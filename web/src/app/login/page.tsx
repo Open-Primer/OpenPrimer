@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
-import { Mail, Lock, ArrowRight, Github as GithubIcon, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Globe, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
@@ -49,7 +49,7 @@ export default function LoginPage() {
           </div>
 
           <button className="w-full py-4 rounded-2xl bg-slate-900 border border-slate-800 text-white font-black text-xs uppercase tracking-[0.2em] transition-all hover:bg-slate-800 flex items-center justify-center gap-3">
-            <GithubIcon className="w-4 h-4" /> GitHub
+            <Globe className="w-4 h-4" /> GitHub
           </button>
         </div>
 
