@@ -1,8 +1,23 @@
 "use client";
 
 import React from 'react';
-import { BarChart3, Users, Cpu, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { BarChart3, Users, Cpu, Activity, ArrowUpRight, ArrowDownRight, Layers, CheckCircle2, Star, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const StatCard = ({ title, value, icon, trend }: { title: string, value: string, icon: React.ReactNode, trend: string }) => (
+  <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all group">
+    <div className="flex justify-between items-start mb-6">
+      <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-400 transition-colors">
+        {icon}
+      </div>
+      <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+        {trend}
+      </div>
+    </div>
+    <p className="text-3xl font-black text-white mb-1">{value}</p>
+    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">{title}</p>
+  </div>
+);
 
 export default function AdminDashboard() {
   const stats = [
