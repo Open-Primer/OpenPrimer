@@ -2,23 +2,20 @@
 
 import React, { useState } from 'react';
 import { TopNav } from '@/components/RefinedUI';
-import { Search, Filter, BookOpen, GraduationCap, ChevronRight, Sparkles, Brain, Code, Scale, Microscope, Atom, Languages } from 'lucide-react';
+import { Search, Filter, BookOpen, GraduationCap, ChevronRight, Sparkles, Brain, Code, Scale, Microscope, Atom, Languages, Star, Users, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const CURRICULA = [
-  { id: 'l1-bio', name: 'Biology L1', level: 'L1', modules: 12, students: '1.2k', duration: '120h', icon: <Microscope className="w-5 h-5" /> },
-  { id: 'l1-cs', name: 'Computer Science L1', level: 'L1', modules: 8, students: '2.4k', duration: '90h', icon: <Code className="w-5 h-5" /> },
-  { id: 'l1-law', name: 'Law L1', level: 'L1', modules: 10, students: '1.5k', duration: '110h', icon: <Scale className="w-5 h-5" /> },
-  { id: 'l1-phys', name: 'Physics L1', level: 'L1', modules: 15, students: '900', duration: '150h', icon: <Atom className="w-5 h-5" /> },
+  { id: 'l1-bio', name: 'Biology L1', level: 'L1', modules: 12, students: '1.2k', rating: 4.8, success: '92%', icon: <Microscope className="w-5 h-5" /> },
+  { id: 'l1-cs', name: 'Computer Science L1', level: 'L1', modules: 8, students: '2.4k', rating: 4.9, success: '85%', icon: <Code className="w-5 h-5" /> },
+  { id: 'l1-law', name: 'Law L1', level: 'L1', modules: 10, students: '1.5k', rating: 4.5, success: '78%', icon: <Scale className="w-5 h-5" /> },
+  { id: 'l1-phys', name: 'Physics L1', level: 'L1', modules: 15, students: '900', rating: 4.7, success: '70%', icon: <Atom className="w-5 h-5" /> },
 ];
 
 const UV_CARDS = [
-  { id: 'cell-bio', name: 'Cell Biology', subject: 'Biology', level: 'L1', lessons: 5, difficulty: 'Core', duration: '6h' },
-  { id: 'genetics', name: 'Molecular Genetics', subject: 'Biology', level: 'L2', lessons: 8, difficulty: 'Intermediate', duration: '12h' },
-  { id: 'python-intro', name: 'Python Fundamentals', subject: 'CS', level: 'L1', lessons: 10, difficulty: 'Core', duration: '15h' },
-  { id: 'quantum-physics', name: 'Quantum Mechanics', subject: 'Physics', level: 'L3', lessons: 12, difficulty: 'Advanced', duration: '20h' },
-  { id: 'const-law', name: 'Constitutional Law', subject: 'Law', level: 'L1', lessons: 6, difficulty: 'Core', duration: '10h' },
-  { id: 'thermo', name: 'Thermodynamics', subject: 'Physics', level: 'L2', lessons: 7, difficulty: 'Intermediate', duration: '14h' },
+  { id: 'cell-bio', name: 'Cell Biology', subject: 'Biology', level: 'L1', lessons: 5, rating: 4.9, enrolled: 850, difficulty: 'Core' },
+  { id: 'genetics', name: 'Molecular Genetics', subject: 'Biology', level: 'L2', lessons: 8, rating: 4.7, enrolled: 420, difficulty: 'Intermediate' },
+  { id: 'python-intro', name: 'Python Fundamentals', subject: 'CS', level: 'L1', lessons: 10, rating: 4.8, enrolled: 1200, difficulty: 'Core' },
 ];
 
 export default function CatalogPage() {
@@ -105,22 +102,37 @@ export default function CatalogPage() {
               <motion.div 
                 key={c.id} 
                 whileHover={{ y: -8 }}
-                className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col justify-between h-96 relative overflow-hidden"
+                className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col justify-between h-[420px] relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-[60px] pointer-events-none" />
                 <div>
-                  <div className="w-14 h-14 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xl shadow-blue-900/10">
-                    {c.icon}
+                  <div className="flex justify-between items-start mb-8">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xl shadow-blue-900/10">
+                      {c.icon}
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">
+                       <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                       <span className="text-[10px] font-black text-slate-200">{c.rating}</span>
+                    </div>
                   </div>
                   <h3 className="text-2xl font-black text-white mb-2 leading-tight">{c.name}</h3>
                   <div className="flex flex-wrap gap-2 mb-6">
                     <span className="px-3 py-1 rounded-full bg-slate-800/50 text-[8px] font-black text-slate-500 uppercase tracking-widest border border-white/5">{c.level}</span>
                     <span className="px-3 py-1 rounded-full bg-slate-800/50 text-[8px] font-black text-slate-500 uppercase tracking-widest border border-white/5">{c.modules} Modules</span>
-                    <span className="px-3 py-1 rounded-full bg-slate-800/50 text-[8px] font-black text-slate-500 uppercase tracking-widest border border-white/5">{c.duration}</span>
+                  </div>
+                  <div className="space-y-3 mt-4">
+                     <div className="flex items-center gap-2 text-slate-500">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-bold">{c.students} Students</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-emerald-500/80">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{c.success} Success Rate</span>
+                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{c.students} Enrolled</p>
+                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Enroll to start</p>
                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all">
                      <ChevronRight className="w-5 h-5" />
                    </div>
@@ -138,13 +150,19 @@ export default function CatalogPage() {
                   <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
                     <BookOpen className="w-5 h-5" />
                   </div>
-                  <span className="px-3 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest border border-blue-500/20">{uv.difficulty}</span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="px-3 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest border border-blue-500/20">{uv.difficulty}</span>
+                    <div className="flex items-center gap-1 text-yellow-500">
+                       <Star className="w-2.5 h-2.5 fill-current" />
+                       <span className="text-[9px] font-black">{uv.rating}</span>
+                    </div>
+                  </div>
                 </div>
                 <h3 className="font-bold text-slate-100 mb-2 group-hover:text-blue-400 transition-colors">{uv.name}</h3>
                 <div className="flex items-center gap-3 mb-6">
                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{uv.subject}</p>
                    <div className="w-1 h-1 rounded-full bg-slate-800" />
-                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{uv.duration}</p>
+                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{uv.enrolled} Active</p>
                 </div>
                 <button className="w-full py-4 rounded-2xl bg-slate-800 hover:bg-blue-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-xl">Enroll UV</button>
               </motion.div>

@@ -2,11 +2,13 @@
   "University": {
     "Bachelor": {
       "L1": {
-        "Physics": {
-          "Classical Mechanics": [
-            "Kinematics in One Dimension",
-            "Vectors and 2D Motion",
-            "Newton's Laws of Motion"
+        "Biology": {
+          "Cell Biology": [
+            "Introduction to the Cell",
+            "Cell Membrane and Transport",
+            "Cytoskeleton and Motility",
+            "Mitochondria and Energy",
+            "The Nucleus and Genetic Info"
           ]
         }
       }

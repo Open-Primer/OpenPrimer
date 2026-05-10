@@ -18,34 +18,40 @@ export default function AdminDashboard() {
         <p className="text-slate-500 text-sm font-medium">Real-time health and growth metrics for the OpenPrimer ecosystem.</p>
       </header>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {stats.map((stat, i) => (
-          <motion.div 
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 shadow-xl"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-blue-400 border border-white/5">
-                {stat.icon}
-              </div>
-              <div className={`flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full ${stat.isUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                {stat.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {stat.trend}
-              </div>
-            </div>
-            <p className="text-4xl font-black mb-1">{stat.value}</p>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
-          </motion.div>
-        ))}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <StatCard title="Total Students" value="12,450" icon={<Users className="w-6 h-6" />} trend="+12% this month" />
+        <StatCard title="Curricula Active" value="32" icon={<Layers className="w-6 h-6 text-blue-500" />} trend="+3 new this week" />
+        <StatCard title="Validation Rate" value="84%" icon={<CheckCircle2 className="w-6 h-6 text-emerald-500" />} trend="+5% improvement" />
+        <StatCard title="Platform Rating" value="4.8/5" icon={<Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />} trend="Based on 2.1k reviews" />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="p-8 rounded-[40px] bg-slate-900/20 border border-slate-900 min-h-[300px] flex items-center justify-center border-dashed">
-           <p className="text-xs font-bold text-slate-700 uppercase tracking-widest italic">Growth Chart Placeholder</p>
-        </div>
+      <div className="grid lg:grid-cols-2 gap-12">
+        <section className="space-y-6">
+          <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
+             <Sparkles className="w-4 h-4 text-blue-500" /> Content Engine Health
+          </h2>
+          <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-8">
+             <div className="flex justify-between items-end">
+                <div>
+                   <p className="text-3xl font-black text-white">96%</p>
+                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">AI Content Accuracy</p>
+                </div>
+                <div className="h-12 w-32 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20">
+                   <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Stable</p>
+                </div>
+             </div>
+             <div className="space-y-2">
+                <div className="flex justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                   <span>Generation Queue</span>
+                   <span>42 Modules / Hour</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                   <div className="h-full w-[65%] bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]" />
+                </div>
+             </div>
+          </div>
+        </section>
+
         <div className="p-8 rounded-[40px] bg-slate-900/20 border border-slate-900 min-h-[300px] flex items-center justify-center border-dashed">
            <p className="text-xs font-bold text-slate-700 uppercase tracking-widest italic">Retention Metrics Placeholder</p>
         </div>

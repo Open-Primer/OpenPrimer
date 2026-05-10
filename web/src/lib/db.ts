@@ -11,6 +11,14 @@ export interface UserProfile {
   isEmailVerified: boolean;
   isBlocked: boolean;
   joinedAt: string;
+  lastVisitedPage?: {
+    courseId: string;
+    moduleId: string;
+    path: string;
+    title: string;
+  };
+  favorites: string[]; 
+  aiCoachMessage: string;
 }
 
 export interface SyllabusNode {
@@ -27,6 +35,10 @@ export interface UV {
   subject: string;
   level: string;
   lessonsCount: number;
+  minLessonsToValidate?: number; 
+  rating: number; // 0-5
+  enrolledCount: number;
+  successRate: number; // 0-100%
   languages: string[]; 
   translationStatus: Record<string, 'complete' | 'ai-draft' | 'none'>;
 }
@@ -37,6 +49,10 @@ export interface Curriculum {
   level: string;
   syllabusId: string;
   uvIds: string[];
+  minUVsToValidate?: number;
+  rating: number;
+  enrolledCount: number;
+  successRate: number;
 }
 
 export interface ReportCluster {
@@ -54,9 +70,27 @@ let syllabi: SyllabusNode[] = [
 ];
 
 let users: UserProfile[] = [
-  { id: 'u1', name: 'Silvere Martin', email: 'silvere@openprimer.org', role: 'admin', level: 12, kp: 12450, isEmailVerified: true, isBlocked: false, joinedAt: '2026-01-10' },
-  { id: 'u2', name: 'Alice Smith', email: 'alice@edu.com', role: 'student', level: 5, kp: 3200, isEmailVerified: true, isBlocked: false, joinedAt: '2026-03-15' },
-  { id: 'u3', name: 'Bob Jones', email: 'bob@edu.com', role: 'student', level: 8, kp: 6100, isEmailVerified: false, isBlocked: true, joinedAt: '2026-04-20' }
+  { 
+    id: 'u1', 
+    name: 'Silvere Martin', 
+    email: 'silvere@openprimer.org', 
+    role: 'admin', 
+    level: 12, 
+    kp: 12450, 
+    isEmailVerified: true, 
+    isBlocked: false, 
+    joinedAt: '2026-01-10',
+    lastVisitedPage: {
+      courseId: 'l1-phys',
+      moduleId: 'newton-laws',
+      path: '/L1/Physics/Classical_Mechanics/newtons_laws_of_motion',
+      title: "Newton's Laws of Motion"
+    },
+    favorites: ['/L1/Biology/Cell_Biology/mitochondria_and_energy'],
+    aiCoachMessage: "Welcome back, Silvere! You're doing great on Classical Mechanics. I recommend reviewing Vectors before jumping into the final Newton quiz."
+  },
+  { id: 'u2', name: 'Alice Smith', email: 'alice@edu.com', role: 'student', level: 5, kp: 3200, isEmailVerified: true, isBlocked: false, joinedAt: '2026-03-15', favorites: [], aiCoachMessage: "Hello Alice! Ready to continue your journey?" },
+  { id: 'u3', name: 'Bob Jones', email: 'bob@edu.com', role: 'student', level: 8, kp: 6100, isEmailVerified: false, isBlocked: true, joinedAt: '2026-04-20', favorites: [], aiCoachMessage: "Account blocked. Contact admin." }
 ];
 
 let reportClusters: ReportCluster[] = [
