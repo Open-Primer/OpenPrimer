@@ -58,6 +58,21 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           <MDXRemote source={pageData.content} components={components} />
         </article>
 
+        {/* Course Footer Metadata */}
+        <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-6">
+            <div className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
+              Version <span className="text-blue-500">{pageData.meta.version || '1.0.0'}</span>
+            </div>
+            <div className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
+              MAJ <span className="text-slate-500">{pageData.meta.updatedAt || '2024'}</span>
+            </div>
+          </div>
+          <div className="text-[9px] font-black text-slate-800 uppercase tracking-[0.4em]">
+            Certifié OpenPrimer Elite
+          </div>
+        </div>
+
         {/* Footer Navigation */}
         <div className="mt-32 pt-12 border-t border-slate-900 flex justify-between items-center group cursor-pointer">
            <div>
