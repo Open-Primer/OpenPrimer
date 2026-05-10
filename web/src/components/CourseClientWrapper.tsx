@@ -7,9 +7,10 @@ import { TopNav, AITutorOverlay, ReportInput } from '@/components/RefinedUI';
 interface CourseClientWrapperProps {
   children: React.ReactNode;
   navItems: any[];
+  pageContext?: string;
 }
 
-export const CourseClientWrapper = ({ children, navItems }: CourseClientWrapperProps) => {
+export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -26,7 +27,7 @@ export const CourseClientWrapper = ({ children, navItems }: CourseClientWrapperP
         </main>
       </div>
 
-      <AITutorOverlay />
+      <AITutorOverlay pageContext={pageContext} />
     </div>
   );
 };

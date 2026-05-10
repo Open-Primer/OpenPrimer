@@ -5,20 +5,27 @@ import Link from 'next/link';
 import { Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, Bookmark, Menu, ChevronRight, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const AITutorOverlay = () => {
+export const AITutorOverlay = ({ pageContext }: { pageContext?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! Need help with this section?" }
+    { role: 'assistant', content: "Bonjour ! Je suis votre tuteur OpenPrimer. Posez-moi une question sur ce module." }
   ]);
   const [input, setInput] = useState('');
 
   const handleSend = () => {
     if (!input.trim()) return;
-    setMessages([...messages, { role: 'user', content: input }]);
+    const userMsg = input;
+    setMessages([...messages, { role: 'user', content: userMsg }]);
     setInput('');
+    
+    // Simulation d'une réponse basée sur le contexte du cours
     setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: "The key here is the membrane's semi-permeability." }]);
-    }, 1000);
+      let response = "C'est une excellente question académique.";
+      if (pageContext?.toLowerCase().includes("membrane")) {
+        response = "D'après le cours, la membrane est semi-perméable, ce qui permet le transport sélectif des ions.";
+      }
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    }, 1200);
   };
 
   return (

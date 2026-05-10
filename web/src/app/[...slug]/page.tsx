@@ -25,7 +25,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
   const navItems = getNavigationTree();
 
   return (
-    <CourseClientWrapper navItems={navItems}>
+    <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
       <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-12">
