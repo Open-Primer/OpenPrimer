@@ -1,0 +1,577 @@
+[
+  {
+    "title": "Biology L1 Core",
+    "level": "L1",
+    "subject": "Biology",
+    "units": [
+      {
+        "name": "Intro to Biology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Biology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Biology L2 Core",
+    "level": "L2",
+    "subject": "Biology",
+    "units": [
+      {
+        "name": "Intro to Biology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Biology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Biology L3 Core",
+    "level": "L3",
+    "subject": "Biology",
+    "units": [
+      {
+        "name": "Intro to Biology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Biology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Biology Lycée Terminale Core",
+    "level": "Lycée Terminale",
+    "subject": "Biology",
+    "units": [
+      {
+        "name": "Intro to Biology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Biology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Biology Collège 3ème Core",
+    "level": "Collège 3ème",
+    "subject": "Biology",
+    "units": [
+      {
+        "name": "Intro to Biology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Biology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Physics L1 Core",
+    "level": "L1",
+    "subject": "Physics",
+    "units": [
+      {
+        "name": "Intro to Physics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Physics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Physics L2 Core",
+    "level": "L2",
+    "subject": "Physics",
+    "units": [
+      {
+        "name": "Intro to Physics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Physics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Physics L3 Core",
+    "level": "L3",
+    "subject": "Physics",
+    "units": [
+      {
+        "name": "Intro to Physics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Physics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Physics Lycée Terminale Core",
+    "level": "Lycée Terminale",
+    "subject": "Physics",
+    "units": [
+      {
+        "name": "Intro to Physics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Physics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Physics Collège 3ème Core",
+    "level": "Collège 3ème",
+    "subject": "Physics",
+    "units": [
+      {
+        "name": "Intro to Physics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Physics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Mathematics L1 Core",
+    "level": "L1",
+    "subject": "Mathematics",
+    "units": [
+      {
+        "name": "Intro to Mathematics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Mathematics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Mathematics L2 Core",
+    "level": "L2",
+    "subject": "Mathematics",
+    "units": [
+      {
+        "name": "Intro to Mathematics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Mathematics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Mathematics L3 Core",
+    "level": "L3",
+    "subject": "Mathematics",
+    "units": [
+      {
+        "name": "Intro to Mathematics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Mathematics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Mathematics Lycée Terminale Core",
+    "level": "Lycée Terminale",
+    "subject": "Mathematics",
+    "units": [
+      {
+        "name": "Intro to Mathematics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Mathematics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Mathematics Collège 3ème Core",
+    "level": "Collège 3ème",
+    "subject": "Mathematics",
+    "units": [
+      {
+        "name": "Intro to Mathematics",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Mathematics",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sociology L1 Core",
+    "level": "L1",
+    "subject": "Sociology",
+    "units": [
+      {
+        "name": "Intro to Sociology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Sociology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sociology L2 Core",
+    "level": "L2",
+    "subject": "Sociology",
+    "units": [
+      {
+        "name": "Intro to Sociology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Sociology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sociology L3 Core",
+    "level": "L3",
+    "subject": "Sociology",
+    "units": [
+      {
+        "name": "Intro to Sociology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Sociology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sociology Lycée Terminale Core",
+    "level": "Lycée Terminale",
+    "subject": "Sociology",
+    "units": [
+      {
+        "name": "Intro to Sociology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Sociology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sociology Collège 3ème Core",
+    "level": "Collège 3ème",
+    "subject": "Sociology",
+    "units": [
+      {
+        "name": "Intro to Sociology",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced Sociology",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "History L1 Core",
+    "level": "L1",
+    "subject": "History",
+    "units": [
+      {
+        "name": "Intro to History",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced History",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "History L2 Core",
+    "level": "L2",
+    "subject": "History",
+    "units": [
+      {
+        "name": "Intro to History",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced History",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "History L3 Core",
+    "level": "L3",
+    "subject": "History",
+    "units": [
+      {
+        "name": "Intro to History",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced History",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "History Lycée Terminale Core",
+    "level": "Lycée Terminale",
+    "subject": "History",
+    "units": [
+      {
+        "name": "Intro to History",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced History",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "History Collège 3ème Core",
+    "level": "Collège 3ème",
+    "subject": "History",
+    "units": [
+      {
+        "name": "Intro to History",
+        "modules": [
+          "Fundamentals",
+          "History",
+          "Basic Principles"
+        ]
+      },
+      {
+        "name": "Advanced History",
+        "modules": [
+          "Complex Cases",
+          "Theory",
+          "Applications"
+        ]
+      }
+    ]
+  }
+]
