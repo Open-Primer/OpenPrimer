@@ -6,8 +6,8 @@ import { notFound } from 'next/navigation';
 import { Quiz, Question, Option } from '@/components/mdx/Quiz';
 import { Glossary } from '@/components/mdx/Glossary';
 import { Video } from '@/components/mdx/Video';
+import { FillInBlanks, MetaNote } from '@/components/mdx/Interactive';
 import { CourseClientWrapper } from '@/components/CourseClientWrapper';
-import { ChevronRight } from 'lucide-react';
 
 const components = {
   Quiz,
@@ -15,6 +15,8 @@ const components = {
   Option,
   Glossary,
   Video,
+  FillInBlanks,
+  MetaNote,
 };
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
