@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { dbService, UV } from '@/lib/db';
-import { BookOpen, Plus, MoreVertical, GripVertical, ChevronRight, Layers, GraduationCap, Sparkles, Globe, Trash2, Search, Zap } from 'lucide-react';
+import { BookOpen, Plus, MoreVertical, GripVertical, ChevronRight, Layers, GraduationCap, Sparkles, Globe, Trash2, Search, Zap, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminCurriculum() {
