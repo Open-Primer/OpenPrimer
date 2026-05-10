@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Gatekeeper } from "@/components/Gatekeeper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className={`${inter.className} selection:bg-blue-500/30`}>
-        {children}
+        <Gatekeeper>
+          {children}
+        </Gatekeeper>
       </body>
     </html>
   );
