@@ -1,59 +1,122 @@
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, ArrowRight, BookOpen, Cpu, Globe } from 'lucide-react';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight } from 'lucide-react';
+import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
+import { TopNav } from '@/components/RefinedUI';
+import { motion } from 'framer-motion';
 
 export default function Home() {
+  const [search, setSearch] = useState('');
+
+  const examples = [
+    { label: "Biology L1", query: "biology" },
+    { label: "Introduction to Programming", query: "programming" },
+    { label: "Constitutional Law", query: "law" },
+    { label: "Point Mechanics", query: "physics" }
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-32 pb-24 px-8">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
+      <TopNav toggleSidebar={() => {}} />
+      {/* Background Glow */}
+      <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
+
+      {/* Main Content */}
+      <div className="relative z-10 max-w-5xl mx-auto px-8 pt-32 pb-24 flex flex-col items-center">
         
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-8">
-            <Cpu className="w-4 h-4" /> Propulsé par l'Intelligence Artificielle
-          </div>
-          
-          <h1 className="text-7xl md:text-8xl font-black mb-8 tracking-tight leading-[0.9]">
-            Le Savoir Universel <br />
+        {/* Shiny Icon */}
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="mb-12"
+        >
+          <OpenPrimerIcon className="w-24 h-24" />
+        </motion.div>
+
+        {/* Title */}
+        <div className="text-center mb-16">
+          <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-white">
+            Universal Knowledge. <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-              Enfin Libre.
+              Finally Free.
             </span>
           </h1>
-          
-          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-            OpenPrimer est le premier projet open-source visant à synthétiser l'intégralité des cursus de la L1 à la L3 en un manuel interactif et gratuit.
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            OpenPrimer synthesizes the entirety of academic curricula from primary school to Bachelor's degree into a single, interactive, and AI-tutored experience.
           </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="w-full max-w-2xl mb-12">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-blue-600/20 blur-2xl group-focus-within:bg-blue-600/40 transition-all opacity-0 group-focus-within:opacity-100" />
+            <div className="relative flex items-center bg-slate-900/80 border border-slate-800 p-2 rounded-[32px] backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl">
+              <div className="pl-6 pr-4">
+                <Search className="w-6 h-6 text-slate-600" />
+              </div>
+              <input 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="What do you want to learn today?"
+                className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
+              />
+              <Link 
+                href={search ? `/L1/Biology/Cell_Biology/introduction_to_the_cell` : '#'} 
+                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20"
+              >
+                <ArrowRight className="w-6 h-6" />
+              </Link>
+            </div>
+          </div>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/L1/Biology/Cell_Biology/introduction_to_the_cell"
-              className="px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg transition-all shadow-xl shadow-blue-600/20 flex items-center gap-2 group"
-            >
-              Commencer l'apprentissage <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <button className="px-8 py-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-bold text-lg transition-all">
-              Contribuer sur GitHub
-            </button>
+          {/* Examples */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">Try:</span>
+            {examples.map((ex) => (
+              <button 
+                key={ex.label}
+                onClick={() => setSearch(ex.label)}
+                className="px-4 py-2 rounded-full bg-slate-900/50 border border-slate-800/50 text-xs font-bold text-slate-500 hover:text-blue-400 hover:border-blue-500/30 transition-all"
+              >
+                {ex.label}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Features */}
-      <div className="max-w-6xl mx-auto py-24 px-8 grid md:grid-cols-3 gap-8">
-        <div className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-xl">
-          <BookOpen className="w-12 h-12 text-emerald-400 mb-6" />
-          <h3 className="text-2xl font-bold mb-4">Cours Interactifs</h3>
-          <p className="text-slate-400 leading-relaxed">Des contenus MDX riches avec des quiz, des simulations et des schémas générés à la volée.</p>
+        {/* Footer Concept */}
+        <div className="grid md:grid-cols-3 gap-8 mt-12 text-center md:text-left">
+           <div className="space-y-4 p-6">
+             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mx-auto md:mx-0">
+               <BookOpen className="w-5 h-5" />
+             </div>
+             <h3 className="font-bold text-slate-200">Structured Learning</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Not just a search engine, but a real academic curriculum guided by university standards.</p>
+           </div>
+           <div className="space-y-4 p-6">
+             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto md:mx-0">
+               <Cpu className="w-5 h-5" />
+             </div>
+             <h3 className="font-bold text-slate-200">AI Tutoring</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Ask questions directly in the manual. Our AI understands the context and helps you move forward.</p>
+           </div>
+           <div className="space-y-4 p-6">
+             <div className="w-10 h-10 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400 mx-auto md:mx-0">
+               <Globe className="w-5 h-5" />
+             </div>
+             <h3 className="font-bold text-slate-200">Open & Universal</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Free access to all knowledge, in multiple languages, for everyone on the planet.</p>
+           </div>
         </div>
-        <div className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-xl">
-          <Globe className="w-12 h-12 text-blue-400 mb-6" />
-          <h3 className="text-2xl font-bold mb-4">Standard Mondial</h3>
-          <p className="text-slate-400 leading-relaxed">Une synthèse des meilleurs syllabus internationaux (MIT, Sorbonne, Stanford) en un tronc commun.</p>
-        </div>
-        <div className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-xl">
-          <Cpu className="w-12 h-12 text-violet-400 mb-6" />
-          <h3 className="text-2xl font-bold mb-4">Tuteur IA</h3>
-          <p className="text-slate-400 leading-relaxed">Une assistance personnalisée qui répond à vos questions en fonction du contexte du cours.</p>
+
+        {/* Copyright / Footer */}
+        <div className="mt-24 pt-8 border-t border-slate-900/50 w-full text-center">
+           <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.3em]">
+             OpenPrimer Project • 2026 • AI-Generated Academic Repository
+           </p>
         </div>
       </div>
     </div>

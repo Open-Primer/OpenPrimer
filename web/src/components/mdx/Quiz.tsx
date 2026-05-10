@@ -17,7 +17,7 @@ export const Quiz = ({ children }: QuizProps) => {
   return (
     <div className="my-8 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl backdrop-blur-xl shadow-2xl">
       <h3 className="text-xl font-bold text-blue-400 mb-6 flex items-center gap-2">
-        <CheckCircle2 className="w-5 h-5" /> Test de Connaissances
+        <CheckCircle2 className="w-5 h-5" /> Knowledge Check
       </h3>
       <div className="space-y-8">
         {children}

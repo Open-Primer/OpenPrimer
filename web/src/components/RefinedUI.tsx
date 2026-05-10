@@ -1,0 +1,201 @@
+"use client";
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, Bookmark, Menu, ChevronRight, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export const AITutorOverlay = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: "Hi! Need help with this section?" }
+  ]);
+  const [input, setInput] = useState('');
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages([...messages, { role: 'user', content: input }]);
+    setInput('');
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'assistant', content: "The key here is the membrane's semi-permeability." }]);
+    }, 1000);
+  };
+
+  return (
+    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="w-96 h-[500px] rounded-[32px] bg-slate-900/80 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden glass"
+          >
+            <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-400" />
+                <span className="font-bold text-xs uppercase tracking-widest opacity-80">Tutor</span>
+              </div>
+              <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                    msg.role === 'assistant' 
+                      ? 'bg-slate-800/50 text-slate-300' 
+                      : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20'
+                  }`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-5 bg-slate-950/30 border-t border-slate-800/50">
+              <div className="relative">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Ask a question..."
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600"
+                />
+                <button onClick={handleSend} className="absolute right-3 top-2.5 p-1.5 text-blue-500 hover:text-blue-400 transition-colors">
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl shadow-blue-600/40 flex items-center justify-center relative group border border-white/10"
+      >
+        <MessageSquare className="w-6 h-6" />
+      </motion.button>
+    </div>
+  );
+};
+
+export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?: () => void, isCoursePage?: boolean }) => {
+  const [showReport, setShowReport] = useState(false);
+  const [reportInput, setReportInput] = useState('');
+  const [showToast, setShowToast] = useState<string | null>(null);
+  const [isReportSent, setIsReportSent] = useState(false);
+
+  const triggerToast = (msg: string) => {
+    setShowToast(msg);
+    setTimeout(() => setShowToast(null), 3000);
+  };
+
+  const handleSendReport = () => {
+    if (!reportInput.trim()) return;
+    setIsReportSent(true);
+    setReportInput('');
+    setTimeout(() => {
+      setIsReportSent(false);
+      setShowReport(false);
+      triggerToast("Report sent to AI Review.");
+    }, 2000);
+  };
+
+  return (
+    <div className="fixed top-0 left-0 right-0 h-16 glass border-b border-slate-900/50 z-40 px-6 flex items-center justify-between">
+      <div className="flex items-center gap-6">
+        {isCoursePage && (
+          <button onClick={toggleSidebar} className="p-2 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-white transition-all">
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <Link href="/" className="text-lg font-black tracking-tighter text-white hover:opacity-80 transition-opacity">
+          OpenPrimer
+        </Link>
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500 uppercase tracking-widest text-[9px] ml-4">
+          <Link href="/catalog" className="hover:text-white transition-colors">Course Catalog</Link>
+        </nav>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {isCoursePage && (
+          <button 
+            onClick={() => setShowReport(!showReport)} 
+            className={`p-2 rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${
+              showReport ? 'bg-red-500/20 text-red-400' : 'hover:bg-red-500/10 text-slate-500 hover:text-red-400'
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4" /> <span className="hidden lg:inline">Report</span>
+          </button>
+        )}
+        <button 
+          onClick={() => { triggerToast("Link copied!"); }}
+          className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+        <button 
+          onClick={() => { triggerToast("Course bookmarked!"); }}
+          className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all"
+        >
+          <Bookmark className="w-4 h-4" />
+        </button>
+        <div className="w-px h-6 bg-slate-800 mx-2" />
+        <Link href="/profile" className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
+          <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        </Link>
+      </div>
+
+      {/* TOP-ALIGNED REPORT INPUT */}
+      <AnimatePresence>
+        {showReport && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 right-6 w-full max-w-sm z-50"
+          >
+             <div className="relative group">
+              <div className="absolute inset-0 bg-red-600/10 blur-xl opacity-100 transition-opacity" />
+              <div className="relative flex items-center bg-slate-900/90 border border-slate-800/50 p-1.5 rounded-2xl backdrop-blur-xl shadow-2xl focus-within:border-red-500/30 transition-all">
+                <div className="pl-4 pr-2">
+                  <AlertTriangle className={`w-4 h-4 ${isReportSent ? 'text-emerald-400' : 'text-slate-600'}`} />
+                </div>
+                <input 
+                  autoFocus
+                  value={reportInput}
+                  onChange={(e) => setReportInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendReport()}
+                  placeholder={isReportSent ? "Thank you! Reviewed soon." : "Spotted an error? Tell us..."}
+                  className={`flex-1 bg-transparent border-none py-2 text-xs text-white focus:outline-none placeholder:text-slate-700 font-medium ${isReportSent ? 'text-emerald-400' : ''}`}
+                />
+                <button 
+                  onClick={handleSendReport}
+                  className="bg-slate-800 hover:bg-red-600/20 text-slate-500 hover:text-red-400 p-2 rounded-xl transition-all"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-slate-900 border border-slate-800 shadow-2xl flex items-center gap-3 z-[60]"
+          >
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-medium text-slate-100">{showToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};

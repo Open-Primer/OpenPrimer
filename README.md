@@ -1,40 +1,39 @@
 # OpenPrimer
 
-OpenPrimer est une plateforme éducative open-source dont le contenu est généré par IA pour offrir un standard de référence du savoir, du CP à la Licence.
+> **Universal knowledge, finally free and tutored by artificial intelligence.**
 
-## 🏗️ Structure du Projet
+OpenPrimer is an open-source project aiming to synthesize the entirety of academic knowledge, from primary school to Bachelor's degree, in the form of an interactive manual and personalized AI tutor.
 
-- `content/` : Base de données de cours au format MDX (générée par l'IA).
-- `generator/` : Usine de génération de contenu (Python + Vertex AI).
-- `web/` : Interface utilisateur (Next.js + Tailwind CSS).
+## 🌟 Vision
+OpenPrimer is not just a course website. It is a **transition tool** designed to offer a "Dual-Pane" learning experience: academic reference knowledge on the left, and intelligent conversational support on the right.
 
-## 🚀 Démarrage Rapide
+## 🏗️ Architecture & Philosophy
+The project rests on three technological pillars:
+1.  **Content Factory**: An asynchronous factory (Python + Vertex AI) that scrapes, synthesizes, and translates global academic knowledge.
+2.  **Explorer**: An ultra-clean Next.js interface focused on interaction and academic gamification (Knowledge Points, UVs).
+3.  **Auto-Wiki**: A feedback loop where user reports feed a correction AI to maintain the quality of the corpus.
 
-### 1. Génération du Contenu
-Allez dans le dossier `generator`, installez les dépendances et configurez votre projet GCP.
+[Read more on Project Guidelines](PROJECT_GUIDELINES.md) | [Check the Technical Architecture](docs/ARCHITECTURE.md)
 
+## 🚀 Quick Start (POC)
+
+### 1. Generation (Google Cloud VM)
+The generation engine runs on a GCP VM to "blast" content.
 ```bash
-cd generator
-pip install -r requirements.txt
-python syllabus_mapper.py  # Crée la structure des cours
-python orchestrator.py     # Lance la génération (Mock par défaut sans .env)
+gcloud compute ssh openprimer-factory
+cd /opt/openprimer/generator
+python3 orchestrator.py
 ```
 
-### 2. Interface Web
-Allez dans le dossier `web` et lancez le serveur de développement.
-
+### 2. Web Interface (Local)
 ```bash
 cd web
 npm install
 npm run dev
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000) pour voir le résultat.
+## 🤝 Contributing
+We need you to validate content and suggest new curricula. Check our [Contribution Guide](docs/CONTRIBUTING.md).
 
-## 🎨 Fonctionnalités
-- **Mode Sombre Premium** : Design moderne avec glassmorphisme.
-- **MDX Interactif** : Support des Quiz et simulations directement dans les cours.
-- **Arborescence Dynamique** : Navigation fluide à travers les niveaux et matières.
-
-## 📝 Licence
-Ce projet est sous licence MIT. Les contenus générés sont destinés à rester libres et gratuits.
+## 📝 License
+OpenPrimer is a common good under the MIT license. Generated content is intended to remain free, gratis, and accessible to all.

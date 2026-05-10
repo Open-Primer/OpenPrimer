@@ -17,14 +17,14 @@ Format requirements:
 - Use clean Markdown syntax.
 - Ensure scientific accuracy.
 - Use a professional yet engaging tone (The 'Young Lady's Illustrated Primer' style).
-- Language: French.
+- Language: English.
 
 Example Quiz syntax:
 <Quiz>
-  <Question q="Quelle est la fonction principale des mitochondries ?">
-    <Option text="Synthèse des protéines" />
-    <Option text="Production d'énergie (ATP)" correct />
-    <Option text="Stockage de l'eau" />
+  <Question q="What is the primary function of mitochondria?">
+    <Option text="Protein synthesis" />
+    <Option text="Energy production (ATP)" correct />
+    <Option text="Water storage" />
   </Question>
 </Quiz>
 

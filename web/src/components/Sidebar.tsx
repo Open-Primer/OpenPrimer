@@ -1,97 +1,68 @@
 "use client";
 
-import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Folder, FileText, ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, Circle, Search, GraduationCap, Settings } from 'lucide-react';
 import { NavItem } from '@/lib/content';
 
 interface SidebarProps {
   items: NavItem[];
+  isOpen: boolean;
 }
 
-export const Sidebar = ({ items }: SidebarProps) => {
+export const Sidebar = ({ items, isOpen }: SidebarProps) => {
+  const pathname = usePathname();
+
+  if (!isOpen) return null;
+
   return (
-    <aside className="w-80 h-screen overflow-y-auto bg-slate-950/50 backdrop-blur-3xl border-r border-slate-800 p-6 flex flex-col gap-8">
-      <div className="flex items-center gap-3 px-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <GraduationCap className="w-6 h-6 text-white" />
-        </div>
-        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-          OpenPrimer
-        </h1>
+    <aside className="w-80 h-full flex flex-col bg-slate-950/30 p-8 border-r border-slate-900/50">
+      <div className="relative mb-12">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
+        <input 
+          placeholder="Search this course..."
+          className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-4 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
+        />
       </div>
 
-      <nav className="flex-1">
-        <Tree items={items} />
-      </nav>
-      
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-violet-500/10 border border-blue-500/20">
-        <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">AI Tutor</p>
-        <p className="text-sm text-slate-400">Posez vos questions à tout moment.</p>
+      <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
+        {items.map((module) => (
+          <div key={module.name} className="space-y-4">
+            <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{module.name}</h4>
+            <div className="space-y-1">
+              {module.children?.map((page) => {
+                const isActive = pathname === page.path;
+                return (
+                  <Link
+                    key={page.name}
+                    href={page.path || '#'}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                      isActive 
+                        ? 'bg-blue-600/10 text-blue-400' 
+                        : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                    }`}
+                  >
+                    {isActive ? (
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600" />
+                    )}
+                    <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight' : 'tracking-normal'}`}>
+                      {page.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-slate-900/50">
+         <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-black text-slate-700 uppercase tracking-widest">
+           Course Progress • 12%
+         </div>
       </div>
     </aside>
-  );
-};
-
-const Tree = ({ items, level = 0 }: { items: NavItem[]; level?: number }) => {
-  return (
-    <ul className="space-y-1">
-      {items.map((item, idx) => (
-        <TreeNode key={idx} item={item} level={level} />
-      ))}
-    </ul>
-  );
-};
-
-const TreeNode = ({ item, level }: { item: NavItem; level: number }) => {
-  const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname();
-  const isActive = pathname === `/${item.path}`;
-
-  if (item.type === 'folder') {
-    return (
-      <li>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center gap-2 p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group"
-          style={{ paddingLeft: `${level * 12 + 8}px` }}
-        >
-          {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          <Folder className="w-4 h-4 text-blue-500/70" />
-          <span className="text-sm font-medium">{item.name}</span>
-        </button>
-        <AnimatePresence>
-          {isOpen && item.children && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <Tree items={item.children} level={level + 1} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </li>
-    );
-  }
-
-  return (
-    <li>
-      <Link
-        href={`/${item.path}`}
-        className={`flex items-center gap-2 p-2 rounded-lg text-sm transition-all ${
-          isActive 
-            ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' 
-            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
-        }`}
-        style={{ paddingLeft: `${level * 12 + 24}px` }}
-      >
-        <FileText className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-600'}`} />
-        <span className="capitalize">{item.name}</span>
-      </Link>
-    </li>
   );
 };

@@ -27,13 +27,13 @@ class OpenPrimerGenerator:
             self.model = None
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    async def generate_page(self, subject, level, module_name, topic):
+    async def generate_page(self, subject, level, module_name, topic, context=None):
         prompt = MASTER_PROMPT.format(
             subject=subject,
             level=level,
             module_name=module_name,
             topic=topic,
-            context="No additional context provided."
+            context=context if context else "Utilise tes connaissances internes pour structurer le cours selon les standards académiques L1/L3."
         )
 
         if self.model:
@@ -49,16 +49,16 @@ module: {module_name}
 
 # {topic}
 
-Ceci est un contenu de démonstration pour le module **{topic}**. 
+This is a demonstration content for the module **{topic}**. 
 
-Dans une version réelle, l'IA synthétiserait ici les connaissances académiques relatives à ce sujet, en s'appuyant sur les meilleurs syllabus mondiaux.
+In a real version, the AI would synthesize academic knowledge related to this topic here, based on the best global syllabi.
 
-## Test de connaissances
+## Knowledge Check
 <Quiz>
-  <Question q="Est-ce que ce composant interactif fonctionne ?">
-    <Option text="Non, c'est cassé" />
-    <Option text="Oui, parfaitement !" correct />
-    <Option text="Peut-être" />
+  <Question q="Is this interactive component working?">
+    <Option text="No, it's broken" />
+    <Option text="Yes, perfectly!" correct />
+    <Option text="Maybe" />
   </Question>
 </Quiz>
 """
@@ -79,6 +79,7 @@ Dans une version réelle, l'IA synthétiserait ici les connaissances académique
                             continue
 
                         print(f"Generating: {topic}...")
+                        # Optionnel: On pourrait ici appeler un scraper pour récupérer du context
                         content = await self.generate_page(subject, level_key, module_name, topic)
                         
                         with open(file_path, "w", encoding="utf-8") as f:

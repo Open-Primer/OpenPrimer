@@ -34,6 +34,30 @@ SYLLABUS = {
                         "CPU and Memory Basics",
                         "Operating Systems Fundamentals"
                     ]
+                },
+                "Law": {
+                    "Constitutional Law": [
+                        "General Theory of the State",
+                        "The Constitution and Hierarchy of Norms",
+                        "Separation of Powers",
+                        "The 5th Republic Institutions"
+                    ]
+                },
+                "Physics": {
+                    "Point Mechanics": [
+                        "Kinematics: Position and Velocity",
+                        "Newton's Laws of Motion",
+                        "Energy and Work",
+                        "Harmonic Oscillators"
+                    ]
+                },
+                "Economics": {
+                    "Macroeconomics": [
+                        "Economic Aggregates (GDP, GNP)",
+                        "Consumption and Investment Functions",
+                        "Inflation and Unemployment",
+                        "Fiscal and Monetary Policies"
+                    ]
                 }
             }
         }
