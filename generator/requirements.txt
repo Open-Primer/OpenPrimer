@@ -1,0 +1,9 @@
+google-cloud-aiplatform
+google-generativeai
+supabase
+GitPython
+tenacity
+asyncio
+python-dotenv
+tqdm
+pydantic
