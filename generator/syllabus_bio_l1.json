@@ -1,0 +1,90 @@
+{
+  "University": {
+    "Bachelor": {
+      "L1": {
+        "Biology": {
+          "Cell Biology": [
+            "Introduction to the Cell",
+            "Cell Membrane and Transport",
+            "Cytoskeleton and Motility",
+            "Mitochondria and Energy",
+            "The Nucleus and Genetic Info",
+            "Endomembrane System",
+            "Cell Signaling Fundamentals",
+            "Cell Cycle and Mitosis"
+          ],
+          "Molecular Genetics": [
+            "Structure of DNA and RNA",
+            "DNA Replication Mechanisms",
+            "Transcription: DNA to RNA",
+            "Translation: RNA to Protein",
+            "Regulation of Gene Expression",
+            "Mendelian Genetics",
+            "Chromosomal Inheritance",
+            "Modern DNA Technology"
+          ],
+          "Biochemistry": [
+            "Chemical Bonds in Life",
+            "Water and Carbon Scaffolds",
+            "Structure of Amino Acids",
+            "Protein Folding and Function",
+            "Enzyme Kinetics",
+            "Carbohydrates and Lipids",
+            "Nucleic Acid Chemistry",
+            "Metabolic Pathways Overview"
+          ],
+          "Evolutionary Biology": [
+            "Darwin and Natural Selection",
+            "Evidence for Evolution",
+            "Population Genetics",
+            "Speciation Mechanisms",
+            "The History of Life",
+            "Phylogenetic Trees",
+            "Macroevolutionary Patterns",
+            "Human Evolution Intro"
+          ],
+          "Plant Biology": [
+            "Plant Cell Structure",
+            "Photosynthesis: Light Reactions",
+            "The Calvin Cycle",
+            "Plant Tissues and Growth",
+            "Transport in Vascular Plants",
+            "Plant Nutrition and Soil",
+            "Reproduction in Angiosperms",
+            "Plant Hormones and Defense"
+          ],
+          "Animal Physiology": [
+            "Animal Form and Function",
+            "Animal Nutrition and Digestion",
+            "Circulation and Gas Exchange",
+            "The Immune System",
+            "Osmoregulation and Excretion",
+            "Endocrine Signaling",
+            "Nervous System Intro",
+            "Sensory and Motor Systems"
+          ],
+          "Ecology": [
+            "Introduction to Ecology",
+            "Population Ecology",
+            "Community Ecology",
+            "Ecosystem Dynamics",
+            "Conservation Biology",
+            "Global Climate Change",
+            "Biogeography",
+            "Restoration Ecology"
+          ],
+          "Microbiology": [
+            "Diversity of Prokaryotes",
+            "Bacterial Structure and Growth",
+            "Viral Structure and Life Cycles",
+            "Microbial Genetics",
+            "Human Microbiome",
+            "Pathogenesis Mechanisms",
+            "Antimicrobial Resistance",
+            "Environmental Microbiology"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { notFound } from 'next/navigation';
 import { Quiz, Question, Option } from '@/components/mdx/Quiz';
 import { Glossary } from '@/components/mdx/Glossary';
+import { Video } from '@/components/mdx/Video';
 import { CourseClientWrapper } from '@/components/CourseClientWrapper';
 import { ChevronRight } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const components = {
   Question,
   Option,
   Glossary,
+  Video,
 };
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {

@@ -28,37 +28,64 @@ class OpenPrimerGenerator:
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     async def generate_page(self, subject, level, module_name, topic, context=None):
-        prompt = MASTER_PROMPT.format(
-            subject=subject,
-            level=level,
-            module_name=module_name,
-            topic=topic,
-            context=context if context else "Utilise tes connaissances internes pour structurer le cours selon les standards académiques L1/L3."
-        )
+        prompt = f"""
+        Génère un cours de niveau {level} sur le sujet : {topic}.
+        Inclus impérativement :
+        1. Pré-requis (Compétences nécessaires avant ce cours).
+        2. Contenu théorique structuré et rigoureux.
+        3. Glossaire des termes techniques utilisés.
+        4. Liens Wikipedia de référence.
+        5. Quiz interactif (min 3 questions).
+        6. Une section 'Ressources Vidéo' pointant vers des chaînes académiques (MIT, KhanAcademy).
+        
+        Format: MDX avec composants <Quiz>, <Glossary>, <Video />.
+        """
 
         if self.model:
             response = await self.model.generate_content_async(prompt)
             return response.text
         else:
+            # PRO-LEVEL MOCK TEMPLATE
             return f"""---
 title: {topic}
 level: {level}
 subject: {subject}
 module: {module_name}
+prerequisites: ["Basic Chemistry", "Introduction to Life Sciences"]
+duration: "45 min"
 ---
 
 # {topic}
 
-This is a demonstration content for the module **{topic}**. 
+<header className="pro-header">
+  **Prerequisites:** {level} Level understanding of Cell Structures.
+  **Objectives:** Master the {topic} fundamentals and its industrial applications.
+</header>
 
-In a real version, the AI would synthesize academic knowledge related to this topic here, based on the best global syllabi.
+## Core Theory
+Welcome to the advanced study of **{topic}**. This module covers the essential mechanisms and latest research findings in the field.
+
+> "Knowledge is the only resource that increases when shared." - OpenPrimer Motto.
+
+## Visual Resources
+<Video id="dQw4w9WgXcQ" title="Core concepts of {topic}" provider="YouTube" />
+
+## Academic References
+- [Wikipedia: {topic}](https://en.wikipedia.org/wiki/{topic.replace(' ', '_')})
+- [MIT OpenCourseWare: {subject}](https://ocw.mit.edu/search/?q={subject})
+
+## Technical Glossary
+<Glossary terms={[
+  {{ term: "Concept A", definition: "First key definition for {topic}" }},
+  {{ term: "Concept B", definition: "Second key definition for {topic}" }}
+]} />
 
 ## Knowledge Check
 <Quiz>
-  <Question q="Is this interactive component working?">
-    <Option text="No, it's broken" />
-    <Option text="Yes, perfectly!" correct />
-    <Option text="Maybe" />
+  <Question q="What is the primary function of {topic}?">
+    <Option text="Option A" />
+    <Option text="Option B" correct />
+    <Option text="Option C" />
   </Question>
 </Quiz>
 """

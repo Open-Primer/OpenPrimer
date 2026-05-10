@@ -9,7 +9,16 @@ export interface UserProfile {
   level: number;
   kp: number;
   isEmailVerified: boolean;
+  isBlocked: boolean;
   joinedAt: string;
+}
+
+export interface SyllabusNode {
+  id: string;
+  title: string;
+  level: string;
+  subject: string;
+  units: string[]; // List of UV IDs
 }
 
 export interface UV {
@@ -18,57 +27,105 @@ export interface UV {
   subject: string;
   level: string;
   lessonsCount: number;
+  languages: string[]; 
+  translationStatus: Record<string, 'complete' | 'ai-draft' | 'none'>;
 }
 
 export interface Curriculum {
   id: string;
   name: string;
   level: string;
+  syllabusId: string;
   uvIds: string[];
 }
 
+export interface ReportCluster {
+  id: string;
+  course: string;
+  issueSummary: string;
+  count: number;
+  status: 'Pending' | 'In Progress' | 'Fixed';
+  aiProposal: string;
+}
+
 // SIMULATED DATABASE STATE
-let users: UserProfile[] = [
-  { id: 'u1', name: 'Silvere Martin', email: 'silvere@openprimer.org', role: 'admin', level: 12, kp: 12450, isEmailVerified: true, joinedAt: '2026-01-10' },
-  { id: 'u2', name: 'Alice Smith', email: 'alice@edu.com', role: 'student', level: 5, kp: 3200, isEmailVerified: true, joinedAt: '2026-03-15' },
-  { id: 'u3', name: 'Bob Jones', email: 'bob@edu.com', role: 'student', level: 8, kp: 6100, isEmailVerified: false, joinedAt: '2026-04-20' }
+let syllabi: SyllabusNode[] = [
+  { id: 'syll-bio-l1', title: 'Biology L1 Core', level: 'L1', subject: 'Biology', units: ['cell-bio', 'molecular-genetics'] }
 ];
 
-let reports = [
-  { id: 'rep_1', course: 'Cell Biology', issue: 'Typo in Section 2', status: 'Pending', user: 'Student #4', date: '2026-05-10T14:00:00Z' },
-  { id: 'rep_2', course: 'Python Intro', issue: 'Broken link in quiz', status: 'Pending', user: 'Student #12', date: '2026-05-10T15:30:00Z' }
+let users: UserProfile[] = [
+  { id: 'u1', name: 'Silvere Martin', email: 'silvere@openprimer.org', role: 'admin', level: 12, kp: 12450, isEmailVerified: true, isBlocked: false, joinedAt: '2026-01-10' },
+  { id: 'u2', name: 'Alice Smith', email: 'alice@edu.com', role: 'student', level: 5, kp: 3200, isEmailVerified: true, isBlocked: false, joinedAt: '2026-03-15' },
+  { id: 'u3', name: 'Bob Jones', email: 'bob@edu.com', role: 'student', level: 8, kp: 6100, isEmailVerified: false, isBlocked: true, joinedAt: '2026-04-20' }
+];
+
+let reportClusters: ReportCluster[] = [
+  { 
+    id: 'cl_1', 
+    course: 'Cell Biology', 
+    issueSummary: 'Mitochondria ATP count discrepancy reported by multiple users.', 
+    count: 42, 
+    status: 'Pending',
+    aiProposal: 'Update ATP yield from 36 to 38 based on latest research.'
+  }
 ];
 
 let uvs: UV[] = [
-  { id: 'cell-bio', name: 'Cell Biology', subject: 'Biology', level: 'L1', lessonsCount: 5 },
-  { id: 'python-intro', name: 'Python Fundamentals', subject: 'CS', level: 'L1', lessonsCount: 10 }
+  { 
+    id: 'cell-bio', 
+    name: 'Cell Biology', 
+    subject: 'Biology', 
+    level: 'L1', 
+    lessonsCount: 5, 
+    languages: ['en', 'fr'], 
+    translationStatus: { 'en': 'complete', 'fr': 'ai-draft' } 
+  },
+  { 
+    id: 'python-intro', 
+    name: 'Python Fundamentals', 
+    subject: 'CS', 
+    level: 'L1', 
+    lessonsCount: 10, 
+    languages: ['en'], 
+    translationStatus: { 'en': 'complete' } 
+  }
 ];
 
 export const authService = {
-  getUser: () => users[0], // Mocking logged in as admin
+  getUser: () => users[0], 
   login: (email: string) => console.log(`Logging in ${email}...`),
   logout: () => console.log("Logging out..."),
   isAdmin: () => users[0].role === 'admin'
 };
 
 export const dbService = {
+  // SYLLABUS & CURRICULUM
+  getSyllabus: async (id: string) => syllabi.find(s => s.id === id),
+  getAllSyllabi: async () => syllabi,
+
   // USER MGMT
   getUsers: async () => users,
   updateUserRole: async (id: string, role: UserRole) => {
     users = users.map(u => u.id === id ? { ...u, role } : u);
   },
+  toggleBlockUser: async (id: string) => {
+    users = users.map(u => u.id === id ? { ...u, isBlocked: !u.isBlocked } : u);
+  },
+  deleteUser: async (id: string) => {
+    users = users.filter(u => u.id !== id);
+  },
   
-  // REPORT MGMT
-  getReports: async () => reports,
-  updateReportStatus: async (id: string, status: string) => {
-    reports = reports.map(r => r.id === id ? { ...r, status } : r);
+  // CLUSTERED REPORT MGMT
+  getReportClusters: async () => reportClusters,
+  approveClusterFix: async (id: string) => {
+    reportClusters = reportClusters.map(c => c.id === id ? { ...c, status: 'Fixed' } : c);
   },
   autoApproveAll: async () => {
-    reports = reports.map(r => ({ ...r, status: 'Fixed (AI)' }));
-    console.log("All reports auto-approved and fixed by AI.");
+    reportClusters = reportClusters.map(c => ({ ...c, status: 'Fixed' }));
   },
 
   // CURRICULUM MGMT
   getUVs: async () => uvs,
-  addUV: async (uv: UV) => { uvs.push(uv); }
+  addUV: async (uv: UV) => { uvs.push(uv); },
+  deleteCurriculum: async (id: string) => { /* logic */ }
 };
