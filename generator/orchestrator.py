@@ -73,20 +73,27 @@ Imagine a bridge: its stability isn't just about the strength of steel, but the 
 ---
 *OpenPrimer Industrial Grade Certified*
 """
-        return content
+        TOPICS TO COVER IN DEPTH:
+        - Newton's Laws (Vectorial form: F = m*a = dP/dt)
+        - Partial Derivatives in potential energy gradients (F = -∇U)
+        - Conservative and Non-conservative forces.
+        - Dynamics of systems with variable mass.
+
+        NO INTRODUCTIONS. NO AI GREETINGS. START DIRECTLY WITH THE RIGOROUS CONTENT.
+        """
+        return prompt
 
     async def process_syllabus(self, syllabus):
         bach = syllabus.get("University", {}).get("Bachelor", {})
         for level, subjects in bach.items():
             for subject, modules in subjects.items():
                 for module, topics in modules.items():
-                    # Simulation d'un module par sujet
                     module_dir = CONTENT_DIR / level / subject / module.replace(" ", "_")
                     module_dir.mkdir(parents=True, exist_ok=True)
                     
                     for i, topic in enumerate(topics, 1):
                         for lang in ["en", "fr"]:
-                            content = await self.generate_real_section(subject, level, module, topic, i, lang)
+                            content = self.generate_module(topic, level, subject, i, lang)
                             file_path = module_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
                             with open(file_path, "w", encoding="utf-8") as f:
                                 f.write(content)

@@ -1,0 +1,85 @@
+---
+title: "Dynamique Fondamentale : Lois de Newton et Formalisme Différentiel"
+level: "L1"
+subject: "Mécanique Classique"
+section: "Dynamique"
+author: "OpenPrimer Elite Engine"
+---
+
+# 1. Nature Vectorielle de la Force et de la Quantité de Mouvement
+
+En mécanique classique newtonienne, le mouvement d'une particule est régi par ses interactions avec son environnement, quantifiées par le concept de **Force** ($\vec{F}$). Pour comprendre la dynamique au niveau universitaire, nous devons dépasser les approximations scalaires et embrasser la nature vectorielle et différentielle de ces lois.
+
+### 1.1 Quantité de Mouvement et Loi de Newton Généralisée
+L'état de mouvement d'une particule est défini par sa **quantité de mouvement** $\vec{p}$, produit de sa masse $m$ par sa vitesse $\vec{v}$ :
+$$\vec{p} = m\vec{v}$$
+
+La deuxième loi de Newton, dans sa forme la plus rigoureuse, stipule que la force nette agissant sur une particule est égale au **taux de variation temporelle** de sa quantité de mouvement :
+$$\sum \vec{F}_{ext} = \frac{d\vec{p}}{dt} = \frac{d(m\vec{v})}{dt}$$
+
+Si la masse $m$ reste constante (cas général en L1 non-relativiste), l'équation se simplifie en :
+$$\vec{F} = m\frac{d\vec{v}}{dt} = m\vec{a}$$
+
+<InteractiveFigure id="vector-force-decomposition" type="canvas">
+  // Prof: Ici nous visualisons la décomposition de F dans la base de Frenet.
+  // F = m(dv/dt * u_t + v^2/R * u_n)
+</InteractiveFigure>
+
+# 2. Équations Différentielles du Mouvement
+
+La deuxième loi est par essence une **équation différentielle ordinaire (EDO) du second ordre**. Résoudre la trajectoire $\vec{r}(t)$ nécessite l'intégration de l'accélération :
+$$m\frac{d^2\vec{r}}{dt^2} = \vec{F}(\vec{r}, \dot{\vec{r}}, t)$$
+
+### 2.1 Exemple : L'Oscillateur Harmonique Linéaire
+Considérons une masse $m$ fixée à un ressort de raideur $k$. La force de rappel est donnée par la loi de Hooke : $F = -kx$. L'EDO devient :
+$$m\ddot{x} + kx = 0 \implies \ddot{x} + \omega_0^2 x = 0$$
+où $\omega_0 = \sqrt{k/m}$ est la pulsation propre.
+
+La solution générale est une combinaison linéaire de sinusoïdes :
+$$x(t) = A\cos(\omega_0 t + \phi)$$
+
+<SolvedProblem>
+**Problème : Oscillations Amorties dans un Fluide Visqueux**
+Une particule de masse $m$ est soumise à une force de rappel $-kx$ et à une force de traînée proportionnelle à sa vitesse $F_d = -b\dot{x}$. 
+
+**1. Dériver l'EDO :**
+$$m\ddot{x} + b\dot{x} + kx = 0$$
+
+**2. Résoudre pour le cas Sous-Amorti ($b < 2\sqrt{mk}$) :**
+On cherche une solution de la forme $x(t) = e^{\lambda t}$. L'équation caractéristique est :
+$$m\lambda^2 + b\lambda + k = 0 \implies \lambda = \frac{-b \pm \sqrt{b^2 - 4mk}}{2m}$$
+En posant $\gamma = b/2m$ et $\omega = \sqrt{\omega_0^2 - \gamma^2}$, la solution est :
+$$x(t) = A e^{-\gamma t} \cos(\omega t + \phi)$$
+
+**Conclusion :** L'amplitude décroît exponentiellement avec le temps à cause de la force non-conservative de frottement.
+</SolvedProblem>
+
+# 3. Travail, Énergie et Gradients de Potentiel
+
+Une force est **conservative** si le travail qu'elle fournit sur une particule se déplaçant entre deux points est indépendant du chemin suivi. Dans ce cas, on définit une **Énergie Potentielle** $U(\vec{r})$.
+
+### 3.1 La Relation de Gradient
+Une force conservative est l'opposé du gradient de son énergie potentielle :
+$$\vec{F} = -\nabla U = - \left( \frac{\partial U}{\partial x}\vec{i} + \frac{\partial U}{\partial y}\vec{j} + \frac{\partial U}{\partial z}\vec{k} \right)$$
+
+Pour un potentiel gravitationnel $U(z) = mgz$ :
+$$\vec{F} = -\frac{\partial (mgz)}{\partial z}\vec{k} = -mg\vec{k}$$
+
+<ActiveRecall>
+**Question :** Pourquoi une force non-conservative (comme le frottement) n'admet-elle pas d'énergie potentielle ?
+**Réponse :** Car le travail fourni dépend de la longueur du chemin. L'intégrale curviligne sur un contour fermé $\oint \vec{F} \cdot d\vec{r} \neq 0$, ce qui signifie que le rotationnel $\nabla \times \vec{F} \neq 0$.
+</ActiveRecall>
+
+# 4. Systèmes à Masse Variable (Équation de la Fusée)
+
+Dans les systèmes où de la masse est éjectée (fusée), il faut revenir à la forme originelle de la deuxième loi : $\vec{F} = \frac{d\vec{p}}{dt}$.
+
+Soit $v_e$ la vitesse d'éjection des gaz relative à la fusée. La force de poussée est :
+$$F_{poussee} = v_e \frac{dm}{dt}$$
+
+La vitesse finale d'une fusée partant du repos est :
+$$v_f = v_e \ln\left(\frac{m_{initiale}}{m_{finale}}\right)$$
+C'est l'**équation de Tsiolkovski**, pilier de l'aérospatiale.
+
+---
+*OpenPrimer Standard Académique v1.6 - Mécanique Classique L1*
