@@ -111,6 +111,9 @@ let uvs: UV[] = [
     subject: 'Biology', 
     level: 'L1', 
     lessonsCount: 5, 
+    rating: 4.8,
+    enrolledCount: 1250,
+    successRate: 92,
     languages: ['en', 'fr'], 
     translationStatus: { 'en': 'complete', 'fr': 'ai-draft' } 
   },
@@ -120,6 +123,9 @@ let uvs: UV[] = [
     subject: 'CS', 
     level: 'L1', 
     lessonsCount: 10, 
+    rating: 4.5,
+    enrolledCount: 3400,
+    successRate: 88,
     languages: ['en'], 
     translationStatus: { 'en': 'complete' } 
   }

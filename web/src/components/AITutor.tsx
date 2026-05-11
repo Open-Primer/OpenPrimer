@@ -17,7 +17,8 @@ export const AITutor = () => {
 
   const handleSend = () => {
     if (!input.trim()) return;
-    const newMessages = [...messages, { role: 'user', content: input }];
+    const newMessage: Message = { role: 'user', content: input };
+    const newMessages = [...messages, newMessage];
     setMessages(newMessages);
     setInput('');
     

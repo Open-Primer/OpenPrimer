@@ -47,7 +47,7 @@ export const Question = ({ q, children }: QuestionProps) => {
     <div className="space-y-4">
       <p className="text-lg font-medium text-slate-100">{q}</p>
       <div className="grid gap-3">
-        {options.map((option, index) => (
+        {options.map((option: any, index) => (
           <button
             key={index}
             onClick={() => handleSelect(index, option.props.correct)}

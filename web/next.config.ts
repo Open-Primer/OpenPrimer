@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    allowedDevOrigins: ["127.0.0.1"],
-  },
   /* config options here */
+  experimental: {
+    // Correcting build error: allowedDevOrigins is not part of ExperimentalConfig in recent versions
+  }
 };
 
 export default nextConfig;

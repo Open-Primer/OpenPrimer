@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Shield, Target, Users, Mail, Phone, MapPin, Globe, Sparkles, 
-  BookOpen, ChevronRight, Search, Filter, Book, Award, Zap, Languages
+  BookOpen, ChevronRight, Search, Filter, Book, Award, Zap, Languages,
+  ShieldCheck, Clock, Star
 } from 'lucide-react';
 import { TopNav, UI_STRINGS } from './RefinedUI';
 import { motion } from 'framer-motion';

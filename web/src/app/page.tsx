@@ -125,8 +125,34 @@ export default function Home() {
            </div>
         </div>
 
-        {/* INDUSTRIAL FOOTER */}
-        <div className="w-full mt-32 pt-16 border-t border-slate-900 grid md:grid-cols-4 gap-12 text-sm">
+        {/* MISSION SECTION */}
+        <section className="w-full mt-40 grid md:grid-cols-2 gap-16 items-center">
+           <div className="space-y-8">
+              <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">
+                 <Globe className="w-4 h-4" /> Global Mission
+              </div>
+              <h2 className="text-4xl font-black tracking-tighter text-white">Knowledge without borders.</h2>
+              <p className="text-slate-500 leading-relaxed italic">
+                "Our objective is to ensure that no student, regardless of their language or location, is ever denied access to the highest level of academic rigor."
+              </p>
+              <Link href="/mission" className="flex items-center gap-2 text-blue-500 font-bold hover:gap-4 transition-all">
+                Learn about our vision <ArrowRight className="w-4 h-4" />
+              </Link>
+           </div>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center">
+                 <p className="text-3xl font-black text-white">5</p>
+                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Languages</p>
+              </div>
+              <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center mt-8">
+                 <p className="text-3xl font-black text-white">Elite</p>
+                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Standard</p>
+              </div>
+           </div>
+        </section>
+
+        {/* TEAM & CONTACT QUICK LINKS */}
+        <div className="w-full mt-40 pt-16 border-t border-slate-900 grid md:grid-cols-4 gap-12 text-sm">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <OpenPrimerIcon className="w-6 h-6" />

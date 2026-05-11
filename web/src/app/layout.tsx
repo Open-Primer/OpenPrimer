@@ -6,8 +6,8 @@ import { Gatekeeper } from "@/components/Gatekeeper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OpenPrimer | L'Encyclopédie du Savoir Universel",
-  description: "Accédez gratuitement à tous les cours du CP à la Licence, générés par IA et validés par la communauté.",
+  title: "OpenPrimer | Universal Academic Repository",
+  description: "Access the entire global academic knowledge from Primary School to Bachelor degree, AI-powered and community-certified.",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="dark">
+    <html lang="en" className="dark">
       <body className={`${inter.className} selection:bg-blue-500/30`}>
         <Gatekeeper>
           {children}

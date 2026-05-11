@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { getPageContent, getNavigationTree } from '@/lib/content';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { notFound } from 'next/navigation';

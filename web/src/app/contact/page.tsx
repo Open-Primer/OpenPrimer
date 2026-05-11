@@ -1,2 +1,5 @@
-import { ContactPage } from '@/components/StaticPages';
-export default function Contact() { return <ContactPage />; }
+import { ContactPage } from "@/components/StaticPages";
+
+export default function Page() {
+  return <ContactPage />;
+}

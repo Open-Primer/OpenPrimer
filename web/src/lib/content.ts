@@ -26,7 +26,7 @@ export function getNavigationTree(dir = ''): NavItem[] {
 
   const items = fs.readdirSync(fullPath, { withFileTypes: true });
   
-  return items.map(item => {
+  return items.map((item): NavItem => {
     const relativePath = path.join(dir, item.name).split(path.sep).join('/');
     if (item.isDirectory()) {
       return {

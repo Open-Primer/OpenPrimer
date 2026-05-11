@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { TopNav, AITutorOverlay, ReportInput } from '@/components/RefinedUI';
+import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;

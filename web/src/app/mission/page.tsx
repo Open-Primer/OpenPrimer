@@ -1,2 +1,5 @@
-import { MissionPage } from '@/components/StaticPages';
-export default function Mission() { return <MissionPage />; }
+import { MissionPage } from "@/components/StaticPages";
+
+export default function Page() {
+  return <MissionPage />;
+}

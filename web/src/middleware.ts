@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/tutor') || 
       request.nextUrl.pathname.startsWith('/api/generate')) {
     
-    const ip = request.ip || 'anonymous';
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
     const now = Date.now();
     const userData = rateLimitStore.get(ip) || { count: 0, lastReset: now };
 
