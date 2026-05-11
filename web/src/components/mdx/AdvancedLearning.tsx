@@ -74,7 +74,7 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
       {[1, 2, 3, 4, 5].map(lvl => (
         <button key={lvl} className="flex-1 h-12 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500 text-slate-500 hover:text-white font-black transition-all">
           {lvl}
-        </li>
+        </button>
       ))}
     </div>
   </div>
