@@ -220,3 +220,74 @@ export const ContactPage = () => (
     <Footer />
   </div>
 );
+
+// --- PAGE: SYLLABUS ---
+export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
+  const course = {
+    title,
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Mathematics L1 (Calculus)", "General Physics (Introduction)"],
+    content: [
+      { unit: "Kinematics", modules: ["Position Vectors", "Polar Coordinates", "Frenet Frames"] },
+      { unit: "Dynamics", modules: ["Newton's Laws", "Differential Equations", "Momentum"] },
+      { unit: "Work & Energy", modules: ["Work-Energy Theorem", "Potential Energy", "Conservative Forces"] }
+    ]
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
+      <TopNav />
+      <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+          <h1 className="text-4xl font-black tracking-tighter">{course.title}</h1>
+          <button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20">
+             Start Course
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+           <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
+              <Award className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Academic Credits</p>
+              <p className="text-2xl font-black text-white">{course.ects} ECTS</p>
+           </div>
+           <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
+              <Clock className="w-8 h-8 text-blue-500 mx-auto mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Expected Time</p>
+              <p className="text-2xl font-black text-white">{course.hours} Hours</p>
+           </div>
+           <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
+              <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prerequisites</p>
+              <p className="text-[10px] font-bold text-slate-400 leading-tight mt-2">{course.prerequisites.join(' • ')}</p>
+           </div>
+        </div>
+
+        <div className="space-y-12">
+          {course.content.map(unit => (
+            <div key={unit.unit}>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-6 flex items-center gap-4">
+                 <span className="w-8 h-px bg-blue-500/30" /> {unit.unit}
+              </h3>
+              <div className="grid gap-4">
+                {unit.modules.map(mod => (
+                  <div key={mod} className="flex items-center justify-between p-6 bg-slate-900/20 border border-slate-800 rounded-3xl group hover:border-blue-500/30 transition-all cursor-pointer">
+                    <div className="flex items-center gap-4">
+                       <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:text-blue-400 transition-colors">
+                          <BookOpen className="w-4 h-4" />
+                       </div>
+                       <span className="font-bold text-slate-300 group-hover:text-white transition-colors">{mod}</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-800 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+};

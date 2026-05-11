@@ -23,6 +23,14 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
+  const [persona, setPersona] = useState('Pragmatic');
+
+  const QUICK_ACTIONS = [
+    { label: "Give Example", icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },
+    { label: "Tell Story", icon: <Bookmark className="w-3 h-3" />, prompt: "Tell me a historical anecdote about this discovery." },
+    { label: "Simplify", icon: <Globe className="w-3 h-3" />, prompt: "Explain this to me as if I were a complete beginner." },
+    { label: "Test Me", icon: <CheckCircle className="w-3 h-3" />, prompt: "Give me a challenge question to test my understanding." }
+  ];
 
   // Persist history
   useEffect(() => {
@@ -38,12 +46,13 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
     }
   }, [messages, pageContext, lang]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { role: 'user', content: input }]);
-    setInput('');
+  const handleSend = (text?: string) => {
+    const content = text || input;
+    if (!content.trim()) return;
+    setMessages(prev => [...prev, { role: 'user', content }]);
+    if (!text) setInput('');
     setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'ZH' ? "正在进行学术分析..." : "Academic analysis in progress..." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'ZH' ? "正在进行学术分析..." : `[${persona} Mode] Academic analysis in progress...` }]);
     }, 1200);
   };
 
@@ -51,34 +60,57 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-96 h-[500px] rounded-[32px] bg-slate-900/95 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-400" />
-                <span className="font-black text-[10px] uppercase tracking-widest opacity-80">{t.tutor}</span>
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-[400px] h-[600px] rounded-[40px] bg-slate-900/95 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-slate-800/50 flex items-center justify-between bg-slate-950/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
+                   <select 
+                     value={persona} 
+                     onChange={(e) => setPersona(e.target.value)}
+                     className="bg-transparent text-sm font-bold text-white focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
+                   >
+                     <option value="Socratic">Socratic Method</option>
+                     <option value="Pragmatic">Pragmatic Mode</option>
+                     <option value="Academic">Rigorous Academic</option>
+                   </select>
+                </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+              <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
+
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20'}`}>
+                  <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
                     {msg.content}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="p-5 bg-slate-950/30 border-t border-slate-800/50">
+
+            <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
+               {QUICK_ACTIONS.map(qa => (
+                 <button key={qa.label} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left">
+                   {qa.icon} {qa.label}
+                 </button>
+               ))}
+            </div>
+
+            <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
               <div className="relative">
-                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t.placeholder} className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600" />
-                <button onClick={handleSend} className="absolute right-3 top-2.5 p-1.5 text-blue-500 hover:text-blue-400 transition-colors"><Send className="w-4 h-4" /></button>
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600" />
+                <button onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all"><Send className="w-4 h-4" /></button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpen(!isOpen)} className="w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl shadow-blue-600/40 flex items-center justify-center relative border border-white/10">
-        <MessageSquare className="w-6 h-6" />
+      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpen(!isOpen)} className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group">
+        <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
       </motion.button>
     </div>
   );
