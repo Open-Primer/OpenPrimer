@@ -13,6 +13,15 @@ export default function AdminCurriculumPage() {
   const [view, setView] = useState<'pipeline' | 'feedback'>('pipeline');
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [autoRevision, setAutoRevision] = useState(false);
+  const [input, setInput] = useState('');
+  const [persona, setPersona] = useState('Pragmatic');
+
+  /* 
+     TUTOR PERSONA LOGIC:
+     - Socratic: Encourages discovery via questions.
+     - Pragmatic: Focuses on analogies and real-world examples.
+     - Academic: Focuses on proofs and technical rigor.
+  */
 
   const [jobs, setJobs] = useState([
     { 
@@ -35,10 +44,13 @@ export default function AdminCurriculumPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-8">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter flex items-center gap-4">
-               <ShieldCheck className="w-10 h-10 text-emerald-500" /> Academic Ops
+            {/* INSTITUTIONAL HEADER: Tracks curriculum health and governance */}
+            <h1 className="text-5xl font-black tracking-tighter flex items-center gap-4 text-white">
+              <Database className="w-10 h-10 text-blue-500" /> Academic Governance
             </h1>
-            <div className="flex gap-4 mt-4">
+            <p className="text-slate-500 font-medium mt-2 uppercase tracking-widest text-[10px]">Curriculum Lifecycle & Quality Assurance</p>
+            
+            <div className="flex gap-4 mt-8">
                <button onClick={() => setView('pipeline')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${view === 'pipeline' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-white'}`}>
                   Pipeline Monitor
                </button>

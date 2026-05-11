@@ -9,7 +9,27 @@ CONTENT_DIR = Path("../content")
 CONFIG_DIR = Path("./config")
 
 class OpenPrimerFeynmanElite:
+    """
+    OpenPrimer Elite Orchestrator (v52.0)
+    ------------------------------------
+    The core academic engine responsible for the lifecycle of high-density curricula.
+    
+    WORKFLOW:
+    1. Phase 1 (Syllabus): Generates a structural JSON blueprint (UVs, Modules).
+    2. Phase 2 (Production): Triggers mass generation of 5000+ word MDX modules.
+    
+    STANDARDS:
+    - Elite v1.7: Mandatory historical context, pedagogical intuition, and rigorous math.
+    - Multi-Lingual: Concurrent generation in 5 languages (EN, FR, ES, DE, ZH).
+    - Institutional: Tracks ECTS credits, prerequisites, and expected workload.
+    """
+    
     def __init__(self, api_key=None):
+        # Industrial Constants
+        self.target_languages = ["en", "fr", "es", "de", "zh"]
+        self.min_density_words = 5000
+        self.curator_retries = 3
+        
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.version = "1.7.0-Gold"
         self.max_attempts = 3
