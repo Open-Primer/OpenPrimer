@@ -24,6 +24,20 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
 
+  // Persist history
+  useEffect(() => {
+    const key = `op_tutor_hist_${pageContext || 'global'}_${lang}`;
+    const saved = localStorage.getItem(key);
+    if (saved) setMessages(JSON.parse(saved));
+  }, [pageContext, lang]);
+
+  useEffect(() => {
+    if (messages.length > 1) {
+      const key = `op_tutor_hist_${pageContext || 'global'}_${lang}`;
+      localStorage.setItem(key, JSON.stringify(messages.slice(-10))); // Keep last 10
+    }
+  }, [messages, pageContext, lang]);
+
   const handleSend = () => {
     if (!input.trim()) return;
     setMessages([...messages, { role: 'user', content: input }]);
