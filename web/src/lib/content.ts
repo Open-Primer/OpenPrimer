@@ -37,16 +37,29 @@ export function getNavigationTree(dir = ''): NavItem[] {
       };
     }
     return {
-      name: item.name.replace('.mdx', '').replace(/_/g, ' '),
+      name: item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '').replace(/_/g, ' '),
       type: 'file',
-      path: relativePath.replace('.mdx', '')
+      path: relativePath.replace(/\.(en|fr|es|de|zh)\.mdx$/, '')
     };
   }).sort((a, b) => a.type === 'folder' ? -1 : 1);
 }
 
 export async function getPageContent(slug: string[]) {
-  const filePath = path.join(CONTENT_PATH, ...slug) + '.mdx';
-  if (!fs.existsSync(filePath)) return null;
+  const baseFilePath = path.join(CONTENT_PATH, ...slug);
+  
+  // Try exact .mdx first (unlikely given naming convention)
+  let filePath = baseFilePath + '.mdx';
+  
+  if (!fs.existsSync(filePath)) {
+    // Try common language suffixes
+    const langs = ['.en.mdx', '.fr.mdx', '.es.mdx', '.de.mdx', '.zh.mdx'];
+    const found = langs.find(ext => fs.existsSync(baseFilePath + ext));
+    if (found) {
+      filePath = baseFilePath + found;
+    } else {
+      return null;
+    }
+  }
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(fileContent);
