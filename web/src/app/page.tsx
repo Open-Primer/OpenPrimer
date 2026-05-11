@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
@@ -9,13 +9,21 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   const [search, setSearch] = useState('');
+  const [results, setResults] = useState([]);
 
-  const examples = [
-    { label: "Biology L1", query: "biology" },
-    { label: "Introduction to Programming", query: "programming" },
-    { label: "Constitutional Law", query: "law" },
-    { label: "Point Mechanics", query: "physics" }
-  ];
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (search.length < 2) {
+        setResults([]);
+        return;
+      }
+      const res = await fetch(`/api/search?q=${search}`);
+      const data = await res.json();
+      setResults(data);
+    };
+    const timer = setTimeout(fetchResults, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
@@ -50,7 +58,7 @@ export default function Home() {
         </div>
 
         {/* Search Bar */}
-        <div className="w-full max-w-2xl mb-12">
+        <div className="w-full max-w-2xl mb-12 relative z-[60]">
           <div className="relative group">
             <div className="absolute inset-0 bg-blue-600/20 blur-2xl group-focus-within:bg-blue-600/40 transition-all opacity-0 group-focus-within:opacity-100" />
             <div className="relative flex items-center bg-slate-900/80 border border-slate-800 p-2 rounded-[32px] backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl">
@@ -63,13 +71,29 @@ export default function Home() {
                 placeholder="What do you want to learn today?"
                 className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
               />
-              <Link 
-                href={search ? `/L1/Biology/Cell_Biology/introduction_to_the_cell` : '#'} 
-                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20"
-              >
-                <ArrowRight className="w-6 h-6" />
-              </Link>
             </div>
+            
+            {/* Live Results Dropdown */}
+            {results.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full left-0 right-0 mt-4 bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-2xl shadow-2xl overflow-hidden p-2"
+              >
+                {results.map((course) => (
+                  <Link 
+                    key={course.id}
+                    href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
+                    className="flex items-center justify-between p-4 hover:bg-blue-600/10 rounded-2xl transition-all group"
+                  >
+                    <div>
+                      <p className="text-sm font-black text-white">{course.title}</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-500">{course.subject} • {course.level}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                ))}
+              </motion.div>
+            )}
           </div>
           
           {/* Examples */}
