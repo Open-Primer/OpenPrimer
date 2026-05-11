@@ -7,6 +7,7 @@ import { Quiz, Question, Option } from '@/components/mdx/Quiz';
 import { Glossary } from '@/components/mdx/Glossary';
 import { Video } from '@/components/mdx/Video';
 import { FillInBlanks, MetaNote } from '@/components/mdx/Interactive';
+import { SolvedProblem, Summary, SelfEval } from '@/components/mdx/AdvancedLearning';
 import { CourseClientWrapper } from '@/components/CourseClientWrapper';
 
 const components = {
@@ -17,6 +18,9 @@ const components = {
   Video,
   FillInBlanks,
   MetaNote,
+  SolvedProblem,
+  Summary,
+  SelfEval,
 };
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
