@@ -72,43 +72,28 @@ class OpenPrimerFeynmanElite:
             print(f"Config {config_file} missing.")
             return
 
-        with open(config_file, "r", encoding="utf-8") as f:
-            config = json.load(f)
+        with open(syllabus_file, "r", encoding="utf-8") as f:
+            syllabus = json.load(f)
 
-        for task in config.get("tasks", []):
-            subject = task["subject"]
-            level = task["level"]
-            syllabus = task.get("syllabus", []) # Should be fetched from syllabus_orchestrator
+        print(f"🚀 Industrial Production Starting for: {syllabus['title']}")
+        
+        for unit in syllabus.get("units", []):
+            unit_name = unit.get("name", "General")
+            unit_dir = p / unit_name.replace(" ", "_")
+            unit_dir.mkdir(parents=True, exist_ok=True)
             
-            for unit in syllabus:
-                unit_dir = CONTENT_DIR / level / subject / unit["name"].replace(" ", "_")
-                unit_dir.mkdir(parents=True, exist_ok=True)
-                
-                for topic in unit["modules"]:
-                    for lang in TARGET_LANGUAGES:
-                        content = await self.generate_module(topic, level, subject, unit["name"], lang)
-                        file_path = unit_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            f.write(content)
-                    print(f"        Module {topic} finalized.")
+            for topic in unit.get("modules", []):
+                for lang in TARGET_LANGUAGES:
+                    content = await self.generate_module(topic, syllabus["level"], syllabus["subject"], unit_name, lang)
+                    file_path = unit_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                print(f"      ✅ Module [{topic}] Finalized in all 5 languages.")
 
 async def main():
-    # Final production config simulation
-    industrial_config = {
-        "tasks": [
-            {
-                "subject": "Classical Mechanics",
-                "level": "L1",
-                "syllabus": [{"name": "Dynamics", "modules": ["Newton's Laws", "Energy Conservation"]}]
-            }
-        ]
-    }
-    
-    with open("industrial_config.json", "w", encoding="utf-8") as f:
-        json.dump(industrial_config, f, indent=2)
-
     generator = OpenPrimerFeynmanElite()
-    await generator.run_industrial_task("industrial_config.json")
+    # Triggering Classical Mechanics specifically
+    await generator.process_local_syllabus("../content/L1/Physics/Classical_Mechanics")
 
 if __name__ == "__main__":
     asyncio.run(main())

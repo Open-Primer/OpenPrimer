@@ -1,0 +1,31 @@
+{
+  "title": "Classical Mechanics L1: Fundamental Principles",
+  "level": "L1",
+  "subject": "Physics",
+  "units": [
+    {
+      "name": "Kinematics",
+      "modules": [
+        "Position and Trajectory Vectors",
+        "Velocity and Acceleration Formalism",
+        "Circular Motion and Frenet Frames"
+      ]
+    },
+    {
+      "name": "Dynamics",
+      "modules": [
+        "Newton's Laws and Momentum",
+        "Differential Equations of Motion",
+        "Variable Mass Systems"
+      ]
+    },
+    {
+      "name": "Work and Energy",
+      "modules": [
+        "Work-Energy Theorem",
+        "Conservative Forces and Potential Energy",
+        "Equilibrium and Stability Analysis"
+      ]
+    }
+  ]
+}
