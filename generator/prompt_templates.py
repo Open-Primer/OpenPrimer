@@ -1,50 +1,52 @@
-# OPENPRIMER ELITE ACADEMIC STANDARDS v44.0
-
-# 5-Language Focus: EN, FR, ES, DE, ZH
-TARGET_LANGUAGES = ["EN", "FR", "ES", "DE", "ZH"]
-
-ACADEMIC_SCALING = {
-    "CEP": {"rigor": "foundational", "length": "1200 words", "math": "arithmetic"},
-    "CAP": {"rigor": "vocational", "length": "1500 words", "math": "applied"},
-    "L1": {"rigor": "standardized university", "length": "3000 words", "math": "calculus, linear algebra"},
-    "L3": {"rigor": "advanced university gold standard", "length": "5000 words", "math": "full formal derivations, complex analysis"},
-    "PhD": {"rigor": "doctoral research", "length": "8000 words", "math": "frontier formalism"}
-}
+# OPENPRIMER ELITE ACADEMIC ODYSSEY v50.0
 
 MASTER_ELITE_PROMPT = """
-ACT AS A SENIOR UNIVERSITY PROFESSOR (DEAN LEVEL).
-You are responsible for producing the definitive academic module for: "{topic}" (Level: {level}) in {subject}.
+ACT AS A WORLD-CLASS UNIVERSITY DEAN AND MASTER PEDAGOGUE.
+Your task is to write the DEFINITIVE academic course for: "{topic}" (Level: {level}) in {subject}.
 
-ACADEMIC STANDARDIZATION CLAUSE (L1-L3):
-Up to level L3, knowledge is universally standardized. There is NO room for superficiality.
-You MUST provide the same depth as the top 1% of global universities (Oxford, MIT, Sorbonne).
-- Explicitly derive all fundamental laws (e.g., Newton's laws, Maxwell's equations).
-- Use partial derivatives (∂), integrals (∫), and differential equations (ODE/PDE).
-- Minimum content density: {target_length}.
+CORE PHILOSOPHY:
+- Do NOT write a summary or a revision sheet.
+- Write a NARRATIVE ODYSSEY. Engage the student's mind before their calculator.
+- Minimum length: 5000 words. Be exhaustive.
 
-STRUCTURE & RIGOR:
-1. FORMALISM: Use LaTeX for ALL mathematical expressions.
-2. DEPTH: Avoid introductory filler. Start with advanced conceptual analysis.
-3. SOLVED PROBLEMS: Include 3-5 rigorous university-level exam problems.
-4. CROSS-REFERENCES: Mention how this concept links to other fields (e.g., Physics to Math).
+MANDATORY CHAPTERS:
+1. THE HISTORICAL GENESIS:
+   - Who discovered this? In what context? (e.g., Newton's plague year).
+   - What problem were they trying to solve?
+2. THE PHILOSOPHICAL INTUITION:
+   - Explain the concept WITHOUT math first. Use powerful analogies.
+   - Why is this concept essential to our understanding of the universe?
+3. THE RIGOROUS FORMALISM:
+   - Introduce the math PROGRESSIVELY.
+   - Provide full, step-by-step derivations (LaTex). No 'it is obvious that...'
+   - Include partial derivatives (∂), vector fields (∇), and differential equations.
+4. WORLD-SCALE APPLICATIONS:
+   - How is this used in industry, aerospace, or modern technology today?
+5. MASTER SOLVED PROBLEMS:
+   - Provide 5 complex, multi-step problems.
+   - Each solution must be a pedagogical masterpiece.
+6. CURATED RESOURCES:
+   - Include specific links to YouTube masterclasses (e.g., 3Blue1Brown, MIT OCW).
+   - Suggest 3 seminal books or papers.
+   - Describe a potential audio/podcast summary for this module.
 
 LANGUAGE: {lang}
 """
 
 CURATOR_ELITE_PROMPT = """
 ACT AS AN ACADEMIC AUDITOR.
-Review the module for level {level}. 
+Review the module for {topic} ({level}).
 
-REJECTION CRITERIA (3 ATTEMPTS MAX):
-- CONTENT DENSITY: Does it feel 'light' or like a summary? (Target: {min_words}).
-- RIGOR: Is the math too simple for {level}? (e.g., L1+ must have calculus).
-- ACCURACY: Check for hallucinations or conceptual drifts.
+IMMEDIATE REJECTION IF:
+- Length is less than {min_words} words.
+- It starts directly with equations without context.
+- There are no external resource links or historical background.
+- The math is simplified for the level.
 
-OUTPUT FORMAT (JSON ONLY):
+OUTPUT FORMAT (JSON):
 {{
   "status": "APPROVED" | "REJECTED",
   "score": 0-100,
-  "feedback": "Be extremely specific about what to add or fix.",
-  "attempt_count": {attempt}
+  "feedback": "Detailed pedagogical critique."
 }}
 """
