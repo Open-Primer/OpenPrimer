@@ -1,0 +1,74 @@
+---
+title: "Fundamental Principles of Dynamics: Newtonian Formalism"
+level: "L1"
+subject: "Classical Mechanics"
+unit: "Newtonian_Dynamics"
+module: "Fundamental_Principles_of_Dynamics"
+author: "OpenPrimer Elite Engine v1.7"
+---
+
+# 1. Axiomatic Foundations of Classical Dynamics
+
+Newtonian mechanics is built upon three fundamental axioms that describe the relationship between the motion of a body and the forces acting upon it. At the university level (L1), we must move beyond the basic definitions and explore the differential and vectorial consequences of these laws.
+
+### 1.1 The Concept of the Inertial Frame
+Newton's laws are only valid in a specific class of reference frames called **Inertial Reference Frames** (or Galilean frames). An inertial frame is one in which a particle not subject to any net force moves with constant velocity.
+
+The transition between two inertial frames $R$ and $R'$ moving at constant velocity $\vec{V}$ is given by the **Galilean Transformation**:
+$$\vec{r}' = \vec{r} - \vec{V}t$$
+$$\vec{v}' = \vec{v} - \vec{V}$$
+$$\vec{a}' = \vec{a}$$
+
+Since acceleration is invariant under Galilean transformations, the laws of dynamics remain the same in all inertial frames.
+
+# 2. Newton's Second Law: The Differential Perspective
+
+The most critical equation in classical mechanics relates the net force $\sum \vec{F}$ to the rate of change of linear momentum $\vec{p}$:
+$$\sum \vec{F}_{ext} = \frac{d\vec{p}}{dt}$$
+
+For a particle of constant mass $m$, this becomes the second-order ordinary differential equation (ODE):
+$$m\frac{d^2\vec{r}}{dt^2} = \sum \vec{F}_{ext}(\vec{r}, \dot{\vec{r}}, t)$$
+
+### 2.1 Projectile Motion with Viscous Drag
+Consider a particle under gravity and linear air resistance $\vec{F}_d = -b\vec{v}$. The equation of motion is:
+$$m\frac{d\vec{v}}{dt} = m\vec{g} - b\vec{v}$$
+
+This is a first-order linear differential equation for $\vec{v}(t)$. Separating variables for the vertical component:
+$$m\frac{dv_z}{dt} = -mg - bv_z \implies \frac{dv_z}{v_z + mg/b} = -\frac{b}{m}dt$$
+
+Integrating gives the terminal velocity $v_T = -mg/b$:
+$$v_z(t) = (v_{z0} - v_T)e^{-bt/m} + v_T$$
+
+<InteractiveFigure id="projectile-drag-canvas" type="canvas">
+  // Context: Visualization of the trajectory with and without drag.
+  // Equation: y(t) = (m/b)(v_{z0} + mg/b)(1 - e^{-bt/m}) - (mg/b)t
+</InteractiveFigure>
+
+<SolvedProblem>
+**Problem: The Brachistochrone Challenge (Simplified)**
+Find the acceleration of a particle sliding down a frictionless wire defined by the curve $y = f(x)$. 
+
+**Solution Path:**
+1. Define the forces: Gravity $\vec{P} = mg\vec{j}$ and Normal Force $\vec{N}$ (perpendicular to the tangent).
+2. Project Newton's Second Law onto the tangent $\vec{u}_t$ in Frenet coordinates:
+$$F_t = m\frac{dv}{dt} \implies mg \sin(\theta) = m\frac{dv}{dt}$$
+where $\theta$ is the local slope.
+3. Use the conservation of energy (since $N$ does no work):
+$$1/2 mv^2 + mgy = Constant$$
+4. Differentiate with respect to time to verify the projection.
+</SolvedProblem>
+
+# 3. Systems with Variable Mass: The Tsiolkovsky Equation
+
+In cases where mass $m(t)$ changes due to ejection or accretion, we must use the general form:
+$$\vec{F}_{ext} + \vec{v}_{rel}\frac{dm}{dt} = m\frac{d\vec{v}}{dt}$$
+where $\vec{v}_{rel}$ is the velocity of the ejected mass relative to the system.
+
+For a rocket in vacuum ($\vec{F}_{ext} = 0$):
+$$-v_e \frac{dm}{dt} = m \frac{dv}{dt} \implies dv = -v_e \frac{dm}{m}$$
+
+Integrating from $m_i$ to $m_f$:
+$$\Delta v = v_e \ln\left(\frac{m_i}{m_f}\right)$$
+
+---
+*OpenPrimer Gold Standard v1.7 - Elite Academic Content*

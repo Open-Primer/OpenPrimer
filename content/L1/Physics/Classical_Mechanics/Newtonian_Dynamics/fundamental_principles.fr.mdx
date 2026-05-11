@@ -1,0 +1,67 @@
+---
+title: "Principes Fondamentaux de la Dynamique : Formalisme Newtonien"
+level: "L1"
+subject: "Mécanique Classique"
+unit: "Newtonian_Dynamics"
+module: "Fundamental_Principles_of_Dynamics"
+author: "OpenPrimer Elite Engine v1.7"
+---
+
+# 1. Fondements Axiomatiques de la Dynamique Classique
+
+La mécanique newtonienne repose sur trois axiomes fondamentaux décrivant la relation entre le mouvement d'un corps et les forces qui s'y exercent. Au niveau universitaire (L1), il est impératif d'aller au-delà des définitions de base pour explorer les conséquences différentielles et vectorielles de ces lois.
+
+### 1.1 Le Concept de Référentiel Galiléen
+Les lois de Newton ne sont valides que dans une classe spécifique de référentiels appelés **Référentiels Galiléens** (ou inertiels). Un référentiel galiléen est un référentiel dans lequel une particule libre (soumise à aucune force) possède un mouvement rectiligne uniforme.
+
+Le passage entre deux référentiels galiléens $R$ et $R'$ animés d'une vitesse constante $\vec{V}$ est donné par la **Transformation de Galilée** :
+$$\vec{r}' = \vec{r} - \vec{V}t$$
+$$\vec{v}' = \vec{v} - \vec{V}$$
+$$\vec{a}' = \vec{a}$$
+
+L'accélération étant invariante par transformation galiléenne, les lois de la dynamique sont identiques dans tous les référentiels galiléens.
+
+# 2. Deuxième Loi de Newton : Perspective Différentielle
+
+L'équation fondamentale de la dynamique relie la force nette $\sum \vec{F}$ à la variation de la quantité de mouvement $\vec{p}$ :
+$$\sum \vec{F}_{ext} = \frac{d\vec{p}}{dt}$$
+
+Pour un point matériel de masse $m$ constante, cela devient une équation différentielle ordinaire (EDO) du second ordre :
+$$m\frac{d^2\vec{r}}{dt^2} = \sum \vec{F}_{ext}(\vec{r}, \dot{\vec{r}}, t)$$
+
+### 2.1 Mouvement d'un Projectile avec Frottement Visqueux
+Considérons une particule soumise à la gravité et à une résistance de l'air linéaire $\vec{F}_d = -b\vec{v}$. L'équation du mouvement est :
+$$m\frac{d\vec{v}}{dt} = m\vec{g} - b\vec{v}$$
+
+Il s'agit d'une EDO linéaire du premier ordre pour $\vec{v}(t)$. En séparant les variables pour la composante verticale :
+$$m\frac{dv_z}{dt} = -mg - bv_z \implies \frac{dv_z}{v_z + mg/b} = -\frac{b}{m}dt$$
+
+L'intégration donne la vitesse limite $v_L = -mg/b$ :
+$$v_z(t) = (v_{z0} - v_L)e^{-bt/m} + v_L$$
+
+<InteractiveFigure id="projectile-drag-canvas" type="canvas">
+  // Contexte : Visualisation de la trajectoire avec et sans frottement.
+</InteractiveFigure>
+
+<SolvedProblem>
+**Problème : Le Défi de la Brachistochrone (Simplifié)**
+Trouver l'accélération d'une particule glissant sans frottement sur un fil défini par la courbe $y = f(x)$. 
+
+**Chemin de Résolution :**
+1. Définir les forces : Poids $\vec{P} = mg\vec{j}$ et Réaction normale $\vec{N}$.
+2. Projeter la loi de Newton sur la tangente $\vec{u}_t$ dans la base de Frenet :
+$$F_t = m\frac{dv}{dt} \implies mg \sin(\theta) = m\frac{dv}{dt}$$
+3. Utiliser la conservation de l'énergie (car $N$ ne travaille pas).
+</SolvedProblem>
+
+# 3. Systèmes à Masse Variable : Équation de Tsiolkovski
+
+Lorsque la masse $m(t)$ varie (éjection de gaz), il faut utiliser la forme générale de la loi :
+$$\vec{F}_{ext} + \vec{v}_{rel}\frac{dm}{dt} = m\frac{d\vec{v}}{dt}$$
+où $\vec{v}_{rel}$ est la vitesse d'éjection relative au système.
+
+Pour une fusée dans le vide ($\vec{F}_{ext} = 0$) :
+$$\Delta v = v_e \ln\left(\frac{m_{initiale}}{m_{finale}}\right)$$
+
+---
+*Standard Gold OpenPrimer v1.7 - Contenu Académique Elite*

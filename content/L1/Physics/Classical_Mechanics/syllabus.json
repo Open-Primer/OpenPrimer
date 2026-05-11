@@ -1,30 +1,42 @@
 {
-  "title": "Classical Mechanics L1: Fundamental Principles",
+  "title": "Classical Mechanics L1: Theoretical & Applied Foundations",
   "level": "L1",
   "subject": "Physics",
   "units": [
     {
-      "name": "Kinematics",
+      "name": "Kinematics_of_a_Particle",
       "modules": [
-        "Position and Trajectory Vectors",
-        "Velocity and Acceleration Formalism",
-        "Circular Motion and Frenet Frames"
+        "Vector_Space_and_Coordinate_Systems",
+        "Velocity_and_Acceleration_in_Polar_Coordinates",
+        "Frenet_Serret_Frames_and_Curvilinear_Motion",
+        "Relative_Motion_and_Galilean_Transformations"
       ]
     },
     {
-      "name": "Dynamics",
+      "name": "Newtonian_Dynamics",
       "modules": [
-        "Newton's Laws and Momentum",
-        "Differential Equations of Motion",
-        "Variable Mass Systems"
+        "Fundamental_Principles_of_Dynamics",
+        "Linear_Momentum_and_Impulse",
+        "Work_Energy_Theorem_and_Power",
+        "Conservative_Systems_and_Potential_Energy_Gradients"
       ]
     },
     {
-      "name": "Work and Energy",
+      "name": "Advanced_Dynamics",
       "modules": [
-        "Work-Energy Theorem",
-        "Conservative Forces and Potential Energy",
-        "Equilibrium and Stability Analysis"
+        "Angular_Momentum_Theorem",
+        "Central_Forces_and_Kepler_Laws",
+        "Non_Inertial_Frames_and_Coriolis_Forces",
+        "Systems_with_Variable_Mass_Dynamics"
+      ]
+    },
+    {
+      "name": "Oscillations_and_Stability",
+      "modules": [
+        "Harmonic_Oscillators_Differential_Formalism",
+        "Damped_and_Forced_Oscillations",
+        "Resonance_Phenomena_and_Energy_Dissipation",
+        "Equilibrium_Points_and_Stability_Analysis"
       ]
     }
   ]
