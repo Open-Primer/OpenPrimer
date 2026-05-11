@@ -168,6 +168,9 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Identity</p>
                  <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
                </div>
+               <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
+                 <Settings className="w-4 h-4" /> Administration
+               </Link>
                <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                  <User className="w-4 h-4" /> {t.profile}
                </Link>
