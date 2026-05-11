@@ -11,15 +11,15 @@ export default function Home() {
   const [search, setSearch] = useState('');
   
   const examples = [
-    { label: "Physique L1", query: "physique" },
-    { label: "Biologie Cellulaire", query: "biologie" },
-    { label: "Droit Constitutionnel", query: "droit" },
-    { label: "Mécanique du Point", query: "mecanique" }
+    { label: "Physics L1", query: "physics" },
+    { label: "Cell Biology", query: "biology" },
+    { label: "Constitutional Law", query: "law" },
+    { label: "Point Mechanics", query: "mechanics" }
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
-      <TopNav toggleSidebar={() => {}} />
+      <TopNav />
       
       {/* Background Glow */}
       <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
@@ -40,13 +40,13 @@ export default function Home() {
         {/* Title */}
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-white">
-            Le Savoir Universel. <br />
+            Universal Knowledge. <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-              Enfin Libre.
+              Finally Free.
             </span>
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            OpenPrimer synthétise l'intégralité des cursus académiques, du CP à la Licence, dans une expérience unique, interactive et tutorée par IA.
+            OpenPrimer synthesizes the entirety of academic curricula, from primary school to Bachelor's degree, into a single, interactive, and AI-tutored experience.
           </p>
         </div>
 
@@ -61,18 +61,18 @@ export default function Home() {
               <input 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Que souhaitez-vous apprendre aujourd'hui ?"
+                placeholder="What do you want to learn today?"
                 className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
               />
-              <button className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2">
+              <Link href="/catalog" className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2">
                 <ArrowRight className="w-6 h-6" />
-              </button>
+              </Link>
             </div>
           </div>
           
           {/* Examples */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">Essayer :</span>
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">Try:</span>
             {examples.map((ex) => (
               <button 
                 key={ex.label}
@@ -91,26 +91,26 @@ export default function Home() {
              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mx-auto md:mx-0">
                <BookOpen className="w-5 h-5" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Apprentissage Structuré</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Pas seulement un moteur de recherche, mais un véritable cursus académique guidé par les standards universitaires.</p>
+             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Structured Learning</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Not just a search engine, but a real academic curriculum guided by university standards.</p>
            </div>
            <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-3xl">
              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto md:mx-0">
                <Cpu className="w-5 h-5" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Tutorat par IA</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Posez vos questions directement dans le manuel. Notre IA comprend le contexte et vous aide à progresser.</p>
+             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">AI Tutoring</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Ask questions directly in the manual. Our AI understands the context and helps you move forward.</p>
            </div>
            <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-3xl">
              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400 mx-auto md:mx-0">
                <Globe className="w-5 h-5" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Ouvert & Universel</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Accès gratuit à toute la connaissance, en plusieurs langues, pour chaque être humain sur la planète.</p>
+             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Open & Universal</h3>
+             <p className="text-sm text-slate-500 leading-relaxed">Free access to all knowledge, in multiple languages, for everyone on the planet.</p>
            </div>
         </div>
 
-        {/* NEW INDUSTRIAL FOOTER */}
+        {/* INDUSTRIAL FOOTER */}
         <div className="w-full mt-32 pt-16 border-t border-slate-900 grid md:grid-cols-4 gap-12 text-sm">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -118,33 +118,33 @@ export default function Home() {
               <span className="font-black tracking-tighter text-white">OPENPRIMER</span>
             </div>
             <p className="text-slate-500 text-xs leading-relaxed">
-              L'encyclopédie académique de nouvelle génération, conçue pour l'ère de l'intelligence artificielle.
+              The next-generation academic encyclopedia, designed for the era of artificial intelligence.
             </p>
           </div>
           
           <div className="space-y-4">
             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Institution</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/mission" className="hover:text-blue-400 transition-colors">Notre Mission</Link></li>
-              <li><Link href="/about" className="hover:text-blue-400 transition-colors">Qui sommes-nous ?</Link></li>
-              <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Nous contacter</Link></li>
+              <li><Link href="/mission" className="hover:text-blue-400 transition-colors">Our Mission</Link></li>
+              <li><Link href="/about" className="hover:text-blue-400 transition-colors">Who Are We?</Link></li>
+              <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Ressources</h4>
+            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Resources</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Catalogue complet</Link></li>
-              <li><Link href="/methodology" className="hover:text-blue-400 transition-colors">Méthode Feynman</Link></li>
+              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Full Catalog</Link></li>
+              <li><Link href="/methodology" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
               <li><Link href="/open-source" className="hover:text-blue-400 transition-colors">Open Source</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Légal</h4>
+            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Legal</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Confidentialité</Link></li>
-              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">CGU</Link></li>
+              <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function Home() {
         {/* Copyright */}
         <div className="mt-16 text-center">
            <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.3em]">
-             OpenPrimer Project • 2026 • Répertoire Académique Généré par IA
+             OpenPrimer Project • 2026 • AI-Generated Academic Repository
            </p>
         </div>
       </div>
