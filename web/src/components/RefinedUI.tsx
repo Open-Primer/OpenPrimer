@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -117,10 +117,14 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
 };
 
 // --- COMPONENT: TOP NAVIGATION ---
+// --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, onLangChange?: (lang: string) => void }) => {
   const [lang, setLang] = useState('EN');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
+  
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   useEffect(() => {
@@ -132,6 +136,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
     setLang(newLang);
     localStorage.setItem('op_lang', newLang);
     if (onLangChange) onLangChange(newLang);
+    setActiveDropdown(null);
   };
 
   const triggerToast = (msg: string) => {
@@ -167,21 +172,25 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Pentaglotte Language Selector */}
-        <div className="relative group/lang">
+        {/* Language Selector */}
+        <div className="relative" onMouseEnter={() => setActiveDropdown('lang')} onMouseLeave={() => setActiveDropdown(null)}>
           <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
             <span className="text-lg">{languages.find(l => l.code === lang)?.flag}</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang}</span>
-            <ChevronDown className="w-3 h-3 text-slate-600 group-hover/lang:rotate-180 transition-transform" />
+            <ChevronDown className={`w-3 h-3 text-slate-600 transition-transform ${activeDropdown === 'lang' ? 'rotate-180' : ''}`} />
           </button>
-          <div className="absolute top-full right-0 mt-2 w-40 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/lang:opacity-100 pointer-events-none group-hover/lang:pointer-events-auto transition-all translate-y-2 group-hover/lang:translate-y-0 z-[100] overflow-hidden p-1">
-             {languages.map(l => (
-               <button key={l.code} onClick={() => changeLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
-                 <span>{l.flag} {l.label}</span>
-                 {lang === l.code && <CheckCircle className="w-3 h-3" />}
-               </button>
-             ))}
-          </div>
+          <AnimatePresence>
+            {activeDropdown === 'lang' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
+                 {languages.map(l => (
+                   <button key={l.code} onClick={() => changeLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                     <span>{l.flag} {l.label}</span>
+                     {lang === l.code && <CheckCircle className="w-3 h-3" />}
+                   </button>
+                 ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
@@ -191,27 +200,34 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
         <div className="w-px h-6 bg-slate-800 mx-2" />
         
         {isLoggedIn ? (
-          <div className="relative group/user">
-            <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
-              <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </button>
-            <div className="absolute top-full right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto transition-all translate-y-2 group-hover/user:translate-y-0 z-[100] overflow-hidden p-2">
-               <div className="px-4 py-3 border-b border-slate-800/50 mb-1">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Identity</p>
-                 <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
-               </div>
-               <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
-                 <Settings className="w-4 h-4" /> Administration
-               </Link>
-               <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                 <User className="w-4 h-4" /> {t.profile}
-               </Link>
-               <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                 <LogOut className="w-4 h-4" /> {t.signout}
-               </button>
-               <button onClick={() => { if(confirm("Permanently delete?")) { setIsLoggedIn(false); triggerToast(t.delete); } }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors mt-1 border-t border-slate-800">
-                 <Trash2 className="w-4 h-4" /> {t.delete}
-               </button>
+          <div className="flex items-center gap-4">
+            <Link href="/profile" className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all group">
+              <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+            </Link>
+            
+            <div className="relative" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
+              <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
+                <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+              <AnimatePresence>
+                {activeDropdown === 'user' && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-2">
+                     <div className="px-4 py-3 border-b border-slate-800/50 mb-1">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Identity</p>
+                       <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
+                     </div>
+                     <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
+                       <ShieldAlert className="w-4 h-4" /> Administration
+                     </Link>
+                     <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                       <User className="w-4 h-4" /> {t.profile}
+                     </Link>
+                     <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                       <LogOut className="w-4 h-4" /> {t.signout}
+                     </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         ) : (
@@ -220,6 +236,34 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
           </Link>
         )}
       </div>
+
+      {/* SETTINGS MODAL */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden">
+               <div className="p-8 border-b border-slate-800 flex items-center justify-between">
+                  <h3 className="text-xl font-black text-white uppercase tracking-widest">Account Settings</h3>
+                  <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+               </div>
+               <div className="p-10 space-y-8">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Danger Zone</p>
+                    <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center justify-between">
+                       <div>
+                         <p className="font-bold text-white">Delete Account</p>
+                         <p className="text-xs text-slate-500">Permanently erase your progress and data.</p>
+                       </div>
+                       <button onClick={() => { if(confirm("Permanently delete?")) { setIsLoggedIn(false); setShowSettings(false); triggerToast(t.delete); } }} className="px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
+                         <Trash2 className="w-4 h-4" />
+                       </button>
+                    </div>
+                  </div>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showToast && (

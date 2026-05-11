@@ -108,15 +108,22 @@ export const CatalogPage = () => {
                   </div>
                   <h3 className="text-xl font-black mb-3">{course.title}</h3>
                   <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">Elite academic content certified in {course.langs.join(', ')}.</p>
+                  
+                  {/* PROGRESS INDICATOR (Mocked) */}
+                  <div className="mb-6">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="text-[8px] font-black uppercase text-slate-600">Progress</span>
+                        <span className="text-[8px] font-black text-blue-500">32%</span>
+                     </div>
+                     <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="w-[32%] h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                     </div>
+                  </div>
+
                   <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-                    <div className="flex items-center gap-2">
-                       <div className="flex gap-0.5">
-                         {[...Array(5)].map((_, i) => (
-                           <Star key={i} className={`w-3 h-3 ${i < 4 ? 'text-yellow-500 fill-current' : 'text-slate-800'}`} />
-                         ))}
-                       </div>
-                       <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{course.subject}</span>
-                    </div>
+                    <button className="px-6 py-2 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+                       Continue
+                    </button>
                     <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
