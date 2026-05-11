@@ -4,91 +4,66 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2 
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
+const UI_STRINGS = {
+  EN: { tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile", delete: "Delete Account", catalog: "Catalog" },
+  FR: { tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", delete: "Supprimer le compte", catalog: "Catalogue" },
+  ES: { tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", delete: "Eliminar cuenta", catalog: "Catálogo" },
+  DE: { tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", delete: "Konto löschen", catalog: "Katalog" },
+  PT: { tutor: "Tutor IA", placeholder: "Faça uma pergunta...", welcome: "Olá! Eu sou o seu tutor OpenPrimer.", copy: "Link copiado!", report: "Reportar", signout: "Sair", login: "Entrar", profile: "Meu Perfil", delete: "Excluir conta", catalog: "Catálogo" }
+};
+
 // --- COMPONENT: AI TUTOR OVERLAY ---
-export const AITutorOverlay = ({ pageContext }: { pageContext?: string }) => {
+export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: string, lang?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Bonjour ! Je suis votre tuteur OpenPrimer. Posez-moi une question sur ce module." }
-  ]);
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
 
   const handleSend = () => {
     if (!input.trim()) return;
-    const userMsg = input;
-    setMessages([...messages, { role: 'user', content: userMsg }]);
+    setMessages([...messages, { role: 'user', content: input }]);
     setInput('');
-    
     setTimeout(() => {
-      let response = "C'est une excellente question académique.";
-      if (pageContext?.toLowerCase().includes("membrane")) {
-        response = "D'après le cours, la membrane est semi-perméable, ce qui permet le transport sélectif des ions.";
-      }
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    }, 1200);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Academic analysis in progress..." }]);
+    }, 1000);
   };
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-96 h-[500px] rounded-[32px] bg-slate-900/80 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-96 h-[500px] rounded-[32px] bg-slate-900/90 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden">
             <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-blue-400" />
-                <span className="font-bold text-xs uppercase tracking-widest opacity-80">Tuteur IA</span>
+                <span className="font-black text-[10px] uppercase tracking-widest opacity-80">{t.tutor}</span>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                <X className="w-4 h-4" />
-              </button>
+              <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === 'assistant' 
-                      ? 'bg-slate-800/50 text-slate-300' 
-                      : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20'
-                  }`}>
+                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20'}`}>
                     {msg.content}
                   </div>
                 </div>
               ))}
             </div>
-
             <div className="p-5 bg-slate-950/30 border-t border-slate-800/50">
               <div className="relative">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Posez une question..."
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600"
-                />
-                <button onClick={handleSend} className="absolute right-3 top-2.5 p-1.5 text-blue-500 hover:text-blue-400 transition-colors">
-                  <Send className="w-4 h-4" />
-                </button>
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t.placeholder} className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600" />
+                <button onClick={handleSend} className="absolute right-3 top-2.5 p-1.5 text-blue-500 hover:text-blue-400 transition-colors"><Send className="w-4 h-4" /></button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl shadow-blue-600/40 flex items-center justify-center relative group border border-white/10"
-      >
+      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpen(!isOpen)} className="w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl shadow-blue-600/40 flex items-center justify-center relative border border-white/10">
         <MessageSquare className="w-6 h-6" />
       </motion.button>
     </div>
@@ -97,130 +72,94 @@ export const AITutorOverlay = ({ pageContext }: { pageContext?: string }) => {
 
 // --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?: () => void, isCoursePage?: boolean }) => {
-  const [showReport, setShowReport] = useState(false);
-  const [reportInput, setReportInput] = useState('');
-  const [showToast, setShowToast] = useState<string | null>(null);
-  const [isReportSent, setIsReportSent] = useState(false);
+  const [lang, setLang] = useState('EN');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [showToast, setShowToast] = useState<string | null>(null);
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
     setTimeout(() => setShowToast(null), 3000);
   };
 
-  const handleSendReport = () => {
-    if (!reportInput.trim()) return;
-    setIsReportSent(true);
-    setReportInput('');
-    setTimeout(() => {
-      setIsReportSent(false);
-      setShowReport(false);
-      triggerToast("Signalement envoyé à l'IA Review.");
-    }, 2000);
+  const shareLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    triggerToast(t.copy);
   };
+
+  const languages = [
+    { code: 'EN', flag: '🇬🇧', label: 'English' },
+    { code: 'FR', flag: '🇫🇷', label: 'Français' },
+    { code: 'ES', flag: '🇪🇸', label: 'Español' },
+    { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
+    { code: 'PT', flag: '🇵🇹', label: 'Português' }
+  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-50 px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        {isCoursePage && (
-          <button onClick={toggleSidebar} className="p-2 hover:bg-slate-900 rounded-xl transition-colors text-slate-400 hover:text-white">
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
             <Sparkles className="w-5 h-5" />
           </div>
           <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
         </Link>
+        <Link href="/catalog" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors ml-4 hidden md:block">
+           {t.catalog}
+        </Link>
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Advanced Language Selector */}
+        {/* Pentaglotte Language Selector */}
         <div className="relative group/lang">
           <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
-            <span className="text-lg">🇬🇧</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">EN</span>
-            <ChevronDown className="w-3 h-3 text-slate-600" />
+            <span className="text-lg">{languages.find(l => l.code === lang)?.flag}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang}</span>
+            <ChevronDown className="w-3 h-3 text-slate-600 group-hover/lang:rotate-180 transition-transform" />
           </button>
-          <div className="absolute top-full right-0 mt-2 w-36 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/lang:opacity-100 pointer-events-none group-hover/lang:pointer-events-auto transition-all translate-y-2 group-hover/lang:translate-y-0 z-[100] overflow-hidden">
-             <button className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-[10px] font-black uppercase tracking-widest text-blue-400">
-               <span>🇬🇧</span> English
-             </button>
-             <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-               <span>🇫🇷</span> Français
-             </button>
-             <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-               <span>🇪🇸</span> Español
-             </button>
+          <div className="absolute top-full right-0 mt-2 w-40 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/lang:opacity-100 pointer-events-none group-hover/lang:pointer-events-auto transition-all translate-y-2 group-hover/lang:translate-y-0 z-[100] overflow-hidden p-1">
+             {languages.map(l => (
+               <button key={l.code} onClick={() => setLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                 <span>{l.flag} {l.label}</span>
+                 {lang === l.code && <CheckCircle className="w-3 h-3" />}
+               </button>
+             ))}
           </div>
         </div>
 
-        {isCoursePage && (
-          <button onClick={() => setShowReport(!showReport)} className={`p-2 rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${showReport ? 'bg-red-500/20 text-red-400' : 'text-slate-500 hover:text-red-400'}`}>
-            <AlertTriangle className="w-4 h-4" /> <span className="hidden lg:inline">Signaler</span>
-          </button>
-        )}
-
-        <button onClick={() => { triggerToast("Lien copié !"); navigator.clipboard.writeText(window.location.href); }} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
+        <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all shadow-sm">
           <Share2 className="w-4 h-4" />
         </button>
 
-        {isCoursePage && (
-          <button onClick={() => { triggerToast("Cours sauvegardé !"); }} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
-            <Bookmark className="w-4 h-4" />
-          </button>
-        )}
-
         <div className="w-px h-6 bg-slate-800 mx-2" />
         
-        {/* Dynamic User Menu / Auth */}
-        {!isLoggedIn ? (
-          <Link href="/auth/login" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">
-            Se connecter
-          </Link>
-        ) : (
+        {isLoggedIn ? (
           <div className="relative group/user">
             <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
               <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>
-            
             <div className="absolute top-full right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto transition-all translate-y-2 group-hover/user:translate-y-0 z-[100] overflow-hidden p-2">
                <div className="px-4 py-3 border-b border-slate-800/50 mb-1">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Compte Etudiant</p>
+                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Industrial Identity</p>
                  <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
                </div>
                <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                 <User className="w-4 h-4" /> Mon Profil
+                 <User className="w-4 h-4" /> {t.profile}
                </Link>
-               <button 
-                 onClick={() => { setIsLoggedIn(false); triggerToast("Déconnexion réussie"); }} 
-                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
-               >
-                 <LogOut className="w-4 h-4" /> Se déconnecter
+               <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                 <LogOut className="w-4 h-4" /> {t.signout}
                </button>
-               <button 
-                 onClick={() => { if(confirm("Voulez-vous vraiment supprimer votre compte ?")) { setIsLoggedIn(false); triggerToast("Compte supprimé"); } }} 
-                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors mt-1"
-               >
-                 <Trash2 className="w-4 h-4" /> Supprimer mon compte
+               <button onClick={() => { if(confirm("Permanently delete account?")) { setIsLoggedIn(false); triggerToast(t.delete); } }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors mt-1 border-t border-slate-800">
+                 <Trash2 className="w-4 h-4" /> {t.delete}
                </button>
             </div>
           </div>
+        ) : (
+          <Link href="/auth/login" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+            {t.login}
+          </Link>
         )}
       </div>
-
-      {/* MODALS & TOASTS */}
-      <AnimatePresence>
-        {showReport && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute top-20 right-6 w-full max-w-sm z-50">
-             <div className="bg-slate-900/95 border border-slate-800 p-2 rounded-2xl backdrop-blur-2xl shadow-2xl flex items-center gap-2">
-                <input autoFocus value={reportInput} onChange={(e) => setReportInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendReport()} placeholder={isReportSent ? "Merci !" : "Une erreur ?"} className="flex-1 bg-transparent border-none py-2 px-4 text-xs text-white focus:outline-none" />
-                <button onClick={handleSendReport} className="bg-blue-600 text-white p-2 rounded-xl"><Send className="w-3.5 h-3.5" /></button>
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showToast && (
@@ -230,6 +169,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </div>
   );
 };

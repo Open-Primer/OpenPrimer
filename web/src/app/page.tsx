@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Mail, Shield, Users } from 'lucide-react';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
-import { TopNav } from '@/components/RefinedUI';
+import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { motion } from 'framer-motion';
 
 export default function Home() {
@@ -20,6 +20,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
       <TopNav />
+      <AITutorOverlay lang="EN" />
       
       {/* Background Glow */}
       <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
@@ -32,9 +33,12 @@ export default function Home() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="mb-12"
+          className="mb-12 relative"
         >
           <OpenPrimerIcon className="w-24 h-24" />
+          <div className="absolute -top-2 -right-6 bg-blue-600 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg shadow-blue-600/40">
+            v1.5 Beta
+          </div>
         </motion.div>
 
         {/* Title */}
@@ -86,27 +90,38 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mt-12 text-center md:text-left">
-           <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-3xl">
-             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mx-auto md:mx-0">
-               <BookOpen className="w-5 h-5" />
+        <div className="grid md:grid-cols-3 gap-8 mt-12">
+           <div className="space-y-4 p-8 bg-slate-900/20 border border-slate-900 rounded-[40px] hover:bg-slate-900/40 transition-all group">
+             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+               <BookOpen className="w-6 h-6" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Structured Learning</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Not just a search engine, but a real academic curriculum guided by university standards.</p>
+             <div className="flex items-center gap-2">
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Academic Rigor</h3>
+               <div className="bg-emerald-500/20 text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Elite</div>
+             </div>
+             <p className="text-sm text-slate-500 leading-relaxed">Full university curricula synthesized with the Feynman method for maximum depth.</p>
            </div>
-           <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-3xl">
-             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto md:mx-0">
-               <Cpu className="w-5 h-5" />
+           
+           <div className="space-y-4 p-8 bg-slate-900/20 border border-slate-900 rounded-[40px] hover:bg-slate-900/40 transition-all group">
+             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+               <Cpu className="w-6 h-6" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">AI Tutoring</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Ask questions directly in the manual. Our AI understands the context and helps you move forward.</p>
+             <div className="flex items-center gap-2">
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">AI Tutor</h3>
+               <div className="bg-blue-500/20 text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">New</div>
+             </div>
+             <p className="text-sm text-slate-500 leading-relaxed">Context-aware AI tutoring directly integrated into every learning module.</p>
            </div>
-           <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-3xl">
-             <div className="w-10 h-10 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400 mx-auto md:mx-0">
-               <Globe className="w-5 h-5" />
+
+           <div className="space-y-4 p-8 bg-slate-900/20 border border-slate-900 rounded-[40px] hover:bg-slate-900/40 transition-all group">
+             <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform">
+               <Globe className="w-6 h-6" />
              </div>
-             <h3 className="font-bold text-slate-200 uppercase text-xs tracking-widest">Open & Universal</h3>
-             <p className="text-sm text-slate-500 leading-relaxed">Free access to all knowledge, in multiple languages, for everyone on the planet.</p>
+             <div className="flex items-center gap-2">
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Multilingual</h3>
+               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">5 Languages</div>
+             </div>
+             <p className="text-sm text-slate-500 leading-relaxed">Native support for EN, FR, ES, DE, and PT. Breaking the language barrier in education.</p>
            </div>
         </div>
 
@@ -118,7 +133,7 @@ export default function Home() {
               <span className="font-black tracking-tighter text-white">OPENPRIMER</span>
             </div>
             <p className="text-slate-500 text-xs leading-relaxed">
-              The next-generation academic encyclopedia, designed for the era of artificial intelligence.
+              Global academic consortium dedicated to universalizing knowledge via AI.
             </p>
           </div>
           
@@ -134,7 +149,7 @@ export default function Home() {
           <div className="space-y-4">
             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Resources</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Full Catalog</Link></li>
+              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Course Catalog</Link></li>
               <li><Link href="/methodology" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
               <li><Link href="/open-source" className="hover:text-blue-400 transition-colors">Open Source</Link></li>
             </ul>
@@ -152,7 +167,7 @@ export default function Home() {
         {/* Copyright */}
         <div className="mt-16 text-center">
            <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.3em]">
-             OpenPrimer Project • 2026 • AI-Generated Academic Repository
+             OpenPrimer Project • 2026 • Global AI Academic Repository
            </p>
         </div>
       </div>
