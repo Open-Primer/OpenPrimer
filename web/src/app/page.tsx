@@ -10,6 +10,12 @@ import { motion } from 'framer-motion';
 export default function Home() {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState([]);
+  
+  const examples = [
+    { label: "Physics L1", query: "physics" },
+    { label: "Cell Biology", query: "biology" },
+    { label: "Constitutional Law", query: "law" }
+  ];
 
   useEffect(() => {
     const fetchResults = async () => {

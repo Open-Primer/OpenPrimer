@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, User, ArrowRight, Github, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Code, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AuthPage({ mode = 'login' }: { mode?: 'login' | 'signup' }) {
@@ -65,7 +65,7 @@ export default function AuthPage({ mode = 'login' }: { mode?: 'login' | 'signup'
           <div className="mt-8 pt-8 border-t border-slate-800 text-center">
             <p className="text-slate-500 text-sm mb-4">Or continue with</p>
             <button className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 text-white py-3 rounded-2xl flex items-center justify-center gap-3 transition-all">
-              <Github className="w-5 h-5" /> GitHub
+              <Code className="w-5 h-5" /> GitHub
             </button>
           </div>
 
