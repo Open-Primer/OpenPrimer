@@ -115,22 +115,31 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-16 glass border-b border-slate-900/50 z-40 px-6 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-50 px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
         {isCoursePage && (
-          <button onClick={toggleSidebar} className="p-2 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-white transition-all">
-            <Menu className="w-5 h-5" />
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 hover:bg-slate-900 rounded-xl transition-colors"
+          >
+            <Menu className="w-5 h-5 text-slate-400" />
           </button>
         )}
-        <Link href="/" className="text-lg font-black tracking-tighter text-white hover:opacity-80 transition-opacity">
-          OpenPrimer
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <span className="font-black text-xl tracking-tighter text-white">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
         </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500 uppercase tracking-widest text-[9px] ml-4">
-          <Link href="/catalog" className="hover:text-white transition-colors">Course Catalog</Link>
-        </nav>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
+        {/* Language Selector */}
+        <div className="flex items-center gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800">
+           <button className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 rounded-md">FR</button>
+           <button className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors">EN</button>
+        </div>
+
         {isCoursePage && (
           <button 
             onClick={() => setShowReport(!showReport)} 
