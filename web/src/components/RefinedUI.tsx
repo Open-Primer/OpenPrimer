@@ -9,12 +9,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
-const UI_STRINGS = {
-  EN: { tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile", delete: "Delete Account", catalog: "Catalog" },
-  FR: { tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", delete: "Supprimer le compte", catalog: "Catalogue" },
-  ES: { tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", delete: "Eliminar cuenta", catalog: "Catálogo" },
-  DE: { tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", delete: "Konto löschen", catalog: "Katalog" },
-  PT: { tutor: "Tutor IA", placeholder: "Faça uma pergunta...", welcome: "Olá! Eu sou o seu tutor OpenPrimer.", copy: "Link copiado!", report: "Reportar", signout: "Sair", login: "Entrar", profile: "Meu Perfil", delete: "Excluir conta", catalog: "Catálogo" }
+export const UI_STRINGS = {
+  EN: { tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile", delete: "Delete Account", catalog: "Catalog", langLabel: "Language" },
+  FR: { tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", delete: "Supprimer le compte", catalog: "Catalogue", langLabel: "Langue" },
+  ES: { tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", delete: "Eliminar cuenta", catalog: "Catálogo", langLabel: "Idioma" },
+  DE: { tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", delete: "Konto löschen", catalog: "Katalog", langLabel: "Sprache" },
+  ZH: { tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的个人资料", delete: "删除账户", catalog: "目录", langLabel: "语言" }
 };
 
 // --- COMPONENT: AI TUTOR OVERLAY ---
@@ -29,15 +29,15 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
     setMessages([...messages, { role: 'user', content: input }]);
     setInput('');
     setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Academic analysis in progress..." }]);
-    }, 1000);
+      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'ZH' ? "正在进行学术分析..." : "Academic analysis in progress..." }]);
+    }, 1200);
   };
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-96 h-[500px] rounded-[32px] bg-slate-900/90 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-96 h-[500px] rounded-[32px] bg-slate-900/95 border border-slate-800/50 shadow-2xl backdrop-blur-3xl flex flex-col overflow-hidden">
             <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-blue-400" />
@@ -71,11 +71,22 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
 };
 
 // --- COMPONENT: TOP NAVIGATION ---
-export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?: () => void, isCoursePage?: boolean }) => {
+export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, onLangChange?: (lang: string) => void }) => {
   const [lang, setLang] = useState('EN');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showToast, setShowToast] = useState<string | null>(null);
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('op_lang') || 'EN';
+    setLang(savedLang);
+  }, []);
+
+  const changeLang = (newLang: string) => {
+    setLang(newLang);
+    localStorage.setItem('op_lang', newLang);
+    if (onLangChange) onLangChange(newLang);
+  };
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -92,7 +103,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
     { code: 'FR', flag: '🇫🇷', label: 'Français' },
     { code: 'ES', flag: '🇪🇸', label: 'Español' },
     { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
-    { code: 'PT', flag: '🇵🇹', label: 'Português' }
+    { code: 'ZH', flag: '🇨🇳', label: '中文' }
   ];
 
   return (
@@ -119,7 +130,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
           </button>
           <div className="absolute top-full right-0 mt-2 w-40 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/lang:opacity-100 pointer-events-none group-hover/lang:pointer-events-auto transition-all translate-y-2 group-hover/lang:translate-y-0 z-[100] overflow-hidden p-1">
              {languages.map(l => (
-               <button key={l.code} onClick={() => setLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+               <button key={l.code} onClick={() => changeLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                  <span>{l.flag} {l.label}</span>
                  {lang === l.code && <CheckCircle className="w-3 h-3" />}
                </button>
@@ -127,7 +138,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
           </div>
         </div>
 
-        <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all shadow-sm">
+        <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
           <Share2 className="w-4 h-4" />
         </button>
 
@@ -140,7 +151,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
             </button>
             <div className="absolute top-full right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto transition-all translate-y-2 group-hover/user:translate-y-0 z-[100] overflow-hidden p-2">
                <div className="px-4 py-3 border-b border-slate-800/50 mb-1">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Industrial Identity</p>
+                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Identity</p>
                  <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
                </div>
                <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
@@ -149,7 +160,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
                <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                  <LogOut className="w-4 h-4" /> {t.signout}
                </button>
-               <button onClick={() => { if(confirm("Permanently delete account?")) { setIsLoggedIn(false); triggerToast(t.delete); } }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors mt-1 border-t border-slate-800">
+               <button onClick={() => { if(confirm("Permanently delete?")) { setIsLoggedIn(false); triggerToast(t.delete); } }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors mt-1 border-t border-slate-800">
                  <Trash2 className="w-4 h-4" /> {t.delete}
                </button>
             </div>
@@ -169,6 +180,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </nav>
   );
 };
