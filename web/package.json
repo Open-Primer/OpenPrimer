@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "playwright test",
+    "test:report": "playwright show-report"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

@@ -212,6 +212,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </nav>
   );
 };
