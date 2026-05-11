@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, Bookmark, Menu, ChevronRight, CheckCircle } from 'lucide-react';
+import { Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AITutorOverlay = ({ pageContext }: { pageContext?: string }) => {
@@ -134,10 +134,24 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
       </div>
 
       <div className="flex items-center gap-8">
-        {/* Language Selector */}
-        <div className="flex items-center gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800">
-           <button className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 rounded-md">FR</button>
-           <button className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors">EN</button>
+        {/* Advanced Language Selector */}
+        <div className="relative group/lang">
+          <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
+            <span className="text-lg">🇫🇷</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">FR</span>
+            <ChevronDown className="w-3 h-3 text-slate-600 group-hover/lang:rotate-180 transition-transform" />
+          </button>
+          <div className="absolute top-full right-0 mt-2 w-32 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/lang:opacity-100 pointer-events-none group-hover/lang:pointer-events-auto transition-all translate-y-2 group-hover/lang:translate-y-0 z-[100] overflow-hidden">
+             <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+               <span>🇬🇧</span> EN
+             </button>
+             <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/5">
+               <span>🇫🇷</span> FR
+             </button>
+             <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+               <span>🇪🇸</span> ES
+             </button>
+          </div>
         </div>
 
         {isCoursePage && (
@@ -156,16 +170,44 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false }: { toggleSidebar?
         >
           <Share2 className="w-4 h-4" />
         </button>
-        <button 
-          onClick={() => { triggerToast("Course bookmarked!"); }}
-          className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all"
-        >
-          <Bookmark className="w-4 h-4" />
-        </button>
+        {isCoursePage && (
+          <button 
+            onClick={() => { triggerToast("Course bookmarked!"); }}
+            className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all"
+          >
+            <Bookmark className="w-4 h-4" />
+          </button>
+        )}
         <div className="w-px h-6 bg-slate-800 mx-2" />
-        <Link href="/profile" className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
-          <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        </Link>
+        
+        {/* Dynamic User Menu */}
+        <div className="relative group/user">
+          <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
+            <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </button>
+          
+          <div className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto transition-all translate-y-2 group-hover/user:translate-y-0 z-[100] overflow-hidden">
+             <div className="px-4 py-3 border-b border-slate-800">
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Account</p>
+               <p className="text-xs font-bold text-white truncate">student@openprimer.org</p>
+             </div>
+             <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+               <User className="w-4 h-4" /> Profile
+             </Link>
+             <button 
+               onClick={() => { triggerToast("Logged out successfully"); }}
+               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
+             >
+               <LogOut className="w-4 h-4" /> Sign Out
+             </button>
+             <button 
+               onClick={() => { triggerToast("Account deletion requested"); }}
+               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors border-t border-slate-800"
+             >
+               <Trash2 className="w-4 h-4" /> Delete Account
+             </button>
+          </div>
+        </div>
       </div>
 
       {/* TOP-ALIGNED REPORT INPUT */}
