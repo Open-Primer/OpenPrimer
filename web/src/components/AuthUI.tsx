@@ -14,8 +14,7 @@ export default function AuthPage({ mode = 'login' }: { mode?: 'login' | 'signup'
       {/* Ambient Background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
       
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      <div 
         className="w-full max-w-md relative z-10"
       >
         <div className="bg-slate-900/50 backdrop-blur-2xl border border-slate-800 rounded-[40px] p-10 shadow-2xl">
@@ -78,7 +77,7 @@ export default function AuthPage({ mode = 'login' }: { mode?: 'login' | 'signup'
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
