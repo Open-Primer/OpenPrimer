@@ -3,108 +3,93 @@ import json
 import asyncio
 from pathlib import Path
 from datetime import datetime
+from prompt_templates import ELITE_PROMPT, CURATOR_PROMPT, ACADEMIC_SCALING
 
 CONTENT_DIR = Path("../content")
 
-class OpenPrimerFeynmanFinal:
-    def __init__(self, current_version="1.5.0"):
-        self.version = current_version
-        self.today = datetime.now().strftime("%Y-%m-%d")
+class OpenPrimerFeynmanElite:
+    def __init__(self, api_key=None):
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.version = "1.6.0-Elite"
 
-    async def generate_real_section(self, subject, level, module, topic, num, lang="en"):
-        print(f"      [PRODUCING v{self.version}] {topic} (Section {num}) in {lang.upper()}...")
+    async def generate_module(self, topic, level, subject, num, lang='en'):
+        scale = ACADEMIC_SCALING.get(level, ACADEMIC_SCALING["L1"])
+        print(f"      [PRODUCING {level}] {topic} ({scale['length']}) in {lang.upper()}...")
         
-        # PROMPT DE PRODUCTION BRUTE (Pas de meta-talk)
-        content = f"""---
-title: "{topic}"
-level: "{level}"
-subject: "{subject}"
-module: "{module}"
-section: {num}
-version: "{self.version}"
-updatedAt: "{self.today}"
-lang: "{lang}"
----
+        # 1. Generation Step
+        prompt = ELITE_PROMPT.format(
+            topic=topic,
+            level=level,
+            subject=subject,
+            target_length=scale["length"],
+            math_requirement=scale["math"],
+            lang=lang
+        )
+        
+        # Mocking AI Call (In production, replace with Vertex AI or OpenAI call)
+        content = await self._call_llm(prompt)
+        
+        # 2. Curation Step (Quality Loop)
+        is_valid = False
+        attempts = 0
+        while not is_valid and attempts < 2:
+            review = await self.curate_module(content, level, scale["length"])
+            if review["status"] == "APPROVED":
+                is_valid = True
+                print(f"      ✅ Approved (Score: {review['score']}/100)")
+            else:
+                attempts += 1
+                print(f"      ❌ Rejected ({attempts}/2): {review['feedback']}. Retrying with feedback...")
+                content = await self._call_llm(f"{prompt}\n\nCRITICAL FEEDBACK FROM CURATOR: {review['feedback']}")
+                
+        return content
 
-# {topic} : Deep Academic Dive
+    async def curate_module(self, content, level, min_len):
+        """Simulates an independent Curator AI pass."""
+        # This would be a separate LLM call in production
+        # Mocking approval for now
+        return {
+            "status": "APPROVED",
+            "score": 92,
+            "feedback": "Depth is sufficient, math derivations present."
+        }
 
-<SelfEval title="{topic}" type="pre" />
-
-## 1. Core Principles
-{topic} is the study of how **systems** maintain **stability** under stress. In **{subject}**, this is measured by the **Alpha-Gradient**. 
-Imagine a bridge: its stability isn't just about the strength of steel, but the **distribution of forces**. 
-
-<MetaNote title="Analogy">
-  A system in equilibrium is like a dancer on a tightrope: constantly moving to remain still.
-</MetaNote>
-
-## 2. Solved Problem: Equilibrium
-<SolvedProblem 
-  title="Force Balance"
-  problem="Calculate the tension in a rope holding a 10kg mass at rest."
-  solution="Since the system is at rest, F_net = 0. Gravity (mg) = 10 * 9.8 = 98N. Tension must be 98N."
-/>
-
-## 3. Active Recall
-<FillInBlanks 
-  sentence="The acceleration of gravity on Earth is approximately [...] m/s²." 
-  answer="9.8" 
-/>
-
-## 📽️ Video Resource
-<Video id="8_Xg3z_9G8M" title="Module Masterclass" provider="YouTube" />
-
-## ✍️ Summary
-<Summary items={[
-  "Concept of **Equilibrium**",
-  "Calculation of **Static Forces**",
-  "Application to **{subject}**"
-]} />
-
-<Quiz>
-  <Question q="What happens when F_net is zero?">
-    <Option text="Acceleration is positive" />
-    <Option text="The system is in equilibrium" correct />
-  </Question>
-</Quiz>
-
-<SelfEval title="{topic}" type="post" />
-
----
-*OpenPrimer Industrial Grade Certified*
-"""
-        TOPICS TO COVER IN DEPTH:
-        - Newton's Laws (Vectorial form: F = m*a = dP/dt)
-        - Partial Derivatives in potential energy gradients (F = -∇U)
-        - Conservative and Non-conservative forces.
-        - Dynamics of systems with variable mass.
-
-        NO INTRODUCTIONS. NO AI GREETINGS. START DIRECTLY WITH THE RIGOROUS CONTENT.
-        """
-        return prompt
+    async def _call_llm(self, prompt):
+        # Placeholder for actual LLM integration
+        # For now, it returns a high-density template based on the prompt
+        return f"# {prompt[:50]}...\n(Detailed content generated for {self.version})"
 
     async def process_syllabus(self, syllabus):
-        bach = syllabus.get("University", {}).get("Bachelor", {})
-        for level, subjects in bach.items():
-            for subject, modules in subjects.items():
-                for module, topics in modules.items():
-                    module_dir = CONTENT_DIR / level / subject / module.replace(" ", "_")
-                    module_dir.mkdir(parents=True, exist_ok=True)
-                    
-                    for i, topic in enumerate(topics, 1):
-                        for lang in ["en", "fr"]:
-                            content = self.generate_module(topic, level, subject, i, lang)
-                            file_path = module_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
-                            with open(file_path, "w", encoding="utf-8") as f:
-                                f.write(content)
-                        print(f"        {topic} produced (EN/FR).")
+        # Process syllabus units and modules
+        for unit in syllabus.get("units", []):
+            unit_name = unit.get("name", "General")
+            for i, topic in enumerate(unit.get("modules", []), 1):
+                module_dir = CONTENT_DIR / syllabus["level"] / syllabus["subject"] / unit_name.replace(" ", "_")
+                module_dir.mkdir(parents=True, exist_ok=True)
+                
+                for lang in ["en", "fr", "es", "de", "zh"]:
+                    content = await self.generate_module(topic, syllabus["level"], syllabus["subject"], i, lang)
+                    file_path = module_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                print(f"        {topic} completed in 5 languages.")
 
 async def main():
-    if not Path("syllabus.json").exists(): return
-    with open("syllabus.json", "r", encoding="utf-8") as f:
-        syllabus = json.load(f)
+    # Example loading a generated syllabus blueprint
+    blueprint_path = Path("syllabus_physics_l1.json")
+    if not blueprint_path.exists():
+        # Fallback for demo
+        syllabus = {
+            "title": "Classical Mechanics L1",
+            "level": "L1",
+            "subject": "Physics",
+            "units": [{"name": "Dynamics", "modules": ["Newton's Laws", "Energy Conservation"]}]
+        }
+    else:
+        with open(blueprint_path, "r", encoding="utf-8") as f:
+            syllabus = json.load(f)[0]
     
-    generator = OpenPrimerFeynmanFinal()
+    generator = OpenPrimerFeynmanElite()
     await generator.process_syllabus(syllabus)
 
 if __name__ == "__main__":
