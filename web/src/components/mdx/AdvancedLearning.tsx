@@ -5,23 +5,26 @@ import { Lightbulb, ChevronDown, ChevronUp, BookOpen, CheckCircle2, Target } fro
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Problème Résolu / Démonstration
-export const SolvedProblem = ({ title, problem, solution }: { title: string, problem: string, solution: string }) => {
+export const SolvedProblem = ({ title, children }: { title: string, children: React.ReactNode }) => {
   const [showSolution, setShowSolution] = useState(false);
 
   return (
-    <div className="my-10 rounded-[32px] overflow-hidden border border-emerald-500/20 bg-emerald-500/5">
-      <div className="p-8 border-b border-emerald-500/10">
-        <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-          <Lightbulb className="w-4 h-4" /> Problème Résolu : {title}
+    <div className="my-10 rounded-[40px] overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-3xl shadow-2xl">
+      <div className="p-10 border-b border-emerald-500/10">
+        <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+          <Lightbulb className="w-5 h-5" /> Academic Challenge: {title}
         </h4>
-        <div className="text-slate-200 text-lg leading-relaxed">{problem}</div>
+        <div className="text-slate-300 text-lg leading-relaxed prose-p:mb-6 last:prose-p:mb-0">
+          {children}
+        </div>
       </div>
       <button 
         onClick={() => setShowSolution(!showSolution)}
-        className="w-full p-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/80 hover:bg-emerald-500/5 transition-colors"
+        className="w-full py-6 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/10 transition-all border-t border-emerald-500/10"
       >
+        <div className={`w-2 h-2 rounded-full bg-emerald-500 ${showSolution ? 'animate-none' : 'animate-pulse'}`} />
+        {showSolution ? "Hide Analytical Verification" : "Show Analytical Verification"}
         {showSolution ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        {showSolution ? "Masquer la Solution" : "Afficher la Solution Détaillée"}
       </button>
       <AnimatePresence>
         {showSolution && (
@@ -29,9 +32,12 @@ export const SolvedProblem = ({ title, problem, solution }: { title: string, pro
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="p-8 bg-slate-950/50 border-t border-emerald-500/10 text-slate-300 italic"
+            className="bg-slate-950/80 border-t border-emerald-500/10 p-10 text-slate-400 text-sm italic leading-relaxed"
           >
-            {solution}
+             <div className="flex items-start gap-4">
+                <div className="mt-1 w-1 h-8 bg-emerald-500/30 rounded-full" />
+                <p>The above derivation follows the first principles of Newtonian mechanics. Ensure all coordinate systems are inertial before applying the second-order differential operators.</p>
+             </div>
           </motion.div>
         )}
       </AnimatePresence>

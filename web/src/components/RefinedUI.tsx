@@ -4,22 +4,79 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { OpenPrimerIcon } from './OpenPrimerIcon';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
 export const UI_STRINGS = {
-  EN: { tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile", delete: "Delete Account", catalog: "Catalog", langLabel: "Language" },
-  FR: { tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", delete: "Supprimer le compte", catalog: "Catalogue", langLabel: "Langue" },
-  ES: { tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", delete: "Eliminar cuenta", catalog: "Catálogo", langLabel: "Idioma" },
-  DE: { tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", delete: "Konto löschen", catalog: "Katalog", langLabel: "Sprache" },
-  ZH: { tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的个人资料", delete: "删除账户", catalog: "目录", langLabel: "语言" }
+  EN: { 
+    tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", 
+    copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile", 
+    delete: "Delete Account", catalog: "Catalog", langLabel: "Language",
+    foundation: "Foundation", curriculum: "Curriculum", legal: "Legal",
+    philosophy: "Our Philosophy", contact: "Global Contact", opensource: "Open Source",
+    progress: "My Progress", admin: "Academic Admin",
+    terms: "Terms of Service", privacy: "Privacy Sovereignty",
+    copyright: "© 2026 OpenPrimer Foundation • European Academic Consortium",
+    all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", search: "Search modules..."
+  },
+  FR: { 
+    tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", 
+    copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", 
+    delete: "Supprimer le compte", catalog: "Catalogue", langLabel: "Langue",
+    foundation: "Fondation", curriculum: "Curriculum", legal: "Légal",
+    philosophy: "Notre Philosophie", contact: "Contact Global", opensource: "Open Source",
+    progress: "Mon Progrès", admin: "Admin Académique",
+    terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
+    copyright: "© 2026 Fondation OpenPrimer • Consortium Académique Européen",
+    all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", search: "Rechercher des modules..."
+  },
+  ES: { 
+    tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", 
+    copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", 
+    delete: "Eliminar cuenta", catalog: "Catálogo", langLabel: "Idioma",
+    foundation: "Fundación", curriculum: "Currículo", legal: "Legal",
+    philosophy: "Nuestra Filosofía", contact: "Contacto Global", opensource: "Código Abierto",
+    progress: "Mi Progreso", admin: "Admin Académico",
+    terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
+    copyright: "© 2026 Fundación OpenPrimer • Consorcio Académico Europeo",
+    all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos..."
+  },
+  DE: { 
+    tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", 
+    copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", 
+    delete: "Konto löschen", catalog: "Katalog", langLabel: "Sprache",
+    foundation: "Stiftung", curriculum: "Lehrplan", legal: "Rechtliches",
+    philosophy: "Unsere Philosophie", contact: "Globaler Kontakt", opensource: "Open Source",
+    progress: "Mein Fortschritt", admin: "Akademische Verwaltung",
+    terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
+    copyright: "© 2026 OpenPrimer Stiftung • Europäisches Akademisches Konsortium",
+    all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen..."
+  },
+  ZH: { 
+    tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", 
+    copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的个人资料", 
+    delete: "删除账户", catalog: "目录", langLabel: "语言",
+    foundation: "基金会", curriculum: "课程", legal: "法律",
+    philosophy: "我们的哲学", contact: "全球联系", opensource: "开源项目",
+    progress: "我的进度", admin: "学术管理",
+    terms: "服务条款", privacy: "隐私主权",
+    copyright: "© 2026 OpenPrimer 基金会 • 欧洲学术联盟",
+    all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块..."
+  }
 };
+
+import { usePathname } from 'next/navigation';
 
 // --- COMPONENT: AI TUTOR OVERLAY ---
 export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: string, lang?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
+
+  if (!isCurriculumPage) return null;
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
@@ -117,12 +174,10 @@ export const AITutorOverlay = ({ pageContext, lang = 'EN' }: { pageContext?: str
 };
 
 // --- COMPONENT: TOP NAVIGATION ---
-// --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, onLangChange?: (lang: string) => void }) => {
   const [lang, setLang] = useState('EN');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showToast, setShowToast] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
   
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
@@ -160,10 +215,16 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[100] px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
+        {isCoursePage && toggleSidebar && (
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 transition-all mr-2"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5" />
-          </div>
+          <OpenPrimerIcon className="w-9 h-9" />
           <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
         </Link>
         <Link href="/catalog" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors ml-4 hidden md:block">
@@ -193,77 +254,74 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
           </AnimatePresence>
         </div>
 
+        {isCoursePage && (
+          <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
+            {['Default', 'Paper', 'Focus'].map(mode => (
+              <button 
+                key={mode}
+                onClick={() => (window as any).setReadingMode?.(mode.toLowerCase())}
+                className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        )}
+
         <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
           <Share2 className="w-4 h-4" />
         </button>
 
+        <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-blue-500/50 transition-all">
+          <Github className="w-5 h-5" />
+        </a>
+
         <div className="w-px h-6 bg-slate-800 mx-2" />
         
         {isLoggedIn ? (
-          <div className="flex items-center gap-4">
-            <Link href="/profile" className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all group">
-              <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
-            </Link>
-            
-            <div className="relative" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
-              <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
-                <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              </button>
-              <AnimatePresence>
-                {activeDropdown === 'user' && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-2">
-                     <div className="px-4 py-3 border-b border-slate-800/50 mb-1">
-                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Identity</p>
-                       <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
-                     </div>
-                     <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
-                       <ShieldAlert className="w-4 h-4" /> Administration
-                     </Link>
-                     <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                       <User className="w-4 h-4" /> {t.profile}
-                     </Link>
-                     <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                       <LogOut className="w-4 h-4" /> {t.signout}
-                     </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          <div className="relative" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
+            <button className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all overflow-hidden group">
+              <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </button>
+            <AnimatePresence>
+              {activeDropdown === 'user' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
+                   <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
+                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">Logged in as</p>
+                     <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
+                   </div>
+                   
+                   <Link href="/catalog" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
+                     <GraduationCap className="w-4 h-4" /> My Curriculum
+                   </Link>
+                   
+                   <Link href="/profile" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                     <Settings className="w-4 h-4" /> Account Settings
+                   </Link>
+                   
+                   <div className="h-px bg-slate-800/50 my-1" />
+                   
+                   <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">
+                     <GraduationCap className="w-4 h-4" /> Curriculum Manager
+                   </Link>
+                   
+                   <Link href="/admin/analytics" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
+                     <Brain className="w-4 h-4" /> Research Intelligence
+                   </Link>
+                   
+                   <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                     <LogOut className="w-4 h-4" /> {t.signout}
+                   </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
-          <Link href="/auth/login" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-            {t.login}
-          </Link>
+          <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 transition-all">
+            Join Project
+          </a>
         )}
       </div>
-
-      {/* SETTINGS MODAL */}
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden">
-               <div className="p-8 border-b border-slate-800 flex items-center justify-between">
-                  <h3 className="text-xl font-black text-white uppercase tracking-widest">Account Settings</h3>
-                  <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
-               </div>
-               <div className="p-10 space-y-8">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Danger Zone</p>
-                    <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center justify-between">
-                       <div>
-                         <p className="font-bold text-white">Delete Account</p>
-                         <p className="text-xs text-slate-500">Permanently erase your progress and data.</p>
-                       </div>
-                       <button onClick={() => { if(confirm("Permanently delete?")) { setIsLoggedIn(false); setShowSettings(false); triggerToast(t.delete); } }} className="px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                         <Trash2 className="w-4 h-4" />
-                       </button>
-                    </div>
-                  </div>
-               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showToast && (
@@ -274,5 +332,68 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
         )}
       </AnimatePresence>
     </nav>
+  );
+};
+// --- COMPONENT: INSTITUTIONAL FOOTER ---
+export const Footer = () => {
+  const [lang, setLang] = useState('EN');
+  useEffect(() => {
+    setLang(localStorage.getItem('op_lang') || 'EN');
+  }, []);
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  return (
+    <footer className="bg-slate-950 border-t border-slate-900 pt-24 pb-12 px-8 overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-16 mb-20">
+          <div className="md:col-span-1">
+            <Link href="/" className="flex items-center gap-3 mb-8 group">
+              <OpenPrimerIcon className="w-10 h-10" />
+              <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
+            </Link>
+            <p className="text-sm text-slate-500 leading-relaxed italic">
+              Universalizing elite academic knowledge through recursive AI-assisted pedagogy.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.foundation}</p>
+            <ul className="space-y-4">
+              <li><Link href="/philosophy" className="text-sm text-slate-600 hover:text-white transition-colors">{t.philosophy}</Link></li>
+              <li><Link href="/contact" className="text-sm text-slate-600 hover:text-white transition-colors">{t.contact}</Link></li>
+              <li><a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="text-sm text-slate-600 hover:text-white transition-colors">{t.opensource}</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.curriculum}</p>
+            <ul className="space-y-4">
+              <li><Link href="/catalog" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.catalog}</Link></li>
+              <li><Link href="/profile" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.progress}</Link></li>
+              <li><Link href="/admin/curriculum" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.admin}</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.legal}</p>
+            <ul className="space-y-4">
+              <li><Link href="/terms" className="text-sm text-slate-800 hover:text-slate-400 transition-colors">{t.terms}</Link></li>
+              <li><Link href="/privacy" className="text-sm text-slate-800 hover:text-slate-400 transition-colors">{t.privacy}</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-12 border-t border-slate-900/50 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="text-[9px] font-black text-slate-800 uppercase tracking-[0.4em]">
+            {t.copyright}
+          </div>
+          <div className="flex gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">
+             <span className="text-xs font-bold text-white">🇪🇺</span>
+             <span className="text-xs font-bold text-white">🇨🇳</span>
+             <span className="text-xs font-bold text-white">🇺🇸</span>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };

@@ -135,7 +135,7 @@ export default function Home() {
               <p className="text-slate-500 leading-relaxed italic">
                 "Our objective is to ensure that no student, regardless of their language or location, is ever denied access to the highest level of academic rigor."
               </p>
-              <Link href="/mission" className="flex items-center gap-2 text-blue-500 font-bold hover:gap-4 transition-all">
+              <Link href="/philosophy" className="flex items-center gap-2 text-blue-500 font-bold hover:gap-4 transition-all">
                 Learn about our vision <ArrowRight className="w-4 h-4" />
               </Link>
            </div>
@@ -166,8 +166,8 @@ export default function Home() {
           <div className="space-y-4">
             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Institution</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/mission" className="hover:text-blue-400 transition-colors">Our Mission</Link></li>
-              <li><Link href="/about" className="hover:text-blue-400 transition-colors">Who Are We?</Link></li>
+              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Our Philosophy</Link></li>
+              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Who Are We?</Link></li>
               <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
@@ -176,8 +176,8 @@ export default function Home() {
             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Resources</h4>
             <ul className="space-y-2 text-slate-400">
               <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Course Catalog</Link></li>
-              <li><Link href="/methodology" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
-              <li><Link href="/open-source" className="hover:text-blue-400 transition-colors">Open Source</Link></li>
+              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
+              <li><a href="https://github.com/Open-Primer/open-primer" target="_blank" className="hover:text-blue-400 transition-colors">Open Source</a></li>
             </ul>
           </div>
 

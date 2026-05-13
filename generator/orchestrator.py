@@ -1,119 +1,122 @@
 import os
 import json
 import asyncio
+import argparse
 from pathlib import Path
 from datetime import datetime
-from prompt_templates import MASTER_ELITE_PROMPT, CURATOR_ELITE_PROMPT, ACADEMIC_SCALING, TARGET_LANGUAGES
+from dotenv import load_dotenv
+from prompt_templates import ARCHITECT_PROMPT, WRITER_PROMPT, ACADEMIC_SCALING, WRITING_STYLES
+
+# Vertex AI Integration
+try:
+    import vertexai
+    from vertexai.generative_models import GenerativeModel
+    VERTEX_AVAILABLE = True
+except ImportError:
+    VERTEX_AVAILABLE = False
+
+load_dotenv()
 
 CONTENT_DIR = Path("../content")
-CONFIG_DIR = Path("./config")
 
 class OpenPrimerFeynmanElite:
-    """
-    OpenPrimer Elite Orchestrator (v52.0)
-    ------------------------------------
-    The core academic engine responsible for the lifecycle of high-density curricula.
-    
-    WORKFLOW:
-    1. Phase 1 (Syllabus): Generates a structural JSON blueprint (UVs, Modules).
-    2. Phase 2 (Production): Triggers mass generation of 5000+ word MDX modules.
-    
-    STANDARDS:
-    - Elite v1.7: Mandatory historical context, pedagogical intuition, and rigorous math.
-    - Multi-Lingual: Concurrent generation in 5 languages (EN, FR, ES, DE, ZH).
-    - Institutional: Tracks ECTS credits, prerequisites, and expected workload.
-    """
-    
-    def __init__(self, api_key=None):
-        # Industrial Constants
+    def __init__(self, simulate=False, arch_model="gemini-1.5-pro", write_model="gemini-1.5-flash"):
         self.target_languages = ["en", "fr", "es", "de", "zh"]
-        self.min_density_words = 5000
-        self.curator_retries = 3
+        self.simulate = simulate
+        self.project_id = os.getenv("GCP_PROJECT_ID")
+        print(f"      [INIT] VERTEX_AVAILABLE: {VERTEX_AVAILABLE}, PROJECT_ID: {self.project_id}")
         
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.version = "1.7.0-Gold"
-        self.max_attempts = 3
+        if not simulate and VERTEX_AVAILABLE and self.project_id:
+            try:
+                vertexai.init(project=self.project_id, location="us-central1")
+                self.arch_model = GenerativeModel(arch_model)
+                self.write_model = GenerativeModel(write_model)
+                print(f"      [INIT] Models Loaded: {arch_model}, {write_model}")
+            except Exception as e:
+                print(f"      [INIT] Vertex AI Init Failed: {e}")
+                self.arch_model = None
+                self.write_model = None
+        else:
+            self.arch_model = None
+            self.write_model = None
+        self.version = "2.0.0-Agentic"
 
-    async def generate_module(self, topic, level, subject, unit, lang='EN'):
-        scale = ACADEMIC_SCALING.get(level, ACADEMIC_SCALING["L1"])
-        print(f"      [PRODUCING {level}] {topic} ({lang}) - Target: {scale['length']}...")
+    async def _call_llm(self, model, prompt, is_json=False):
+        if self.simulate:
+            # (Simulation logic remains same)
+            return "Simulated content"
         
-        # 1. Initial Generation
-        prompt = MASTER_ELITE_PROMPT.format(
+        try:
+            response = await model.generate_content_async(
+                prompt,
+                generation_config={"response_mime_type": "application/json"} if is_json else None
+            )
+            return response.text
+        except Exception as e:
+            print(f"      LLM Error: {e}")
+            return None
+
+    async def generate_module(self, topic, level, subject, lang='EN'):
+        scale = ACADEMIC_SCALING.get(level, ACADEMIC_SCALING["L1"])
+        style = WRITING_STYLES["master_scientist"]
+        
+        print(f"      [STAGE 1: ARCHITECT] Designing blueprint for {topic}...")
+        arch_prompt = ARCHITECT_PROMPT.format(topic=topic, level=level)
+        blueprint_raw = await self._call_llm(self.arch_model, arch_prompt, is_json=True)
+        if not blueprint_raw: return None
+        
+        blueprint = json.loads(blueprint_raw)
+        
+        print(f"      [STAGE 2: WRITER] Producing content ({lang}) - {scale['length']} words...")
+        writer_prompt = WRITER_PROMPT.format(
             topic=topic,
-            level=level,
-            subject=subject,
+            style_description=style,
+            lang=lang,
             target_length=scale["length"],
-            math_requirement=scale["math"],
-            lang=lang
+            blueprint=json.dumps(blueprint, indent=2)
         )
         
-        content = await self._call_llm(prompt)
-        
-        # 2. Curation Loop (Limited to 3 attempts)
-        is_valid = False
-        attempt = 1
-        while not is_valid and attempt <= self.max_attempts:
-            review = await self.curate_module(content, level, scale["length"], attempt)
-            
-            if review["status"] == "APPROVED" or review["score"] > 85:
-                is_valid = True
-                print(f"      ✅ Approved (Attempt {attempt}, Score: {review['score']}/100)")
-            else:
-                if attempt == self.max_attempts:
-                    print(f"      ⚠️ Max attempts reached. Marking {topic} as 'REVIEW_REQUIRED'.")
-                    content = f"<!-- REVIEW_REQUIRED: {review['feedback']} -->\n" + content
-                    break
-                
-                attempt += 1
-                print(f"      ❌ Rejected ({attempt-1}/{self.max_attempts}): {review['feedback']}. Retrying...")
-                content = await self._call_llm(f"{prompt}\n\nCRITICAL FEEDBACK FROM CURATOR (Attempt {attempt-1}): {review['feedback']}")
-                
+        content = await self._call_llm(self.write_model, writer_prompt)
         return content
 
-    async def curate_module(self, content, level, min_len, attempt):
-        curator_prompt = CURATOR_ELITE_PROMPT.format(
-            level=level,
-            min_words=min_len,
-            attempt=attempt
-        )
-        # Mocking Curator AI Call
-        response = await self._call_llm(f"{curator_prompt}\n\nCONTENT TO REVIEW:\n{content[:3000]}...")
-        # In production, parse JSON from LLM response
-        return {"status": "APPROVED", "score": 90, "feedback": "Criteria met."}
+    async def process_local_syllabus(self, syllabus_path, suffix=""):
+        p = Path(syllabus_path)
+        if not p.exists(): return
 
-    async def _call_llm(self, prompt):
-        # Mocking LLM API
-        return f"# {prompt[:100]}...\n(Simulated high-density academic content for OpenPrimer v1.7)"
-
-    async def run_industrial_task(self, config_file):
-        """Loads subjects and levels from a config file (to be moved to Supabase)."""
-        if not Path(config_file).exists():
-            print(f"Config {config_file} missing.")
-            return
-
-        with open(syllabus_file, "r", encoding="utf-8") as f:
+        with open(p, "r", encoding="utf-8") as f:
             syllabus = json.load(f)
 
-        print(f"🚀 Industrial Production Starting for: {syllabus['title']}")
+        base_dir = CONTENT_DIR / syllabus["level"] / syllabus["subject"] / (syllabus["id"] + suffix)
         
         for unit in syllabus.get("units", []):
-            unit_name = unit.get("name", "General")
-            unit_dir = p / unit_name.replace(" ", "_")
+            unit_dir = base_dir / unit.get("name", "General").replace(" ", "_")
             unit_dir.mkdir(parents=True, exist_ok=True)
             
             for topic in unit.get("modules", []):
-                for lang in TARGET_LANGUAGES:
-                    content = await self.generate_module(topic, syllabus["level"], syllabus["subject"], unit_name, lang)
-                    file_path = unit_dir / f"{topic.lower().replace(' ', '_')}.{lang}.mdx"
+                # Generate only EN for comparison speed
+                content = await self.generate_module(topic, syllabus["level"], syllabus["subject"], 'EN')
+                if content:
+                    file_path = unit_dir / f"{topic.lower().replace(' ', '_')}.en.mdx"
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(content)
-                print(f"      ✅ Module [{topic}] Finalized in all 5 languages.")
 
 async def main():
-    generator = OpenPrimerFeynmanElite()
-    # Triggering Classical Mechanics specifically
-    await generator.process_local_syllabus("../content/L1/Physics/Classical_Mechanics")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--compare", action="store_true")
+    args = parser.parse_args()
+
+    if args.compare:
+        combos = [
+            ("gemini-1.5-flash", "gemini-1.5-flash", "_flash_15_standard"),
+            ("gemini-1.5-flash-002", "gemini-1.5-flash-002", "_flash_15_v002_vanguard")
+        ]
+        for arch, write, suffix in combos:
+            print(f"\nRunning Comparison: Architect={arch} | Writer={write}")
+            generator = OpenPrimerFeynmanElite(arch_model=arch, write_model=write)
+            await generator.process_local_syllabus("./syllabus_physics_l1.json", suffix=suffix)
+    else:
+        generator = OpenPrimerFeynmanElite(simulate=True)
+        await generator.process_local_syllabus("./syllabus_physics_l1.json")
 
 if __name__ == "__main__":
     asyncio.run(main())

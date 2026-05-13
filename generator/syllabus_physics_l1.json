@@ -1,0 +1,14 @@
+{
+  "id": "Classical_Mechanics",
+  "title": "Classical Mechanics: Newtonian Dynamics",
+  "level": "L1",
+  "subject": "Physics",
+  "ects": 6,
+  "hours": 150,
+  "units": [
+    {
+      "name": "Newtonian Dynamics",
+      "modules": ["Newton's Laws"]
+    }
+  ]
+}

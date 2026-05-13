@@ -8,21 +8,20 @@ import { OpenPrimerIcon } from './OpenPrimerIcon';
 const BETA_CODE = "OP-BETA-2026";
 
 export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [code, setCode] = useState("");
-  const [isAuthorized, setIsAuthorized] = useState(true);
   const [error, setError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Bypassing for industrialization audit
-    setIsAuthorized(true);
-    setIsLoading(false);
+    // Check auth on mount
+    const auth = localStorage.getItem("op_beta_authorized");
+    setIsAuthorized(auth === "true");
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.toUpperCase() === BETA_CODE) {
-      localStorage.setItem("op_beta_access", "true");
+    if (code === "OP-BETA-2026") {
+      localStorage.setItem("op_beta_authorized", "true");
       setIsAuthorized(true);
       setError(false);
     } else {
@@ -31,53 +30,38 @@ export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-slate-950" />;
+  // Prevent flash of content during hydration
+  if (isAuthorized === null) return <div className="min-h-screen bg-slate-950" />;
 
-  if (isAuthorized) return <>{children}</>;
-
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8 selection:bg-blue-500/30">
-      <div className="fixed inset-0 bg-blue-600/5 blur-[120px] pointer-events-none" />
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="text-center mb-12">
-          <OpenPrimerIcon className="w-16 h-16 mx-auto mb-8" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest mb-6">
-            <ShieldCheck className="w-3 h-3" /> Private Beta Access
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 font-sans overflow-hidden">
+        <div className="fixed top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 w-full max-w-md p-10 rounded-[48px] bg-slate-900/50 border border-slate-800 backdrop-blur-3xl text-center"
+        >
+          <div className="w-16 h-16 bg-blue-600 rounded-3xl mx-auto mb-8 flex items-center justify-center text-white shadow-2xl shadow-blue-600/30">
+            <ShieldCheck className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-black text-white mb-3">Entrance Secured</h1>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            OpenPrimer is currently in invite-only industrialization phase. Please enter your access code.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative group">
-            <div className={`absolute inset-0 bg-blue-600/20 blur-xl transition-opacity duration-500 ${error ? 'bg-red-600/40 opacity-100' : 'opacity-0 group-focus-within:opacity-100'}`} />
-            <div className={`relative flex items-center bg-slate-900/80 border ${error ? 'border-red-500/50' : 'border-slate-800'} rounded-3xl p-2 backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl`}>
-              <div className="pl-6 pr-4">
-                <Lock className={`w-5 h-5 ${error ? 'text-red-500' : 'text-slate-700'}`} />
-              </div>
-              <input 
-                autoFocus
-                type="password"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter Beta Code..."
-                className="flex-1 bg-transparent border-none py-4 text-white focus:outline-none placeholder:text-slate-700 font-bold tracking-widest"
-              />
-              <button 
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20"
-              >
-                <ArrowRight className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
+          
+          <h1 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase">Beta Access <span className="text-blue-500 italic">Locked</span></h1>
+          <p className="text-slate-500 text-sm mb-10 leading-relaxed font-medium">Please enter your institutional access code to enter the OpenPrimer repository.</p>
+          
+          <form onSubmit={handleAuth} className="space-y-4">
+            <input 
+              type="password"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="••••••••••••"
+              className={`w-full bg-slate-950 border ${error ? 'border-red-500' : 'border-slate-800'} rounded-2xl py-4 px-6 text-center text-xl font-black tracking-[0.3em] text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-800`}
+            />
+            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-600/20 transition-all active:scale-95">
+              Authorize Access
+            </button>
+          </form>
           
           <AnimatePresence>
             {error && (
@@ -85,7 +69,7 @@ export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-center text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                className="mt-4 text-center text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 <AlertCircle className="w-3 h-3" /> Invalid Access Code
               </motion.p>
