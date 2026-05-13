@@ -6,78 +6,69 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from prompt_templates import ARCHITECT_PROMPT, WRITER_PROMPT, ACADEMIC_SCALING, WRITING_STYLES
-
-# Vertex AI Integration
-try:
-    import vertexai
-    from vertexai.generative_models import GenerativeModel
-    VERTEX_AVAILABLE = True
-except ImportError:
-    VERTEX_AVAILABLE = False
+from google import genai
 
 load_dotenv()
 
 CONTENT_DIR = Path("../content")
+AI_STUDIO_KEY = "AIzaSyCYUPTeO1Vq39HcOXrolyEFEU-PN-QP2zw"
 
 class OpenPrimerFeynmanElite:
-    def __init__(self, simulate=False, arch_model="gemini-1.5-pro", write_model="gemini-1.5-flash"):
+    def __init__(self, simulate=False, arch_model="gemini-flash-latest", write_model="gemini-flash-latest"):
         self.target_languages = ["en", "fr", "es", "de", "zh"]
         self.simulate = simulate
-        self.project_id = os.getenv("GCP_PROJECT_ID")
-        print(f"      [INIT] VERTEX_AVAILABLE: {VERTEX_AVAILABLE}, PROJECT_ID: {self.project_id}")
         
-        if not simulate and VERTEX_AVAILABLE and self.project_id:
-            try:
-                vertexai.init(project=self.project_id, location="us-central1")
-                self.arch_model = GenerativeModel(arch_model)
-                self.write_model = GenerativeModel(write_model)
-                print(f"      [INIT] Models Loaded: {arch_model}, {write_model}")
-            except Exception as e:
-                print(f"      [INIT] Vertex AI Init Failed: {e}")
-                self.arch_model = None
-                self.write_model = None
-        else:
-            self.arch_model = None
-            self.write_model = None
-        self.version = "2.0.0-Agentic"
-
-    async def _call_llm(self, model, prompt, is_json=False):
-        if self.simulate:
-            # (Simulation logic remains same)
-            return "Simulated content"
+        if not simulate:
+            print(f"      [INIT] Using GenAI SDK (Account: vanguard.mysterious)")
+            self.client = genai.Client(api_key=AI_STUDIO_KEY)
+            self.arch_model_name = arch_model
+            self.write_model_name = write_model
         
-        try:
-            response = await model.generate_content_async(
-                prompt,
-                generation_config={"response_mime_type": "application/json"} if is_json else None
-            )
-            return response.text
-        except Exception as e:
-            print(f"      LLM Error: {e}")
-            return None
+        self.version = "3.1.0-Vanguard"
 
     async def generate_module(self, topic, level, subject, lang='EN'):
-        scale = ACADEMIC_SCALING.get(level, ACADEMIC_SCALING["L1"])
-        style = WRITING_STYLES["master_scientist"]
+        if self.simulate:
+            return "# Simulated Content\nPedagogical excellence in progress."
         
-        print(f"      [STAGE 1: ARCHITECT] Designing blueprint for {topic}...")
-        arch_prompt = ARCHITECT_PROMPT.format(topic=topic, level=level)
-        blueprint_raw = await self._call_llm(self.arch_model, arch_prompt, is_json=True)
-        if not blueprint_raw: return None
-        
-        blueprint = json.loads(blueprint_raw)
-        
-        print(f"      [STAGE 2: WRITER] Producing content ({lang}) - {scale['length']} words...")
-        writer_prompt = WRITER_PROMPT.format(
-            topic=topic,
-            style_description=style,
-            lang=lang,
-            target_length=scale["length"],
-            blueprint=json.dumps(blueprint, indent=2)
-        )
-        
-        content = await self._call_llm(self.write_model, writer_prompt)
-        return content
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # 1. Architect (Blueprint)
+                arch_prompt = ARCHITECT_PROMPT.format(topic=topic, level=level, subject=subject, lang=lang)
+                resp_arch = self.client.models.generate_content(
+                    model=self.arch_model_name,
+                    contents=arch_prompt
+                )
+                blueprint = resp_arch.text
+                
+                await asyncio.sleep(2)
+                
+                # 2. Writer (Final Content)
+                style_desc = WRITING_STYLES["technical_expert"]
+                target_len = ACADEMIC_SCALING.get(level, ACADEMIC_SCALING["L1"])["length"]
+                
+                write_prompt = WRITER_PROMPT.format(
+                    topic=topic, 
+                    blueprint=blueprint, 
+                    lang=lang,
+                    style_description=style_desc,
+                    target_length=target_len
+                )
+                
+                resp_write = self.client.models.generate_content(
+                    model=self.write_model_name,
+                    contents=write_prompt
+                )
+                return resp_write.text
+            except Exception as e:
+                err_msg = str(e)
+                if ("503" in err_msg or "429" in err_msg) and attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 15
+                    print(f"      [RETRY] {err_msg[:100]}... Waiting {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
+                print(f"      LLM Error: {e}")
+                return None
 
     async def process_local_syllabus(self, syllabus_path, suffix=""):
         p = Path(syllabus_path)
@@ -93,7 +84,6 @@ class OpenPrimerFeynmanElite:
             unit_dir.mkdir(parents=True, exist_ok=True)
             
             for topic in unit.get("modules", []):
-                # Generate only EN for comparison speed
                 content = await self.generate_module(topic, syllabus["level"], syllabus["subject"], 'EN')
                 if content:
                     file_path = unit_dir / f"{topic.lower().replace(' ', '_')}.en.mdx"
@@ -108,10 +98,10 @@ async def main():
     if args.compare:
         # Matrix: (Arch, Writer)
         matrix = [
-            ("gemini-1.5-flash", "gemini-1.5-flash", "flash_15_standard"),
-            ("gemini-1.5-flash", "gemini-1.5-flash-002", "mixed_vanguard_writer"),
-            ("gemini-1.5-flash-002", "gemini-1.5-flash", "mixed_vanguard_architect"),
-            ("gemini-1.5-flash-002", "gemini-1.5-flash-002", "flash_15_v002_vanguard")
+            ("gemini-flash-latest", "gemini-flash-latest", "flash_latest"),
+            ("gemini-flash-latest", "gemini-3.1-flash-lite", "mixed_31_writer"),
+            ("gemini-3.1-flash-lite", "gemini-flash-latest", "mixed_31_architect"),
+            ("gemini-3.1-flash-lite", "gemini-3.1-flash-lite", "flash_31_lite_vanguard")
         ]
         
         tmp_dir = Path("./tmp_comparison")
@@ -121,7 +111,6 @@ async def main():
             print(f"\nRunning Comparison: Architect={arch} | Writer={write}")
             generator = OpenPrimerFeynmanElite(arch_model=arch, write_model=write)
             
-            # We use a topic to test quality
             topic = "Newton's Laws of Motion"
             content = await generator.generate_module(topic, "L1", "Physics", 'EN')
             

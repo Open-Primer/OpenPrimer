@@ -9,19 +9,18 @@ import {
 } from 'lucide-react';
 import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
-  const [activeLang, setActiveLang] = useState('EN');
+  const { language: activeLang, setLanguage: setActiveLang } = useLanguage();
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [courseLangFilter, setCourseLangFilter] = useState('EN');
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('op_lang') || 'EN';
-    setActiveLang(saved);
-    setCourseLangFilter(saved);
+    setCourseLangFilter(activeLang);
     
     const savedBookmarks = localStorage.getItem('op_bookmarks');
     if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
@@ -248,7 +247,7 @@ export const PhilosophyPage = () => (
         </p>
         <div className="flex flex-col md:flex-row items-center justify-center gap-6">
           <a 
-            href="https://github.com/Open_Primer" 
+            href="https://github.com/Open-Primer/OpenPrimer" 
             target="_blank" 
             className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all shadow-2xl"
           >
@@ -300,7 +299,27 @@ export const ContactPage = () => (
                   <input name="email" type="email" placeholder="Email Address" className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                </div>
                <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-48 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
-               <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20">Send Inquiry</button>
+                <button 
+                  type="submit" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget.form;
+                    if (!form) return;
+                    const name = (form.name as any).value;
+                    const email = (form.email as any).value;
+                    const message = (form.message as any).value;
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                       alert("Please enter a valid email address.");
+                       return;
+                    }
+                    window.location.href = `mailto:support@openprimer.org?subject=Inquiry from ${name}&body=${message} (Reply to: ${email})`;
+                    alert("Your mail client has been opened to send the message. Thank you!");
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20"
+                >
+                  Send Inquiry
+                </button>
             </form>
         </div>
       </div>
@@ -393,10 +412,9 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
                 {unit.modules.map(mod => (
                   <div key={mod} className="flex items-center justify-between p-6 bg-slate-900/20 border border-slate-800 rounded-3xl group hover:border-blue-500/30 transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
-                       <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:text-blue-400 transition-colors">
-                          <BookOpen className="w-4 h-4" />
-                       </div>
-                       <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="text-sm text-slate-600 hover:text-white transition-colors">Open Source</a>
+                       <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950 text-slate-600 hover:text-white transition-colors">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                       </a>
                        <span className="font-bold text-slate-300 group-hover:text-white transition-colors">{mod}</span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-800 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />

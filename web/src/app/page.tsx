@@ -6,8 +6,12 @@ import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, 
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+import { UI_STRINGS } from '@/components/RefinedUI';
 
 export default function Home() {
+  const { language: lang } = useLanguage();
+  const s = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [search, setSearch] = useState('');
   
   const examples = [
@@ -44,13 +48,13 @@ export default function Home() {
         {/* Title */}
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-white">
-            Universal Knowledge. <br />
+            {lang === 'FR' ? "Le Savoir Universel." : "Universal Knowledge."} <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-              Finally Free.
+              {lang === 'FR' ? "Enfin Libre." : "Finally Free."}
             </span>
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            OpenPrimer synthesizes the entirety of academic curricula, from primary school to Bachelor's degree, into a single, interactive, and AI-tutored experience.
+            {lang === 'FR' ? "OpenPrimer synthétise l'intégralité des cursus académiques, du primaire au Bachelor, dans une expérience unique, interactive et tutorée par l'IA." : "OpenPrimer synthesizes the entirety of academic curricula, from primary school to Bachelor's degree, into a single, interactive, and AI-tutored experience."}
           </p>
         </div>
 
@@ -65,7 +69,7 @@ export default function Home() {
               <input 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="What do you want to learn today?"
+                placeholder={s.search}
                 className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
               />
               <Link href="/catalog" className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2">
@@ -173,11 +177,11 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Resources</h4>
+            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">{s.curriculum}</h4>
             <ul className="space-y-2 text-slate-400">
-              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">Course Catalog</Link></li>
+              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">{s.catalog}</Link></li>
               <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
-              <li><a href="https://github.com/Open-Primer/open-primer" target="_blank" className="hover:text-blue-400 transition-colors">Open Source</a></li>
+              <li><a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="hover:text-blue-400 transition-colors">{s.opensource}</a></li>
             </ul>
           </div>
 

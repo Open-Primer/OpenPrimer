@@ -1,0 +1,108 @@
+# Newton's Laws of Motion: The Mechanics of Dynamics
+
+## 1. Historical Genesis
+
+The transition from Aristotelian teleology—which posited that objects possess an inherent desire to reach a "natural state of rest"—to Newtonian mechanics represents the birth of modern analytical physics. Aristotle argued that a constant force was required to maintain constant velocity. Galileo Galilei shattered this paradigm through his experiments on inclined planes, identifying **Inertia** as a property of matter rather than a consequence of applied force.
+
+An **Inertial Reference Frame** is a coordinate system in which a body remains at rest or moves at a constant velocity unless acted upon by a non-zero net external force. Mathematically, if $S$ is an inertial frame, any frame $S'$ moving at constant velocity $\vec{v}$ relative to $S$ is also an inertial frame.
+
+<Glossary terms={{
+  "Inertia": "The resistance of any physical object to any change in its velocity.",
+  "Inertial Frame": "A frame of reference that is not accelerating, where Newton's laws hold.",
+  "Galilean Transformation": "The set of equations that relate the coordinates of a particle in one inertial frame to another: $x' = x - vt, t' = t$."
+}} />
+
+---
+
+## 2. Newton’s First Law: The Law of Inertia
+
+Newton’s First Law states: *Every body persists in its state of being at rest or of moving uniformly straight forward, except insofar as it is compelled to change its state by force impressed.*
+
+### The Mathematical Condition
+In terms of vector calculus, the First Law defines the condition of equilibrium:
+$$\sum \vec{F} = 0 \iff \frac{d\vec{v}}{dt} = 0$$
+
+If the net force is zero, the acceleration $\vec{a}$ is identically zero. This implies that mass is the quantitative measure of inertia.
+
+[FIGURE DESCRIPTION: A schematic showing an object on a frictionless horizontal surface. The gravitational force $\vec{F}_g$ (down) is exactly countered by the normal force $\vec{N}$ (up), resulting in $\sum \vec{F} = 0$. The object maintains a constant velocity vector $\vec{v}$.]
+
+<Video id="newton_first_law_intro" />
+
+<Quiz questions={[
+  { q: "If an object is moving in a circle at a constant speed, is it in equilibrium?", a: "No, because the direction of the velocity vector is changing, implying acceleration." }
+]} />
+
+---
+
+## 3. Newton’s Second Law: Dynamics of Change
+
+Newton’s Second Law is the core governing equation for classical mechanics. It establishes a causal link between the net force applied to a body and its resulting kinematic state.
+
+### The Vector Relation
+For a system of constant mass:
+$$\vec{F}_{\text{net}} = \sum \vec{F} = m\vec{a}$$
+
+Since acceleration is the second derivative of position with respect to time ($\vec{a} = \frac{d^2\vec{r}}{dt^2}$), the Second Law is a second-order linear differential equation:
+$$\sum \vec{F} = m \frac{d^2\vec{r}}{dt^2}$$
+
+### Derivation: Momentum Formulation
+Newton originally framed the law in terms of linear momentum $\vec{p} = m\vec{v}$:
+$$\vec{F} = \frac{d\vec{p}}{dt} = \frac{d}{dt}(m\vec{v})$$
+If $m$ is constant, $\vec{F} = m \frac{d\vec{v}}{dt} + \vec{v} \frac{dm}{dt}$. In classical mechanics, $\frac{dm}{dt} = 0$, reducing the expression to the standard form.
+
+<SolvedProblem title="Forces on a Conveyor" >
+  **Problem:** A block of mass $m = 5\text{ kg}$ is accelerated from rest at $2\text{ m/s}^2$ on a frictionless plane. Calculate the required force.
+  **Solution:** 
+  1. Identify $\sum \vec{F} = m\vec{a}$
+  2. Substitute values: $F = (5\text{ kg})(2\text{ m/s}^2)$
+  3. Result: $F = 10\text{ N}$
+</SolvedProblem>
+
+<Video id="newton_second_law_deriv" />
+
+---
+
+## 4. Newton’s Third Law: Action and Reaction
+
+Newton’s Third Law states: *To every action there is always opposed an equal reaction; or, the mutual actions of two bodies upon each other are always equal, and directed to contrary parts.*
+
+### The Force Pair
+$$\vec{F}_{12} = -\vec{F}_{21}$$
+Crucially, these forces act on **different bodies**. A common misconception is that these forces "cancel out." They do not, because they are applied to different objects, meaning they do not appear in the same FBD.
+
+<Figure src="action_reaction_pair.png" description="Two blocks (m1, m2) in contact. F12 (force of m2 on m1) and F21 (force of m1 on m2) are shown as vectors of equal magnitude and opposite direction acting on separate objects." />
+
+<SolvedProblem title="Tug-of-War Dynamics" >
+  **Problem:** Two athletes pull on a rope with 500 N each. What is the tension in the rope?
+  **Solution:** The tension is 500 N, not 1000 N. Each athlete experiences an action-reaction pair where the rope pulls back with 500 N.
+</SolvedProblem>
+
+---
+
+## 5. Application: Free-Body Diagrams (FBD)
+
+The FBD is the essential tool for reducing a complex physical system to a solvable mathematical problem.
+
+### Algorithm for Construction:
+1. Isolate the body from its surroundings.
+2. Replace all contacts with their respective force vectors (Gravity $w=mg$, Normal $\vec{N}$, Friction $f_k = \mu_k N$, Tension $\vec{T}$).
+3. Define an orthogonal coordinate system ($x, y$).
+4. Resolve all vectors into $x$ and $y$ components.
+5. Apply $\sum F_x = ma_x$ and $\sum F_y = ma_y$.
+
+<SolvedProblem title="Block on Inclined Plane" >
+  **Problem:** A mass $m$ slides down a frictionless incline at angle $\theta$. Find the acceleration.
+  **Derivation:**
+  1. $F_x = mg\sin\theta = ma_x$
+  2. $F_y = N - mg\cos\theta = 0$
+  3. Solving for $a_x$: $a_x = g\sin\theta$.
+</SolvedProblem>
+
+<Glossary terms={{
+  "Normal Force": "Force perpendicular to the surface of contact.",
+  "Frictional Force": "Resistance force parallel to the surface; $f_k = \mu_k N$."
+}} />
+
+***
+
+*Note: Mastering these laws requires rigorous practice with vector summation. Ensure all coordinate systems are consistent across multi-body problems to avoid sign errors in acceleration components.*

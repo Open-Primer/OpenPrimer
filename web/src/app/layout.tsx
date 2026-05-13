@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Access the entire global academic knowledge from Primary School to Bachelor degree, AI-powered and community-certified.",
 };
 
+import { ClientProviders } from "@/components/ClientProviders";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} selection:bg-blue-500/30`}>
-        <Gatekeeper>
-          {children}
-        </Gatekeeper>
+        <ClientProviders>
+          <Gatekeeper>
+            {children}
+          </Gatekeeper>
+        </ClientProviders>
       </body>
     </html>
   );

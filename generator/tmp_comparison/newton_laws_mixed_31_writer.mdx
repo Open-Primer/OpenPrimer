@@ -1,0 +1,128 @@
+# Newton's Laws of Motion: The Foundation of Classical Mechanics
+
+## Chapter 1: The Aristotelian Transition & Galileo’s Insight
+
+The classical view of motion, dominated by Aristotelian physics for two millennia, posited that the "natural state" of an object is rest, and that force is required to maintain constant velocity. This is empirically flawed. 
+
+Galileo Galilei dismantled this through the study of inclined planes. He observed that as a ball rolls down an incline and onto a secondary plane, it attempts to return to its original height. If the secondary plane is leveled to the horizontal, the ball theoretically continues to move indefinitely in the absence of external resistive forces.
+
+<GalileosInclineSim />
+
+[FIGURE DESCRIPTION: A schematic showing a ball rolling down a slope (θ) onto a flat surface. Vector arrows illustrate velocity remaining constant on the horizontal plane, contrasting with the deceleration experienced on an upward incline.]
+
+<ThoughtExperimentSlider_FrictionlessSurface />
+
+### Key Takeaway
+Motion is not a property requiring an active agent; motion is a state. Friction is the hidden agent of deceleration, not a fundamental requirement of motion itself.
+
+---
+
+## Chapter 2: The First Law: Inertia and Reference Frames
+
+Newton’s First Law, the Law of Inertia, states: *An object at rest remains at rest, and an object in motion remains in motion at a constant velocity unless acted upon by a net external force.*
+
+### Mathematical Definition
+Let $\mathbf{v}$ be the velocity vector.
+$$\sum \mathbf{F} = 0 \implies \frac{d\mathbf{v}}{dt} = 0 \implies \mathbf{v} = \text{constant}$$
+
+### Inertial vs. Non-Inertial Frames
+An inertial frame is one in which the First Law holds true. If an observer is in an accelerating frame (a non-inertial frame), objects appear to move without force, necessitating the introduction of "fictitious forces" (e.g., the Coriolis effect or centrifugal force).
+
+<InertiaPuckAnimation />
+<ReferenceFrameToggle_TrainScenario />
+
+<Glossary terms={{
+  Inertia: "The resistance of any physical object to any change in its velocity.",
+  "Inertial Frame": "A frame of reference where Newton's First Law holds.",
+  "Fictitious Force": "An apparent force that acts on all masses in a non-inertial frame of reference."
+}} />
+
+---
+
+## Chapter 3: The Second Law: The Quantification of Force
+
+The Second Law provides the bridge between geometry and dynamics. It defines how force manifests as a change in the state of motion.
+
+### Derivation
+Newton originally defined force as the time rate of change of momentum ($\mathbf{p} = m\mathbf{v}$):
+$$\mathbf{F} = \frac{d\mathbf{p}}{dt} = \frac{d}{dt}(m\mathbf{v})$$
+Assuming constant mass ($m$):
+$$\mathbf{F} = m \frac{d\mathbf{v}}{dt} = m\mathbf{a}$$
+
+<InteractiveDerivation_F_ma />
+<MassAccelerationGrapher />
+
+### Industrial Application: Atwood's Machine
+An Atwood machine consists of two masses ($m_1, m_2$) connected by an inextensible string over a massless, frictionless pulley.
+
+**Derivation:**
+For mass $m_1$ (assuming $m_2 > m_1$):
+1. $T - m_1g = m_1a$
+2. $m_2g - T = m_2a$
+
+Adding the equations:
+$m_2g - m_1g = (m_1 + m_2)a$
+$$a = g \frac{m_2 - m_1}{m_2 + m_1}$$
+
+<SolvedProblem_AtwoodsMachine_Simple />
+
+---
+
+## Chapter 4: The Third Law: Symmetry in Interaction
+
+The Third Law posits that forces are not isolated occurrences but interactions between two bodies. 
+
+### The Law
+For every action, there is an equal and opposite reaction:
+$$\mathbf{F}_{AB} = -\mathbf{F}_{BA}$$
+
+**Critical Rigor:** These forces act on **different bodies**. Therefore, they do not cancel each other out in a system summation unless the system includes both objects.
+
+<VectorPairIdentificationLab />
+<RecoilSimulator_SkaterPush />
+
+[FIGURE DESCRIPTION: A diagram showing two skaters pushing off each other. Two identical vector arrows point in opposite directions, one originating at the center of mass of Skater A, the other at Skater B.]
+
+---
+
+## Chapter 5: Synthesis: Free Body Diagrams (FBDs)
+
+Resolution of complex mechanical systems requires the decomposition of all acting forces into orthogonal components.
+
+### Methodology
+1. **Isolate the body:** Remove the environment.
+2. **Identify all forces:** Gravity ($mg$), Normal Force ($N$), Tension ($T$), Friction ($f$).
+3. **Establish a coordinate system:** Align axes to simplify acceleration components.
+4. **Apply $\sum \mathbf{F} = m\mathbf{a}$.**
+
+<Video id="VectorResolutionInRealTime" />
+
+### Complex Scenario: Inclined Plane
+An object on an incline with angle $\theta$.
+*   Normal Force: $N = mg\cos(\theta)$
+*   Parallel Force: $F_{||} = mg\sin(\theta)$
+
+If the object is in equilibrium ($\sum \mathbf{F} = 0$), then:
+$$f_s = mg\sin(\theta)$$
+
+<DragAndDrop_FBD_Builder />
+
+---
+
+## Final Assessment: Integrated Mastery
+
+<Quiz 
+  questions={[
+    {q: "If an object is at terminal velocity, what is the net force acting upon it?", a: "Zero."},
+    {q: "Does the Third Law imply that action-reaction forces cancel?", a: "No, they act on different bodies."},
+    {q: "Define Inertial Mass mathematically.", a: "m = F/a"}
+  ]} 
+/>
+
+### Mathematical Summary Table
+| Concept | Equation | Application |
+| :--- | :--- | :--- |
+| **Net Force** | $\sum \mathbf{F} = \sum \mathbf{F}_i$ | Systems analysis |
+| **Dynamics** | $\mathbf{F} = m\mathbf{a}$ | Accelerating bodies |
+| **Statics** | $\sum \mathbf{F} = 0$ | Structural integrity |
+| **Symmetry** | $\mathbf{F}_{12} = -\mathbf{F}_{21}$ | Multi-body interaction |
