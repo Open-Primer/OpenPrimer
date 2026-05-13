@@ -75,14 +75,16 @@ export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
               </motion.p>
             )}
           </AnimatePresence>
-        </form>
 
-        <div className="mt-20 text-center">
-           <p className="text-[9px] font-black text-slate-800 uppercase tracking-[0.3em]">
-             System industrialization in progress • v18.0
-           </p>
-        </div>
-      </motion.div>
-    </div>
-  );
+          <div className="mt-20 text-center">
+             <p className="text-[9px] font-black text-slate-800 uppercase tracking-[0.3em]">
+               System industrialization in progress • v18.0
+             </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 };
