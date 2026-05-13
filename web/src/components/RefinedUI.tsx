@@ -204,25 +204,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[100] px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        {isCoursePage && (
-          <button 
-            onClick={() => triggerToast(s.copy)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"
-          >
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{s.report}</span>
-          </button>
-        )}
-        <button 
-          onClick={() => {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url);
-            triggerToast(s.copy);
-          }}
-          className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-blue-500/50 transition-all"
-        >
-          <Share2 className="w-4 h-4" />
-        </button>
         {isCoursePage && toggleSidebar && (
           <button 
             onClick={toggleSidebar}
@@ -274,6 +255,16 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
               </button>
             ))}
           </div>
+        )}
+
+        {isCoursePage && (
+          <button 
+            onClick={() => triggerToast(t.report)}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{t.report}</span>
+          </button>
         )}
 
         <button onClick={shareLink} className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-white transition-all">
