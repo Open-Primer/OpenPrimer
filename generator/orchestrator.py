@@ -106,16 +106,33 @@ async def main():
     args = parser.parse_args()
 
     if args.compare:
-        combos = [
-            ("gemini-1.5-flash", "gemini-1.5-flash", "_flash_15_standard"),
-            ("gemini-1.5-flash-002", "gemini-1.5-flash-002", "_flash_15_v002_vanguard")
+        # Matrix: (Arch, Writer)
+        matrix = [
+            ("gemini-1.5-flash", "gemini-1.5-flash", "flash_15_standard"),
+            ("gemini-1.5-flash", "gemini-1.5-flash-002", "mixed_vanguard_writer"),
+            ("gemini-1.5-flash-002", "gemini-1.5-flash", "mixed_vanguard_architect"),
+            ("gemini-1.5-flash-002", "gemini-1.5-flash-002", "flash_15_v002_vanguard")
         ]
-        for arch, write, suffix in combos:
+        
+        tmp_dir = Path("./tmp_comparison")
+        tmp_dir.mkdir(exist_ok=True)
+        
+        for arch, write, suffix in matrix:
             print(f"\nRunning Comparison: Architect={arch} | Writer={write}")
             generator = OpenPrimerFeynmanElite(arch_model=arch, write_model=write)
-            await generator.process_local_syllabus("./syllabus_physics_l1.json", suffix=suffix)
+            
+            # We use a topic to test quality
+            topic = "Newton's Laws of Motion"
+            content = await generator.generate_module(topic, "L1", "Physics", 'EN')
+            
+            if content:
+                file_path = tmp_dir / f"newton_laws_{suffix}.mdx"
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+                print(f"      [SUCCESS] Sample saved to {file_path}")
+            
     else:
-        generator = OpenPrimerFeynmanElite(simulate=True)
+        generator = OpenPrimerFeynmanElite()
         await generator.process_local_syllabus("./syllabus_physics_l1.json")
 
 if __name__ == "__main__":
