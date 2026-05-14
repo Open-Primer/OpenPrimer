@@ -47,7 +47,12 @@ export const UI_STRINGS = {
     save_changes: "Save Changes", preferences: "Preferences", preferred_lang: "Preferred Language",
     lang_desc: "Global UI and tutor interaction language.", danger_zone: "Danger Zone",
     delete_account: "Delete Account", delete_desc: "This action is permanent. All progress will be lost.",
-    profile_updated: "Profile Updated Successfully"
+    profile_updated: "Profile Updated Successfully",
+    total_credits: "Total Credits", knowledge_points: "Knowledge Points", learning_time: "Learning Time",
+    active_modules: "Active Modules", progress: "Progress", tutor_summary: "AI Pedagogical Summary",
+    tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview",
+    classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law",
+    physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics"
   },
   FR: { 
     progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
@@ -84,7 +89,12 @@ export const UI_STRINGS = {
     save_changes: "Enregistrer", preferences: "Préférences", preferred_lang: "Langue Préférée",
     lang_desc: "Langue globale de l'interface et du tuteur.", danger_zone: "Zone de Danger",
     delete_account: "Supprimer le Compte", delete_desc: "Cette action est permanente. Tout le progrès sera perdu.",
-    profile_updated: "Profil mis à jour avec succès"
+    profile_updated: "Profil mis à jour avec succès",
+    total_credits: "Crédits Totaux", knowledge_points: "Points de Savoir", learning_time: "Temps d'Apprentissage",
+    active_modules: "Modules Actifs", progress: "Progression", tutor_summary: "Résumé Pédagogique IA",
+    tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum",
+    classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel",
+    physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques"
   },
   ES: { 
     progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
@@ -121,7 +131,12 @@ export const UI_STRINGS = {
     save_changes: "Guardar Cambios", preferences: "Preferencias", preferred_lang: "Idioma Preferido",
     lang_desc: "Idioma global de la interfaz y del tutor.", danger_zone: "Zona de Peligro",
     delete_account: "Eliminar Cuenta", delete_desc: "Esta acción es permanente. Se perderá todo el progreso.",
-    profile_updated: "Perfil actualizado con éxito"
+    profile_updated: "Perfil actualizado con éxito",
+    total_credits: "Créditos Totales", knowledge_points: "Puntos de Conocimiento", learning_time: "Tiempo de Aprendizaje",
+    active_modules: "Módulos Activos", progress: "Progreso", tutor_summary: "Resumen Pedagógico IA",
+    tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo",
+    classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional",
+    physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas"
   },
   DE: { 
     progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
@@ -158,7 +173,12 @@ export const UI_STRINGS = {
     save_changes: "Änderungen speichern", preferences: "Einstellungen", preferred_lang: "Bevorzugte Sprache",
     lang_desc: "Globale UI- und Tutor-Interaktionssprache.", danger_zone: "Gefahrenzone",
     delete_account: "Konto löschen", delete_desc: "Diese Aktion ist permanent. Alle Fortschritte gehen verloren.",
-    profile_updated: "Profil erfolgreich aktualisiert"
+    profile_updated: "Profil erfolgreich aktualisiert",
+    total_credits: "Gesamt-Credits", knowledge_points: "Wissenspunkte", learning_time: "Lernzeit",
+    active_modules: "Aktive Module", progress: "Fortschritt", tutor_summary: "KI-Pädagogische Zusammenfassung",
+    tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick",
+    classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht",
+    physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik"
   },
   ZH: { 
     progress: "我的进度", admin: "管理控制台", settings: "账户设置",
@@ -195,7 +215,12 @@ export const UI_STRINGS = {
     save_changes: "保存更改", preferences: "偏好设置", preferred_lang: "首选语言",
     lang_desc: "全局界面和导师互动语言。", danger_zone: "危险区域",
     delete_account: "删除账户", delete_desc: "此操作是永久性的。所有进度都将丢失。",
-    profile_updated: "资料更新成功"
+    profile_updated: "资料更新成功",
+    total_credits: "总学分", knowledge_points: "知识点", learning_time: "学习时长",
+    active_modules: "当前模块", progress: "进度", tutor_summary: "AI 教学总结",
+    tutor_feedback: "学术反馈", curriculum_overview: "课程概览",
+    classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法",
+    physics: "物理", biology: "生物", law: "法律", math: "数学"
   }
 };
 

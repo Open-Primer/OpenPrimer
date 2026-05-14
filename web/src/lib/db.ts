@@ -164,9 +164,25 @@ export const dbService = {
     return { data, error };
   },
 
-  // CLUSTERED REPORT MGMT (Keep mock for now if no table exists, or assume it's there)
+  // CURRICULUM & PROGRESS
+  getUserProgress: async (userId: string) => {
+    // Simulated progressive data
+    return {
+      credits: 18,
+      kp: 14250,
+      learningTime: "52h 20m",
+      activeModules: [
+        { id: 1, title_key: "classical_mechanics", subject_key: "physics", level: "L1", slug: "classical-mechanics", progress: 65 },
+        { id: 2, title_key: "cell_biology", subject_key: "biology", level: "L1", slug: "cell-biology", progress: 28 },
+        { id: 3, title_key: "constitutional_law", subject_key: "law", level: "L1", slug: "constitutional-law", progress: 12 }
+      ],
+      aiSummary: "You have shown exceptional rigor in Classical Mechanics. Your next milestone is the Lagrangian synthesis. In Biology, we suggest focusing on ATP cycles to reach the L2 threshold."
+    };
+  },
+
+  // CLUSTERED REPORT MGMT
   getReportClusters: async () => {
-     // This might need a new table in Supabase
-     return [];
+     const { data, error } = await supabase.from('report_clusters').select('*');
+     return { data: data || [], error };
   }
 };

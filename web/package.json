@@ -21,7 +21,7 @@
     "framer-motion": "^12.38.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^1.14.0",
-    "next": "15.1.7",
+    "next": "16.2.6",
     "next-mdx-remote": "^6.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -37,7 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.1.7",
+    "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

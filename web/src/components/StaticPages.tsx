@@ -336,7 +336,7 @@ export const ContactPage = () => {
                       <input name="name" type="text" placeholder="Full Name" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                       <input name="email" type="email" placeholder="Email Address" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                    </div>
-                   <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-96 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
+                   <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-40 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
                     <button 
                       type="submit" 
                       disabled={isSending}
