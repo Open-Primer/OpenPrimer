@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { Mail, Lock, ArrowRight, Globe, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { TopNav, Footer } from '@/components/RefinedUI';
 
 export default function LoginPage() {
   return (
@@ -57,6 +58,9 @@ export default function LoginPage() {
           Don't have an account? <Link href="/signup" className="text-blue-500 font-bold hover:underline">Create one for free</Link>
         </p>
       </motion.div>
+      <div className="fixed bottom-0 left-0 right-0 p-8">
+        <Footer />
+      </div>
     </div>
   );
 }

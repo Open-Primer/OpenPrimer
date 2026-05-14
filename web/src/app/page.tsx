@@ -8,11 +8,21 @@ import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
+import { dbService } from '@/lib/db';
 
 export default function Home() {
   const { language: lang } = useLanguage();
   const s = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({ total_students: 0, active_curricula: 0 });
+
+  useEffect(() => {
+    async function loadStats() {
+      const { data } = await dbService.getSiteStats();
+      if (data) setStats(data);
+    }
+    loadStats();
+  }, []);
   
   const examples = [
     { label: "Physics L1", query: "physics" },
@@ -41,20 +51,20 @@ export default function Home() {
         >
           <OpenPrimerIcon className="w-24 h-24" />
           <div className="absolute -top-2 -right-6 bg-blue-600 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg shadow-blue-600/40">
-            v1.5 Beta
+            {s.beta_tag}
           </div>
         </motion.div>
 
         {/* Title */}
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-white">
-            {lang === 'FR' ? "Le Savoir Universel." : "Universal Knowledge."} <br />
+            {s.universal_knowledge} <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-              {lang === 'FR' ? "Enfin Libre." : "Finally Free."}
+              {s.finally_free}
             </span>
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            {lang === 'FR' ? "OpenPrimer synthétise l'intégralité des cursus académiques, du primaire au Bachelor, dans une expérience unique, interactive et tutorée par l'IA." : "OpenPrimer synthesizes the entirety of academic curricula, from primary school to Bachelor's degree, into a single, interactive, and AI-tutored experience."}
+            {s.summary}
           </p>
         </div>
 
@@ -80,7 +90,7 @@ export default function Home() {
           
           {/* Examples */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">Try:</span>
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">{s.try_label}</span>
             {examples.map((ex) => (
               <button 
                 key={ex.label}
@@ -100,10 +110,10 @@ export default function Home() {
                <BookOpen className="w-6 h-6" />
              </div>
              <div className="flex items-center gap-2">
-               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Academic Rigor</h3>
-               <div className="bg-emerald-500/20 text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Elite</div>
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{s.rigor}</h3>
+               <div className="bg-emerald-500/20 text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{s.elite_tag}</div>
              </div>
-             <p className="text-sm text-slate-500 leading-relaxed">Full university curricula synthesized with the Feynman method for maximum depth.</p>
+             <p className="text-sm text-slate-500 leading-relaxed">{s.rigor_desc}</p>
            </div>
            
            <div className="space-y-4 p-8 bg-slate-900/20 border border-slate-900 rounded-[40px] hover:bg-slate-900/40 transition-all group">
@@ -111,10 +121,10 @@ export default function Home() {
                <Cpu className="w-6 h-6" />
              </div>
              <div className="flex items-center gap-2">
-               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">AI Tutor</h3>
-               <div className="bg-blue-500/20 text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">New</div>
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{s.tutor}</h3>
+               <div className="bg-blue-500/20 text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{s.new_tag}</div>
              </div>
-             <p className="text-sm text-slate-500 leading-relaxed">Context-aware AI tutoring directly integrated into every learning module.</p>
+             <p className="text-sm text-slate-500 leading-relaxed">{s.tutor_desc}</p>
            </div>
 
            <div className="space-y-4 p-8 bg-slate-900/20 border border-slate-900 rounded-[40px] hover:bg-slate-900/40 transition-all group">
@@ -122,10 +132,10 @@ export default function Home() {
                <Globe className="w-6 h-6" />
              </div>
              <div className="flex items-center gap-2">
-               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Multilingual</h3>
-               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">5 Languages</div>
+               <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{s.languages}</h3>
+               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{lang === 'ZH' ? '5 种语言' : `5 ${s.languages}`}</div>
              </div>
-             <p className="text-sm text-slate-500 leading-relaxed">Native support for EN, FR, ES, DE, and PT. Breaking the language barrier in education.</p>
+             <p className="text-sm text-slate-500 leading-relaxed">{s.multilingual_desc}</p>
            </div>
         </div>
 
@@ -133,73 +143,29 @@ export default function Home() {
         <section className="w-full mt-40 grid md:grid-cols-2 gap-16 items-center">
            <div className="space-y-8">
               <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">
-                 <Globe className="w-4 h-4" /> Global Mission
+                 <Globe className="w-4 h-4" /> {s.mission_sub}
               </div>
-              <h2 className="text-4xl font-black tracking-tighter text-white">Knowledge without borders.</h2>
+              <h2 className="text-4xl font-black tracking-tighter text-white">{s.mission}</h2>
               <p className="text-slate-500 leading-relaxed italic">
-                "Our objective is to ensure that no student, regardless of their language or location, is ever denied access to the highest level of academic rigor."
+                "{s.mission_desc}"
               </p>
               <Link href="/philosophy" className="flex items-center gap-2 text-blue-500 font-bold hover:gap-4 transition-all">
-                Learn about our vision <ArrowRight className="w-4 h-4" />
+                {s.mission_link} <ArrowRight className="w-4 h-4" />
               </Link>
            </div>
            <div className="grid grid-cols-2 gap-4">
               <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center">
-                 <p className="text-3xl font-black text-white">5</p>
-                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Languages</p>
+                 <p className="text-3xl font-black text-white">{stats.total_students.toLocaleString() || '50+'}</p>
+                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">{s.languages}</p>
               </div>
               <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center mt-8">
-                 <p className="text-3xl font-black text-white">Elite</p>
-                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Standard</p>
+                 <p className="text-3xl font-black text-white">{stats.active_curricula || '12'}</p>
+                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">{s.quality}</p>
               </div>
            </div>
         </section>
 
-        {/* TEAM & CONTACT QUICK LINKS */}
-        <div className="w-full mt-40 pt-16 border-t border-slate-900 grid md:grid-cols-4 gap-12 text-sm">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <OpenPrimerIcon className="w-6 h-6" />
-              <span className="font-black tracking-tighter text-white">OPENPRIMER</span>
-            </div>
-            <p className="text-slate-500 text-xs leading-relaxed">
-              Global academic consortium dedicated to universalizing knowledge via AI.
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Institution</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Our Philosophy</Link></li>
-              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Who Are We?</Link></li>
-              <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">{s.curriculum}</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li><Link href="/catalog" className="hover:text-blue-400 transition-colors">{s.catalog}</Link></li>
-              <li><Link href="/philosophy" className="hover:text-blue-400 transition-colors">Feynman Method</Link></li>
-              <li><a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="hover:text-blue-400 transition-colors">{s.opensource}</a></li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700">Legal</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy</Link></li>
-              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="mt-16 text-center">
-           <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.3em]">
-             OpenPrimer Project • 2026 • Global AI Academic Repository
-           </p>
-        </div>
+        <Footer />
       </div>
     </div>
   );

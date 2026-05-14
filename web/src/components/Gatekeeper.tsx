@@ -5,14 +5,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
 
-const BETA_CODE = "OP-BETA-2026";
+const BETA_CODE = process.env.NEXT_PUBLIC_BETA_CODE || "OP-BETA-2026";
 
+/**
+ * GATEKEEPER COMPONENT
+ * 
+ * This component acts as a "Socratic Overlay" for the entire application.
+ * It enforces an access code on production (Vercel) to maintain beta exclusivity.
+ * 
+ * SECURITY NOTE: This is a client-side gate for beta user experience, not a 
+ * replacement for server-side RLS or Auth.
+ */
 export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    // BYPASS GATEKEEPER ON LOCAL DEVELOPMENT
+    // This ensures Silvere and the dev team don't get blocked during local iterations.
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (isLocal && process.env.NODE_ENV === "development") {
+      setIsAuthorized(true);
+      return;
+    }
+
     // Check auth on mount
     const auth = localStorage.getItem("op_beta_authorized");
     setIsAuthorized(auth === "true");
@@ -47,7 +64,7 @@ export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
             <ShieldCheck className="w-8 h-8" />
           </div>
           
-          <h1 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase">Beta Access <span className="text-blue-500 italic">Locked</span></h1>
+          <h1 className="text-3xl md:text-4xl font-black mb-4 tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Beta Access <span className="italic text-white">Locked</span></h1>
           <p className="text-slate-500 text-sm mb-10 leading-relaxed font-medium">Please enter your institutional access code to enter the OpenPrimer repository.</p>
           
           <form onSubmit={handleAuth} className="space-y-4">

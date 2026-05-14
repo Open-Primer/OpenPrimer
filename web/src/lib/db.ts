@@ -138,34 +138,35 @@ export const authService = {
   isAdmin: () => users[0].role === 'admin'
 };
 
+import { supabase } from './supabase';
+
 export const dbService = {
   // SYLLABUS & CURRICULUM
-  getSyllabus: async (id: string) => syllabi.find(s => s.id === id),
-  getAllSyllabi: async () => syllabi,
-
-  // USER MGMT
-  getUsers: async () => users,
-  updateUserRole: async (id: string, role: UserRole) => {
-    users = users.map(u => u.id === id ? { ...u, role } : u);
-  },
-  toggleBlockUser: async (id: string) => {
-    users = users.map(u => u.id === id ? { ...u, isBlocked: !u.isBlocked } : u);
-  },
-  deleteUser: async (id: string) => {
-    users = users.filter(u => u.id !== id);
+  getSyllabus: async (id: string) => {
+    const { data, error } = await supabase.from('courses').select('*').eq('slug', id).single();
+    return { data, error };
   },
   
-  // CLUSTERED REPORT MGMT
-  getReportClusters: async () => reportClusters,
-  approveClusterFix: async (id: string) => {
-    reportClusters = reportClusters.map(c => c.id === id ? { ...c, status: 'Fixed' } : c);
-  },
-  autoApproveAll: async () => {
-    reportClusters = reportClusters.map(c => ({ ...c, status: 'Fixed' }));
+  getAllCourses: async () => {
+    const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
+    return { data, error };
   },
 
-  // CURRICULUM MGMT
-  getUVs: async () => uvs,
-  addUV: async (uv: UV) => { uvs.push(uv); },
-  deleteCurriculum: async (id: string) => { /* logic */ }
+  // USER MGMT
+  getUsers: async () => {
+    const { data, error } = await supabase.from('profiles').select('*');
+    return { data, error };
+  },
+
+  // STATS
+  getSiteStats: async () => {
+    const { data, error } = await supabase.from('site_stats').select('*').single();
+    return { data, error };
+  },
+
+  // CLUSTERED REPORT MGMT (Keep mock for now if no table exists, or assume it's there)
+  getReportClusters: async () => {
+     // This might need a new table in Supabase
+     return [];
+  }
 };

@@ -1,141 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { TopNav } from '@/components/RefinedUI';
-import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function ProfilePage() {
-  const [user, setUser] = useState({
-    firstName: "Silvere",
-    lastName: "Martin",
-    email: "silvere@openprimer.org",
-    lang: "EN"
-  });
-  const [showToast, setShowToast] = useState(false);
+export default function ProfileRedirect() {
+  const router = useRouter();
 
-  const saveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
+  useEffect(() => {
+    router.push('/profile/curriculum');
+  }, [router]);
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
-      <TopNav />
-      
-      <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
-        <header className="mb-12">
-          <div className="flex items-center gap-4 text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
-             <User className="w-4 h-4" /> Account Management
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter">Profile Settings</h1>
-        </header>
-
-        <div className="grid gap-8">
-           {/* PERSONAL INFO */}
-           <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-3">
-                 <User className="w-4 h-4" /> Personal Information
-              </h3>
-              
-              <form onSubmit={saveProfile} className="space-y-6">
-                 <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">First Name</label>
-                       <input 
-                         type="text" 
-                         value={user.firstName}
-                         onChange={(e) => setUser({...user, firstName: e.target.value})}
-                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" 
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Last Name</label>
-                       <input 
-                         type="text" 
-                         value={user.lastName}
-                         onChange={(e) => setUser({...user, lastName: e.target.value})}
-                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" 
-                       />
-                    </div>
-                 </div>
-                 
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Email Address</label>
-                    <div className="relative">
-                       <Mail className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
-                       <input 
-                         type="email" 
-                         value={user.email}
-                         disabled
-                         className="w-full bg-slate-950/30 border border-slate-900 rounded-2xl p-4 pl-12 text-sm text-slate-500 cursor-not-allowed" 
-                       />
-                    </div>
-                 </div>
-
-                 <div className="pt-4 flex justify-end">
-                    <button type="submit" className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20">
-                       <Save className="w-4 h-4" /> Save Changes
-                    </button>
-                 </div>
-              </form>
-           </section>
-
-           {/* PREFERENCES */}
-           <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-3">
-                 <Globe className="w-4 h-4" /> Preferences
-              </h3>
-              
-              <div className="space-y-6">
-                 <div className="flex items-center justify-between p-6 bg-slate-950/50 border border-slate-800 rounded-3xl">
-                    <div>
-                       <p className="font-bold text-white">Preferred Language</p>
-                       <p className="text-xs text-slate-500">Global UI and tutor interaction language.</p>
-                    </div>
-                    <select 
-                      value={user.lang}
-                      onChange={(e) => setUser({...user, lang: e.target.value})}
-                      className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs font-bold focus:outline-none focus:border-blue-500/50 transition-all"
-                    >
-                       <option value="EN">English</option>
-                       <option value="FR">Français</option>
-                       <option value="ES">Español</option>
-                       <option value="DE">Deutsch</option>
-                       <option value="ZH">中文</option>
-                    </select>
-                 </div>
-              </div>
-           </section>
-
-           {/* DANGER ZONE */}
-           <section className="p-10 bg-red-500/5 border border-red-500/20 rounded-[48px] backdrop-blur-3xl">
-              <h3 className="text-sm font-black uppercase tracking-widest text-red-500 mb-8 flex items-center gap-3">
-                 <ShieldAlert className="w-4 h-4" /> Danger Zone
-              </h3>
-              
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 bg-red-500/5 border border-red-500/10 rounded-3xl">
-                 <div>
-                    <p className="font-black text-white uppercase tracking-widest text-xs">Delete My Account</p>
-                    <p className="text-xs text-slate-500 mt-1 italic">This action is permanent. All your ECTS and KP will be lost.</p>
-                 </div>
-                 <button onClick={() => confirm("Delete permanently?")} className="flex items-center gap-3 px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                    <Trash2 className="w-4 h-4" /> Delete Account
-                 </button>
-              </div>
-           </section>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showToast && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-12 left-1/2 -translate-x-1/2 px-8 py-4 rounded-full bg-emerald-600 text-white shadow-2xl flex items-center gap-3 z-[100]">
-            <CheckCircle className="w-5 h-5" />
-            <span className="text-sm font-black uppercase tracking-widest">Profile Updated Successfully</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  return <div className="min-h-screen bg-slate-950" />;
 }

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, AlertTriangle, Users, BookOpen, Settings, ChevronRight, LogOut, ArrowLeft, Menu, X } from 'lucide-react';
-import { TopNav } from '@/components/RefinedUI';
+import { TopNav, Footer } from '@/components/RefinedUI';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 
 const NAV_ITEMS = [
@@ -74,9 +74,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950 p-12">
-          {children}
-        </main>
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950">
+          <main className="p-12">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </div>
     </div>
   );

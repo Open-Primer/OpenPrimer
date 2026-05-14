@@ -13,60 +13,192 @@ import { useLanguage } from '@/context/LanguageContext';
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
 export const UI_STRINGS = {
   EN: { 
-    progress: "My Progress", admin: "Admin Cockpit",
+    progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
     copyright: "© 2026 OpenPrimer Project • Global AI Academic Repository",
     all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", search: "Search modules...",
     tagline: "The Future of Open Academic Sovereignty",
-    cta_start: "Start Learning", cta_foundation: "Explore Foundation"
+    cta_start: "Start Learning", cta_foundation: "Explore Foundation",
+    tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.",
+    copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile",
+    delete: "Delete Account", langLabel: "Language",
+    foundation: "Foundation", curriculum: "Curriculum", legal: "Legal",
+    philosophy: "Our Philosophy", contact: "Contact Support", opensource: "Open Source",
+    languages: "Languages", elite: "Elite",
+    mission: "Universal Academic Sovereignty", mission_sub: "Project Manifesto",
+    mission_desc: "OpenPrimer is built on the belief that elite education is a fundamental human right, not a localized privilege.",
+    accessibility: "Radical Accessibility", accessibility_desc: "We eliminate linguistic barriers by providing all certified academic content in the 5 most spoken global languages.",
+    quality: "Institutional Quality", quality_desc: "Every module on OpenPrimer is aligned with international standards (ECTS, US Credits).",
+    methodology: "Methodology", methodology_desc: "The Feynman Methodology",
+    transparency: "Radical Transparency", transparency_desc: "The logic of education should never be a black box. OpenPrimer is 100% Open Source.",
+    universal_knowledge: "Universal Knowledge.", finally_free: "Finally Free.",
+    summary: "OpenPrimer synthesizes the entirety of academic curricula, from primary school to Bachelor's degree, into a single, interactive, and AI-tutored experience.",
+    rigor: "Academic Rigor", rigor_desc: "Full university curricula synthesized with the Feynman method for maximum depth.",
+    tutor_desc: "Context-aware AI tutoring directly integrated into every learning module.",
+    multilingual_desc: "Native support for EN, FR, ES, DE, and ZH. Breaking the language barrier in education.",
+    mission_link: "Learn about our vision", beta_tag: "v1.5 Beta", elite_tag: "Elite", new_tag: "New", try_label: "Try:",
+    socratic: "Socratic Method", pragmatic: "Pragmatic Mode", academic: "Rigorous Academic",
+    give_example: "Give Example", tell_story: "Tell Story", simplify: "Simplify", test_me: "Test Me",
+    analysis: "Academic analysis in progress...", mode_default: "Default", mode_paper: "Paper", mode_focus: "Focus",
+    footer_desc: "Universalizing elite academic knowledge through recursive AI-assisted pedagogy.",
+    logged_in_as: "Logged in as", my_curriculum: "My Curriculum", catalog: "Browse Catalog",
+    account_mgmt: "Account Management", profile_settings: "Profile Settings",
+    personal_info: "Personal Information", first_name: "First Name", last_name: "Last Name", email_addr: "Email Address",
+    save_changes: "Save Changes", preferences: "Preferences", preferred_lang: "Preferred Language",
+    lang_desc: "Global UI and tutor interaction language.", danger_zone: "Danger Zone",
+    delete_account: "Delete Account", delete_desc: "This action is permanent. All progress will be lost.",
+    profile_updated: "Profile Updated Successfully"
   },
   FR: { 
-    tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", 
-    copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Profil", 
-    delete: "Supprimer le compte", catalog: "Catalogue", langLabel: "Langue",
-    foundation: "Fondation", curriculum: "Curriculum", legal: "Légal",
-    philosophy: "Notre Philosophie", contact: "Contact Global", opensource: "Open Source",
-    progress: "Mon Progrès", admin: "Cockpit Admin",
+    progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
     copyright: "© 2026 Projet OpenPrimer • Répertoire Académique Mondial d'IA",
     all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", search: "Rechercher des modules...",
     tagline: "L'Avenir de la Souveraineté Académique Libre",
-    cta_start: "Commencer", cta_foundation: "Explorer la Fondation"
+    cta_start: "Commencer", cta_foundation: "Explorer la Fondation",
+    tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", 
+    copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Curriculum", 
+    delete: "Supprimer le compte", langLabel: "Langue",
+    foundation: "Fondation", curriculum: "Curriculum", legal: "Légal",
+    philosophy: "Notre Philosophie", contact: "Contact Support", opensource: "Open Source",
+    languages: "Langues", elite: "Élite",
+    mission: "Souveraineté Académique Universelle", mission_sub: "Manifeste du Projet",
+    mission_desc: "OpenPrimer repose sur la conviction que l'éducation d'élite est un droit humain fondamental, pas un privilège localisé.",
+    accessibility: "Accessibilité Radicale", accessibility_desc: "Nous éliminons les barrières linguistiques en fournissant tout le contenu académique certifié dans les 5 langues les plus parlées au monde.",
+    quality: "Qualité Institutionnelle", quality_desc: "Chaque module sur OpenPrimer est aligné sur les normes internationales (ECTS, US Credits).",
+    methodology: "Méthodologie", methodology_desc: "La Méthodologie Feynman",
+    transparency: "Transparence Radicale", transparency_desc: "L'éducation ne devrait jamais être une boîte noire. OpenPrimer est 100% Open Source.",
+    universal_knowledge: "Le Savoir Universel.", finally_free: "Enfin Libre.",
+    summary: "OpenPrimer synthétise l'intégralité des cursus académiques, du primaire au Bachelor, dans une expérience unique, interactive et tutorée par l'IA.",
+    rigor: "Rigueur Académique", rigor_desc: "Des cursus universitaires complets synthétisés avec la méthode Feynman.",
+    tutor_desc: "Tutorat IA contextuel intégré directement dans chaque module d'apprentissage.",
+    multilingual_desc: "Support natif pour EN, FR, ES, DE et ZH. Briser la barrière de la langue.",
+    mission_link: "Découvrir notre vision", beta_tag: "v1.5 Beta", elite_tag: "Élite", new_tag: "Nouveau", try_label: "Essayer :",
+    socratic: "Méthode Socratique", pragmatic: "Mode Pragmatique", academic: "Rigueur Académique",
+    give_example: "Donner un exemple", tell_story: "Raconter une histoire", simplify: "Simplifier", test_me: "M'évaluer",
+    analysis: "Analyse académique en cours...", mode_default: "Défaut", mode_paper: "Papier", mode_focus: "Focus",
+    footer_desc: "Universalisation du savoir académique d'élite via une pédagogie assistée par IA récursive.",
+    logged_in_as: "Connecté en tant que", my_curriculum: "Mon Curriculum", catalog: "Parcourir le Catalogue",
+    account_mgmt: "Gestion du Compte", profile_settings: "Paramètres du Profil",
+    personal_info: "Informations Personnelles", first_name: "Prénom", last_name: "Nom", email_addr: "Adresse Email",
+    save_changes: "Enregistrer", preferences: "Préférences", preferred_lang: "Langue Préférée",
+    lang_desc: "Langue globale de l'interface et du tuteur.", danger_zone: "Zone de Danger",
+    delete_account: "Supprimer le Compte", delete_desc: "Cette action est permanente. Tout le progrès sera perdu.",
+    profile_updated: "Profil mis à jour avec succès"
   },
   ES: { 
-    tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", 
-    copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Perfil", 
-    delete: "Eliminar cuenta", catalog: "Catálogo", langLabel: "Idioma",
-    foundation: "Fundación", curriculum: "Currículo", legal: "Legal",
-    philosophy: "Nuestra Filosofía", contact: "Contacto Global", opensource: "Código Abierto",
-    progress: "Mi Progreso", admin: "Admin Académico",
+    progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
     copyright: "© 2026 Fundación OpenPrimer • Consorcio Académico Europeo",
-    all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos..."
+    all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos...",
+    tagline: "El Futuro de la Soberanía Académica Abierta",
+    cta_start: "Empezar", cta_foundation: "Explorar Fundación",
+    tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", 
+    copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Currículo", 
+    delete: "Eliminar cuenta", langLabel: "Idioma",
+    foundation: "Fundación", curriculum: "Currículo", legal: "Legal",
+    philosophy: "Nuestra Filosofía", contact: "Contacto", opensource: "Código Abierto",
+    languages: "Idiomas", elite: "Élite",
+    mission: "Soberanía Académica Universal", mission_sub: "Manifiesto del Proyecto",
+    mission_desc: "OpenPrimer se basa en la creencia de que la educación de élite es un derecho humano fundamental, no un privilegio localizado.",
+    accessibility: "Accesibilidad Radical", accessibility_desc: "Eliminamos las barreras lingüísticas al proporcionar todo el contenido académico certificado en los 5 idiomas más hablados del mundo.",
+    quality: "Calidad Institucional", quality_desc: "Cada módulo en OpenPrimer está alineado con los estándares internacionales (ECTS, créditos estadounidenses).",
+    methodology: "Metodología", methodology_desc: "La Metodología Feynman",
+    transparency: "Transparencia Radical", transparency_desc: "La lógica de la educación nunca debe ser una caja negra. OpenPrimer es 100% código abierto.",
+    universal_knowledge: "El Conocimiento Universal.", finally_free: "Finalmente Libre.",
+    summary: "OpenPrimer sintetiza la totalidad de los currículos académicos, desde la escuela primaria hasta el grado, en una experiencia única, interactiva y tutorizada por IA.",
+    rigor: "Rigor Académico", rigor_desc: "Currículos universitarios completos sintetizados con el método Feynman.",
+    tutor_desc: "Tutoría de IA consciente del contexto integrada directamente en cada módulo de aprendizaje.",
+    multilingual_desc: "Soporte nativo para EN, FR, ES, DE y ZH. Rompiendo la barrera del idioma.",
+    mission_link: "Conoce nuestra visión", beta_tag: "v1.5 Beta", elite_tag: "Élite", new_tag: "Nuevo", try_label: "Probar:",
+    socratic: "Método Socrático", pragmatic: "Modo Pragmático", academic: "Rigor Académico",
+    give_example: "Dar ejemplo", tell_story: "Contar historia", simplify: "Simplificar", test_me: "Evaluarme",
+    analysis: "Análisis académico en curso...", mode_default: "Predeterminado", mode_paper: "Papel", mode_focus: "Enfoque",
+    footer_desc: "Universalizar el conocimiento académico de élite mediante una pedagogía recursiva asistida por IA.",
+    logged_in_as: "Conectado como", my_curriculum: "Mi Currículo", catalog: "Explorar Catálogo",
+    account_mgmt: "Gestión de Cuenta", profile_settings: "Ajustes del Perfil",
+    personal_info: "Información Personal", first_name: "Nombre", last_name: "Apellido", email_addr: "Correo Electrónico",
+    save_changes: "Guardar Cambios", preferences: "Preferencias", preferred_lang: "Idioma Preferido",
+    lang_desc: "Idioma global de la interfaz y del tutor.", danger_zone: "Zona de Peligro",
+    delete_account: "Eliminar Cuenta", delete_desc: "Esta acción es permanente. Se perderá todo el progreso.",
+    profile_updated: "Perfil actualizado con éxito"
   },
   DE: { 
-    tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", 
-    copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Profil", 
-    delete: "Konto löschen", catalog: "Katalog", langLabel: "Sprache",
-    foundation: "Stiftung", curriculum: "Lehrplan", legal: "Rechtliches",
-    philosophy: "Unsere Philosophie", contact: "Globaler Kontakt", opensource: "Open Source",
-    progress: "Mein Fortschritt", admin: "Akademische Verwaltung",
+    progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
     copyright: "© 2026 OpenPrimer Stiftung • Europäisches Akademisches Konsortium",
-    all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen..."
+    all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen...",
+    tagline: "Die Zukunft der freien akademischen Souveränität",
+    cta_start: "Lernen starten", cta_foundation: "Stiftung erkunden",
+    tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", 
+    copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Lehrplan", 
+    delete: "Konto löschen", langLabel: "Sprache",
+    foundation: "Stiftung", curriculum: "Lehrplan", legal: "Rechtliches",
+    philosophy: "Unsere Philosophie", contact: "Kontakt", opensource: "Open Source",
+    languages: "Sprachen", elite: "Elite",
+    mission: "Universelle akademische Souveränität", mission_sub: "Projekt-Manifest",
+    mission_desc: "OpenPrimer basiert auf der Überzeugung, dass Elitebildung ein grundlegendes Menschenrecht ist, kein lokales Privileg.",
+    accessibility: "Radikale Barrierefreiheit", accessibility_desc: "Wir beseitigen Sprachbarrieren, indem wir alle zertifizierten akademischen Inhalte in den 5 meistgesprochenen Weltsprachen bereitstellen.",
+    quality: "Institutionelle Qualität", quality_desc: "Jedes Modul auf OpenPrimer ist auf internationale Standards (ECTS, US-Credits) ausgerichtet.",
+    methodology: "Methodik", methodology_desc: "Die Feynman-Methodik",
+    transparency: "Radikale Transparenz", transparency_desc: "Die Logik der Bildung sollte niemals eine Blackbox sein. OpenPrimer ist 100 % Open Source.",
+    universal_knowledge: "Universelles Wissen.", finally_free: "Endlich Frei.",
+    summary: "OpenPrimer synthetisiert die gesamte akademische Laufbahn, von der Grundschule bis zum Bachelor, in einer einzigen, interaktiven und KI-gestützten Erfahrung.",
+    rigor: "Akademische Strenge", rigor_desc: "Vollständige universitäre Lehrpläne, synthetisiert mit der Feynman-Methode.",
+    tutor_desc: "Kontextbewusstes KI-Tutoring, das direkt in jedes Lernmodul integriert ist.",
+    multilingual_desc: "Native Unterstützung für EN, FR, ES, DE und ZH. Überwindung der Sprachbarriere.",
+    mission_link: "Erfahren Sie mehr über unsere Vision", beta_tag: "v1.5 Beta", elite_tag: "Elite", new_tag: "Neu", try_label: "Probieren:",
+    socratic: "Sokratische Methode", pragmatic: "Pragmatischer Modus", academic: "Akademische Strenge",
+    give_example: "Beispiel geben", tell_story: "Geschichte erzählen", simplify: "Vereinfachen", test_me: "Testen Sie mich",
+    analysis: "Akademische Analyse läuft...", mode_default: "Standard", mode_paper: "Papier", mode_focus: "Fokus",
+    footer_desc: "Universalisierung akademischen Elite-Wissens durch rekursive KI-gestützte Pädagogik.",
+    logged_in_as: "Angemeldet als", my_curriculum: "Mein Lehrplan", catalog: "Katalog durchsuchen",
+    account_mgmt: "Kontoverwaltung", profile_settings: "Profileinstellungen",
+    personal_info: "Persönliche Informationen", first_name: "Vorname", last_name: "Nachname", email_addr: "E-Mail-Adresse",
+    save_changes: "Änderungen speichern", preferences: "Einstellungen", preferred_lang: "Bevorzugte Sprache",
+    lang_desc: "Globale UI- und Tutor-Interaktionssprache.", danger_zone: "Gefahrenzone",
+    delete_account: "Konto löschen", delete_desc: "Diese Aktion ist permanent. Alle Fortschritte gehen verloren.",
+    profile_updated: "Profil erfolgreich aktualisiert"
   },
   ZH: { 
-    tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", 
-    copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的个人资料", 
-    delete: "删除账户", catalog: "目录", langLabel: "语言",
-    foundation: "基金会", curriculum: "课程", legal: "法律",
-    philosophy: "我们的哲学", contact: "全球联系", opensource: "开源项目",
-    progress: "我的进度", admin: "学术管理",
+    progress: "我的进度", admin: "管理控制台", settings: "账户设置",
     terms: "服务条款", privacy: "隐私主权",
     copyright: "© 2026 OpenPrimer 基金会 • 欧洲学术联盟",
-    all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块..."
+    all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块...",
+    tagline: "开放学术主权的未来",
+    cta_start: "开始学习", cta_foundation: "探索基金会",
+    tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", 
+    copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的课程", 
+    delete: "删除账户", langLabel: "语言",
+    foundation: "基金会", curriculum: "课程", legal: "法律",
+    philosophy: "我们的哲学", contact: "联系我们", opensource: "开源项目",
+    languages: "语言", elite: "精英",
+    mission: "全民学术主权", mission_sub: "项目宣言",
+    mission_desc: "OpenPrimer 建立在这样一种信念之上：精英教育是一项基本人权，而不是一种局部特权。",
+    accessibility: "彻底的无障碍", accessibility_desc: "我们通过提供全球 5 种最常用语言的所有认证学术内容来消除语言障碍。",
+    quality: "机构质量", quality_desc: "OpenPrimer 上的每个模块都符合国际标准（ECTS、美国学分）。",
+    methodology: "教学法", methodology_desc: "费曼教学法",
+    transparency: "彻底的透明度", transparency_desc: "教育的逻辑绝不应该是一个黑匣子。OpenPrimer 是 100% 开源的。",
+    universal_knowledge: "普及全球知识。", finally_free: "最终实现自由。",
+    summary: "OpenPrimer 将从小学到学士学位的全部学术课程综合为单一的、互动的和 AI 指导的体验。",
+    rigor: "严谨学术", rigor_desc: "采用费曼教学法综合的完整大学课程。",
+    tutor_desc: "情境感知 AI 辅导，直接集成到每个学习模块中。",
+    multilingual_desc: "原生支持英文、法文、西班牙文、德文和中文。打破教育中的语言障碍。",
+    mission_link: "了解我们的愿景", beta_tag: "v1.5 Beta", elite_tag: "精英", new_tag: "新内容", try_label: "尝试：",
+    socratic: "苏格拉底教学法", pragmatic: "务实模式", academic: "严谨学术",
+    give_example: "举例说明", tell_story: "讲述故事", simplify: "简化内容", test_me: "测试我",
+    analysis: "正在进行学术分析...", mode_default: "默认", mode_paper: "纸质", mode_focus: "专注",
+    footer_desc: "通过递归 AI 辅助教学法普及精英学术知识。",
+    logged_in_as: "登录身份为", my_curriculum: "我的课程", catalog: "浏览课程目录",
+    account_mgmt: "账户管理", profile_settings: "个人资料设置",
+    personal_info: "个人信息", first_name: "名字", last_name: "姓氏", email_addr: "电子邮件地址",
+    save_changes: "保存更改", preferences: "偏好设置", preferred_lang: "首选语言",
+    lang_desc: "全局界面和导师互动语言。", danger_zone: "危险区域",
+    delete_account: "删除账户", delete_desc: "此操作是永久性的。所有进度都将丢失。",
+    profile_updated: "资料更新成功"
   }
 };
+
 
 import { usePathname } from 'next/navigation';
 
@@ -81,28 +213,28 @@ export const AITutorOverlay = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
-  const [persona, setPersona] = useState('Pragmatic');
+  const [persona, setPersona] = useState(t.pragmatic);
 
   const QUICK_ACTIONS = [
-    { label: "Give Example", icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },
-    { label: "Tell Story", icon: <Bookmark className="w-3 h-3" />, prompt: "Tell me a historical anecdote about this discovery." },
-    { label: "Simplify", icon: <Globe className="w-3 h-3" />, prompt: "Explain this to me as if I were a complete beginner." },
-    { label: "Test Me", icon: <CheckCircle className="w-3 h-3" />, prompt: "Give me a challenge question to test my understanding." }
+    { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },
+    { label: t.tell_story, icon: <Bookmark className="w-3 h-3" />, prompt: "Tell me a historical anecdote about this discovery." },
+    { label: t.simplify, icon: <Globe className="w-3 h-3" />, prompt: "Explain this to me as if I were a complete beginner." },
+    { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: "Give me a challenge question to test my understanding." }
   ];
 
   // Persist history
   useEffect(() => {
-    const key = `op_tutor_hist_${pageContext || 'global'}_${lang}`;
+    const key = `op_tutor_hist_${pathname || 'global'}_${lang}`;
     const saved = localStorage.getItem(key);
     if (saved) setMessages(JSON.parse(saved));
-  }, [pageContext, lang]);
+  }, [pathname, lang]);
 
   useEffect(() => {
     if (messages.length > 1) {
-      const key = `op_tutor_hist_${pageContext || 'global'}_${lang}`;
+      const key = `op_tutor_hist_${pathname || 'global'}_${lang}`;
       localStorage.setItem(key, JSON.stringify(messages.slice(-10))); // Keep last 10
     }
-  }, [messages, pageContext, lang]);
+  }, [messages, pathname, lang]);
 
   const handleSend = (text?: string) => {
     const content = text || input;
@@ -110,7 +242,7 @@ export const AITutorOverlay = () => {
     setMessages(prev => [...prev, { role: 'user', content }]);
     if (!text) setInput('');
     setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'ZH' ? "正在进行学术分析..." : `[${persona} Mode] Academic analysis in progress...` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `[${persona}] ${t.analysis}` }]);
     }, 1200);
   };
 
@@ -131,9 +263,9 @@ export const AITutorOverlay = () => {
                      onChange={(e) => setPersona(e.target.value)}
                      className="bg-transparent text-sm font-bold text-white focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
                    >
-                     <option value="Socratic">Socratic Method</option>
-                     <option value="Pragmatic">Pragmatic Mode</option>
-                     <option value="Academic">Rigorous Academic</option>
+                     <option value={t.socratic}>{t.socratic}</option>
+                     <option value={t.pragmatic}>{t.pragmatic}</option>
+                     <option value={t.academic}>{t.academic}</option>
                    </select>
                 </div>
               </div>
@@ -194,7 +326,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
   };
 
   const languages = [
-    { code: 'EN', flag: '🇬🇧', label: 'English' },
+    { code: 'EN', flag: '🇺🇸', label: 'English' },
     { code: 'FR', flag: '🇫🇷', label: 'Français' },
     { code: 'ES', flag: '🇪🇸', label: 'Español' },
     { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
@@ -245,15 +377,18 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
 
         {isCoursePage && (
           <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
-            {['Default', 'Paper', 'Focus'].map(mode => (
-              <button 
-                key={mode}
-                onClick={() => (window as any).setReadingMode?.(mode.toLowerCase())}
-                className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
-              >
-                {mode}
-              </button>
-            ))}
+            {['Default', 'Paper', 'Focus'].map(mode => {
+              const modeLabel = mode === 'Default' ? t.mode_default : mode === 'Paper' ? t.mode_paper : t.mode_focus;
+              return (
+                <button 
+                  key={mode}
+                  onClick={() => (window as any).setReadingMode?.(mode.toLowerCase())}
+                  className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
+                >
+                  {modeLabel}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -286,26 +421,27 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">Logged in as</p>
                      <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
                    </div>
-                   <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
-                     <ShieldAlert className="w-4 h-4" /> Admin
-                   </Link>
-                   <Link href="/catalog" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
-                     <GraduationCap className="w-4 h-4" /> {t.catalog}
-                   </Link>
-                   
-                   <div className="h-px bg-slate-800/50 my-1" />
-                   
-                   <Link href="/admin/curriculum" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">
-                     <GraduationCap className="w-4 h-4" /> Curriculum Manager
-                   </Link>
-                   
-                   <Link href="/admin/analytics" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-600/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-colors">
-                     <Brain className="w-4 h-4" /> Research Intelligence
-                   </Link>
-                   
-                   <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                     <LogOut className="w-4 h-4" /> {t.signout}
-                   </button>
+                     <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <GraduationCap className="w-4 h-4" /> {t.my_curriculum}
+                    </Link>
+                    
+                    <Link href="/catalog" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <Brain className="w-4 h-4" /> {t.catalog}
+                    </Link>
+                    
+                    <Link href="/profile/settings" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <Settings className="w-4 h-4" /> {t.settings}
+                    </Link>
+
+                    <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <ShieldAlert className="w-4 h-4" /> {t.admin}
+                    </Link>
+                    
+                    <div className="h-px bg-slate-800/50 my-1" />
+                    
+                    <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                      <LogOut className="w-4 h-4" /> {t.signout}
+                    </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -343,7 +479,7 @@ export const Footer = () => {
               <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed italic">
-              Universalizing elite academic knowledge through recursive AI-assisted pedagogy.
+              {t.footer_desc}
             </p>
           </div>
 
@@ -352,7 +488,6 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li><Link href="/philosophy" className="text-sm text-slate-600 hover:text-white transition-colors">{t.philosophy}</Link></li>
               <li><Link href="/contact" className="text-sm text-slate-600 hover:text-white transition-colors">{t.contact}</Link></li>
-              <li><a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="text-sm text-slate-600 hover:text-white transition-colors">{t.opensource}</a></li>
             </ul>
           </div>
 
@@ -360,8 +495,6 @@ export const Footer = () => {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.curriculum}</p>
             <ul className="space-y-4">
               <li><Link href="/catalog" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.catalog}</Link></li>
-              <li><Link href="/profile" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.progress}</Link></li>
-              <li><Link href="/admin/curriculum" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.admin}</Link></li>
             </ul>
           </div>
 

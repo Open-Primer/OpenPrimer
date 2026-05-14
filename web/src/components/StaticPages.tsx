@@ -10,14 +10,26 @@ import {
 import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { dbService } from '@/lib/db';
 
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const { language: activeLang, setLanguage: setActiveLang } = useLanguage();
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [courseLangFilter, setCourseLangFilter] = useState('EN');
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadCourses() {
+      const { data } = await dbService.getAllCourses();
+      if (data) setCourses(data);
+    }
+    loadCourses();
+  }, []);
 
   useEffect(() => {
     setCourseLangFilter(activeLang);
@@ -38,18 +50,11 @@ export const CatalogPage = () => {
 
   const t = UI_STRINGS[activeLang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
-  const courses = [
-    { id: 1, title: "Kinematics 1D", level: "L1", subject: "Physics", langs: ["EN", "FR", "ZH"], slug: "kinematics-1d" },
-    { id: 2, title: "Cell Structure", level: "L1", subject: "Biology", langs: ["EN", "ES", "ZH"], slug: "cell-structure" },
-    { id: 3, title: "Constitutional Law", level: "L1", subject: "Law", langs: ["EN", "FR", "DE"], slug: "const-law" },
-    { id: 4, title: "Linear Algebra", level: "L1", subject: "Mathematics", langs: ["EN", "PT", "ZH"], slug: "linear-algebra" },
-    { id: 5, title: "Quantum Basics", level: "L2", subject: "Physics", langs: ["EN", "DE", "ZH"], slug: "quantum-basics" },
-  ];
 
   const filteredCourses = courses.filter(c => 
     (subjectFilter === 'All' || c.subject === subjectFilter) &&
     (subjectFilter === 'Saved' ? bookmarks.includes(c.id) : true) &&
-    (c.langs.includes(courseLangFilter)) &&
+    (courseLangFilter === 'All' || (c.languages && c.languages.includes(courseLangFilter.toLowerCase()))) &&
     (c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.subject.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -60,7 +65,7 @@ export const CatalogPage = () => {
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter mb-4">{t.catalog}</h1>
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{t.catalog}</h1>
             <div className="flex items-center gap-2 text-slate-500">
                <Globe className="w-4 h-4" />
                <p className="font-medium">Discover courses in {courseLangFilter}</p>
@@ -174,18 +179,22 @@ export const CatalogPage = () => {
 };
 
 // --- PAGE: PHILOSOPHY ---
-export const PhilosophyPage = () => (
-  <div className="min-h-screen bg-slate-950 text-white font-sans">
-    <TopNav />
+export const PhilosophyPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
+      <TopNav />
     <div className="max-w-5xl mx-auto px-8 pt-32 pb-24">
       {/* SECTION 1: MISSION */}
       <header className="mb-32 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
-          Project Manifesto
+          {t.mission_sub}
         </div>
-        <h1 className="text-7xl font-black tracking-tighter mb-10 leading-[0.9]">Universal Academic <br /><span className="text-blue-500 italic">Sovereignty</span></h1>
+        <h1 className="text-6xl md:text-7xl font-black tracking-tighter mb-10 leading-[0.9] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{t.mission}</h1>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-          OpenPrimer is built on the belief that elite education is a fundamental human right, not a localized privilege. 
+          {t.mission_desc}
         </p>
       </header>
 
@@ -193,19 +202,19 @@ export const PhilosophyPage = () => (
          <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-blue-500/30 transition-all">
             <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
                <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20"><Globe className="w-6 h-6" /></div>
-               Radical Accessibility
+               {t.accessibility}
             </h3>
             <p className="text-slate-400 leading-relaxed">
-               We eliminate linguistic barriers by providing all certified academic content in the 5 most spoken global languages. Using our proprietary <strong>Feynman Translation Engine</strong>, we ensure that technical rigor remains intact across cultural boundaries.
+               {t.accessibility_desc}
             </p>
          </div>
          <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-emerald-500/30 transition-all">
             <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
                <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20"><Target className="w-6 h-6" /></div>
-               Institutional Quality
+               {t.quality}
             </h3>
             <p className="text-slate-400 leading-relaxed">
-               Every module on OpenPrimer is aligned with international standards (ECTS, US Credits). Our objective is to provide a repository of knowledge that matches the rigor of the world's leading universities, freely available to anyone with a browser.
+               {t.quality_desc}
             </p>
          </div>
       </div>
@@ -214,9 +223,9 @@ export const PhilosophyPage = () => (
       <div className="mb-40">
         <div className="flex flex-col md:flex-row gap-20 items-start">
           <div className="md:w-1/3 sticky top-32">
-            <h2 className="text-4xl font-black tracking-tighter mb-6">The Feynman <br /><span className="text-blue-500">Methodology</span></h2>
+            <h2 className="text-4xl font-black tracking-tighter mb-6">{t.methodology_desc}</h2>
             <p className="text-slate-500 leading-relaxed">
-              Our AI Tutor is trained to detect "The Illusion of Knowledge" and help you break complex concepts into their atomic components.
+              {t.tutor} {t.placeholder.toLowerCase()}
             </p>
           </div>
           <div className="md:w-2/3 space-y-6">
@@ -240,10 +249,9 @@ export const PhilosophyPage = () => (
         <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white mx-auto mb-10 border border-slate-800 shadow-2xl">
            <Zap className="w-10 h-10 text-blue-500" />
         </div>
-        <h2 className="text-4xl font-black tracking-tighter mb-6">Radical Transparency</h2>
+        <h2 className="text-4xl font-black tracking-tighter mb-6">{t.transparency}</h2>
         <p className="text-slate-400 text-lg leading-relaxed mb-12 max-w-2xl mx-auto">
-          The logic of education should never be a black box. OpenPrimer is 100% Open Source. 
-          Anyone can audit our syllabus generation algorithms or contribute to the curriculum.
+          {t.transparency_desc}
         </p>
         <div className="flex flex-col md:flex-row items-center justify-center gap-6">
           <a 
@@ -259,81 +267,106 @@ export const PhilosophyPage = () => (
         </div>
       </div>
     </div>
-    <Footer />
-  </div>
-);
+      <Footer />
+    </div>
+  );
+};
 
 // --- PAGE: CONTACT ---
-export const ContactPage = () => (
-  <div className="min-h-screen bg-slate-950 text-white font-sans">
-    <TopNav />
-    <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
-      <div className="flex items-center gap-3 mb-12 text-violet-500">
-        <Mail className="w-8 h-8" />
-        <h1 className="text-4xl font-black tracking-tighter">Get in Touch</h1>
-      </div>
-      <div className="grid md:grid-cols-2 gap-12">
-        <div className="space-y-12">
-          <p className="text-slate-400 leading-relaxed">Reach out to our global ops team for partnerships or feedback on the Feynman Engine.</p>
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500"><Globe className="w-5 h-5" /></div>
-             <div>
-               <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Global Support Operations</p>
-               <p className="font-bold text-slate-200 uppercase tracking-tight">support@openprimer.org</p>
-             </div>
+export const ContactPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const [isSending, setIsSending] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSending(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      message: formData.get('message')
+    };
+
+    try {
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (resp.ok) setIsSent(true);
+      else alert("Failed to send message. Please try again later.");
+    } catch (err) {
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
+      <TopNav />
+      <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
+        <div className="flex items-center gap-3 mb-12 text-violet-500">
+          <Mail className="w-8 h-8" />
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Get in Touch</h1>
+        </div>
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="space-y-12">
+            <p className="text-slate-400 leading-relaxed">Reach out to our global ops team for partnerships or feedback on the Feynman Engine.</p>
+            <div className="flex items-center gap-4">
+               <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500"><Globe className="w-5 h-5" /></div>
+               <div>
+                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Global Support Operations</p>
+                 <p className="font-bold text-slate-200 uppercase tracking-tight">support@openprimer.org</p>
+               </div>
+            </div>
+          </div>
+          <div className="bg-slate-900/50 p-10 rounded-[40px] border border-slate-800 shadow-2xl backdrop-blur-2xl">
+              {isSent ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto mb-6">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-black mb-2 uppercase tracking-tighter">Message Received</h3>
+                  <p className="text-slate-500 text-sm">We will get back to you shortly.</p>
+                </div>
+              ) : (
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                   <div className="flex flex-col gap-4">
+                      <input name="name" type="text" placeholder="Full Name" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
+                      <input name="email" type="email" placeholder="Email Address" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
+                   </div>
+                   <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-96 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
+                    <button 
+                      type="submit" 
+                      disabled={isSending}
+                      className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20"
+                    >
+                      {isSending ? "Dispatching..." : "Send Inquiry"}
+                    </button>
+                </form>
+              )}
           </div>
         </div>
-        <div className="bg-slate-900/50 p-10 rounded-[40px] border border-slate-800 shadow-2xl backdrop-blur-2xl">
-            <form className="space-y-6" onSubmit={(e) => {
-               e.preventDefault();
-               const email = (e.target as any).email.value;
-               const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-               if (!emailRegex.test(email)) {
-                  alert("Please enter a valid email address.");
-                  return;
-               }
-               alert("Message sent successfully!");
-            }}>
-               <div className="flex flex-col gap-4">
-                  <input name="name" type="text" placeholder="Full Name" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
-                  <input name="email" type="email" placeholder="Email Address" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
-               </div>
-               <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-48 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
-                <button 
-                  type="submit" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const form = e.currentTarget.form;
-                    if (!form) return;
-                    const name = (form.name as any).value;
-                    const email = (form.email as any).value;
-                    const message = (form.message as any).value;
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(email)) {
-                       alert("Please enter a valid email address.");
-                       return;
-                    }
-                    window.location.href = `mailto:support@openprimer.org?subject=Inquiry from ${name}&body=${message} (Reply to: ${email})`;
-                    alert("Your mail client has been opened to send the message. Thank you!");
-                  }}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20"
-                >
-                  Send Inquiry
-                </button>
-            </form>
-        </div>
       </div>
+      <Footer />
     </div>
-    <Footer />
-  </div>
-);
+  );
+};
 
 // --- PAGE: TERMS ---
-export const TermsPage = () => (
-  <div className="min-h-screen bg-slate-950 text-white font-sans">
-    <TopNav />
+export const TermsPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
+      <TopNav />
     <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
-      <h1 className="text-4xl font-black tracking-tighter mb-12">Terms of Service</h1>
+      <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Terms of Service</h1>
       <p className="text-slate-400">Effective Date: May 11, 2026</p>
       <h2>1. Acceptable Use</h2>
       <p>OpenPrimer is an academic resource. Users are expected to interact with the AI Tutor respectfully and use the platform for genuine learning purposes.</p>
@@ -342,25 +375,33 @@ export const TermsPage = () => (
       <h2>3. Limitation of Liability</h2>
       <p>The platform is provided "as-is". While we strive for absolute academic rigor, users should always cross-reference critical information with official university sources.</p>
     </div>
-    <Footer />
-  </div>
-);
+      <Footer />
+    </div>
+  );
+};
 
 // --- PAGE: PRIVACY ---
-export const PrivacyPage = () => (
-  <div className="min-h-screen bg-slate-950 text-white font-sans">
-    <TopNav />
+export const PrivacyPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
+      <TopNav />
     <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
-      <h1 className="text-4xl font-black tracking-tighter mb-12">Privacy Policy</h1>
+      <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Privacy Policy</h1>
       <p className="text-slate-400 text-sm italic">"Your data, your progress, your sovereignty."</p>
       <p>We do not sell your data. Your learning progress is used exclusively to calibrate the AI Tutor for your specific needs. We comply with GDPR and global privacy standards for academic data protection.</p>
     </div>
-    <Footer />
-  </div>
-);
+      <Footer />
+    </div>
+  );
+};
 
 // --- PAGE: SYLLABUS ---
 export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const course = {
     title,
     ects: 6,
@@ -378,7 +419,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
       <TopNav />
       <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-          <h1 className="text-4xl font-black tracking-tighter">{course.title}</h1>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{course.title}</h1>
           <button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20">
              Start Course
           </button>
@@ -412,9 +453,6 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
                 {unit.modules.map(mod => (
                   <div key={mod} className="flex items-center justify-between p-6 bg-slate-900/20 border border-slate-800 rounded-3xl group hover:border-blue-500/30 transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
-                       <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950 text-slate-600 hover:text-white transition-colors">
-                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-                       </a>
                        <span className="font-bold text-slate-300 group-hover:text-white transition-colors">{mod}</span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-800 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />

@@ -22,7 +22,7 @@ export default function AuthPage({ mode = 'login' }: { mode?: 'login' | 'signup'
             <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-black tracking-tighter mb-2">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
               {mode === 'login' ? 'Welcome Back' : 'Join the Future'}
             </h1>
             <p className="text-slate-500 text-sm">

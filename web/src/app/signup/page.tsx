@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { Mail, Lock, User, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TopNav, Footer } from '@/components/RefinedUI';
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
@@ -76,6 +77,9 @@ export default function SignupPage() {
           Already have an account? <Link href="/login" className="text-blue-500 font-bold hover:underline">Sign In</Link>
         </p>
       </motion.div>
+      <div className="fixed bottom-0 left-0 right-0 p-8">
+        <Footer />
+      </div>
     </div>
   );
 }
