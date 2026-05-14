@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star } from 'lucide-react';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
-import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
+import { TopNav, AITutorOverlay, Footer } from '@/components/RefinedUI';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';

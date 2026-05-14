@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   Shield, Target, Users, Mail, Phone, MapPin, Globe, Sparkles, 
   BookOpen, ChevronRight, Search, Filter, Book, Award, Zap, Languages,
-  ShieldCheck, Clock, Star
+  ShieldCheck, Clock, Star, CheckCircle2, GraduationCap
 } from 'lucide-react';
 import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion } from 'framer-motion';
