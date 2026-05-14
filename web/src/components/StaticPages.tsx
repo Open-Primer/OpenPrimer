@@ -14,9 +14,8 @@ import { dbService } from '@/lib/db';
 
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
-  const { language: lang } = useLanguage();
+  const { language: lang, setLanguage: setActiveLang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
-  const { language: activeLang, setLanguage: setActiveLang } = useLanguage();
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [courseLangFilter, setCourseLangFilter] = useState('EN');
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,11 +31,11 @@ export const CatalogPage = () => {
   }, []);
 
   useEffect(() => {
-    setCourseLangFilter(activeLang);
+    setCourseLangFilter(lang);
     
     const savedBookmarks = localStorage.getItem('op_bookmarks');
     if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
-  }, []);
+  }, [lang]);
 
   const toggleBookmark = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,8 +46,6 @@ export const CatalogPage = () => {
     setBookmarks(newBookmarks);
     localStorage.setItem('op_bookmarks', JSON.stringify(newBookmarks));
   };
-
-  const t = UI_STRINGS[activeLang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
 
   const filteredCourses = courses.filter(c => 
