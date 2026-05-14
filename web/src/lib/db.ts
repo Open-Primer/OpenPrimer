@@ -184,5 +184,15 @@ export const dbService = {
   getReportClusters: async () => {
      const { data, error } = await supabase.from('report_clusters').select('*');
      return { data: data || [], error };
+  },
+
+  approveClusterFix: async (id: string) => {
+    const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('id', id);
+    return { data, error };
+  },
+
+  autoApproveAll: async () => {
+    const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('status', 'Pending');
+    return { data, error };
   }
 };

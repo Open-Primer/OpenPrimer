@@ -14,7 +14,7 @@ export default function AdminReports() {
   }, []);
 
   const loadClusters = async () => {
-    const data = await dbService.getReportClusters();
+    const { data } = await dbService.getReportClusters();
     setClusters(data);
   };
 
