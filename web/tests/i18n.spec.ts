@@ -7,26 +7,26 @@ test('verify i18n switching on landing page', async ({ page }) => {
   await expect(page.locator('h1')).toContainText('Universal Knowledge.');
   
   // Switch to French
-  await page.click('button:has-text("EN")');
+  await page.click('button:has-text("🇺🇸 EN")');
   await page.click('button:has-text("🇫🇷 Français")');
   
   // Verify French
   await expect(page.locator('h1')).toContainText('Le Savoir Universel.');
   
   // Switch to Chinese
-  await page.click('button:has-text("FR")');
+  await page.click('button:has-text("🇫🇷 FR")');
   await page.click('button:has-text("🇨🇳 中文")');
   
   // Verify Chinese
   await expect(page.locator('h1')).toContainText('普及全球知识。');
 });
 
-test('verify catalog page loads dynamic data', async ({ page }) => {
-  await page.goto('http://localhost:3000/catalog');
-  
-  // Check if title is correct (localized)
-  await expect(page.locator('h1')).toContainText('Curriculum');
-  
+test('should navigate to the catalog', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.click('text=Browse Catalog');
+    await expect(page).toHaveURL(/.*catalog/);
+    await expect(page.locator('h1')).toContainText('Universal Academic Repository');
+  });
   // Check if at least one course card is rendered (dynamic)
   // Note: This requires the database to be populated
   const cards = page.locator('.group.block.h-full');

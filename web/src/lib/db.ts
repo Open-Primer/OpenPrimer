@@ -155,6 +155,23 @@ export const dbService = {
   // USER MGMT
   getUsers: async () => {
     const { data, error } = await supabase.from('profiles').select('*');
+    return { data: data || [], error };
+  },
+
+  deleteUser: async (id: string) => {
+    const { data, error } = await supabase.from('profiles').delete().eq('id', id);
+    return { data, error };
+  },
+
+  toggleBlockUser: async (id: string) => {
+    // First get current state
+    const { data: user } = await supabase.from('profiles').select('isBlocked').eq('id', id).single();
+    const { data, error } = await supabase.from('profiles').update({ isBlocked: !user?.isBlocked }).eq('id', id);
+    return { data, error };
+  },
+
+  updateUserRole: async (id: string, role: string) => {
+    const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id);
     return { data, error };
   },
 

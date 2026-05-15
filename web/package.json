@@ -17,6 +17,7 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/typography": "^0.5.19",
+    "add-mcp": "^1.8.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "gray-matter": "^4.0.3",
