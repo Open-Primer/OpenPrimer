@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle } from 'lucide-react';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { TopNav, AITutorOverlay, Footer } from '@/components/RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,7 +73,10 @@ export default function Home() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [justVerified, setJustVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const coursesList = [
@@ -95,38 +98,34 @@ export default function Home() {
     loadStats();
   }, []);
 
-  const handleToggleCourse = (id: number) => {
-    if (selectedCourses.includes(id)) {
-      setSelectedCourses(selectedCourses.filter(c => c !== id));
-    } else {
-      setSelectedCourses([...selectedCourses, id]);
-    }
-  };
-
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setErrorMsg('Veuillez remplir tous les champs requis.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMsg('Les mots de passe ne correspondent pas.');
       return;
     }
     setErrorMsg('');
     setAuthState('verify');
   };
 
-  const handleVerifyAndLogin = () => {
+  const handleSimulateValidation = () => {
     const profile = {
       firstName,
       lastName,
       email,
       preferredLang: lang,
-      selectedCourses,
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
-    localStorage.setItem('op_session', 'true');
-    localStorage.setItem('op_bookmarks', JSON.stringify(selectedCourses));
-    setIsLoggedIn(true);
-    router.push('/catalog');
+    localStorage.setItem('op_session', 'false'); // Not logged in yet!
+    localStorage.setItem('op_registration_verified', 'true');
+    setJustVerified(true);
+    setErrorMsg('');
+    setAuthState('login'); // Switch to login form!
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -136,12 +135,16 @@ export default function Home() {
       return;
     }
 
+    const isVerified = localStorage.getItem('op_registration_verified') === 'true';
+    if (isVerified) {
+      localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+    }
+
     const testProfile = {
-      firstName: 'Silvere',
-      lastName: 'Martin',
+      firstName: isVerified ? firstName : 'Silvere',
+      lastName: isVerified ? lastName : 'Martin',
       email: email,
       preferredLang: lang,
-      selectedCourses: [1, 2],
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(testProfile));
@@ -275,52 +278,60 @@ export default function Home() {
                           />
                         </div>
                       </div>
-
-                      <div className="space-y-1">
+                                      <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Mot de passe</label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                           <input 
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
                         </div>
                       </div>
 
-                      {/* INITIAL COURSE CHECKLIST */}
-                      <div className="space-y-2 pt-1">
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Sélectionner vos cours initiaux</span>
-                        <div className="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
-                          {coursesList.map((course) => {
-                            const selected = selectedCourses.includes(course.id);
-                            return (
-                              <div 
-                                key={course.id}
-                                onClick={() => handleToggleCourse(course.id)}
-                                className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${selected ? 'bg-blue-600/10 border-blue-500/60 text-white' : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'}`}
-                              >
-                                <h4 className="text-[9px] font-black leading-tight truncate">{course.title}</h4>
-                                <p className="text-[7px] text-slate-500 truncate mt-0.5">{course.desc}</p>
-                              </div>
-                            );
-                          })}
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Confirmer le mot de passe</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            required
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
                         </div>
                       </div>
 
                       <button 
                         type="submit"
-                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 animate-pulse"
                       >
                         Valider mon inscription <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </form>
 
                     <p className="mt-6 text-center text-xs text-slate-600">
-                      Déjà un compte ? <button onClick={() => setAuthState('login')} className="text-blue-500 font-bold hover:underline">Se connecter</button>
+                      Déjà un compte ? <button onClick={() => { setErrorMsg(''); setAuthState('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">Se connecter</button>
                     </p>
                   </motion.div>
                 )}
@@ -337,6 +348,23 @@ export default function Home() {
                       <h2 className="text-2xl font-black tracking-tight text-white uppercase">Connexion</h2>
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">Accéder au Dépôt</p>
                     </div>
+
+                    {justVerified && (
+                      <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold flex items-start gap-3 shadow-lg shadow-emerald-500/5">
+                        <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-bold text-white uppercase text-[8px] tracking-wider">Compte validé avec succès !</p>
+                          <p className="text-slate-400 leading-normal text-[10px] font-medium">Votre inscription est confirmée. Connectez-vous maintenant pour choisir vos cours et composer votre curriculum.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {errorMsg && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
 
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                       <div className="space-y-1">
@@ -359,26 +387,33 @@ export default function Home() {
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                           <input 
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
                         </div>
                       </div>
 
                       <button 
                         type="submit"
-                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
                       >
                         Se Connecter
                       </button>
                     </form>
 
                     <p className="mt-6 text-center text-xs text-slate-600">
-                      Nouveau ? <button onClick={() => setAuthState('signup')} className="text-blue-500 font-bold hover:underline">Créer un compte</button>
+                      Nouveau ? <button onClick={() => { setErrorMsg(''); setAuthState('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">Créer un compte</button>
                     </p>
                   </motion.div>
                 )}
@@ -404,14 +439,14 @@ export default function Home() {
                       </div>
                       <p className="font-bold text-white mb-2">Bienvenue sur OpenPrimer !</p>
                       <button 
-                        onClick={handleVerifyAndLogin}
-                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10"
+                        onClick={handleSimulateValidation}
+                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10 cursor-pointer"
                       >
-                        Valider mon compte & Commencer
+                        Valider mon compte & Se Connecter
                       </button>
                     </div>
 
-                    <button onClick={() => setAuthState('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest">
+                    <button onClick={() => setAuthState('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
                       Retour
                     </button>
                   </motion.div>

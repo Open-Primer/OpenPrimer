@@ -30,9 +30,7 @@ const EMPTY_STATE_STRINGS = {
     subtitle_b: "AI Generation Engine.",
     freq_label: "Frequently searched — not yet generated",
     explain: "When enough students search for this topic, our sovereign AI curriculum engine automatically drafts and publishes a new course. You can leave your details below to be notified the moment it goes live.",
-    name_placeholder: "Your full name",
     email_placeholder: "Your email address",
-    name_required: "Please enter your name before submitting.",
     email_required: "Please enter a valid email address.",
     cta_notify: "Notify me when this course is live",
     success_title: "You're on the list!",
@@ -40,6 +38,7 @@ const EMPTY_STATE_STRINGS = {
     alt_title: "Explore available courses",
     alt_sub: "Or try one of these popular subjects:",
     clear: "Clear search",
+    privacy_note: "Your email address is securely retained for up to 90 days and will be automatically purged if the course is not generated within this period.",
   },
   FR: {
     title: "Aucun cours trouvé",
@@ -47,9 +46,7 @@ const EMPTY_STATE_STRINGS = {
     subtitle_b: "Moteur de Génération IA.",
     freq_label: "Recherche fréquente — cours non encore généré",
     explain: "Lorsqu'un nombre suffisant d'étudiants recherchent ce sujet, notre moteur IA génère et publie automatiquement un nouveau cours. Laissez vos coordonnées ci-dessous pour être notifié dès sa mise en ligne.",
-    name_placeholder: "Votre nom complet",
     email_placeholder: "Votre adresse e-mail",
-    name_required: "Veuillez entrer votre nom avant de soumettre.",
     email_required: "Veuillez entrer une adresse e-mail valide.",
     cta_notify: "Me notifier à la mise en ligne du cours",
     success_title: "Vous êtes inscrit !",
@@ -57,6 +54,7 @@ const EMPTY_STATE_STRINGS = {
     alt_title: "Explorer les cours disponibles",
     alt_sub: "Ou essayez l'un de ces sujets populaires :",
     clear: "Effacer la recherche",
+    privacy_note: "Votre adresse e-mail est conservée de manière sécurisée pendant 90 jours maximum et sera automatiquement supprimée si le cours n'est pas généré durant cette période.",
   },
   ES: {
     title: "No se encontraron cursos",
@@ -64,9 +62,7 @@ const EMPTY_STATE_STRINGS = {
     subtitle_b: "Motor de Generación IA.",
     freq_label: "Búsqueda frecuente — curso aún no generado",
     explain: "Cuando suficientes estudiantes buscan este tema, nuestro motor de IA genera y publica automáticamente un nuevo curso. Deja tus datos para recibir una notificación en cuanto esté disponible.",
-    name_placeholder: "Tu nombre completo",
     email_placeholder: "Tu dirección de correo",
-    name_required: "Por favor, introduce tu nombre antes de enviar.",
     email_required: "Por favor, introduce un correo electrónico válido.",
     cta_notify: "Notificarme cuando el curso esté disponible",
     success_title: "¡Estás en la lista!",
@@ -74,6 +70,7 @@ const EMPTY_STATE_STRINGS = {
     alt_title: "Explorar cursos disponibles",
     alt_sub: "O prueba uno de estos temas populares:",
     clear: "Borrar búsqueda",
+    privacy_note: "Su dirección de correo electrónico se conserva de forma segura durante un máximo de 90 días y se eliminará automáticamente si el curso no se genera durante este período.",
   },
   DE: {
     title: "Keine Kurse gefunden",
@@ -81,9 +78,7 @@ const EMPTY_STATE_STRINGS = {
     subtitle_b: "KI-Generierungs-Engine verfolgt.",
     freq_label: "Häufig gesucht — Kurs noch nicht generiert",
     explain: "Wenn genug Studierende dieses Thema suchen, erstellt und veröffentlicht unsere KI automatisch einen neuen Kurs. Hinterlasse deine Daten, um benachrichtigt zu werden, sobald er verfügbar ist.",
-    name_placeholder: "Dein vollständiger Name",
     email_placeholder: "Deine E-Mail-Adresse",
-    name_required: "Bitte gib deinen Namen ein, bevor du absendest.",
     email_required: "Bitte gib eine gültige E-Mail-Adresse ein.",
     cta_notify: "Benachrichtige mich, wenn der Kurs verfügbar ist",
     success_title: "Du bist auf der Liste!",
@@ -91,6 +86,7 @@ const EMPTY_STATE_STRINGS = {
     alt_title: "Verfügbare Kurse erkunden",
     alt_sub: "Oder probiere eines dieser beliebten Themen:",
     clear: "Suche löschen",
+    privacy_note: "Ihre E-Mail-Adresse wird bis zu 90 Tage lang sicher aufbewahrt und automatisch gelöscht, wenn der Kurs in diesem Zeitraum nicht erstellt wird.",
   },
   ZH: {
     title: "未找到课程",
@@ -98,9 +94,7 @@ const EMPTY_STATE_STRINGS = {
     subtitle_b: "AI生成引擎追踪。",
     freq_label: "搜索频繁 — 课程尚未生成",
     explain: "当足够多的学生搜索此主题时，我们的 AI 主权课程引擎将自动起草并发布新课程。请在下方留下您的信息，以便在课程上线时第一时间收到通知。",
-    name_placeholder: "您的姓名",
     email_placeholder: "您的电子邮件地址",
-    name_required: "请在提交前输入您的姓名。",
     email_required: "请输入有效的电子邮件地址。",
     cta_notify: "课程上线时通知我",
     success_title: "您已成功报名！",
@@ -108,6 +102,7 @@ const EMPTY_STATE_STRINGS = {
     alt_title: "探索现有课程",
     alt_sub: "或者尝试这些热门主题：",
     clear: "清除搜索",
+    privacy_note: "您的电子邮件地址将被安全保留最多90天，如果在此期间未生成课程，将被自动清除。",
   },
 };
 
@@ -119,7 +114,6 @@ interface SmartEmptyStateProps {
 
 const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) => {
   const es = EMPTY_STATE_STRINGS[lang as keyof typeof EMPTY_STATE_STRINGS] || EMPTY_STATE_STRINGS.EN;
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -127,13 +121,12 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!name.trim()) { setError(es.name_required); return; }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(es.email_required); return; }
     // Persist notification request in localStorage (mock backend)
     if (typeof window !== 'undefined') {
       const key = 'op_course_notifications';
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.push({ query: searchQuery, name: name.trim(), email: email.trim(), timestamp: new Date().toISOString() });
+      existing.push({ query: searchQuery, email: email.trim(), timestamp: new Date().toISOString() });
       localStorage.setItem(key, JSON.stringify(existing));
     }
     setSubmitted(true);
@@ -161,17 +154,6 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
               </p>
             )}
           </div>
-          {searchQuery && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
-              </span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                {es.freq_label}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Explanation card */}
@@ -223,18 +205,6 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
                   </div>
                 )}
 
-                {/* Name field — blocking */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={es.name_placeholder}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 px-5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 transition-all"
-                  />
-                </div>
-
                 {/* Email field — blocking */}
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
@@ -247,6 +217,11 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-11 pr-5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 transition-all"
                   />
                 </div>
+
+                {/* Privacy Warning Sub-label */}
+                <p className="text-[10px] text-slate-500 leading-relaxed text-center px-4 font-medium">
+                  {es.privacy_note}
+                </p>
 
                 <button
                   type="submit"
@@ -319,6 +294,21 @@ export const CatalogPage = () => {
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('op_show_welcome_catalog_popup');
+      if (val === 'true') {
+        setShowWelcomePopup(true);
+      }
+    }
+  }, []);
+
+  const dismissWelcomePopup = () => {
+    localStorage.removeItem('op_show_welcome_catalog_popup');
+    setShowWelcomePopup(false);
+  };
 
   useEffect(() => {
     async function loadCourses() {
@@ -567,6 +557,54 @@ export const CatalogPage = () => {
         </div>
       </div>
       <Footer />
+
+      <AnimatePresence>
+        {showWelcomePopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden text-center"
+            >
+              {/* Decorative radial gradients */}
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-violet-600/10 rounded-full blur-3xl" />
+
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-blue-600/20 to-violet-600/20 border border-blue-500/20 flex items-center justify-center shadow-xl shadow-blue-500/5 mb-6">
+                <GraduationCap className="w-8 h-8 text-blue-400" />
+              </div>
+
+              <h2 className="text-2xl font-black text-white mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
+                {lang === 'FR' ? "Bienvenue sur OpenPrimer !" :
+                 lang === 'ES' ? "¡Bienvenido a OpenPrimer!" :
+                 lang === 'DE' ? "Willkommen bei OpenPrimer!" :
+                 lang === 'ZH' ? "欢迎来到 OpenPrimer！" :
+                 "Welcome to OpenPrimer!"}
+              </h2>
+              
+              <p className="text-sm text-slate-400 leading-relaxed mb-8">
+                {lang === 'FR' ? "Votre inscription a été validée avec succès. Il ne vous reste plus qu'à choisir les cours qui vous intéressent dans le catalogue ci-dessous pour composer votre premier curriculum personnalisé !" :
+                 lang === 'ES' ? "Su registro se ha validado correctamente. ¡Solo tiene que elegir los cursos que le interesan en el catálogo siguiente para componer su primer plan de estudios personalizado!" :
+                 lang === 'DE' ? "Ihre Registrierung wurde erfolgreich bestätigt. Wählen Sie nun einfach die Kurse, die Sie interessieren, aus dem untenstehenden Katalog aus, um Ihren ersten personalisierten Lehrplan zu erstellen!" :
+                 lang === 'ZH' ? "您的注册已成功通过验证。现在，您只需从下方的目录中选择您感兴趣的课程，即可构建您的第一个个性化课程表！" :
+                 "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
+              </p>
+
+              <button
+                onClick={dismissWelcomePopup}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
+              >
+                {lang === 'FR' ? "Commencer à explorer" :
+                 lang === 'ES' ? "Empezar a explorar" :
+                 lang === 'DE' ? "Jetzt erkunden" :
+                 lang === 'ZH' ? "开始探索" :
+                 "Start Exploring"}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

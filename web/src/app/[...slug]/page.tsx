@@ -55,6 +55,40 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const moduleName = pageData.meta.module || 'Overview';
     const level = pageData.meta.level || 'L1';
 
+    const getLocalizedCoreModule = (currentLang: string, lvl: string) => {
+      const lUpper = currentLang.toUpperCase();
+      let moduleLabel = "Core Module";
+      if (lUpper === 'FR') moduleLabel = "Module Principal";
+      else if (lUpper === 'ES') moduleLabel = "Módulo Principal";
+      else if (lUpper === 'DE') moduleLabel = "Kernmodul";
+      else if (lUpper === 'ZH') moduleLabel = "核心模块";
+
+      const lvlStr = String(lvl).toUpperCase();
+      let lvlVal = lvlStr;
+      if (lvlStr === 'L1') {
+        if (lUpper === 'EN') lvlVal = '101';
+        else if (lUpper === 'ZH') lvlVal = '大一 (101)';
+        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L1 (101)';
+      } else if (lvlStr === 'L2') {
+        if (lUpper === 'EN') lvlVal = '201';
+        else if (lUpper === 'ZH') lvlVal = '大二 (201)';
+        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L2 (201)';
+      } else if (lvlStr === 'L3') {
+        if (lUpper === 'EN') lvlVal = '301';
+        else if (lUpper === 'ZH') lvlVal = '大三 (301)';
+        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L3 (301)';
+      } else if (/^\d+$/.test(lvlStr)) {
+        const num = parseInt(lvlStr, 10);
+        if (lUpper === 'ZH') lvlVal = `${num}年级`;
+        else if (lUpper === 'EN') lvlVal = `Grade ${num}`;
+        else if (lUpper === 'FR') lvlVal = `Niveau ${num}`;
+        else if (lUpper === 'ES') lvlVal = `Grado ${num}`;
+        else if (lUpper === 'DE') lvlVal = `Klasse ${num}`;
+      }
+
+      return `${moduleLabel} • ${lvlVal}`;
+    };
+
     return (
       <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
@@ -69,7 +103,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
           <header className="mb-12 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 text-blue-500/80 text-[8px] font-black uppercase tracking-widest mb-4">
-              Core Module • {level}
+              {getLocalizedCoreModule(lang, level)}
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {title}

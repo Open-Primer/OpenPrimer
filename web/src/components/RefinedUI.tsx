@@ -416,11 +416,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    if (session === 'false') {
-      setIsLoggedIn(false);
-    } else {
-      setIsLoggedIn(true);
-    }
+    setIsLoggedIn(session === 'true');
     const profile = localStorage.getItem('op_user_profile');
     if (profile) {
       setUserProfile(JSON.parse(profile));
