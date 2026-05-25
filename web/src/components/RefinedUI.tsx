@@ -385,6 +385,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportComment, setReportComment] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [readingMode, setReadingMode] = useState('dark');
 
   // Static flag map for well-known language codes
   const LANG_FLAG_MAP: Record<string, { flag: string; label: string }> = {
@@ -424,17 +425,76 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     if (profile) {
       setUserProfile(JSON.parse(profile));
     }
+
+    // Load initial reading mode theme
+    const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
+    setReadingMode(savedMode);
+
+    const handleGlobalModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setReadingMode(customEvent.detail);
+    };
+    window.addEventListener('op_reading_mode_changed', handleGlobalModeChange);
+
     // Load available languages dynamically from db
     dbService.getAvailableLanguages().then(({ data }) => {
       if (data && data.length > 0) {
         setLanguages(data.map((l: any) => ({
           code: l.code.toUpperCase(),
-          flag: LANG_FLAG_MAP[l.code.toUpperCase()]?.flag ?? '🌐',
-          label: l.name || LANG_FLAG_MAP[l.code.toUpperCase()]?.label || l.code.toUpperCase(),
+          flag: LANG_FLAG_MAP[l.code.toUpperCase()]?.flag || l.flag || '🌐',
+          label: LANG_FLAG_MAP[l.code.toUpperCase()]?.label || l.label || l.name || l.code.toUpperCase(),
         })));
       }
     }).catch(() => { /* keep fallback */ });
+
+    return () => {
+      window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
+    };
   }, []);
+
+  const handleThemeSelect = (modeKey: string) => {
+    setReadingMode(modeKey);
+    localStorage.setItem('op_reading_mode', modeKey);
+    
+    // Update op_user_profile inside localStorage
+    const profileStr = localStorage.getItem('op_user_profile');
+    if (profileStr) {
+      try {
+        const profile = JSON.parse(profileStr);
+        profile.preferredTheme = modeKey;
+        localStorage.setItem('op_user_profile', JSON.stringify(profile));
+      } catch (e) {}
+    }
+    
+    // Call dynamic page setting if defined
+    if ((window as any).setReadingMode) {
+      (window as any).setReadingMode(modeKey);
+    }
+    
+    // Dispatch custom event
+    window.dispatchEvent(new CustomEvent('op_reading_mode_changed', { detail: modeKey }));
+  };
+
+  const handleLanguageSelect = (code: string) => {
+    setLang(code as any);
+    localStorage.setItem('openprimer_lang', code);
+    document.cookie = `openprimer_lang=${code}; path=/; max-age=31536000; SameSite=Lax`;
+    
+    // Update op_user_profile preferredLang inside localStorage
+    const profileStr = localStorage.getItem('op_user_profile');
+    if (profileStr) {
+      try {
+        const profile = JSON.parse(profileStr);
+        profile.preferredLang = code.toLowerCase();
+        localStorage.setItem('op_user_profile', JSON.stringify(profile));
+      } catch (e) {}
+    }
+    
+    if (onLangChange) onLangChange(code);
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  };
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -478,7 +538,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             {activeDropdown === 'lang' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
                  {languages.map(l => (
-                   <button key={l.code} onClick={() => { setLang(l.code as any); if (onLangChange) onLangChange(l.code); setTimeout(() => { window.location.reload(); }, 100); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                   <button key={l.code} onClick={() => handleLanguageSelect(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                      <span>{l.flag} {l.label}</span>
                      {lang === l.code && <CheckCircle className="w-3 h-3" />}
                    </button>
@@ -488,15 +548,17 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           </AnimatePresence>
         </div>
 
-        {(isCoursePage || showReadingModeSelector) && (
+        {(isCoursePage || showReadingModeSelector || isLoggedIn) && (
           <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
             {['Default', 'Paper', 'Focus'].map(mode => {
+              const modeKey = mode === 'Default' ? 'dark' : mode.toLowerCase();
+              const active = readingMode === modeKey || (modeKey === 'dark' && readingMode === 'default');
               const modeLabel = mode === 'Default' ? t.mode_default : mode === 'Paper' ? t.mode_paper : t.mode_focus;
               return (
                 <button 
                   key={mode}
-                  onClick={() => (window as any).setReadingMode?.(mode.toLowerCase())}
-                  className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
+                  onClick={() => handleThemeSelect(modeKey)}
+                  className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
                 >
                   {modeLabel}
                 </button>

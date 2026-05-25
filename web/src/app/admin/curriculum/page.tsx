@@ -826,10 +826,17 @@ export default function AdminCurriculumPage() {
   const handleAddLanguage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLangCode || !newLangLabel) return;
+    const FLAG_LOOKUP: Record<string, string> = {
+      EN: '🇺🇸', FR: '🇫🇷', ES: '🇪🇸', DE: '🇩🇪', ZH: '🇨🇳',
+      IT: '🇮🇹', PT: '🇵🇹', JA: '🇯🇵', KO: '🇰🇷', RU: '🇷🇺',
+      AR: '🇸🇦', NL: '🇳🇱', PL: '🇵🇱', TR: '🇹🇷', SV: '🇸🇪'
+    };
+    const codeUpper = newLangCode.toUpperCase();
+    const resolvedFlag = newLangFlag || FLAG_LOOKUP[codeUpper] || '🌐';
     await dbService.registerLanguage({
-      code: newLangCode.toUpperCase(),
+      code: codeUpper,
       label: newLangLabel,
-      flag: newLangFlag || '🌐'
+      flag: resolvedFlag
     });
     setNewLangCode('');
     setNewLangLabel('');

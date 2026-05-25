@@ -16,10 +16,28 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('openprimer_lang') as Language;
-    if (saved && typeof saved === 'string' && saved.length > 0) {
-      setLanguage(saved);
-      document.cookie = `openprimer_lang=${saved}; path=/; max-age=31536000; SameSite=Lax`;
+    let initialLang: Language = '';
+    const profileStr = localStorage.getItem('op_user_profile');
+    if (profileStr) {
+      try {
+        const profile = JSON.parse(profileStr);
+        if (profile && profile.preferredLang) {
+          initialLang = profile.preferredLang.toUpperCase() as Language;
+        }
+      } catch (e) {}
+    }
+
+    if (!initialLang) {
+      const saved = localStorage.getItem('openprimer_lang') as Language;
+      if (saved && typeof saved === 'string' && saved.length > 0) {
+        initialLang = saved;
+      }
+    }
+
+    if (initialLang) {
+      setLanguage(initialLang);
+      localStorage.setItem('openprimer_lang', initialLang);
+      document.cookie = `openprimer_lang=${initialLang}; path=/; max-age=31536000; SameSite=Lax`;
     } else {
       const cookieLang = typeof document !== 'undefined' && document.cookie
         .split('; ')

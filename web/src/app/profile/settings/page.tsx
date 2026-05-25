@@ -45,18 +45,23 @@ export default function ProfileSettingsPage() {
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Persist profile
+    const savedProfile = localStorage.getItem('op_user_profile');
+    let existingProfile = {} as any;
+    if (savedProfile) {
+      try {
+        existingProfile = JSON.parse(savedProfile);
+      } catch (err) {}
+    }
+
+    // Persist profile keeping preferences intact!
     const profile = {
+      ...existingProfile,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      preferredLang: user.lang.toLowerCase(),
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
-
-    // Persist reading mode
-    localStorage.setItem('op_reading_mode', readingMode);
 
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -130,60 +135,6 @@ export default function ProfileSettingsPage() {
                  </div>
               </form>
            </section>
-
-            {/* PREFERENCES */}
-            <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl">
-               <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-3">
-                  <Globe className="w-4 h-4" /> {t.preferences}
-               </h3>
-               
-               <div className="space-y-8">
-                  <div className="flex items-center justify-between p-6 bg-slate-950/50 border border-slate-800 rounded-3xl">
-                     <div>
-                        <p className="font-bold text-white">{t.preferred_lang}</p>
-                        <p className="text-xs text-slate-500">{t.lang_desc}</p>
-                     </div>
-                     <div className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-400">
-                        {user.lang}
-                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                     <div>
-                        <p className="font-bold text-white">{t.mode_default || "Reading Mode"}</p>
-                        <p className="text-xs text-slate-500">Configure your default visual interface for reading certified modules.</p>
-                     </div>
-
-                     <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { id: 'default', label: t.mode_default || 'Default', desc: 'Sleek dark interface (default)' },
-                          { id: 'paper', label: t.mode_paper || 'Paper', desc: 'Soft sepia paper style' },
-                          { id: 'focus', label: t.mode_focus || 'Focus', desc: 'High-contrast pure black' }
-                        ].map((m) => {
-                          const active = readingMode === m.id || (m.id === 'default' && readingMode === 'dark');
-                          return (
-                            <button
-                              type="button" 
-                              key={m.id}
-                              onClick={() => {
-                                const finalMode = m.id === 'default' ? 'dark' : m.id;
-                                setReadingMode(finalMode);
-                                localStorage.setItem('op_reading_mode', finalMode);
-                                if (typeof window !== 'undefined') {
-                                  (window as any).setReadingMode?.(finalMode);
-                                }
-                              }}
-                              className={`p-6 rounded-3xl border transition-all flex flex-col items-start text-left gap-2 group ${active ? 'bg-blue-600/10 border-blue-500/60 text-white shadow-lg shadow-blue-600/5' : 'bg-slate-950/30 border-slate-900 text-slate-500 hover:border-slate-800 hover:text-slate-300'}`}
-                            >
-                              <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-blue-400' : 'text-slate-400'}`}>{m.label}</span>
-                              <span className="text-[9px] text-slate-500 font-medium leading-relaxed">{m.desc}</span>
-                            </button>
-                          );
-                        })}
-                     </div>
-                  </div>
-               </div>
-            </section>
 
            {/* DANGER ZONE */}
            <section className="p-10 bg-red-500/5 border border-red-500/20 rounded-[48px] backdrop-blur-3xl">
