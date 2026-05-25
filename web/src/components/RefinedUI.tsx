@@ -385,6 +385,31 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportComment, setReportComment] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+
+  // Static flag map for well-known language codes
+  const LANG_FLAG_MAP: Record<string, { flag: string; label: string }> = {
+    EN: { flag: '🇺🇸', label: 'English' },
+    FR: { flag: '🇫🇷', label: 'Français' },
+    ES: { flag: '🇪🇸', label: 'Español' },
+    DE: { flag: '🇩🇪', label: 'Deutsch' },
+    ZH: { flag: '🇨🇳', label: '中文' },
+    IT: { flag: '🇮🇹', label: 'Italiano' },
+    PT: { flag: '🇧🇷', label: 'Português' },
+    AR: { flag: '🇸🇦', label: 'العربية' },
+    JA: { flag: '🇯🇵', label: '日本語' },
+    KO: { flag: '🇰🇷', label: '한국어' },
+    RU: { flag: '🇷🇺', label: 'Русский' },
+  };
+
+  const FALLBACK_LANGUAGES = [
+    { code: 'EN', flag: '🇺🇸', label: 'English' },
+    { code: 'FR', flag: '🇫🇷', label: 'Français' },
+    { code: 'ES', flag: '🇪🇸', label: 'Español' },
+    { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
+    { code: 'ZH', flag: '🇨🇳', label: '中文' }
+  ];
+
+  const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
   
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
@@ -399,6 +424,16 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     if (profile) {
       setUserProfile(JSON.parse(profile));
     }
+    // Load available languages dynamically from db
+    dbService.getAvailableLanguages().then(({ data }) => {
+      if (data && data.length > 0) {
+        setLanguages(data.map((l: any) => ({
+          code: l.code.toUpperCase(),
+          flag: LANG_FLAG_MAP[l.code.toUpperCase()]?.flag ?? '🌐',
+          label: l.name || LANG_FLAG_MAP[l.code.toUpperCase()]?.label || l.code.toUpperCase(),
+        })));
+      }
+    }).catch(() => { /* keep fallback */ });
   }, []);
 
   const triggerToast = (msg: string) => {
@@ -410,14 +445,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     navigator.clipboard.writeText(window.location.href);
     triggerToast(t.copy);
   };
-
-  const languages = [
-    { code: 'EN', flag: '🇺🇸', label: 'English' },
-    { code: 'FR', flag: '🇫🇷', label: 'Français' },
-    { code: 'ES', flag: '🇪🇸', label: 'Español' },
-    { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
-    { code: 'ZH', flag: '🇨🇳', label: '中文' }
-  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[100] px-8 flex items-center justify-between">

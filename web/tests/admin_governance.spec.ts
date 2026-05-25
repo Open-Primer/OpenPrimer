@@ -180,8 +180,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
     await expect(suggestedZap).toBeVisible();
     await suggestedZap.click();
  
-    // 8. Verify dynamic translations compilation are rendered
-    await expect(page.locator('text=/Multi-Language Compilation Backlog|Backlog de Compilation/')).toBeVisible();
+    // 8. Verify badge icon library is visible (Multi-Language panel removed)
     await expect(page.locator('text=Streaker Master').first()).toBeVisible();
  
     // 9. Submit creation and assert badge appears in grid
@@ -198,8 +197,8 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
     // 11. Force Purge badge to clean database
     const streakerExpertCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Streaker Expert' }) }).first();
     await streakerExpertCard.locator('button[title*="Force Delete"]').first().click();
-    await page.fill('input[placeholder="Type name here..."]', 'Streaker Expert');
-    await page.click('button:has-text("Force Purge"), button:has-text("Purger")');
+    // Simple confirm — no name typing required after refactor
+     await page.click('button:has-text("Confirm Delete"), button:has-text("Force Purge"), button:has-text("Confirmer")');
     await expect(page.locator('h3:has-text("Streaker Expert")')).not.toBeVisible();
   });
  

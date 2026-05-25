@@ -469,14 +469,36 @@ export const CatalogPage = () => {
                       <Book className="w-6 h-6" />
                     </div>
                     <div className="flex gap-2 items-center">
+                      {/* Star rating from completed users */}
+                      {(course.averageRating ?? 0) > 0 && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-xl" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
+                          {[1,2,3,4,5].map((s) => {
+                            const avg = course.averageRating ?? 0;
+                            const full = avg >= s;
+                            const half = !full && avg >= s - 0.5;
+                            return (
+                              <span key={s} className="relative inline-block w-3 h-3">
+                                <Star className="w-3 h-3 text-slate-700 absolute inset-0" />
+                                {full && <Star className="w-3 h-3 text-amber-400 fill-amber-400 absolute inset-0" />}
+                                {half && <span className="absolute inset-0 overflow-hidden w-[50%]"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /></span>}
+                              </span>
+                            );
+                          })}
+                          <span className="text-[9px] font-black text-amber-400 ml-0.5">{(course.averageRating ?? 0).toFixed(1)}</span>
+                          <span className="text-[8px] text-slate-600 font-semibold">({course.ratingCount ?? 0})</span>
+                        </div>
+                      )}
+                      {/* Bookmark (logged-in only) */}
                       {isLoggedIn && (
-                        <button 
+                        <button
                           onClick={(e) => toggleBookmark(course.id, e)}
+                          title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
                           className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
                         >
                           <Star className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                         </button>
                       )}
+                      {/* Level badge */}
                       <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
                         {course.level}
                       </span>
