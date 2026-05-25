@@ -107,7 +107,6 @@ export interface AgentMetric {
   rolling30DaysCost: number;
   requests: number;
   avgResponseTime: string;
-  rating: number;
 }
 
 export interface SyllabusNode {
@@ -179,6 +178,7 @@ export interface MockCourse {
   archivedLanguages?: string[];
   ratingCount?: number;
   averageRating?: number;
+  validations?: number; // Configurable validations threshold metric
 }
 
 // 1. POPULATED SEED DATA - 10+ RICH USER ACCOUNTS WITH ENGAGEMENT DATA
@@ -347,7 +347,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr", "es", "de", "zh"],
     ects: 6, 
     popularity: 1250, 
-    is_active: true 
+    is_active: true,
+    validations: 12
   },
   { 
     id: 2, 
@@ -360,7 +361,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 6, 
     popularity: 840, 
-    is_active: true 
+    is_active: true,
+    validations: 3
   },
   { 
     id: 3, 
@@ -373,7 +375,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 4, 
     popularity: 2400, 
-    is_active: true 
+    is_active: true,
+    validations: 15
   },
   { 
     id: 4, 
@@ -386,7 +389,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 5, 
     popularity: 1800, 
-    is_active: true 
+    is_active: true,
+    validations: 8
   },
   { 
     id: 5, 
@@ -399,7 +403,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 6, 
     popularity: 1500, 
-    is_active: true 
+    is_active: true,
+    validations: 2
   },
   { 
     id: 6, 
@@ -412,7 +417,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 5, 
     popularity: 950, 
-    is_active: true 
+    is_active: true,
+    validations: 1
   },
   { 
     id: 7, 
@@ -425,7 +431,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 6, 
     popularity: 3100, 
-    is_active: true 
+    is_active: true,
+    validations: 25
   },
   { 
     id: 8, 
@@ -438,7 +445,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 6, 
     popularity: 4200, 
-    is_active: true 
+    is_active: true,
+    validations: 32
   },
   { 
     id: 9, 
@@ -451,7 +459,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 5, 
     popularity: 1100, 
-    is_active: true 
+    is_active: true,
+    validations: 4
   },
   { 
     id: 10, 
@@ -464,7 +473,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr"],
     ects: 4, 
     popularity: 1600, 
-    is_active: true 
+    is_active: true,
+    validations: 6
   },
   { 
     id: 11, 
@@ -477,7 +487,8 @@ let mockCourses: MockCourse[] = [
     langs: ["en", "fr", "es", "de", "zh"],
     ects: 6, 
     popularity: 1850, 
-    is_active: true 
+    is_active: true,
+    validations: 11
   }
 ];
 
@@ -879,8 +890,7 @@ let initialAgentMetrics: AgentMetric[] = [
     totalCost: 245.80,
     rolling30DaysCost: 48.50,
     requests: 820,
-    avgResponseTime: '1420ms',
-    rating: 4.8
+    avgResponseTime: '1420ms'
   },
   {
     id: 'translation',
@@ -889,8 +899,7 @@ let initialAgentMetrics: AgentMetric[] = [
     totalCost: 188.40,
     rolling30DaysCost: 32.10,
     requests: 1240,
-    avgResponseTime: '890ms',
-    rating: 4.9
+    avgResponseTime: '890ms'
   },
   {
     id: 'revision',
@@ -899,8 +908,7 @@ let initialAgentMetrics: AgentMetric[] = [
     totalCost: 98.20,
     rolling30DaysCost: 15.60,
     requests: 450,
-    avgResponseTime: '1120ms',
-    rating: 4.7
+    avgResponseTime: '1120ms'
   },
   {
     id: 'tutor',
@@ -909,8 +917,7 @@ let initialAgentMetrics: AgentMetric[] = [
     totalCost: 312.50,
     rolling30DaysCost: 64.20,
     requests: 3420,
-    avgResponseTime: '580ms',
-    rating: 4.95
+    avgResponseTime: '580ms'
   }
 ];
 
@@ -1543,6 +1550,15 @@ export const dbService = {
     translationRequestsList = translationRequestsList.filter(t => t.id !== id);
     setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
     return { data: null, error: null };
+  },
+
+  cleanupTranslationRequests: async (retentionDays: number) => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - retentionDays);
+    const originalCount = translationRequestsList.length;
+    translationRequestsList = translationRequestsList.filter(t => new Date(t.timestamp) >= cutoff);
+    setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
+    return { data: { purged: originalCount - translationRequestsList.length }, error: null };
   },
 
   // REFUSED COURSES APIS

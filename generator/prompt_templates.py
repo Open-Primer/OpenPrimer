@@ -3,9 +3,30 @@
 # ==============================================================================
 
 ACADEMIC_SCALING = {
-    "L1": {"ects": 6, "hours": 150, "complexity": "Introductory University", "math": "Calculus & Linear Algebra", "length": 5000},
-    "L2": {"ects": 6, "hours": 150, "complexity": "Intermediate University", "math": "Multivariable & Differential Eqs", "length": 6500},
-    "L3": {"ects": 9, "hours": 225, "complexity": "Advanced University", "math": "Topology & Vector Fields", "length": 8000},
+    "L1": {
+        "ects": 6, 
+        "hours": 150, 
+        "complexity": "Introductory University / Bachelor Year 1 / US 101 / China 大一", 
+        "math": "Calculus & Linear Algebra", 
+        "length": 5000,
+        "equivalencies": {"Europe": "L1 / Licence 1", "US": "101 / Freshman", "China": "大一 / University Year 1"}
+    },
+    "L2": {
+        "ects": 6, 
+        "hours": 150, 
+        "complexity": "Intermediate University / Bachelor Year 2 / US 201 / China 大二", 
+        "math": "Multivariable & Differential Eqs", 
+        "length": 6500,
+        "equivalencies": {"Europe": "L2 / Licence 2", "US": "201 / Sophomore", "China": "大二 / University Year 2"}
+    },
+    "L3": {
+        "ects": 9, 
+        "hours": 225, 
+        "complexity": "Advanced University / Bachelor Year 3 / US 301 / China 大三", 
+        "math": "Topology & Vector Fields", 
+        "length": 8000,
+        "equivalencies": {"Europe": "L3 / Licence 3", "US": "301 / Junior", "China": "大三 / University Year 3"}
+    },
 }
 
 PEDAGOGICAL_PATTERNS = {

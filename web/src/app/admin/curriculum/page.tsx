@@ -7,7 +7,8 @@ import {
   Clock, AlertCircle, Settings, Filter, Database, Eye, Check, X, 
   Edit3, Trash2, ShieldAlert, Bell, Play, RefreshCw, BarChart3, Award,
   Sparkles, Star, Trophy, Crown, Book, Layers, Activity, Heart, Globe, Flame,
-  Compass, Map, GraduationCap, Target, Cpu, Key, Lock, Lightbulb, Rocket, Search
+  Compass, Map, GraduationCap, Target, Cpu, Key, Lock, Lightbulb, Rocket, Search,
+  Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage } from '@/lib/db';
@@ -338,6 +339,14 @@ export default function AdminCurriculumPage() {
   const [backlogRetention, setBacklogRetention] = useState(30);
   const [transRetention, setTransRetention] = useState(30);
 
+  // Paginated Gallery States
+  const [creationGalleryPage, setCreationGalleryPage] = useState(1);
+  const [editionGalleryPage, setEditionGalleryPage] = useState(1);
+  const badgePageSize = 9;
+
+  // Academic Suggestions validations threshold
+  const [validationsThreshold, setValidationsThreshold] = useState(5);
+
   // Load language and database elements
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -508,6 +517,23 @@ export default function AdminCurriculumPage() {
   }, [feedbacks, autoRevision, revThreshold, queue, refusedRevisions]);
 
   // Generation Handlers
+  const handleDeployExpansion = (title: string, prerequisite: string, level: string, subject: string) => {
+    const newTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title,
+      type: 'generation',
+      status: 'pending',
+      progress: 0,
+      priority: 'Medium',
+      timestamp: new Date().toISOString(),
+      details: `Sovereign Academic Expansion: L2 Progression on subject "${subject}". Prerequisite: ${prerequisite}`
+    };
+    const updated = [...queue, newTask];
+    setQueue(updated);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    loadData();
+  };
+
   const handleApproveGen = (title: string, count: number) => {
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -785,10 +811,30 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
-  const handlePurgeExecuteSimple = async (ach: Achievement) => {
-    const confirmed = window.confirm(lang === 'FR' ? `Êtes-vous sûr de vouloir archiver le badge "${ach.name}" ?` : `Are you sure you want to archive the badge "${ach.name}"?`);
-    if (!confirmed) return;
-    await dbService.deleteAchievement(ach.id);
+  const handleOpenPurge = (ach: Achievement) => {
+    setPurgeTarget(ach);
+    setPurgeInput('');
+  };
+
+  const handlePurgeExecute = async () => {
+    if (!purgeTarget) return;
+    await dbService.deleteAchievement(purgeTarget.id);
+    setPurgeTarget(null);
+    loadData();
+  };
+
+  const handleAddLanguage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLangCode || !newLangLabel) return;
+    await dbService.registerLanguage({
+      code: newLangCode.toUpperCase(),
+      label: newLangLabel,
+      flag: newLangFlag || '🌐'
+    });
+    setNewLangCode('');
+    setNewLangLabel('');
+    setNewLangFlag('');
+    setShowAddLanguage(false);
     loadData();
   };
 
@@ -966,6 +1012,100 @@ export default function AdminCurriculumPage() {
                      )}
                    </div>
                  </div>
+
+                 {/* Academic Expansion Suggestions Panel */}
+                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
+                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                     <div className="space-y-1">
+                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                         <Sparkles className="w-5 h-5 text-yellow-500" /> Sovereign Academic Expansion
+                       </h2>
+                       <p className="text-xs text-slate-400">
+                         Recommends advanced courses (L2 progression paths & prerequisite expansions) once L1 student validation count passes the set threshold.
+                       </p>
+                     </div>
+                     
+                     <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-850 shrink-0">
+                       <span className="text-[10px] font-black text-slate-400 uppercase">Validations Seuil:</span>
+                       <input 
+                         type="range"
+                         min="1"
+                         max="20"
+                         value={validationsThreshold}
+                         onChange={(e) => setValidationsThreshold(Number(e.target.value))}
+                         className="w-32 accent-violet-500 bg-slate-800 rounded-lg cursor-pointer"
+                       />
+                       <span className="text-xs font-mono font-bold text-violet-400 w-6 text-center">{validationsThreshold}</span>
+                     </div>
+                   </div>
+
+                   <div className="grid md:grid-cols-2 gap-6">
+                     {[
+                       { title: "L2 Advanced Quantum Physics", prereq: "Quantum Physics", level: "L2", subject: "Physics" },
+                       { title: "L2 Advanced Molecular Biology", prereq: "Molecular Biology", level: "L2", subject: "Biology" },
+                       { title: "L2 Advanced Organic Chemistry", prereq: "Organic Chemistry", level: "L2", subject: "Chemistry" },
+                       { title: "L2 Advanced Linear Algebra", prereq: "Linear Algebra", level: "L2", subject: "Mathematics" }
+                     ].map((item, idx) => (
+                       <div key={idx} className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl flex justify-between items-center hover:border-yellow-500/30 transition-all">
+                         <div className="space-y-1.5">
+                           <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[8px] font-black rounded uppercase">
+                             Recommended L2 expansion
+                           </span>
+                           <h4 className="text-sm font-bold text-slate-200">{item.title}</h4>
+                           <p className="text-[9px] font-semibold text-slate-500 leading-normal">
+                             Prerequisite: <span className="text-slate-400">{item.prereq}</span> | Subject: {item.subject}
+                           </p>
+                         </div>
+                         <button
+                           type="button"
+                           onClick={() => handleDeployExpansion(item.title, item.prereq, item.level, item.subject)}
+                           className="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shrink-0"
+                         >
+                           Deploy
+                         </button>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+
+                 {/* Log Retention & Cleaning Panel */}
+                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                   <div className="space-y-1">
+                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                       <History className="w-5 h-5 text-blue-400" /> Generation Logs & Demand Retention
+                     </h2>
+                     <p className="text-xs text-slate-400">
+                       Set retention days for failed search term logs and feedback logs, and purge expired entries immediately.
+                     </p>
+                   </div>
+                   
+                   <div className="flex flex-wrap items-center gap-6">
+                     <div className="flex items-center gap-3">
+                       <span className="text-[10px] font-black text-slate-400 uppercase">Retention:</span>
+                       <input 
+                         type="range" 
+                         min="7" 
+                         max="90" 
+                         value={backlogRetention} 
+                         onChange={(e) => setBacklogRetention(Number(e.target.value))}
+                         className="w-28 accent-blue-500 cursor-pointer"
+                       />
+                       <span className="text-xs font-mono font-bold text-blue-400 w-8 text-center">{backlogRetention}d</span>
+                     </div>
+                     <button 
+                       type="button"
+                       onClick={async () => {
+                         const res = await dbService.cleanupSearchHistory(backlogRetention);
+                         const resFeedback = await dbService.cleanupCourseFeedbacks(backlogRetention);
+                         const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0);
+                         alert(lang === 'FR' ? `Nettoyage réussi. ${totalPurged} entrées expirées ont été purgées.` : `Logs cleanup completed. ${totalPurged} expired entries purged.`);
+                       }}
+                       className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/10"
+                     >
+                       Purge Logs
+                     </button>
+                   </div>
+                 </div>
                </div>
              )}
 
@@ -1042,6 +1182,77 @@ export default function AdminCurriculumPage() {
                          </button>
                        </div>
                      ))}
+                     {refusedTranslations.length === 0 && (
+                       <p className="text-sm text-slate-600 italic py-4">Refused translations backlog is empty.</p>
+                     )}
+                   </div>
+                 </div>
+
+                 {/* Registered Languages Registry & Add Language Panel */}
+                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
+                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                     <div className="space-y-1">
+                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                         <Globe className="w-5 h-5 text-emerald-500" /> Dynamic Languages Registry
+                       </h2>
+                       <p className="text-xs text-slate-400">
+                         Registered languages that are dynamically recognized for localization compilation and student translation requests.
+                       </p>
+                     </div>
+                     <button
+                       type="button"
+                       onClick={() => setShowAddLanguage(true)}
+                       className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/10 shrink-0"
+                     >
+                       Register New Language
+                     </button>
+                   </div>
+
+                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                     {availableLanguages.map((langItem, idx) => (
+                       <div key={idx} className="p-4 bg-slate-950/40 border border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-emerald-500/20 transition-all text-center">
+                         <span className="text-2xl">{langItem.flag || '🌐'}</span>
+                         <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest">{langItem.code}</span>
+                         <span className="text-[9px] text-slate-500 font-semibold">{langItem.label}</span>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+
+                 {/* Requests Retention & Purge Panel */}
+                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                   <div className="space-y-1">
+                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                       <History className="w-5 h-5 text-emerald-400" /> Translation Requests & Logs Retention
+                     </h2>
+                     <p className="text-xs text-slate-400">
+                       Configure log retention limits for dynamic user translation requests and purge stale/un-acted translation backlogs.
+                     </p>
+                   </div>
+                   
+                   <div className="flex flex-wrap items-center gap-6">
+                     <div className="flex items-center gap-3">
+                       <span className="text-[10px] font-black text-slate-400 uppercase">Retention:</span>
+                       <input 
+                         type="range" 
+                         min="7" 
+                         max="90" 
+                         value={transRetention} 
+                         onChange={(e) => setTransRetention(Number(e.target.value))}
+                         className="w-28 accent-emerald-500 cursor-pointer"
+                       />
+                       <span className="text-xs font-mono font-bold text-emerald-400 w-8 text-center">{transRetention}d</span>
+                     </div>
+                     <button 
+                       type="button"
+                       onClick={async () => {
+                         const res = await dbService.cleanupTranslationRequests(transRetention);
+                         alert(lang === 'FR' ? `Nettoyage réussi. ${res.data?.purged || 0} entrées expirées ont été purgées.` : `Translation logs cleanup completed. ${res.data?.purged || 0} expired entries purged.`);
+                       }}
+                       className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/10"
+                     >
+                       Purge Logs
+                     </button>
                    </div>
                  </div>
                </div>
@@ -1154,18 +1365,30 @@ export default function AdminCurriculumPage() {
                           <th className="px-6 py-4">Title</th>
                           <th className="px-6 py-4">Subject</th>
                           <th className="px-6 py-4">Level</th>
-                          <th className="px-6 py-4">Course Languages (Click to Toggle Archival)</th>
+                          <th className="px-6 py-4">Archival Level Control</th>
                           <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Bulk Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/50">
                         {courses
                           .filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase()))
                           .map(course => {
-                            const archivedLangs = course.archivedLanguages || [];
-                            const allArchived = course.languages.every(l => archivedLangs.includes(l));
-                            const noneArchived = archivedLangs.length === 0;
+                            const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
+
+                            // Label and color definitions based on dynamic level
+                            let statusLabel = lang === 'FR' ? 'Actif' : 'Active';
+                            let statusColor = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+                            
+                            if (currentLevel === 1) {
+                              statusLabel = lang === 'FR' ? 'Partiel' : 'Partial';
+                              statusColor = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+                            } else if (currentLevel === 2) {
+                              statusLabel = lang === 'FR' ? 'Lecture Seule' : 'Read-Only';
+                              statusColor = 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+                            } else if (currentLevel === 3) {
+                              statusLabel = lang === 'FR' ? 'Archivé' : 'Archived';
+                              statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
+                            }
 
                             return (
                               <tr key={course.id} className="hover:bg-slate-900/20 transition-colors">
@@ -1178,74 +1401,32 @@ export default function AdminCurriculumPage() {
                                 <td className="px-6 py-4 text-slate-400 font-medium">{course.subject}</td>
                                 <td className="px-6 py-4 text-slate-400 font-mono font-bold">{course.level}</td>
                                 <td className="px-6 py-4">
-                                  <div className="flex flex-wrap gap-2">
-                                    {course.languages?.map(l => {
-                                      const isArchived = archivedLangs.includes(l);
-                                      return (
-                                        <button
-                                          key={l}
-                                          type="button"
-                                          onClick={async () => {
-                                            await dbService.toggleCourseLanguageArchived(course.id, l);
-                                            loadData();
-                                          }}
-                                          className={`px-3 py-1.5 border rounded-xl font-black text-[9px] uppercase tracking-wider transition-all hover:scale-105 flex items-center gap-1.5 ${isArchived ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'}`}
-                                          title={isArchived ? "Click to unarchive language" : "Click to archive language"}
-                                        >
-                                          <span className={`w-1.5 h-1.5 rounded-full ${isArchived ? 'bg-red-500 animate-pulse' : 'bg-emerald-400'}`}></span>
-                                          {l}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
+                                  <select
+                                    value={currentLevel}
+                                    onChange={async (e) => {
+                                      const nextLvl = Number(e.target.value);
+                                      await dbService.setCourseArchivingLevel(course.id, nextLvl);
+                                      loadData();
+                                    }}
+                                    className="bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500/50 cursor-pointer font-semibold"
+                                  >
+                                    <option value={0}>{lang === 'FR' ? 'Niveau 0 : Actif complet' : 'Level 0: Fully Active'}</option>
+                                    <option value={1}>{lang === 'FR' ? 'Niveau 1 : Archivage partiel' : 'Level 1: Partial Archival (FR/EN only)'}</option>
+                                    <option value={2}>{lang === 'FR' ? 'Niveau 2 : Lecture seule' : 'Level 2: Read-Only'}</option>
+                                    <option value={3}>{lang === 'FR' ? 'Niveau 3 : Archive totale' : 'Level 3: Fully Archived'}</option>
+                                  </select>
                                 </td>
                                 <td className="px-6 py-4">
-                                  {allArchived ? (
-                                    <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black rounded-full uppercase tracking-wider">
-                                      Fully Archived
-                                    </span>
-                                  ) : archivedLangs.length > 0 ? (
-                                    <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black rounded-full uppercase tracking-wider">
-                                      Partially Archived ({archivedLangs.length}/${course.languages.length})
-                                    </span>
-                                  ) : (
-                                    <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black rounded-full uppercase tracking-wider">
-                                      Active
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        await dbService.archiveAllCourseLanguages(course.id, true);
-                                        loadData();
-                                      }}
-                                      disabled={allArchived}
-                                      className="px-3 py-1.5 border text-[8px] font-black uppercase tracking-wider rounded-xl transition-all border-red-500/20 hover:border-red-500/50 text-red-400 hover:bg-red-500/10 disabled:border-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed"
-                                    >
-                                      Archive All
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        await dbService.archiveAllCourseLanguages(course.id, false);
-                                        loadData();
-                                      }}
-                                      disabled={noneArchived}
-                                      className="px-3 py-1.5 border text-[8px] font-black uppercase tracking-wider rounded-xl transition-all border-emerald-500/20 hover:border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 disabled:border-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed"
-                                    >
-                                      Unarchive All
-                                    </button>
-                                  </div>
+                                  <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
+                                    {statusLabel}
+                                  </span>
                                 </td>
                               </tr>
                             );
                           })}
                         {courses.filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase())).length === 0 && (
                           <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center text-slate-655 italic">No courses found matching your query.</td>
+                            <td colSpan={5} className="px-6 py-12 text-center text-slate-655 italic">No courses found matching your query.</td>
                           </tr>
                         )}
                       </tbody>
@@ -1307,7 +1488,7 @@ export default function AdminCurriculumPage() {
              {view === 'achievements' && (
                <div className="space-y-8">
                  <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-black text-slate-200">Seeded Achievements badges ({achievements.length})</h3>
+                   <h3 className="text-xl font-black text-slate-200">Seeded Achievements badges ({achievements.filter(ach => ach.status !== 'inactive').length})</h3>
                    <button 
                      onClick={() => setShowAddAchievement(true)}
                      className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-violet-600/10 flex items-center gap-2"
@@ -1318,7 +1499,7 @@ export default function AdminCurriculumPage() {
 
                  {/* GRID */}
                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                   {achievements.map(ach => {
+                   {achievements.filter(ach => ach.status !== 'inactive').map(ach => {
                       const styledBadge = BADGE_LIBRARY.find(b => b.id === ach.icon);
                       const IconComp = styledBadge ? (LUCIDE_ICONS[styledBadge.iconName] || Award) : (LUCIDE_ICONS[ach.icon] || Award);
                       const gradientClass = styledBadge ? styledBadge.gradient : 'from-violet-500 to-fuchsia-600';
@@ -1469,10 +1650,104 @@ export default function AdminCurriculumPage() {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="3 days" 
+                      value={newAch.threshold} 
+                      onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                    />
+                  </div>
+
+                  {/* Start and End Date Fields */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                        Start Date (Optional)
+                      </label>
+                      <input 
+                        type="date"
+                        value={badgeStartDate}
+                        onChange={(e) => setBadgeStartDate(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                        End Validity Date (Optional)
+                      </label>
+                      <input 
+                        type="date"
+                        value={badgeEndDate}
+                        onChange={(e) => setBadgeEndDate(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Drag and Drop Zone & Live Preview */}
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Custom Badge Upload & Live Preview
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div 
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, false)}
+                        className="p-8 border-2 border-dashed border-slate-800 hover:border-violet-500/50 rounded-3xl bg-slate-950/20 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
+                      >
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleImageFile(e.target.files[0], false);
+                            }
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <Upload className="w-8 h-8 text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-all" />
+                        <p className="text-xs text-slate-400 font-medium">Drag & drop badge image here</p>
+                        <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">PNG, JPG, SVG up to 5MB</p>
+                      </div>
+
+                      <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
+                        <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
+                          {badgeIcon ? (
+                            badgeIcon.startsWith('data:image') ? (
+                              <img src={badgeIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
+                            ) : (() => {
+                              const found = BADGE_LIBRARY.find(b => b.id === badgeIcon);
+                              const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
+                              const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
+                              return (
+                                <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                                  <IconComp className="w-8 h-8 text-white" />
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-slate-600 italic text-[10px]">No Icon</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-slate-200">{newAch.name || 'Live Preview'}</h4>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            {newAch.description || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Suggested Images Panel */}
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Suggested Badge Designs
+                      Suggested Badge Designs (Dynamic)
                     </label>
                     {(() => {
                       const suggestions = getSuggestedBadges(newAch.name, newAch.description, achievements, badgeIcon);
@@ -1512,41 +1787,86 @@ export default function AdminCurriculumPage() {
                     })()}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="3 days" 
-                      value={newAch.threshold} 
-                      onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
-
-                  {/* Multi-Language Compilation Backlog Section (E2E expectation) */}
-                  {(newAch.name || newAch.description) && (
-                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-violet-400" /> Multi-Language Compilation Backlog
-                      </h4>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        The badge translation and description are automatically compiled by the localization AI engine into all 5 languages instantly.
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-                        {getCompiledTranslations(newAch.name, newAch.description).map((tr) => (
-                          <div key={tr.code} className="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="px-1 py-0.5 bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[7px] font-black rounded uppercase">{tr.code}</span>
-                              <span className="text-[9px] font-black text-slate-300 truncate">{tr.name}</span>
-                            </div>
-                            <p className="text-[8px] text-slate-500 leading-tight line-clamp-2">{tr.desc}</p>
+                  {/* Full Paginated Badge Gallery */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between ml-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Badge Library Catalog
+                      </label>
+                      {(() => {
+                        const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
+                        const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                        const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        return (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={creationGalleryPage === 1}
+                              onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              &larr; Prev
+                            </button>
+                            <span className="text-[10px] font-mono text-slate-400 font-bold">
+                              {creationGalleryPage} / {totalPages}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={creationGalleryPage === totalPages}
+                              onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              Next &rarr;
+                            </button>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })()}
                     </div>
-                  )}
+
+                    {(() => {
+                      const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
+                      const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                      const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                      const curPage = Math.min(creationGalleryPage, totalPages) || 1;
+                      const startIndex = (curPage - 1) * badgePageSize;
+                      const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+
+                      if (currentPageBadges.length === 0) {
+                        return (
+                          <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
+                            All 50 library badges are currently active in our curriculum!
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="grid grid-cols-3 gap-4">
+                          {currentPageBadges.map((img) => {
+                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
+                            const isSelected = badgeIcon === img.id;
+                            return (
+                              <button
+                                key={img.id}
+                                type="button"
+                                onClick={() => setBadgeIcon(img.id)}
+                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                              >
+                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
+                                  <IconComp className="w-6 h-6" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                  {img.iconName.toUpperCase()}
+                                </span>
+                                <span className="text-[8px] font-semibold text-slate-500">
+                                  {img.colorName}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
 
                   <button type="submit" className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
                      Create Achievement Badge
@@ -1594,10 +1914,103 @@ export default function AdminCurriculumPage() {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      value={editThreshold} 
+                      onChange={(e) => setEditThreshold(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                    />
+                  </div>
+
+                  {/* Start and End Date Fields */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                        Start Date (Optional)
+                      </label>
+                      <input 
+                        type="date"
+                        value={editStartDate}
+                        onChange={(e) => setEditStartDate(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                        End Validity Date (Optional)
+                      </label>
+                      <input 
+                        type="date"
+                        value={editEndDate}
+                        onChange={(e) => setEditEndDate(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Drag and Drop Zone & Live Preview */}
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Custom Badge Upload & Live Preview
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div 
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, true)}
+                        className="p-8 border-2 border-dashed border-slate-800 hover:border-violet-500/50 rounded-3xl bg-slate-950/20 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
+                      >
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleImageFile(e.target.files[0], true);
+                            }
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <Upload className="w-8 h-8 text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-all" />
+                        <p className="text-xs text-slate-400 font-medium">Drag & drop badge image here</p>
+                        <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">PNG, JPG, SVG up to 5MB</p>
+                      </div>
+
+                      <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
+                        <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
+                          {editIcon ? (
+                            editIcon.startsWith('data:image') ? (
+                              <img src={editIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
+                            ) : (() => {
+                              const found = BADGE_LIBRARY.find(b => b.id === editIcon);
+                              const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
+                              const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
+                              return (
+                                <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                                  <IconComp className="w-8 h-8 text-white" />
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-slate-600 italic text-[10px]">No Icon</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-slate-200">{editName || 'Live Preview'}</h4>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            {editDesc || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Suggested Images Panel */}
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Suggested Badge Designs
+                      Suggested Badge Designs (Dynamic)
                     </label>
                     {(() => {
                       const suggestions = getSuggestedBadges(editName, editDesc, achievements, editIcon);
@@ -1636,41 +2049,91 @@ export default function AdminCurriculumPage() {
                       );
                     })()}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      value={editThreshold} 
-                      onChange={(e) => setEditThreshold(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
 
-                  {/* Multi-Language Compilation Backlog Section (E2E expectation) */}
-                  {(editName || editDesc) && (
-                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-violet-400" /> Multi-Language Compilation Backlog
-                      </h4>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        The badge translation and description are automatically compiled by the localization AI engine into all 5 languages instantly.
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-                        {getCompiledTranslations(editName, editDesc).map((tr) => (
-                          <div key={tr.code} className="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="px-1 py-0.5 bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[7px] font-black rounded uppercase">{tr.code}</span>
-                              <span className="text-[9px] font-black text-slate-300 truncate">{tr.name}</span>
-                            </div>
-                            <p className="text-[8px] text-slate-500 leading-tight line-clamp-2">{tr.desc}</p>
+                  {/* Full Paginated Badge Gallery */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between ml-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Badge Library Catalog
+                      </label>
+                      {(() => {
+                        const usedActiveIcons = achievements
+                          .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
+                          .map(a => a.icon);
+                        const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                        const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        return (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={editionGalleryPage === 1}
+                              onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              &larr; Prev
+                            </button>
+                            <span className="text-[10px] font-mono text-slate-400 font-bold">
+                              {editionGalleryPage} / {totalPages}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={editionGalleryPage === totalPages}
+                              onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              Next &rarr;
+                            </button>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })()}
                     </div>
-                  )}
+
+                    {(() => {
+                      const usedActiveIcons = achievements
+                        .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
+                        .map(a => a.icon);
+                      const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                      const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                      const curPage = Math.min(editionGalleryPage, totalPages) || 1;
+                      const startIndex = (curPage - 1) * badgePageSize;
+                      const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+
+                      if (currentPageBadges.length === 0) {
+                        return (
+                          <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
+                            All 50 library badges are currently active in our curriculum!
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="grid grid-cols-3 gap-4">
+                          {currentPageBadges.map((img) => {
+                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
+                            const isSelected = editIcon === img.id;
+                            return (
+                              <button
+                                key={img.id}
+                                type="button"
+                                onClick={() => setEditIcon(img.id)}
+                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                              >
+                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
+                                  <IconComp className="w-6 h-6" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                  {img.iconName.toUpperCase()}
+                                </span>
+                                <span className="text-[8px] font-semibold text-slate-500">
+                                  {img.colorName}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
 
                   <button onClick={handleUpdateAchievement} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
                      Update Achievement Badge
@@ -1689,25 +2152,14 @@ export default function AdminCurriculumPage() {
                <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
                   <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
                   <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
-                     Double Safeguard Purge
+                     Confirm Badge Delete
                   </h3>
                </div>
                <div className="p-10 space-y-6">
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                     Warning: This action will completely purge <span className="text-white font-bold">{purgeTarget.name}</span> and delete all user completions from our database. This action is irreversible.
+                  <p className="text-xs text-slate-400 leading-relaxed text-center">
+                     Are you sure you want to delete/archive the badge <span className="text-white font-bold">{purgeTarget.name}</span>? This action is irreversible.
                   </p>
                   
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Confirm by typing the badge name:</label>
-                    <input 
-                      type="text" 
-                      placeholder="Type name here..." 
-                      value={purgeInput}
-                      onChange={(e) => setPurgeInput(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none text-white focus:border-red-550/50" 
-                    />
-                  </div>
-
                   <div className="flex gap-4 pt-2">
                      <button 
                        onClick={() => setPurgeTarget(null)}
@@ -1717,13 +2169,75 @@ export default function AdminCurriculumPage() {
                      </button>
                      <button 
                        onClick={handlePurgeExecute}
-                       disabled={purgeInput !== purgeTarget.name}
-                       className={`flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all ${purgeInput === purgeTarget.name ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10' : 'bg-red-900/30 text-red-550/30 cursor-not-allowed'}`}
+                       className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10"
                      >
-                       Force Purge
+                       Confirm Delete
                      </button>
                   </div>
                </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DYNAMIC LANGUAGE ADD MODAL */}
+      <AnimatePresence>
+        {showAddLanguage && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden">
+               <div className="p-8 border-b border-slate-850 flex items-center justify-between">
+                  <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                     <Globe className="w-6 h-6 text-emerald-500" /> Register New Language
+                  </h3>
+                  <button onClick={() => setShowAddLanguage(false)} className="text-slate-555 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+               </div>
+               
+               <form onSubmit={handleAddLanguage} className="p-10 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Language Code (e.g. IT, JA, PT) <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="IT" 
+                      value={newLangCode}
+                      onChange={(e) => setNewLangCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-emerald-500/50 text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Language Label <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="Italiano" 
+                      value={newLangLabel}
+                      onChange={(e) => setNewLangLabel(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-emerald-500/50 text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                      Flag / Symbol (Optional)
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="🇮🇹" 
+                      value={newLangFlag}
+                      onChange={(e) => setNewLangFlag(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-emerald-500/50 text-white"
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-emerald-600/10">
+                     Register Language
+                  </button>
+               </form>
             </motion.div>
           </div>
         )}

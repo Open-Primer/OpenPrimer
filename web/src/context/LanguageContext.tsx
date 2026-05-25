@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Language = 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+type Language = string;
 
 interface LanguageContextType {
   language: Language;
@@ -17,7 +17,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('openprimer_lang') as Language;
-    if (saved && ['EN', 'FR', 'ES', 'DE', 'ZH'].includes(saved)) {
+    if (saved && typeof saved === 'string' && saved.length > 0) {
       setLanguage(saved);
       document.cookie = `openprimer_lang=${saved}; path=/; max-age=31536000; SameSite=Lax`;
     } else {
@@ -25,7 +25,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         .split('; ')
         .find(row => row.startsWith('openprimer_lang='))
         ?.split('=')[1] as Language;
-      if (cookieLang && ['EN', 'FR', 'ES', 'DE', 'ZH'].includes(cookieLang)) {
+      if (cookieLang && typeof cookieLang === 'string' && cookieLang.length > 0) {
         setLanguage(cookieLang);
       } else {
         document.cookie = `openprimer_lang=EN; path=/; max-age=31536000; SameSite=Lax`;

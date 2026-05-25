@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
-import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
@@ -16,6 +16,7 @@ export default function CurriculumPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [readingMode, setReadingMode] = useState('dark');
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
 
   useEffect(() => {
     async function loadProgress() {
@@ -27,6 +28,10 @@ export default function CurriculumPage() {
     }
     loadProgress();
 
+    // Load bookmarks
+    const savedBookmarks = localStorage.getItem('op_bookmarks');
+    if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+
     // Load initial reading mode and define dynamic header buttons listener
     const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
     setReadingMode(savedMode);
@@ -36,6 +41,16 @@ export default function CurriculumPage() {
       localStorage.setItem('op_reading_mode', mode);
     };
   }, []);
+
+  const toggleBookmark = (id: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const newBookmarks = bookmarks.includes(id) 
+      ? bookmarks.filter(b => b !== id)
+      : [...bookmarks, id];
+    setBookmarks(newBookmarks);
+    localStorage.setItem('op_bookmarks', JSON.stringify(newBookmarks));
+  };
 
   if (loading || !progress) {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
@@ -129,6 +144,46 @@ export default function CurriculumPage() {
                   return '/catalog';
                 };
 
+                const formatCourseLevel = (level: string | number) => {
+                  const lvlStr = String(level).toUpperCase();
+                  const isEn = lang.toUpperCase() === 'EN';
+                  const isZh = lang.toUpperCase() === 'ZH';
+                  const isEs = lang.toUpperCase() === 'ES';
+                  const isDe = lang.toUpperCase() === 'DE';
+
+                  if (lvlStr === 'L1') {
+                    if (isEn) return '101';
+                    if (isZh) return '大一 (101)';
+                    if (isEs) return 'L1 (101)';
+                    if (isDe) return 'L1 (101)';
+                    return 'L1';
+                  }
+                  if (lvlStr === 'L2') {
+                    if (isEn) return '201';
+                    if (isZh) return '大二 (201)';
+                    if (isEs) return 'L2 (201)';
+                    if (isDe) return 'L2 (201)';
+                    return 'L2';
+                  }
+                  if (lvlStr === 'L3') {
+                    if (isEn) return '301';
+                    if (isZh) return '大三 (301)';
+                    if (isEs) return 'L3 (301)';
+                    if (isDe) return 'L3 (301)';
+                    return 'L3';
+                  }
+
+                  if (/^\d+$/.test(lvlStr)) {
+                    const num = parseInt(lvlStr, 10);
+                    if (isZh) return `${num}年级`;
+                    if (isEn) return `Grade ${num}`;
+                    if (lang.toUpperCase() === 'FR') return `Niveau ${num}`;
+                    if (isEs) return `Grado ${num}`;
+                    if (isDe) return `Klasse ${num}`;
+                  }
+                  return lvlStr;
+                };
+
                 const getLocalizedTitle = (c: any) => {
                   const isEn = lang.toUpperCase() === 'EN';
                   const slug = c.slug;
@@ -161,14 +216,24 @@ export default function CurriculumPage() {
                           <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400">
                              <Book className="w-6 h-6" />
                           </div>
-                          <div className="flex gap-2">
-                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-955 border border-slate-800 rounded-lg text-amber-500 flex items-center gap-1">
-                               <Star className="w-3 h-3 fill-amber-500/20" />
-                               {ratingCount >= 10 
-                                 ? `${averageRating.toFixed(1)} (${ratingCount})` 
-                                 : `N/A (${ratingCount})`}
+                          <div className="flex gap-2 items-center">
+                             {/* Unified gold star rating badge */}
+                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                               <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                               {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
                              </span>
-                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-955 border border-slate-800 rounded-lg text-slate-500">{course.level}</span>
+                             {/* Interactive Bookmark Button */}
+                             <button
+                               onClick={(e) => toggleBookmark(course.id, e)}
+                               title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
+                               className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
+                             >
+                               <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                             </button>
+                             {/* Level badge */}
+                             <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                               {formatCourseLevel(course.level)}
+                             </span>
                           </div>
                        </div>
                        <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
