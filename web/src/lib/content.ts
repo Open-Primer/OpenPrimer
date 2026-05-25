@@ -20,45 +20,54 @@ export function getSyllabus() {
   return null;
 }
 
-export function getNavigationTree(dir = ''): NavItem[] {
+export function getNavigationTree(dir = '', lang: string = 'en'): NavItem[] {
   const fullPath = path.join(CONTENT_PATH, dir);
   if (!fs.existsSync(fullPath)) return [];
 
   const items = fs.readdirSync(fullPath, { withFileTypes: true });
   
-  return items.map((item): NavItem => {
+  const navItems: NavItem[] = [];
+
+  for (const item of items) {
     const relativePath = path.join(dir, item.name).split(path.sep).join('/');
     if (item.isDirectory()) {
-      return {
-        name: item.name.replace(/_/g, ' '),
-        type: 'folder',
-        path: relativePath,
-        children: getNavigationTree(relativePath)
-      };
+      // Recursively fetch folder children. Do not add empty folders that have no translated content.
+      const children = getNavigationTree(relativePath, lang);
+      if (children.length > 0) {
+        navItems.push({
+          name: item.name.replace(/_/g, ' '),
+          type: 'folder',
+          path: relativePath,
+          children
+        });
+      }
+    } else if (item.name.endsWith(`.${lang}.mdx`)) {
+      navItems.push({
+        name: item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '').replace(/_/g, ' '),
+        type: 'file',
+        path: '/' + relativePath.replace(/\.(en|fr|es|de|zh)\.mdx$/, '')
+      });
     }
-    return {
-      name: item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '').replace(/_/g, ' '),
-      type: 'file',
-      path: relativePath.replace(/\.(en|fr|es|de|zh)\.mdx$/, '')
-    };
-  }).sort((a, b) => a.type === 'folder' ? -1 : 1);
+  }
+
+  return navItems.sort((a, b) => a.type === 'folder' ? -1 : 1);
 }
 
-export async function getPageContent(slug: string[]) {
+export async function getPageContent(slug: string[], lang: string = 'en') {
   const baseFilePath = path.join(CONTENT_PATH, ...slug);
   
-  // Try exact .mdx first (unlikely given naming convention)
-  let filePath = baseFilePath + '.mdx';
+  // Strict check: only allow page loading if the target language translation file exists
+  const filePath = baseFilePath + `.${lang}.mdx`;
+  
+  console.log("=== getPageContent ===");
+  console.log("slug:", slug);
+  console.log("lang:", lang);
+  console.log("filePath:", filePath);
+  console.log("exists:", fs.existsSync(filePath));
+  console.log("======================");
   
   if (!fs.existsSync(filePath)) {
-    // Try common language suffixes
-    const langs = ['.en.mdx', '.fr.mdx', '.es.mdx', '.de.mdx', '.zh.mdx'];
-    const found = langs.find(ext => fs.existsSync(baseFilePath + ext));
-    if (found) {
-      filePath = baseFilePath + found;
-    } else {
-      return null;
-    }
+    return null;
   }
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');

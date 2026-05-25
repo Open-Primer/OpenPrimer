@@ -1,0 +1,11 @@
+# Exclude non-web folders from Vercel deployment
+mobile
+generator
+private_scripts
+.git
+.github
+docs
+scratch
+web/node_modules
+web/.next
+web/. gemini

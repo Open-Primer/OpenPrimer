@@ -1,0 +1,64 @@
+---
+title: "Einführung in die beschreibende Statistik"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 0
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "de"
+---
+
+# Einführung in die beschreibende Statistik
+
+Die beschreibende (deskriptive) Statistik befasst sich mit der quantitativen Beschreibung der Hauptmerkmale einer Informationssammlung. Sie unterscheidet sich von der schließenden Statistik dadurch, dass sie eine Stichprobe zusammenfasst, anstatt die Daten zu nutzen, um etwas über die Grundgesamtheit zu erfahren.
+
+## 1. Maße der zentralen Tendenz
+
+Die zentrale Tendenz repräsentiert das Zentrum einer Wahrscheinlichkeitsverteilung. Die drei häufigsten Maße sind:
+
+1. **Mittelwert** (arithmetisches Mittel):
+   $$\bar{X} = \frac{1}{n} \sum_{i=1}^n X_i$$
+
+2. **Median**: Der mittlere Wert, der die obere Hälfte von der unteren Hälfte einer Stichprobe trennt.
+
+3. **Modus**: Der Wert, der in einem Datensatz am häufigsten vorkommt.
+
+<MetaNote title="Analogie">
+  Stellen Sie sich den Mittelwert als den Schwerpunkt einer physischen Waage vor, die an jedem Datenpunkt mit Gewichten beladen ist, während der Median einfach der visuelle Schnittpunkt ist, der die Bevölkerung in zwei gleiche Gruppen teilt.
+</MetaNote>
+
+## 2. Streuungsmaße
+
+Die Streuung (Dispersion) misst die Verteilung der Daten um die zentrale Tendenz.
+
+### 2.1 Stichprobenvarianz
+Die Stichprobenvarianz $S^2$ misst die durchschnittliche quadratische Abweichung vom Mittelwert:
+$$S^2 = \frac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2$$
+
+### 2.2 Standardabweichung
+Die Standardabweichung $S$ ist die Quadratwurzel aus der Varianz, wodurch die Streuung auf die ursprüngliche Datenskala zurückgeführt wird:
+$$S = \sqrt{S^2}$$
+
+<SolvedProblem>
+**Aufgabe: Berechnung deskriptiver Statistiken von Prüfungsergebnissen**
+Eine Gruppe von 5 Studenten erzielte: 12, 15, 10, 18, 15.
+
+**1. Berechnen Sie den Mittelwert:**
+$$\bar{X} = \frac{12+15+10+18+15}{5} = \frac{70}{5} = 14$$
+
+**2. Berechnen Sie die Varianz:**
+$$S^2 = \frac{(12-14)^2 + (15-14)^2 + (10-14)^2 + (18-14)^2 + (15-14)^2}{4}$$
+$$S^2 = \frac{4 + 1 + 16 + 16 + 1}{4} = \frac{38}{4} = 9.5$$
+</SolvedProblem>
+
+<Quiz>
+  <Question q="Welches Maß der zentralen Tendenz reagiert sehr empfindlich auf extreme Ausreißer?">
+    <Option text="Median" />
+    <Option text="Mittelwert" correct />
+    <Option text="Modus" />
+  </Question>
+</Quiz>
+
+---
+*Akademischer Standard von OpenPrimer - Mathematische Statistik L1*

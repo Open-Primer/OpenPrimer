@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bot, Download, Send, Zap, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Note: Requires npm install @mlc-ai/web-llm
 // import * as webllm from "@mlc-ai/web-llm";

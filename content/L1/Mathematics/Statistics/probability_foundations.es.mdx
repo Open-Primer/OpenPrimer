@@ -1,0 +1,68 @@
+---
+title: "Teoría de la Probabilidad y Fundamentos"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 1
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "es"
+---
+
+# Teoría de la Probabilidad y Fundamentos
+
+La teoría de la probabilidad es el marco matemático para modelar la incertidumbre. Andrei Kolmogorov estableció una formulación matemática rigurosa utilizando la teoría de la medida.
+
+## 1. Definición Axiomática de Probabilidad
+
+Dado un espacio muestral $\Omega$ y una $\sigma$-álgebra $\mathcal{F}$ de eventos, una medida de probabilidad $P$ es una función que asigna eventos a números reales que satisface los Axiomas de Kolmogorov:
+
+1. **No negatividad**: $P(A) \ge 0$ para todo $A \in \mathcal{F}$.
+2. **Normalización**: $P(\Omega) = 1$.
+3. **Aditividad contable**: Para eventos disjuntos $A_1, A_2, \dots$:
+   $$P\left(\bigcup_{i=1}^\infty A_i\right) = \sum_{i=1}^\infty P(A_i)$$
+
+## 2. Probabilidad Condicional y Teorema de Bayes
+
+### 2.1 Probabilidad Condicional
+La probabilidad de que ocurra el evento $A$ dado que el evento $B$ ya ocurrió es:
+$$P(A|B) = \frac{P(A \cap B)}{P(B)}, \quad \text{si } P(B) > 0$$
+
+### 2.2 Teorema de Bayes
+El Teorema de Bayes relaciona las probabilidades condicionales y marginales de eventos estocásticos:
+$$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$$
+
+Donde $P(B)$ se puede expandir usando la ley de probabilidad total:
+$$P(B) = \sum_{k} P(B|A_k)P(A_k)$$
+
+<MetaNote title="Analogía">
+  El Teorema de Bayes es la máquina matemática para actualizar nuestras creencias. La probabilidad previa $P(A)$ es lo que creemos antes de observar la evidencia $B$. La probabilidad posterior $P(A|B)$ es nuestra creencia corregida.
+</MetaNote>
+
+<SolvedProblem>
+**Problema: Precisión de una Prueba de Diagnóstico**
+Una enfermedad rara afecta al 1% de la población. Una prueba de diagnóstico tiene un 99% de precisión (la tasa de verdaderos positivos es del 99% y la tasa de verdaderos negativos es del 99%).
+¿Cuál es la probabilidad de que una persona tenga la enfermedad dado que dio positivo en la prueba?
+
+**1. Identificar parámetros:**
+- Previa $P(D) = 0.01$ (y $P(D^c) = 0.99$)
+- Sensibilidad $P(+|D) = 0.99$
+- Tasa de falsos positivos $P(+|D^c) = 0.01$
+
+**2. Aplicar el Teorema de Bayes:**
+$$P(D|+) = \frac{P(+|D)P(D)}{P(+|D)P(D) + P(+|D^c)P(D^c)}$$
+$$P(D|+) = \frac{0.99 \times 0.01}{0.99 \times 0.01 + 0.01 \times 0.99} = \frac{0.0099}{0.0099 + 0.0099} = 0.50$$
+
+**Conclusión:** Solo hay un 50% de probabilidad de que el paciente tenga la enfermedad, a pesar de la prueba de precisión del 99%, debido a la baja probabilidad previa de la enfermedad.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="¿Cuál es el resultado de P(A) + P(A^c) según los axiomas de la probabilidad?">
+    <Option text="0.5" />
+    <Option text="1.0" correct />
+    <Option text="0.0" />
+  </Question>
+</Quiz>
+
+---
+*Estándar Académico OpenPrimer - Estadística Matemática L1*

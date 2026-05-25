@@ -2,35 +2,431 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { TopNav, AITutorOverlay, Footer } from '@/components/RefinedUI';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
 
 export default function Home() {
-  const { language: lang } = useLanguage();
+  const router = useRouter();
+  const { language: lang, setLanguage: setLang } = useLanguage();
   const s = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  
+  const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [search, setSearch] = useState('');
-  const [stats, setStats] = useState({ total_students: 0, active_curricula: 0 });
+  const [stats, setStats] = useState({ total_students: 0, active_curricula: 0, total_languages: 0, total_courses: 0 });
+
+  const allSearchableModules = [
+    { title: lang === 'FR' ? "Mécanique Classique" : "Classical Mechanics", category: s.physics || 'Physics' },
+    { title: lang === 'FR' ? "Physique Quantique" : "Quantum Physics", category: s.physics || 'Physics' },
+    { title: lang === 'FR' ? "Biologie Cellulaire" : "Cell Biology", category: s.biology || 'Biology' },
+    { title: lang === 'FR' ? "Génétique Moléculaire" : "Molecular Genetics", category: s.biology || 'Biology' },
+    { title: lang === 'FR' ? "Droit Constitutionnel" : "Constitutional Law", category: s.law || 'Law' },
+    { title: lang === 'FR' ? "Droit Pénal" : "Criminal Law", category: s.law || 'Law' },
+    { title: lang === 'FR' ? "Algèbre Linéaire" : "Linear Algebra", category: s.math || 'Mathematics' },
+    { title: lang === 'FR' ? "Analyse I" : "Calculus I", category: s.math || 'Mathematics' },
+  ];
+
+  const popularCourses = [
+    {
+      id: 1,
+      title: lang === 'FR' ? "Physique : Mécanique Classique" : "Physics: Classical Mechanics",
+      searchQuery: lang === 'FR' ? "Mécanique Classique" : "Classical Mechanics",
+      color: "from-blue-500/20 to-blue-600/5 hover:border-blue-500/50 text-blue-400"
+    },
+    {
+      id: 2,
+      title: lang === 'FR' ? "Physique : Physique Quantique" : "Physics: Quantum Physics",
+      searchQuery: lang === 'FR' ? "Physique Quantique" : "Quantum Physics",
+      color: "from-violet-500/20 to-violet-600/5 hover:border-violet-500/50 text-violet-400"
+    },
+    {
+      id: 3,
+      title: lang === 'FR' ? "Biologie : Biologie Cellulaire" : "Biology: Cell Biology",
+      searchQuery: lang === 'FR' ? "Biologie Cellulaire" : "Cell Biology",
+      color: "from-emerald-500/20 to-emerald-600/5 hover:border-emerald-500/50 text-emerald-400"
+    }
+  ];
+
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!search.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const filtered = allSearchableModules.filter(m => 
+      m.title.toLowerCase().includes(search.toLowerCase()) || 
+      m.category.toLowerCase().includes(search.toLowerCase())
+    );
+    setSuggestions(filtered);
+  }, [search, lang]);
+
+  // Guest Registration State
+  const [authState, setAuthState] = useState<'signup' | 'login' | 'verify'>('signup');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const coursesList = [
+    { id: 1, title: 'Physique: Classical Mechanics (L1)', desc: 'Feynman-optimized physics' },
+    { id: 2, title: 'Physique: Quantum Physics (L2)', desc: 'Quantum state vectors and wave mechanics' },
+    { id: 3, title: 'Biologie: Cell Biology (L1)', desc: 'Cellular structures and ATP cycles' },
+    { id: 4, title: 'Biologie: Molecular Genetics (L1)', desc: 'DNA replication and genetics' },
+  ];
+
+  useEffect(() => {
+    setMounted(true);
+    const session = localStorage.getItem('op_session');
+    setIsLoggedIn(session === 'true');
+
     async function loadStats() {
       const { data } = await dbService.getSiteStats();
       if (data) setStats(data);
     }
     loadStats();
   }, []);
-  
-  const examples = [
-    { label: "Physics L1", query: "physics" },
-    { label: "Cell Biology", query: "biology" },
-    { label: "Constitutional Law", query: "law" },
-    { label: "Point Mechanics", query: "mechanics" }
-  ];
 
+  const handleToggleCourse = (id: number) => {
+    if (selectedCourses.includes(id)) {
+      setSelectedCourses(selectedCourses.filter(c => c !== id));
+    } else {
+      setSelectedCourses([...selectedCourses, id]);
+    }
+  };
+
+  const handleSignupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName || !lastName || !email || !password) {
+      setErrorMsg('Veuillez remplir tous les champs requis.');
+      return;
+    }
+    setErrorMsg('');
+    setAuthState('verify');
+  };
+
+  const handleVerifyAndLogin = () => {
+    const profile = {
+      firstName,
+      lastName,
+      email,
+      preferredLang: lang,
+      selectedCourses,
+      isVerified: true
+    };
+    localStorage.setItem('op_user_profile', JSON.stringify(profile));
+    localStorage.setItem('op_session', 'true');
+    localStorage.setItem('op_bookmarks', JSON.stringify(selectedCourses));
+    setIsLoggedIn(true);
+    router.push('/catalog');
+  };
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setErrorMsg('Veuillez entrer vos identifiants.');
+      return;
+    }
+
+    const testProfile = {
+      firstName: 'Silvere',
+      lastName: 'Martin',
+      email: email,
+      preferredLang: lang,
+      selectedCourses: [1, 2],
+      isVerified: true
+    };
+    localStorage.setItem('op_user_profile', JSON.stringify(testProfile));
+    localStorage.setItem('op_session', 'true');
+    setIsLoggedIn(true);
+    router.push('/catalog');
+  };
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-slate-950" />;
+  }
+
+  // GUEST LANDING PAGE GATEWAY
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
+        <TopNav />
+        <div className="fixed inset-0 bg-blue-600/5 blur-[120px] pointer-events-none" />
+
+        <div className="flex-1 max-w-7xl mx-auto w-full px-8 pt-24 pb-16 grid lg:grid-cols-12 gap-16 items-center">
+          {/* Left Column: Brand Storytelling & Premium Accolades */}
+          <div className="lg:col-span-6 space-y-8">
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">
+              <Sparkle className="w-4 h-4 text-blue-400 animate-pulse" />
+              <span>{lang === 'FR' ? "DÉPÔT D'EXCELLENCE ACADÉMIQUE" : "DEPOT OF ACADEMIC EXCELLENCE"}</span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-white">
+              {s.universal_knowledge} <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
+                {s.finally_free}
+              </span>
+            </h1>
+
+            <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-lg">
+              {s.summary}
+            </p>
+
+            <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-900">
+              <div>
+                <h4 className="text-2xl font-black text-white">5+</h4>
+                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
+                  {lang === 'FR' ? "Langues" : "Languages"}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-white">100%</h4>
+                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
+                  {lang === 'FR' ? "Libre" : "Free"}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-white">L1 - L3</h4>
+                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
+                  {lang === 'FR' ? "Niveaux" : "Levels"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Dynamic Interactive Auth Form */}
+          <div className="lg:col-span-6 flex justify-center">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-[48px] p-8 md:p-10 backdrop-blur-3xl shadow-2xl relative"
+            >
+              <AnimatePresence mode="wait">
+                {authState === 'signup' && (
+                  <motion.div 
+                    key="signup"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <div className="text-center mb-6">
+                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
+                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">Créer un Compte</h2>
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">Commencer votre parcours</p>
+                    </div>
+
+                    {errorMsg && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSignupSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Prénom</label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <input 
+                              required
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              placeholder="Jean"
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Nom</label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <input 
+                              required
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              placeholder="Dupont"
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Adresse Email</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@email.com"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Mot de passe</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      {/* INITIAL COURSE CHECKLIST */}
+                      <div className="space-y-2 pt-1">
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Sélectionner vos cours initiaux</span>
+                        <div className="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                          {coursesList.map((course) => {
+                            const selected = selectedCourses.includes(course.id);
+                            return (
+                              <div 
+                                key={course.id}
+                                onClick={() => handleToggleCourse(course.id)}
+                                className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${selected ? 'bg-blue-600/10 border-blue-500/60 text-white' : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'}`}
+                              >
+                                <h4 className="text-[9px] font-black leading-tight truncate">{course.title}</h4>
+                                <p className="text-[7px] text-slate-500 truncate mt-0.5">{course.desc}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                      >
+                        Valider mon inscription <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+
+                    <p className="mt-6 text-center text-xs text-slate-600">
+                      Déjà un compte ? <button onClick={() => setAuthState('login')} className="text-blue-500 font-bold hover:underline">Se connecter</button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {authState === 'login' && (
+                  <motion.div 
+                    key="login"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <div className="text-center mb-6">
+                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
+                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">Connexion</h2>
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">Accéder au Dépôt</p>
+                    </div>
+
+                    <form onSubmit={handleLoginSubmit} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Adresse Email</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@email.com"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Mot de passe</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
+                      >
+                        Se Connecter
+                      </button>
+                    </form>
+
+                    <p className="mt-6 text-center text-xs text-slate-600">
+                      Nouveau ? <button onClick={() => setAuthState('signup')} className="text-blue-500 font-bold hover:underline">Créer un compte</button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {authState === 'verify' && (
+                  <motion.div 
+                    key="verify"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-4"
+                  >
+                    <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto mb-4 border border-blue-500/20">
+                      <Mail className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Vérifier l'Email</h3>
+                    <p className="text-[10px] text-slate-500 leading-relaxed mt-2 mb-6">
+                      Un lien de validation a été envoyé à <span className="text-slate-300 font-bold">{email}</span>. Veuillez confirmer votre email pour débloquer votre accès.
+                    </p>
+
+                    <div className="bg-slate-950/60 border border-slate-850 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
+                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-850 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
+                        EMAIL SIMULÉ
+                      </div>
+                      <p className="font-bold text-white mb-2">Bienvenue sur OpenPrimer !</p>
+                      <button 
+                        onClick={handleVerifyAndLogin}
+                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10"
+                      >
+                        Valider mon compte & Commencer
+                      </button>
+                    </div>
+
+                    <button onClick={() => setAuthState('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest">
+                      Retour
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // LOGGED-IN HOME DASHBOARD
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
       <TopNav />
@@ -68,11 +464,19 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar & Dynamic Suggestions */}
         <div className="w-full max-w-2xl mb-12 relative z-[60]">
           <div className="relative group">
             <div className="absolute inset-0 bg-blue-600/20 blur-2xl group-focus-within:bg-blue-600/40 transition-all opacity-0 group-focus-within:opacity-100" />
-            <div className="relative flex items-center bg-slate-900/80 border border-slate-800 p-2 rounded-[32px] backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (search.trim()) {
+                  router.push(`/catalog?search=${encodeURIComponent(search.trim())}`);
+                }
+              }}
+              className="relative flex items-center bg-slate-900/80 border border-slate-800 p-2 rounded-[32px] backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl"
+            >
               <div className="pl-6 pr-4">
                 <Search className="w-6 h-6 text-slate-600" />
               </div>
@@ -82,22 +486,56 @@ export default function Home() {
                 placeholder={s.search}
                 className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
               />
-              <Link href="/catalog" className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2">
-                <ArrowRight className="w-6 h-6" />
-              </Link>
-            </div>
-          </div>
-          
-          {/* Examples */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mr-2">{s.try_label}</span>
-            {examples.map((ex) => (
               <button 
-                key={ex.label}
-                onClick={() => setSearch(ex.label)}
-                className="px-4 py-2 rounded-full bg-slate-900/50 border border-slate-800/50 text-xs font-bold text-slate-500 hover:text-blue-400 hover:border-blue-500/30 transition-all"
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2 flex items-center justify-center"
               >
-                {ex.label}
+                <ArrowRight className="w-6 h-6" />
+              </button>
+            </form>
+
+            {/* Suggestions Dropdown */}
+            <AnimatePresence>
+              {suggestions.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute left-0 right-0 top-full mt-3 bg-slate-900/90 border border-slate-800 rounded-[32px] overflow-hidden shadow-2xl z-[70] p-2 backdrop-blur-2xl"
+                >
+                  {suggestions.map((sug, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => router.push(`/catalog?search=${encodeURIComponent(sug.title)}`)}
+                      className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-slate-850 rounded-2xl transition-colors text-left"
+                    >
+                      <div>
+                        <p className="text-sm font-bold text-white">{sug.title}</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-0.5">{sug.category}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-600" />
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Popular Curricula */}
+        <div className="w-full max-w-2xl mb-20 text-center relative z-50">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">
+            {lang === 'FR' ? "CURRICULUMS POPULAIRES" : "POPULAR CURRICULA"}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {popularCourses.map(course => (
+              <button 
+                key={course.id}
+                onClick={() => router.push(`/catalog?search=${encodeURIComponent(course.searchQuery)}`)}
+                className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group`}
+              >
+                <GraduationCap className="w-5 h-5 mb-3 text-slate-500 group-hover:text-current transition-colors" />
+                <h4 className="text-xs font-black tracking-tight leading-tight group-hover:text-white transition-colors">{course.title}</h4>
               </button>
             ))}
           </div>
@@ -153,16 +591,30 @@ export default function Home() {
                 {s.mission_link} <ArrowRight className="w-4 h-4" />
               </Link>
            </div>
-           <div className="grid grid-cols-2 gap-4">
-              <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center">
-                 <p className="text-3xl font-black text-white">{stats.total_students.toLocaleString() || '50+'}</p>
-                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">{s.languages}</p>
-              </div>
-              <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center mt-8">
-                 <p className="text-3xl font-black text-white">{stats.active_curricula || '12'}</p>
-                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">{s.quality}</p>
-              </div>
-           </div>
+           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+               <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-blue-500/30 transition-all duration-300 backdrop-blur-xl group">
+                  <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500 group-hover:scale-105 transition-transform duration-300">
+                    {stats.total_languages || 2}
+                  </p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">{s.languages}</p>
+               </div>
+               <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-violet-500/30 transition-all duration-300 backdrop-blur-xl group sm:mt-6">
+                  <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-violet-500 group-hover:scale-105 transition-transform duration-300">
+                    {stats.active_curricula || 10}
+                  </p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
+                    {lang === 'FR' ? "Cursus" : "Curricula"}
+                  </p>
+               </div>
+               <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-xl group sm:mt-12">
+                  <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-500 group-hover:scale-105 transition-transform duration-300">
+                    {stats.total_courses || 25}
+                  </p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
+                    {lang === 'FR' ? "Cours Totaux" : "Total Courses"}
+                  </p>
+               </div>
+            </div>
         </section>
 
         <Footer />

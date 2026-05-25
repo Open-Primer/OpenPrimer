@@ -1,0 +1,60 @@
+---
+title: "Inferential Statistics and Estimation"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 2
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "en"
+---
+
+# Inferential Statistics and Estimation
+
+Inferential statistics uses a random sample of data taken from a population to describe and make inferences about the population.
+
+## 1. The Central Limit Theorem (CLT)
+
+The Central Limit Theorem is the foundation of inferential statistics. It states that, given a sufficiently large sample size $n$ (usually $n \ge 30$), the sampling distribution of the sample mean $\bar{X}$ will be approximately normally distributed, regardless of the population's distribution:
+$$\bar{X} \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right)$$
+
+## 2. Confidence Intervals
+
+A confidence interval gives an estimated range of values which is likely to include an unknown population parameter.
+
+### 2.1 Interval for Mean with Known Variance
+The $1-\alpha$ confidence interval for the population mean $\mu$ when variance $\sigma^2$ is known is:
+$$\bar{X} \pm Z_{\alpha/2} \left( \frac{\sigma}{\sqrt{n}} \right)$$
+
+For a 95% confidence level, $\alpha = 0.05$ and $Z_{0.025} = 1.96$.
+
+<MetaNote title="Analogy">
+  Think of a confidence interval as casting a net to catch a fish (the true parameter $\mu$). The confidence level is the probability that our net actually captures the fish if we repeat the process many times.
+</MetaNote>
+
+<SolvedProblem>
+**Problem: Compute 95% Confidence Interval**
+A researcher measures the height of 100 plants. The sample mean is $\bar{X} = 15$ cm. The known population standard deviation is $\sigma = 2$ cm.
+
+**1. Calculate the standard error:**
+$$SE = \frac{\sigma}{\sqrt{n}} = \frac{2}{\sqrt{100}} = 0.2$$
+
+**2. Calculate the margins of error:**
+$$ME = 1.96 \times 0.2 = 0.392$$
+
+**3. Construct the interval:**
+$$CI = 15 \pm 0.392 \implies [14.608, 15.392]$$
+
+**Conclusion:** We are 95% confident that the true population mean plant height lies between 14.61 cm and 15.39 cm.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="What does the Central Limit Theorem require for the population distribution?">
+    <Option text="Must be normal" />
+    <Option text="Can be any distribution shape (with finite variance)" correct />
+    <Option text="Must be uniform" />
+  </Question>
+</Quiz>
+
+---
+*OpenPrimer Academic Standard - Mathematics Statistics L1*

@@ -5,6 +5,8 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   total_ects INTEGER DEFAULT 0,
   completed_modules INTEGER DEFAULT 0,
+  level INTEGER DEFAULT 1,
+  kp INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -15,6 +17,8 @@ CREATE TABLE courses (
   slug TEXT UNIQUE NOT NULL,
   level TEXT NOT NULL,
   subject TEXT NOT NULL,
+  description TEXT,
+  languages TEXT[] DEFAULT '{"en"}',
   ects INTEGER DEFAULT 3,
   popularity INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT true,

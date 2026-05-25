@@ -9,11 +9,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
 import { useLanguage } from '@/context/LanguageContext';
+import { dbService, TutorPersonality } from '@/lib/db';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
 export const UI_STRINGS = {
   EN: { 
-    progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
+    my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
     copyright: "© 2026 OpenPrimer Project • Global AI Academic Repository",
     all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", search: "Search modules...",
@@ -51,11 +52,10 @@ export const UI_STRINGS = {
     total_credits: "Total Credits", knowledge_points: "Knowledge Points", learning_time: "Learning Time",
     active_modules: "Active Modules", progress: "Progress", tutor_summary: "AI Pedagogical Summary",
     tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview",
-    classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law",
-    physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics"
+    classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law"
   },
   FR: { 
-    progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
+    my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
     copyright: "© 2026 Projet OpenPrimer • Répertoire Académique Mondial d'IA",
     all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", search: "Rechercher des modules...",
@@ -93,11 +93,10 @@ export const UI_STRINGS = {
     total_credits: "Crédits Totaux", knowledge_points: "Points de Savoir", learning_time: "Temps d'Apprentissage",
     active_modules: "Modules Actifs", progress: "Progression", tutor_summary: "Résumé Pédagogique IA",
     tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum",
-    classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel",
-    physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques"
+    classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel"
   },
   ES: { 
-    progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
+    my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
     copyright: "© 2026 Fundación OpenPrimer • Consorcio Académico Europeo",
     all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos...",
@@ -135,11 +134,10 @@ export const UI_STRINGS = {
     total_credits: "Créditos Totales", knowledge_points: "Puntos de Conocimiento", learning_time: "Tiempo de Aprendizaje",
     active_modules: "Módulos Activos", progress: "Progreso", tutor_summary: "Resumen Pedagógico IA",
     tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo",
-    classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional",
-    physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas"
+    classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional"
   },
   DE: { 
-    progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
+    my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
     copyright: "© 2026 OpenPrimer Stiftung • Europäisches Akademisches Konsortium",
     all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen...",
@@ -177,11 +175,10 @@ export const UI_STRINGS = {
     total_credits: "Gesamt-Credits", knowledge_points: "Wissenspunkte", learning_time: "Lernzeit",
     active_modules: "Aktive Module", progress: "Fortschritt", tutor_summary: "KI-Pädagogische Zusammenfassung",
     tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick",
-    classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht",
-    physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik"
+    classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht"
   },
   ZH: { 
-    progress: "我的进度", admin: "管理控制台", settings: "账户设置",
+    my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
     terms: "服务条款", privacy: "隐私主权",
     copyright: "© 2026 OpenPrimer 基金会 • 欧洲学术联盟",
     all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块...",
@@ -219,26 +216,65 @@ export const UI_STRINGS = {
     total_credits: "总学分", knowledge_points: "知识点", learning_time: "学习时长",
     active_modules: "当前模块", progress: "进度", tutor_summary: "AI 教学总结",
     tutor_feedback: "学术反馈", curriculum_overview: "课程概览",
-    classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法",
-    physics: "物理", biology: "生物", law: "法律", math: "数学"
+    classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法"
   }
 };
 
 
 import { usePathname } from 'next/navigation';
 
-// --- COMPONENT: AI TUTOR OVERLAY ---
-export const AITutorOverlay = () => {
-  const { language: lang } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
-  const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
+interface AITutorOverlayProps {
+  lang?: string;
+  pageContext?: string;
+}
 
-  if (!isCurriculumPage) return null;
+// --- COMPONENT: AI TUTOR OVERLAY ---
+export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayProps = {}) => {
+  const { language: contextLang } = useLanguage();
+  const lang = propLang || contextLang;
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
   const [persona, setPersona] = useState(t.pragmatic);
+  const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
+  const pathname = usePathname();
+  const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
+
+  // Query Tutor Personalities & Safeguard Check on Mount/Open
+  useEffect(() => {
+    async function loadPersonalities() {
+      const { data } = await dbService.getTutorPersonalities();
+      if (data && data.length > 0) {
+        setPersonalities(data);
+        
+        const storedId = localStorage.getItem('op_active_tutor_personality');
+        const active = data.find(p => p.id === storedId);
+        
+        if (active) {
+          setPersona(active.name);
+        } else {
+          // Safeguard fallback: if selected personality is missing, fall back immediately to default!
+          const defaultPers = data.find(p => p.isDefault) || data[0];
+          if (defaultPers) {
+            setPersona(defaultPers.name);
+            localStorage.setItem('op_active_tutor_personality', defaultPers.id);
+          }
+        }
+      }
+    }
+    loadPersonalities();
+  }, [isOpen]); // Also re-check when opening overlay to sync changes in real-time!
+
+  const handlePersonaChange = (personaName: string) => {
+    setPersona(personaName);
+    const selected = personalities.find(p => p.name === personaName);
+    if (selected) {
+      localStorage.setItem('op_active_tutor_personality', selected.id);
+    }
+  };
+
+  if (!isCurriculumPage) return null;
 
   const QUICK_ACTIONS = [
     { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },
@@ -247,19 +283,27 @@ export const AITutorOverlay = () => {
     { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: "Give me a challenge question to test my understanding." }
   ];
 
-  // Persist history
+  // Persist history based on course slug instead of specific page pathname
+  const slugParts = pathname ? pathname.split('/') : [];
+  const isLPage = slugParts.includes('L1') || slugParts.includes('L2') || slugParts.includes('L3');
+  const courseSlug = isLPage ? slugParts[3] : 'global';
+
   useEffect(() => {
-    const key = `op_tutor_hist_${pathname || 'global'}_${lang}`;
+    const key = `op_tutor_hist_${courseSlug}_${lang}`;
     const saved = localStorage.getItem(key);
-    if (saved) setMessages(JSON.parse(saved));
-  }, [pathname, lang]);
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    } else {
+      setMessages([{ role: 'assistant', content: t.welcome }]);
+    }
+  }, [courseSlug, lang, t.welcome]);
 
   useEffect(() => {
     if (messages.length > 1) {
-      const key = `op_tutor_hist_${pathname || 'global'}_${lang}`;
+      const key = `op_tutor_hist_${courseSlug}_${lang}`;
       localStorage.setItem(key, JSON.stringify(messages.slice(-10))); // Keep last 10
     }
-  }, [messages, pathname, lang]);
+  }, [messages, courseSlug, lang]);
 
   const handleSend = (text?: string) => {
     const content = text || input;
@@ -285,12 +329,12 @@ export const AITutorOverlay = () => {
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
                    <select 
                      value={persona} 
-                     onChange={(e) => setPersona(e.target.value)}
+                     onChange={(e) => handlePersonaChange(e.target.value)}
                      className="bg-transparent text-sm font-bold text-white focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
                    >
-                     <option value={t.socratic}>{t.socratic}</option>
-                     <option value={t.pragmatic}>{t.pragmatic}</option>
-                     <option value={t.academic}>{t.academic}</option>
+                     {personalities.map(p => (
+                       <option key={p.id} value={p.name} className="bg-slate-900 text-white">{p.name}</option>
+                     ))}
                    </select>
                 </div>
               </div>
@@ -332,13 +376,30 @@ export const AITutorOverlay = () => {
 };
 
 // --- COMPONENT: TOP NAVIGATION ---
-export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, onLangChange?: (lang: string) => void }) => {
+export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSelector = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, showReadingModeSelector?: boolean, onLangChange?: (lang: string) => void }) => {
   const { language: lang, setLanguage: setLang } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
+  const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; } | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportComment, setReportComment] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
   
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    if (session === 'false') {
+      setIsLoggedIn(false);
+    } else {
+      setIsLoggedIn(true);
+    }
+    const profile = localStorage.getItem('op_user_profile');
+    if (profile) {
+      setUserProfile(JSON.parse(profile));
+    }
+  }, []);
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -390,7 +451,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
             {activeDropdown === 'lang' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
                  {languages.map(l => (
-                   <button key={l.code} onClick={() => setLang(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                   <button key={l.code} onClick={() => { setLang(l.code as any); if (onLangChange) onLangChange(l.code); setTimeout(() => { window.location.reload(); }, 100); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                      <span>{l.flag} {l.label}</span>
                      {lang === l.code && <CheckCircle className="w-3 h-3" />}
                    </button>
@@ -400,7 +461,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
           </AnimatePresence>
         </div>
 
-        {isCoursePage && (
+        {(isCoursePage || showReadingModeSelector) && (
           <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
             {['Default', 'Paper', 'Focus'].map(mode => {
               const modeLabel = mode === 'Default' ? t.mode_default : mode === 'Paper' ? t.mode_paper : t.mode_focus;
@@ -419,7 +480,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
 
         {isCoursePage && (
           <button 
-            onClick={() => triggerToast(t.report)}
+            onClick={() => setIsReportModalOpen(true)}
             className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -444,7 +505,12 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
                    <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">Logged in as</p>
-                     <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
+                     <p className="text-xs font-bold text-white truncate">
+                       {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Silvere Martin'}
+                     </p>
+                     <p className="text-[10px] text-slate-500 truncate">
+                       {userProfile ? userProfile.email : 'silvere@openprimer.org'}
+                     </p>
                    </div>
                      <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
                       <GraduationCap className="w-4 h-4" /> {t.my_curriculum}
@@ -464,7 +530,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
                     
                     <div className="h-px bg-slate-800/50 my-1" />
                     
-                    <button onClick={() => { setIsLoggedIn(false); triggerToast(t.signout); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                    <button onClick={() => { localStorage.setItem('op_session', 'false'); setIsLoggedIn(false); triggerToast(t.signout); window.location.reload(); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                       <LogOut className="w-4 h-4" /> {t.signout}
                     </button>
                 </motion.div>
@@ -472,9 +538,9 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
             </AnimatePresence>
           </div>
         ) : (
-          <a href="https://github.com/Open-Primer/OpenPrimer" target="_blank" className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 transition-all">
-            Join Project
-          </a>
+          <Link href="/login" className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 transition-all text-center">
+            {t.login}
+          </Link>
         )}
       </div>
 
@@ -484,6 +550,79 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, onLangChange }: { 
             <CheckCircle className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-medium text-slate-100">{showToast}</span>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isReportModalOpen && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
+                <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-500" /> {lang === 'FR' ? "Signaler une erreur" : "Report an issue"}
+                </h3>
+                <button 
+                  onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
+                  className="text-slate-600 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="p-10 space-y-6">
+                <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                  {lang === 'FR' 
+                    ? "Aidez notre IA à affiner le cursus. Décrivez l'erreur pédagogique, de traduction ou scientifique sur cette page." 
+                    : "Help our AI refine the curriculum. Describe the mathematical, lexical, or pedagogical issue on this page."}
+                </p>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                    {lang === 'FR' ? "Commentaire (Optionnel)" : "Comment (Optional)"}
+                  </label>
+                  <textarea 
+                    value={reportComment}
+                    onChange={(e) => setReportComment(e.target.value)}
+                    rows={4}
+                    placeholder={lang === 'FR' ? "ex: Le calcul de la force de frottement à la ligne 12 est erroné..." : "e.g., The derivation in line 12 is missing a minus sign..."}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500/50 transition-all resize-none text-white placeholder:text-slate-700" 
+                  />
+                </div>
+                
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
+                    className="flex-1 py-4 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400"
+                  >
+                    {lang === 'FR' ? "Annuler" : "Cancel"}
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      setSubmittingReport(true);
+                      const pathParts = window.location.pathname.split('/');
+                      const courseName = pathParts[3] ? pathParts[3].replace(/_/g, ' ') : "General";
+                      await dbService.submitReport(courseName, window.location.pathname, reportComment);
+                      setSubmittingReport(false);
+                      setIsReportModalOpen(false);
+                      setReportComment('');
+                      triggerToast(lang === 'FR' ? "Rapport soumis avec succès" : "Report submitted successfully");
+                    }}
+                    disabled={submittingReport}
+                    className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/20 disabled:bg-slate-800"
+                  >
+                    {submittingReport 
+                      ? (lang === 'FR' ? "Envoi..." : "Sending...") 
+                      : (lang === 'FR' ? "Soumettre le Rapport" : "Submit Report")}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </nav>
@@ -541,6 +680,53 @@ export const Footer = () => {
              <span className="text-xs font-bold text-white">🇨🇳</span>
              <span className="text-xs font-bold text-white">🇺🇸</span>
           </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// --- COMPONENT: ADMIN CONSOLE FOOTER ---
+export const AdminFooter = () => {
+  const { language: lang } = useLanguage();
+  const isFR = lang === 'FR';
+
+  return (
+    <footer className="bg-slate-950 border-t border-slate-900 py-6 px-12 mt-auto">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        {/* Left Side: System Status */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+              {isFR ? "Systèmes Souverains Stables" : "Sovereign Systems Stable"}
+            </span>
+          </div>
+          <div className="hidden md:block w-px h-4 bg-slate-900" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            {isFR ? "Moteurs Autonomes 98.4% Actifs" : "Autonomous Engines 98.4% Active"}
+          </span>
+        </div>
+
+        {/* Center: Admin Shortcuts */}
+        <div className="flex items-center gap-6 text-[9px] font-black uppercase tracking-widest text-slate-500">
+          <Link href="/admin" className="hover:text-blue-400 transition-colors">
+            {isFR ? "Tableau de bord" : "Dashboard"}
+          </Link>
+          <Link href="/admin/users" className="hover:text-blue-400 transition-colors">
+            {isFR ? "Membres" : "Users"}
+          </Link>
+          <Link href="/admin/curriculum" className="hover:text-blue-400 transition-colors">
+            {isFR ? "Gouvernance Cursus" : "Curriculum Center"}
+          </Link>
+        </div>
+
+        {/* Right Side: Copyright */}
+        <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest">
+          © 2026 OpenPrimer Foundation
         </div>
       </div>
     </footer>

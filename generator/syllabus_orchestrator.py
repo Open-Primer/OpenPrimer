@@ -13,10 +13,17 @@ except ImportError:
     VERTEX_AVAILABLE = False
 
 class SyllabusOrchestrator:
-    def __init__(self, project_id=None):
-        if VERTEX_AVAILABLE and project_id:
-            vertexai.init(project_id=project_id, location="us-central1")
-            self.model = GenerativeModel("gemini-1.5-flash")
+    def __init__(self, project_id=None, api_key=None):
+        if api_key:
+            from google import genai
+            self.client = genai.Client(api_key=api_key)
+            self.model = "gemini-flash-lite-latest"
+        elif VERTEX_AVAILABLE and project_id:
+            import google.auth
+            credentials, project = google.auth.default()
+            print(f"      [AUTH] Using Project: {project_id}, Auth Account: {getattr(credentials, 'service_account_email', 'User/Other')}")
+            vertexai.init(project=project_id, location="us-central1", credentials=credentials)
+            self.model = GenerativeModel("gemini-1.5-pro")
         else:
             self.model = None
 
@@ -42,13 +49,24 @@ class SyllabusOrchestrator:
         }}
         """
         
-        if self.model:
+        if hasattr(self, 'client'):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt
+                )
+                text = response.text.strip().replace("```json", "").replace("```", "")
+                return json.loads(text)
+            except Exception as e:
+                print(f"Error generating syllabus with Gemini API: {e}")
+                return None
+        elif self.model:
             try:
                 response = await self.model.generate_content_async(prompt)
                 text = response.text.strip().replace("```json", "").replace("```", "")
                 return json.loads(text)
             except Exception as e:
-                print(f"Error generating syllabus: {e}")
+                print(f"Error generating syllabus with Vertex AI: {e}")
                 return None
         else:
             # Fallback for local testing
@@ -81,7 +99,12 @@ async def main():
     parser.add_argument("--queue", type=str, help="Path to a JSON queue file for batch processing")
     args = parser.parse_args()
 
-    orchestrator = SyllabusOrchestrator(project_id=os.getenv("GCP_PROJECT_ID"))
+    from dotenv import load_dotenv
+    load_dotenv()
+    orchestrator = SyllabusOrchestrator(
+        project_id=os.getenv("GCP_PROJECT_ID"),
+        api_key=os.getenv("GEMINI_API_KEY")
+    )
     
     if args.queue:
         queue_path = Path(args.queue)

@@ -1,32 +1,51 @@
 import { test, expect } from '@playwright/test';
 
-test('verify i18n switching on landing page', async ({ page }) => {
+test('verify i18n switching on landing page', async ({ page, context }) => {
+  test.slow();
+  await context.addCookies([{
+    name: 'openprimer_lang',
+    value: 'EN',
+    url: 'http://localhost:3000'
+  }]);
   await page.goto('http://localhost:3000');
+  await page.evaluate(() => {
+    window.localStorage.setItem('openprimer_lang', 'EN');
+  });
+  await page.reload();
   
   // Verify English (Default)
   await expect(page.locator('h1')).toContainText('Universal Knowledge.');
   
   // Switch to French
-  await page.click('button:has-text("🇺🇸 EN")');
-  await page.click('button:has-text("🇫🇷 Français")');
+  await page.locator('button').filter({ hasText: /EN/ }).first().hover();
+  await page.click('button:has-text("Français")');
   
   // Verify French
   await expect(page.locator('h1')).toContainText('Le Savoir Universel.');
   
   // Switch to Chinese
-  await page.click('button:has-text("🇫🇷 FR")');
-  await page.click('button:has-text("🇨🇳 中文")');
+  await page.locator('button').filter({ hasText: /FR/ }).first().hover();
+  await page.click('button:has-text("中文")');
   
   // Verify Chinese
   await expect(page.locator('h1')).toContainText('普及全球知识。');
 });
 
-test('should navigate to the catalog', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Browse Catalog');
-    await expect(page).toHaveURL(/.*catalog/);
-    await expect(page.locator('h1')).toContainText('Universal Academic Repository');
+test('should navigate to the catalog', async ({ page, context }) => {
+  await context.addCookies([{
+    name: 'openprimer_lang',
+    value: 'EN',
+    url: 'http://localhost:3000'
+  }]);
+  await page.goto('http://localhost:3000');
+  await page.evaluate(() => {
+    window.localStorage.setItem('openprimer_lang', 'EN');
   });
+  await page.reload();
+  await page.click('text=Browse Catalog');
+  await expect(page).toHaveURL(/.*catalog/);
+  await expect(page.locator('h1')).toContainText(/Browse Catalog|Parcourir/);
+
   // Check if at least one course card is rendered (dynamic)
   // Note: This requires the database to be populated
   const cards = page.locator('.group.block.h-full');

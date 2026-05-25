@@ -1,0 +1,60 @@
+---
+title: "Estadística Inferencial y Estimación"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 2
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "es"
+---
+
+# Estadística Inferencial y Estimación
+
+La estadística inferencial utiliza una muestra aleatoria de datos tomados de una población para describir y realizar inferencias sobre la población general.
+
+## 1. El Teorema del Límite Central (TLC)
+
+El Teorema del Límite Central es la base de la estadística inferencial. Establece que, dado un tamaño de muestra $n$ suficientemente grande (generalmente $n \ge 30$), la distribución muestral de la media muestral $\bar{X}$ se aproximará a una distribución normal, independientemente de la distribución de la población:
+$$\bar{X} \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right)$$
+
+## 2. Intervalos de Confianza
+
+Un intervalo de confianza proporciona un rango estimado de valores que probablemente incluya un parámetro poblacional desconocido.
+
+### 2.1 Intervalo para la Media con Varianza Conocida
+El intervalo de confianza de $1-\alpha$ para la media poblacional $\mu$ cuando se conoce la varianza $\sigma^2$ es:
+$$\bar{X} \pm Z_{\alpha/2} \left( \frac{\sigma}{\sqrt{n}} \right)$$
+
+Para un nivel de confianza del 95%, $\alpha = 0.05$ y $Z_{0.025} = 1.96$.
+
+<MetaNote title="Analogía">
+  Piense en un intervalo de confianza como lanzar una red para pescar un pez (el parámetro real $\mu$). El nivel de confianza es la probabilidad de que nuestra red realmente capture el pez si repetimos el proceso muchas veces.
+</MetaNote>
+
+<SolvedProblem>
+**Problema: Calcular Intervalo de Confianza del 95%**
+Un investigador mide la altura de 100 plantas. La media muestral es $\bar{X} = 15$ cm. La desviación estándar conocida de la población es $\sigma = 2$ cm.
+
+**1. Calcular el error estándar:**
+$$SE = \frac{\sigma}{\sqrt{n}} = \frac{2}{\sqrt{100}} = 0.2$$
+
+**2. Calcular los márgenes de error:**
+$$ME = 1.96 \times 0.2 = 0.392$$
+
+**3. Construir el intervalo:**
+$$CI = 15 \pm 0.392 \implies [14.608, 15.392]$$
+
+**Conclusión:** Tenemos un 95% de confianza en que la verdadera media poblacional de la altura de las plantas se encuentra entre 14.61 cm y 15.39 cm.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="¿Qué requiere el Teorema del Límite Central para la distribución de la población?">
+    <Option text="Debe ser normal" />
+    <Option text="Puede ser cualquier forma de distribución (con varianza finita)" correct />
+    <Option text="Debe ser uniforme" />
+  </Question>
+</Quiz>
+
+---
+*Estándar Académico OpenPrimer - Estadística Matemática L1*

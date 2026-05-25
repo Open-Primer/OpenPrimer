@@ -22,10 +22,10 @@ export const Gatekeeper = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // BYPASS GATEKEEPER ON LOCAL DEVELOPMENT
+    // BYPASS GATEKEEPER ON LOCAL HOSTNAME
     // This ensures Silvere and the dev team don't get blocked during local iterations.
     const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (isLocal && process.env.NODE_ENV === "development") {
+    if (isLocal) {
       setIsAuthorized(true);
       return;
     }

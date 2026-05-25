@@ -23,6 +23,23 @@ The user interface is optimized for reading and interaction:
 - **Feedback API**: Collection of user reports.
 - **Correction Agent**: Analyzes reports on the GCP VM and automatically updates MDX files on GitHub.
 
+## 5. Curriculum Autonomy Engine & Governance Cockpit
+The OpenPrimer Curriculum Autonomy Engine represents a 100% query-driven governance console designed to recursively monitor search behaviors, localizations, and revisions without mock mockups:
+1. **Search History Autonomy (Tab 1)**: Computes course proposals dynamically from raw `dbService.getSearchHistory()` entries representing failed queries (`wasSuccessful: false`). If counts exceed the configured `courseThreshold` (or the distinct resuggested threshold for previously rejected items), the agent auto-promotes the course request into the pipeline queue.
+2. **Side-by-Side Translation Workspace (Tab 2)**: Triggers an elegant slide-over drawer showing original English content alongside translated AI drafts for dual-comparison.
+3. **AI Tutor Personality Controls (Tab 3)**: Integrates global tutor system instructions (Socratic Coach, Direct Synthesizer, Gamified Companion) and tracks real-time Vertex AI token usage and cost metrics.
+4. **Topology syllabus analysis (Tab 4)**: Includes a collapsible interactive topology viewer showing prerequisite dependencies.
+5. **AI Badge Icon Agent (Tab 6)**: Employs real-time keyword analysis (e.g. "streak" triggers Zap/Flame icons) and auto-compiles multi-language JSON translation dictionaries instantly. Enforces strict input validation to block zero or negative metrics thresholds.
+6. **Project Overview Metrics & Leaderboard**: Main `/admin` screen integrates a 28-day active study cohort heatmap and elite student leaderboard directly calculated from active local databases.
+7. **Granular Retention Sliders**: Retention settings are placed directly inside the tabs they affect (Tab 1 for search logs, Tab 2 for translations, Tab 3 for reports) to vacuum expired history.
+
+## 6. Playwright E2E Validation Matrix
+E2E tests in `web/tests/admin_governance.spec.ts` execute real user simulation scenarios to guarantee database integrity:
+- **Identity CRUD**: Assures student profile creation, block toggles, and secure modal deletion.
+- **Autonomy Promotion**: Seeds failed search logs to force-trigger the agent's threshold evaluator, verifying reactive queue additions and cancel operations.
+- **Badge Bounds Safeguard**: Asserts input sanitization, dynamic Lucide selection, and force purging.
+- **Overview Mathematics**: Validates that calculated dashboard overview values match actual database counts.
+
 ## 🧱 Folder Structure
 ```
 OpenPrimer/

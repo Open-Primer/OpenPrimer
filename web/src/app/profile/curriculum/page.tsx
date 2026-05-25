@@ -13,24 +13,44 @@ export default function CurriculumPage() {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   const [progress, setProgress] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [readingMode, setReadingMode] = useState('dark');
 
   useEffect(() => {
     async function loadProgress() {
       const data = await dbService.getUserProgress('u1'); // Mock user
       setProgress(data);
+      const { data: coursesData } = await dbService.getAllCourses();
+      if (coursesData) setCourses(coursesData);
       setLoading(false);
     }
     loadProgress();
+
+    // Load initial reading mode and define dynamic header buttons listener
+    const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
+    setReadingMode(savedMode);
+
+    (window as any).setReadingMode = (mode: string) => {
+      setReadingMode(mode);
+      localStorage.setItem('op_reading_mode', mode);
+    };
   }, []);
 
   if (loading || !progress) {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
+  const modeStyles = {
+    dark: "bg-slate-950 text-white font-sans",
+    default: "bg-slate-950 text-white font-sans",
+    paper: "bg-[#fcfaf2] text-slate-900 font-serif",
+    focus: "bg-black text-slate-400 font-sans"
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
-      <TopNav />
+    <div className={`min-h-screen transition-colors duration-500 ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>
+      <TopNav showReadingModeSelector={true} />
       
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
         <header className="mb-12">
@@ -87,39 +107,93 @@ export default function CurriculumPage() {
            <h2 className="text-2xl font-black mb-8 flex items-center gap-4">
               <Book className="w-6 h-6 text-blue-500" /> {t.active_modules}
            </h2>
-           
-           <div className="grid md:grid-cols-2 gap-8">
-              {progress.activeModules.map((course: any) => (
-                <Link key={course.id} href={`/catalog`} className="group">
-                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[48px] hover:border-blue-500/50 transition-all shadow-2xl flex flex-col h-full relative overflow-hidden">
-                     <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400">
-                           <Book className="w-6 h-6" />
-                        </div>
-                        <div className="flex gap-2">
-                           <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-500">{course.level}</span>
-                        </div>
-                     </div>
-                     <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">{t[course.title_key as keyof typeof t] || course.title_key}</h3>
-                     <p className="text-sm text-slate-500 mb-8">{t[course.subject_key as keyof typeof t] || course.subject_key}</p>
-                     
-                     <div className="mt-auto">
-                        <div className="flex justify-between items-center mb-2">
-                           <span className="text-[9px] font-black uppercase text-slate-600">{t.progress}</span>
-                           <span className="text-[9px] font-black text-blue-500">{course.progress}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                           <motion.div 
-                             initial={{ width: 0 }}
-                             animate={{ width: `${course.progress}%` }}
-                             className="h-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" 
-                           />
-                        </div>
-                     </div>
-                  </div>
-                </Link>
-              ))}
-           </div>
+                      <div className="grid md:grid-cols-2 gap-8">
+              {progress.activeModules.map((course: any) => {
+                const getCoursePath = (c: any) => {
+                  const slug = c.slug;
+                  if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+                    return '/L1/Physics/Classical_Mechanics/introduction';
+                  }
+                  if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+                    return '/L2/Physics/Physique_Test_L2/introduction';
+                  }
+                  if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+                    return '/L1/Biology/Cell_Biology/introduction';
+                  }
+                  if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+                    return '/L1/Biology/Biologie_Test_L1/introduction';
+                  }
+                  if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+                    return '/L1/Law/Droit_Test/introduction';
+                  }
+                  return '/catalog';
+                };
+
+                const getLocalizedTitle = (c: any) => {
+                  const isEn = lang.toUpperCase() === 'EN';
+                  const slug = c.slug;
+                  if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+                    return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
+                  }
+                  if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+                    return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
+                  }
+                  if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+                    return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
+                  }
+                  if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+                    return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
+                  }
+                  if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+                    return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
+                  }
+                  return t[c.title_key as keyof typeof t] || c.title_key;
+                };
+
+                const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
+                const ratingCount = courseDetails?.ratingCount || 0;
+                const averageRating = courseDetails?.averageRating || 0;
+
+                return (
+                  <Link key={course.id} href={getCoursePath(course)} className="group">
+                    <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[48px] hover:border-blue-500/50 transition-all shadow-2xl flex flex-col h-full relative overflow-hidden">
+                       <div className="flex justify-between items-start mb-6">
+                          <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400">
+                             <Book className="w-6 h-6" />
+                          </div>
+                          <div className="flex gap-2">
+                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-955 border border-slate-800 rounded-lg text-amber-500 flex items-center gap-1">
+                               <Star className="w-3 h-3 fill-amber-500/20" />
+                               {ratingCount >= 10 
+                                 ? `${averageRating.toFixed(1)} (${ratingCount})` 
+                                 : `N/A (${ratingCount})`}
+                             </span>
+                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-955 border border-slate-800 rounded-lg text-slate-500">{course.level}</span>
+                          </div>
+                       </div>
+                       <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
+                         {getLocalizedTitle(course)}
+                       </h3>
+                       <p className="text-sm text-slate-500 mb-8">{t[course.subject_key as keyof typeof t] || course.subject_key}</p>
+                       
+                       <div className="mt-auto">
+                          <div className="flex justify-between items-center mb-2">
+                             <span className="text-[9px] font-black uppercase text-slate-600">{t.progress}</span>
+                             <span className="text-[9px] font-black text-blue-500">{course.progress}%</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                             <motion.div 
+                               initial={{ width: 0 }}
+                               animate={{ width: `${course.progress}%` }}
+                               className="h-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" 
+                             />
+                          </div>
+                       </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
         </section>
       </div>
 

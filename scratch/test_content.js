@@ -2,34 +2,26 @@ const fs = require('fs');
 const path = require('path');
 const matter = require('gray-matter');
 
-const CONTENT_PATH = path.join(process.cwd(), 'content');
+const CONTENT_PATH = path.join(__dirname, '../content');
 
-async function getPageContent(slug) {
+function getPageContent(slug, lang = 'en') {
   const baseFilePath = path.join(CONTENT_PATH, ...slug);
-  console.log('Base Path:', baseFilePath);
+  const filePath = baseFilePath + `.${lang}.mdx`;
   
-  let filePath = baseFilePath + '.mdx';
+  console.log('Checking file path:', filePath);
+  console.log('Exists:', fs.existsSync(filePath));
   
   if (!fs.existsSync(filePath)) {
-    const langs = ['.en.mdx', '.fr.mdx', '.es.mdx', '.de.mdx', '.zh.mdx'];
-    const found = langs.find(ext => fs.existsSync(baseFilePath + ext));
-    if (found) {
-      filePath = baseFilePath + found;
-    } else {
-      console.log('File not found at any suffix');
-      return null;
-    }
+    return null;
   }
 
-  console.log('Resolved Path:', filePath);
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(fileContent);
 
   return {
     meta: data,
-    content: content.substring(0, 100) + '...'
+    content: content.slice(0, 100) + '...'
   };
 }
 
-const slug = ["L1", "Physics", "Classical_Mechanics", "Newtonian_Dynamics", "newtonian_odyssey"];
-getPageContent(slug).then(console.log).catch(console.error);
+console.log(getPageContent(['L1', 'Biology', 'Biologie_Test', 'introduction'], 'fr'));

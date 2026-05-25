@@ -1,0 +1,64 @@
+---
+title: "Introduction to Descriptive Statistics"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 0
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "en"
+---
+
+# Introduction to Descriptive Statistics
+
+Descriptive statistics is the discipline of quantitatively describing the main features of a collection of information. It differs from inferential statistics in that descriptive statistics aims to summarize a sample, rather than use the data to learn about the population.
+
+## 1. Measures of Central Tendency
+
+Central tendency represents the center of a probability distribution. The three most common measures are:
+
+1. **Mean** (arithmetic average):
+   $$\bar{X} = \frac{1}{n} \sum_{i=1}^n X_i$$
+
+2. **Median**: The middle value separating the higher half from the lower half of a data sample.
+
+3. **Mode**: The value that appears most frequently in a data set.
+
+<MetaNote title="Analogy">
+  Think of the mean as the balance point of a physical scale loaded with weights at each data point, whereas the median is simply the visual cut point that divides the population in two equal groups.
+</MetaNote>
+
+## 2. Measures of Dispersion
+
+Dispersion measures the spread of data around the central tendency.
+
+### 2.1 Sample Variance
+The sample variance $S^2$ measures the average squared deviation from the mean:
+$$S^2 = \frac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2$$
+
+### 2.2 Standard Deviation
+The standard deviation $S$ is the square root of the variance, returning the dispersion to the original data scale:
+$$S = \sqrt{S^2}$$
+
+<SolvedProblem>
+**Problem: Calculate descriptive statistics of exam scores**
+A cohort of 5 students scored: 12, 15, 10, 18, 15.
+
+**1. Calculate the mean:**
+$$\bar{X} = \frac{12+15+10+18+15}{5} = \frac{70}{5} = 14$$
+
+**2. Calculate the variance:**
+$$S^2 = \frac{(12-14)^2 + (15-14)^2 + (10-14)^2 + (18-14)^2 + (15-14)^2}{4}$$
+$$S^2 = \frac{4 + 1 + 16 + 16 + 1}{4} = \frac{38}{4} = 9.5$$
+</SolvedProblem>
+
+<Quiz>
+  <Question q="Which measure of central tendency is highly sensitive to extreme outliers?">
+    <Option text="Median" />
+    <Option text="Mean" correct />
+    <Option text="Mode" />
+  </Question>
+</Quiz>
+
+---
+*OpenPrimer Academic Standard - Mathematics Statistics L1*

@@ -2,21 +2,114 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, AlertTriangle, Users, BookOpen, Settings, ChevronRight, LogOut, ArrowLeft, Menu, X } from 'lucide-react';
-import { TopNav, Footer } from '@/components/RefinedUI';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, AlertTriangle, Users, BookOpen, ChevronDown, CheckCircle, LogOut, ArrowLeft, Menu, X, User, GraduationCap, Brain, Settings, ShieldAlert } from 'lucide-react';
+import { AdminFooter } from '@/components/RefinedUI';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
+import { useLanguage } from '@/context/LanguageContext';
+import { authService } from '@/lib/db';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { label: 'Error Report', href: '/admin/reports', icon: <AlertTriangle className="w-4 h-4" /> },
-  { label: 'User Management', href: '/admin/users', icon: <Users className="w-4 h-4" /> },
-  { label: 'Curriculum Editor', href: '/admin/curriculum', icon: <BookOpen className="w-4 h-4" /> },
-];
+export const ADMIN_STRINGS = {
+  EN: {
+    dashboard: "Dashboard",
+    reports: "Error Reports",
+    users: "User Management",
+    curriculum: "Curriculum Management",
+    signout: "Sign Out",
+    admin_panel: "OpenPrimer Admin Panel",
+    cockpit: "Admin Cockpit",
+    logged_as: "Logged in as",
+    my_curriculum: "My Curriculum",
+    catalog: "Browse Catalog",
+    settings: "Account Settings",
+    admin: "Admin Console"
+  },
+  FR: {
+    dashboard: "Tableau de Bord",
+    reports: "Rapports d'Erreurs",
+    users: "Gestion des Utilisateurs",
+    curriculum: "Gestion des Cursus",
+    signout: "Déconnexion",
+    admin_panel: "Panneau d'Administration",
+    cockpit: "Cockpit Administrateur",
+    logged_as: "Connecté en tant que",
+    my_curriculum: "Mon Curriculum",
+    catalog: "Parcourir le Catalogue",
+    settings: "Paramètres du Compte",
+    admin: "Console Admin"
+  },
+  ES: {
+    dashboard: "Panel de Control",
+    reports: "Reportes de Errores",
+    users: "Gestión de Usuarios",
+    curriculum: "Gestión del Plan de Estudios",
+    signout: "Cerrar Sesión",
+    admin_panel: "Panel de Administración",
+    cockpit: "Cabina de Mando",
+    logged_as: "Sesión iniciada como",
+    my_curriculum: "Mi Currículo",
+    catalog: "Explorar Catálogo",
+    settings: "Ajustes de Cuenta",
+    admin: "Consola Admin"
+  },
+  DE: {
+    dashboard: "Dashboard",
+    reports: "Fehlerberichte",
+    users: "Benutzerverwaltung",
+    curriculum: "Lehrplanverwaltung",
+    signout: "Abmelden",
+    admin_panel: "Admin-Panel",
+    cockpit: "Admin-Cockpit",
+    logged_as: "Angemeldet als",
+    my_curriculum: "Mein Lehrplan",
+    catalog: "Katalog durchsuchen",
+    settings: "Kontoeinstellungen",
+    admin: "Admin-Konsole"
+  },
+  ZH: {
+    dashboard: "仪表板",
+    reports: "错误报告",
+    users: "用户管理",
+    curriculum: "课程管理",
+    signout: "登出",
+    admin_panel: "管理控制台",
+    cockpit: "管理员座舱",
+    logged_as: "已登录为",
+    my_curriculum: "我的课程",
+    catalog: "浏览课程目录",
+    settings: "账户设置",
+    admin: "管理控制台"
+  }
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [activeDropdown, setActiveDropdown] = React.useState<'lang' | 'user' | null>(null);
+  
+  const { language: lang, setLanguage: setLang } = useLanguage();
+  const t = ADMIN_STRINGS[lang as keyof typeof ADMIN_STRINGS] || ADMIN_STRINGS.EN;
+
+  const NAV_ITEMS = [
+    { label: t.dashboard, href: '/admin', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { label: t.users, href: '/admin/users', icon: <Users className="w-4 h-4" /> },
+    { label: t.curriculum, href: '/admin/curriculum', icon: <BookOpen className="w-4 h-4" /> },
+  ];
+
+  const languages = [
+    { code: 'EN', flag: '🇺🇸', label: 'English' },
+    { code: 'FR', flag: '🇫🇷', label: 'Français' },
+    { code: 'ES', flag: '🇪🇸', label: 'Español' },
+    { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
+    { code: 'ZH', flag: '🇨🇳', label: '中文' }
+  ];
+
+  const handleLogout = () => {
+    authService.logout();
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans text-white">
@@ -40,9 +133,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-8">
             <Link href="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-4 h-4 text-slate-500" />
-              <span className="text-lg font-black tracking-tighter">OpenPrimer</span>
+              <span className="text-lg font-black tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
-            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1 ml-6 italic">Admin Cockpit</p>
+            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 ml-6 italic">{t.cockpit}</p>
           </div>
 
           <nav className="flex-1 px-4 space-y-1">
@@ -66,19 +159,81 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-900">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 transition-all">
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
-          </div>
+          {/* Removed redundant Sign Out button as requested */}
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950">
-          <main className="p-12">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950 flex flex-col h-full">
+          {/* Top Navbar */}
+          <header className="h-20 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
+            <div>
+              <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.admin_panel}</span>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              {/* Language Selector */}
+              <div className="relative" onMouseEnter={() => setActiveDropdown('lang')} onMouseLeave={() => setActiveDropdown(null)}>
+                <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
+                  <span className="text-lg">{languages.find(l => l.code === lang)?.flag}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang}</span>
+                  <ChevronDown className={`w-3 h-3 text-slate-600 transition-transform ${activeDropdown === 'lang' ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {activeDropdown === 'lang' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
+                      {languages.map(l => (
+                        <button key={l.code} onClick={() => setLang(l.code as any)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                          <span>{l.flag} {l.label}</span>
+                          {lang === l.code && <CheckCircle className="w-3 h-3 text-blue-500" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="w-px h-6 bg-slate-900" />
+
+              {/* User Dropdown */}
+              <div className="relative" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
+                <button className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 transition-all overflow-hidden group">
+                  <User className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-400" />
+                </button>
+                <AnimatePresence>
+                  {activeDropdown === 'user' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
+                      <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_as}</p>
+                        <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-blue-500 mt-1">Administrator</p>
+                      </div>
+                      <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                        <GraduationCap className="w-4 h-4" /> {t.my_curriculum}
+                      </Link>
+                      <Link href="/catalog" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                        <Brain className="w-4 h-4" /> {t.catalog}
+                      </Link>
+                      <Link href="/profile/settings" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                        <Settings className="w-4 h-4" /> {t.settings}
+                      </Link>
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                        <ShieldAlert className="w-4 h-4" /> {t.admin}
+                      </Link>
+                      <div className="h-px bg-slate-800/50 my-1" />
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                        <LogOut className="w-4 h-4" /> {t.signout}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </header>
+
+          <main className="p-12 flex-1">
             {children}
           </main>
-          <Footer />
+          <AdminFooter />
         </div>
       </div>
     </div>

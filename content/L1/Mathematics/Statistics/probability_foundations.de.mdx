@@ -1,0 +1,68 @@
+---
+title: "Wahrscheinlichkeitstheorie und Grundlagen"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 1
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "de"
+---
+
+# Wahrscheinlichkeitstheorie und Grundlagen
+
+Die Wahrscheinlichkeitstheorie ist der mathematische Rahmen zur Modellierung von Unsicherheit. Eine strenge mathematische Formulierung wurde von Andrei Kolmogorow unter Verwendung der Maßtheorie etabliert.
+
+## 1. Axiomatische Definition der Wahrscheinlichkeit
+
+Gegeben sei ein Ergebnisraum $\Omega$ und eine $\sigma$-Algebra $\mathcal{F}$ von Ereignissen. Ein Wahrscheinlichkeitsmaß $P$ ist eine Funktion, die Ereignissen reelle Zahlen zuordnet und die Kolmogorov-Axiome erfüllt:
+
+1. **Nichtnegativität**: $P(A) \ge 0$ für alle $A \in \mathcal{F}$.
+2. **Normiertheit**: $P(\Omega) = 1$.
+3. **Abzählbare Additivität** (sigma-Additivität): Für paarweise disjunkte Ereignisse $A_1, A_2, \dots$:
+   $$P\left(\bigcup_{i=1}^\infty A_i\right) = \sum_{i=1}^\infty P(A_i)$$
+
+## 2. Bedingte Wahrscheinlichkeit und Satz von Bayes
+
+### 2.1 Bedingte Wahrscheinlichkeit
+Die Wahrscheinlichkeit, dass das Ereignis $A$ eintritt, unter der Bedingung, dass das Ereignis $B$ bereits eingetreten ist, ist:
+$$P(A|B) = \frac{P(A \cap B)}{P(B)}, \quad \text{falls } P(B) > 0$$
+
+### 2.2 Satz von Bayes
+Der Satz von Bayes setzt die bedingte Wahrscheinlichkeit zweier stochastischer Ereignisse in Beziehung:
+$$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$$
+
+Wobei $P(B)$ mithilfe der Formel der totalen Wahrscheinlichkeit erweitert werden kann:
+$$P(B) = \sum_{k} P(B|A_k)P(A_k)$$
+
+<MetaNote title="Analogie">
+  Der Satz von Bayes ist die mathematische Maschine zur Aktualisierung unserer Überzeugungen. Der Prior $P(A)$ ist das, was wir glauben, bevor wir die Beweise $B$ sehen. Der Posterior $P(A|B)$ ist unsere korrigierte Überzeugung.
+</MetaNote>
+
+<SolvedProblem>
+**Aufgabe: Genauigkeit eines Diagnosetests**
+Eine seltene Krankheit betrifft 1 % der Bevölkerung. Ein Diagnosetest ist zu 99 % genau (Richtig-Positiv-Rate ist 99 % und Richtig-Negativ-Rate ist 99 %).
+Wie hoch ist die Wahrscheinlichkeit, dass eine Person die Krankheit hat, unter der Bedingung, dass sie positiv getestet wurde?
+
+**1. Identifizieren Sie die Parameter:**
+- Prior $P(D) = 0,01$ (und $P(D^c) = 0,99$)
+- Sensitivität $P(+|D) = 0,99$
+- Falsch-Positiv-Rate $P(+|D^c) = 0,01$
+
+**2. Wenden Sie den Satz von Bayes an:**
+$$P(D|+) = \frac{P(+|D)P(D)}{P(+|D)P(D) + P(+|D^c)P(D^c)}$$
+$$P(D|+) = \frac{0,99 \times 0,01}{0,99 \times 0,01 + 0,01 \times 0,99} = \frac{0,0099}{0,0099 + 0,0099} = 0,50$$
+
+**Fazit:** Die Wahrscheinlichkeit, dass der Patient die Krankheit tatsächlich hat, beträgt trotz des zu 99 % genauen Tests nur 50 %, was an der niedrigen Prior-Wahrscheinlichkeit der Krankheit liegt.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="Was ist das Ergebnis von P(A) + P(A^c) gemäß den Wahrscheinlichkeitsaxiomen?">
+    <Option text="0,5" />
+    <Option text="1,0" correct />
+    <Option text="0,0" />
+  </Question>
+</Quiz>
+
+---
+*Akademischer Standard von OpenPrimer - Mathematische Statistik L1*

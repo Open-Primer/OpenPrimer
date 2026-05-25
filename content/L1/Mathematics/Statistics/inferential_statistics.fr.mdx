@@ -1,0 +1,60 @@
+---
+title: "Statistique Inférentielle et Estimation"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 2
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "fr"
+---
+
+# Statistique Inférentielle et Estimation
+
+La statistique inférentielle utilise un échantillon aléatoire de données prélevées dans une population pour décrire et faire des inférences sur cette population.
+
+## 1. Le Théorème Central Limite (TCL)
+
+Le théorème central limite est le fondement de la statistique inférentielle. Il stipule que, pour un échantillon de taille $n$ suffisamment grande (généralement $n \ge 30$), la distribution d'échantillonnage de la moyenne échantillonnale $\bar{X}$ suit approximativement une loi normale, quelle que soit la distribution de la population d'origine :
+$$\bar{X} \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right)$$
+
+## 2. Intervalles de Confiance
+
+Un intervalle de confiance fournit une plage de valeurs estimée susceptible de contenir un paramètre de population inconnu.
+
+### 2.1 Intervalle pour la Moyenne avec Variance Connue
+L'intervalle de confiance à $1-\alpha$ pour la moyenne de la population $\mu$ lorsque la variance $\sigma^2$ est connue est :
+$$\bar{X} \pm Z_{\alpha/2} \left( \frac{\sigma}{\sqrt{n}} \right)$$
+
+Pour un niveau de confiance de 95 %, $\alpha = 0,05$ et $Z_{0,025} = 1,96$.
+
+<MetaNote title="Analogie">
+  Pensez à un intervalle de confiance comme au fait de jeter un filet pour attraper un poisson (le vrai paramètre $\mu$). Le niveau de confiance est la probabilité que notre filet capture effectivement le poisson si nous répétions le processus un grand nombre de fois.
+</MetaNote>
+
+<SolvedProblem>
+**Problème : Calculer un Intervalle de Confiance à 95 %**
+Un chercheur mesure la hauteur de 100 plantes. La moyenne de l'échantillon est $\bar{X} = 15$ cm. L'écart type connu de la population est $\sigma = 2$ cm.
+
+**1. Calculer l'erreur type :**
+$$SE = \frac{\sigma}{\sqrt{n}} = \frac{2}{\sqrt{100}} = 0,2$$
+
+**2. Calculer la marge d'erreur :**
+$$ME = 1,96 \times 0,2 = 0,392$$
+
+**3. Construire l'intervalle :**
+$$CI = 15 \pm 0,392 \implies [14,608, 15,392]$$
+
+**Conclusion :** Nous sommes confiants à 95 % que la véritable moyenne de la hauteur des plantes de la population se situe entre 14,61 cm et 15,39 cm.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="Que requiert le Théorème Central Limite concernant la distribution de la population d'origine ?">
+    <Option text="Elle doit être normale" />
+    <Option text="Elle peut avoir n'importe quelle forme (avec une variance finie)" correct />
+    <Option text="Elle doit être uniforme" />
+  </Question>
+</Quiz>
+
+---
+*Norme Académique OpenPrimer - Statistique Mathématique L1*

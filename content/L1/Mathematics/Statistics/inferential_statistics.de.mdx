@@ -1,0 +1,60 @@
+---
+title: "Schließende Statistik und Schätzung"
+level: "L1"
+subject: "Mathematics"
+module: "Statistics"
+section: 2
+version: "1.0.0"
+updatedAt: "2026-05-25"
+lang: "de"
+---
+
+# Schließende Statistik und Schätzung
+
+Die schließende (induktive) Statistik verwendet eine zufällige Stichprobe von Daten aus einer Grundgesamtheit, um diese zu beschreiben und Rückschlüsse auf sie zu ziehen.
+
+## 1. Der zentrale Grenzwertsatz (ZGS)
+
+Der zentrale Grenzwertsatz ist das Fundament der schließenden Statistik. Er besagt, dass bei einem ausreichend großen Stichprobenumfang $n$ (normalerweise $n \ge 30$) die Stichprobenverteilung des Stichprobenmittelwerts $\bar{X}$ näherungsweise normalverteilt ist, unabhängig von der Verteilung der Grundgesamtheit:
+$$\bar{X} \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right)$$
+
+## 2. Konfidenzintervalle
+
+Ein Konfidenzintervall gibt einen geschätzten Wertebereich an, der wahrscheinlich einen unbekannten Parameter der Grundgesamtheit enthält.
+
+### 2.1 Intervall für den Mittelwert bei bekannter Varianz
+Das $1-\alpha$-Konfidenzintervall für den Mittelwert $\mu$ der Grundgesamtheit bei bekannter Varianz $\sigma^2$ lautet:
+$$\bar{X} \pm Z_{\alpha/2} \left( \frac{\sigma}{\sqrt{n}} \right)$$
+
+Für ein Konfidenzniveau von 95 % ist $\alpha = 0,05$ und $Z_{0,025} = 1,96$.
+
+<MetaNote title="Analogie">
+  Stellen Sie sich ein Konfidenzintervall wie das Auswerfen eines Netzes vor, um einen Fisch zu fangen (den wahren Parameter $\mu$). Das Konfidenzniveau ist die Wahrscheinlichkeit, mit der unser Netz den Fisch tatsächlich fängt, wenn wir den Vorgang viele Male wiederholen.
+</MetaNote>
+
+<SolvedProblem>
+**Aufgabe: Berechnung eines 95%-Konfidenzintervalls**
+Ein Forscher misst die Höhe von 100 Pflanzen. Der Stichprobenmittelwert beträgt $\bar{X} = 15$ cm. Die bekannte Standardabweichung der Grundgesamtheit beträgt $\sigma = 2$ cm.
+
+**1. Berechnen Sie den Standardfehler:**
+$$SE = \frac{\sigma}{\sqrt{n}} = \frac{2}{\sqrt{100}} = 0,2$$
+
+**2. Berechnen Sie die Fehlermarge:**
+$$ME = 1,96 \times 0,2 = 0,392$$
+
+**3. Konstruieren Sie das Intervall:**
+$$CI = 15 \pm 0,392 \implies [14,608, 15,392]$$
+
+**Fazit:** Wir sind zu 95 % sicher, dass der tatsächliche Mittelwert der Pflanzenhöhe in der Grundgesamtheit zwischen 14,61 cm und 15,39 cm liegt.
+</SolvedProblem>
+
+<Quiz>
+  <Question q="Was setzt der zentrale Grenzwertsatz für die Verteilung der Grundgesamtheit voraus?">
+    <Option text="Muss normalverteilt sein" />
+    <Option text="Kann jede beliebige Verteilungsform sein (mit endlicher Varianz)" correct />
+    <Option text="Muss gleichverteilt sein" />
+  </Question>
+</Quiz>
+
+---
+*Akademischer Standard von OpenPrimer - Mathematische Statistik L1*

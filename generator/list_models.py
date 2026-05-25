@@ -1,6 +1,6 @@
 import google.generativeai as genai
 
-AI_STUDIO_KEY = "AIzaSyCYUPTeO1Vq39HcOXrolyEFEU-PN-QP2zw"
+AI_STUDIO_KEY = "PLACEHOLDER_KEY"
 
 def list_models():
     genai.configure(api_key=AI_STUDIO_KEY)
