@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
@@ -252,8 +252,41 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [input, setInput] = useState('');
   const [persona, setPersona] = useState(t.pragmatic);
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const pathname = usePathname();
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
+
+  // Periodic health check with auto-reconnection loop
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    async function checkHealth() {
+      try {
+        if (isOffline) {
+          setIsRetrying(true);
+        }
+        const res = await fetch('/api/tutor/health');
+        if (!res.ok) {
+          throw new Error('Tutor health degraded');
+        }
+        setIsOffline(false);
+        setIsRetrying(false);
+      } catch (err) {
+        setIsOffline(true);
+        setIsRetrying(true);
+      }
+    }
+
+    if (isOpen) {
+      checkHealth();
+      timer = setInterval(checkHealth, 5000); // Check every 5 seconds for robust state synchronization
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isOpen, isOffline]);
 
   // Query Tutor Personalities & Safeguard Check on Mount/Open
   useEffect(() => {
@@ -441,6 +474,26 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
+            {/* Offline Connection Loss banner */}
+            <AnimatePresence>
+              {isOffline && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-6 py-3 bg-red-500/10 border-b border-red-500/20 text-red-400 flex items-center justify-between text-[10px] font-black uppercase tracking-widest gap-2 shrink-0 overflow-hidden"
+                >
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{lang === 'FR' ? 'Connexion perdue... reconnexion' : 'Lost connection... retrying'}</span>
+                  </div>
+                  <div className="bg-red-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse shrink-0">
+                    {lang === 'FR' ? 'Service Dégradé' : 'Degraded Service'}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -453,7 +506,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
             <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
                {QUICK_ACTIONS.map(qa => (
-                 <button key={qa.label} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left">
+                 <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
                    {qa.icon} {qa.label}
                  </button>
                ))}
@@ -461,8 +514,8 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
             <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
               <div className="relative">
-                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600" />
-                <button onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all"><Send className="w-4 h-4" /></button>
+                <input disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
+                <button disabled={isOffline} onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"><Send className="w-4 h-4" /></button>
               </div>
             </div>
           </motion.div>
