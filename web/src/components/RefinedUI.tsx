@@ -291,7 +291,21 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
-  const [persona, setPersona] = useState(t.pragmatic);
+  const [persona, setPersona] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
+      const names: Record<string, string> = {
+        socratic: 'Socratic Coach',
+        direct: 'Direct Synthesizer',
+        gamified: 'Gamified Companion',
+        historical: 'Historical Storyteller',
+        feynman: 'Feynman Simplifier',
+        proof: 'Rigorous Proof Master'
+      };
+      return names[storedId] || 'Socratic Coach';
+    }
+    return 'Socratic Coach';
+  });
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
   const [isOffline, setIsOffline] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -546,7 +560,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-black tracking-tight text-white">
-                    {lang === 'FR' ? "Tuteur Socratique IA" : "Socratic AI Tutor"}
+                    {lang === 'FR' ? `Tuteur ${persona} IA` : `${persona} AI Tutor`}
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed max-w-[300px]">
                     {lang === 'FR' 
@@ -632,12 +646,14 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           >
             <div className="flex items-center gap-2 text-blue-400">
               <Sparkles className="w-4 h-4 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Socratic AI Features</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                {lang === 'FR' ? `Tuteur ${persona} IA` : `${persona} AI Tutor`}
+              </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               {lang === 'FR' 
-                ? "L'interaction pédagogique avec l'IA nécessite une connexion active afin de gérer votre suivi au mieux." 
-                : "Interactive AI diagnostics require a signed-in session to track your pedagogical progress at its best."}
+                ? "Le contenu pédagogique est libre et gratuit. Cependant, l'interaction avec le Tuteur IA nécessite une connexion afin d'initialiser votre session et gérer votre suivi pédagogique au mieux." 
+                : "Course materials are completely free. However, AI interaction requires being signed in to initialize your session context and track your pedagogical progress at its best."}
             </p>
             <button 
               onClick={(e) => {
