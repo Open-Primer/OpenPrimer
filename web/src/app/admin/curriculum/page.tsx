@@ -1797,15 +1797,16 @@ export default function AdminCurriculumPage() {
                      <button 
                        type="button"
                        onClick={async () => {
-                         const res = await dbService.cleanupSearchHistory(backlogRetention);
-                         const resFeedback = await dbService.cleanupCourseFeedbacks(backlogRetention);
-                         const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0);
+                         const [res, resFeedback, resTrans] = await Promise.all([
+                            dbService.cleanupSearchHistory(backlogRetention),
+                            dbService.cleanupCourseFeedbacks(backlogRetention),
+                            dbService.cleanupTranslationRequests(backlogRetention)
+                          ]);
+                          const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0) + (resTrans.data?.purged || 0);
                          alert(lang === 'FR' ? `Nettoyage réussi. ${totalPurged} entrées expirées ont été purgées.` : `Logs cleanup completed. ${totalPurged} expired entries purged.`);
                        }}
                        className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/10"
-                     >
-                       Purge Logs
-                     </button>
+                     >{lang === 'FR' ? 'Purger les Logs' : lang === 'ES' ? 'Purgar Registros' : lang === 'DE' ? 'Protokolle löschen' : lang === 'ZH' ? '清除日志' : 'Purge Logs'}</button>
                    </div>
                  </div>
                </div>
