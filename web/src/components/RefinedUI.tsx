@@ -21,7 +21,7 @@ const STATIC_UI_STRINGS = {
     tagline: "The Future of Open Academic Sovereignty",
     cta_start: "Start Learning", cta_foundation: "Explore Foundation",
     tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.",
-    copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Sign In", profile: "My Profile",
+    copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Log In", signup: "Sign In", profile: "My Profile",
     delete: "Delete Account", langLabel: "Language",
     foundation: "Foundation", curriculum: "Curriculum", legal: "Legal",
     philosophy: "Our Philosophy", contact: "Contact Support", opensource: "Open Source",
@@ -62,7 +62,7 @@ const STATIC_UI_STRINGS = {
     tagline: "L'Avenir de la Souveraineté Académique Libre",
     cta_start: "Commencer", cta_foundation: "Explorer la Fondation",
     tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", 
-    copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Connexion", profile: "Mon Curriculum", 
+    copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Se connecter", signup: "S'inscrire", profile: "Mon Curriculum", 
     delete: "Supprimer le compte", langLabel: "Langue",
     foundation: "Fondation", curriculum: "Curriculum", legal: "Légal",
     philosophy: "Notre Philosophie", contact: "Contact Support", opensource: "Open Source",
@@ -103,7 +103,7 @@ const STATIC_UI_STRINGS = {
     tagline: "El Futuro de la Soberanía Académica Abierta",
     cta_start: "Empezar", cta_foundation: "Explorar Fundación",
     tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", 
-    copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Entrar", profile: "Mi Currículo", 
+    copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Iniciar sesión", signup: "Registrarse", profile: "Mi Currículo", 
     delete: "Eliminar cuenta", langLabel: "Idioma",
     foundation: "Fundación", curriculum: "Currículo", legal: "Legal",
     philosophy: "Nuestra Filosofía", contact: "Contacto", opensource: "Código Abierto",
@@ -144,7 +144,7 @@ const STATIC_UI_STRINGS = {
     tagline: "Die Zukunft der freien akademischen Souveränität",
     cta_start: "Lernen starten", cta_foundation: "Stiftung erkunden",
     tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", 
-    copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Anmelden", profile: "Mein Lehrplan", 
+    copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Einloggen", signup: "Registrieren", profile: "Mein Lehrplan", 
     delete: "Konto löschen", langLabel: "Sprache",
     foundation: "Stiftung", curriculum: "Lehrplan", legal: "Rechtliches",
     philosophy: "Unsere Philosophie", contact: "Kontakt", opensource: "Open Source",
@@ -185,7 +185,7 @@ const STATIC_UI_STRINGS = {
     tagline: "开放学术主权的未来",
     cta_start: "开始学习", cta_foundation: "探索基金会",
     tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", 
-    copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", profile: "我的课程", 
+    copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", signup: "注册", profile: "我的课程", 
     delete: "删除账户", langLabel: "语言",
     foundation: "基金会", curriculum: "课程", legal: "法律",
     philosophy: "我们的哲学", contact: "联系我们", opensource: "开源项目",
@@ -514,6 +514,16 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  const handleAuthClick = (mode: 'login' | 'signup') => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/') {
+        window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: mode }));
+      } else {
+        window.location.href = `/?auth=${mode}`;
+      }
+    }
+  };
+
   useEffect(() => {
     const session = localStorage.getItem('op_session');
     setIsLoggedIn(session === 'true');
@@ -644,24 +654,22 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           </AnimatePresence>
         </div>
 
-        {(isCoursePage || showReadingModeSelector || isLoggedIn) && (
-          <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
-            {['Default', 'Paper', 'Focus'].map(mode => {
-              const modeKey = mode === 'Default' ? 'dark' : mode.toLowerCase();
-              const active = readingMode === modeKey || (modeKey === 'dark' && readingMode === 'default');
-              const modeLabel = mode === 'Default' ? t.mode_default : mode === 'Paper' ? t.mode_paper : t.mode_focus;
-              return (
-                <button 
-                  key={mode}
-                  onClick={() => handleThemeSelect(modeKey)}
-                  className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-                >
-                  {modeLabel}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl mr-2">
+          {['Default', 'Paper', 'Focus'].map(mode => {
+            const modeKey = mode === 'Default' ? 'dark' : mode.toLowerCase();
+            const active = readingMode === modeKey || (modeKey === 'dark' && readingMode === 'default');
+            const modeLabel = mode === 'Default' ? t.mode_default : mode === 'Paper' ? t.mode_paper : t.mode_focus;
+            return (
+              <button 
+                key={mode}
+                onClick={() => handleThemeSelect(modeKey)}
+                className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+              >
+                {modeLabel}
+              </button>
+            );
+          })}
+        </div>
 
         {isCoursePage && (
           <button 
@@ -723,9 +731,20 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             </AnimatePresence>
           </div>
         ) : (
-          <Link href="/login" className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 transition-all text-center">
-            {t.login}
-          </Link>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => handleAuthClick('login')} 
+              className="px-5 py-2.5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+            >
+              {t.login}
+            </button>
+            <button 
+              onClick={() => handleAuthClick('signup')} 
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 transition-all cursor-pointer"
+            >
+              {t.signup || 'Sign In'}
+            </button>
+          </div>
         )}
       </div>
 

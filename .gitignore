@@ -24,3 +24,6 @@ private_scripts/
 Thumbs.db
 
 .vercel
+
+# Temp files
+tmp/

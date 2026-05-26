@@ -99,9 +99,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [activeDropdown, setActiveDropdown] = React.useState<'lang' | 'user' | null>(null);
+  const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
+  const [readingMode, setReadingMode] = React.useState('dark');
   
   const { language: lang, setLanguage: setLang } = useLanguage();
   const t = ADMIN_STRINGS[lang as keyof typeof ADMIN_STRINGS] || ADMIN_STRINGS.EN;
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
+      setReadingMode(savedMode);
+    }
+
+    const handleGlobalModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setReadingMode(customEvent.detail);
+    };
+    window.addEventListener('op_reading_mode_changed', handleGlobalModeChange);
+    return () => {
+      window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
+    };
+  }, []);
+
+  const handleThemeSelect = (modeKey: string) => {
+    setReadingMode(modeKey);
+    localStorage.setItem('op_reading_mode', modeKey);
+    
+    const profileStr = localStorage.getItem('op_user_profile');
+    if (profileStr) {
+      try {
+        const profile = JSON.parse(profileStr);
+        profile.preferredTheme = modeKey;
+        localStorage.setItem('op_user_profile', JSON.stringify(profile));
+      } catch (e) {}
+    }
+    
+    window.dispatchEvent(new CustomEvent('op_reading_mode_changed', { detail: modeKey }));
+  };
+
+  React.useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    if (session !== 'true') {
+      router.push('/login');
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
+
+  if (isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 text-[10px] tracking-[0.3em] font-black uppercase">
+        Verifying Administrative Access...
+      </div>
+    );
+  }
 
   const NAV_ITEMS = [
     { label: t.dashboard, href: '/admin', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -125,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans text-white">
+    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
       {/* Mobile Hamburger Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800 sticky top-0 z-[110]">
          <div className="flex items-center gap-2">
@@ -140,7 +191,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex h-screen overflow-hidden">
         {/* Admin Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-[100] w-64 border-r border-slate-900 bg-slate-950 flex flex-col transition-transform duration-300
+          fixed inset-y-0 left-0 z-[100] w-64 border-r border-slate-900 bg-background flex flex-col transition-transform duration-300
           md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         `}>
           <div className="p-8">
@@ -176,9 +227,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950 flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-background flex flex-col h-full">
           {/* Top Navbar */}
-          <header className="h-20 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
+          <header className="h-20 border-b border-slate-900 bg-background/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
             <div>
               <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.admin_panel}</span>
             </div>
@@ -203,6 +254,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+
+              {/* Theme Selector */}
+              <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+                {['Default', 'Paper', 'Focus'].map(mode => {
+                  const modeKey = mode === 'Default' ? 'dark' : mode.toLowerCase();
+                  const active = readingMode === modeKey;
+                  const modeLabel = mode === 'Default' ? (lang === 'FR' ? 'Défaut' : 'Default') : mode === 'Paper' ? (lang === 'FR' ? 'Papier' : 'Paper') : 'Focus';
+                  return (
+                    <button 
+                      key={mode}
+                      onClick={() => handleThemeSelect(modeKey)}
+                      className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                    >
+                      {modeLabel}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="w-px h-6 bg-slate-900" />

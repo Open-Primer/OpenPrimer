@@ -96,6 +96,30 @@ export default function Home() {
       if (data) setStats(data);
     }
     loadStats();
+
+    const handleTriggerAuth = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail === 'login') {
+        setAuthState('login');
+      } else if (customEvent.detail === 'signup') {
+        setAuthState('signup');
+      }
+    };
+    window.addEventListener('op_trigger_auth_state', handleTriggerAuth);
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get('auth');
+      if (authParam === 'login') {
+        setAuthState('login');
+      } else if (authParam === 'signup') {
+        setAuthState('signup');
+      }
+    }
+
+    return () => {
+      window.removeEventListener('op_trigger_auth_state', handleTriggerAuth);
+    };
   }, []);
 
   const handleSignupSubmit = (e: React.FormEvent) => {

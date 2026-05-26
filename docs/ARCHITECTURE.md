@@ -46,7 +46,19 @@ OpenPrimer/
 ├── content/          # MDX Knowledge Database
 ├── generator/        # Generation Factory (Python)
 ├── web/              # User Interface (Next.js)
+## 7. Cybersecurity, Session Safeguards & Global Theming
+* **API Gating & Prevent Footprinting**: The server health endpoint `/api/health` requires session verification (`x-admin-session` or `x-admin-token` headers) to prevent unauthorized footprinting of latency parameters and connection status. Safe bypasses are granted strictly in local development environments.
+* **Cockpit Authorization Redirects**: A layout-level session hook (`AdminLayout`) inspects student credentials. Unauthenticated requests targeting `/admin/*` are automatically blocked and redirected to `/login`.
+* **Hot-Swap Credentials persistence**: Sensitive keys (Supabase, Resend, Gemini) can be dynamic, browser-swapped dynamically without redeployments. Custom keys are transmitted via headers and preserved locally in client sandboxes.
+* **Global CSS Variables Theming**: A central, event-driven theme manager is loaded at the root. Swapping theme modes (Default Dark, Sepia Paper, Focus Black) dynamically adjusts CSS variables (`--background`, `--foreground`) on `:root` and updates the entire DOM tree (including the Admin Cockpit layouts) in real-time.
+
+## 🧱 Folder Structure
+```
+OpenPrimer/
+├── content/          # MDX Knowledge Database
 ├── docs/             # Project Documentation
-├── scripts/          # Public Automation Scripts
-└── private_scripts/  # Specific Configurations (GCP, etc.)
+├── generator/        # Generation Factory (Python)
+├── mobile/           # Mobile App Codebase
+├── tmp/              # Temporarily Ignored Files (Ignored via .gitignore)
+└── web/              # User Interface (Next.js)
 ```

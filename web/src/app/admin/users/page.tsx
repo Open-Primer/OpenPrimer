@@ -103,7 +103,7 @@ export default function AdminUsers() {
     <div className="space-y-12 pb-20">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-white">Identity Control</h1>
+          <h1 className="text-3xl font-black tracking-tight mb-2 text-foreground">Identity Control</h1>
           <p className="text-slate-500 text-sm font-medium">Manage platform security and administrative roles.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
@@ -182,7 +182,7 @@ export default function AdminUsers() {
                       {user.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div>
-                      <p className={`text-sm font-bold ${user.isBlocked ? 'text-red-400' : 'text-slate-100'}`} data-testid={`user-name-${user.id}`}>{user.name}</p>
+                      <p className={`text-sm font-bold ${user.isBlocked ? 'text-red-400' : 'text-foreground'}`} data-testid={`user-name-${user.id}`}>{user.name}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-[10px] text-slate-600 font-medium">{user.email}</p>
                         <span className="text-[8px] bg-slate-800/60 text-slate-400 border border-slate-700/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">{user.preferredLang || 'EN'}</span>

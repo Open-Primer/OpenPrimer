@@ -256,12 +256,108 @@ export default function ServerHealthPage() {
   const t = HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN;
   const { health, isChecking, refresh } = useServiceStatus(30_000);
 
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
+  const [resendApiKey, setResendApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [notif, setNotif] = useState<string | null>(null);
+
+  // Load hot-swap keys on mount
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      setSupabaseUrl(localStorage.getItem('op_supabase_url') || '');
+      setSupabaseAnonKey(localStorage.getItem('op_supabase_anon_key') || '');
+      setResendApiKey(localStorage.getItem('op_resend_api_key') || '');
+      setGeminiApiKey(localStorage.getItem('op_gemini_api_key') || '');
+    }
+  });
+
+  const handleSaveKeys = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('op_supabase_url', supabaseUrl);
+    localStorage.setItem('op_supabase_anon_key', supabaseAnonKey);
+    localStorage.setItem('op_resend_api_key', resendApiKey);
+    localStorage.setItem('op_gemini_api_key', geminiApiKey);
+    setNotif(lang === 'FR' ? 'Clés API appliquées avec succès à chaud !' : 'API Keys successfully hot-swapped!');
+    setTimeout(() => setNotif(null), 4000);
+    refresh();
+  };
+
+  const handleResetKeys = () => {
+    localStorage.removeItem('op_supabase_url');
+    localStorage.removeItem('op_supabase_anon_key');
+    localStorage.removeItem('op_resend_api_key');
+    localStorage.removeItem('op_gemini_api_key');
+    setSupabaseUrl('');
+    setSupabaseAnonKey('');
+    setResendApiKey('');
+    setGeminiApiKey('');
+    setNotif(lang === 'FR' ? 'Retour aux clés serveurs par défaut.' : 'Returned to default server keys.');
+    setTimeout(() => setNotif(null), 4000);
+    refresh();
+  };
+
   const services = Object.values(health);
   const allOk = services.every(s => s.status === 'ok');
   const anyOffline = services.some(s => s.status === 'offline');
 
+  const strings = {
+    EN: {
+      cfg_title: '🛠️ Hot-Swap API Keys Configurator',
+      cfg_desc: 'Temporarily override server environment keys in this browser session. Securely passed in authenticated request headers.',
+      lbl_sb_url: 'Supabase Project URL',
+      lbl_sb_key: 'Supabase Anon Public Key',
+      lbl_resend: 'Resend API Key',
+      lbl_gemini: 'Gemini 1.5 API Key',
+      btn_apply: 'Apply Hot-Swap Keys',
+      btn_reset: 'Reset to Defaults'
+    },
+    FR: {
+      cfg_title: '🛠️ Configurateur de Clés API à Chaud',
+      cfg_desc: 'Surcharger temporairement les clés serveurs pour cette session de navigateur. Transmis en toute sécurité via en-têtes requêtes.',
+      lbl_sb_url: 'URL du Projet Supabase',
+      lbl_sb_key: 'Clé Publique Anon Supabase',
+      lbl_resend: 'Clé API Resend',
+      lbl_gemini: 'Clé API Gemini 1.5',
+      btn_apply: 'Appliquer les Clés',
+      btn_reset: 'Réinitialiser aux Défauts'
+    },
+    ES: {
+      cfg_title: '🛠️ Configurador de Claves API en Caliente',
+      cfg_desc: 'Anule temporalmente las claves del servidor en esta sesión. Transmitido de forma segura a través de encabezados.',
+      lbl_sb_url: 'URL del Proyecto Supabase',
+      lbl_sb_key: 'Clave Pública Anon Supabase',
+      lbl_resend: 'Clave API Resend',
+      lbl_gemini: 'Clave API Gemini 1.5',
+      btn_apply: 'Aplicar Cambios',
+      btn_reset: 'Restablecer Valores'
+    },
+    DE: {
+      cfg_title: '🛠️ Hot-Swap API-Schlüssel Konfigurator',
+      cfg_desc: 'Server-Umgebungsschlüssel in dieser Sitzung vorübergehend überschreiben. Sicher übertragen über Anfrage-Header.',
+      lbl_sb_url: 'Supabase Projekt-URL',
+      lbl_sb_key: 'Supabase Anon Public Key',
+      lbl_resend: 'Resend API-Schlüssel',
+      lbl_gemini: 'Gemini 1.5 API-Schlüssel',
+      btn_apply: 'Schlüssel anwenden',
+      btn_reset: 'Auf Standard zurücksetzen'
+    },
+    ZH: {
+      cfg_title: '🛠️ 热插拔 API 密钥配置器',
+      cfg_desc: '在当前浏览器会话中临时覆盖服务器环境变量密钥。密钥通过安全请求头动态传输。',
+      lbl_sb_url: 'Supabase 项目 URL',
+      lbl_sb_key: 'Supabase Anon 公钥',
+      lbl_resend: 'Resend 邮件 API 密钥',
+      lbl_gemini: 'Gemini 1.5 API 密钥',
+      btn_apply: '应用热插拔密钥',
+      btn_reset: '重置为默认值'
+    }
+  };
+
+  const currentCfg = strings[lang] || strings.EN;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
       <TopNav />
 
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24 space-y-12">
@@ -314,6 +410,83 @@ export default function ServerHealthPage() {
             <p className="text-sm font-semibold text-red-300">{t.status_offline} — One or more services are unreachable</p>
           </div>
         )}
+
+        {/* Hot-Swap API Keys Configurator Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 border border-slate-800 hover:border-blue-500/20 rounded-[32px] bg-slate-900/30 flex flex-col gap-6"
+        >
+          <div>
+            <h2 className="text-lg font-black text-white">{currentCfg.cfg_title}</h2>
+            <p className="text-xs text-slate-500 mt-1 leading-snug">{currentCfg.cfg_desc}</p>
+          </div>
+
+          {notif && (
+            <div className="px-4 py-3 bg-blue-500/10 border border-blue-500/25 rounded-xl text-blue-400 text-xs font-black uppercase tracking-widest">
+              {notif}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveKeys} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_sb_url}</label>
+              <input
+                type="text"
+                value={supabaseUrl}
+                onChange={e => setSupabaseUrl(e.target.value)}
+                placeholder="https://xxx.supabase.co"
+                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_sb_key}</label>
+              <input
+                type="password"
+                value={supabaseAnonKey}
+                onChange={e => setSupabaseAnonKey(e.target.value)}
+                placeholder="••••••••••••••••••••••••••••"
+                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_resend}</label>
+              <input
+                type="password"
+                value={resendApiKey}
+                onChange={e => setResendApiKey(e.target.value)}
+                placeholder="re_xxxxxxxxxxxxxx"
+                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_gemini}</label>
+              <input
+                type="password"
+                value={geminiApiKey}
+                onChange={e => setGeminiApiKey(e.target.value)}
+                placeholder="AIzaSyxxxxxxxxxxxxxxx"
+                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+              />
+            </div>
+
+            <div className="md:col-span-2 flex flex-col md:flex-row gap-4 mt-2">
+              <button
+                type="submit"
+                className="flex-1 px-6 py-4.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/10 active:scale-[0.98]"
+              >
+                {currentCfg.btn_apply}
+              </button>
+              <button
+                type="button"
+                onClick={handleResetKeys}
+                className="px-6 py-4.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-[0.98]"
+              >
+                {currentCfg.btn_reset}
+              </button>
+            </div>
+          </form>
+        </motion.div>
 
         {/* Service Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6">

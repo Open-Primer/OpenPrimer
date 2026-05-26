@@ -77,7 +77,24 @@ export function useServiceStatus(intervalMs = 30_000) {
   const check = useCallback(async () => {
     setIsChecking(true);
     try {
-      const res = await fetch('/api/health', { method: 'GET', cache: 'no-store' });
+      const customSupabaseUrl = typeof window !== 'undefined' ? localStorage.getItem('op_supabase_url') || '' : '';
+      const customSupabaseKey = typeof window !== 'undefined' ? localStorage.getItem('op_supabase_anon_key') || '' : '';
+      const customResendKey = typeof window !== 'undefined' ? localStorage.getItem('op_resend_api_key') || '' : '';
+      const customGeminiKey = typeof window !== 'undefined' ? localStorage.getItem('op_gemini_api_key') || '' : '';
+      const adminSession = typeof window !== 'undefined' ? localStorage.getItem('op_session') || '' : '';
+
+      const headers: Record<string, string> = {};
+      if (customSupabaseUrl) headers['x-supabase-url'] = customSupabaseUrl;
+      if (customSupabaseKey) headers['x-supabase-anon-key'] = customSupabaseKey;
+      if (customResendKey) headers['x-resend-api-key'] = customResendKey;
+      if (customGeminiKey) headers['x-gemini-api-key'] = customGeminiKey;
+      if (adminSession === 'true') headers['x-admin-session'] = 'true';
+
+      const res = await fetch('/api/health', { 
+        method: 'GET', 
+        headers,
+        cache: 'no-store' 
+      });
       if (res.ok) {
         const results: ServiceHealth[] = await res.json();
         const map: any = {};

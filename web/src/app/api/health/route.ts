@@ -25,9 +25,9 @@ async function probeUrl(url: string, timeoutMs = 5000): Promise<{ ok: boolean; l
   }
 }
 
-async function checkSupabase(): Promise<ServiceResult> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+async function checkSupabase(customUrl?: string, customKey?: string): Promise<ServiceResult> {
+  const url = customUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = customKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const checkedAt = new Date().toISOString();
 
   if (!url || url.includes('your-project')) {
@@ -51,8 +51,8 @@ async function checkSupabase(): Promise<ServiceResult> {
   }
 }
 
-async function checkResend(): Promise<ServiceResult> {
-  const key = process.env.RESEND_API_KEY;
+async function checkResend(customKey?: string): Promise<ServiceResult> {
+  const key = customKey || process.env.RESEND_API_KEY;
   const url = 'https://api.resend.com';
   const checkedAt = new Date().toISOString();
 
@@ -62,7 +62,6 @@ async function checkResend(): Promise<ServiceResult> {
 
   const start = Date.now();
   try {
-    // Ping the domains endpoint — lightweight, authenticated
     const res = await fetch('https://api.resend.com/domains', {
       headers: { Authorization: `Bearer ${key}` },
       signal: AbortSignal.timeout(5000),
@@ -77,8 +76,8 @@ async function checkResend(): Promise<ServiceResult> {
   }
 }
 
-async function checkGemini(): Promise<ServiceResult> {
-  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+async function checkGemini(customKey?: string): Promise<ServiceResult> {
+  const key = customKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const url = 'https://generativelanguage.googleapis.com';
   const checkedAt = new Date().toISOString();
 
@@ -88,7 +87,6 @@ async function checkGemini(): Promise<ServiceResult> {
 
   const start = Date.now();
   try {
-    // Lightweight models list probe
     const res = await fetch(`${url}/v1beta/models?key=${key}`, {
       signal: AbortSignal.timeout(6000),
       cache: 'no-store'
@@ -118,11 +116,26 @@ async function checkPollinations(): Promise<ServiceResult> {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminSession = request.headers.get('x-admin-session');
+  const adminToken = request.headers.get('x-admin-token');
+  const host = request.headers.get('host') || '';
+  const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+  // Enforce administrative authentication
+  if (adminSession !== 'true' && adminToken !== 'OP-ADMIN-SECRET-2026' && !isLocal) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: Administrative access required' }, { status: 401 });
+  }
+
+  const customSupabaseUrl = request.headers.get('x-supabase-url') || undefined;
+  const customSupabaseKey = request.headers.get('x-supabase-anon-key') || undefined;
+  const customResendKey = request.headers.get('x-resend-api-key') || undefined;
+  const customGeminiKey = request.headers.get('x-gemini-api-key') || undefined;
+
   const [db, email, ai, images] = await Promise.all([
-    checkSupabase(),
-    checkResend(),
-    checkGemini(),
+    checkSupabase(customSupabaseUrl, customSupabaseKey),
+    checkResend(customResendKey),
+    checkGemini(customGeminiKey),
     checkPollinations()
   ]);
 

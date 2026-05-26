@@ -1582,7 +1582,7 @@ export default function AdminCurriculumPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-955 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
       <TopNav />
       
       <div className="max-w-7xl mx-auto px-8 pt-32 pb-24">
