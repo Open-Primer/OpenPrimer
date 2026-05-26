@@ -691,14 +691,14 @@ export const CatalogPage = () => {
                 <Link 
                   href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
                   onClick={(e) => {
-                    if (!isEnrolled) {
+                    if (isLoggedIn && !isEnrolled) {
                       e.preventDefault();
                       setSelectedEnrollCourse(course);
                     }
                   }}
                   className="group block h-full"
                 >
-                  <div className="p-8 bg-slate-900/40 border border-slate-800/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
+                  <div className="p-8 bg-slate-900/40 border border-slate-880/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
                     
                     {/* Ultra Flashy corner diagonal Ribbon */}
                     {isCourseNew(course) && (
@@ -733,7 +733,7 @@ export const CatalogPage = () => {
                           </button>
                         )}
                         {/* Level badge */}
-                        <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                        <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
                           {formatCourseLevel(course.level)}
                         </span>
                       </div>
@@ -762,7 +762,7 @@ export const CatalogPage = () => {
                     <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
                       <button 
                         onClick={(e) => {
-                          if (!isEnrolled) {
+                          if (isLoggedIn && !isEnrolled) {
                             e.preventDefault();
                             e.stopPropagation();
                             setSelectedEnrollCourse(course);
@@ -770,7 +770,7 @@ export const CatalogPage = () => {
                         }}
                         className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isEnrolled ? 'bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white' : 'bg-emerald-600/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-600 hover:text-white'}`}
                       >
-                         {isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
+                         {!isLoggedIn ? (lang === 'FR' ? 'Commencer à apprendre' : 'Start learning') : isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
                       </button>
                       <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>

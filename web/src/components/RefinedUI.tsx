@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
@@ -257,6 +257,23 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const pathname = usePathname();
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
 
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  useEffect(() => {
+    const updateAuth = () => {
+      const session = localStorage.getItem('op_session');
+      setIsLoggedIn(session !== 'false');
+    };
+    updateAuth();
+    window.addEventListener('storage', updateAuth);
+    window.addEventListener('op_auth_state_changed', updateAuth);
+    return () => {
+      window.removeEventListener('storage', updateAuth);
+      window.removeEventListener('op_auth_state_changed', updateAuth);
+    };
+  }, []);
+
   // Periodic health check with auto-reconnection loop
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -333,6 +350,12 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     const selected = personalities.find(p => p.name === personaName);
     if (selected) {
       localStorage.setItem('op_active_tutor_personality', selected.id);
+    }
+  };
+
+  const handleAuthClick = (mode: 'login' | 'signup') => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: mode }));
     }
   };
 
@@ -464,6 +487,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                      value={persona} 
                      onChange={(e) => handlePersonaChange(e.target.value)}
                      className="bg-transparent text-sm font-bold text-white focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
+                     disabled={!isLoggedIn}
                    >
                      {personalities.map(p => (
                        <option key={p.id} value={p.name} className="bg-slate-900 text-white">{p.name}</option>
@@ -474,54 +498,123 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
-            {/* Offline Connection Loss banner */}
-            <AnimatePresence>
-              {isOffline && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="px-6 py-3 bg-red-500/10 border-b border-red-500/20 text-red-400 flex items-center justify-between text-[10px] font-black uppercase tracking-widest gap-2 shrink-0 overflow-hidden"
-                >
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>{lang === 'FR' ? 'Connexion perdue... reconnexion' : 'Lost connection... retrying'}</span>
-                  </div>
-                  <div className="bg-red-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse shrink-0">
-                    {lang === 'FR' ? 'Service Dégradé' : 'Degraded Service'}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {!isLoggedIn ? (
+              <div className="flex-1 flex flex-col justify-center items-center p-8 text-center space-y-6 bg-slate-950/20">
+                <div className="w-16 h-16 rounded-3xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 animate-bounce">
+                  <Lock className="w-7 h-7" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black tracking-tight text-white">
+                    {lang === 'FR' ? "Tuteur Socratique IA" : "Socratic AI Tutor"}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed max-w-[280px]">
+                    {lang === 'FR' ? "Posez des questions, demandez des simplifications ou testez vos compétences en temps réel." : "Ask questions, request simplifications, or test your skills in real-time."}
+                  </p>
+                </div>
+                <div className="w-full space-y-2.5 pt-4">
+                  <button 
+                    onClick={() => handleAuthClick('signup')}
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
+                  >
+                    {lang === 'FR' ? "S'inscrire Gratuitement" : "Sign Up to Unlock"}
+                  </button>
+                  <button 
+                    onClick={() => handleAuthClick('login')}
+                    className="w-full py-3.5 bg-slate-800 border border-slate-750 text-slate-300 font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:text-white hover:border-slate-700 cursor-pointer"
+                  >
+                    {lang === 'FR' ? "Se Connecter" : "Log In"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Offline Connection Loss banner */}
+                <AnimatePresence>
+                  {isOffline && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="px-6 py-3 bg-red-500/10 border-b border-red-500/20 text-red-400 flex items-center justify-between text-[10px] font-black uppercase tracking-widest gap-2 shrink-0 overflow-hidden"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{lang === 'FR' ? 'Connexion perdue... reconnexion' : 'Lost connection... retrying'}</span>
+                      </div>
+                      <div className="bg-red-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse shrink-0">
+                        {lang === 'FR' ? 'Service Dégradé' : 'Degraded Service'}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
-                    {msg.content}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                  {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
+                   {QUICK_ACTIONS.map(qa => (
+                     <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
+                       {qa.icon} {qa.label}
+                     </button>
+                   ))}
+                </div>
+
+                <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
+                  <div className="relative">
+                    <input disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
+                    <button disabled={isOffline} onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"><Send className="w-4 h-4" /></button>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
-               {QUICK_ACTIONS.map(qa => (
-                 <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
-                   {qa.icon} {qa.label}
-                 </button>
-               ))}
-            </div>
-
-            <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
-              <div className="relative">
-                <input disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
-                <button disabled={isOffline} onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"><Send className="w-4 h-4" /></button>
-              </div>
-            </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpen(!isOpen)} className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group">
+
+      {/* Guest Hover Sign-In Tooltip */}
+      <AnimatePresence>
+        {showTooltip && !isLoggedIn && !isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="absolute bottom-20 right-0 w-72 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl backdrop-blur-3xl space-y-3 z-50 text-left"
+          >
+            <div className="flex items-center gap-2 text-blue-400">
+              <Sparkles className="w-4 h-4 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Socratic AI Features</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {lang === 'FR' ? "Connectez-vous pour débloquer les explications interactives et le tuteur socratique IA." : "Sign in to access free AI features and personalized socratic feedback."}
+            </p>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAuthClick('signup');
+              }}
+              className="w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg cursor-pointer text-center"
+            >
+              {lang === 'FR' ? "Créer un Compte" : "Sign Up"}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button 
+        whileHover={{ scale: 1.1 }} 
+        whileTap={{ scale: 0.9 }} 
+        onClick={() => setIsOpen(!isOpen)}
+        onMouseEnter={() => !isLoggedIn && setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group cursor-pointer"
+      >
         <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
       </motion.button>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Info, CheckCircle2, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
@@ -94,8 +94,18 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [input, setInput] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    setIsLoggedIn(session !== 'false');
+  }, []);
 
   const check = () => {
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
+      return;
+    }
     if (input.toLowerCase().trim() === answer.toLowerCase().trim()) {
       setIsCorrect(true);
     } else {
@@ -111,15 +121,21 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
         onChange={(e) => setInput(e.target.value)}
         className={`bg-slate-950 border ${isCorrect === true ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all`}
         placeholder={t.placeholder_answer}
+        disabled={!isLoggedIn}
       />
       <span className="text-slate-300 font-medium">{sentence.split('[...]')[1]}</span>
       <button 
         onClick={check}
         className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
       >
-        {t.validate}
+        {!isLoggedIn ? (language === 'FR' ? 'Débloquer' : 'Unlock') : t.validate}
       </button>
       {isCorrect === true && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-pulse" />}
+      {!isLoggedIn && (
+        <span className="text-[10px] font-bold text-slate-500 block w-full mt-2">
+          {language === 'FR' ? "💡 Connectez-vous pour valider vos exercices interactifs." : "💡 Sign in to validate your interactive exercises."}
+        </span>
+      )}
     </div>
   );
 };
@@ -146,8 +162,18 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
   const [text, setText] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    setIsLoggedIn(session !== 'false');
+  }, []);
 
   const analyze = async () => {
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
+      return;
+    }
     setIsLoading(true);
     setTimeout(() => {
       setFeedback(`${t.feynman_feedback} "${concept}" : ${t.feynman_feedback_text}`);
@@ -156,7 +182,7 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
   };
 
   return (
-    <div className="my-8 p-8 rounded-[40px] bg-indigo-600/5 border border-indigo-600/20">
+    <div className="my-8 p-8 rounded-[40px] bg-indigo-600/5 border border-indigo-600/20 relative overflow-hidden">
       <h4 className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
         {t.feynman_title} {concept}
       </h4>
@@ -164,15 +190,16 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
       <textarea 
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full h-32 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white outline-none focus:border-indigo-500 transition-all resize-none text-white"
+        className="w-full h-32 bg-slate-950 border border-slate-800 rounded-2xl p-4 outline-none focus:border-indigo-500 transition-all resize-none text-white disabled:opacity-40"
         placeholder={t.feynman_placeholder}
+        disabled={!isLoggedIn}
       />
       <button 
         onClick={analyze}
         disabled={isLoading}
         className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
       >
-        {isLoading ? t.feynman_submitting : t.feynman_submit}
+        {!isLoggedIn ? (language === 'FR' ? 'Débloquer l\'Analyse IA' : 'Unlock AI Analysis') : isLoading ? t.feynman_submitting : t.feynman_submit}
       </button>
       {feedback && (
         <motion.div 
@@ -182,6 +209,25 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
         >
           {feedback}
         </motion.div>
+      )}
+      {!isLoggedIn && (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 animate-pulse">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <div>
+            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Analyse Feynman active" : "Active Feynman Analysis"}</h5>
+            <p className="text-[11px] text-slate-400 max-w-[240px] mt-1">
+              {language === 'FR' ? "Rejoignez la communauté pour analyser vos explications par IA." : "Join the community to unlock recursive AI diagnostics on your explanations."}
+            </p>
+          </div>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
+          >
+            {language === 'FR' ? "S'inscrire et s'exercer" : "Sign Up to Practice"}
+          </button>
+        </div>
       )}
     </div>
   );
@@ -194,9 +240,23 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const safeOptions = Array.isArray(options) ? options : [];
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    setIsLoggedIn(session !== 'false');
+  }, []);
+
+  const handleSelect = (idx: number) => {
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
+      return;
+    }
+    setSelected(idx);
+  };
 
   return (
-    <div className="my-10 p-8 rounded-[40px] bg-amber-600/5 border border-amber-600/20">
+    <div className="my-10 p-8 rounded-[40px] bg-amber-600/5 border border-amber-600/20 relative overflow-hidden">
       <h4 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
         {t.predict_title}
       </h4>
@@ -205,14 +265,14 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
         {safeOptions.map((opt, i) => (
           <button
             key={i}
-            onClick={() => setSelected(i)}
+            onClick={() => handleSelect(i)}
             className={`w-full text-left p-4 rounded-2xl border transition-all ${selected === i ? 'bg-amber-600/20 border-amber-500 text-amber-200 cursor-default' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 cursor-pointer'}`}
           >
             {opt}
           </button>
         ))}
       </div>
-      {!revealed && selected !== null && (
+      {!revealed && selected !== null && isLoggedIn && (
         <button 
           onClick={() => setRevealed(true)}
           className="mt-6 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
@@ -220,7 +280,7 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
           {t.predict_reveal}
         </button>
       )}
-      {revealed && (
+      {revealed && isLoggedIn && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -229,6 +289,25 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
           <span className="font-bold uppercase text-[10px] block mb-2 tracking-widest">{t.predict_explanation}</span>
           {t.predict_exp_desc}
         </motion.div>
+      )}
+      {!isLoggedIn && (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-600/10 border border-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <div>
+            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Défi de Prédiction Protégé" : "Protected Prediction Challenge"}</h5>
+            <p className="text-[11px] text-slate-400 max-w-[240px] mt-1">
+              {language === 'FR' ? "Connectez-vous pour voter et débloquer les réponses théoriques détaillées." : "Sign in to vote and reveal full conceptual explanations."}
+            </p>
+          </div>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
+            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-amber-600/20"
+          >
+            {language === 'FR' ? "Se connecter et voter" : "Sign In to Vote"}
+          </button>
+        </div>
       )}
     </div>
   );
