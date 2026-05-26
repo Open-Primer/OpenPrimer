@@ -777,7 +777,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           <OpenPrimerIcon className="w-9 h-9" />
           <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
         </Link>
-        <Link href="/catalog" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors ml-4 hidden md:block">
+        <Link href="/catalog" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-400 transition-colors ml-4 hidden md:block">
            {t.catalog}
         </Link>
       </div>

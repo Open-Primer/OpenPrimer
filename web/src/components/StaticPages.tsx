@@ -497,7 +497,7 @@ export const CatalogPage = () => {
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session !== 'false');
+    setIsLoggedIn(session === 'true');
 
     const savedBookmarks = localStorage.getItem('op_bookmarks');
     if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
@@ -633,11 +633,22 @@ export const CatalogPage = () => {
             <h1 className="text-5xl md:text-6xl font-black tracking-tight pb-2 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {t.catalog}
             </h1>
-            <div className="flex items-center gap-2 text-slate-500">
-               <Globe className="w-4 h-4" />
-               <p className="font-semibold text-xs uppercase tracking-wider">
-                 Language: {lang === 'FR' ? 'Français' : lang === 'ES' ? 'Español' : lang === 'DE' ? 'Deutsch' : lang === 'ZH' ? '中文' : 'English'}
-               </p>
+            <div className="flex flex-col gap-1.5 mt-2">
+               <div className="flex items-center gap-2 text-slate-500">
+                  <Globe className="w-4 h-4" />
+                  <p className="font-semibold text-xs uppercase tracking-wider">
+                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? '当前语言：' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'Français' : lang.toUpperCase() === 'ES' ? 'Español' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? '中文' : 'English'}
+                  </p>
+               </div>
+               {!isLoggedIn && (
+                 <p className="text-[10px] text-slate-600 font-medium italic mt-1 leading-relaxed max-w-sm">
+                   {lang.toUpperCase() === 'FR' ? '💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d\'autres langues.' : 
+                    lang.toUpperCase() === 'ES' ? '💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.' : 
+                    lang.toUpperCase() === 'DE' ? '💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
+                    lang.toUpperCase() === 'ZH' ? '💡 在顶部导航栏中切换语言，即可探索其他语言的课程。' : 
+                    '💡 Change the language in the top navigation bar to discover courses in other languages.'}
+                 </p>
+               )}
             </div>
           </div>
           

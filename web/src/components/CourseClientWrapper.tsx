@@ -26,7 +26,7 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.default}`}>
+    <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.default}`}>
       <TopNav toggleSidebar={() => setSidebarOpen(!sidebarOpen)} isCoursePage={true} />
       
       <div className="flex pt-16 h-[calc(100vh-64px)] overflow-hidden">

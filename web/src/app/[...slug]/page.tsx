@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getPageContent, getNavigationTree } from '@/lib/content';
+import { getPageContent, getNavigationTree, getFirstAvailableLanguage } from '@/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -13,12 +13,22 @@ import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback'
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
+  let autoSwitched = false;
   try {
     const { slug } = await params;
     const cookieStore = await cookies();
     lang = (cookieStore.get('openprimer_lang')?.value || 'EN').toLowerCase();
 
-    const pageData = await getPageContent(slug, lang);
+    let pageData = await getPageContent(slug, lang);
+    if (!pageData) {
+      const altLang = await getFirstAvailableLanguage(slug);
+      if (altLang) {
+        lang = altLang.toLowerCase();
+        pageData = await getPageContent(slug, lang);
+        autoSwitched = true;
+      }
+    }
+
     if (!pageData) return notFound();
 
     // Serialize MDX on the server — safe to pass to client components
@@ -93,7 +103,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-12">
+          <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-12 distraction-free-hide">
             <Link href="/catalog" className="hover:text-blue-500 transition-colors">{subject}</Link>
             <ChevronRight className="w-3 h-3 text-slate-800" />
             <span className="text-slate-500">{moduleName}</span>
@@ -102,13 +112,13 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           </div>
 
           <header className="mb-12 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 text-blue-500/80 text-[8px] font-black uppercase tracking-widest mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 text-blue-500/80 text-[8px] font-black uppercase tracking-widest mb-4 distraction-free-hide">
               {getLocalizedCoreModule(lang, level)}
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {title}
             </h1>
-            <div className="w-16 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 rounded-full mx-auto md:mx-0" />
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 rounded-full mx-auto md:mx-0 distraction-free-hide" />
           </header>
 
           <article className="prose prose-invert prose-slate max-w-none 
@@ -122,7 +132,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           </article>
 
           {/* Course Footer Metadata */}
-          <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 distraction-free-hide">
             <div className="flex items-center gap-6">
               {/* Fluff removed */}
             </div>
@@ -152,6 +162,19 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               courseTitle={title} 
               lang={lang} 
             />
+          )}
+          {autoSwitched && (
+            <script dangerouslySetInnerHTML={{ __html: `
+              document.cookie = "openprimer_lang=${lang.toUpperCase()}; path=/; max-age=31536000; SameSite=Lax";
+              localStorage.setItem("openprimer_lang", "${lang.toUpperCase()}");
+              try {
+                const profile = JSON.parse(localStorage.getItem("op_user_profile") || "{}");
+                if (profile && Object.keys(profile).length > 0) {
+                  profile.preferredLang = "${lang.toLowerCase()}";
+                  localStorage.setItem("op_user_profile", JSON.stringify(profile));
+                }
+              } catch(e){}
+            ` }} />
           )}
         </div>
       </CourseClientWrapper>

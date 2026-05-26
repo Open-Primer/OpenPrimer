@@ -55,3 +55,197 @@ nextjs-portal {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ==========================================
+   PREMIUM READING MODE OVERRIDES
+   ========================================== */
+
+/* --- 1. PAPER THEME (WARM LITERARY CONTRAST) --- */
+.theme-paper {
+  background-color: #fcfaf2 !important;
+  color: #0f172a !important; /* Slate-900 */
+}
+
+/* Sidebar styling in Paper Theme */
+.theme-paper aside {
+  background-color: #f6f3e8 !important;
+  border-right: 1px solid #e7e2d1 !important;
+}
+.theme-paper aside h4 {
+  color: #78716c !important;
+}
+.theme-paper aside a {
+  color: #44403c !important;
+}
+.theme-paper aside a:hover {
+  background-color: #ede9d9 !important;
+  color: #1c1917 !important;
+}
+.theme-paper aside a.bg-blue-600\/10,
+.theme-paper aside a.bg-blue-600\\\/10 {
+  background-color: #e5e0cf !important;
+  color: #2563eb !important;
+}
+
+/* Top Nav styling in Paper Theme */
+.theme-paper nav {
+  background-color: rgba(246, 243, 232, 0.9) !important;
+  border-bottom: 1px solid #e7e2d1 !important;
+}
+.theme-paper nav span.text-white {
+  color: #1e293b !important;
+}
+.theme-paper nav a.text-slate-400 {
+  color: #475569 !important;
+}
+.theme-paper nav a.text-slate-400:hover {
+  color: #2563eb !important;
+}
+.theme-paper nav button {
+  background-color: #ede9d9 !important;
+  border-color: #dbd5c5 !important;
+  color: #1c1917 !important;
+}
+.theme-paper nav span.text-slate-400 {
+  color: #475569 !important;
+}
+
+/* Main Content Area styling in Paper Theme */
+.theme-paper main {
+  background-color: #fcfaf2 !important;
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+}
+.theme-paper h1.bg-clip-text {
+  background-image: none !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+/* Markdown MDX Prose Overrides for High Contrast Paper Reading */
+.theme-paper .prose {
+  color: #0f172a !important;
+}
+.theme-paper .prose p,
+.theme-paper .prose li,
+.theme-paper .prose-p {
+  color: #1e293b !important;
+  font-size: 1.15rem !important;
+  line-height: 1.9 !important;
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+}
+.theme-paper .prose h1,
+.theme-paper .prose h2,
+.theme-paper .prose h3,
+.theme-paper .prose h4 {
+  color: #020617 !important;
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+  font-weight: 800 !important;
+}
+.theme-paper .prose h2 {
+  border-bottom: 1px solid #e7e2d1 !important;
+}
+.theme-paper .prose strong {
+  color: #1d4ed8 !important; /* Elegant dark blue */
+  font-weight: 800 !important;
+}
+.theme-paper .prose blockquote {
+  background-color: #ede9d9 !important;
+  border-left-color: #2563eb !important;
+  color: #1c1917 !important;
+}
+.theme-paper .prose code {
+  color: #b91c1c !important; /* Elegant deep red code */
+  background-color: #ede9d9 !important;
+}
+
+
+/* --- 2. FOCUS THEME (DISTRACTION-FREE MONOCHROME PITCH BLACK) --- */
+.theme-focus {
+  background-color: #000000 !important;
+  color: #94a3b8 !important; /* Slate-400 */
+}
+
+/* Sidebar styling in Focus Theme (ultra-minimalist) */
+.theme-focus aside {
+  background-color: #000000 !important;
+  border-right: 1px solid #111827 !important;
+}
+.theme-focus aside input {
+  background-color: #050505 !important;
+  border-color: #111827 !important;
+}
+.theme-focus aside h4 {
+  color: #4b5563 !important;
+}
+.theme-focus aside a {
+  color: #4b5563 !important;
+}
+.theme-focus aside a:hover {
+  background-color: #050505 !important;
+  color: #d1d5db !important;
+}
+.theme-focus aside a.bg-blue-600\/10,
+.theme-focus aside a.bg-blue-600\\\/10 {
+  background-color: #111827 !important;
+  color: #38bdf8 !important; /* Neon Sky Blue focus */
+}
+
+/* Top Nav styling in Focus Theme */
+.theme-focus nav {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  border-bottom: 1px solid #111827 !important;
+}
+
+/* Main Content Area styling in Focus Theme */
+.theme-focus main {
+  background-color: #000000 !important;
+}
+.theme-focus h1.bg-clip-text {
+  background-image: none !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  color: #ffffff !important; /* Solid High Contrast White */
+  font-weight: 900 !important;
+}
+
+/* Markdown MDX Prose Overrides for Focus Mode */
+.theme-focus .prose {
+  color: #cbd5e1 !important; /* Crisp light gray body */
+}
+.theme-focus .prose p,
+.theme-focus .prose li,
+.theme-focus .prose-p {
+  color: #9ca3af !important;
+  font-size: 1.05rem !important;
+  line-height: 1.8 !important;
+}
+.theme-focus .prose h1,
+.theme-focus .prose h2,
+.theme-focus .prose h3,
+.theme-focus .prose h4 {
+  color: #ffffff !important;
+}
+.theme-focus .prose h2 {
+  border-bottom: 1px solid #111827 !important;
+}
+.theme-focus .prose strong {
+  color: #38bdf8 !important; /* Sky Blue accent for key terms */
+  font-weight: 800 !important;
+}
+.theme-focus .prose blockquote {
+  background-color: #050505 !important;
+  border-left-color: #38bdf8 !important;
+  color: #9ca3af !important;
+}
+.theme-focus .prose code {
+  color: #34d399 !important; /* Crisp neon emerald code */
+  background-color: #090d16 !important;
+}
+
+/* Hide Distracting Metadata, badges, and lines in Focus Mode */
+.theme-focus .distraction-free-hide {
+  display: none !important;
+}
+

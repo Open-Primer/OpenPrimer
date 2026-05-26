@@ -78,3 +78,26 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
     content
   };
 }
+
+export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
+  const baseFilePath = path.join(CONTENT_PATH, ...slug);
+  const dirPath = path.dirname(baseFilePath);
+  const baseName = path.basename(baseFilePath);
+  
+  if (!fs.existsSync(dirPath)) return null;
+  
+  try {
+    const files = fs.readdirSync(dirPath);
+    for (const file of files) {
+      if (file.startsWith(baseName + '.')) {
+        const parts = file.split('.');
+        if (parts.length >= 3 && parts[parts.length - 1] === 'mdx') {
+          return parts[parts.length - 2];
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Error reading dir for available languages:", e);
+  }
+  return null;
+}
