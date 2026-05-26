@@ -398,6 +398,7 @@ export const CatalogPage = () => {
   // Dynamic Enrollment States
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+  const [userProgress, setUserProgress] = useState<any>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -473,11 +474,17 @@ export const CatalogPage = () => {
   };
 
   useEffect(() => {
-    async function loadCourses() {
+    async function loadCoursesAndProgress() {
       const { data } = await dbService.getAllCourses();
       if (data) setCourses(data);
+      try {
+        const progressData = await dbService.getUserProgress('u1');
+        if (progressData) setUserProgress(progressData);
+      } catch (err) {
+        console.error("Failed to load user progress", err);
+      }
     }
-    loadCourses();
+    loadCoursesAndProgress();
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -686,6 +693,8 @@ export const CatalogPage = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCourses.length > 0 ? filteredCourses.map((course) => {
             const isEnrolled = enrolledIds.includes(course.id);
+            const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || m.title_key === course.title_key);
+            const progressPercent = activeModule ? activeModule.progress : 12;
             return (
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
                 <Link 
@@ -750,11 +759,11 @@ export const CatalogPage = () => {
                     {isLoggedIn && isEnrolled && (
                       <div className="mb-6">
                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[8px] font-black uppercase text-slate-600">Progress</span>
-                            <span className="text-[8px] font-black text-blue-500">24%</span>
+                            <span className="text-[8px] font-black uppercase text-slate-600">{lang === 'FR' ? 'Progression' : 'Progress'}</span>
+                            <span className="text-[8px] font-black text-blue-500">{progressPercent}%</span>
                          </div>
                          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="w-[24%] h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                            <div className="h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" style={{ width: `${progressPercent}%` }} />
                          </div>
                       </div>
                     )}

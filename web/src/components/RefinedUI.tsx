@@ -507,8 +507,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                   <h3 className="text-lg font-black tracking-tight text-white">
                     {lang === 'FR' ? "Tuteur Socratique IA" : "Socratic AI Tutor"}
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed max-w-[280px]">
-                    {lang === 'FR' ? "Posez des questions, demandez des simplifications ou testez vos compétences en temps réel." : "Ask questions, request simplifications, or test your skills in real-time."}
+                  <p className="text-xs text-slate-400 leading-relaxed max-w-[300px]">
+                    {lang === 'FR' 
+                      ? "Le contenu pédagogique est libre et gratuit. Cependant, l'interaction avec le Tuteur IA nécessite une connexion afin d'initialiser votre session et gérer votre suivi pédagogique au mieux." 
+                      : "Course materials are completely free. However, AI interaction requires being signed in to initialize your session context and track your pedagogical progress at its best."}
                   </p>
                 </div>
                 <div className="w-full space-y-2.5 pt-4">
@@ -592,7 +594,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               <span className="text-[10px] font-black uppercase tracking-widest">Socratic AI Features</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              {lang === 'FR' ? "Connectez-vous pour débloquer les explications interactives et le tuteur socratique IA." : "Sign in to access free AI features and personalized socratic feedback."}
+              {lang === 'FR' 
+                ? "L'interaction pédagogique avec l'IA nécessite une connexion active afin de gérer votre suivi au mieux." 
+                : "Interactive AI diagnostics require a signed-in session to track your pedagogical progress at its best."}
             </p>
             <button 
               onClick={(e) => {

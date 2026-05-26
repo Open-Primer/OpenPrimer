@@ -132,8 +132,10 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
       </button>
       {isCorrect === true && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-pulse" />}
       {!isLoggedIn && (
-        <span className="text-[10px] font-bold text-slate-500 block w-full mt-2">
-          {language === 'FR' ? "💡 Connectez-vous pour valider vos exercices interactifs." : "💡 Sign in to validate your interactive exercises."}
+        <span className="text-[10px] font-bold text-slate-550 block w-full mt-2">
+          {language === 'FR' 
+            ? "💡 Les exercices interactifs nécessitent d'être connecté pour gérer votre suivi pédagogique au mieux." 
+            : "💡 Interactive exercises require a signed-in session to track your pedagogical progress at its best."}
         </span>
       )}
     </div>
@@ -217,8 +219,10 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
           </div>
           <div>
             <h5 className="text-sm font-black text-white">{language === 'FR' ? "Analyse Feynman active" : "Active Feynman Analysis"}</h5>
-            <p className="text-[11px] text-slate-400 max-w-[240px] mt-1">
-              {language === 'FR' ? "Rejoignez la communauté pour analyser vos explications par IA." : "Join the community to unlock recursive AI diagnostics on your explanations."}
+            <p className="text-[11px] text-slate-400 max-w-[280px] mt-1">
+              {language === 'FR' 
+                ? "L'analyse et la validation récursive par l'IA nécessitent une connexion active afin de gérer votre suivi pédagogique au mieux." 
+                : "Dynamic verification and recursive AI analysis require a signed-in session to manage your pedagogical progress at its best."}
             </p>
           </div>
           <button 
@@ -297,8 +301,10 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
           </div>
           <div>
             <h5 className="text-sm font-black text-white">{language === 'FR' ? "Défi de Prédiction Protégé" : "Protected Prediction Challenge"}</h5>
-            <p className="text-[11px] text-slate-400 max-w-[240px] mt-1">
-              {language === 'FR' ? "Connectez-vous pour voter et débloquer les réponses théoriques détaillées." : "Sign in to vote and reveal full conceptual explanations."}
+            <p className="text-[11px] text-slate-400 max-w-[280px] mt-1">
+              {language === 'FR' 
+                ? "La soumission de prédictions et l'analyse théorique détaillée nécessitent d'être connecté afin de gérer votre suivi pédagogique au mieux." 
+                : "Submitting predictions and unlocking analytical theoretical details require a signed-in session to manage your pedagogical progress at its best."}
             </p>
           </div>
           <button 

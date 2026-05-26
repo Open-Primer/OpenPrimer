@@ -171,17 +171,6 @@ export default function Home() {
       return;
     }
 
-    // Advanced Password Complexity Validation on Login
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setErrorMsg(
-        lang === 'FR' 
-          ? 'Le mot de passe doit contenir au moins 8 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.' 
-          : 'Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'
-      );
-      return;
-    }
-
     const isVerified = localStorage.getItem('op_registration_verified') === 'true';
     const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 
