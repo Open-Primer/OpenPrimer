@@ -334,14 +334,85 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     }
   }, [messages, courseSlug, lang]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const content = text || input;
     if (!content.trim()) return;
-    setMessages(prev => [...prev, { role: 'user', content }]);
+    
+    const newMessages = [...messages, { role: 'user', content }];
+    setMessages(newMessages);
     if (!text) setInput('');
-    setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: `[${persona}] ${t.analysis}` }]);
-    }, 1200);
+
+    // Append an assistant slot that we will stream into
+    setMessages(prev => [...prev, { role: 'assistant', content: '...' }]);
+    
+    try {
+      const response = await fetch('/api/tutor/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMessages,
+          persona,
+          pageContext: pageContext || '',
+          language: lang
+        })
+      });
+
+      if (!response.body) {
+        throw new Error("No response stream");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulatedText = '';
+      let firstChunk = true;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            try {
+              const dataStr = line.slice(5).trim();
+              if (!dataStr) continue;
+              const parsed = JSON.parse(dataStr);
+              if (parsed.text) {
+                if (firstChunk) {
+                  accumulatedText = parsed.text;
+                  firstChunk = false;
+                } else {
+                  accumulatedText += parsed.text;
+                }
+                setMessages(prev => {
+                  const updated = [...prev];
+                  if (updated.length > 0) {
+                    updated[updated.length - 1] = { role: 'assistant', content: accumulatedText };
+                  }
+                  return updated;
+                });
+              }
+            } catch (err) {}
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Streaming error", err);
+      setMessages(prev => {
+        const updated = [...prev];
+        if (updated.length > 0) {
+          updated[updated.length - 1] = { 
+            role: 'assistant', 
+            content: lang === 'FR' 
+              ? "Désolé, une erreur est survenue lors de la communication avec le tuteur. Veuillez réessayer." 
+              : "Sorry, an error occurred while communicating with the tutor. Please try again."
+          };
+         }
+         return updated;
+       });
+     }
   };
 
   return (

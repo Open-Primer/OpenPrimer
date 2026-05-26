@@ -506,6 +506,131 @@ export default function AdminCurriculumPage() {
   const [editGeneratedBadges, setEditGeneratedBadges] = useState<string[]>([]);
   const [isEditGeneratingBadges, setIsEditGeneratingBadges] = useState(false);
 
+  const getGradientColors = (gradient: string): [string, string] => {
+    const map: Record<string, [string, string]> = {
+      'from-violet-500 to-fuchsia-600': ['#8b5cf6', '#d946ef'],
+      'from-amber-400 to-orange-500': ['#fbbf24', '#f97316'],
+      'from-yellow-400 to-amber-500': ['#facc15', '#f59e0b'],
+      'from-red-500 to-orange-500': ['#ef4444', '#f97316'],
+      'from-yellow-300 to-yellow-500': ['#fde047', '#eab308'],
+      'from-blue-400 to-cyan-500': ['#60a5fa', '#06b6d4'],
+      'from-indigo-400 to-purple-600': ['#818cf8', '#9333ea'],
+      'from-yellow-500 to-amber-600': ['#eab308', '#d97706'],
+      'from-emerald-400 to-teal-500': ['#34d399', '#14b8a6'],
+      'from-teal-400 to-cyan-500': ['#2dd4bf', '#06b6d4'],
+      'from-green-400 to-emerald-600': ['#4ade80', '#059669'],
+      'from-pink-400 to-rose-600': ['#f472b6', '#e11d48'],
+      'from-cyan-400 to-blue-500': ['#22d3ee', '#3b82f6'],
+      'from-slate-300 to-slate-500': ['#cbd5e1', '#64748b'],
+      'from-rose-500 to-red-650': ['#f43f5e', '#dc2626'],
+      'from-rose-500 to-red-600': ['#f43f5e', '#dc2626'],
+      'from-pink-500 to-rose-500': ['#ec4899', '#f43f5e'],
+      'from-blue-500 to-indigo-500': ['#3b82f6', '#6366f1'],
+      'from-amber-500 to-emerald-500': ['#f59e0b', '#10b981'],
+      'from-cyan-500 to-blue-600': ['#06b6d4', '#2563eb'],
+      'from-red-600 to-rose-600': ['#dc2626', '#e11d48'],
+      'from-slate-700 to-slate-900': ['#334155', '#0f172a'],
+      'from-sky-400 to-blue-500': ['#38bdf8', '#3b82f6'],
+      'from-yellow-600 to-amber-600': ['#ca8a04', '#d97706'],
+      'from-red-500 to-rose-700': ['#ef4444', '#be123c'],
+      'from-amber-300 to-yellow-400': ['#fcd34d', '#facc15'],
+      'from-orange-500 to-red-655': ['#f97316', '#dc2626'],
+      'from-orange-500 to-red-650': ['#f97316', '#dc2626'],
+      'from-slate-400 to-slate-600': ['#94a3b8', '#475569'],
+      'from-violet-400 to-indigo-600': ['#a78bfa', '#4f46e5'],
+      'from-amber-500 to-yellow-600': ['#f59e0b', '#ca8a04'],
+      'from-orange-400 to-pink-500': ['#fb923c', '#ec4899'],
+      'from-teal-400 to-emerald-500': ['#2dd4bf', '#10b981'],
+      'from-purple-500 to-pink-500': ['#a855f7', '#ec4899'],
+      'from-blue-600 to-indigo-700': ['#2563eb', '#4338ca'],
+      'from-slate-500 to-slate-700': ['#64748b', '#334155'],
+      'from-indigo-500 to-pink-500': ['#6366f1', '#ec4899'],
+      'from-red-400 to-rose-600': ['#f87171', '#e11d48'],
+      'from-teal-500 to-cyan-600': ['#14b8a6', '#0891b2'],
+      'from-purple-600 to-fuchsia-700': ['#9333ea', '#a21caf'],
+      'from-orange-500 to-red-500': ['#f97316', '#ef4444'],
+    };
+    return map[gradient] || ['#8b5cf6', '#d946ef'];
+  };
+
+  const getLucideIconPath = (iconName: string): string => {
+    try {
+      const IconComp = LUCIDE_ICONS[iconName];
+      if (!IconComp) return '';
+      const element = IconComp({});
+      if (element && element.props && element.props.children) {
+        const children = Array.isArray(element.props.children)
+          ? element.props.children
+          : [element.props.children];
+        
+        let svgContent = '';
+        children.forEach((child: any) => {
+          if (!child || !child.type) return;
+          const tagName = child.type;
+          const props = child.props || {};
+          const attrString = Object.keys(props)
+            .filter(key => key !== 'children')
+            .map(key => {
+              const svgKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+              return `${svgKey}="${props[key]}"`;
+            })
+            .join(' ');
+          
+          if (props.children) {
+            svgContent += `<${tagName} ${attrString}>${props.children}</${tagName}>`;
+          } else {
+            svgContent += `<${tagName} ${attrString} />`;
+          }
+        });
+        return svgContent;
+      }
+    } catch (e) {
+      console.error("Failed to extract Lucide paths", e);
+    }
+    return '';
+  };
+
+  const resolveBadgeIconToBase64 = async (iconKey: string): Promise<string> => {
+    if (iconKey.startsWith('data:image') || iconKey.startsWith('http')) {
+      return await resizeAndStandardizeImage(iconKey);
+    }
+    
+    const styled = BADGE_LIBRARY.find(b => b.id === iconKey);
+    if (styled) {
+      try {
+        const svgContent = getLucideIconPath(styled.iconName);
+        const [c1, c2] = getGradientColors(styled.gradient);
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${c1}" />
+      <stop offset="100%" stop-color="${c2}" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#bgGrad)" />
+  <g transform="translate(4, 4) scale(0.66)">
+    ${svgContent}
+  </g>
+</svg>`;
+        const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+        return await resizeAndStandardizeImage(svgBase64);
+      } catch (e) {
+        console.error("Failed to generate Base64 for library icon", e);
+      }
+    }
+
+    try {
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" rx="6" fill="#8b5cf6" />
+  <circle cx="12" cy="12" r="5" stroke="white" stroke-width="2"/>
+</svg>`;
+      const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+      return await resizeAndStandardizeImage(svgBase64);
+    } catch (e) {
+      return iconKey;
+    }
+  };
+
   // Dynamic Image Resizing to Standard 128x128 JPEG to be under 50KB
   const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
     return new Promise((resolve) => {
@@ -546,13 +671,32 @@ export default function AdminCurriculumPage() {
     const timer = setTimeout(async () => {
       setIsGeneratingBadges(true);
       try {
+        const promises = [1, 2, 3].map(async (num) => {
+          const res = await fetch('/api/badges/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: newAch.name,
+              description: newAch.description,
+              seed: Math.floor(Math.random() * 100000) + num * 1234
+            })
+          });
+          const json = await res.json();
+          if (json.success && json.dataUri) {
+            return json.dataUri;
+          }
+          throw new Error(json.error || "Generation error");
+        });
+        const results = await Promise.all(promises);
+        setGeneratedBadges(results);
+      } catch (err) {
+        console.error("AI Badge Generation Error", err);
+        // Fallback placeholder images if API key or network fails
         const seed = `${newAch.name}_${newAch.description}`;
         const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
         const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
         const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
         setGeneratedBadges([opt1, opt2, opt3]);
-      } catch (err) {
-        console.error("AI Badge Generation Error", err);
       } finally {
         setIsGeneratingBadges(false);
       }
@@ -575,13 +719,31 @@ export default function AdminCurriculumPage() {
     const timer = setTimeout(async () => {
       setIsEditGeneratingBadges(true);
       try {
+        const promises = [1, 2, 3].map(async (num) => {
+          const res = await fetch('/api/badges/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: editName,
+              description: editDesc,
+              seed: Math.floor(Math.random() * 100000) + num * 1234
+            })
+          });
+          const json = await res.json();
+          if (json.success && json.dataUri) {
+            return json.dataUri;
+          }
+          throw new Error(json.error || "Generation error");
+        });
+        const results = await Promise.all(promises);
+        setEditGeneratedBadges(results);
+      } catch (err) {
+        console.error("AI Badge Generation Error", err);
         const seed = `${editName}_${editDesc}`;
         const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
         const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
         const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
         setEditGeneratedBadges([opt1, opt2, opt3]);
-      } catch (err) {
-        console.error("AI Badge Generation Error", err);
       } finally {
         setIsEditGeneratingBadges(false);
       }
@@ -619,8 +781,32 @@ export default function AdminCurriculumPage() {
     setTranslationRequests(trRequests || []);
     setFeedbacks(fdb || []);
     setCourses(crs || []);
-    setAchievements(achs || []);
     setPersonalities(pers || []);
+
+    if (achs && achs.length > 0) {
+      let needsMigration = false;
+      const migrated = await Promise.all(achs.map(async (ach) => {
+        if (ach.icon && ach.icon.startsWith('img_')) {
+          needsMigration = true;
+          const base64 = await resolveBadgeIconToBase64(ach.icon);
+          return { ...ach, icon: base64 };
+        }
+        return ach;
+      }));
+      
+      if (needsMigration) {
+        console.log("[BADGE MIGRATION] Migrating preseeded library badges to rich Base64 in database...");
+        for (const ach of migrated) {
+          await dbService.saveAchievement(ach);
+        }
+        const { data: updatedAchs } = await dbService.getAchievements();
+        setAchievements(updatedAchs || migrated);
+      } else {
+        setAchievements(achs);
+      }
+    } else {
+      setAchievements([]);
+    }
     setAvailableLanguages(langs || []);
 
     if (typeof window !== 'undefined') {
@@ -1216,10 +1402,7 @@ export default function AdminCurriculumPage() {
       transMap[t.code] = { name: t.name, description: t.desc };
     });
 
-    let finalIcon = badgeIcon;
-    if (badgeIcon.startsWith('http') || badgeIcon.startsWith('data:image')) {
-      finalIcon = await resizeAndStandardizeImage(badgeIcon);
-    }
+    const finalIcon = await resolveBadgeIconToBase64(badgeIcon);
 
     const id = achievements.length > 0 ? Math.max(...achievements.map(a => a.id)) + 1 : 1;
     await dbService.saveAchievement({
@@ -1269,10 +1452,7 @@ export default function AdminCurriculumPage() {
       transMap[t.code] = { name: t.name, description: t.desc };
     });
 
-    let finalIcon = editIcon;
-    if (editIcon.startsWith('http') || editIcon.startsWith('data:image')) {
-      finalIcon = await resizeAndStandardizeImage(editIcon);
-    }
+    const finalIcon = await resolveBadgeIconToBase64(editIcon);
 
     await dbService.saveAchievement({
       ...selectedAchievement,

@@ -1,22 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
-import { Mail, Lock, User, ArrowRight, CheckCircle2, Globe, Sparkles, BookOpen, Star, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, CheckCircle2, Globe, Sparkles, BookOpen, Star, AlertCircle, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/RefinedUI';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1); // 1 = Form, 2 = Verification Email Sent, 3 = Reset Password flow
+  const [step, setStep] = useState(1); // 1 = Form, 2 = Verification Email Sent, 3 = Forgot Password
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [preferredLang, setPreferredLang] = useState('EN');
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRealEmailSent, setIsRealEmailSent] = useState(false);
+  const [simulatedVerificationUrl, setSimulatedVerificationUrl] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
   const coursesList = [
@@ -26,6 +31,48 @@ export default function SignupPage() {
     { id: 4, title: 'Biologie: Molecular Genetics (L1)', desc: 'DNA replication and genetics' },
   ];
 
+  // 1. Check for verification parameters in query string
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tokenParam = params.get('token');
+      const emailParam = params.get('email');
+
+      if (tokenParam && emailParam) {
+        setVerificationStatus('verifying');
+        setStep(2); // Jump straight to verification display
+        setEmail(emailParam);
+
+        fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tokenParam, email: emailParam })
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setVerificationStatus('success');
+              // Save to session and profile locally
+              localStorage.setItem('op_user_profile', JSON.stringify(data.profile));
+              localStorage.setItem('op_session', 'true');
+              localStorage.setItem('op_bookmarks', JSON.stringify(selectedCourses));
+              
+              setTimeout(() => {
+                router.push('/catalog');
+              }, 2000);
+            } else {
+              setVerificationStatus('error');
+              setErrorMsg(data.error || 'La validation du lien a échoué ou a expiré.');
+            }
+          })
+          .catch(() => {
+            setVerificationStatus('error');
+            setErrorMsg('Une erreur de réseau est survenue lors de la validation.');
+          });
+      }
+    }
+  }, [router, selectedCourses]);
+
   const handleToggleCourse = (id: number) => {
     if (selectedCourses.includes(id)) {
       setSelectedCourses(selectedCourses.filter(c => c !== id));
@@ -34,33 +81,62 @@ export default function SignupPage() {
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !password) {
       setErrorMsg('Veuillez remplir tous les champs requis.');
       return;
     }
     setErrorMsg('');
-    setStep(2); // Go to email validation screen
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          password,
+          preferredLang,
+          selectedCourses
+        })
+      });
+
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (data.success) {
+        setIsRealEmailSent(data.isRealSent);
+        setSimulatedVerificationUrl(data.verificationUrl);
+        setStep(2); // Show confirmation email dispatched screen
+      } else {
+        setErrorMsg(data.error || "Une erreur s'est produite lors de l'inscription.");
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMsg("Impossible de joindre le serveur d'inscription.");
+    }
   };
 
-  // MOCK VERIFICATION & LOGIN ACTION
-  const handleVerifyAndLogin = () => {
-    const userProfile = {
-      firstName,
-      lastName,
+  // DEVELOPER SIMULATOR ACTIONS
+  const handleVerifyAndLoginSimulated = () => {
+    // If running in browser simulation click, simulate successful verify API return locally
+    const simulatedProfile = {
+      id: `u_${Date.now()}`,
+      name: `${firstName} ${lastName}`,
       email,
+      role: 'student',
       preferredLang,
-      selectedCourses,
-      isVerified: true
+      isEmailVerified: true
     };
     
-    // Save to local storage to simulate backend database insertion
-    localStorage.setItem('op_user_profile', JSON.stringify(userProfile));
+    setVerificationStatus('success');
+    localStorage.setItem('op_user_profile', JSON.stringify(simulatedProfile));
     localStorage.setItem('op_session', 'true');
     localStorage.setItem('op_bookmarks', JSON.stringify(selectedCourses));
     
-    // Trigger redirect with custom delay for absolute premium feel
     setTimeout(() => {
       router.push('/catalog');
     }, 1000);
@@ -69,7 +145,7 @@ export default function SignupPage() {
   const handleSimulateResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    alert(`Un lien de réinitialisation de mot de passe simulé a été envoyé à ${email || 'votre email'}.`);
+    alert(`Un lien de réinitialisation de mot de passe a été envoyé à ${email || 'votre adresse email'}.`);
     setStep(1);
   };
 
@@ -217,9 +293,14 @@ export default function SignupPage() {
 
                   <button 
                     type="submit"
-                    className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-3"
+                    disabled={isSubmitting}
+                    className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
-                    Valider et envoyer l'email <ArrowRight className="w-4 h-4" />
+                    {isSubmitting ? (
+                      <>Envoi en cours <Loader className="w-4 h-4 animate-spin" /></>
+                    ) : (
+                      <>Valider et envoyer l'email <ArrowRight className="w-4 h-4" /></>
+                    )}
                   </button>
                 </form>
               </motion.div>
@@ -233,40 +314,87 @@ export default function SignupPage() {
                 exit={{ opacity: 0 }}
                 className="text-center py-6"
               >
-                <div className="w-20 h-20 rounded-[32px] bg-blue-600/10 flex items-center justify-center text-blue-400 mx-auto mb-6 border border-blue-500/20 shadow-xl shadow-blue-600/5">
-                  <Mail className="w-10 h-10" />
-                </div>
-                <h1 className="text-3xl font-black tracking-tight mb-3 text-white">Vérification Requise</h1>
-                <p className="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto mb-10">
-                  Un email de validation a été envoyé à l'adresse <span className="text-slate-200 font-bold">{email}</span>. Veuillez cliquer sur le lien qu'il contient pour activer votre compte.
-                </p>
-
-                {/* INTERACTIVE SIMULATOR CARD */}
-                <div className="bg-slate-950/60 border border-slate-800 rounded-3xl p-6 text-left max-w-md mx-auto mb-8 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-3 text-[7px] font-black uppercase bg-blue-600/10 text-blue-400 border-l border-b border-slate-800 rounded-bl-xl tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    <span>SIMULATEUR DE BOÎTE MAIL</span>
-                  </div>
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Email de Validation Reçu</h3>
-                  
-                  <div className="space-y-4 border-l-2 border-blue-500 pl-4 py-1">
-                    <p className="text-xs font-bold text-white leading-tight">Confirmation d'inscription OpenPrimer</p>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
-                      Bonjour <span className="text-white font-bold">{firstName}</span>,<br/>
-                      Merci d'avoir rejoint le dépôt OpenPrimer. Cliquez sur le bouton ci-dessous pour confirmer votre email :
+                {verificationStatus === 'verifying' ? (
+                  <>
+                    <div className="w-20 h-20 rounded-[32px] bg-blue-600/10 flex items-center justify-center text-blue-400 mx-auto mb-6 border border-blue-500/20 shadow-xl shadow-blue-600/5">
+                      <Loader className="w-10 h-10 animate-spin" />
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight mb-3 text-white">Validation en Cours</h1>
+                    <p className="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto mb-10">
+                      Nous vérifions votre code de validation sécurisé...
                     </p>
-                    <button 
-                      onClick={handleVerifyAndLogin}
-                      className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 inline-flex items-center gap-2"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Confirmer mon Email & Me connecter
-                    </button>
-                  </div>
-                </div>
+                  </>
+                ) : verificationStatus === 'success' ? (
+                  <>
+                    <div className="w-20 h-20 rounded-[32px] bg-emerald-600/10 flex items-center justify-center text-emerald-400 mx-auto mb-6 border border-emerald-500/20 shadow-xl shadow-emerald-600/5 animate-bounce">
+                      <CheckCircle2 className="w-10 h-10" />
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight mb-3 text-white">Compte Activé !</h1>
+                    <p className="text-emerald-400/80 text-xs leading-relaxed max-w-sm mx-auto mb-10 font-bold uppercase tracking-widest">
+                      Votre adresse e-mail a été validée avec succès. Redirection vers votre catalogue de cours...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-[32px] bg-blue-600/10 flex items-center justify-center text-blue-400 mx-auto mb-6 border border-blue-500/20 shadow-xl shadow-blue-600/5">
+                      <Mail className="w-10 h-10" />
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight mb-3 text-white">Vérification Requise</h1>
+                    
+                    {errorMsg && (
+                      <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-semibold text-left">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {isRealEmailSent ? (
+                      <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto mb-10 border border-blue-500/30 bg-blue-500/5 p-4 rounded-2xl font-bold">
+                        ✉️ Un e-mail de validation réel a été envoyé à l'adresse <span className="text-white font-black">{email}</span> via **Resend**. Veuillez cliquer sur le lien de confirmation présent dans votre boîte aux lettres.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto mb-10">
+                          Un e-mail de validation a été envoyé à l'adresse <span className="text-slate-200 font-bold">{email}</span>. Veuillez cliquer sur le lien qu'il contient pour activer votre compte.
+                        </p>
+
+                        {/* INTERACTIVE SIMULATOR CARD */}
+                        <div className="bg-slate-950/60 border border-slate-800 rounded-3xl p-6 text-left max-w-md mx-auto mb-8 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-3 text-[7px] font-black uppercase bg-blue-600/10 text-blue-400 border-l border-b border-slate-800 rounded-bl-xl tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-2.5 h-2.5" />
+                            <span>SIMULATEUR DE BOÎTE MAIL</span>
+                          </div>
+                          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Email de Validation Reçu</h3>
+                          
+                          <div className="space-y-4 border-l-2 border-blue-500 pl-4 py-1">
+                            <p className="text-xs font-bold text-white leading-tight">Confirmation d'inscription OpenPrimer</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed">
+                              Bonjour <span className="text-white font-bold">{firstName || 'Étudiant'}</span>,<br/>
+                              Merci d'avoir rejoint le dépôt OpenPrimer. Cliquez sur le bouton ci-dessous pour confirmer votre e-mail :
+                            </p>
+                            <button 
+                              onClick={handleVerifyAndLoginSimulated}
+                              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 inline-flex items-center gap-2"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Confirmer mon Email & Me connecter (Local)
+                            </button>
+                            <div className="text-[8px] text-slate-600 mt-2 break-all">
+                              URL Réelle générée : <a href={simulatedVerificationUrl} className="text-blue-500 underline">{simulatedVerificationUrl}</a>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
                   <button 
-                    onClick={() => setStep(1)} 
+                    onClick={() => {
+                      setStep(1);
+                      setVerificationStatus('idle');
+                      setErrorMsg('');
+                    }} 
                     className="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
                   >
                     Retourner au formulaire

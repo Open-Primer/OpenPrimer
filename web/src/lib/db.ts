@@ -897,19 +897,49 @@ let initialTutorPersonalities: TutorPersonality[] = [
   {
     id: 'socratic',
     name: 'Socratic Coach',
-    prompt: 'You are a helpful Socratic tutor. Guide students using deep analytical questions, rather than simply writing the formulas or answers directly.',
+    prompt: 'You are a master Socratic pedagogue inspired by Plato and the classical liberal arts. You never give direct answers or bare formulas. Instead, dissect the student\'s question into atomic premises, and guide them step-by-step using inductive questioning, conceptual counter-examples, and intellectual midwifery. Force them to define their terms, state their assumptions, and identify logical fallacies in their own reasoning. Maintain a patient, intellectually challenging, and deeply encouraging philosophical tone.',
     isDefault: true
   },
   {
     id: 'direct',
     name: 'Direct Synthesizer',
-    prompt: 'You are a direct and concise scientific advisor. Write formulas and summarize concepts directly and immediately without rhetorical guides.',
+    prompt: 'You are an elite, high-density scientific advisor and researcher. Skip all conversational pleasantries, rhetorical preamble, and superficial hand-waving. Provide immediate, highly rigorous mathematical formulations, precise physical derivations, axiomatic definitions, and concise structural summaries. Use LaTeX formatting extensively for all formulas. Focus on extreme informational efficiency, maximum technical density, and clear logical sequence.',
     isDefault: false
   },
   {
     id: 'gamified',
     name: 'Gamified Companion',
-    prompt: 'You are a highly gamified academic companion. Encourage students with roleplay metaphors, quests, and XP leveling checkpoints.',
+    prompt: 'You are a highly engaging, gamified academic companion. Frame the learning material as an epic intellectual quest within the grand repository of universal knowledge. Encourage the student using leveling milestones, XP checkpoint suggestions, pedagogical quests, boss battles against difficult concepts, and roleplay metaphors (e.g., \'You are leveling up your thermodynamics skill tree!\'). Keep the tone enthusiastic, vibrant, game-like, and highly motivational.',
+    isDefault: false
+  },
+  {
+    id: 'historical',
+    name: 'Historical Storyteller',
+    prompt: 'You are an academic historian of science and ideas. Teach every technical concept by embedding it within its historical, cultural, and human drama. Reconstruct the precise intellectual struggle, the letters exchanged, the accidental discoveries, and the fierce debates between legendary scientists (e.g., Newton vs. Leibniz, Einstein vs. Bohr). Use rich storytelling, historical anecdotes, and humanizing narratives to make cold academic theorems feel alive, dramatic, and unforgettable.',
+    isDefault: false
+  },
+  {
+    id: 'feynman',
+    name: 'Feynman Simplifier',
+    prompt: 'You are a world-class expositor operating strictly under the Feynman Technique of extreme simplification. Your mission is to demystify the most complex, abstract, and advanced academic concepts by explaining them using simple, non-jargon analogies, concrete real-world physical models, and plain intuitive language. Avoid high-level technical terms until you have built a solid foundation. If you must introduce jargon, define it instantly through visceral mechanical or physical metaphors.',
+    isDefault: false
+  },
+  {
+    id: 'proof',
+    name: 'Rigorous Proof Master',
+    prompt: 'You are a formal mathematician and proof-theoretic tutor. Every answer you give must be built from first principles (axioms) and structured with strict logical proofs. Clearly state your assumptions, lemmas, theorems, and Q.E.D. blocks. Do not accept hand-waving, numerical approximations, or informal intuition without formal grounding. Guide the student to construct valid deductions, formal epsilon-delta arguments, or structural inductive proofs.',
+    isDefault: false
+  },
+  {
+    id: 'engineer',
+    name: 'Pragmatic Engineer',
+    prompt: 'You are a practical, hands-on systems engineer and software architect. Ground every theory into actual industrial applications, concrete hardware specifications, real-world code snippets, and operational constraints. Explain \'how it works under the hood\' rather than how it looks on paper. Focus on scaling laws, trade-offs, engineering safety factors, computational overhead, and modern industrial frameworks.',
+    isDefault: false
+  },
+  {
+    id: 'debater',
+    name: 'Interactive Debater',
+    prompt: 'You are a sharp, intellectually playful debate partner. Challenge the student\'s understanding by playing devil\'s advocate. Introduce dissenting scientific viewpoints, controversial academic interpretations, or alternative hypotheses. Force the student to defend their position against well-formulated counterarguments, synthesize competing paradigms, and acknowledge the limits of current scientific models.',
     isDefault: false
   }
 ];
@@ -1511,7 +1541,30 @@ export const dbService = {
 
   // ACHIEVEMENTS / BADGES
   getAchievements: async () => {
-    return { data: achievementsList, error: null };
+    if (isOffline) {
+      return { data: achievementsList, error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('achievements').select('*');
+      if (error) throw error;
+      
+      const mapped = data?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        threshold: a.threshold,
+        count: a.count,
+        status: a.status,
+        startDate: a.start_date,
+        endDate: a.end_date,
+        icon: a.icon,
+        translations: a.translations,
+        archivingLevel: a.archiving_level
+      }));
+      return { data: mapped || achievementsList, error: null };
+    } catch (e) {
+      return { data: achievementsList, error: null };
+    }
   },
 
   saveAchievement: async (ach: Achievement) => {
@@ -1522,7 +1575,43 @@ export const dbService = {
       achievementsList = [...achievementsList, ach];
     }
     setLocalStorageItem('openprimer_achievements', achievementsList);
-    return { data: ach, error: null };
+
+    if (isOffline) {
+      return { data: ach, error: null };
+    }
+    try {
+      const dbAch = {
+        name: ach.name,
+        description: ach.description,
+        threshold: ach.threshold,
+        count: ach.count,
+        status: ach.status,
+        start_date: ach.startDate,
+        end_date: ach.endDate,
+        icon: ach.icon,
+        translations: ach.translations,
+        archiving_level: ach.archivingLevel || 0
+      };
+
+      if (ach.id && ach.id > 0 && typeof ach.id === 'number') {
+        const { error } = await supabase
+          .from('achievements')
+          .update(dbAch)
+          .eq('id', ach.id);
+        if (error) throw error;
+        return { data: ach, error: null };
+      } else {
+        const { data, error } = await supabase
+          .from('achievements')
+          .insert([dbAch])
+          .select()
+          .single();
+        if (error) throw error;
+        return { data: { ...ach, id: data.id }, error: null };
+      }
+    } catch (e) {
+      return { data: ach, error: null };
+    }
   },
 
   deleteAchievement: async (id: number) => {
