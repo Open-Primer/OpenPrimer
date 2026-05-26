@@ -57,6 +57,7 @@ export interface RefusedCourseEntry {
   searches: number;
   priority: string;
   previouslyRefused: boolean;
+  timestamp?: string;
 }
 
 export interface RefusedTranslationEntry {
@@ -793,7 +794,7 @@ let initialTranslationRequests: TranslationRequestEntry[] = [
 ];
 
 let initialRefusedCourses: RefusedCourseEntry[] = [
-  { id: 'ref_c1', name: "Advanced Thermodynamics", subject: "Physics", searches: 1, priority: "Low", previouslyRefused: true }
+  { id: 'ref_c1', name: "Advanced Thermodynamics", subject: "Physics", searches: 1, priority: "Low", previouslyRefused: true, timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() }
 ];
 
 let initialContactFeedbacks: ContactFeedback[] = [

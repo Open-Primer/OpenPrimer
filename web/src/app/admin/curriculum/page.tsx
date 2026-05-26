@@ -423,6 +423,8 @@ export default function AdminCurriculumPage() {
   // Autonomy settings
   const [autoApprove, setAutoApprove] = useState(false);
   const [threshold, setThreshold] = useState(5);
+  const [autoApproveDelayHours, setAutoApproveDelayHours] = useState(24);
+  const [reevaluationDays, setReevaluationDays] = useState(15);
 
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -941,8 +943,30 @@ export default function AdminCurriculumPage() {
     
     // Group failed searches
     const failed = historyList.filter(h => !h.wasSuccessful);
-    const groups: Record<string, { query: string; count: number; lang: string }> = {};
     
+    // 15 days (reevaluationDays) re-evaluation check
+    const now = Date.now();
+    const dueForReevaluation = refusedCourses.filter(rc => {
+      const elapsedDays = (now - new Date(rc.timestamp || now).getTime()) / (1000 * 60 * 60 * 24);
+      if (elapsedDays >= reevaluationDays) return true;
+      
+      // Also check if there are new failed searches since refusal
+      const hasNewSearches = failed.some(h => 
+        h.query.toLowerCase() === rc.name.toLowerCase() && 
+        new Date(h.timestamp).getTime() > new Date(rc.timestamp || now).getTime()
+      );
+      return hasNewSearches;
+    });
+
+    if (dueForReevaluation.length > 0) {
+      // Safely delete from database and reload
+      Promise.all(dueForReevaluation.map(rc => dbService.deleteRefusedCourse(rc.id))).then(() => {
+        loadData();
+      });
+      return;
+    }
+
+    const groups: Record<string, { query: string; count: number; lang: string }> = {};
     failed.forEach(h => {
       const q = h.query;
       if (!groups[q]) {
@@ -952,17 +976,57 @@ export default function AdminCurriculumPage() {
     });
 
     const activeProposals = Object.values(groups).filter(g => {
-      // Exclude already created courses
       const isCourse = courses.some(c => c.title.toLowerCase() === g.query.toLowerCase() || c.slug.toLowerCase() === g.query.toLowerCase().replace(/ /g, '_'));
-      // Exclude refused backlog
       const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === g.query.toLowerCase());
-      // Exclude already in queue
       const isInQueue = queue.some(t => t.title.toLowerCase() === g.query.toLowerCase());
       return !isCourse && !isRefused && !isInQueue;
     });
 
-    setProposals(activeProposals);
-  }, [historyList, courses, refusedCourses, queue]);
+    const searchProposals = activeProposals.map(g => ({
+      query: g.query,
+      count: g.count,
+      reason: "Search Demand",
+      source: `Failed Searches: ${g.count}`,
+      priority: g.count >= 15 ? 'High' : 'Medium' as 'High' | 'Medium'
+    }));
+
+    // Pedagogical validation expansion proposals (Sovereign Academic Expansion)
+    const expansionProposals: any[] = [];
+    courses.forEach(course => {
+      if (course.validations !== undefined && course.validations >= validationsThreshold) {
+        let nextLevel = '';
+        let nextTitlePrefix = '';
+        if (course.level === 'L1') {
+          nextLevel = 'L2';
+          nextTitlePrefix = 'L2 Advanced';
+        } else if (course.level === 'L2') {
+          nextLevel = 'L3';
+          nextTitlePrefix = 'L3 Masterclass';
+        }
+        
+        if (nextLevel) {
+          const baseTitle = course.title.replace(/(L1|L2|L3|Advanced|Masterclass|Physique|Biologie|Droit|Maths|Test|\(.*\))/g, '').trim();
+          const proposedTitle = `${nextTitlePrefix} ${baseTitle}`;
+          
+          const isCourse = courses.some(c => c.title.toLowerCase() === proposedTitle.toLowerCase());
+          const isInQueue = queue.some(t => t.title.toLowerCase() === proposedTitle.toLowerCase());
+          const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === proposedTitle.toLowerCase());
+          
+          if (!isCourse && !isInQueue && !isRefused) {
+            expansionProposals.push({
+              query: proposedTitle,
+              count: course.validations,
+              reason: "Academic Expansion",
+              source: `Validated Prereq: ${course.title} (${course.validations} completions)`,
+              priority: course.validations >= 12 ? 'High' : 'Medium'
+            });
+          }
+        }
+      }
+    });
+
+    setProposals([...searchProposals, ...expansionProposals]);
+  }, [historyList, courses, refusedCourses, queue, validationsThreshold, reevaluationDays]);
 
   // REACTIVE AUTONOMY ENGINE loop
   useEffect(() => {
@@ -971,7 +1035,26 @@ export default function AdminCurriculumPage() {
       let promoted = false;
 
       proposals.forEach(p => {
-        if (p.count >= threshold) {
+        // Enforce delay period (at least autoApproveDelayHours) for auto-approval
+        let hoursElapsed = 0;
+        if (p.reason === "Search Demand") {
+          const matches = historyList.filter(h => h.query.toLowerCase() === p.query.toLowerCase() && !h.wasSuccessful);
+          const oldest = matches.reduce((min, cur) => {
+            const t = new Date(cur.timestamp).getTime();
+            return t < min ? t : min;
+          }, Date.now());
+          hoursElapsed = (Date.now() - oldest) / (1000 * 60 * 60);
+        } else if (p.reason === "Academic Expansion") {
+          // Find prereq course
+          const prereq = courses.find(c => p.source.includes(c.title));
+          const createdTime = prereq?.created_at ? new Date(prereq.created_at).getTime() : (Date.now() - 30 * 24 * 60 * 60 * 1000);
+          hoursElapsed = (Date.now() - createdTime) / (1000 * 60 * 60);
+        }
+
+        const isDelayedEnough = hoursElapsed >= autoApproveDelayHours;
+
+        // Auto approve if threshold met AND delay period has passed
+        if (p.count >= threshold && isDelayedEnough) {
           updatedQueue.push({
             id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: p.query,
@@ -991,7 +1074,7 @@ export default function AdminCurriculumPage() {
         loadData();
       }
     }
-  }, [proposals, autoApprove, threshold]);
+  }, [proposals, autoApprove, threshold, autoApproveDelayHours, historyList, courses]);
 
   // REACTIVE AUTO-TRANSLATION LOOP
   useEffect(() => {
@@ -1107,7 +1190,8 @@ export default function AdminCurriculumPage() {
       subject: 'Mathematics',
       searches: 5,
       priority: 'High',
-      previouslyRefused: true
+      previouslyRefused: true,
+      timestamp: new Date().toISOString()
     });
     loadData();
   };
@@ -1598,60 +1682,158 @@ export default function AdminCurriculumPage() {
              {/* 1. GENERATION ENGINE TAB */}
              {view === 'generation' && (
                <div className="space-y-8">
-                 {/* Autonomy Panel */}
-                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                   <div className="space-y-1">
-                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                       <Sparkles className="w-5 h-5 text-blue-500" /> Dynamic Autonomy Loop
-                     </h2>
-                     <p className="text-xs text-slate-400">Promotes failed search terms to the generation queue automatically based on aggregate student demands.</p>
-                   </div>
-                   
-                   <div className="flex flex-wrap items-center gap-6">
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">{t.auto_approve}</span>
-                       <button 
-                         onClick={() => setAutoApprove(!autoApprove)}
-                         className={`w-12 h-6 rounded-full relative transition-all ${autoApprove ? 'bg-blue-600' : 'bg-slate-800'}`}
-                       >
-                         <motion.div animate={{ x: autoApprove ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
-                       </button>
+                 {/* Autonomy & Logs Control Center (Combined and Moved UP) */}
+                 <div className="grid lg:grid-cols-2 gap-8">
+                   {/* Left Card: Autonomy Loop Panel */}
+                   <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col justify-between hover:border-slate-700/50 transition-all">
+                     <div className="space-y-1">
+                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                         <Sparkles className="w-5 h-5 text-blue-500" /> Dynamic Autonomy Loop
+                       </h2>
+                       <p className="text-xs text-slate-400">Configures automated promotion of failed searches and pedagogical validation proposals to the queue.</p>
                      </div>
-                     <div className="w-px h-8 bg-slate-800 hidden md:block" />
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">{t.failure_threshold}</span>
-                       <input 
-                         type="number" 
-                         value={threshold} 
-                         onChange={(e) => setThreshold(Math.max(1, Number(e.target.value)))}
-                         className="w-16 bg-slate-950 border border-slate-800 rounded-xl p-2 text-center text-sm font-bold text-white focus:outline-none focus:border-blue-500/50"
-                       />
+                     
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="flex flex-col gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">{t.auto_approve}</span>
+                         <div className="flex items-center justify-between mt-1">
+                           <button 
+                             type="button"
+                             onClick={() => setAutoApprove(!autoApprove)}
+                             className={`w-10 h-5 rounded-full relative transition-all ${autoApprove ? 'bg-blue-600' : 'bg-slate-800'}`}
+                           >
+                             <motion.div animate={{ x: autoApprove ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                           </button>
+                           <span className="text-xs font-bold text-slate-300">{autoApprove ? 'ON' : 'OFF'}</span>
+                         </div>
+                       </div>
+
+                       <div className="flex flex-col gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">{t.failure_threshold}</span>
+                         <input 
+                           type="number" 
+                           value={threshold} 
+                           onChange={(e) => setThreshold(Math.max(1, Number(e.target.value)))}
+                           className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-full mt-1"
+                         />
+                       </div>
+
+                       <div className="flex flex-col gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">Auto-Approve Delay (h)</span>
+                         <input 
+                           type="number" 
+                           value={autoApproveDelayHours} 
+                           onChange={(e) => setAutoApproveDelayHours(Math.max(1, Number(e.target.value)))}
+                           className="bg-transparent border-none text-emerald-400 text-sm font-black focus:outline-none w-full mt-1"
+                         />
+                       </div>
+
+                       <div className="flex flex-col gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">Validations Threshold</span>
+                         <input 
+                           type="number" 
+                           value={validationsThreshold} 
+                           onChange={(e) => setValidationsThreshold(Math.max(1, Number(e.target.value)))}
+                           className="bg-transparent border-none text-violet-400 text-sm font-black focus:outline-none w-full mt-1"
+                         />
+                       </div>
+
+                       <div className="col-span-2 flex flex-col gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">Backlog Re-evaluation Interval (Days)</span>
+                         <input 
+                           type="number" 
+                           value={reevaluationDays} 
+                           onChange={(e) => setReevaluationDays(Math.max(1, Number(e.target.value)))}
+                           className="bg-transparent border-none text-yellow-500 text-sm font-black focus:outline-none w-full mt-1"
+                         />
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Right Card: Generation Logs & Demand Retention (Moved UP) */}
+                   <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col justify-between hover:border-slate-700/50 transition-all">
+                     <div className="space-y-1">
+                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                         <History className="w-5 h-5 text-blue-400" /> Generation Logs & Demand Retention
+                       </h2>
+                       <p className="text-xs text-slate-400">
+                         Set retention days for failed search term logs and feedback logs, and purge expired entries immediately.
+                       </p>
+                     </div>
+
+                     <div className="space-y-4">
+                       <div className="flex items-center justify-between bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">Retention Limit</span>
+                         <div className="flex items-center gap-3">
+                           <input 
+                             type="range" 
+                             min="7" 
+                             max="90" 
+                             value={backlogRetention} 
+                             onChange={(e) => setBacklogRetention(Number(e.target.value))}
+                             className="w-24 accent-blue-500 cursor-pointer"
+                           />
+                           <span className="text-xs font-mono font-bold text-blue-400 w-8 text-center">{backlogRetention}d</span>
+                         </div>
+                       </div>
+
+                       <button 
+                         type="button"
+                         onClick={async () => {
+                           const [res, resFeedback, resTrans] = await Promise.all([
+                              dbService.cleanupSearchHistory(backlogRetention),
+                              dbService.cleanupCourseFeedbacks(backlogRetention),
+                              dbService.cleanupTranslationRequests(backlogRetention)
+                            ]);
+                            const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0) + (resTrans.data?.purged || 0);
+                           alert(lang === 'FR' ? `Nettoyage réussi. ${totalPurged} entrées expirées ont été purgées.` : `Logs cleanup completed. ${totalPurged} expired entries purged.`);
+                         }}
+                         className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/10"
+                       >
+                         {lang === 'FR' ? 'Purger les Logs' : lang === 'ES' ? 'Purgar Registros' : lang === 'DE' ? 'Protokolle löschen' : lang === 'ZH' ? '清除日志' : 'Purge Logs'}
+                       </button>
                      </div>
                    </div>
                  </div>
 
-                 {/* Proposals list */}
+                 {/* Active proposals list */}
                  <div className="space-y-4">
                    <h3 className="text-xl font-black text-slate-200">{t.active_proposals}</h3>
                    <div className="grid md:grid-cols-2 gap-6">
                      {proposals.map((item, idx) => (
-                       <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-blue-500/30 transition-all">
+                       <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-blue-500/30 transition-all group relative overflow-hidden">
+                         {item.reason === "Academic Expansion" && (
+                           <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-xl rounded-full pointer-events-none" />
+                         )}
+                         
                          <div>
-                           <h3 className="text-lg font-bold text-white">{item.query}</h3>
-                           <p className="text-[9px] font-black text-slate-500 uppercase mt-1">Failed Searches: {item.count} • Priority: <span className={item.count >= 15 ? "text-red-400 font-bold" : "text-yellow-500"}>{item.count >= 15 ? 'High' : 'Medium'}</span></p>
+                           <div className="flex items-center gap-2">
+                             <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase ${
+                               item.reason === "Academic Expansion" 
+                                 ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" 
+                                 : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                             }`}>
+                               {item.reason}
+                             </span>
+                             {item.reason === "Academic Expansion" && <Sparkles className="w-3 h-3 text-yellow-500" />}
+                           </div>
+                           <h3 className="text-base font-bold text-white mt-2">{item.query}</h3>
+                           <p className="text-[10px] font-medium text-slate-500 mt-1">
+                             {item.source} | Priority: <span className={item.priority === 'High' ? "text-red-400 font-bold" : "text-yellow-500 font-semibold"}>{item.priority}</span>
+                           </p>
                          </div>
-                         <div className="flex gap-2">
+                         <div className="flex gap-2 shrink-0 z-10">
                            <button 
                              title="Approve & Promote" 
                              onClick={() => handleApproveGen(item.query, item.count)}
-                             className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all"
+                             className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-md shadow-blue-600/10"
                            >
                              <Check className="w-4 h-4" />
                            </button>
                            <button 
                              title="Refuse & Backlog" 
                              onClick={() => handleRefuseGen(item.query)}
-                             className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all"
+                             className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all shadow-md"
                            >
                              <X className="w-4 h-4" />
                            </button>
@@ -1659,7 +1841,7 @@ export default function AdminCurriculumPage() {
                        </div>
                      ))}
                      {proposals.length === 0 && (
-                       <p className="text-sm text-slate-600 italic py-6">No pending failed-search proposals. Clean database.</p>
+                       <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">No pending failed-search or expansion proposals. Clean database.</p>
                      )}
                    </div>
                  </div>
@@ -1668,118 +1850,30 @@ export default function AdminCurriculumPage() {
                  <div className="space-y-4 pt-4 border-t border-slate-900">
                    <h3 className="text-xl font-black text-slate-200">{t.refused_backlog}</h3>
                    <div className="grid md:grid-cols-3 gap-6">
-                     {refusedCourses.map((item) => (
-                       <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center group">
-                         <div>
-                           <h4 className="text-sm font-bold text-slate-200">{item.name}</h4>
-                           <p className="text-[8px] font-black text-slate-500 uppercase mt-1">Refused Backlog • Priority: {item.priority}</p>
+                     {refusedCourses.map((item) => {
+                       const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
+                       const remainingDays = Math.max(0, Math.ceil(reevaluationDays - elapsedDays));
+                       return (
+                         <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex flex-col justify-between gap-4 group hover:border-red-500/20 transition-all">
+                           <div>
+                             <h4 className="text-sm font-bold text-slate-200">{item.name}</h4>
+                             <p className="text-[8px] font-black text-slate-500 uppercase mt-1">Refused Backlog • Priority: {item.priority}</p>
+                             <p className="text-[9px] font-bold text-red-500/70 mt-2">
+                               Re-evaluation in: <span className="text-red-400">{remainingDays}d</span>
+                             </p>
+                           </div>
+                           <button 
+                             onClick={() => deleteRefused(item.id)} 
+                             className="w-full py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-400 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider text-center"
+                           >
+                             Un-Refuse / Re-propose
+                           </button>
                          </div>
-                         <button 
-                           onClick={() => deleteRefused(item.id)} 
-                           className="p-2 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider"
-                         >
-                           Un-Refuse
-                         </button>
-                       </div>
-                     ))}
+                       );
+                     })}
                      {refusedCourses.length === 0 && (
-                       <p className="text-sm text-slate-600 italic py-4">Refused courses backlog is empty.</p>
+                       <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">Refused courses backlog is empty.</p>
                      )}
-                   </div>
-                 </div>
-
-                 {/* Academic Expansion Suggestions Panel */}
-                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
-                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                     <div className="space-y-1">
-                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                         <Sparkles className="w-5 h-5 text-yellow-500" /> Sovereign Academic Expansion
-                       </h2>
-                       <p className="text-xs text-slate-400">
-                         Recommends advanced courses (L2 progression paths & prerequisite expansions) once L1 student validation count passes the set threshold.
-                       </p>
-                     </div>
-                     
-                     <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-850 shrink-0">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">Validations Seuil:</span>
-                       <input 
-                         type="range"
-                         min="1"
-                         max="20"
-                         value={validationsThreshold}
-                         onChange={(e) => setValidationsThreshold(Number(e.target.value))}
-                         className="w-32 accent-violet-500 bg-slate-800 rounded-lg cursor-pointer"
-                       />
-                       <span className="text-xs font-mono font-bold text-violet-400 w-6 text-center">{validationsThreshold}</span>
-                     </div>
-                   </div>
-
-                   <div className="grid md:grid-cols-2 gap-6">
-                     {[
-                       { title: "L2 Advanced Quantum Physics", prereq: "Quantum Physics", level: "L2", subject: "Physics" },
-                       { title: "L2 Advanced Molecular Biology", prereq: "Molecular Biology", level: "L2", subject: "Biology" },
-                       { title: "L2 Advanced Organic Chemistry", prereq: "Organic Chemistry", level: "L2", subject: "Chemistry" },
-                       { title: "L2 Advanced Linear Algebra", prereq: "Linear Algebra", level: "L2", subject: "Mathematics" }
-                     ].map((item, idx) => (
-                       <div key={idx} className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl flex justify-between items-center hover:border-yellow-500/30 transition-all">
-                         <div className="space-y-1.5">
-                           <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[8px] font-black rounded uppercase">
-                             Recommended L2 expansion
-                           </span>
-                           <h4 className="text-sm font-bold text-slate-200">{item.title}</h4>
-                           <p className="text-[9px] font-semibold text-slate-500 leading-normal">
-                             Prerequisite: <span className="text-slate-400">{item.prereq}</span> | Subject: {item.subject}
-                           </p>
-                         </div>
-                         <button
-                           type="button"
-                           onClick={() => handleDeployExpansion(item.title, item.prereq, item.level, item.subject)}
-                           className="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shrink-0"
-                         >
-                           Deploy
-                         </button>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-
-                 {/* Log Retention & Cleaning Panel */}
-                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                   <div className="space-y-1">
-                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                       <History className="w-5 h-5 text-blue-400" /> Generation Logs & Demand Retention
-                     </h2>
-                     <p className="text-xs text-slate-400">
-                       Set retention days for failed search term logs and feedback logs, and purge expired entries immediately.
-                     </p>
-                   </div>
-                   
-                   <div className="flex flex-wrap items-center gap-6">
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">Retention:</span>
-                       <input 
-                         type="range" 
-                         min="7" 
-                         max="90" 
-                         value={backlogRetention} 
-                         onChange={(e) => setBacklogRetention(Number(e.target.value))}
-                         className="w-28 accent-blue-500 cursor-pointer"
-                       />
-                       <span className="text-xs font-mono font-bold text-blue-400 w-8 text-center">{backlogRetention}d</span>
-                     </div>
-                     <button 
-                       type="button"
-                       onClick={async () => {
-                         const [res, resFeedback, resTrans] = await Promise.all([
-                            dbService.cleanupSearchHistory(backlogRetention),
-                            dbService.cleanupCourseFeedbacks(backlogRetention),
-                            dbService.cleanupTranslationRequests(backlogRetention)
-                          ]);
-                          const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0) + (resTrans.data?.purged || 0);
-                         alert(lang === 'FR' ? `Nettoyage réussi. ${totalPurged} entrées expirées ont été purgées.` : `Logs cleanup completed. ${totalPurged} expired entries purged.`);
-                       }}
-                       className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/10"
-                     >{lang === 'FR' ? 'Purger les Logs' : lang === 'ES' ? 'Purgar Registros' : lang === 'DE' ? 'Protokolle löschen' : lang === 'ZH' ? '清除日志' : 'Purge Logs'}</button>
                    </div>
                  </div>
                </div>
