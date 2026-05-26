@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get('slug')?.split(',') || [];
   const type = searchParams.get('type') || 'page';
+  const lang = searchParams.get('lang') || 'en';
 
   try {
     if (type === 'nav') {
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
       return NextResponse.json(tree);
     }
 
-    const content = await getPageContent(slug);
+    const content = await getPageContent(slug, lang);
     if (!content) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     
     return NextResponse.json(content);

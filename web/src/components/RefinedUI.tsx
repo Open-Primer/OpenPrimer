@@ -772,7 +772,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     window.dispatchEvent(new CustomEvent('op_reading_mode_changed', { detail: modeKey }));
   };
 
-  const handleLanguageSelect = (code: string) => {
+  const handleLanguageSelect = async (code: string) => {
     setLang(code as any);
     localStorage.setItem('openprimer_lang', code);
     document.cookie = `openprimer_lang=${code}; path=/; max-age=31536000; SameSite=Lax`;
@@ -788,6 +788,40 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     }
     
     if (onLangChange) onLangChange(code);
+
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const parts = pathname.split('/').filter(Boolean);
+      const isCoursePath = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
+
+      if (isCoursePath) {
+        const langLower = code.toLowerCase();
+        try {
+          // Check if this course page is available in the target language
+          const res = await fetch(`/api/content?slug=${parts.join(',')}&lang=${langLower}`);
+          if (res.ok) {
+            window.location.reload();
+            return;
+          }
+        } catch (e) {
+          console.error("Error verifying language availability:", e);
+        }
+
+        // If translation is missing:
+        const session = localStorage.getItem('op_session');
+        const loggedIn = session === 'true';
+
+        if (loggedIn) {
+          // Redirect to curriculum page
+          window.location.href = '/profile/curriculum';
+        } else {
+          // Redirect to catalog page
+          window.location.href = '/catalog';
+        }
+        return;
+      }
+    }
+    
     setTimeout(() => {
       window.location.reload();
     }, 100);
