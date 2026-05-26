@@ -178,8 +178,8 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
     await expect(libraryBadge).toBeVisible();
     await libraryBadge.click();
 
-    // 8. Verify the preview contains the title
-    await expect(page.locator('text=Streaker Master').first()).toBeVisible();
+    // 8. Verify the input field contains the title
+    await expect(page.locator('input[placeholder*="Fast Learner"]')).toHaveValue('Streaker Master');
  
     // 9. Submit creation and assert badge appears in grid
     await page.click('button:has-text("Create Achievement Badge"), button:has-text("Créer un Badge")');

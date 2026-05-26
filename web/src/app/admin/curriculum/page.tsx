@@ -1616,7 +1616,7 @@ export default function AdminCurriculumPage() {
       <AnimatePresence>
         {showAddAchievement && (
           <div onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Create Achievement Badge
@@ -1631,208 +1631,180 @@ export default function AdminCurriculumPage() {
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Achievement Name <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="Fast Learner" 
-                      value={newAch.name} 
-                      onChange={(e) => setNewAch({...newAch, name: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Description <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="record time" 
-                      value={newAch.description} 
-                      onChange={(e) => setNewAch({...newAch, description: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="3 days" 
-                      value={newAch.threshold} 
-                      onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
-
-                  {/* Start and End Date Fields */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                        Start Date (Optional)
-                      </label>
-                      <input 
-                        type="date"
-                        value={badgeStartDate}
-                        onChange={(e) => setBadgeStartDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                        End Validity Date (Optional)
-                      </label>
-                      <input 
-                        type="date"
-                        value={badgeEndDate}
-                        onChange={(e) => setBadgeEndDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Live Preview */}
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Badge Design Live Preview
-                    </label>
-                    <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
-                      <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
-                        {badgeIcon ? (
-                          badgeIcon.startsWith('data:image') ? (
-                            <img src={badgeIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
-                          ) : (() => {
-                            const found = BADGE_LIBRARY.find(b => b.id === badgeIcon);
-                            const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
-                            const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
-                            return (
-                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                                <IconComp className="w-8 h-8 text-white" />
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-slate-600 italic text-[10px]">No Icon</span>
-                        )}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Left Column: Form Fields */}
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Achievement Name <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="Fast Learner" 
+                          value={newAch.name} 
+                          onChange={(e) => setNewAch({...newAch, name: e.target.value})}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
+                        />
                       </div>
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-200">{newAch.name || 'Live Preview'}</h4>
-                        <p className="text-[10px] text-slate-500 leading-normal">
-                          {newAch.description || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Full Paginated Badge Gallery */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between ml-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Badge Library Catalog
-                      </label>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Description <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="record time" 
+                          value={newAch.description} 
+                          onChange={(e) => setNewAch({...newAch, description: e.target.value})}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Trigger Parameter <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="3 days" 
+                          value={newAch.threshold} 
+                          onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        />
+                      </div>
+
+                      {/* Start and End Date Fields */}
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                            Start Date (Optional)
+                          </label>
+                          <input 
+                            type="date"
+                            value={badgeStartDate}
+                            onChange={(e) => setBadgeStartDate(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                            End Validity Date (Optional)
+                          </label>
+                          <input 
+                            type="date"
+                            value={badgeEndDate}
+                            onChange={(e) => setBadgeEndDate(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
+                         Create Achievement Badge
+                      </button>
+                    </div>
+
+                    {/* Right Column: Paginated Badge Library Catalog */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between ml-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Badge Library Catalog
+                        </label>
+                        {(() => {
+                          const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
+                          const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                          const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={creationGalleryPage === 1}
+                                onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
+                                className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                &larr; Prev
+                              </button>
+                              <span className="text-[10px] font-mono text-slate-400 font-bold">
+                                {creationGalleryPage} / {totalPages}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={creationGalleryPage === totalPages}
+                                onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
+                                className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                Next &rarr;
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
                       {(() => {
                         const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
                         const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
                         const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        const curPage = Math.min(creationGalleryPage, totalPages) || 1;
+                        const startIndex = (curPage - 1) * badgePageSize;
+                        const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+
+                        if (currentPageBadges.length === 0) {
+                          return (
+                            <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
+                              All 50 library badges are currently active in our curriculum!
+                            </div>
+                          );
+                        }
+
                         return (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              disabled={creationGalleryPage === 1}
-                              onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              &larr; Prev
-                            </button>
-                            <span className="text-[10px] font-mono text-slate-400 font-bold">
-                              {creationGalleryPage} / {totalPages}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={creationGalleryPage === totalPages}
-                              onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              Next &rarr;
-                            </button>
+                          <div className="grid grid-cols-3 gap-4">
+                            {/* Custom Badge Upload Trigger Card */}
+                            <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleImageFile(e.target.files[0], false);
+                                  }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                              />
+                              <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                                <Upload className="w-5 h-5" />
+                              </div>
+                              <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                                {lang === 'FR' ? 'Uploader' : 'Upload'}
+                              </span>
+                            </div>
+
+                            {currentPageBadges.map((img) => {
+                              const IconComp = LUCIDE_ICONS[img.iconName] || Award;
+                              const isSelected = badgeIcon === img.id;
+                              return (
+                                <button
+                                  key={img.id}
+                                  type="button"
+                                  onClick={() => setBadgeIcon(img.id)}
+                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                >
+                                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
+                                    <IconComp className="w-6 h-6" />
+                                  </div>
+                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                    {img.iconName.toUpperCase()}
+                                  </span>
+                                  <span className="text-[8px] font-semibold text-slate-500">
+                                    {img.colorName}
+                                  </span>
+                                </button>
+                              );
+                            })}
                           </div>
                         );
                       })()}
                     </div>
-
-                    {(() => {
-                      const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
-                      const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                      const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
-                      const curPage = Math.min(creationGalleryPage, totalPages) || 1;
-                      const startIndex = (curPage - 1) * badgePageSize;
-                      const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
-
-                      if (currentPageBadges.length === 0) {
-                        return (
-                          <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
-                            All 50 library badges are currently active in our curriculum!
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="grid grid-cols-3 gap-4">
-                          {/* Custom Badge Upload Trigger Card */}
-                          <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  handleImageFile(e.target.files[0], false);
-                                }
-                              }}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
-                            <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
-                              <Upload className="w-5 h-5" />
-                            </div>
-                            <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
-                              {lang === 'FR' ? 'Uploader' : 'Upload'}
-                            </span>
-                          </div>
-
-                          {currentPageBadges.map((img) => {
-                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                            const isSelected = badgeIcon === img.id;
-                            return (
-                              <button
-                                key={img.id}
-                                type="button"
-                                onClick={() => setBadgeIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
-                              >
-                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
-                                  <IconComp className="w-6 h-6" />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
-                                  {img.iconName.toUpperCase()}
-                                </span>
-                                <span className="text-[8px] font-semibold text-slate-500">
-                                  {img.colorName}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
-
-                  <button type="submit" className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
-                     Create Achievement Badge
-                  </button>
                </form>
             </motion.div>
           </div>
@@ -1843,7 +1815,7 @@ export default function AdminCurriculumPage() {
       <AnimatePresence>
         {selectedAchievement && (
           <div onClick={() => setSelectedAchievement(null)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Edit Achievement Badge
@@ -1852,209 +1824,181 @@ export default function AdminCurriculumPage() {
                </div>
                
                <div className="p-10 space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Achievement Name <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      value={editName} 
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Description <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      value={editDesc} 
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Trigger Parameter <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      value={editThreshold} 
-                      onChange={(e) => setEditThreshold(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
-                    />
-                  </div>
-
-                  {/* Start and End Date Fields */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                        Start Date (Optional)
-                      </label>
-                      <input 
-                        type="date"
-                        value={editStartDate}
-                        onChange={(e) => setEditStartDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                        End Validity Date (Optional)
-                      </label>
-                      <input 
-                        type="date"
-                        value={editEndDate}
-                        onChange={(e) => setEditEndDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Live Preview */}
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Badge Design Live Preview
-                    </label>
-                    <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
-                      <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
-                        {editIcon ? (
-                          editIcon.startsWith('data:image') ? (
-                            <img src={editIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
-                          ) : (() => {
-                            const found = BADGE_LIBRARY.find(b => b.id === editIcon);
-                            const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
-                            const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
-                            return (
-                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                                <IconComp className="w-8 h-8 text-white" />
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-slate-600 italic text-[10px]">No Icon</span>
-                        )}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Left Column: Form Fields */}
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Achievement Name <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={editName} 
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
+                        />
                       </div>
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-200">{editName || 'Live Preview'}</h4>
-                        <p className="text-[10px] text-slate-500 leading-normal">
-                          {editDesc || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Full Paginated Badge Gallery */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between ml-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Badge Library Catalog
-                      </label>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Description <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={editDesc} 
+                          onChange={(e) => setEditDesc(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                          Trigger Parameter <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={editThreshold} 
+                          onChange={(e) => setEditThreshold(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        />
+                      </div>
+
+                      {/* Start and End Date Fields */}
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                            Start Date (Optional)
+                          </label>
+                          <input 
+                            type="date"
+                            value={editStartDate}
+                            onChange={(e) => setEditStartDate(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+                            End Validity Date (Optional)
+                          </label>
+                          <input 
+                            type="date"
+                            value={editEndDate}
+                            onChange={(e) => setEditEndDate(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <button onClick={handleUpdateAchievement} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
+                         Update Achievement Badge
+                      </button>
+                    </div>
+
+                    {/* Right Column: Paginated Badge Library Catalog */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between ml-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Badge Library Catalog
+                        </label>
+                        {(() => {
+                          const usedActiveIcons = achievements
+                            .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
+                            .map(a => a.icon);
+                          const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
+                          const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={editionGalleryPage === 1}
+                                onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
+                                className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                &larr; Prev
+                              </button>
+                              <span className="text-[10px] font-mono text-slate-400 font-bold">
+                                {editionGalleryPage} / {totalPages}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={editionGalleryPage === totalPages}
+                                onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
+                                className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                Next &rarr;
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
                       {(() => {
                         const usedActiveIcons = achievements
                           .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
                           .map(a => a.icon);
                         const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
                         const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        const curPage = Math.min(editionGalleryPage, totalPages) || 1;
+                        const startIndex = (curPage - 1) * badgePageSize;
+                        const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+
+                        if (currentPageBadges.length === 0) {
+                          return (
+                            <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
+                              All 50 library badges are currently active in our curriculum!
+                            </div>
+                          );
+                        }
+
                         return (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              disabled={editionGalleryPage === 1}
-                              onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              &larr; Prev
-                            </button>
-                            <span className="text-[10px] font-mono text-slate-400 font-bold">
-                              {editionGalleryPage} / {totalPages}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={editionGalleryPage === totalPages}
-                              onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              Next &rarr;
-                            </button>
+                          <div className="grid grid-cols-3 gap-4">
+                            {/* Custom Badge Upload Trigger Card */}
+                            <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleImageFile(e.target.files[0], true);
+                                  }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                              />
+                              <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                                <Upload className="w-5 h-5" />
+                              </div>
+                              <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                                {lang === 'FR' ? 'Uploader' : 'Upload'}
+                              </span>
+                            </div>
+
+                            {currentPageBadges.map((img) => {
+                              const IconComp = LUCIDE_ICONS[img.iconName] || Award;
+                              const isSelected = editIcon === img.id;
+                              return (
+                                <button
+                                  key={img.id}
+                                  type="button"
+                                  onClick={() => setEditIcon(img.id)}
+                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                >
+                                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
+                                    <IconComp className="w-6 h-6" />
+                                  </div>
+                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                    {img.iconName.toUpperCase()}
+                                  </span>
+                                  <span className="text-[8px] font-semibold text-slate-500">
+                                    {img.colorName}
+                                  </span>
+                                </button>
+                              );
+                            })}
                           </div>
                         );
                       })()}
                     </div>
-
-                    {(() => {
-                      const usedActiveIcons = achievements
-                        .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
-                        .map(a => a.icon);
-                      const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                      const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
-                      const curPage = Math.min(editionGalleryPage, totalPages) || 1;
-                      const startIndex = (curPage - 1) * badgePageSize;
-                      const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
-
-                      if (currentPageBadges.length === 0) {
-                        return (
-                          <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
-                            All 50 library badges are currently active in our curriculum!
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="grid grid-cols-3 gap-4">
-                          {/* Custom Badge Upload Trigger Card */}
-                          <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  handleImageFile(e.target.files[0], true);
-                                }
-                              }}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
-                            <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
-                              <Upload className="w-5 h-5" />
-                            </div>
-                            <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
-                              {lang === 'FR' ? 'Uploader' : 'Upload'}
-                            </span>
-                          </div>
-
-                          {currentPageBadges.map((img) => {
-                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                            const isSelected = editIcon === img.id;
-                            return (
-                              <button
-                                key={img.id}
-                                type="button"
-                                onClick={() => setEditIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
-                              >
-                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
-                                  <IconComp className="w-6 h-6" />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
-                                  {img.iconName.toUpperCase()}
-                                </span>
-                                <span className="text-[8px] font-semibold text-slate-500">
-                                  {img.colorName}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
-
-                  <button onClick={handleUpdateAchievement} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
-                     Update Achievement Badge
-                  </button>
                </div>
             </motion.div>
           </div>
