@@ -128,6 +128,18 @@ export default function Home() {
       setErrorMsg(lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.');
       return;
     }
+
+    // Advanced Password Complexity Validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setErrorMsg(
+        lang === 'FR' 
+          ? 'Le mot de passe doit contenir au moins 8 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.' 
+          : 'Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'
+      );
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMsg(lang === 'FR' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.');
       return;
@@ -159,9 +171,23 @@ export default function Home() {
       return;
     }
 
+    // Advanced Password Complexity Validation on Login
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setErrorMsg(
+        lang === 'FR' 
+          ? 'Le mot de passe doit contenir au moins 8 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.' 
+          : 'Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'
+      );
+      return;
+    }
+
     const isVerified = localStorage.getItem('op_registration_verified') === 'true';
-    if (isVerified) {
+    const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
+
+    if (isVerified && !hasLoggedInBefore) {
       localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+      localStorage.setItem('op_logged_in_before', 'true');
     }
 
     const testProfile = {
@@ -175,7 +201,12 @@ export default function Home() {
     localStorage.setItem('op_session', 'true');
     setIsLoggedIn(true);
     setAuthModal(null);
-    router.push('/catalog');
+    
+    if (hasLoggedInBefore) {
+      router.push('/profile/curriculum');
+    } else {
+      router.push('/catalog');
+    }
   };
 
   if (!mounted) {
