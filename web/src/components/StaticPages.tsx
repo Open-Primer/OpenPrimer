@@ -11,7 +11,7 @@ import {
 import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { dbService } from '@/lib/db';
+import { dbService, progressService } from '@/lib/db';
 
 // ── Smart Empty State: No courses found ──────────────────────────────────────
 const SUBJECT_SUGGESTIONS = [
@@ -450,14 +450,9 @@ export const CatalogPage = () => {
     }
   };
 
-  const isCourseNew = (course: any) => {
-    if (!course.created_at) return false;
-    const created = new Date(course.created_at).getTime();
-    const now = new Date().getTime();
-    const diffTime = now - created;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    return diffDays >= 0 && diffDays <= 90;
-  };
+  // Delegates to the canonical 90-day rule in progressService
+  const isCourseNew = (course: any) => progressService.isNewCourse(course.created_at);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -641,8 +636,8 @@ export const CatalogPage = () => {
                   </p>
                </div>
                {!isLoggedIn && (
-                  <div className="mt-3 px-4 py-3 bg-blue-500/5 border border-blue-500/20 rounded-2xl max-w-md text-[11px] leading-relaxed text-blue-400/90 font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5 animate-pulse">
-                    <Globe className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
+                  <div className="mt-3 px-4 py-3 bg-gradient-to-r from-blue-950/60 via-blue-900/30 to-blue-950/60 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 rounded-2xl max-w-md text-[11px] leading-relaxed text-blue-400/90 font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5">
+                    <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
                     <div>
                       <span className="font-bold text-white uppercase text-[8px] tracking-wider block mb-1">
                         {lang.toUpperCase() === 'FR' ? 'GUIDE DE TRADUCTION DU CATALOGUE' : 
@@ -744,15 +739,20 @@ export const CatalogPage = () => {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                    <div className="flex justify-between items-center mb-6 w-full gap-4">
+                      <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
                         <Book className="w-6 h-6" />
                       </div>
-                      <div className="flex gap-2 items-center mr-8">
+                      <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
                         {/* Unified gold star rating badge */}
                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                           {(course.averageRating && course.averageRating > 0) ? course.averageRating.toFixed(1) : "3.4"} ({(course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12})
+                        </span>
+                        {/* Expected duration chip */}
+                        <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={`${COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150} expected learning hours`}>
+                          <Clock className="w-3 h-3 text-blue-400" />
+                          {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
                         </span>
                         {/* Bookmark (logged-in only) */}
                         {isLoggedIn && (
@@ -774,9 +774,23 @@ export const CatalogPage = () => {
                     <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
                       {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
                     </h3>
-                    <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">
+                    <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed">
                       {translatedCourses[course.id]?.description || course.description}
                     </p>
+
+                    {/* LAST REVISION DATE */}
+                    <div className="mb-4 flex items-center gap-1.5 text-[9px] font-bold text-slate-600 uppercase tracking-wider">
+                      <ShieldCheck className="w-3 h-3 text-slate-600" />
+                      {lang === 'FR' ? 'Dernière révision :' : 'Last revised:'}&nbsp;
+                      <span className={`font-black ${
+                        course.last_revision_date && 
+                        (Date.now() - new Date(course.last_revision_date).getTime()) < 30 * 24 * 60 * 60 * 1000
+                          ? 'text-emerald-500'
+                          : 'text-slate-500'
+                      }`}>
+                        {progressService.formatRevisionDate(course.last_revision_date, lang)}
+                      </span>
+                    </div>
 
                     {/* PROGRESS INDICATOR (only visible if logged in AND enrolled) */}
                     {isLoggedIn && isEnrolled && (
@@ -785,11 +799,16 @@ export const CatalogPage = () => {
                             <span className="text-[8px] font-black uppercase text-slate-600">{lang === 'FR' ? 'Progression' : 'Progress'}</span>
                             <span className="text-[8px] font-black text-blue-500">{progressPercent}%</span>
                          </div>
-                         <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                         <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mb-2">
                             <div className="h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" style={{ width: `${progressPercent}%` }} />
+                         </div>
+                         <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
+                           <span>{lang === 'FR' ? 'Temps passé :' : 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
+                           <span>{lang === 'FR' ? 'Attendu :' : 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h</span>
                          </div>
                       </div>
                     )}
+
 
                     <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
                       <button 
@@ -903,9 +922,9 @@ export const CatalogPage = () => {
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4 mb-8">
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
-                  <Award className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Credits</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} ECTS</p>
+                  <Sparkles className="w-5 h-5 text-violet-400 mx-auto mb-1" />
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
                   <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
@@ -1233,9 +1252,9 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
-              <Award className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Academic Credits</p>
-              <p className="text-2xl font-black text-white">{course.ects} ECTS</p>
+              <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Mastery Weight</p>
+              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">pts</span></p>
            </div>
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Clock className="w-8 h-8 text-blue-500 mx-auto mb-3" />

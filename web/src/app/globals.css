@@ -164,38 +164,119 @@ nextjs-portal {
 /* --- 2. FOCUS THEME (DISTRACTION-FREE MONOCHROME PITCH BLACK) --- */
 .theme-focus {
   background-color: #000000 !important;
-  color: #94a3b8 !important; /* Slate-400 */
+  color: #a3a3a3 !important; /* Neutral-400 */
+}
+
+/* Eliminate all vibrant background gradients and shadow glows in Focus Theme */
+.theme-focus *, 
+.theme-focus *::before, 
+.theme-focus *::after {
+  --tw-gradient-from: transparent !important;
+  --tw-gradient-to: transparent !important;
+  --tw-gradient-stops: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+/* Enforce flat, pure-black backgrounds with neutral borders in Focus Theme */
+.theme-focus .bg-slate-900\/40, 
+.theme-focus .bg-slate-950\/30,
+.theme-focus .bg-slate-900\/50,
+.theme-focus .bg-slate-950\/20,
+.theme-focus .bg-slate-900\/10,
+.theme-focus .bg-slate-900,
+.theme-focus .bg-slate-950,
+.theme-focus .bg-slate-950\/80,
+.theme-focus .bg-slate-900\/30 {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border-color: #262626 !important;
+}
+
+/* Convert all interactive colors and colorful text to monochrome in Focus Theme */
+.theme-focus svg {
+  color: #737373 !important;
+}
+.theme-focus .text-blue-400,
+.theme-focus .text-emerald-400,
+.theme-focus .text-violet-400,
+.theme-focus .text-amber-500,
+.theme-focus .text-emerald-500,
+.theme-focus .text-blue-500,
+.theme-focus .text-indigo-500,
+.theme-focus .text-indigo-400,
+.theme-focus .text-emerald-600,
+.theme-focus .text-blue-600,
+.theme-focus .text-violet-500 {
+  color: #e5e5e5 !important;
+}
+
+.theme-focus .text-slate-500,
+.theme-focus .text-slate-600,
+.theme-focus .text-slate-700 {
+  color: #525252 !important;
+}
+
+/* Flatten all colorful backgrounds of badges/chips to neutral grays in Focus Theme */
+.theme-focus .bg-blue-600\/10,
+.theme-focus .bg-blue-500\/10,
+.theme-focus .bg-emerald-600\/10,
+.theme-focus .bg-emerald-500\/10,
+.theme-focus .bg-amber-500\/10,
+.theme-focus .bg-violet-500\/10,
+.theme-focus .bg-blue-950\/40,
+.theme-focus .bg-slate-800,
+.theme-focus .bg-slate-850,
+.theme-focus .bg-slate-950,
+.theme-focus .bg-slate-900\/20,
+.theme-focus .bg-blue-600 {
+  background-color: #171717 !important;
+  background-image: none !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+.theme-focus .border-blue-500\/20,
+.theme-focus .border-emerald-500\/20,
+.theme-focus .border-amber-500\/20,
+.theme-focus .border-violet-500\/30,
+.theme-focus .border-slate-800,
+.theme-focus .border-slate-850,
+.theme-focus .border-slate-700 {
+  border-color: #262626 !important;
 }
 
 /* Sidebar styling in Focus Theme (ultra-minimalist) */
 .theme-focus aside {
   background-color: #000000 !important;
-  border-right: 1px solid #111827 !important;
+  border-right: 1px solid #171717 !important;
 }
 .theme-focus aside input {
   background-color: #050505 !important;
-  border-color: #111827 !important;
+  border-color: #262626 !important;
 }
 .theme-focus aside h4 {
-  color: #4b5563 !important;
+  color: #525252 !important;
 }
 .theme-focus aside a {
-  color: #4b5563 !important;
+  color: #525252 !important;
 }
 .theme-focus aside a:hover {
-  background-color: #050505 !important;
-  color: #d1d5db !important;
+  background-color: #0a0a0a !important;
+  color: #e5e5e5 !important;
 }
 .theme-focus aside a.bg-blue-600\/10,
 .theme-focus aside a.bg-blue-600\\\/10 {
-  background-color: #111827 !important;
-  color: #38bdf8 !important; /* Neon Sky Blue focus */
+  background-color: #171717 !important;
+  color: #ffffff !important;
+  border: 1px solid #404040 !important;
 }
 
 /* Top Nav styling in Focus Theme */
 .theme-focus nav {
-  background-color: rgba(0, 0, 0, 0.9) !important;
-  border-bottom: 1px solid #111827 !important;
+  background-color: rgba(0, 0, 0, 0.95) !important;
+  border-bottom: 1px solid #171717 !important;
 }
 
 /* Main Content Area styling in Focus Theme */
@@ -212,12 +293,12 @@ nextjs-portal {
 
 /* Markdown MDX Prose Overrides for Focus Mode */
 .theme-focus .prose {
-  color: #cbd5e1 !important; /* Crisp light gray body */
+  color: #d4d4d4 !important; /* Crisp neutral body */
 }
 .theme-focus .prose p,
 .theme-focus .prose li,
 .theme-focus .prose-p {
-  color: #9ca3af !important;
+  color: #a3a3a3 !important;
   font-size: 1.05rem !important;
   line-height: 1.8 !important;
 }
@@ -228,20 +309,20 @@ nextjs-portal {
   color: #ffffff !important;
 }
 .theme-focus .prose h2 {
-  border-bottom: 1px solid #111827 !important;
+  border-bottom: 1px solid #262626 !important;
 }
 .theme-focus .prose strong {
-  color: #38bdf8 !important; /* Sky Blue accent for key terms */
+  color: #ffffff !important; /* Bold high contrast key terms */
   font-weight: 800 !important;
 }
 .theme-focus .prose blockquote {
-  background-color: #050505 !important;
-  border-left-color: #38bdf8 !important;
-  color: #9ca3af !important;
+  background-color: #0a0a0a !important;
+  border-left-color: #a3a3a3 !important;
+  color: #a3a3a3 !important;
 }
 .theme-focus .prose code {
-  color: #34d399 !important; /* Crisp neon emerald code */
-  background-color: #090d16 !important;
+  color: #ffffff !important; 
+  background-color: #171717 !important;
 }
 
 /* Hide Distracting Metadata, badges, and lines in Focus Mode */

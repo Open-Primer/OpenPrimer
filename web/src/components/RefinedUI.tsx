@@ -315,6 +315,14 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
 
+  const getPersonaName = (pName: string) => {
+    const selected = personalities.find(p => p.name === pName || p.id === pName);
+    if (selected && selected.translations?.[lang]) {
+      return selected.translations[lang].name;
+    }
+    return pName;
+  };
+
   useEffect(() => {
     const updateAuth = () => {
       const session = localStorage.getItem('op_session');
@@ -545,7 +553,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                      disabled={!isLoggedIn}
                    >
                      {personalities.map(p => (
-                       <option key={p.id} value={p.name} className="bg-slate-900 text-white">{p.name}</option>
+                       <option key={p.id} value={p.name} className="bg-slate-900 text-white">
+                         {p.translations?.[lang]?.name || p.name}
+                       </option>
                      ))}
                    </select>
                 </div>
@@ -560,7 +570,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-black tracking-tight text-white">
-                    {lang === 'FR' ? `Tuteur ${persona} IA` : `${persona} AI Tutor`}
+                    {lang === 'FR' ? `Tuteur ${getPersonaName(persona)} IA` : `${getPersonaName(persona)} AI Tutor`}
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed max-w-[300px]">
                     {lang === 'FR' 
@@ -647,7 +657,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
             <div className="flex items-center gap-2 text-blue-400">
               <Sparkles className="w-4 h-4 animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-widest">
-                {lang === 'FR' ? `Tuteur ${persona} IA` : `${persona} AI Tutor`}
+                {lang === 'FR' ? `Tuteur ${getPersonaName(persona)} IA` : `${getPersonaName(persona)} AI Tutor`}
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -763,20 +773,25 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     };
     window.addEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
 
-    // Load available languages dynamically from db
-    dbService.getAvailableLanguages().then(({ data }) => {
-      if (data && data.length > 0) {
-        setLanguages(data.map((l: any) => ({
-          code: l.code.toUpperCase(),
-          flag: LANG_FLAG_MAP[l.code.toUpperCase()]?.flag || l.flag || '🌐',
-          label: LANG_FLAG_MAP[l.code.toUpperCase()]?.label || l.label || l.name || l.code.toUpperCase(),
-        })));
-      }
-    }).catch(() => { /* keep fallback */ });
+    const fetchLanguages = () => {
+      dbService.getAvailableLanguages().then(({ data }) => {
+        if (data && data.length > 0) {
+          setLanguages(data.map((l: any) => ({
+            code: l.code.toUpperCase(),
+            flag: LANG_FLAG_MAP[l.code.toUpperCase()]?.flag || l.flag || '🌐',
+            label: LANG_FLAG_MAP[l.code.toUpperCase()]?.label || l.label || l.name || l.code.toUpperCase(),
+          })));
+        }
+      }).catch(() => { /* keep fallback */ });
+    };
+
+    fetchLanguages();
+    window.addEventListener('op_languages_changed', fetchLanguages);
 
     return () => {
       window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
       window.removeEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
+      window.removeEventListener('op_languages_changed', fetchLanguages);
     };
   }, []);
 

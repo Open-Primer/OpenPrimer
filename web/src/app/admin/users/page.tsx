@@ -207,7 +207,14 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-8 py-6">
                   <div>
-                    <p className="text-xs font-black text-slate-300">Lvl {user.level}</p>
+                    <p className="text-xs font-black text-slate-300">
+                      {(() => {
+                        const totalMins = Math.round(user.kp / 10);
+                        const hrs = Math.floor(totalMins / 60);
+                        const mins = totalMins % 60;
+                        return `${hrs}h ${mins}m`;
+                      })()}
+                    </p>
                     <p className="text-[10px] text-slate-600 font-bold">{user.kp.toLocaleString()} KP</p>
                   </div>
                 </td>

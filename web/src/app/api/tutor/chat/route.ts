@@ -15,8 +15,13 @@ export async function POST(request: Request) {
     try {
       const { data: personalities } = await dbService.getTutorPersonalities();
       const matching = personalities?.find((p: any) => p.name === persona || p.id === persona);
-      if (matching?.prompt) {
-        systemPrompt = matching.prompt;
+      if (matching) {
+        const langUpper = (language || 'EN').toUpperCase();
+        if (matching.translations?.[langUpper]?.prompt) {
+          systemPrompt = matching.translations[langUpper].prompt;
+        } else if (matching.prompt) {
+          systemPrompt = matching.prompt;
+        }
       }
     } catch (e) {
       console.warn('[TUTOR CHAT] Failed to query tutor personality from database, using defaults.', e);

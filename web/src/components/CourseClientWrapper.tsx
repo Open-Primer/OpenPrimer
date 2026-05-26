@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
+import { usePathname } from 'next/navigation';
+import { progressService } from '@/lib/db';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;
@@ -13,11 +15,38 @@ interface CourseClientWrapperProps {
 export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
+  const pathname = usePathname();
 
   // Expose to window for TopNav
   useEffect(() => {
     (window as any).setReadingMode = setReadingMode;
   }, []);
+
+  // Lesson session timer per page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const parts = pathname.split('/');
+    const slug = parts[3] || 'Classical_Mechanics';
+    
+    // Start tracking this page visit
+    progressService.recordLessonEntry(slug, pathname);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        progressService.commitLessonTime(slug, pathname);
+      } else {
+        progressService.recordLessonEntry(slug, pathname);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      progressService.commitLessonTime(slug, pathname);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [pathname]);
+
 
   const modeStyles = {
     default: "bg-slate-950 text-slate-100",

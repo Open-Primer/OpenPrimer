@@ -46,15 +46,28 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (cookieLang && typeof cookieLang === 'string' && cookieLang.length > 0) {
         setLanguage(cookieLang);
       } else {
-        document.cookie = `openprimer_lang=EN; path=/; max-age=31536000; SameSite=Lax`;
+        // Dual-Layer Detection Engine for guests
+        let fallbackLang: Language = 'EN';
         
-        // Geolocation IP-based detection for guests
+        // Layer 1: Instant synchronous browser-locale check
+        if (typeof navigator !== 'undefined' && navigator.language) {
+          const browserLang = navigator.language.split('-')[0].toUpperCase();
+          if (['FR', 'ES', 'DE', 'ZH', 'IT'].includes(browserLang)) {
+            fallbackLang = browserLang;
+          }
+        }
+        
+        // Immediately apply browser default
+        setLanguage(fallbackLang);
+        document.cookie = `openprimer_lang=${fallbackLang}; path=/; max-age=31536000; SameSite=Lax`;
+        
+        // Layer 2: Async Geolocation IP-based refinement
         fetch('https://ipapi.co/json/')
           .then(res => res.json())
           .then(data => {
             if (data && data.country_code) {
               const cc = String(data.country_code).toUpperCase();
-              let detectedLang: Language = 'EN';
+              let detectedLang: Language = fallbackLang;
               
               if (cc === 'IT') {
                 detectedLang = 'IT';
@@ -73,12 +86,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                 setLanguage(detectedLang);
                 localStorage.setItem('openprimer_lang', detectedLang);
                 document.cookie = `openprimer_lang=${detectedLang}; path=/; max-age=31536000; SameSite=Lax`;
-                console.log(`Detected country: ${cc}, auto-set default language to: ${detectedLang}`);
+                console.log(`[GEO] Detected country: ${cc}, auto-refined default language to: ${detectedLang}`);
               }
             }
           })
           .catch(err => {
-            console.warn("IP-based language detection failed, falling back to EN default:", err);
+            console.warn("[GEO] IP-based language detection failed, staying on browser default:", err);
           });
       }
     }

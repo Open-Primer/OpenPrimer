@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
-import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark } from 'lucide-react';
+import * as Icons from 'lucide-react';
+import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
-import { dbService } from '@/lib/db';
+import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
+
 
 export default function CurriculumPage() {
   const { language: lang } = useLanguage();
@@ -14,6 +16,10 @@ export default function CurriculumPage() {
 
   const [progress, setProgress] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [earnedIds, setEarnedIds] = useState<number[]>([]);
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
+  const [curriculumRevision, setCurriculumRevision] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
@@ -24,6 +30,19 @@ export default function CurriculumPage() {
       setProgress(data);
       const { data: coursesData } = await dbService.getAllCourses();
       if (coursesData) setCourses(coursesData);
+      
+      const { data: achs } = await dbService.getAchievements();
+      if (achs) setAchievements(achs);
+      
+      const earned = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_earned_achievements') || '[]') : [];
+      setEarnedIds(earned);
+
+      // Compute enrolled IDs + curriculum revision date
+      const ids: number[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_enrolled_courses') || '[1, 3]') : [1, 3];
+      setEnrolledIds(ids);
+      const revDate = progressService.getCurriculumLastRevision(ids);
+      setCurriculumRevision(revDate);
+
       setLoading(false);
     }
     loadProgress();
@@ -41,6 +60,7 @@ export default function CurriculumPage() {
       localStorage.setItem('op_reading_mode', mode);
     };
   }, []);
+
 
   const toggleBookmark = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -64,7 +84,7 @@ export default function CurriculumPage() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>
+    <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>
       <TopNav showReadingModeSelector={true} />
       
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
@@ -92,31 +112,82 @@ export default function CurriculumPage() {
               <p className="text-xl md:text-2xl font-bold leading-relaxed text-slate-200 max-w-3xl italic">
                  "{progress.aiSummary}"
               </p>
-              <div className="mt-8 pt-8 border-t border-slate-800/50 flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white"><ShieldCheck className="w-6 h-6" /></div>
-                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.tutor_feedback} • Institutional Consensus</span>
-              </div>
            </div>
         </motion.section>
 
         {/* STATS GRID */}
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
-           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-yellow-500/30 transition-all">
-              <Award className="w-8 h-8 text-yellow-500 mb-4 group-hover:scale-110 transition-transform" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.total_credits}</p>
-              <p className="text-3xl font-black text-white">{progress.credits} ECTS</p>
-           </div>
-           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-blue-500/30 transition-all">
-              <Star className="w-8 h-8 text-blue-500 mb-4 group-hover:scale-110 transition-transform" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.knowledge_points}</p>
-              <p className="text-3xl font-black text-white">{progress.kp.toLocaleString()} KP</p>
-           </div>
-           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-emerald-500/30 transition-all">
-              <Clock className="w-8 h-8 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.learning_time}</p>
-              <p className="text-3xl font-black text-white">{progress.learningTime}</p>
-           </div>
-        </div>        {(() => {
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+
+          {/* 🔥 Study Streak */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-orange-500/30 transition-all">
+            <div className="text-3xl mb-4">🔥</div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+              {lang === 'FR' ? 'Série d\'étude' : 'Study Streak'}
+            </p>
+            <p className="text-3xl font-black text-white">
+              {progress.studyStreakDays ?? 0}
+              <span className="text-base text-slate-500 font-bold ml-2">
+                {lang === 'FR' ? 'jour' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 ? 's' : ''}
+              </span>
+            </p>
+            <p className="text-[9px] text-slate-600 mt-2 font-medium">
+              {(progress.studyStreakDays ?? 0) >= 7
+                ? (lang === 'FR' ? '🏆 Série impressionnante !' : '🏆 Impressive streak!')
+                : (progress.studyStreakDays ?? 0) >= 3
+                ? (lang === 'FR' ? '⚡ Continue comme ça !' : '⚡ Keep it up!')
+                : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : 'Come back daily to build a streak!')}
+            </p>
+          </div>
+
+          {/* ⭐ Mastery Points — always grows */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-violet-500/30 transition-all">
+            <Sparkles className="w-8 h-8 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+              {lang === 'FR' ? 'Points de Maîtrise' : 'Mastery Points'}
+            </p>
+            <p className="text-3xl font-black text-white">
+              {progress.masteryPoints ?? 0}
+              <span className="text-base text-slate-500 font-bold ml-2">pt{(progress.masteryPoints ?? 0) !== 1 ? 's' : ''}</span>
+            </p>
+            <p className="text-[9px] font-black uppercase tracking-wider mt-2 text-violet-400">
+              {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : '🏆 Master')
+                : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : '⭐ Expert')
+                : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : '📚 Scholar')
+                : (lang === 'FR' ? '🌱 Apprenti' : '🌱 Apprentice')}
+            </p>
+          </div>
+
+          {/* ⏱ Total Study Hours */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-emerald-500/30 transition-all">
+            <Clock className="w-8 h-8 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.learning_time}</p>
+            <p className="text-3xl font-black text-white">{progress.learningTime || "0h 0m"}</p>
+            <p className="text-[9px] text-slate-600 mt-2 font-medium">
+              {(progress.totalMinutes ?? 0) >= 600
+                ? (lang === 'FR' ? '📖 Lecteur assidu' : '📖 Dedicated reader')
+                : (progress.totalMinutes ?? 0) >= 120
+                ? (lang === 'FR' ? '✨ Belle progression' : '✨ Great progress')
+                : (lang === 'FR' ? 'Chaque minute compte !' : 'Every minute counts!')}
+            </p>
+          </div>
+
+          {/* 📚 Courses Mastered */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-blue-500/30 transition-all">
+            <GraduationCap className="w-8 h-8 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+              {lang === 'FR' ? 'Cours Terminés' : 'Courses Mastered'}
+            </p>
+            <p className="text-3xl font-black text-white">{progress.completedCount ?? 0}</p>
+            <p className="text-[9px] text-slate-500 mt-2 font-medium flex items-center gap-1">
+              <span className="text-blue-400 font-black">{progress.inProgressCount ?? 0}</span>
+              &nbsp;{lang === 'FR' ? 'en cours • sur' : 'in progress • of'}
+              &nbsp;<span className="text-slate-400 font-black">{progress.activeModules?.length ?? 0}</span>
+              &nbsp;{lang === 'FR' ? 'inscrits' : 'enrolled'}
+            </p>
+          </div>
+        </div>
+
+        {(() => {
           const activeCourses = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
           const completedCourses = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
 
@@ -208,23 +279,27 @@ export default function CurriculumPage() {
                        return (
                          <Link key={course.id} href={getCoursePath(course)} className="group">
                            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[48px] hover:border-blue-500/50 transition-all shadow-2xl flex flex-col h-full relative overflow-hidden">
-                              <div className="flex justify-between items-start mb-6">
-                                 <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400">
+                              <div className="flex justify-between items-center mb-6 gap-2 w-full">
+                                 <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 flex-shrink-0">
                                     <Book className="w-6 h-6" />
                                  </div>
-                                 <div className="flex gap-2 items-center">
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                 <div className="flex gap-2 items-center flex-1 justify-end flex-wrap">
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
                                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                       {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1">
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {(courseDetails?.hours ?? 150)}H
                                     </span>
                                     <button
                                       onClick={(e) => toggleBookmark(course.id, e)}
                                       title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
-                                      className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
+                                      className={`p-2 rounded-xl transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
                                     >
                                       <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                                     </button>
-                                    <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                    <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
                                       {formatCourseLevel(course.level)}
                                     </span>
                                  </div>
@@ -232,19 +307,30 @@ export default function CurriculumPage() {
                               <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
                                 {getLocalizedTitle(course)}
                               </h3>
-                              <p className="text-sm text-slate-500 mb-8">{t[course.subject_key as keyof typeof t] || course.subject_key}</p>
+                              <p className="text-sm text-slate-500 mb-6">{course.subject}</p>
                               
                               <div className="mt-auto">
                                  <div className="flex justify-between items-center mb-2">
                                     <span className="text-[9px] font-black uppercase text-slate-600">{t.progress}</span>
                                     <span className="text-[9px] font-black text-blue-500">{course.progress}%</span>
                                  </div>
-                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
+                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
                                     <motion.div 
                                       initial={{ width: 0 }}
                                       animate={{ width: `${course.progress}%` }}
                                       className="h-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" 
                                     />
+                                 </div>
+
+                                 {/* Time spent indicator card */}
+                                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
+                                   <span className="flex items-center gap-1">
+                                     <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                     {lang === 'FR' ? 'Temps passé :' : 'Time spent:'} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
+                                   </span>
+                                   <span>
+                                     {lang === 'FR' ? 'Attendu :' : 'Expected:'} <strong className="text-slate-400">{(courseDetails?.hours ?? 150)}h</strong>
+                                   </span>
                                  </div>
                                  
                                  {/* Continue button at bottom of curriculum module */}
@@ -266,7 +352,7 @@ export default function CurriculumPage() {
               {completedCourses.length > 0 && (
                 <section className="mt-20">
                    <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-emerald-500">
-                      <Award className="w-6 h-6 text-emerald-500 animate-pulse" /> {lang.toUpperCase() === 'FR' ? "Modules Complétés / Curriculum" : "Completed Courses / Curriculum"}
+                      <Award className="w-6 h-6 text-emerald-500 animate-pulse" /> {lang.toUpperCase() === 'FR' ? "Modules Complétés" : "Completed Courses"}
                    </h2>
                    <div className="grid md:grid-cols-2 gap-8">
                      {completedCourses.map((course: any) => {
@@ -329,29 +415,47 @@ export default function CurriculumPage() {
                                 </div>
                               </div>
 
-                              <div className="flex justify-between items-start mb-6">
-                                 <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
+                              <div className="flex justify-between items-center mb-6 gap-2 w-full">
+                                 <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400 flex-shrink-0">
                                     <Award className="w-6 h-6 animate-pulse" />
                                  </div>
-                                 <div className="flex gap-2 items-center mr-8">
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                 <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
                                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                       {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 flex items-center gap-1.5">
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {(courseDetails?.hours ?? 150)}H
+                                    </span>
+                                    <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                      {formatCourseLevel(course.level)}
                                     </span>
                                  </div>
                               </div>
                               <h3 className="text-xl font-black mb-2 text-emerald-100 group-hover:text-emerald-400 transition-colors">
                                 {getLocalizedTitle(course)}
                               </h3>
-                              <p className="text-sm text-slate-500 mb-8">{t[course.subject_key as keyof typeof t] || course.subject_key}</p>
+                              <p className="text-sm text-slate-500 mb-6">{course.subject}</p>
                               
                               <div className="mt-auto">
                                  <div className="flex justify-between items-center mb-2">
                                     <span className="text-[9px] font-black uppercase text-emerald-600">{lang.toUpperCase() === 'FR' ? 'Statut' : 'Status'}</span>
                                     <span className="text-[9px] font-black text-emerald-500">100% {lang.toUpperCase() === 'FR' ? 'Terminé' : 'Completed'}</span>
                                  </div>
-                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
-                                    <div className="h-full bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)] animate-pulse" style={{ width: '100%' }} />
+                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
+                                    <div className="h-full bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)]" style={{ width: '100%' }} />
+                                 </div>
+
+                                 {/* Time spent indicator card */}
+                                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
+                                   <span className="flex items-center gap-1">
+                                     <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                     {lang === 'FR' ? 'Temps passé :' : 'Time spent:'} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
+                                   </span>
+                                   <span>
+                                     {lang === 'FR' ? 'Prévu :' : 'Expected:'} <strong className="text-slate-400">{(courseDetails?.hours ?? 150)}h</strong>
+                                   </span>
                                  </div>
                                  
                                  {/* Continue/Review button at bottom of completed module */}
@@ -369,12 +473,67 @@ export default function CurriculumPage() {
                    </div>
                 </section>
               )}
+
+              {activeCourses.length === 0 && completedCourses.length === 0 && (
+                <div className="p-16 border border-slate-850 rounded-[48px] bg-slate-900/10 text-center max-w-2xl mx-auto my-12 backdrop-blur-3xl shadow-xl">
+                  <Book className="w-16 h-16 text-slate-650 mx-auto mb-6" />
+                  <h3 className="text-2xl font-black text-white mb-3">
+                    {lang === 'FR' ? 'Votre curriculum est vide' : 'Your curriculum is empty'}
+                  </h3>
+                  <p className="text-slate-500 mb-8 max-w-md mx-auto text-sm leading-relaxed">
+                    {lang === 'FR' 
+                      ? 'Parcourez notre catalogue premium et commencez votre premier parcours de formation auto-dirigé dès aujourd\'hui.'
+                      : 'Explore our premium catalog and kick off your first self-directed learning quest today.'}
+                  </p>
+                  <Link href="/catalog" className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg transition-all inline-block hover:scale-105 active:scale-95">
+                    {lang === 'FR' ? 'Parcourir le catalogue' : 'Explore Catalog'}
+                  </Link>
+                </div>
+              )}
             </>
           );
         })()}
-      </div>
 
-      <Footer />
-    </div>
-  );
+        {/* ACHIEVEMENTS GALLERY */}
+        <section className="mt-20">
+           <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
+              <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : "Achievements Gallery"}
+           </h2>
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+             {achievements.map((ach) => {
+               const isEarned = earnedIds.includes(ach.id);
+               const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
+               const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
+
+               return (
+                 <div 
+                   key={ach.id}
+                   className={`p-6 border rounded-[32px] flex flex-col items-center text-center transition-all ${
+                     isEarned 
+                       ? 'bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5' 
+                       : 'bg-slate-950/20 border-slate-800/40 opacity-40 hover:opacity-60'
+                   }`}
+                 >
+                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${isEarned ? badge.gradient : 'from-slate-800 to-slate-900'} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                     <IconComponent className="w-6 h-6" />
+                   </div>
+                   <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.name}</h4>
+                   <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.description}</p>
+                   <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${
+                     isEarned 
+                       ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' 
+                       : 'bg-slate-800/40 border-slate-700/30 text-slate-500'
+                   }`}>
+                     {isEarned ? (lang === 'FR' ? 'Déverrouillé' : 'Unlocked') : ach.threshold}
+                   </span>
+                 </div>
+               );
+             })}
+           </div>
+        </section>
+     </div>
+
+     <Footer />
+   </div>
+ );
 }

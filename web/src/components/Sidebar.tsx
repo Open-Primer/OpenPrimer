@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { NavItem } from '@/lib/content';
-import { dbService } from '@/lib/db';
+import { dbService, progressService } from '@/lib/db';
 
 interface SidebarProps {
   items: NavItem[];
@@ -29,29 +29,37 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       const activeSlug = isLPage ? parts[3] : null;
       if (!activeSlug) return;
       
-      const { activeModules } = await dbService.getUserProgress('u1');
-      const currentModule = activeModules.find((m: any) => 
-        m.slug.toLowerCase().replace(/_/g, '-') === activeSlug.toLowerCase().replace(/_/g, '-')
-      );
-      if (currentModule) {
-        setProgress(currentModule.progress);
+      const flatPages: any[] = [];
+      items.forEach(module => {
+        module.children?.forEach(page => {
+          flatPages.push(page);
+        });
+      });
+
+      const visited = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_visited_pages') || '[]') : [];
+      const visitedCount = flatPages.filter(p => visited.includes(p.path)).length;
+      const totalPages = flatPages.length;
+      const calculatedProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 12;
+
+      setProgress(calculatedProgress);
+
+      if (typeof window !== 'undefined') {
+        const progressMap = JSON.parse(localStorage.getItem('op_course_progress') || '{}');
+        progressMap[activeSlug] = calculatedProgress;
+        localStorage.setItem('op_course_progress', JSON.stringify(progressMap));
       }
     }
     loadProgress();
-  }, [pathname]);
+  }, [pathname, items]);
 
   if (!isOpen) return null;
 
-  // Flatten all child page items to map completion index-by-index
   const flatPages: any[] = [];
   items.forEach(module => {
     module.children?.forEach(page => {
       flatPages.push(page);
     });
   });
-  
-  const totalPages = flatPages.length;
-  const completedCount = totalPages > 0 ? Math.round(totalPages * (progress / 100)) : 0;
 
   return (
     <aside className="w-80 h-full flex flex-col bg-slate-950/30 p-8 border-r border-slate-900/50">
@@ -70,8 +78,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             <div className="space-y-1">
               {module.children?.map((page) => {
                 const isActive = pathname === page.path;
-                const pageIndex = flatPages.findIndex(p => p.path === page.path);
-                const isCompleted = isLoggedIn && pageIndex !== -1 && pageIndex < completedCount;
+                const visited = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_visited_pages') || '[]') : [];
+                const isCompleted = isLoggedIn && visited.includes(page.path);
 
                 return (
                   <Link

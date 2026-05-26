@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { progressService } from '@/lib/db';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,7 +42,25 @@ export const Question = ({ q, children }: QuestionProps) => {
     if (selected !== null) return;
     setSelected(index);
     setIsCorrect(correct);
+
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const parts = pathname.split('/');
+      const slug = parts[3] || 'Classical_Mechanics';
+      
+      const key = `op_quiz_attempts_${pathname}`;
+      const attempts = JSON.parse(window.localStorage.getItem(key) || '{}');
+      attempts[q] = correct;
+      window.localStorage.setItem(key, JSON.stringify(attempts));
+
+      const keys = Object.keys(attempts);
+      const totalCorrect = keys.filter(k => attempts[k] === true).length;
+      const totalAnswered = keys.length;
+
+      progressService.recordQuizAnswer(slug, pathname, totalCorrect, totalAnswered);
+    }
   };
+
 
   return (
     <div className="space-y-4">

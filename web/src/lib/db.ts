@@ -108,6 +108,7 @@ export interface TutorPersonality {
   prompt: string;
   isDefault: boolean;
   archivingLevel?: number;
+  translations?: Record<string, { name: string; prompt: string }>;
 }
 
 export interface AgentMetric {
@@ -190,9 +191,31 @@ export interface MockCourse {
   ratingCount?: number;
   averageRating?: number;
   validations?: number; // Configurable validations threshold metric
-  created_at?: string; // Creation timestamp for new tracking
+  created_at?: string; // Creation timestamp for new tracking (NEW badge < 90 days)
+  last_revision_date?: string; // Last content revision — displayed on cards
   translations?: Record<string, { title: string; description: string }>;
 }
+
+export const getCanonicalCourseId = (slugOrId: string | number): number => {
+  if (typeof slugOrId === 'number') return slugOrId;
+  const s = String(slugOrId).toLowerCase().replace(/_/g, '-');
+  if (s === 'classical-mechanics' || s === '1') return 1;
+  if (s === 'quantum-physics' || s === 'physique-test-l2' || s === '2') return 2;
+  if (s === 'cell-biology' || s === 'biologie-test' || s === '3') return 3;
+  if (s === 'molecular-genetics' || s === 'biologie-test-l1' || s === '4') return 4;
+  if (s === 'constitutional-law' || s === 'droit-test' || s === '5') return 5;
+  if (s === 'criminal-law' || s === 'droit-test-l2' || s === '6') return 6;
+  if (s === 'linear-algebra' || s === 'maths-test' || s === '7') return 7;
+  if (s === 'calculus-i' || s === 'maths-test-l1' || s === '8') return 8;
+  if (s === 'organic-chemistry' || s === 'chimie-test' || s === '9') return 9;
+  if (s === 'microeconomics' || s === 'economie-test' || s === '10') return 10;
+  if (s === 'statistics' || s === 'statistics-l1' || s === '11') return 11;
+  
+  const parsed = parseInt(String(slugOrId));
+  if (!isNaN(parsed)) return parsed;
+  return 0;
+};
+
 
 // 1. POPULATED SEED DATA - 10+ RICH USER ACCOUNTS WITH ENGAGEMENT DATA
 let users: UserProfile[] = [
@@ -362,7 +385,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1250, 
     is_active: true,
     validations: 12,
-    created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString() // 120 days ago (Old)
+    created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(), // 120 days ago
+    last_revision_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()  // Revised 15 days ago
   },
   { 
     id: 2, 
@@ -377,7 +401,8 @@ let mockCourses: MockCourse[] = [
     popularity: 840, 
     is_active: true,
     validations: 3,
-    created_at: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString() // 100 days ago (Old)
+    created_at: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(), // 100 days ago
+    last_revision_date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()  // Revised 45 days ago
   },
   { 
     id: 3, 
@@ -392,7 +417,8 @@ let mockCourses: MockCourse[] = [
     popularity: 2400, 
     is_active: true,
     validations: 15,
-    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString() // 110 days ago (Old)
+    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString(), // 110 days ago
+    last_revision_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()   // Revised 7 days ago
   },
   { 
     id: 4, 
@@ -407,7 +433,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1800, 
     is_active: true,
     validations: 8,
-    created_at: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString() // 95 days ago (Old)
+    created_at: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString(), // 95 days ago
+    last_revision_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()  // Revised 30 days ago
   },
   { 
     id: 5, 
@@ -422,7 +449,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1500, 
     is_active: true,
     validations: 2,
-    created_at: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString() // 150 days ago (Old)
+    created_at: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(), // 150 days ago
+    last_revision_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()  // Revised 60 days ago
   },
   { 
     id: 6, 
@@ -437,7 +465,8 @@ let mockCourses: MockCourse[] = [
     popularity: 950, 
     is_active: true,
     validations: 1,
-    created_at: new Date(Date.now() - 92 * 24 * 60 * 60 * 1000).toISOString() // 92 days ago (Old)
+    created_at: new Date(Date.now() - 92 * 24 * 60 * 60 * 1000).toISOString(), // 92 days ago
+    last_revision_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()   // Revised 3 days ago
   },
   { 
     id: 7, 
@@ -452,7 +481,8 @@ let mockCourses: MockCourse[] = [
     popularity: 3100, 
     is_active: true,
     validations: 25,
-    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days ago (New!)
+    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days ago (New!)
+    last_revision_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()   // Revised 2 days ago
   },
   { 
     id: 8, 
@@ -467,7 +497,8 @@ let mockCourses: MockCourse[] = [
     popularity: 4200, 
     is_active: true,
     validations: 32,
-    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString() // 110 days ago (Old)
+    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString(), // 110 days ago
+    last_revision_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString()  // Revised 20 days ago
   },
   { 
     id: 9, 
@@ -482,7 +513,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1100, 
     is_active: true,
     validations: 4,
-    created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString() // 180 days ago (Old)
+    created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(), // 180 days ago
+    last_revision_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()  // Revised 90 days ago
   },
   { 
     id: 10, 
@@ -497,7 +529,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1600, 
     is_active: true,
     validations: 6,
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days ago (New!)
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago (New!)
+    last_revision_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()   // Revised yesterday
   },
   { 
     id: 11, 
@@ -512,7 +545,8 @@ let mockCourses: MockCourse[] = [
     popularity: 1850, 
     is_active: true,
     validations: 11,
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago (New!)
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago (New!)
+    last_revision_date: new Date().toISOString()  // Revised today
   }
 ];
 
@@ -898,49 +932,81 @@ let initialTutorPersonalities: TutorPersonality[] = [
     id: 'socratic',
     name: 'Socratic Coach',
     prompt: 'You are a master Socratic pedagogue inspired by Plato and the classical liberal arts. You never give direct answers or bare formulas. Instead, dissect the student\'s question into atomic premises, and guide them step-by-step using inductive questioning, conceptual counter-examples, and intellectual midwifery. Force them to define their terms, state their assumptions, and identify logical fallacies in their own reasoning. Maintain a patient, intellectually challenging, and deeply encouraging philosophical tone.',
-    isDefault: true
+    isDefault: true,
+    translations: {
+      EN: { name: 'Socratic Coach', prompt: 'You are a master Socratic pedagogue inspired by Plato and the classical liberal arts. You never give direct answers or bare formulas. Instead, dissect the student\'s question into atomic premises, and guide them step-by-step using inductive questioning, conceptual counter-examples, and intellectual midwifery. Force them to define their terms, state their assumptions, and identify logical fallacies in their own reasoning. Maintain a patient, intellectually challenging, and deeply encouraging philosophical tone.' },
+      FR: { name: 'Coach Socratique', prompt: 'Vous êtes un maître de la pédagogie socratique, inspiré par Platon et les arts libéraux classiques. Vous ne donnez jamais de réponses directes ni de formules brutes. Au lieu de cela, décortiquez la question de l\'élève en prémisses atomiques et guidez-le étape par étape à l\'aide de questions inductives, de contre-exemples conceptuels et de maïeutique intellectuelle. Forcez-le à définir ses termes, à énoncer ses hypothèses et à identifier les erreurs logiques dans son propre raisonnement. Maintenez un ton philosophique patient, stimulant intellectuellement et profondément encourageant.' }
+    }
   },
   {
     id: 'direct',
     name: 'Direct Synthesizer',
     prompt: 'You are an elite, high-density scientific advisor and researcher. Skip all conversational pleasantries, rhetorical preamble, and superficial hand-waving. Provide immediate, highly rigorous mathematical formulations, precise physical derivations, axiomatic definitions, and concise structural summaries. Use LaTeX formatting extensively for all formulas. Focus on extreme informational efficiency, maximum technical density, and clear logical sequence.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Direct Synthesizer', prompt: 'You are an elite, high-density scientific advisor and researcher. Skip all conversational pleasantries, rhetorical preamble, and superficial hand-waving. Provide immediate, highly rigorous mathematical formulations, precise physical derivations, axiomatic definitions, and concise structural summaries. Use LaTeX formatting extensively for all formulas. Focus on extreme informational efficiency, maximum technical density, and clear logical sequence.' },
+      FR: { name: 'Synthétiseur Direct', prompt: 'Vous êtes un conseiller scientifique et chercheur d\'élite à haute densité. Évitez toutes les politesses conversationnelles, les préambules rhétoriques et les explications superficielles. Fournissez immédiatement des formulations mathématiques hautement rigoureuses, des dérivations physiques précises, des définitions axiomatiques et des résumés structurels concis. Utilisez abondamment le formatage LaTeX pour toutes les formules. Concentrez-vous sur une efficacité informationnelle extrême, une densité technique maximale et une séquence logique claire.' }
+    }
   },
   {
     id: 'gamified',
     name: 'Gamified Companion',
     prompt: 'You are a highly engaging, gamified academic companion. Frame the learning material as an epic intellectual quest within the grand repository of universal knowledge. Encourage the student using leveling milestones, XP checkpoint suggestions, pedagogical quests, boss battles against difficult concepts, and roleplay metaphors (e.g., \'You are leveling up your thermodynamics skill tree!\'). Keep the tone enthusiastic, vibrant, game-like, and highly motivational.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Gamified Companion', prompt: 'You are a highly engaging, gamified academic companion. Frame the learning material as an epic intellectual quest within the grand repository of universal knowledge. Encourage the student using leveling milestones, XP checkpoint suggestions, pedagogical quests, boss battles against difficult concepts, and roleplay metaphors (e.g., \'You are leveling up your thermodynamics skill tree!\'). Keep the tone enthusiastic, vibrant, game-like, and highly motivational.' },
+      FR: { name: 'Compagnon Ludique', prompt: 'Vous êtes un compagnon académique ludique et hautement engageant. Cadrez le matériel d\'apprentissage comme une quête intellectuelle épique au sein du grand référentiel de la connaissance universelle. Encouragez l\'étudiant en utilisant des jalons de niveau, des suggestions de points de contrôle d\'XP, des quêtes pédagogiques, des combats de boss contre des concepts difficiles et des métaphores de jeu de rôle (par exemple, « Vous améliorez votre arbre de compétences en thermodynamique ! »). Gardez le ton enthousiaste, vibrant, ludique et hautement motivant.' }
+    }
   },
   {
     id: 'historical',
     name: 'Historical Storyteller',
     prompt: 'You are an academic historian of science and ideas. Teach every technical concept by embedding it within its historical, cultural, and human drama. Reconstruct the precise intellectual struggle, the letters exchanged, the accidental discoveries, and the fierce debates between legendary scientists (e.g., Newton vs. Leibniz, Einstein vs. Bohr). Use rich storytelling, historical anecdotes, and humanizing narratives to make cold academic theorems feel alive, dramatic, and unforgettable.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Historical Storyteller', prompt: 'You are an academic historian of science and ideas. Teach every technical concept by embedding it within its historical, cultural, and human drama. Reconstruct the precise intellectual struggle, the letters exchanged, the accidental discoveries, and the fierce debates between legendary scientists (e.g., Newton vs. Leibniz, Einstein vs. Bohr). Use rich storytelling, historical anecdotes, and humanizing narratives to make cold academic theorems feel alive, dramatic, and unforgettable.' },
+      FR: { name: 'Conteur Historique', prompt: 'Vous êtes un historien universitaire des sciences et des idées. Enseignez chaque concept technique en l\'intégrant dans son drame historique, culturel et humain. Reconstituez la lutte intellectuelle précise, les lettres échangées, les découvertes accidentelles et les débats féroces entre scientifiques légendaires (par exemple, Newton contre Leibniz, Einstein contre Bohr). Utilisez des récits riches, des anecdotes historiques et des narrations humanisantes pour rendre les théorèmes académiques froids vivants, dramatiques et inoubliables.' }
+    }
   },
   {
     id: 'feynman',
     name: 'Feynman Simplifier',
     prompt: 'You are a world-class expositor operating strictly under the Feynman Technique of extreme simplification. Your mission is to demystify the most complex, abstract, and advanced academic concepts by explaining them using simple, non-jargon analogies, concrete real-world physical models, and plain intuitive language. Avoid high-level technical terms until you have built a solid foundation. If you must introduce jargon, define it instantly through visceral mechanical or physical metaphors.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Feynman Simplifier', prompt: 'You are a world-class expositor operating strictly under the Feynman Technique of extreme simplification. Your mission is to demystify the most complex, abstract, and advanced academic concepts by explaining them using simple, non-jargon analogies, concrete real-world physical models, and plain intuitive language. Avoid high-level technical terms until you have built a solid foundation. If you must introduce jargon, define it instantly through visceral mechanical or physical metaphors.' },
+      FR: { name: 'Simplificateur Feynman', prompt: 'Vous êtes un présentateur de classe mondiale opérant strictement selon la technique Feynman d\'extrême simplification. Votre mission est de démystifier les concepts universitaires les plus complexes, abstraits et avancés en les expliquant à l\'aide d\'analogies simples sans jargon, de modèles physiques concrets du monde réel et d\'un langage simple et intuitif. Évitez les termes techniques de haut niveau jusqu\'à ce que vous ayez construit des bases solides. Si vous devez introduire du jargon, définissez-le instantanément par des métaphores mécaniques ou physiques viscérales.' }
+    }
   },
   {
     id: 'proof',
     name: 'Rigorous Proof Master',
     prompt: 'You are a formal mathematician and proof-theoretic tutor. Every answer you give must be built from first principles (axioms) and structured with strict logical proofs. Clearly state your assumptions, lemmas, theorems, and Q.E.D. blocks. Do not accept hand-waving, numerical approximations, or informal intuition without formal grounding. Guide the student to construct valid deductions, formal epsilon-delta arguments, or structural inductive proofs.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Rigorous Proof Master', prompt: 'You are a formal mathematician and proof-theoretic tutor. Every answer you give must be built from first principles (axioms) and structured with strict logical proofs. Clearly state your assumptions, lemmas, theorems, and Q.E.D. blocks. Do not accept hand-waving, numerical approximations, or informal intuition without formal grounding. Guide the student to construct valid deductions, formal epsilon-delta arguments, or structural inductive proofs.' },
+      FR: { name: 'Maître des Preuves Rigoureuses', prompt: 'Vous êtes un mathématicien formel et un tuteur axé sur la théorie de la preuve. Chaque réponse que vous donnez doit être construite à partir de principes fondamentaux (axiomes) et structurée avec des preuves logiques strictes. Énoncez clairement vos hypothèses, lemmes, théorèmes et blocs Q.E.D. N\'acceptez pas d\'approximations numériques ni d\'intuitions informelles sans fondement formel. Guidez l\'étudiant pour construire des déductions valides, des arguments epsilon-delta formels ou des preuves inductives structurelles.' }
+    }
   },
   {
     id: 'engineer',
     name: 'Pragmatic Engineer',
     prompt: 'You are a practical, hands-on systems engineer and software architect. Ground every theory into actual industrial applications, concrete hardware specifications, real-world code snippets, and operational constraints. Explain \'how it works under the hood\' rather than how it looks on paper. Focus on scaling laws, trade-offs, engineering safety factors, computational overhead, and modern industrial frameworks.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Pragmatic Engineer', prompt: 'You are a practical, hands-on systems engineer and software architect. Ground every theory into actual industrial applications, concrete hardware specifications, real-world code snippets, and operational constraints. Explain \'how it works under the hood\' rather than how it looks on paper. Focus on scaling laws, trade-offs, engineering safety factors, computational overhead, and modern industrial frameworks.' },
+      FR: { name: 'Ingénieur Pragmatique', prompt: 'Vous êtes un ingénieur système pratique et un architecte logiciel concret. Ancrez chaque théorie dans des applications industrielles réelles, des spécifications matérielles concrètes, des extraits de code réels et des contraintes opérationnelles. Expliquez « comment cela fonctionne sous le capot » plutôt que l\'aspect théorique sur papier. Concentrez-vous sur les lois d\'échelle, les compromis, les facteurs de sécurité technique, la surcharge de calcul et les frameworks industriels modernes.' }
+    }
   },
   {
     id: 'debater',
     name: 'Interactive Debater',
     prompt: 'You are a sharp, intellectually playful debate partner. Challenge the student\'s understanding by playing devil\'s advocate. Introduce dissenting scientific viewpoints, controversial academic interpretations, or alternative hypotheses. Force the student to defend their position against well-formulated counterarguments, synthesize competing paradigms, and acknowledge the limits of current scientific models.',
-    isDefault: false
+    isDefault: false,
+    translations: {
+      EN: { name: 'Interactive Debater', prompt: 'You are a sharp, intellectually playful debate partner. Challenge the student\'s understanding by playing devil\'s advocate. Introduce dissenting scientific viewpoints, controversial academic interpretations, or alternative hypotheses. Force the student to defend their position against well-formulated counterarguments, synthesize competing paradigms, and acknowledge the limits of current scientific models.' },
+      FR: { name: 'Débateur Interactif', prompt: 'Vous êtes un partenaire de débat vif et intellectuellement enjoué. Stimulez la compréhension de l\'étudiant en jouant l\'avocat du diable. Présentez des points de vue scientifiques divergents, des interprétations académiques controversées ou des hypothèses alternatives. Forcez l\'élève à défendre sa position face à des contre-arguments bien formulés, à synthétiser des paradigmes concurrents et à reconnaître les limites des modèles scientifiques actuels.' }
+    }
   }
 ];
 
@@ -1006,6 +1072,15 @@ if (isBrowser) {
   tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
   agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
   availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
+  // Self-healing check for master language English
+  const hasEN = availableLanguagesList.some(l => l.code.toUpperCase() === 'EN');
+  if (!hasEN) {
+    availableLanguagesList.push({ code: 'EN', flag: '🇺🇸', label: 'English', archivingLevel: 0 });
+  } else {
+    availableLanguagesList = availableLanguagesList.map(l => 
+      l.code.toUpperCase() === 'EN' ? { ...l, archivingLevel: 0 } : l
+    );
+  }
   contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', initialContactFeedbacks);
   
   // Save initially to sync
@@ -1055,7 +1130,7 @@ export const dbService = {
   
   getAllCourses: async () => {
     const computedCourses = mockCourses.map(c => {
-      const feedbacks = courseFeedbacks.filter(f => f.courseId === c.slug);
+      const feedbacks = courseFeedbacks.filter(f => getCanonicalCourseId(f.courseId) === getCanonicalCourseId(c.id));
       const ratingCount = feedbacks.length;
       const averageRating = ratingCount > 0
         ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
@@ -1237,38 +1312,109 @@ export const dbService = {
     }
   },
 
-  // CURRICULUM & PROGRESS
+  // PROGRESS TRACKING SERVICE
   getUserProgress: async (userId: string) => {
+    const isBrowser = typeof window !== 'undefined';
+    const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3]') : [1, 3];
+    const progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
+    
+    // Map enrolled IDs to mockCourses
+    const activeModules = enrolled.map((id: number) => {
+      const course = mockCourses.find(c => c.id === id);
+      const prog = progressMap[course?.slug || ''] ?? progressMap[id] ?? 12; // Fallback to 12
+      return {
+        id: course?.id || id,
+        title: course?.title || course?.slug || 'unknown',
+        subject: course?.subject || 'general',
+        level: course?.level || 'L1',
+        slug: course?.slug || '',
+        progress: prog,
+        created_at: course?.created_at || null,
+        last_revision_date: course?.last_revision_date || null
+      };
+    });
+
+    const totalMinutes = progressService.getTotalLearningMinutes();
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const learningTime = `${hours}h ${mins}m`;
+
+    // Compute credits based on completed courses (100% progress)
+    let credits = 0;
+    activeModules.forEach((m: any) => {
+      if (m.progress === 100) {
+        const course = mockCourses.find(c => c.id === m.id);
+        credits += course?.ects || 6;
+      }
+    });
+
+    const earnedAchievements = progressService.evaluateAchievements(achievementsList);
+
+    // ── Mastery Points — cumulative, additive, NEVER decreases ──
+    // Each correct quiz answer = +1 pt. Adding more courses always helps, never hurts.
+    // We also persist a "floor" so the score can't regress if localStorage is partially cleared.
+    const quizResults = progressService.getQuizResults();
+    const quizEntries = Object.values(quizResults) as any[];
+    const rawMasteryPoints = quizEntries.reduce(
+      (sum: number, q: any) => sum + (q.correctAnswers || 0),
+      0
+    );
+    // Persist floor: take the max of computed vs stored floor
+    const storedFloor = isBrowser
+      ? parseInt(window.localStorage.getItem('op_mastery_floor') || '0', 10)
+      : 0;
+    const masteryPoints = Math.max(rawMasteryPoints, storedFloor);
+    if (isBrowser && masteryPoints > storedFloor) {
+      window.localStorage.setItem('op_mastery_floor', String(masteryPoints));
+    }
+
+    // ── Study Streak: unique active days from lesson progress log ──
+    const studyStreakDays = isBrowser ? (() => {
+      const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+      const activeDates = new Set<string>();
+      for (const key in times) {
+        if (times[key].lastVisited) {
+          activeDates.add(times[key].lastVisited.split('T')[0]);
+        }
+      }
+      return activeDates.size;
+    })() : 0;
+
+    // ── Course completion counts ──
+    const completedCount = activeModules.filter((m: any) => m.progress === 100).length;
+    const inProgressCount = activeModules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
+
     return {
-      credits: 18,
-      kp: 14250,
-      learningTime: "52h 20m",
-      activeModules: [
-        { id: 1, title_key: "classical_mechanics", subject_key: "physics", level: "L1", slug: "classical-mechanics", progress: 65 },
-        { id: 2, title_key: "cell_biology", subject_key: "biology", level: "L1", slug: "cell-biology", progress: 28 },
-        { id: 3, title_key: "constitutional_law", subject_key: "law", level: "L1", slug: "constitutional-law", progress: 12 },
-        { id: 4, title_key: "molecular_genetics", subject_key: "biology", level: "L1", slug: "molecular-genetics", progress: 100 }
-      ],
+      masteryPoints,
+      studyStreakDays,
+      completedCount,
+      inProgressCount,
+      learningTime,
+      totalMinutes,
+      activeModules,
+      earnedAchievementsCount: earnedAchievements.length,
       aiSummary: "You have shown exceptional rigor in Classical Mechanics. Your next milestone is the Lagrangian synthesis. In Biology, we suggest focusing on ATP cycles to reach the L2 threshold."
     };
   },
+
 
   // CLUSTERED REPORT MGMT
   getReportClusters: async () => {
     let activeReports = [...reportClusters];
 
-    // Group feedbacks by courseId
-    const feedbackByCourse: Record<string, CourseFeedback[]> = {};
+    // Group feedbacks by canonical course ID
+    const feedbackByCourse: Record<number, CourseFeedback[]> = {};
     courseFeedbacks.forEach(f => {
-      if (!feedbackByCourse[f.courseId]) {
-        feedbackByCourse[f.courseId] = [];
+      const canonicalId = getCanonicalCourseId(f.courseId);
+      if (!feedbackByCourse[canonicalId]) {
+        feedbackByCourse[canonicalId] = [];
       }
-      feedbackByCourse[f.courseId].push(f);
+      feedbackByCourse[canonicalId].push(f);
     });
 
     // Check each course
     mockCourses.forEach(course => {
-      const feedbacks = feedbackByCourse[course.slug] || [];
+      const feedbacks = feedbackByCourse[getCanonicalCourseId(course.id)] || [];
       const totalReviews = feedbacks.length;
       
       if (totalReviews > 0) {
@@ -1525,6 +1671,9 @@ export const dbService = {
   },
 
   setLanguageArchivingLevel: async (code: string, level: number) => {
+    if (code.toUpperCase() === 'EN') {
+      return { data: null, error: new Error('Cannot archive master language English') };
+    }
     if (level === 3) {
       availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
     } else {
@@ -1535,6 +1684,9 @@ export const dbService = {
   },
 
   deleteLanguage: async (code: string) => {
+    if (code.toUpperCase() === 'EN') {
+      return { data: null, error: new Error('Cannot delete master language English') };
+    }
     availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
     setLocalStorageItem('openprimer_languages', availableLanguagesList);
     return { data: null, error: null };
@@ -1702,7 +1854,8 @@ export const dbService = {
 
   getCourseFeedbacks: async (courseId?: string) => {
     if (courseId) {
-      return { data: courseFeedbacks.filter(f => f.courseId === courseId), error: null };
+      const canonicalId = getCanonicalCourseId(courseId);
+      return { data: courseFeedbacks.filter(f => getCanonicalCourseId(f.courseId) === canonicalId), error: null };
     }
     return { data: courseFeedbacks, error: null };
   },
@@ -1976,7 +2129,285 @@ export const dbService = {
   }
 };
 
+export const progressService = {
+  // Page visits
+  recordPageVisit: (path: string, slug: string) => {
+    if (typeof window === 'undefined') return;
+    const visited = JSON.parse(window.localStorage.getItem('op_visited_pages') || '[]');
+    if (!visited.includes(path)) {
+      visited.push(path);
+      window.localStorage.setItem('op_visited_pages', JSON.stringify(visited));
+    }
+  },
+  
+  getVisitedPages: (): string[] => {
+    if (typeof window === 'undefined') return [];
+    return JSON.parse(window.localStorage.getItem('op_visited_pages') || '[]');
+  },
+
+  // Enrollment Dates
+  recordCourseEnrollment: (slug: string) => {
+    if (typeof window === 'undefined') return;
+    const dates = JSON.parse(window.localStorage.getItem('op_enrollment_dates') || '{}');
+    if (!dates[slug]) {
+      dates[slug] = new Date().toISOString();
+      window.localStorage.setItem('op_enrollment_dates', JSON.stringify(dates));
+    }
+  },
+
+  getEnrollmentDate: (slug: string): string => {
+    if (typeof window === 'undefined') return new Date().toISOString();
+    const dates = JSON.parse(window.localStorage.getItem('op_enrollment_dates') || '{}');
+    return dates[slug] || new Date().toISOString();
+  },
+
+  // Lesson Timers
+  recordLessonEntry: (slug: string, lessonPath: string) => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(`op_session_start_${lessonPath}`, new Date().toISOString());
+    progressService.recordCourseEnrollment(slug);
+    progressService.recordPageVisit(lessonPath, slug);
+  },
+
+  commitLessonTime: (slug: string, lessonPath: string) => {
+    if (typeof window === 'undefined') return;
+    const startStr = window.sessionStorage.getItem(`op_session_start_${lessonPath}`);
+    if (!startStr) return;
+    
+    const startTime = new Date(startStr).getTime();
+    const now = Date.now();
+    const elapsedMinutes = Math.min(120, Math.max(1, Math.round((now - startTime) / (60 * 1000))));
+
+    const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+    if (!times[lessonPath]) {
+      times[lessonPath] = { slug, durationMinutes: 0, lastVisited: '' };
+    }
+    times[lessonPath].durationMinutes += elapsedMinutes;
+    times[lessonPath].lastVisited = new Date().toISOString();
+    times[lessonPath].slug = slug;
+    
+    window.localStorage.setItem('openprimer_lesson_progress', JSON.stringify(times));
+    window.sessionStorage.removeItem(`op_session_start_${lessonPath}`);
+
+    // Trigger achievement check
+    window.dispatchEvent(new Event('op_progress_updated'));
+  },
+
+  getLessonTimeForCourse: (slug: string): number => {
+    if (typeof window === 'undefined') return 0;
+    const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+    let total = 0;
+    for (const key in times) {
+      if (times[key].slug === slug) {
+        total += times[key].durationMinutes;
+      }
+    }
+    return total;
+  },
+
+  getTotalLearningMinutes: (): number => {
+    if (typeof window === 'undefined') return 0;
+    const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+    let total = 0;
+    for (const key in times) {
+      total += times[key].durationMinutes;
+    }
+    return total;
+  },
+
+  // Quiz results
+  recordQuizAnswer: (slug: string, lessonPath: string, correctAnswers: number, totalQuestions: number) => {
+    if (typeof window === 'undefined') return;
+    const quizzes = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
+    quizzes[lessonPath] = { slug, correctAnswers, totalQuestions, timestamp: new Date().toISOString() };
+    window.localStorage.setItem('op_quiz_results', JSON.stringify(quizzes));
+
+    // Trigger achievement check
+    window.dispatchEvent(new Event('op_progress_updated'));
+  },
+
+  getQuizResults: () => {
+    if (typeof window === 'undefined') return {};
+    return JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
+  },
+
+  // Tutor Question Counters
+  incrementTutorQuestions: () => {
+    if (typeof window === 'undefined') return;
+    const count = parseInt(window.localStorage.getItem('op_tutor_question_count') || '0') + 1;
+    window.localStorage.setItem('op_tutor_question_count', String(count));
+
+    // Trigger achievement check
+    window.dispatchEvent(new Event('op_progress_updated'));
+  },
+
+  getTutorQuestionCount: (): number => {
+    if (typeof window === 'undefined') return 0;
+    return parseInt(window.localStorage.getItem('op_tutor_question_count') || '0');
+  },
+
+  // Dynamic achievement evaluation
+  evaluateAchievements: (achievements: Achievement[]): number[] => {
+    if (typeof window === 'undefined') return [];
+    const earnedIds: number[] = [];
+
+    const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3]');
+    const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}');
+    const quizResults = progressService.getQuizResults();
+    const totalMinutes = progressService.getTotalLearningMinutes();
+    const questionCount = progressService.getTutorQuestionCount();
+
+    // Check streak
+    const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+    const activeDates = new Set<string>();
+    for (const key in times) {
+      if (times[key].lastVisited) {
+        activeDates.add(times[key].lastVisited.split('T')[0]);
+      }
+    }
+    const streak = activeDates.size; // Simple unique days count for streak
+
+    achievements.forEach(ach => {
+      const th = ach.threshold.toLowerCase();
+      let earned = false;
+
+      if (th.includes('3 days')) {
+        // Fast Learner: completed a course in <= 3 days from enrollment
+        for (const slug in progressMap) {
+          if (progressMap[slug] === 100) {
+            const enrollDate = progressService.getEnrollmentDate(slug);
+            const compDate = new Date().toISOString();
+            const diff = (new Date(compDate).getTime() - new Date(enrollDate).getTime()) / (24 * 60 * 60 * 1000);
+            if (diff <= 3) {
+              earned = true;
+            }
+          }
+        }
+      } else if (th.includes('50 questions')) {
+        if (questionCount >= 50) earned = true;
+      } else if (th.includes('100 questions')) {
+        if (questionCount >= 100) earned = true;
+      } else if (th.includes('7 day streak')) {
+        if (streak >= 7) earned = true;
+      } else if (th.includes('100% score')) {
+        // Perfect Score
+        for (const key in quizResults) {
+          if (quizResults[key].correctAnswers === quizResults[key].totalQuestions && quizResults[key].totalQuestions > 0) {
+            earned = true;
+          }
+        }
+      } else if (th.includes('courses')) {
+        const count = parseInt(th.replace(/\D/g, '')) || 5;
+        if (enrolled.length >= count) earned = true;
+      } else if (th.includes('night session')) {
+        let nightSessions = 0;
+        for (const key in times) {
+          if (times[key].lastVisited) {
+            const hour = new Date(times[key].lastVisited).getHours();
+            if (hour >= 22 || hour <= 5) {
+              nightSessions++;
+            }
+          }
+        }
+        if (nightSessions >= 5) earned = true;
+      } else if (th.includes('morning session')) {
+        let morningSessions = 0;
+        for (const key in times) {
+          if (times[key].lastVisited) {
+            const hour = new Date(times[key].lastVisited).getHours();
+            if (hour >= 5 && hour < 8) {
+              morningSessions++;
+            }
+          }
+        }
+        if (morningSessions >= 5) earned = true;
+      } else if (th.includes('1 feedback')) {
+        if (window.localStorage.getItem('op_feedback_submitted') === 'true') {
+          earned = true;
+        }
+      } else if (th.includes('1 curriculum')) {
+        if (window.localStorage.getItem('op_custom_syllabus_created') === 'true') {
+          earned = true;
+        }
+      }
+
+      // Prototyping fallbacks/milestones
+      if (ach.id === 15 && totalMinutes >= 60) {
+        earned = true;
+      }
+
+      if (earned) {
+        earnedIds.push(ach.id);
+      }
+    });
+
+    const prevEarned = JSON.parse(window.localStorage.getItem('op_earned_achievements') || '[]');
+    const newEarned = Array.from(new Set([...prevEarned, ...earnedIds]));
+    if (newEarned.length > prevEarned.length) {
+      window.localStorage.setItem('op_earned_achievements', JSON.stringify(newEarned));
+      const newlyUnlocked = newEarned.filter(id => !prevEarned.includes(id));
+      newlyUnlocked.forEach(id => {
+        const match = achievements.find(a => a.id === id);
+        if (match) {
+          const ev = new CustomEvent('op_achievement_unlocked', { detail: match });
+          window.dispatchEvent(ev);
+        }
+      });
+    }
+
+    return newEarned;
+  },
+
+  // ─── Date helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * Returns true if the course was created within the last 90 days.
+   * The 90-day window is the platform convention for the "NEW" badge.
+   */
+  isNewCourse: (created_at: string | null | undefined): boolean => {
+    if (!created_at) return false;
+    const ageMs = Date.now() - new Date(created_at).getTime();
+    return ageMs < 90 * 24 * 60 * 60 * 1000;
+  },
+
+  /**
+   * Human-readable revision label.
+   * - < 1 day  → "Today"
+   * - < 2 days → "Yesterday"
+   * - < 30 days → "X days ago"
+   * - < 365 days → "X months ago"
+   * - else     → full date string
+   */
+  formatRevisionDate: (date: string | null | undefined, lang: string = 'EN'): string => {
+    if (!date) return lang === 'FR' ? 'À jour (Version initiale)' : 'Up to date (Initial release)';
+    const diffMs = Date.now() - new Date(date).getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const isFr = lang.toUpperCase() === 'FR';
+    if (diffDays < 1)  return isFr ? "Aujourd'hui" : 'Today';
+    if (diffDays < 2)  return isFr ? 'Hier' : 'Yesterday';
+    if (diffDays < 30) return isFr ? `Il y a ${diffDays} jours` : `${diffDays} days ago`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return isFr ? `Il y a ${diffMonths} mois` : `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+    return new Date(date).toLocaleDateString(isFr ? 'fr-FR' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  },
+
+  /**
+   * Returns the most recent last_revision_date across all enrolled courses
+   * — this is the "curriculum last revision" timestamp.
+   */
+  getCurriculumLastRevision: (enrolledCourseIds: number[]): string | null => {
+    const courseDates = enrolledCourseIds
+      .map(id => mockCourses.find(c => c.id === id)?.last_revision_date)
+      .filter((d): d is string => !!d)
+      .map(d => new Date(d).getTime());
+    if (courseDates.length === 0) return null;
+    return new Date(Math.max(...courseDates)).toISOString();
+  }
+};
+
 // EXPOSE TO WINDOW FOR PLAYWRIGHT E2E TESTING
 if (typeof window !== 'undefined') {
   (window as any).dbService = dbService;
+  (window as any).progressService = progressService;
 }
+
