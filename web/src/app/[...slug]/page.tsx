@@ -112,11 +112,11 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           </header>
 
           <article className="prose prose-invert prose-slate max-w-none 
-            prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-white
-            prose-h2:text-2xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:border-b prose-h2:border-slate-900 prose-h2:pb-4
-            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:mb-8 prose-p:text-base
-            prose-strong:text-blue-400 prose-strong:font-black
-            prose-blockquote:border-l-4 prose-blockquote:border-blue-600 prose-blockquote:bg-blue-600/5 prose-blockquote:py-4 prose-blockquote:px-10 prose-blockquote:rounded-r-[40px] prose-blockquote:not-italic prose-blockquote:text-slate-200
+            prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-foreground
+            prose-h2:text-2xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:border-b prose-h2:border-slate-900/10 prose-h2:pb-4
+            prose-p:text-foreground prose-p:leading-[1.8] prose-p:mb-8 prose-p:text-base
+            prose-strong:text-blue-500 prose-strong:font-black
+            prose-blockquote:border-l-4 prose-blockquote:border-blue-600 prose-blockquote:bg-blue-600/5 prose-blockquote:py-4 prose-blockquote:px-10 prose-blockquote:rounded-r-[40px] prose-blockquote:not-italic prose-blockquote:text-foreground
             prose-code:text-emerald-400 prose-code:bg-emerald-400/5 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:before:content-none prose-code:after:content-none">
             <MdxContent source={mdxSource} />
           </article>

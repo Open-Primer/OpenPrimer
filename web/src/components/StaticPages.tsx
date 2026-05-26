@@ -285,6 +285,100 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
   );
 };
 
+const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; prerequisites: string[]; units: { title: string; modules: string[] }[] }> = {
+  1: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Mathematics L1 (Calculus)", "General Physics (Introduction)"],
+    units: [
+      { title: "Kinematics", modules: ["Position Vectors", "Polar Coordinates", "Frenet Frames"] },
+      { title: "Dynamics", modules: ["Newton's Laws", "Differential Equations", "Momentum"] },
+      { title: "Work & Energy", modules: ["Work-Energy Theorem", "Potential Energy", "Conservative Forces"] }
+    ]
+  },
+  2: {
+    ects: 8,
+    hours: 200,
+    prerequisites: ["Classical Mechanics L1", "Linear Algebra"],
+    units: [
+      { title: "Quantum States", modules: ["Wave-Particle Duality", "Schrödinger Equation", "State Vectors"] },
+      { title: "Quantum Operators", modules: ["Hermitian Operators", "Eigenvalues", "Uncertainty Principle"] }
+    ]
+  },
+  3: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["General Chemistry", "Introduction to Biology"],
+    units: [
+      { title: "Cellular Structures", modules: ["Membrane Dynamics", "Organelles", "Cytoskeleton"] },
+      { title: "Metabolism", modules: ["Glycolysis", "Krebs Cycle", "Oxidative Phosphorylation"] }
+    ]
+  },
+  4: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Cell Biology L1"],
+    units: [
+      { title: "Genetic Code", modules: ["DNA Replication", "Transcription Factors", "Translation"] },
+      { title: "Gene Regulation", modules: ["Operons", "Epigenetics", "Recombinant DNA"] }
+    ]
+  },
+  5: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Introduction to Legal Studies"],
+    units: [
+      { title: "Constitutional Systems", modules: ["Separation of Powers", "Judicial Review", "Federalism"] },
+      { title: "Fundamental Rights", modules: ["Due Process", "Equal Protection", "Freedom of Expression"] }
+    ]
+  },
+  6: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Constitutional Law L1"],
+    units: [
+      { title: "General Principles", modules: ["Actus Reus", "Mens Rea", "Strict Liability"] },
+      { title: "Specific Offenses", modules: ["Homicide", "Property Crimes", "Defenses"] }
+    ]
+  },
+  7: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["High School Algebra"],
+    units: [
+      { title: "Vector Spaces", modules: ["Linear Combinations", "Span & Basis", "Dimension"] },
+      { title: "Linear Transformations", modules: ["Matrices", "Kernel & Image", "Determinants"] }
+    ]
+  },
+  8: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["High School Precalculus"],
+    units: [
+      { title: "Limits & Continuity", modules: ["Delta-Epsilon Definition", "Squeeze Theorem", "Asymptotes"] },
+      { title: "Derivatives", modules: ["Chain Rule", "Implicit Differentiation", "Optimization"] }
+    ]
+  },
+  9: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["General Chemistry"],
+    units: [
+      { title: "Hydrocarbons", modules: ["Alkanes & Alkenes", "Stereochemistry", "Conformational Analysis"] },
+      { title: "Reactions", modules: ["Nucleophilic Substitution", "Elimination Reactions", "Electrophilic Addition"] }
+    ]
+  },
+  10: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Calculus I"],
+    units: [
+      { title: "Consumer Theory", modules: ["Preferences & Utility", "Budget Constraint", "Optimal Choice"] },
+      { title: "Producer Theory", modules: ["Production Functions", "Cost Minimization", "Profit Maximization"] }
+    ]
+  }
+};
+
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
   const { language: lang, setLanguage: setActiveLang } = useLanguage();
@@ -300,6 +394,24 @@ export const CatalogPage = () => {
   // Free Client-Side Translation States for Courses
   const [translatedCourses, setTranslatedCourses] = useState<Record<number, { title: string; description: string }>>({});
   const [translatingCourseIds, setTranslatingCourseIds] = useState<Record<number, boolean>>({});
+
+  // Dynamic Enrollment States
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
+  const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('op_enrolled_courses');
+      if (saved) {
+        setEnrolledIds(JSON.parse(saved));
+      } else {
+        // Enrolled initially in Mechanics (1) and Cell Biology (3)
+        const defaults = [1, 3];
+        localStorage.setItem('op_enrolled_courses', JSON.stringify(defaults));
+        setEnrolledIds(defaults);
+      }
+    }
+  }, []);
 
   const translateCourse = async (courseId: number, title: string, description: string) => {
     if (translatedCourses[courseId]) {
@@ -505,7 +617,7 @@ export const CatalogPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav onLangChange={(l) => setActiveLang(l as any)} />
       
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
@@ -572,96 +684,101 @@ export const CatalogPage = () => {
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredCourses.length > 0 ? filteredCourses.map((course) => (
-            <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
-              <Link href={`/${course.level}/${course.subject}/${course.slug}/introduction`} className="group block h-full">
-                <div className="p-8 bg-slate-900/40 border border-slate-800/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                      <Book className="w-6 h-6" />
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      {/* New Course Badge */}
-                      {isCourseNew(course) && (
-                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase text-emerald-400 tracking-widest flex items-center gap-1 shadow-[0_0_8px_rgba(16,185,129,0.1)]">
-                          <Sparkles className="w-2.5 h-2.5 animate-pulse text-emerald-400" />
-                          {lang.toUpperCase() === 'FR' ? 'NOUVEAU' : 
-                           lang.toUpperCase() === 'ES' ? 'NUEVO' : 
-                           lang.toUpperCase() === 'DE' ? 'NEU' : 
-                           lang.toUpperCase() === 'ZH' ? '最新' : 'NEW'}
+          {filteredCourses.length > 0 ? filteredCourses.map((course) => {
+            const isEnrolled = enrolledIds.includes(course.id);
+            return (
+              <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
+                <Link 
+                  href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
+                  onClick={(e) => {
+                    if (!isEnrolled) {
+                      e.preventDefault();
+                      setSelectedEnrollCourse(course);
+                    }
+                  }}
+                  className="group block h-full"
+                >
+                  <div className="p-8 bg-slate-900/40 border border-slate-800/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
+                    
+                    {/* Ultra Flashy corner diagonal Ribbon */}
+                    {isCourseNew(course) && (
+                      <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                        <div className="absolute top-6 -right-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none">
+                          {lang.toUpperCase() === 'FR' ? 'Nouveau' : 
+                           lang.toUpperCase() === 'ES' ? 'Nuevo' : 
+                           lang.toUpperCase() === 'DE' ? 'Neu' : 
+                           lang.toUpperCase() === 'ZH' ? '最新' : 'New'}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                        <Book className="w-6 h-6" />
+                      </div>
+                      <div className="flex gap-2 items-center mr-8">
+                        {/* Unified gold star rating badge */}
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          {(course.averageRating && course.averageRating > 0) ? course.averageRating.toFixed(1) : "3.4"} ({(course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12})
                         </span>
-                      )}
-                      {/* Unified gold star rating badge */}
-                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
-                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        {(course.averageRating && course.averageRating > 0) ? course.averageRating.toFixed(1) : "3.4"} ({(course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12})
-                      </span>
-                      {/* Bookmark (logged-in only) */}
-                      {isLoggedIn && (
-                        <button
-                          onClick={(e) => toggleBookmark(course.id, e)}
-                          title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
-                          className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
-                        >
-                          <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                        </button>
-                      )}
-                      {/* Level badge */}
-                      <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                        {formatCourseLevel(course.level)}
-                      </span>
+                        {/* Bookmark (logged-in only) */}
+                        {isLoggedIn && (
+                          <button
+                            onClick={(e) => toggleBookmark(course.id, e)}
+                            title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
+                            className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
+                          >
+                            <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                          </button>
+                        )}
+                        {/* Level badge */}
+                        <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                          {formatCourseLevel(course.level)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
+                      {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">
+                      {translatedCourses[course.id]?.description || course.description}
+                    </p>
+
+                    {/* PROGRESS INDICATOR (only visible if logged in AND enrolled) */}
+                    {isLoggedIn && isEnrolled && (
+                      <div className="mb-6">
+                         <div className="flex justify-between items-center mb-2">
+                            <span className="text-[8px] font-black uppercase text-slate-600">Progress</span>
+                            <span className="text-[8px] font-black text-blue-500">24%</span>
+                         </div>
+                         <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="w-[24%] h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                         </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
+                      <button 
+                        onClick={(e) => {
+                          if (!isEnrolled) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedEnrollCourse(course);
+                          }
+                        }}
+                        className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isEnrolled ? 'bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white' : 'bg-emerald-600/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-600 hover:text-white'}`}
+                      >
+                         {isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
+                      </button>
+                      <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
-                    {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
-                  </h3>
-                  <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">
-                    {translatedCourses[course.id]?.description || course.description}
-                  </p>
-
-                  {/* Translate Course Card Button */}
-                  <div className="flex justify-end mb-6">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        translateCourse(course.id, getLocalizedCourseTitle(course), course.description);
-                      }}
-                      disabled={translatingCourseIds[course.id]}
-                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      <Globe className={`w-3.5 h-3.5 ${translatingCourseIds[course.id] ? 'animate-spin' : ''}`} />
-                      <span>
-                        {translatingCourseIds[course.id] ? (lang === 'FR' ? 'Traduction...' : 'Translating...') : 
-                         translatedCourses[course.id] ? (lang === 'FR' ? 'Voir Original' : 'Show Original') :
-                         (lang === 'FR' ? 'Traduire' : 'Translate')}
-                      </span>
-                    </button>
-                  </div>
-                  
-                  {/* PROGRESS INDICATOR (only visible if logged in) */}
-                  {isLoggedIn && (
-                    <div className="mb-6">
-                       <div className="flex justify-between items-center mb-2">
-                          <span className="text-[8px] font-black uppercase text-slate-600">Progress</span>
-                          <span className="text-[8px] font-black text-blue-500">24%</span>
-                       </div>
-                       <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="w-[24%] h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                       </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-                    <button className="px-6 py-2 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
-                       {isLoggedIn ? 'Continue' : t.cta_start}
-                    </button>
-                    <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          )) : (
+                </Link>
+              </motion.div>
+            );
+          }) : (
             <SmartEmptyState
               searchQuery={searchQuery}
               onClear={() => setSearchQuery('')}
@@ -723,6 +840,114 @@ export const CatalogPage = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Socratic Interactive Syllabus Enrollment Overlay Panel */}
+      <AnimatePresence>
+        {selectedEnrollCourse && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar"
+            >
+              <button 
+                onClick={() => setSelectedEnrollCourse(null)}
+                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
+                  <h2 className="text-2xl font-black text-white">{getLocalizedCourseTitle(selectedEnrollCourse)}</h2>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
+                  <Award className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Credits</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} ECTS</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
+                  <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Duration</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} hrs</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Level</p>
+                  <p className="text-xs font-black text-white">{formatCourseLevel(selectedEnrollCourse.level)}</p>
+                </div>
+              </div>
+
+              {/* Prerequisites */}
+              <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2">Prerequisites</p>
+                <div className="flex flex-wrap gap-2">
+                  {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites || []).map((pre, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-slate-950 rounded-lg text-[9px] font-bold text-slate-400 border border-slate-850">{pre}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Syllabus Units */}
+              <div className="space-y-6 mb-10">
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
+                  <div key={uIdx} className="space-y-3">
+                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
+                    </h4>
+                    <div className="grid gap-2 pl-6">
+                      {unit.modules.map((mod, mIdx) => (
+                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
+                          {mod}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setSelectedEnrollCourse(null)}
+                  className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      setSelectedEnrollCourse(null);
+                      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
+                      return;
+                    }
+                    // Enroll course
+                    const updated = [...enrolledIds, selectedEnrollCourse.id];
+                    setEnrolledIds(updated);
+                    localStorage.setItem('op_enrolled_courses', JSON.stringify(updated));
+                    setSelectedEnrollCourse(null);
+                    // Redirect to course
+                    window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+                  }}
+                  className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer animate-bounce"
+                >
+                  <Rocket className="w-4 h-4" />
+                  {isLoggedIn ? (lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning") : (lang === 'FR' ? "Créer un Compte pour s'Inscrire" : "Sign Up to Enroll")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -733,7 +958,7 @@ export const PhilosophyPage = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
     <div className="max-w-5xl mx-auto px-8 pt-32 pb-24">
       {/* SECTION 1: MISSION */}
@@ -855,7 +1080,7 @@ export const ContactPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
       <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
         <div className="flex items-center gap-3 mb-12 text-violet-500">
@@ -912,7 +1137,7 @@ export const TermsPage = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
     <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
       <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Terms of Service</h1>
@@ -935,7 +1160,7 @@ export const PrivacyPage = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
     <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
       <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Privacy Policy</h1>
@@ -964,7 +1189,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 selection:bg-blue-500/30 font-sans overflow-hidden">
       <TopNav />
       <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
