@@ -710,6 +710,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
       if (window.location.pathname === '/') {
         window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: mode }));
       } else {
+        sessionStorage.setItem('op_auth_redirect', window.location.pathname + window.location.search);
         window.location.href = `/?auth=${mode}`;
       }
     }
@@ -733,6 +734,19 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     };
     window.addEventListener('op_reading_mode_changed', handleGlobalModeChange);
 
+    const handleGlobalTriggerAuth = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const mode = customEvent.detail || 'signup';
+      if (typeof window !== 'undefined') {
+        if (window.location.pathname === '/') {
+          return;
+        }
+        sessionStorage.setItem('op_auth_redirect', window.location.pathname + window.location.search);
+        window.location.href = `/?auth=${mode}`;
+      }
+    };
+    window.addEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
+
     // Load available languages dynamically from db
     dbService.getAvailableLanguages().then(({ data }) => {
       if (data && data.length > 0) {
@@ -746,6 +760,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
     return () => {
       window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
+      window.removeEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
     };
   }, []);
 

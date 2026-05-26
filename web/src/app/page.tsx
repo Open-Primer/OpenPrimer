@@ -282,6 +282,17 @@ export default function Home() {
     };
   }, []);
 
+  const handleCloseAuthModal = () => {
+    setAuthModal(null);
+    if (typeof window !== 'undefined') {
+      const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+      if (redirectUrl) {
+        sessionStorage.removeItem('op_auth_redirect');
+        window.location.href = redirectUrl;
+      }
+    }
+  };
+
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -351,10 +362,16 @@ export default function Home() {
     setIsLoggedIn(true);
     setAuthModal(null);
     
-    if (hasLoggedInBefore) {
-      router.push('/profile/curriculum');
+    const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+    if (redirectUrl) {
+      sessionStorage.removeItem('op_auth_redirect');
+      window.location.href = redirectUrl;
     } else {
-      router.push('/catalog');
+      if (hasLoggedInBefore) {
+        router.push('/profile/curriculum');
+      } else {
+        router.push('/catalog');
+      }
     }
   };
 
@@ -559,7 +576,7 @@ export default function Home() {
       <AnimatePresence>
         {authModal && (
           <div 
-            onClick={() => setAuthModal(null)}
+            onClick={handleCloseAuthModal}
             className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md cursor-pointer"
           >
             <motion.div 
@@ -571,7 +588,7 @@ export default function Home() {
             >
               {/* Close Button X */}
               <button 
-                onClick={() => setAuthModal(null)} 
+                onClick={handleCloseAuthModal} 
                 className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-pulse"
               >
                 <X className="w-5 h-5" />
