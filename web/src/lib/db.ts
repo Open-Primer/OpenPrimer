@@ -1630,17 +1630,52 @@ export const dbService = {
 
   // SEARCH HISTORY
   getSearchHistory: async () => {
-    return { data: searchHistoryList, error: null };
+    if (isOffline) {
+      return { data: searchHistoryList, error: null };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('search_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+      if (error) throw error;
+      const mapped = data?.map((s: any) => ({
+        id: s.id,
+        query: s.query,
+        timestamp: s.timestamp,
+        wasSuccessful: s.was_successful,
+        userId: s.user_id
+      }));
+      return { data: mapped || searchHistoryList, error: null };
+    } catch (e) {
+      return { data: searchHistoryList, error: null };
+    }
   },
 
-  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userLanguage?: string }) => {
+  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }) => {
     const newEntry: SearchHistoryEntry = {
-      ...entry,
       id: entry.id || `sh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: entry.timestamp || new Date().toISOString()
+      query: entry.query,
+      timestamp: entry.timestamp || new Date().toISOString(),
+      wasSuccessful: entry.wasSuccessful,
+      userId: entry.userId || undefined
     };
+    
     searchHistoryList = [newEntry, ...searchHistoryList];
     setLocalStorageItem('openprimer_search_history', searchHistoryList);
+
+    if (!isOffline) {
+      try {
+        await supabase.from('search_logs').insert({
+          query: newEntry.query,
+          was_successful: newEntry.wasSuccessful,
+          user_id: newEntry.userId || null,
+          timestamp: newEntry.timestamp
+        });
+      } catch (e) {
+        console.warn("[DB] Failed to insert search log to Supabase, fallback to localStorage", e);
+      }
+    }
     return { data: newEntry, error: null };
   },
 
@@ -1650,6 +1685,17 @@ export const dbService = {
     const originalCount = searchHistoryList.length;
     searchHistoryList = searchHistoryList.filter(entry => new Date(entry.timestamp) >= cutoff);
     setLocalStorageItem('openprimer_search_history', searchHistoryList);
+
+    if (!isOffline) {
+      try {
+        await supabase
+          .from('search_logs')
+          .delete()
+          .lt('timestamp', cutoff.toISOString());
+      } catch (e) {
+        console.warn("[DB] Failed to cleanup search logs in Supabase", e);
+      }
+    }
     return { data: { purged: originalCount - searchHistoryList.length }, error: null };
   },
 

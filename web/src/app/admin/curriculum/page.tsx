@@ -405,8 +405,34 @@ export default function AdminCurriculumPage() {
   const [lang, setLang] = useState<'EN' | 'FR' | 'ES' | 'DE' | 'ZH'>('EN');
   const t = CURRICULUM_STRINGS[lang] || CURRICULUM_STRINGS.EN;
 
-  const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities'>('generation');
+  const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities' | 'analytics'>('generation');
   
+  // AI Analytics States
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyticsReport, setAnalyticsReport] = useState<string | null>(null);
+
+  const handleRunAnalytics = async () => {
+    setIsAnalyzing(true);
+    setAnalyticsReport(null);
+    try {
+      const response = await fetch('/api/stats/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAnalyticsReport(data.report);
+      } else {
+        alert(lang === 'FR' ? "Erreur lors de la génération du rapport analytique." : "Error generating analytics report.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert(lang === 'FR' ? "Échec de la connexion avec l'agent d'analyse IA." : "Failed to connect to the AI analytics agent.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   // Database States
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
@@ -1577,7 +1603,8 @@ export default function AdminCurriculumPage() {
                  { id: 'archiving', label: t.tab_archiving, color: 'bg-pink-600' },
                  { id: 'queue', label: t.tab_queue, color: 'bg-cyan-600' },
                  { id: 'achievements', label: t.tab_achievements, color: 'bg-violet-600' },
-                 { id: 'personalities', label: t.tab_personalities, color: 'bg-fuchsia-600' }
+                 { id: 'personalities', label: t.tab_personalities, color: 'bg-fuchsia-600' },
+                 { id: 'analytics', label: lang === 'FR' ? 'Analyse IA' : 'AI Analytics', color: 'bg-orange-600' }
                ].map(tab => (
                  <button 
                    key={tab.id}
@@ -2682,6 +2709,117 @@ export default function AdminCurriculumPage() {
                   </div>
                 </div>
               )}
+
+             {/* 8. AI ANALYTICS TAB */}
+             {view === 'analytics' && (
+               <div className="space-y-8">
+                 <div className="flex justify-between items-center">
+                   <div>
+                     <h3 className="text-xl font-black text-slate-200 flex items-center gap-3">
+                       <Activity className="w-6 h-6 text-orange-400" />
+                       {lang === 'FR' ? 'Agent d\'Analyse Intelligente' : 'AI Content Gap Analytics'}
+                     </h3>
+                     <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest font-semibold">
+                       {lang === 'FR' 
+                         ? 'Powered by Gemini 1.5 Flash · Analyse les requêtes étudiantes · Détecte les lacunes de contenu'
+                         : 'Powered by Gemini 1.5 Flash · Analyses student queries · Detects content gaps'}
+                     </p>
+                   </div>
+                   <button
+                     onClick={handleRunAnalytics}
+                     disabled={isAnalyzing}
+                     className="px-6 py-3 bg-orange-600 hover:bg-orange-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-600/10 flex items-center gap-2 transition-all"
+                   >
+                     {isAnalyzing ? (
+                       <>
+                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                         {lang === 'FR' ? 'Analyse en cours...' : 'Analyzing...'}
+                       </>
+                     ) : (
+                       <>
+                         <Sparkles className="w-4 h-4" />
+                         {lang === 'FR' ? 'Lancer l\'analyse IA' : 'Run AI Analysis'}
+                       </>
+                     )}
+                   </button>
+                 </div>
+
+                 {/* Search Log Stats */}
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[28px]">
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                       {lang === 'FR' ? 'Requêtes Totales Journalisées' : 'Total Logged Queries'}
+                     </p>
+                     <p className="text-3xl font-black text-orange-400 mt-2">{historyList.length}</p>
+                   </div>
+                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[28px]">
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                       {lang === 'FR' ? 'Requêtes Réussies' : 'Successful Queries'}
+                     </p>
+                     <p className="text-3xl font-black text-emerald-400 mt-2">
+                       {historyList.filter((h: any) => h.wasSuccessful).length}
+                     </p>
+                   </div>
+                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[28px]">
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                       {lang === 'FR' ? 'Requêtes Échouées (Content Gap)' : 'Failed Queries (Content Gap)'}
+                     </p>
+                     <p className="text-3xl font-black text-red-400 mt-2">
+                       {historyList.filter((h: any) => !h.wasSuccessful).length}
+                     </p>
+                   </div>
+                 </div>
+
+                 {/* Recent Raw Log */}
+                 {historyList.length > 0 && (
+                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[28px] space-y-3">
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">
+                       {lang === 'FR' ? 'Dernières Requêtes (10)' : 'Recent Search Logs (10)'}
+                     </p>
+                     <div className="space-y-2">
+                       {historyList.slice(0, 10).map((h: any, i: number) => (
+                         <div key={h.id || i} className="flex items-center gap-4 py-2 border-b border-slate-850 last:border-0">
+                           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${h.wasSuccessful ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                           <span className="text-sm text-slate-300 font-medium flex-1 truncate">"{h.query}"</span>
+                           <span className="text-[9px] text-slate-600 font-mono flex-shrink-0">{new Date(h.timestamp).toLocaleString()}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* AI Report Output */}
+                 {analyticsReport && (
+                   <div className="p-8 bg-slate-900/40 border border-orange-500/20 rounded-[28px] space-y-4">
+                     <div className="flex items-center gap-3 mb-4">
+                       <div className="w-8 h-8 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                         <Sparkles className="w-4 h-4 text-orange-400" />
+                       </div>
+                       <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest">
+                         {lang === 'FR' ? 'Rapport d\'Analyse IA Généré' : 'AI-Generated Analysis Report'}
+                       </p>
+                     </div>
+                     <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-mono bg-slate-950/60 p-6 rounded-2xl border border-slate-850 max-h-[500px] overflow-y-auto">
+                       {analyticsReport}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Empty State */}
+                 {!analyticsReport && !isAnalyzing && (
+                   <div className="p-12 bg-slate-900/40 border border-slate-800 border-dashed rounded-[28px] flex flex-col items-center gap-4 text-center">
+                     <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center">
+                       <Activity className="w-8 h-8 text-orange-400/50" />
+                     </div>
+                     <p className="text-slate-500 text-sm font-semibold">
+                       {lang === 'FR' 
+                         ? 'Lancez l\'analyse pour identifier les lacunes de contenu et les tendances de recherche étudiantes.'
+                         : 'Run the AI analysis to identify content gaps and student search trends.'}
+                     </p>
+                   </div>
+                 )}
+               </div>
+             )}
 
            </div>
          </div>
