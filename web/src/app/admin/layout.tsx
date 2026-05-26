@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, AlertTriangle, Users, BookOpen, ChevronDown, CheckCircle, LogOut, ArrowLeft, Menu, X, User, GraduationCap, Brain, Settings, ShieldAlert, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle, Users, BookOpen, ChevronDown, CheckCircle, LogOut, ArrowLeft, Menu, X, User, GraduationCap, Brain, Settings, ShieldAlert, MessageSquare, Activity } from 'lucide-react';
+import ServiceToast from '@/components/ServiceToast';
 import { AdminFooter } from '@/components/RefinedUI';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,6 +18,7 @@ export const ADMIN_STRINGS = {
     users: "User Management",
     curriculum: "Curriculum Management",
     feedback: "Inquiries & Feedback",
+    health: "Server Health",
     signout: "Sign Out",
     admin_panel: "OpenPrimer Admin Panel",
     cockpit: "Admin Cockpit",
@@ -32,6 +34,7 @@ export const ADMIN_STRINGS = {
     users: "Gestion des Utilisateurs",
     curriculum: "Gestion des Cursus",
     feedback: "Messages & Contact",
+    health: "Santé des Serveurs",
     signout: "Déconnexion",
     admin_panel: "Panneau d'Administration",
     cockpit: "Cockpit Administrateur",
@@ -47,6 +50,7 @@ export const ADMIN_STRINGS = {
     users: "Gestión de Usuarios",
     curriculum: "Gestión del Plan de Estudios",
     feedback: "Consultas y Comentarios",
+    health: "Salud del Servidor",
     signout: "Cerrar Sesión",
     admin_panel: "Panel de Administración",
     cockpit: "Cabina de Mando",
@@ -62,6 +66,7 @@ export const ADMIN_STRINGS = {
     users: "Benutzerverwaltung",
     curriculum: "Lehrplanverwaltung",
     feedback: "Anfragen & Feedback",
+    health: "Server-Gesundheit",
     signout: "Abmelden",
     admin_panel: "Admin-Panel",
     cockpit: "Admin-Cockpit",
@@ -77,6 +82,7 @@ export const ADMIN_STRINGS = {
     users: "用户管理",
     curriculum: "课程管理",
     feedback: "咨询与反馈",
+    health: "服务器健康",
     signout: "登出",
     admin_panel: "管理控制台",
     cockpit: "管理员座舱",
@@ -102,6 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: t.users, href: '/admin/users', icon: <Users className="w-4 h-4" /> },
     { label: t.curriculum, href: '/admin/curriculum', icon: <BookOpen className="w-4 h-4" /> },
     { label: t.feedback, href: '/admin/feedback', icon: <MessageSquare className="w-4 h-4" /> },
+    { label: t.health, href: '/admin/health', icon: <Activity className="w-4 h-4" /> },
   ];
 
   const languages = [
@@ -242,6 +249,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <AdminFooter />
         </div>
       </div>
+      {/* Global service degradation toast — discrete bottom-left banners */}
+      <ServiceToast lang={lang} />
     </div>
   );
 }
