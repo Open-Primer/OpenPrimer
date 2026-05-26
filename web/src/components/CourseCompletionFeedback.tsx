@@ -16,6 +16,38 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [userComment, setUserComment] = useState<string>('');
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    const loggedIn = session !== 'false';
+    setIsLoggedIn(loggedIn);
+
+    if (loggedIn) {
+      // Check user curriculum progress
+      dbService.getUserProgress('u1').then((res) => {
+        const matchingModule = res.activeModules?.find(
+          (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
+        );
+        if (matchingModule && matchingModule.progress === 100) {
+          setIsCompleted(true);
+        }
+      });
+
+      // Fetch existing course feedback
+      dbService.getCourseFeedbacks(courseId).then((res) => {
+        if (res.data && res.data.length > 0) {
+          const fb = res.data[0];
+          setUserRating(fb.rating);
+          setUserComment(fb.comment);
+        }
+      });
+    }
+  }, [courseId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +63,114 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   };
 
   const isFr = lang.toLowerCase() === 'fr';
+
+  if (!isLoggedIn) {
+    return (
+      <div className="mt-32 pt-12 border-t border-slate-900 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+          <CheckCircle className="w-8 h-8" />
+        </div>
+        <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+          {isFr ? "Cours Terminé !" : "Course Completed!"}
+        </h3>
+        <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
+          {isFr 
+            ? "Vous avez fini de lire ce cours en accès libre-service. Connectez-vous ou créez un compte pour sauvegarder votre progression, poser des questions au Tuteur IA, et passer des évaluations."
+            : "You have completed this self-service read-only course. Log in or create an account to save your progress, ask questions to the AI Tutor, and take assessments."}
+        </p>
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link 
+            href="/catalog" 
+            className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+          >
+            {isFr ? "Parcourir le Catalogue" : "Browse Catalog"} <ChevronRight className="w-4 h-4" />
+          </Link>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
+          >
+            {isFr ? "Créer un Compte" : "Create an Account"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isCompleted) {
+    const finalRating = userRating || 4;
+    const finalComment = userComment || (isFr 
+      ? "Ce module de cours est parfaitement maîtrisé. Les dérivations et les principes fondamentaux ont été assimilés et archivés dans votre curriculum."
+      : "This course module is perfectly mastered. The mathematical derivations and core principles have been successfully integrated and archived in your curriculum.");
+
+    return (
+      <div className="mt-32 pt-12 border-t border-slate-900 space-y-8 animate-fade-in">
+        <div className="bg-slate-900/40 border border-emerald-500/20 rounded-[36px] p-8 md:p-10 space-y-8 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-600/10 text-emerald-400 border-l border-b border-emerald-500/20 rounded-bl-2xl text-[8px] font-black uppercase tracking-wider animate-pulse">
+            {isFr ? "CURRICULUM COMPLÉTÉ • LECTURE SEULE" : "CURRICULUM COMPLETED • READ ONLY"}
+          </div>
+
+          <div>
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">
+              ✨ {isFr ? "FICHE DE RÉVISION DU CURRICULUM" : "CURRICULUM REVISION NOTE"}
+            </span>
+            <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
+              {courseTitle}
+            </h3>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              {isFr 
+                ? "Ce cours est marqué comme complété dans votre curriculum. Les commentaires et la note ci-dessous sont visibles en lecture seule et servent de référence pour votre révision personnalisée." 
+                : "This course is marked as completed in your curriculum. The review comment and grade below are archived in read-only mode to serve as a persistent reference for your personalized revision."}
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                {isFr ? "Évaluation finale du cours" : "Final Course Rating"}
+              </span>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star 
+                    key={star}
+                    className={`w-7 h-7 ${
+                      star <= finalRating 
+                        ? 'fill-amber-400 text-amber-400' 
+                        : 'text-slate-800'
+                    }`} 
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                {isFr ? "Notes personnelles & Suggestions de Révision" : "Personal Notes & Revision Feedback"}
+              </span>
+              <div className="w-full bg-slate-950/60 border border-slate-850 rounded-2xl p-5 text-xs text-slate-300 leading-relaxed font-medium min-h-[100px] border-l-4 border-l-emerald-500">
+                {finalComment}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 pt-6 border-t border-slate-850">
+              <Link 
+                href="/profile/curriculum" 
+                className="text-xs font-black uppercase text-slate-500 hover:text-slate-350 transition-colors"
+              >
+                {isFr ? "Retour au Curriculum" : "Back to My Curriculum"}
+              </Link>
+              
+              <Link 
+                href="/catalog" 
+                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/10"
+              >
+                {isFr ? "Continuer mon Cursus" : "Continue My Journey"}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (

@@ -134,10 +134,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           {/* Course Footer Metadata */}
           <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 distraction-free-hide">
             <div className="flex items-center gap-6">
-              {/* Fluff removed */}
-            </div>
-            <div className="text-[9px] font-black text-slate-800 uppercase tracking-[0.4em]">
-              OpenPrimer Archive
             </div>
           </div>
 
@@ -145,9 +141,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           {nextPage ? (
             <Link href={nextPage.path} className="mt-32 pt-12 border-t border-slate-900 flex justify-between items-center group cursor-pointer">
                <div>
-                 <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest mb-1">
-                   {lang === 'fr' ? "Chapitre Suivant" : "Next Chapter"}
-                 </p>
                  <p className="text-lg font-black text-slate-500 group-hover:text-blue-400 transition-colors">
                    {nextPage.name}
                  </p>

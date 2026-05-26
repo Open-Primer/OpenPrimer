@@ -11,10 +11,170 @@ import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
 
+const AUTH_STRINGS: Record<string, Record<string, string>> = {
+  EN: {
+    create_account: "Create an Account",
+    begin_journey: "Begin your journey",
+    first_name: "First Name",
+    last_name: "Last Name",
+    email_address: "Email Address",
+    password: "Password",
+    confirm_password: "Confirm Password",
+    validate_reg: "Validate Registration",
+    already_registered: "Already registered?",
+    login: "Log In",
+    access_repo: "Access the Repository",
+    verified_success: "Account validated successfully!",
+    verified_desc: "Your registration is confirmed. Connect now to choose your courses and compose your curriculum.",
+    new_to_op: "New to OpenPrimer?",
+    create_an_account: "Create an Account",
+    verify_email: "Verify Email",
+    verify_sent: "A validation link has been sent to",
+    verify_confirm: "Please confirm your email to unlock your access.",
+    simulated_email: "SIMULATED EMAIL",
+    welcome_to_op: "Welcome to OpenPrimer!",
+    verify_and_login: "Verify Account & Log In",
+    back: "Back",
+    first_name_placeholder: "John",
+    last_name_placeholder: "Doe"
+  },
+  FR: {
+    create_account: "Créer un Compte",
+    begin_journey: "Commencer votre parcours",
+    first_name: "Prénom",
+    last_name: "Nom",
+    email_address: "Adresse Email",
+    password: "Mot de passe",
+    confirm_password: "Confirmer le mot de passe",
+    validate_reg: "Valider mon inscription",
+    already_registered: "Déjà un compte ?",
+    login: "Se Connecter",
+    access_repo: "Accéder au Dépôt",
+    verified_success: "Compte validé avec succès !",
+    verified_desc: "Votre inscription est confirmée. Connectez-vous maintenant pour choisir vos cours et composer votre curriculum.",
+    new_to_op: "Nouveau ?",
+    create_an_account: "Créer un compte",
+    verify_email: "Vérifier l'Email",
+    verify_sent: "Un lien de validation a été envoyé à",
+    verify_confirm: "Veuillez confirmer votre email pour débloquer votre accès.",
+    simulated_email: "EMAIL SIMULÉ",
+    welcome_to_op: "Bienvenue sur OpenPrimer !",
+    verify_and_login: "Valider mon compte & Se Connecter",
+    back: "Retour",
+    first_name_placeholder: "Jean",
+    last_name_placeholder: "Dupont"
+  },
+  ES: {
+    create_account: "Crear una Cuenta",
+    begin_journey: "Comienza tu viaje",
+    first_name: "Nombre",
+    last_name: "Apellido",
+    email_address: "Correo Electrónico",
+    password: "Contraseña",
+    confirm_password: "Confirmar Contraseña",
+    validate_reg: "Validar Registro",
+    already_registered: "¿Ya tienes cuenta?",
+    login: "Iniciar Sesión",
+    access_repo: "Acceder al Repositorio",
+    verified_success: "¡Cuenta validada con éxito!",
+    verified_desc: "Tu registro está confirmado. Conéctate ahora para elegir tus cursos y componer tu currículo.",
+    new_to_op: "¿Nuevo en OpenPrimer?",
+    create_an_account: "Crear una cuenta",
+    verify_email: "Verificar Correo",
+    verify_sent: "Se ha enviado un enlace de validación a",
+    verify_confirm: "Por favor confirma tu correo para desbloquear tu acceso.",
+    simulated_email: "CORREO SIMULADO",
+    welcome_to_op: "¡Bienvenido a OpenPrimer!",
+    verify_and_login: "Validar cuenta e Iniciar sesión",
+    back: "Volver",
+    first_name_placeholder: "Juan",
+    last_name_placeholder: "Pérez"
+  },
+  DE: {
+    create_account: "Konto erstellen",
+    begin_journey: "Beginne deine Reise",
+    first_name: "Vorname",
+    last_name: "Nachname",
+    email_address: "E-Mail-Adresse",
+    password: "Passwort",
+    confirm_password: "Passwort bestätigen",
+    validate_reg: "Registrierung bestätigen",
+    already_registered: "Bereits registriert?",
+    login: "Einloggen",
+    access_repo: "Repository betreten",
+    verified_success: "Konto erfolgreich validiert!",
+    verified_desc: "Ihre Registrierung ist bestätigt. Verbinden Sie sich jetzt, um Ihre Kurse auszuwählen und Ihren Lehrplan zu erstellen.",
+    new_to_op: "Neu bei OpenPrimer?",
+    create_an_account: "Konto erstellen",
+    verify_email: "E-Mail verifizieren",
+    verify_sent: "Ein Bestätigungslink wurde gesendet an",
+    verify_confirm: "Bitte bestätigen Sie Ihre E-Mail, um Ihren Zugang freizuschalten.",
+    simulated_email: "SIMULIERTE E-MAIL",
+    welcome_to_op: "Willkommen bei OpenPrimer!",
+    verify_and_login: "Konto verifizieren & Einloggen",
+    back: "Zurück",
+    first_name_placeholder: "Hans",
+    last_name_placeholder: "Müller"
+  },
+  IT: {
+    create_account: "Crea un Account",
+    begin_journey: "Inizia il tuo viaggio",
+    first_name: "Nome",
+    last_name: "Cognome",
+    email_address: "Indirizzo Email",
+    password: "Password",
+    confirm_password: "Conferma Password",
+    validate_reg: "Conferma Registrazione",
+    already_registered: "Sei già registrato?",
+    login: "Accedi",
+    access_repo: "Accedi al Repository",
+    verified_success: "Account validato con successo!",
+    verified_desc: "La tua registrazione è confermata. Connettiti ora per scegliere i tuoi corsi e comporre il tuo curriculum.",
+    new_to_op: "Nuovo su OpenPrimer?",
+    create_an_account: "Crea un Account",
+    verify_email: "Verifica Email",
+    verify_sent: "Un link di convalida è stato inviato a",
+    verify_confirm: "Conferma la tua email per sbloccare l'accesso.",
+    simulated_email: "EMAIL SIMULATA",
+    welcome_to_op: "Benvenuto su OpenPrimer!",
+    verify_and_login: "Convalida Account & Accedi",
+    back: "Indietro",
+    first_name_placeholder: "Mario",
+    last_name_placeholder: "Rossi"
+  },
+  ZH: {
+    create_account: "创建账户",
+    begin_journey: "开始您的学术旅程",
+    first_name: "名字",
+    last_name: "姓氏",
+    email_address: "电子邮件地址",
+    password: "密码",
+    confirm_password: "确认密码",
+    validate_reg: "确认注册",
+    already_registered: "已经注册？",
+    login: "登录",
+    access_repo: "访问学术仓库",
+    verified_success: "账户验证成功！",
+    verified_desc: "您的注册已确认。请立即登录以选择课程并制定您的专属学习计划。",
+    new_to_op: "首次使用 OpenPrimer？",
+    create_an_account: "创建账户",
+    verify_email: "验证电子邮件",
+    verify_sent: "验证链接已发送至",
+    verify_confirm: "请确认您的电子邮件以解锁访问权限。",
+    simulated_email: "模拟邮件",
+    welcome_to_op: "欢迎来到 OpenPrimer！",
+    verify_and_login: "验证账户并登录",
+    back: "返回",
+    first_name_placeholder: "三",
+    last_name_placeholder: "张"
+  }
+};
+
 export default function Home() {
   const router = useRouter();
   const { language: lang, setLanguage: setLang } = useLanguage();
   const s = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const a = AUTH_STRINGS[lang as keyof typeof AUTH_STRINGS] || AUTH_STRINGS.EN;
   
   const [mounted, setMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -428,10 +588,10 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
                       <h2 className="text-2xl font-black tracking-tight text-white uppercase">
-                        {lang === 'FR' ? "Créer un Compte" : "Create an Account"}
+                        {a.create_account}
                       </h2>
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">
-                        {lang === 'FR' ? "Commencer votre parcours" : "Begin your journey"}
+                        {a.begin_journey}
                       </p>
                     </div>
 
@@ -446,7 +606,7 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {lang === 'FR' ? "Prénom" : "First Name"}
+                            {a.first_name}
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -454,7 +614,7 @@ export default function Home() {
                               required
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
-                              placeholder={lang === 'FR' ? "Jean" : "John"}
+                              placeholder={a.first_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                             />
                           </div>
@@ -462,7 +622,7 @@ export default function Home() {
 
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {lang === 'FR' ? "Nom" : "Last Name"}
+                            {a.last_name}
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -470,7 +630,7 @@ export default function Home() {
                               required
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
-                              placeholder={lang === 'FR' ? "Dupont" : "Doe"}
+                              placeholder={a.last_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                             />
                           </div>
@@ -479,7 +639,7 @@ export default function Home() {
 
                       <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                          {lang === 'FR' ? "Adresse Email" : "Email Address"}
+                          {a.email_address}
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -496,7 +656,7 @@ export default function Home() {
 
                       <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                          {lang === 'FR' ? "Mot de passe" : "Password"}
+                          {a.password}
                         </label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -520,7 +680,7 @@ export default function Home() {
 
                       <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                          {lang === 'FR' ? "Confirmer le mot de passe" : "Confirm Password"}
+                          {a.confirm_password}
                         </label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -546,12 +706,12 @@ export default function Home() {
                         type="submit"
                         className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        {lang === 'FR' ? "Valider mon inscription" : "Validate Registration"} <ArrowRight className="w-3.5 h-3.5" />
+                        {a.validate_reg} <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </form>
 
                     <p className="mt-6 text-center text-xs text-slate-600">
-                      {lang === 'FR' ? "Déjà un compte ?" : "Already registered?"} <button onClick={() => { setErrorMsg(''); setAuthModal('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{lang === 'FR' ? "Se connecter" : "Log In"}</button>
+                      {a.already_registered} <button onClick={() => { setErrorMsg(''); setAuthModal('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{a.login}</button>
                     </p>
                   </motion.div>
                 )}
@@ -566,10 +726,10 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
                       <h2 className="text-2xl font-black tracking-tight text-white uppercase">
-                        {lang === 'FR' ? "Connexion" : "Log In"}
+                        {a.login}
                       </h2>
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">
-                        {lang === 'FR' ? "Accéder au Dépôt" : "Access the Repository"}
+                        {a.access_repo}
                       </p>
                     </div>
 
@@ -578,12 +738,10 @@ export default function Home() {
                         <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                           <p className="font-bold text-white uppercase text-[8px] tracking-wider">
-                            {lang === 'FR' ? "Compte validé avec succès !" : "Account validated successfully!"}
+                            {a.verified_success}
                           </p>
                           <p className="text-slate-400 leading-normal text-[10px] font-medium">
-                            {lang === 'FR' 
-                              ? "Votre inscription est confirmée. Connectez-vous maintenant pour choisir vos cours et composer votre curriculum."
-                              : "Your registration is confirmed. Connect now to choose your courses and compose your curriculum."}
+                            {a.verified_desc}
                           </p>
                         </div>
                       </div>
@@ -599,7 +757,7 @@ export default function Home() {
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                          {lang === 'FR' ? "Adresse Email" : "Email Address"}
+                          {a.email_address}
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -616,7 +774,7 @@ export default function Home() {
 
                       <div className="space-y-1">
                         <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                          {lang === 'FR' ? "Mot de passe" : "Password"}
+                          {a.password}
                         </label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
@@ -642,12 +800,12 @@ export default function Home() {
                         type="submit"
                         className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
                       >
-                        {lang === 'FR' ? "Se Connecter" : "Log In"}
+                        {a.login}
                       </button>
                     </form>
 
                     <p className="mt-6 text-center text-xs text-slate-600">
-                      {lang === 'FR' ? "Nouveau ?" : "New to OpenPrimer?"} <button onClick={() => { setErrorMsg(''); setAuthModal('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{lang === 'FR' ? "Créer un compte" : "Create an Account"}</button>
+                      {a.new_to_op} <button onClick={() => { setErrorMsg(''); setAuthModal('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{a.create_an_account}</button>
                     </p>
                   </motion.div>
                 )}
@@ -663,31 +821,29 @@ export default function Home() {
                       <Mail className="w-8 h-8" />
                     </div>
                     <h3 className="text-xl font-black text-white uppercase tracking-tight">
-                      {lang === 'FR' ? "Vérifier l'Email" : "Verify Email"}
+                      {a.verify_email}
                     </h3>
                     <p className="text-[10px] text-slate-500 leading-relaxed mt-2 mb-6">
-                      {lang === 'FR' 
-                        ? <>Un lien de validation a été envoyé à <span className="text-slate-300 font-bold">{email}</span>. Veuillez confirmer votre email pour débloquer votre accès.</>
-                        : <>A validation link has been sent to <span className="text-slate-300 font-bold">{email}</span>. Please confirm your email to unlock your access.</>}
+                      {a.verify_sent} <span className="text-slate-300 font-bold">{email}</span>. {a.verify_confirm}
                     </p>
 
-                    <div className="bg-slate-950/60 border border-slate-850 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
-                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-850 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
-                        {lang === 'FR' ? "EMAIL SIMULÉ" : "SIMULATED EMAIL"}
+                    <div className="bg-slate-950/60 border border-slate-855 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
+                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-855 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
+                        {a.simulated_email}
                       </div>
                       <p className="font-bold text-white mb-2">
-                        {lang === 'FR' ? "Bienvenue sur OpenPrimer !" : "Welcome to OpenPrimer!"}
+                        {a.welcome_to_op}
                       </p>
                       <button 
                         onClick={handleSimulateValidation}
                         className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10 cursor-pointer"
                       >
-                        {lang === 'FR' ? "Valider mon compte & Se Connecter" : "Verify Account & Log In"}
+                        {a.verify_and_login}
                       </button>
                     </div>
 
                     <button onClick={() => setAuthModal('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
-                      {lang === 'FR' ? "Retour" : "Back"}
+                      {a.back}
                     </button>
                   </motion.div>
                 )}

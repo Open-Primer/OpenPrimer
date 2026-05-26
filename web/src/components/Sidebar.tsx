@@ -15,6 +15,12 @@ interface SidebarProps {
 export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
   const [progress, setProgress] = useState<number>(12); // Default fallback
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('op_session');
+    setIsLoggedIn(session !== 'false');
+  }, []);
 
   useEffect(() => {
     async function loadProgress() {
@@ -65,7 +71,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
               {module.children?.map((page) => {
                 const isActive = pathname === page.path;
                 const pageIndex = flatPages.findIndex(p => p.path === page.path);
-                const isCompleted = pageIndex !== -1 && pageIndex < completedCount;
+                const isCompleted = isLoggedIn && pageIndex !== -1 && pageIndex < completedCount;
 
                 return (
                   <Link
@@ -95,11 +101,13 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         ))}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-slate-900/50">
-         <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-           Course Progress • <span className="text-blue-500 font-black">{progress}%</span>
-         </div>
-      </div>
+      {isLoggedIn && (
+        <div className="mt-8 pt-6 border-t border-slate-900/50">
+           <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+             Course Progress • <span className="text-blue-500 font-black">{progress}%</span>
+           </div>
+        </div>
+      )}
     </aside>
   );
 };

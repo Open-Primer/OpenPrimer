@@ -637,17 +637,29 @@ export const CatalogPage = () => {
                <div className="flex items-center gap-2 text-slate-500">
                   <Globe className="w-4 h-4" />
                   <p className="font-semibold text-xs uppercase tracking-wider">
-                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? '当前语言：' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'Français' : lang.toUpperCase() === 'ES' ? 'Español' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? '中文' : 'English'}
+                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? '当前语言：' : lang.toUpperCase() === 'IT' ? 'Lingua attiva :' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'Français' : lang.toUpperCase() === 'ES' ? 'Español' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? '中文' : lang.toUpperCase() === 'IT' ? 'Italiano' : 'English'}
                   </p>
                </div>
                {!isLoggedIn && (
-                 <p className="text-[10px] text-slate-600 font-medium italic mt-1 leading-relaxed max-w-sm">
-                   {lang.toUpperCase() === 'FR' ? '💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d\'autres langues.' : 
-                    lang.toUpperCase() === 'ES' ? '💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.' : 
-                    lang.toUpperCase() === 'DE' ? '💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
-                    lang.toUpperCase() === 'ZH' ? '💡 在顶部导航栏中切换语言，即可探索其他语言的课程。' : 
-                    '💡 Change the language in the top navigation bar to discover courses in other languages.'}
-                 </p>
+                  <div className="mt-3 px-4 py-3 bg-blue-500/5 border border-blue-500/20 rounded-2xl max-w-md text-[11px] leading-relaxed text-blue-400/90 font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5 animate-pulse">
+                    <Globe className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
+                    <div>
+                      <span className="font-bold text-white uppercase text-[8px] tracking-wider block mb-1">
+                        {lang.toUpperCase() === 'FR' ? 'GUIDE DE TRADUCTION DU CATALOGUE' : 
+                         lang.toUpperCase() === 'ES' ? 'GUÍA DE TRADUCCIÓN DEL CATÁLOGO' : 
+                         lang.toUpperCase() === 'DE' ? 'KATALOG-ÜBERSETZUNGSLEITFADEN' : 
+                         lang.toUpperCase() === 'ZH' ? '课程目录语言切换指南' : 
+                         lang.toUpperCase() === 'IT' ? 'GUIDA ALLA TRADUZIONE DEL CATALOGO' : 
+                         'CATALOG TRANSLATION GUIDE'}
+                      </span>
+                      {lang.toUpperCase() === 'FR' ? '💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d\'autres langues.' : 
+                       lang.toUpperCase() === 'ES' ? '💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.' : 
+                       lang.toUpperCase() === 'DE' ? '💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
+                       lang.toUpperCase() === 'ZH' ? '💡 在顶部导航栏中切换语言，即可探索其他语言 of 课程目录。' : 
+                       lang.toUpperCase() === 'IT' ? '💡 Cambia la lingua nella barra di navigazione superiore per scoprire i corsi in altre lingue.' : 
+                       '💡 Change the language in the top navigation bar to discover courses in other languages.'}
+                    </div>
+                  </div>
                )}
             </div>
           </div>

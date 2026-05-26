@@ -47,6 +47,39 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setLanguage(cookieLang);
       } else {
         document.cookie = `openprimer_lang=EN; path=/; max-age=31536000; SameSite=Lax`;
+        
+        // Geolocation IP-based detection for guests
+        fetch('https://ipapi.co/json/')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.country_code) {
+              const cc = String(data.country_code).toUpperCase();
+              let detectedLang: Language = 'EN';
+              
+              if (cc === 'IT') {
+                detectedLang = 'IT';
+              } else if (['FR', 'MC', 'GP', 'MQ', 'RE', 'YT'].includes(cc)) {
+                detectedLang = 'FR';
+              } else if (['ES', 'MX', 'AR', 'CO', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'UY', 'PA', 'GQ'].includes(cc)) {
+                detectedLang = 'ES';
+              } else if (['DE', 'AT', 'CH', 'LI'].includes(cc)) {
+                detectedLang = 'DE';
+              } else if (['CN', 'TW', 'HK'].includes(cc)) {
+                detectedLang = 'ZH';
+              }
+              
+              const stillNotSaved = !localStorage.getItem('openprimer_lang');
+              if (stillNotSaved) {
+                setLanguage(detectedLang);
+                localStorage.setItem('openprimer_lang', detectedLang);
+                document.cookie = `openprimer_lang=${detectedLang}; path=/; max-age=31536000; SameSite=Lax`;
+                console.log(`Detected country: ${cc}, auto-set default language to: ${detectedLang}`);
+              }
+            }
+          })
+          .catch(err => {
+            console.warn("IP-based language detection failed, falling back to EN default:", err);
+          });
       }
     }
   }, []);
