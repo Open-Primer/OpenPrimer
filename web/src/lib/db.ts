@@ -1246,7 +1246,8 @@ export const dbService = {
       activeModules: [
         { id: 1, title_key: "classical_mechanics", subject_key: "physics", level: "L1", slug: "classical-mechanics", progress: 65 },
         { id: 2, title_key: "cell_biology", subject_key: "biology", level: "L1", slug: "cell-biology", progress: 28 },
-        { id: 3, title_key: "constitutional_law", subject_key: "law", level: "L1", slug: "constitutional-law", progress: 12 }
+        { id: 3, title_key: "constitutional_law", subject_key: "law", level: "L1", slug: "constitutional-law", progress: 12 },
+        { id: 4, title_key: "molecular_genetics", subject_key: "biology", level: "L1", slug: "molecular-genetics", progress: 100 }
       ],
       aiSummary: "You have shown exceptional rigor in Classical Mechanics. Your next milestone is the Lagrangian synthesis. In Biology, we suggest focusing on ATP cycles to reach the L2 threshold."
     };

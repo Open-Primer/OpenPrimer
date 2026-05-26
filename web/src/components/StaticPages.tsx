@@ -630,7 +630,7 @@ export const CatalogPage = () => {
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
           <div>
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tight pb-2 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {t.catalog}
             </h1>
             <div className="flex items-center gap-2 text-slate-500">
@@ -711,8 +711,8 @@ export const CatalogPage = () => {
                     
                     {/* Ultra Flashy corner diagonal Ribbon */}
                     {isCourseNew(course) && (
-                      <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
-                        <div className="absolute top-6 -right-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none">
+                      <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                        <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
                           {lang.toUpperCase() === 'FR' ? 'Nouveau' : 
                            lang.toUpperCase() === 'ES' ? 'Nuevo' : 
                            lang.toUpperCase() === 'DE' ? 'Neu' : 
@@ -777,7 +777,7 @@ export const CatalogPage = () => {
                             setSelectedEnrollCourse(course);
                           }
                         }}
-                        className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isEnrolled ? 'bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white' : 'bg-emerald-600/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-600 hover:text-white'}`}
+                        className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white`}
                       >
                          {!isLoggedIn ? (lang === 'FR' ? 'Commencer à apprendre' : 'Start learning') : isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
                       </button>
