@@ -12,7 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality } from '@/lib/db';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
-export const UI_STRINGS = {
+const STATIC_UI_STRINGS = {
   EN: { 
     my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
@@ -220,6 +220,20 @@ export const UI_STRINGS = {
   }
 };
 
+export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
+  get(target, prop: string) {
+    if (typeof window !== 'undefined') {
+      const cached = window.localStorage.getItem(`openprimer_ui_strings_${prop.toUpperCase()}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return target[prop as keyof typeof target] || target.EN;
+  }
+}) as any;
+
 
 import { usePathname } from 'next/navigation';
 
@@ -246,16 +260,31 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     async function loadPersonalities() {
       const { data } = await dbService.getTutorPersonalities();
       if (data && data.length > 0) {
-        setPersonalities(data);
+        // Respect standardized archiving levels:
+        // Level 0: Active, visible for all
+        // Level 1: Invisible for new selection (can't select, doesn't appear unless already active)
+        // Level 2: Invisible for users that were using it (therefore invisible for all users)
+        const filtered = data.filter(p => {
+          const currentLevel = typeof p.archivingLevel === 'number' ? p.archivingLevel : 0;
+          if (currentLevel >= 2) return false;
+          if (currentLevel === 1) {
+            const activeId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
+            if (activeId !== p.id) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        setPersonalities(filtered);
         
         const storedId = localStorage.getItem('op_active_tutor_personality');
-        const active = data.find(p => p.id === storedId);
+        const active = filtered.find(p => p.id === storedId);
         
         if (active) {
           setPersona(active.name);
         } else {
-          // Safeguard fallback: if selected personality is missing, fall back immediately to default!
-          const defaultPers = data.find(p => p.isDefault) || data[0];
+          const defaultPers = filtered.find(p => p.isDefault) || filtered[0];
           if (defaultPers) {
             setPersona(defaultPers.name);
             localStorage.setItem('op_active_tutor_personality', defaultPers.id);
@@ -640,12 +669,16 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
       <AnimatePresence>
         {isReportModalOpen && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
+          <div 
+            onClick={() => { setIsReportModalOpen(false); setReportComment(''); }}
+            className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden"
+              className="w-full max-w-lg bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default"
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">

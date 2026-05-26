@@ -1615,8 +1615,8 @@ export default function AdminCurriculumPage() {
       {/* ACHIEVEMENT ADD MODAL */}
       <AnimatePresence>
         {showAddAchievement && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8">
+          <div onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Create Achievement Badge
@@ -1696,102 +1696,37 @@ export default function AdminCurriculumPage() {
                     </div>
                   </div>
 
-                  {/* Drag and Drop Zone & Live Preview */}
+                  {/* Live Preview */}
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Custom Badge Upload & Live Preview
+                      Badge Design Live Preview
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div 
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, false)}
-                        className="p-8 border-2 border-dashed border-slate-800 hover:border-violet-500/50 rounded-3xl bg-slate-950/20 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
-                      >
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              handleImageFile(e.target.files[0], false);
-                            }
-                          }}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                        />
-                        <Upload className="w-8 h-8 text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-all" />
-                        <p className="text-xs text-slate-400 font-medium">Drag & drop badge image here</p>
-                        <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">PNG, JPG, SVG up to 5MB</p>
+                    <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
+                      <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
+                        {badgeIcon ? (
+                          badgeIcon.startsWith('data:image') ? (
+                            <img src={badgeIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
+                          ) : (() => {
+                            const found = BADGE_LIBRARY.find(b => b.id === badgeIcon);
+                            const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
+                            const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
+                            return (
+                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                                <IconComp className="w-8 h-8 text-white" />
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <span className="text-slate-600 italic text-[10px]">No Icon</span>
+                        )}
                       </div>
-
-                      <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
-                        <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
-                          {badgeIcon ? (
-                            badgeIcon.startsWith('data:image') ? (
-                              <img src={badgeIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
-                            ) : (() => {
-                              const found = BADGE_LIBRARY.find(b => b.id === badgeIcon);
-                              const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
-                              const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
-                              return (
-                                <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                                  <IconComp className="w-8 h-8 text-white" />
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <span className="text-slate-600 italic text-[10px]">No Icon</span>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-slate-200">{newAch.name || 'Live Preview'}</h4>
-                          <p className="text-[10px] text-slate-500 leading-normal">
-                            {newAch.description || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
-                          </p>
-                        </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-slate-200">{newAch.name || 'Live Preview'}</h4>
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          {newAch.description || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
+                        </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Suggested Images Panel */}
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Suggested Badge Designs (Dynamic)
-                    </label>
-                    {(() => {
-                      const suggestions = getSuggestedBadges(newAch.name, newAch.description, achievements, badgeIcon);
-                      if (suggestions.length === 0) {
-                        return (
-                          <div className="p-6 bg-slate-950/20 border border-dashed border-slate-850 rounded-2xl text-center text-xs text-slate-500 italic">
-                            Enter a name and description to auto-suggest badge designs...
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="grid grid-cols-3 gap-4">
-                          {suggestions.map((img) => {
-                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                            const isSelected = badgeIcon === img.id;
-                            return (
-                              <button
-                                key={img.id}
-                                type="button"
-                                onClick={() => setBadgeIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
-                              >
-                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
-                                  <IconComp className="w-6 h-6" />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
-                                  {img.iconName.toUpperCase()}
-                                </span>
-                                <span className="text-[8px] font-semibold text-slate-500">
-                                  {img.colorName}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
 
                   {/* Full Paginated Badge Gallery */}
@@ -1848,6 +1783,26 @@ export default function AdminCurriculumPage() {
 
                       return (
                         <div className="grid grid-cols-3 gap-4">
+                          {/* Custom Badge Upload Trigger Card */}
+                          <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleImageFile(e.target.files[0], false);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                              <Upload className="w-5 h-5" />
+                            </div>
+                            <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                              {lang === 'FR' ? 'Uploader' : 'Upload'}
+                            </span>
+                          </div>
+
                           {currentPageBadges.map((img) => {
                             const IconComp = LUCIDE_ICONS[img.iconName] || Award;
                             const isSelected = badgeIcon === img.id;
@@ -1887,8 +1842,8 @@ export default function AdminCurriculumPage() {
       {/* ACHIEVEMENT EDIT MODAL */}
       <AnimatePresence>
         {selectedAchievement && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8">
+          <div onClick={() => setSelectedAchievement(null)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Edit Achievement Badge
@@ -1959,102 +1914,37 @@ export default function AdminCurriculumPage() {
                     </div>
                   </div>
 
-                  {/* Drag and Drop Zone & Live Preview */}
+                  {/* Live Preview */}
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Custom Badge Upload & Live Preview
+                      Badge Design Live Preview
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div 
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, true)}
-                        className="p-8 border-2 border-dashed border-slate-800 hover:border-violet-500/50 rounded-3xl bg-slate-950/20 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
-                      >
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              handleImageFile(e.target.files[0], true);
-                            }
-                          }}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                        />
-                        <Upload className="w-8 h-8 text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-all" />
-                        <p className="text-xs text-slate-400 font-medium">Drag & drop badge image here</p>
-                        <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">PNG, JPG, SVG up to 5MB</p>
+                    <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
+                      <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
+                        {editIcon ? (
+                          editIcon.startsWith('data:image') ? (
+                            <img src={editIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
+                          ) : (() => {
+                            const found = BADGE_LIBRARY.find(b => b.id === editIcon);
+                            const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
+                            const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
+                            return (
+                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                                <IconComp className="w-8 h-8 text-white" />
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <span className="text-slate-600 italic text-[10px]">No Icon</span>
+                        )}
                       </div>
-
-                      <div className="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-850 rounded-3xl">
-                        <div className="w-16 h-16 rounded-[24px] bg-slate-950 border border-slate-850 flex items-center justify-center shadow-inner relative overflow-hidden shrink-0">
-                          {editIcon ? (
-                            editIcon.startsWith('data:image') ? (
-                              <img src={editIcon} alt="Custom Badge Preview" className="w-full h-full object-cover animate-pulse" />
-                            ) : (() => {
-                              const found = BADGE_LIBRARY.find(b => b.id === editIcon);
-                              const IconComp = found ? (LUCIDE_ICONS[found.iconName] || Award) : Award;
-                              const gradient = found ? found.gradient : 'from-slate-700 to-slate-900';
-                              return (
-                                <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                                  <IconComp className="w-8 h-8 text-white" />
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <span className="text-slate-600 italic text-[10px]">No Icon</span>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-slate-200">{editName || 'Live Preview'}</h4>
-                          <p className="text-[10px] text-slate-500 leading-normal">
-                            {editDesc || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
-                          </p>
-                        </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-slate-200">{editName || 'Live Preview'}</h4>
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          {editDesc || 'High-fidelity badge rendering featuring glowing gradient backdrops.'}
+                        </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Suggested Images Panel */}
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Suggested Badge Designs (Dynamic)
-                    </label>
-                    {(() => {
-                      const suggestions = getSuggestedBadges(editName, editDesc, achievements, editIcon);
-                      if (suggestions.length === 0) {
-                        return (
-                          <div className="p-6 bg-slate-950/20 border border-dashed border-slate-850 rounded-2xl text-center text-xs text-slate-500 italic">
-                            Enter a name and description to auto-suggest badge designs...
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="grid grid-cols-3 gap-4">
-                          {suggestions.map((img) => {
-                            const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                            const isSelected = editIcon === img.id;
-                            return (
-                              <button
-                                key={img.id}
-                                type="button"
-                                onClick={() => setEditIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
-                              >
-                                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
-                                  <IconComp className="w-6 h-6" />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
-                                  {img.iconName.toUpperCase()}
-                                </span>
-                                <span className="text-[8px] font-semibold text-slate-500">
-                                  {img.colorName}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
 
                   {/* Full Paginated Badge Gallery */}
@@ -2115,6 +2005,26 @@ export default function AdminCurriculumPage() {
 
                       return (
                         <div className="grid grid-cols-3 gap-4">
+                          {/* Custom Badge Upload Trigger Card */}
+                          <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleImageFile(e.target.files[0], true);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                              <Upload className="w-5 h-5" />
+                            </div>
+                            <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                              {lang === 'FR' ? 'Uploader' : 'Upload'}
+                            </span>
+                          </div>
+
                           {currentPageBadges.map((img) => {
                             const IconComp = LUCIDE_ICONS[img.iconName] || Award;
                             const isSelected = editIcon === img.id;
@@ -2190,8 +2100,8 @@ export default function AdminCurriculumPage() {
       {/* DYNAMIC LANGUAGE ADD MODAL */}
       <AnimatePresence>
         {showAddLanguage && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden">
+          <div onClick={() => setShowAddLanguage(false)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Globe className="w-6 h-6 text-emerald-500" /> Register New Language
@@ -2253,8 +2163,8 @@ export default function AdminCurriculumPage() {
       {/* PERSONALITY ADD MODAL */}
       <AnimatePresence>
         {showAddPersonality && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden">
+          <div onClick={() => setShowAddPersonality(false)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Sparkles className="w-6 h-6 text-fuchsia-500" /> Create Custom Tutor Persona

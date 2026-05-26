@@ -173,14 +173,12 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
     await expect(page.getByText(/Strict Validation Reject|Rejet de Validation Stricte/)).toBeVisible();
  
     // 6. Fix threshold value
-    await page.fill('input[placeholder*="3 days"]', '10');
- 
-    // 7. Verify dynamic Lucide icon suggestions (should include Zap, Flame, or Clock due to "streak" keyword)
-    const suggestedZap = page.locator('button:has-text("ZAP")');
-    await expect(suggestedZap).toBeVisible();
-    await suggestedZap.click();
- 
-    // 8. Verify badge icon library is visible (Multi-Language panel removed)
+    await page.fill('input[placeholder*="3 days"]', '10');    // 7. Select the first available badge from the standard library catalog grid
+    const libraryBadge = page.locator('div.grid-cols-3 button').first();
+    await expect(libraryBadge).toBeVisible();
+    await libraryBadge.click();
+
+    // 8. Verify the preview contains the title
     await expect(page.locator('text=Streaker Master').first()).toBeVisible();
  
     // 9. Submit creation and assert badge appears in grid

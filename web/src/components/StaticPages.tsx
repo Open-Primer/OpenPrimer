@@ -423,7 +423,17 @@ export const CatalogPage = () => {
   };
 
   const filteredCourses = courses.filter(c => {
-    // Only display active courses
+    // Respect standardized archiving levels:
+    // Level 0: Active, visible for all
+    // Level 1: Invisible for new selection (can't select, doesn't appear unless already in bookmarks)
+    // Level 2: Invisible for users that were using it (therefore invisible for all users)
+    const currentLevel = typeof c.archivingLevel === 'number' ? c.archivingLevel : 0;
+    if (currentLevel >= 2) return false;
+    if (currentLevel === 1) {
+      if (!bookmarks.includes(c.id)) {
+        return false;
+      }
+    }
     if (c.is_active === false) return false;
     
     const matchesLang = c.languages && c.languages.includes(lang.toLowerCase());
@@ -560,12 +570,16 @@ export const CatalogPage = () => {
 
       <AnimatePresence>
         {showWelcomePopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+          <div 
+            onClick={dismissWelcomePopup}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden text-center"
+              className="max-w-md w-full bg-slate-900 border border-slate-850 rounded-[32px] p-8 shadow-2xl relative overflow-hidden text-center cursor-default"
             >
               {/* Decorative radial gradients */}
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl" />

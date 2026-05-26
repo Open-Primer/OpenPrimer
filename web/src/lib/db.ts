@@ -14,6 +14,15 @@ export interface Achievement {
   endDate: string | null;
   icon: string;
   translations?: Record<string, { name: string; description: string }>;
+  archivingLevel?: number;
+}
+
+export interface ContactFeedback {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  timestamp: string; // ISO string
 }
 
 export interface LanguageInfo {
@@ -97,6 +106,7 @@ export interface TutorPersonality {
   name: string;
   prompt: string;
   isDefault: boolean;
+  archivingLevel?: number;
 }
 
 export interface AgentMetric {
@@ -738,6 +748,14 @@ let initialRefusedCourses: RefusedCourseEntry[] = [
   { id: 'ref_c1', name: "Advanced Thermodynamics", subject: "Physics", searches: 1, priority: "Low", previouslyRefused: true }
 ];
 
+let initialContactFeedbacks: ContactFeedback[] = [
+  { id: 'fb_1', name: 'Dr. Evelyn Carter', email: 'evelyn.carter@mit.edu', message: 'Hello! I noticed a typo in the Newtonian Dynamics module under Class 1. The discrete Laplacian is missing a negative coefficient in equation 4. Great app otherwise!', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'fb_2', name: 'Jean-Pierre Laurent', email: 'jp.laurent@sorbonne.fr', message: 'Félicitations pour la qualité des cours ! Est-il possible d\'ajouter un module d\'électrostatique pour le niveau L2 ? Nos étudiants apprécieraient beaucoup.', timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'fb_3', name: 'Aleksei Volkov', email: 'avolkov@itmo.ru', message: 'Are you planning to release a mobile application? The responsive web UI is fantastic, but offline study is crucial for transit.', timestamp: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString() }
+];
+
+let contactFeedbacksList: ContactFeedback[] = initialContactFeedbacks;
+
 export let initialLanguages: LanguageInfo[] = [
   { code: 'EN', flag: '🇺🇸', label: 'English' },
   { code: 'FR', flag: '🇫🇷', label: 'Français' },
@@ -944,6 +962,7 @@ if (isBrowser) {
   tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
   agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
   availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
+  contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', initialContactFeedbacks);
   
   // Save initially to sync
   setLocalStorageItem('openprimer_users', users);
@@ -960,6 +979,7 @@ if (isBrowser) {
   setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
   setLocalStorageItem('openprimer_agent_metrics', agentMetricsList);
   setLocalStorageItem('openprimer_languages', availableLanguagesList);
+  setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
 }
 
 export const authService = {
@@ -1459,9 +1479,17 @@ export const dbService = {
   },
 
   deleteAchievement: async (id: number) => {
-    achievementsList = achievementsList.map(a => a.id === id ? { ...a, status: 'inactive' } : a);
+    achievementsList = achievementsList.filter(a => a.id !== id);
     setLocalStorageItem('openprimer_achievements', achievementsList);
-    return { data: null, error: null };
+    if (isOffline) {
+      return { data: null, error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('achievements').delete().eq('id', id);
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: null };
+    }
   },
 
   // SEARCH HISTORY
@@ -1660,6 +1688,76 @@ export const dbService = {
   // AGENT METRICS
   getAgentMetrics: async () => {
     return { data: agentMetricsList, error: null };
+  },
+
+  // COURSE DELETION (LEVEL 3)
+  deleteCourse: async (courseId: number) => {
+    mockCourses = mockCourses.filter(c => c.id !== courseId);
+    setLocalStorageItem('openprimer_courses', mockCourses);
+    if (isOffline) {
+      return { data: null, error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: null };
+    }
+  },
+
+  // CONTACT FEEDBACK INBOX (90-DAY RETENTION)
+  getContactFeedbacks: async () => {
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    
+    // Auto-prune items older than 90 days from the local state
+    const beforeCount = contactFeedbacksList.length;
+    contactFeedbacksList = contactFeedbacksList.filter(fb => new Date(fb.timestamp).getTime() >= ninetyDaysAgo);
+    if (contactFeedbacksList.length !== beforeCount) {
+      setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
+    }
+    
+    if (isOffline) {
+      return { data: contactFeedbacksList, error: null };
+    }
+    try {
+      const ninetyDaysAgoIso = new Date(ninetyDaysAgo).toISOString();
+      const { data, error } = await supabase
+        .from('contact_feedbacks')
+        .select('*')
+        .gte('created_at', ninetyDaysAgoIso)
+        .order('created_at', { ascending: false });
+      return { data, error };
+    } catch (e) {
+      return { data: contactFeedbacksList, error: null };
+    }
+  },
+
+  saveContactFeedback: async (feedback: Omit<ContactFeedback, 'id' | 'timestamp'>) => {
+    const newFb: ContactFeedback = {
+      ...feedback,
+      id: `fb_${Date.now()}`,
+      timestamp: new Date().toISOString()
+    };
+    contactFeedbacksList = [newFb, ...contactFeedbacksList];
+    setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
+    if (isOffline) {
+      return { data: newFb, error: null };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('contact_feedbacks')
+        .insert([{
+          name: feedback.name,
+          email: feedback.email,
+          message: feedback.message,
+          created_at: newFb.timestamp
+        }])
+        .select()
+        .single();
+      return { data, error };
+    } catch (e) {
+      return { data: newFb, error: null };
+    }
   }
 };
 
