@@ -806,43 +806,9 @@ export const Footer = () => {
 
 // --- COMPONENT: ADMIN CONSOLE FOOTER ---
 export const AdminFooter = () => {
-  const { language: lang } = useLanguage();
-  const isFR = lang === 'FR';
-
   return (
     <footer className="bg-slate-950 border-t border-slate-900 py-6 px-12 mt-auto">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        {/* Left Side: System Status */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-              {isFR ? "Systèmes Souverains Stables" : "Sovereign Systems Stable"}
-            </span>
-          </div>
-          <div className="hidden md:block w-px h-4 bg-slate-900" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-            {isFR ? "Moteurs Autonomes 98.4% Actifs" : "Autonomous Engines 98.4% Active"}
-          </span>
-        </div>
-
-        {/* Center: Admin Shortcuts */}
-        <div className="flex items-center gap-6 text-[9px] font-black uppercase tracking-widest text-slate-500">
-          <Link href="/admin" className="hover:text-blue-400 transition-colors">
-            {isFR ? "Tableau de bord" : "Dashboard"}
-          </Link>
-          <Link href="/admin/users" className="hover:text-blue-400 transition-colors">
-            {isFR ? "Membres" : "Users"}
-          </Link>
-          <Link href="/admin/curriculum" className="hover:text-blue-400 transition-colors">
-            {isFR ? "Gouvernance Cursus" : "Curriculum Center"}
-          </Link>
-        </div>
-
-        {/* Right Side: Copyright */}
+      <div className="max-w-7xl mx-auto flex justify-center items-center">
         <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest">
           © 2026 OpenPrimer Foundation
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Calendar, Mail, ArrowRight, Clock } from 'lucide-react';
+import { MessageSquare, Calendar, Mail, ArrowRight, Clock, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { dbService, ContactFeedback } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
@@ -10,6 +10,10 @@ export default function AdminFeedbackPage() {
   const { language: lang } = useLanguage();
   const [contactFeedbacks, setContactFeedbacks] = useState<ContactFeedback[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Translation States
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
 
   const loadFeedbacks = async () => {
     setLoading(true);
@@ -21,6 +25,32 @@ export default function AdminFeedbackPage() {
   useEffect(() => {
     loadFeedbacks();
   }, []);
+
+  const translateFeedback = async (id: string, text: string) => {
+    if (translatedMessages[id]) {
+      // Toggle back to original by removing from translatedMessages
+      setTranslatedMessages(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+      return;
+    }
+    if (translatingIds[id]) return;
+
+    setTranslatingIds(prev => ({ ...prev, [id]: true }));
+    try {
+      const targetLang = lang.toLowerCase();
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
+      const data = await res.json();
+      const translated = data[0].map((x: any) => x[0]).join('');
+      setTranslatedMessages(prev => ({ ...prev, [id]: translated }));
+    } catch (error) {
+      console.error("Translation failed", error);
+    } finally {
+      setTranslatingIds(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn text-white">
@@ -97,11 +127,27 @@ export default function AdminFeedbackPage() {
                   </div>
 
                   {/* Message body blockquote */}
-                  <div className="p-5 bg-slate-950/80 border border-slate-900 rounded-2xl relative overflow-hidden">
+                  <div className="p-5 bg-slate-950/80 border border-slate-900 rounded-2xl relative overflow-hidden space-y-4">
                     <div className="absolute top-2 left-2 text-[28px] font-serif text-slate-900 leading-none shrink-0 pointer-events-none">“</div>
                     <p className="text-xs text-slate-350 leading-relaxed pl-4 py-1 italic whitespace-pre-wrap">
-                      {fb.message}
+                      {translatedMessages[fb.id] || fb.message}
                     </p>
+
+                    {/* Translate action button */}
+                    <div className="flex justify-end pl-4">
+                      <button
+                        onClick={() => translateFeedback(fb.id, fb.message)}
+                        disabled={translatingIds[fb.id]}
+                        className="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Globe className={`w-3.5 h-3.5 ${translatingIds[fb.id] ? 'animate-spin' : ''}`} />
+                        <span>
+                          {translatingIds[fb.id] ? (lang === 'FR' ? 'Traduction...' : 'Translating...') : 
+                           translatedMessages[fb.id] ? (lang === 'FR' ? 'Voir Original' : 'Show Original') :
+                           (lang === 'FR' ? 'Traduire' : 'Translate')}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

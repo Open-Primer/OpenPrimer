@@ -295,6 +295,56 @@ export const CatalogPage = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [showNewOnly, setShowNewOnly] = useState(false);
+
+  // Free Client-Side Translation States for Courses
+  const [translatedCourses, setTranslatedCourses] = useState<Record<number, { title: string; description: string }>>({});
+  const [translatingCourseIds, setTranslatingCourseIds] = useState<Record<number, boolean>>({});
+
+  const translateCourse = async (courseId: number, title: string, description: string) => {
+    if (translatedCourses[courseId]) {
+      // Toggle back to original
+      setTranslatedCourses(prev => {
+        const copy = { ...prev };
+        delete copy[courseId];
+        return copy;
+      });
+      return;
+    }
+    if (translatingCourseIds[courseId]) return;
+
+    setTranslatingCourseIds(prev => ({ ...prev, [courseId]: true }));
+    try {
+      const targetLang = lang.toLowerCase();
+      // Translate title
+      const resTitle = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(title)}`);
+      const dataTitle = await resTitle.json();
+      const translatedTitle = dataTitle[0].map((x: any) => x[0]).join('');
+
+      // Translate description
+      const resDesc = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(description)}`);
+      const dataDesc = await resDesc.json();
+      const translatedDesc = dataDesc[0].map((x: any) => x[0]).join('');
+
+      setTranslatedCourses(prev => ({
+        ...prev,
+        [courseId]: { title: translatedTitle, description: translatedDesc }
+      }));
+    } catch (error) {
+      console.error("Course translation failed", error);
+    } finally {
+      setTranslatingCourseIds(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const isCourseNew = (course: any) => {
+    if (!course.created_at) return false;
+    const created = new Date(course.created_at).getTime();
+    const now = new Date().getTime();
+    const diffTime = now - created;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 90;
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -437,13 +487,21 @@ export const CatalogPage = () => {
     if (c.is_active === false) return false;
     
     const matchesLang = c.languages && c.languages.includes(lang.toLowerCase());
+    const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
     const matchesSearch = localizedTitle.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           c.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          c.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (isNew && (
+                            searchQuery.toLowerCase() === 'new' || 
+                            searchQuery.toLowerCase() === 'nouveau' || 
+                            searchQuery.toLowerCase() === 'nouveauté' ||
+                            searchQuery.toLowerCase() === 'nouveautés'
+                          ));
     const matchesSaved = subjectFilter === 'Saved' ? bookmarks.includes(c.id) : true;
-    return matchesLang && matchesSearch && matchesSaved;
+    const matchesNew = showNewOnly ? isNew : true;
+    return matchesLang && matchesSearch && matchesSaved && matchesNew;
   });
 
   return (
@@ -485,6 +543,20 @@ export const CatalogPage = () => {
               )}
             </div>
             
+            {/* Standalone Premium New Courses Filter Toggle */}
+            <button 
+              onClick={() => setShowNewOnly(!showNewOnly)}
+              className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${showNewOnly ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
+            >
+              <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
+              <span className="hidden sm:inline">
+                {lang.toUpperCase() === 'FR' ? 'Nouveautés' : 
+                 lang.toUpperCase() === 'ES' ? 'Nuevos' : 
+                 lang.toUpperCase() === 'DE' ? 'Neuheiten' : 
+                 lang.toUpperCase() === 'ZH' ? '最新课程' : 'New Only'}
+              </span>
+            </button>
+
             {/* Standalone Premium Star Bookmark Toggle (only visible if logged in) */}
             {isLoggedIn && (
               <button 
@@ -509,6 +581,16 @@ export const CatalogPage = () => {
                       <Book className="w-6 h-6" />
                     </div>
                     <div className="flex gap-2 items-center">
+                      {/* New Course Badge */}
+                      {isCourseNew(course) && (
+                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase text-emerald-400 tracking-widest flex items-center gap-1 shadow-[0_0_8px_rgba(16,185,129,0.1)]">
+                          <Sparkles className="w-2.5 h-2.5 animate-pulse text-emerald-400" />
+                          {lang.toUpperCase() === 'FR' ? 'NOUVEAU' : 
+                           lang.toUpperCase() === 'ES' ? 'NUEVO' : 
+                           lang.toUpperCase() === 'DE' ? 'NEU' : 
+                           lang.toUpperCase() === 'ZH' ? '最新' : 'NEW'}
+                        </span>
+                      )}
                       {/* Unified gold star rating badge */}
                       <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
                         <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
@@ -531,9 +613,31 @@ export const CatalogPage = () => {
                     </div>
                   </div>
                   <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
-                    {getLocalizedCourseTitle(course)}
+                    {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
                   </h3>
-                  <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">{course.description}</p>
+                  <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed">
+                    {translatedCourses[course.id]?.description || course.description}
+                  </p>
+
+                  {/* Translate Course Card Button */}
+                  <div className="flex justify-end mb-6">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        translateCourse(course.id, getLocalizedCourseTitle(course), course.description);
+                      }}
+                      disabled={translatingCourseIds[course.id]}
+                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Globe className={`w-3.5 h-3.5 ${translatingCourseIds[course.id] ? 'animate-spin' : ''}`} />
+                      <span>
+                        {translatingCourseIds[course.id] ? (lang === 'FR' ? 'Traduction...' : 'Translating...') : 
+                         translatedCourses[course.id] ? (lang === 'FR' ? 'Voir Original' : 'Show Original') :
+                         (lang === 'FR' ? 'Traduire' : 'Translate')}
+                      </span>
+                    </button>
+                  </div>
                   
                   {/* PROGRESS INDICATOR (only visible if logged in) */}
                   {isLoggedIn && (

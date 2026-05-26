@@ -4,9 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { dbService, UserProfile, UserRole } from '@/lib/db';
 import { Search, UserCog, Shield, ShieldCheck, Mail, Calendar, ChevronRight, Ban, Trash2, Check, X, AlertCircle, PlusCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
+  if (field !== currentField) return <span className="ml-1 text-slate-700 hover:text-slate-400 cursor-pointer">⇅</span>;
+  return currentDir === 'asc' ? <span className="ml-1 text-blue-400 cursor-pointer">▲</span> : <span className="ml-1 text-blue-400 cursor-pointer">▼</span>;
+};
  
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userSortField, setUserSortField] = useState<string>('name');
+  const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');
   const [confirmingAction, setConfirmingAction] = useState<{ type: 'delete' | 'block' | 'role', userId: string, extra?: any } | null>(null);
   
@@ -77,6 +84,20 @@ export default function AdminUsers() {
     u.name.toLowerCase().includes(search.toLowerCase()) || 
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    let valA = a[userSortField as keyof typeof a];
+    let valB = b[userSortField as keyof typeof b];
+    if (typeof valA === 'string') {
+      valA = valA.toLowerCase();
+      valB = (valB as string).toLowerCase();
+    }
+    if (valA === undefined) return 1;
+    if (valB === undefined) return -1;
+    if (valA < valB) return userSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return userSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
  
   return (
     <div className="space-y-12 pb-20">
@@ -109,15 +130,51 @@ export default function AdminUsers() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-800/50">
-              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Identity</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Privileges</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Progress</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Status</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
+                if (userSortField === 'name') {
+                  setUserSortDir(userSortDir === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setUserSortField('name');
+                  setUserSortDir('asc');
+                }
+              }}>
+                Identity {renderSortIndicator('name', userSortField, userSortDir)}
+              </th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
+                if (userSortField === 'role') {
+                  setUserSortDir(userSortDir === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setUserSortField('role');
+                  setUserSortDir('asc');
+                }
+              }}>
+                Privileges {renderSortIndicator('role', userSortField, userSortDir)}
+              </th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
+                if (userSortField === 'level') {
+                  setUserSortDir(userSortDir === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setUserSortField('level');
+                  setUserSortDir('asc');
+                }
+              }}>
+                Progress {renderSortIndicator('level', userSortField, userSortDir)}
+              </th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
+                if (userSortField === 'isBlocked') {
+                  setUserSortDir(userSortDir === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setUserSortField('isBlocked');
+                  setUserSortDir('asc');
+                }
+              }}>
+                Status {renderSortIndicator('isBlocked', userSortField, userSortDir)}
+              </th>
               <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">Access Control</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/30">
-            {filteredUsers.map((user) => (
+            {sortedUsers.map((user) => (
               <tr key={user.id} className={`group transition-colors ${user.isBlocked ? 'bg-red-500/5' : 'hover:bg-slate-800/30'}`} data-testid={`user-row-${user.id}`}>
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-4">

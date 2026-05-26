@@ -229,6 +229,79 @@ export const CURRICULUM_STRINGS = {
   }
 };
 
+export const LOCALIZED_POPUPS = {
+  EN: {
+    course_confirm: 'Are you sure you want to completely archive the course "{title}"? This will purge it from database.',
+    tutor_confirm: 'Are you sure you want to permanently delete the tutor personality "{title}"? This action is irreversible.',
+    task_cancel_confirm: 'Are you sure you want to cancel the task "{title}"?',
+    translation_cancel_error: "New language creation cannot be cancelled due to site instability risk.",
+    purge_badge_title: "Confirm Badge Delete",
+    purge_badge_desc: 'Are you sure you want to delete/archive the badge "{title}"? This action is irreversible.',
+    purge_badge_confirm_btn: "Confirm Delete",
+    purge_badge_cancel_btn: "Cancel",
+    purge_lang_title: "Confirm Language Delete",
+    purge_lang_desc: 'Are you sure you want to delete/archive the language "{title}"? This action is irreversible.',
+    cancel_task_title: "Confirm Task Cancellation"
+  },
+  FR: {
+    course_confirm: 'Êtes-vous sûr de vouloir archiver totalement le cours "{title}" ? Cela va le purger de la base de données.',
+    tutor_confirm: 'Êtes-vous sûr de vouloir supprimer définitivement la personnalité "{title}" ? Cette action est irréversible.',
+    task_cancel_confirm: 'Êtes-vous sûr de vouloir annuler la tâche "{title}" ?',
+    translation_cancel_error: "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site.",
+    purge_badge_title: "Confirmer la suppression",
+    purge_badge_desc: 'Êtes-vous sûr de vouloir supprimer/archiver le badge "{title}" ? Cette action est irréversible.',
+    purge_badge_confirm_btn: "Confirmer la suppression",
+    purge_badge_cancel_btn: "Annuler",
+    purge_lang_title: "Confirmer la suppression de la langue",
+    purge_lang_desc: 'Êtes-vous sûr de vouloir supprimer/archiver la langue "{title}" ? Cette action est irréversible.',
+    cancel_task_title: "Confirmer l'annulation"
+  },
+  ES: {
+    course_confirm: '¿Está seguro de que desea archivar completamente el curso "{title}"? Esto lo purgará de la base de datos.',
+    tutor_confirm: '¿Está seguro de que desea eliminar permanentemente la personalidad "{title}"? Esta acción es irreversible.',
+    task_cancel_confirm: '¿Está seguro de que desea cancelar la tarea "{title}"?',
+    translation_cancel_error: "La creación de un nuevo idioma no se puede cancelar debido al riesgo de inestabilidad del sitio.",
+    purge_badge_title: "Confirmar eliminación",
+    purge_badge_desc: '¿Está seguro de que desea eliminar/archivar la medalla "{title}"? Esta acción es irreversible.',
+    purge_badge_confirm_btn: "Confirmar eliminación",
+    purge_badge_cancel_btn: "Cancelar",
+    purge_lang_title: "Confirmar eliminación de idioma",
+    purge_lang_desc: '¿Está seguro de que desea eliminar/archivar el idioma "{title}"? Esta acción es irreversible.',
+    cancel_task_title: "Confirmar cancelación"
+  },
+  DE: {
+    course_confirm: 'Sind Sie sicher, dass Sie den Kurs "{title}" vollständig archivieren möchten? Dadurch wird er aus der Datenbank gelöscht.',
+    tutor_confirm: 'Sind Sie sicher, dass Sie die Tutor-Persönlichkeit "{title}" dauerhaft löschen möchten? Diese Aktion ist unwiderruflich.',
+    task_cancel_confirm: 'Sind Sie sicher, dass Sie die Aufgabe "{title}" abbrechen möchten?',
+    translation_cancel_error: "Die Erstellung einer neuen Sprache kann wegen des Risikos von Instabilitäten nicht abgebrochen werden.",
+    purge_badge_title: "Löschen Bestätigen",
+    purge_badge_desc: 'Sind Sie sicher, dass Sie die Errungenschaft "{title}" löschen/archivieren möchten? Diese Aktion ist unwiderruflich.',
+    purge_badge_confirm_btn: "Löschen Bestätigen",
+    purge_badge_cancel_btn: "Abbrechen",
+    purge_lang_title: "Sprache löschen bestätigen",
+    purge_lang_desc: 'Sind Sie sicher, dass Sie die Sprache "{title}" löschen/archivieren möchten? Diese Aktion ist unwiderruflich.',
+    cancel_task_title: "Abbruch bestätigen"
+  },
+  ZH: {
+    course_confirm: '您确定要完全归档课程 "{title}" 吗？这将从数据库中清除它。',
+    tutor_confirm: '您确定要永久删除导师配置 "{title}" 吗？此操作不可逆。',
+    task_cancel_confirm: '您确定要取消任务 "{title}" 吗？',
+    translation_cancel_error: "由于网站不稳定性风险，无法取消新语言的创建任务。",
+    purge_badge_title: "确认删除勋章",
+    purge_badge_desc: '您确定要删除/归档勋章 "{title}" 吗？此操作不可逆。',
+    purge_badge_confirm_btn: "确认删除",
+    purge_badge_cancel_btn: "取消",
+    purge_lang_title: "确认删除语言",
+    purge_lang_desc: '您确定要删除/归档语言 "{title}" 吗？此操作不可逆。',
+    cancel_task_title: "确认取消任务"
+  }
+};
+
+const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
+  if (field !== currentField) return <span className="ml-1 text-slate-700 hover:text-slate-400 cursor-pointer">⇅</span>;
+  return currentDir === 'asc' ? <span className="ml-1 text-emerald-400 cursor-pointer">▲</span> : <span className="ml-1 text-emerald-400 cursor-pointer">▼</span>;
+};
+
 const LUCIDE_ICONS: Record<string, any> = {
   Award, Zap, Star, Flame, Trophy, Clock, Crown, Book, ShieldCheck, Layers, Activity, CheckCircle, Heart,
   Compass, Map, GraduationCap, Target, Cpu, Globe, Key, Lock, Lightbulb, Rocket, Search
@@ -264,6 +337,68 @@ const getSuggestedBadges = (name: string, desc: string, achievements: any[], cur
   }
 
   return matched.slice(0, 3);
+};
+
+
+// --- COMPONENT: ARCHIVING LEVEL BUTTONS (0, 1, 2, 3) ---
+const ArchivingLevelButtons = ({
+  currentLevel,
+  onChange,
+  disableLevel3 = false
+}: {
+  currentLevel: number;
+  onChange: (level: number) => void;
+  disableLevel3?: boolean;
+}) => {
+  return (
+    <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-855 rounded-2xl w-fit">
+      {[0, 1, 2, 3].map((lvl) => {
+        const isActive = currentLevel === lvl;
+        const isDisabled = lvl === 3 && disableLevel3;
+        let activeClass = "";
+        
+        if (isDisabled) {
+          activeClass = "opacity-30 cursor-not-allowed text-slate-600";
+        } else if (isActive) {
+          if (lvl === 0) activeClass = "bg-emerald-600 text-white shadow-md shadow-emerald-600/20";
+          else if (lvl === 1) activeClass = "bg-amber-500 text-white shadow-md shadow-amber-500/20";
+          else if (lvl === 2) activeClass = "bg-blue-600 text-white shadow-md shadow-blue-600/20";
+          else if (lvl === 3) activeClass = "bg-red-600 text-white shadow-md shadow-red-600/20";
+        } else {
+          activeClass = "text-slate-500 hover:text-slate-300 hover:bg-slate-900";
+        }
+
+        let tooltip = "";
+        if (lvl === 0) {
+          tooltip = "Level 0: Active & Visible to all / Actif & Visible pour tous";
+        } else if (lvl === 1) {
+          tooltip = "Level 1: Partial Archival (Invisible for new selections, EN/FR only) / Archivage partiel (Invisible pour nouvelles sélections, EN/FR uniquement)";
+        } else if (lvl === 2) {
+          tooltip = "Level 2: Read-Only (Invisible to all users, active users read-only) / Lecture seule (Invisible pour tous, lecture seule pour actifs)";
+        } else if (lvl === 3) {
+          tooltip = "Level 3: Fully Archived & Deleted (Requires confirmation) / Archive totale & Suppression (Requiert confirmation)";
+        }
+
+        return (
+          <button
+            key={lvl}
+            type="button"
+            disabled={isDisabled}
+            onClick={() => onChange(lvl)}
+            className={`w-7 h-7 flex items-center justify-center rounded-xl text-xs font-black transition-all ${activeClass}`}
+            title={tooltip}
+          >
+            {lvl === 3 ? (
+              <span className="flex items-center justify-center">
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="sr-only">Delete</span>
+              </span>
+            ) : lvl}
+          </button>
+        );
+      })}
+    </div>
+  );
 };
 
 export default function AdminCurriculumPage() {
@@ -339,6 +474,24 @@ export default function AdminCurriculumPage() {
   const [backlogRetention, setBacklogRetention] = useState(30);
   const [transRetention, setTransRetention] = useState(30);
 
+  // Sorting States
+  const [courseSortField, setCourseSortField] = useState<string>('title');
+  const [courseSortDir, setCourseSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const [queueSortField, setQueueSortField] = useState<string>('priority');
+  const [queueSortDir, setQueueSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const [langSortField, setLangSortField] = useState<string>('code');
+  const [langSortDir, setLangSortDir] = useState<'asc' | 'desc'>('asc');
+
+  // Double-Safeguard Target Modals
+  const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
+  const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
+
+  // Drag and Drop Badge Upload Dragging States
+  const [isCreationDragging, setIsCreationDragging] = useState(false);
+  const [isEditionDragging, setIsEditionDragging] = useState(false);
+
   // Paginated Gallery States
   const [creationGalleryPage, setCreationGalleryPage] = useState(1);
   const [editionGalleryPage, setEditionGalleryPage] = useState(1);
@@ -346,6 +499,96 @@ export default function AdminCurriculumPage() {
 
   // Academic Suggestions validations threshold
   const [validationsThreshold, setValidationsThreshold] = useState(5);
+
+  // ─── AI Generated Badge States ─────────────────────────────────────────────
+  const [generatedBadges, setGeneratedBadges] = useState<string[]>([]);
+  const [isGeneratingBadges, setIsGeneratingBadges] = useState(false);
+  const [editGeneratedBadges, setEditGeneratedBadges] = useState<string[]>([]);
+  const [isEditGeneratingBadges, setIsEditGeneratingBadges] = useState(false);
+
+  // Dynamic Image Resizing to Standard 128x128 JPEG to be under 50KB
+  const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(imageSrc);
+          return;
+        }
+        canvas.width = 128;
+        canvas.height = 128;
+        ctx.clearRect(0, 0, 128, 128);
+        ctx.drawImage(img, 0, 0, 128, 128);
+        const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        resolve(resultBase64);
+      };
+      img.onerror = () => {
+        resolve(imageSrc);
+      };
+      img.src = imageSrc;
+    });
+  };
+
+  // Debounced Badge Generator (2 seconds pause) for Creation
+  useEffect(() => {
+    if (!showAddAchievement) {
+      setGeneratedBadges([]);
+      return;
+    }
+    if (!newAch.name || !newAch.description) {
+      setGeneratedBadges([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsGeneratingBadges(true);
+      try {
+        const seed = `${newAch.name}_${newAch.description}`;
+        const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
+        const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
+        const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
+        setGeneratedBadges([opt1, opt2, opt3]);
+      } catch (err) {
+        console.error("AI Badge Generation Error", err);
+      } finally {
+        setIsGeneratingBadges(false);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [newAch.name, newAch.description, showAddAchievement]);
+
+  // Debounced Badge Generator (2 seconds pause) for Edition
+  useEffect(() => {
+    if (!selectedAchievement) {
+      setEditGeneratedBadges([]);
+      return;
+    }
+    if (!editName || !editDesc) {
+      setEditGeneratedBadges([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsEditGeneratingBadges(true);
+      try {
+        const seed = `${editName}_${editDesc}`;
+        const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
+        const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
+        const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
+        setEditGeneratedBadges([opt1, opt2, opt3]);
+      } catch (err) {
+        console.error("AI Badge Generation Error", err);
+      } finally {
+        setIsEditGeneratingBadges(false);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [editName, editDesc, selectedAchievement]);
 
   // Load language and database elements
   useEffect(() => {
@@ -367,7 +610,7 @@ export default function AdminCurriculumPage() {
     const { data: crs } = await dbService.getAllCourses();
     const { data: achs } = await dbService.getAchievements();
     const { data: pers } = await dbService.getTutorPersonalities();
-    const { data: langs } = await dbService.getAvailableLanguages();
+    const { data: langs } = await dbService.getLanguagesAdmin();
 
     setHistoryList(hist || []);
     setRefusedCourses(refC || []);
@@ -389,6 +632,122 @@ export default function AdminCurriculumPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Priority-Based Tasks execution scheduling loop (runs every 4 seconds)
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      if (queue.length === 0) return;
+
+      const runningTask = queue.find(t => t.status === 'running');
+      
+      if (runningTask) {
+        // Increment progress of currently running task
+        const nextProgress = Math.min(100, (runningTask.progress || 0) + 20);
+        const updated = queue.map(t => {
+          if (t.id === runningTask.id) {
+            return {
+              ...t,
+              progress: nextProgress,
+              status: nextProgress >= 100 ? 'complete' : 'running'
+            };
+          }
+          return t;
+        });
+
+        // If task completed, perform actions!
+        if (nextProgress >= 100) {
+          if (runningTask.type === 'generation') {
+            // Actually add mock course to DB so it becomes live!
+            const newId = `crs_${Date.now()}`;
+            await dbService.saveCourse({
+              id: newId,
+              title: runningTask.title,
+              slug: runningTask.title.toLowerCase().replace(/ /g, '_'),
+              description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+              level: 'Beginner',
+              archivingLevel: 0,
+              badge: 'badge_1',
+              modulesCount: 5,
+              lessonsCount: 20
+            });
+          } else if (runningTask.type === 'translation') {
+            // Find target language from format "Course Title (LANG)"
+            const matches = runningTask.title.match(/(.*)\s*\(([^)]+)\)$/);
+            if (matches && matches[1] && matches[2]) {
+              const cTitle = matches[1].trim();
+              const langCode = matches[2].trim().toUpperCase();
+              
+              // Seed translation for this course title
+              const allCrs = await dbService.getAllCourses();
+              const foundCourse = allCrs.data?.find(c => c.title.toLowerCase() === cTitle.toLowerCase());
+              if (foundCourse) {
+                const updatedTranslations = { ...(foundCourse.translations || {}) };
+                updatedTranslations[langCode] = {
+                  title: `${foundCourse.title} [${langCode}]`,
+                  description: `${foundCourse.description} (Translated to ${langCode})`
+                };
+
+                // Add target language to course languages/langs lists without duplicates
+                const originalLanguages = foundCourse.languages || [];
+                const updatedLanguages = originalLanguages.includes(langCode.toLowerCase())
+                  ? originalLanguages
+                  : [...originalLanguages, langCode.toLowerCase()];
+
+                const originalLangsUpper = foundCourse.langs || [];
+                const updatedLangsUpper = originalLangsUpper.includes(langCode.toUpperCase())
+                  ? originalLangsUpper
+                  : [...originalLangsUpper, langCode.toUpperCase()];
+
+                await dbService.saveCourse({
+                  ...foundCourse,
+                  languages: updatedLanguages,
+                  langs: updatedLangsUpper,
+                  translations: updatedTranslations
+                });
+              }
+            }
+          }
+        }
+
+        setQueue(updated);
+        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+        loadData();
+      } else {
+        // No task is currently running, select the next queued task by descending priority
+        const queuedTasks = queue.filter(t => t.status === 'queued');
+        if (queuedTasks.length > 0) {
+          const priorityWeight = { High: 3, Medium: 2, Low: 1 };
+          
+          // Sort by priority weight descending, then timestamp ascending (oldest first)
+          const sortedQueued = [...queuedTasks].sort((a, b) => {
+            const weightA = priorityWeight[a.priority as keyof typeof priorityWeight] || 2;
+            const weightB = priorityWeight[b.priority as keyof typeof priorityWeight] || 2;
+            if (weightA !== weightB) {
+              return weightB - weightA;
+            }
+            return new Date(a.timestamp || '').getTime() - new Date(b.timestamp || '').getTime();
+          });
+
+          const nextTask = sortedQueued[0];
+          const updated = queue.map(t => {
+            if (t.id === nextTask.id) {
+              return {
+                ...t,
+                status: 'running',
+                progress: 0
+              };
+            }
+            return t;
+          });
+          setQueue(updated);
+          localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+          loadData();
+        }
+      }
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [queue]);
 
   // Compute Active Generation Proposals
   useEffect(() => {
@@ -431,7 +790,7 @@ export default function AdminCurriculumPage() {
             id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: p.query,
             type: 'generation',
-            status: 'pending',
+            status: 'queued',
             progress: 0,
             priority: p.count >= 15 ? 'High' : 'Medium',
             timestamp: new Date().toISOString()
@@ -459,12 +818,17 @@ export default function AdminCurriculumPage() {
           const taskTitle = `${tr.courseTitle} (${tr.targetLang.toUpperCase()})`;
           const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
           const isRefused = refusedTranslations.some(rt => rt.name.toLowerCase() === tr.courseTitle.toLowerCase() && rt.targetLang.toLowerCase() === tr.targetLang.toLowerCase());
-          if (!isInQueue && !isRefused) {
+          
+          // Prevent duplicate translation generation
+          const targetCourse = courses.find(c => c.title.toLowerCase() === tr.courseTitle.toLowerCase());
+          const alreadyTranslated = targetCourse && targetCourse.translations && targetCourse.translations[tr.targetLang.toUpperCase()];
+
+          if (!isInQueue && !isRefused && !alreadyTranslated) {
             updatedQueue.push({
               id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               title: taskTitle,
               type: 'translation',
-              status: 'pending',
+              status: 'queued',
               progress: 0,
               priority: 'Medium',
               timestamp: new Date().toISOString()
@@ -480,7 +844,7 @@ export default function AdminCurriculumPage() {
         loadData();
       }
     }
-  }, [translationRequests, autoTranslate, transThreshold, queue, refusedTranslations]);
+  }, [translationRequests, autoTranslate, transThreshold, queue, refusedTranslations, courses]);
 
   // REACTIVE AUTO-REVISION LOOP
   useEffect(() => {
@@ -498,7 +862,7 @@ export default function AdminCurriculumPage() {
               id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               title: taskTitle,
               type: 'revision',
-              status: 'pending',
+              status: 'queued',
               progress: 0,
               priority: 'High',
               timestamp: new Date().toISOString()
@@ -522,7 +886,7 @@ export default function AdminCurriculumPage() {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
       type: 'generation',
-      status: 'pending',
+      status: 'queued',
       progress: 0,
       priority: 'Medium',
       timestamp: new Date().toISOString(),
@@ -539,7 +903,7 @@ export default function AdminCurriculumPage() {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
       type: 'generation',
-      status: 'pending',
+      status: 'queued',
       progress: 0,
       priority: count >= 15 ? 'High' : 'Medium',
       timestamp: new Date().toISOString()
@@ -569,11 +933,28 @@ export default function AdminCurriculumPage() {
 
   // Translation Handlers
   const handleApproveTrans = (courseTitle: string, targetLang: string) => {
+    const taskTitle = `${courseTitle} (${targetLang.toUpperCase()})`;
+
+    // Prevent duplicates in queue
+    const isInQueue = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+    if (isInQueue) {
+      alert(lang === 'FR' ? `La tâche de traduction pour ${targetLang.toUpperCase()} est déjà dans la file d'attente !` : `Translation task for ${targetLang.toUpperCase()} is already in the queue!`);
+      return;
+    }
+
+    // Prevent duplicate translation generation if course already has it
+    const targetCourse = courses.find(c => c.title.toLowerCase() === courseTitle.toLowerCase());
+    const alreadyTranslated = targetCourse && targetCourse.translations && targetCourse.translations[targetLang.toUpperCase()];
+    if (alreadyTranslated) {
+      alert(lang === 'FR' ? `Ce cours est déjà traduit en ${targetLang.toUpperCase()} !` : `This course is already translated into ${targetLang.toUpperCase()}!`);
+      return;
+    }
+
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: `${courseTitle} (${targetLang.toUpperCase()})`,
+      title: taskTitle,
       type: 'translation',
-      status: 'pending',
+      status: 'queued',
       progress: 0,
       priority: 'Medium',
       timestamp: new Date().toISOString()
@@ -602,7 +983,7 @@ export default function AdminCurriculumPage() {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: `${course} - Revise: ${issue}`,
       type: 'revision',
-      status: 'pending',
+      status: 'queued',
       progress: 0,
       priority: 'High',
       timestamp: new Date().toISOString()
@@ -627,12 +1008,26 @@ export default function AdminCurriculumPage() {
   };
 
   // Queue Cancel Handler
-  const handleCancelTask = async (id: string) => {
+  const handleCancelTask = async (id: string, bypassConfirm = false) => {
     const taskToCancel = queue.find(t => t.id === id);
+    if (!taskToCancel) return;
+
+    const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+
+    if (taskToCancel.type === 'translation') {
+      alert(pStrings.translation_cancel_error);
+      return;
+    }
+
+    if (!bypassConfirm) {
+      const confirmed = window.confirm(pStrings.task_cancel_confirm.replace("{title}", taskToCancel.title));
+      if (!confirmed) return;
+    }
+
     const updated = queue.filter(t => t.id !== id);
     localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
     
-    if (taskToCancel && taskToCancel.type === 'generation') {
+    if (taskToCancel.type === 'generation') {
       await dbService.addRefusedCourse({
         id: `ref_c_${Date.now()}`,
         name: taskToCancel.title,
@@ -642,6 +1037,79 @@ export default function AdminCurriculumPage() {
         previouslyRefused: true
       });
     }
+    await loadData();
+  };
+
+  // Queue Pause/Resume Handler
+  const handleTogglePauseTask = async (id: string) => {
+    const updated = queue.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          status: t.status === 'paused' ? 'running' : 'paused'
+        };
+      }
+      return t;
+    });
+    setQueue(updated);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    await loadData();
+  };
+
+  // Change Priority Handler
+  const handleChangePriority = async (id: string, direction: 'up' | 'down') => {
+    const priorityOrder = ['Low', 'Medium', 'High'];
+    const updated = queue.map(t => {
+      if (t.id === id) {
+        const currentIndex = priorityOrder.indexOf(t.priority || 'Medium');
+        let nextIndex = currentIndex;
+        if (direction === 'up' && currentIndex < priorityOrder.length - 1) {
+          nextIndex = currentIndex + 1;
+        } else if (direction === 'down' && currentIndex > 0) {
+          nextIndex = currentIndex - 1;
+        }
+        return {
+          ...t,
+          priority: priorityOrder[nextIndex]
+        };
+      }
+      return t;
+    });
+    setQueue(updated);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    await loadData();
+  };
+
+  // Seed Sample Tasks Handler
+  const handleSeedSampleTasks = async () => {
+    const samples = [
+      {
+        id: `task_trans_${Date.now()}`,
+        title: "Spanish Language Package Creation",
+        type: "translation",
+        status: "running",
+        priority: "High",
+        level: "L1"
+      },
+      {
+        id: `task_gen_${Date.now() + 1}`,
+        title: "Quantum Computing 101",
+        type: "generation",
+        status: "queued",
+        priority: "Medium",
+        level: "L1"
+      },
+      {
+        id: `task_rev_${Date.now() + 2}`,
+        title: "Biochemistry Syllabus Update",
+        type: "revision",
+        status: "paused",
+        priority: "Low",
+        level: "L2"
+      }
+    ];
+    setQueue(samples);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(samples));
     await loadData();
   };
 
@@ -672,7 +1140,8 @@ export default function AdminCurriculumPage() {
     const target = personalities.find(p => p.id === id);
     if (!target) return;
 
-    const confirmed = window.confirm(lang === 'FR' ? `Êtes-vous sûr de vouloir supprimer définitivement la personnalité "${target.name}" ?` : `Are you sure you want to permanently delete the tutor personality "${target.name}"?`);
+    const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+    const confirmed = window.confirm(pStrings.tutor_confirm.replace("{title}", target.name));
     if (!confirmed) return;
 
     const res = await dbService.deleteTutorPersonality(id);
@@ -697,13 +1166,14 @@ export default function AdminCurriculumPage() {
   // Drag and Drop Helpers for custom badge uploads
   const handleImageFile = (file: File, isEdit: boolean) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
+      const resized = await resizeAndStandardizeImage(reader.result as string);
       if (isEdit) {
-        setEditCustomBadgeImage(reader.result as string);
-        setEditIcon(reader.result as string);
+        setEditCustomBadgeImage(resized);
+        setEditIcon(resized);
       } else {
-        setCustomBadgeImage(reader.result as string);
-        setBadgeIcon(reader.result as string);
+        setCustomBadgeImage(resized);
+        setBadgeIcon(resized);
       }
     };
     reader.readAsDataURL(file);
@@ -746,6 +1216,11 @@ export default function AdminCurriculumPage() {
       transMap[t.code] = { name: t.name, description: t.desc };
     });
 
+    let finalIcon = badgeIcon;
+    if (badgeIcon.startsWith('http') || badgeIcon.startsWith('data:image')) {
+      finalIcon = await resizeAndStandardizeImage(badgeIcon);
+    }
+
     const id = achievements.length > 0 ? Math.max(...achievements.map(a => a.id)) + 1 : 1;
     await dbService.saveAchievement({
       id,
@@ -756,7 +1231,7 @@ export default function AdminCurriculumPage() {
       status: 'active',
       startDate: badgeStartDate || null,
       endDate: badgeEndDate || null,
-      icon: badgeIcon,
+      icon: finalIcon,
       translations: transMap
     });
 
@@ -794,12 +1269,17 @@ export default function AdminCurriculumPage() {
       transMap[t.code] = { name: t.name, description: t.desc };
     });
 
+    let finalIcon = editIcon;
+    if (editIcon.startsWith('http') || editIcon.startsWith('data:image')) {
+      finalIcon = await resizeAndStandardizeImage(editIcon);
+    }
+
     await dbService.saveAchievement({
       ...selectedAchievement,
       name: editName,
       description: editDesc,
       threshold: editThreshold,
-      icon: editIcon,
+      icon: finalIcon,
       startDate: editStartDate || null,
       endDate: editEndDate || null,
       translations: transMap
@@ -831,7 +1311,15 @@ export default function AdminCurriculumPage() {
       IT: '🇮🇹', PT: '🇵🇹', JA: '🇯🇵', KO: '🇰🇷', RU: '🇷🇺',
       AR: '🇸🇦', NL: '🇳🇱', PL: '🇵🇱', TR: '🇹🇷', SV: '🇸🇪'
     };
-    const codeUpper = newLangCode.toUpperCase();
+    const codeUpper = newLangCode.toUpperCase().trim();
+
+    // Prevent duplicate language registration
+    const alreadyExists = availableLanguages.some(l => l.code.toUpperCase().trim() === codeUpper);
+    if (alreadyExists) {
+      alert(lang === 'FR' ? `La langue ${codeUpper} est déjà enregistrée !` : `Language ${codeUpper} is already registered!`);
+      return;
+    }
+
     const resolvedFlag = newLangFlag || FLAG_LOOKUP[codeUpper] || '🌐';
     await dbService.registerLanguage({
       code: codeUpper,
@@ -1215,15 +1703,132 @@ export default function AdminCurriculumPage() {
                      </button>
                    </div>
 
-                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                     {availableLanguages.map((langItem, idx) => (
-                       <div key={idx} className="p-4 bg-slate-950/40 border border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-emerald-500/20 transition-all text-center">
-                         <span className="text-2xl">{langItem.flag || '🌐'}</span>
-                         <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest">{langItem.code}</span>
-                         <span className="text-[9px] text-slate-500 font-semibold">{langItem.label}</span>
-                       </div>
-                     ))}
-                   </div>
+                   <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (langSortField === 'flag') {
+                                setLangSortDir(langSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setLangSortField('flag');
+                                setLangSortDir('asc');
+                              }
+                            }}>
+                              Flag {renderSortIndicator('flag', langSortField, langSortDir)}
+                            </th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (langSortField === 'code') {
+                                setLangSortDir(langSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setLangSortField('code');
+                                setLangSortDir('asc');
+                              }
+                            }}>
+                              Code {renderSortIndicator('code', langSortField, langSortDir)}
+                            </th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (langSortField === 'label') {
+                                setLangSortDir(langSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setLangSortField('label');
+                                setLangSortDir('asc');
+                              }
+                            }}>
+                              Label {renderSortIndicator('label', langSortField, langSortDir)}
+                            </th>
+                            <th className="px-6 py-4">Archiving Level Control</th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (langSortField === 'archivingLevel') {
+                                setLangSortDir(langSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setLangSortField('archivingLevel');
+                                setLangSortDir('asc');
+                              }
+                            }}>
+                              Status {renderSortIndicator('archivingLevel', langSortField, langSortDir)}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-850/50">
+                          {[...availableLanguages]
+                            .sort((a, b) => {
+                              // Put Level 2 archived at the bottom
+                              const lvlA = a.archivingLevel || 0;
+                              const lvlB = b.archivingLevel || 0;
+                              if (lvlA === 2 && lvlB !== 2) return 1;
+                              if (lvlA !== 2 && lvlB === 2) return -1;
+                              
+                              let valA = a[langSortField as keyof typeof a] || '';
+                              let valB = b[langSortField as keyof typeof b] || '';
+                              if (typeof valA === 'string') {
+                                valA = valA.toLowerCase();
+                                valB = (valB as string).toLowerCase();
+                              }
+                              if (valA < valB) return langSortDir === 'asc' ? -1 : 1;
+                              if (valA > valB) return langSortDir === 'asc' ? 1 : -1;
+                              return 0;
+                            })
+                            .map((langItem, idx) => {
+                              const currentLevel = langItem.archivingLevel || 0;
+                              let statusLabel = lang === 'FR' ? 'Actif' : 'Active';
+                              let statusColor = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+                              
+                              if (currentLevel === 2) {
+                                statusLabel = lang === 'FR' ? 'Archivé (Invisible)' : 'Archived (Invisible)';
+                                statusColor = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+                              }
+                              
+                              return (
+                                <tr key={idx} className="hover:bg-slate-900/20 transition-colors">
+                                  <td className="px-6 py-4 text-2xl">{langItem.flag || '🌐'}</td>
+                                  <td className="px-6 py-4 font-mono font-bold text-slate-200">{langItem.code}</td>
+                                  <td className="px-6 py-4 text-slate-400 font-medium">{langItem.label}</td>
+                                  <td className="px-6 py-4">
+                                    <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 border border-slate-855/60 rounded-xl w-fit">
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          await dbService.setLanguageArchivingLevel(langItem.code, 0);
+                                          await loadData();
+                                        }}
+                                        className={`px-2 py-1 text-[8px] font-black rounded-lg transition-all uppercase tracking-wider ${currentLevel === 0 ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                                        title="Level 0: Active / Visible"
+                                      >
+                                        0
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          await dbService.setLanguageArchivingLevel(langItem.code, 2);
+                                          await loadData();
+                                        }}
+                                        className={`px-2 py-1 text-[8px] font-black rounded-lg transition-all uppercase tracking-wider ${currentLevel === 2 ? 'bg-amber-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                                        title="Level 2: Invisible for all"
+                                      >
+                                        2
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setPurgeLanguageTarget(langItem)}
+                                        className="px-2 py-1 text-[8px] font-black rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-955/20 transition-all cursor-pointer"
+                                        title="Level 3: Purge from base"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
+                                      {statusLabel}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
                  </div>
 
                  {/* Requests Retention & Purge Panel */}
@@ -1369,16 +1974,74 @@ export default function AdminCurriculumPage() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
-                          <th className="px-6 py-4">Title</th>
-                          <th className="px-6 py-4">Subject</th>
-                          <th className="px-6 py-4">Level</th>
-                          <th className="px-6 py-4">Archival Level Control</th>
-                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (courseSortField === 'title') {
+                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setCourseSortField('title');
+                              setCourseSortDir('asc');
+                            }
+                          }}>
+                            Title {renderSortIndicator('title', courseSortField, courseSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (courseSortField === 'subject') {
+                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setCourseSortField('subject');
+                              setCourseSortDir('asc');
+                            }
+                          }}>
+                            Subject {renderSortIndicator('subject', courseSortField, courseSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (courseSortField === 'level') {
+                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setCourseSortField('level');
+                              setCourseSortDir('asc');
+                            }
+                          }}>
+                            Level {renderSortIndicator('level', courseSortField, courseSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (courseSortField === 'archivingLevel') {
+                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setCourseSortField('archivingLevel');
+                              setCourseSortDir('asc');
+                            }
+                          }}>
+                            Archival Level Control {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (courseSortField === 'is_active') {
+                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setCourseSortField('is_active');
+                              setCourseSortDir('asc');
+                            }
+                          }}>
+                            Status {renderSortIndicator('is_active', courseSortField, courseSortDir)}
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/50">
-                        {courses
+                        {[...courses]
                           .filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase()))
+                          .sort((a, b) => {
+                            let valA = a[courseSortField as keyof typeof a];
+                            let valB = b[courseSortField as keyof typeof b];
+                            if (typeof valA === 'string') {
+                              valA = valA.toLowerCase();
+                              valB = (valB as string).toLowerCase();
+                            }
+                            if (valA === undefined) return 1;
+                            if (valB === undefined) return -1;
+                            if (valA < valB) return courseSortDir === 'asc' ? -1 : 1;
+                            if (valA > valB) return courseSortDir === 'asc' ? 1 : -1;
+                            return 0;
+                          })
                           .map(course => {
                             const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
 
@@ -1406,22 +2069,22 @@ export default function AdminCurriculumPage() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-slate-400 font-medium">{course.subject}</td>
-                                <td className="px-6 py-4 text-slate-400 font-mono font-bold">{course.level}</td>
+                                <td className="px-6 py-4 text-slate-400 font-mono font-bold">
+                                  {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : course.level))}
+                                </td>
                                 <td className="px-6 py-4">
-                                  <select
-                                    value={currentLevel}
-                                    onChange={async (e) => {
-                                      const nextLvl = Number(e.target.value);
+                                  <ArchivingLevelButtons 
+                                    currentLevel={currentLevel}
+                                    onChange={async (nextLvl) => {
+                                      if (nextLvl === 3) {
+                                        const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                                        const confirmed = window.confirm(pStrings.course_confirm.replace("{title}", course.title));
+                                        if (!confirmed) return;
+                                      }
                                       await dbService.setCourseArchivingLevel(course.id, nextLvl);
                                       loadData();
                                     }}
-                                    className="bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500/50 cursor-pointer font-semibold"
-                                  >
-                                    <option value={0}>{lang === 'FR' ? 'Niveau 0 : Actif complet' : 'Level 0: Fully Active'}</option>
-                                    <option value={1}>{lang === 'FR' ? 'Niveau 1 : Archivage partiel' : 'Level 1: Partial Archival (FR/EN only)'}</option>
-                                    <option value={2}>{lang === 'FR' ? 'Niveau 2 : Lecture seule' : 'Level 2: Read-Only'}</option>
-                                    <option value={3}>{lang === 'FR' ? 'Niveau 3 : Archive totale' : 'Level 3: Fully Archived'}</option>
-                                  </select>
+                                  />
                                 </td>
                                 <td className="px-6 py-4">
                                   <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
@@ -1443,53 +2106,212 @@ export default function AdminCurriculumPage() {
               )}
 
               {/* 5. PIPELINE QUEUE TAB */}
-             {view === 'queue' && (
-               <div className="space-y-6">
-                 <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
-                 <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20">
-                   <table className="w-full text-left text-xs border-collapse">
-                     <thead>
-                       <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
-                         <th className="px-6 py-4">Task ID</th>
-                         <th className="px-6 py-4">Course/Topic</th>
-                         <th className="px-6 py-4">Task Type</th>
-                         <th className="px-6 py-4">Status</th>
-                         <th className="px-6 py-4">Priority</th>
-                         <th className="px-6 py-4">Actions</th>
-                       </tr>
-                     </thead>
-                     <tbody className="divide-y divide-slate-850/50">
-                       {queue.map(task => (
-                         <tr key={task.id} className="hover:bg-slate-900/20">
-                           <td className="px-6 py-4 font-mono text-[9px] text-slate-500">{task.id}</td>
-                           <td className="px-6 py-4 font-bold text-slate-200">{task.title}</td>
-                           <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{task.type}</td>
-                           <td className="px-6 py-4">
-                             <span className="px-2.5 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black rounded-full uppercase">
-                               {task.status}
-                             </span>
-                           </td>
-                           <td className="px-6 py-4 font-bold text-slate-400">{task.priority}</td>
-                           <td className="px-6 py-4">
-                             <button 
-                               onClick={() => handleCancelTask(task.id)}
-                               className="px-4 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase"
-                             >
-                               Cancel
-                             </button>
-                           </td>
-                         </tr>
-                       ))}
-                       {queue.length === 0 && (
-                         <tr>
-                           <td colSpan={6} className="px-6 py-12 text-center text-slate-600 italic">No tasks currently executing in the sovereign loop queue.</td>
-                         </tr>
-                       )}
-                     </tbody>
-                   </table>
-                 </div>
-               </div>
-             )}
+              {view === 'queue' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
+                  <div className="overflow-x-auto rounded-3xl border border-slate-855 bg-slate-900/20 shadow-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'id') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('id');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Task ID {renderSortIndicator('id', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'title') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('title');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Course/Topic {renderSortIndicator('title', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'level') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('level');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Level {renderSortIndicator('level', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'type') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('type');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Task Type {renderSortIndicator('type', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'status') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('status');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Status {renderSortIndicator('status', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'priority') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('priority');
+                              setQueueSortDir('desc');
+                            }
+                          }}>
+                            Priority {renderSortIndicator('priority', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-850/50">
+                        {[...queue]
+                          .sort((a, b) => {
+                            if (queueSortField === 'priority') {
+                              const priorityWeights: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                              const wA = priorityWeights[a.priority || 'Medium'] || 0;
+                              const wB = priorityWeights[b.priority || 'Medium'] || 0;
+                              return queueSortDir === 'desc' ? wB - wA : wA - wB;
+                            }
+                            let valA = a[queueSortField as keyof typeof a] || '';
+                            let valB = b[queueSortField as keyof typeof b] || '';
+                            if (typeof valA === 'string') {
+                              valA = valA.toLowerCase();
+                              valB = (valB as string).toLowerCase();
+                            }
+                            if (valA < valB) return queueSortDir === 'asc' ? -1 : 1;
+                            if (valA > valB) return queueSortDir === 'asc' ? 1 : -1;
+                            return 0;
+                          })
+                          .map(task => {
+                          const isPaused = task.status === 'paused';
+                          const isTranslation = task.type === 'translation';
+                          
+                          let statusColor = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+                          if (task.status === 'paused') {
+                            statusColor = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                          } else if (task.status === 'queued') {
+                            statusColor = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+                          } else if (task.status === 'running' || task.status === 'executing' || task.status === 'completed') {
+                            statusColor = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                          }
+
+                          const formatCourseLevel = (level: string) => {
+                            if (!level) return '101'; // Default to standard introductory level
+                            const l = level.toUpperCase();
+                            if (l === 'L1') return '101';
+                            if (l === 'L2') return '201';
+                            if (l === 'L3') return '301';
+                            return l;
+                          };
+
+                          return (
+                            <tr key={task.id} className="hover:bg-slate-900/20 transition-colors">
+                              <td className="px-6 py-4 font-mono text-[9px] text-slate-500">{task.id}</td>
+                              <td className="px-6 py-4 font-bold text-slate-200">{task.title}</td>
+                              <td className="px-6 py-4 font-mono font-bold text-slate-400">{formatCourseLevel(task.level)}</td>
+                              <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{task.type}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2.5 py-1 text-[8px] font-black rounded-full uppercase border ${statusColor}`}>
+                                  {task.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-400 min-w-[50px]">{task.priority}</span>
+                                  <div className="flex flex-col gap-0.5">
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleChangePriority(task.id, 'up')}
+                                      className="text-[9px] hover:text-white text-slate-600 transition-colors px-1"
+                                      title="Increase Priority"
+                                    >
+                                      ▲
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleChangePriority(task.id, 'down')}
+                                      className="text-[9px] hover:text-white text-slate-600 transition-colors px-1"
+                                      title="Decrease Priority"
+                                    >
+                                      ▼
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  {isPaused ? (
+                                    <button 
+                                      onClick={() => handleTogglePauseTask(task.id)}
+                                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                    >
+                                      Resume
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      onClick={() => handleTogglePauseTask(task.id)}
+                                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                    >
+                                      Pause
+                                    </button>
+                                  )}
+                                  
+                                  {isTranslation ? (
+                                    <button 
+                                      disabled
+                                      title={lang === 'FR' 
+                                        ? "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site." 
+                                        : "New language creation cannot be cancelled due to site instability risk."
+                                      }
+                                      className="px-3 py-1.5 bg-slate-950/40 border border-slate-900 text-slate-700 cursor-not-allowed rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                    >
+                                      Cancel
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      onClick={() => setCancelTaskTarget(task)}
+                                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                    >
+                                      Cancel
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {queue.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="px-6 py-16 text-center text-slate-655 italic">
+                              <p className="mb-4 text-xs font-medium text-slate-500">No tasks currently executing in the sovereign loop queue.</p>
+                              <button
+                                type="button"
+                                onClick={handleSeedSampleTasks}
+                                className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/10 transition-all"
+                              >
+                                {lang === 'FR' ? "Générer des tâches d'exemple" : "Seed Sample Pipeline Tasks"}
+                              </button>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
              {/* 6. ACHIEVEMENTS GRID TAB */}
              {view === 'achievements' && (
@@ -1505,49 +2327,94 @@ export default function AdminCurriculumPage() {
                  </div>
 
                  {/* GRID */}
-                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                   {achievements.filter(ach => ach.status !== 'inactive').map(ach => {
-                      const styledBadge = BADGE_LIBRARY.find(b => b.id === ach.icon);
-                      const IconComp = styledBadge ? (LUCIDE_ICONS[styledBadge.iconName] || Award) : (LUCIDE_ICONS[ach.icon] || Award);
-                      const gradientClass = styledBadge ? styledBadge.gradient : 'from-violet-500 to-fuchsia-600';
-                      return (
-                        <div key={ach.id} className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col justify-between group hover:border-violet-500/30 transition-all shadow-xl relative overflow-hidden">
-                          <div className="space-y-6">
-                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradientClass} text-white flex items-center justify-center shadow-lg shadow-violet-500/10`}>
-                             <IconComp className="w-7 h-7" />
-                           </div>
-                           <div className="space-y-1">
-                             <h3 className="text-xl font-black">{ach.name}</h3>
-                             <p className="text-xs text-slate-500 leading-relaxed">{ach.description}</p>
-                           </div>
-                         </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {(() => {
+                      const sortedAchievements = [...achievements]
+                        .filter(ach => ach.status !== 'inactive')
+                        .sort((a, b) => {
+                          const lvlA = a.archivingLevel || 0;
+                          const lvlB = b.archivingLevel || 0;
+                          if (lvlA === 0 && lvlB > 0) return -1;
+                          if (lvlA > 0 && lvlB === 0) return 1;
+                          return lvlA - lvlB;
+                        });
+                      
+                      return sortedAchievements.map(ach => {
+                        const styledBadge = BADGE_LIBRARY.find(b => b.id === ach.icon);
+                        const IconComp = styledBadge ? (LUCIDE_ICONS[styledBadge.iconName] || Award) : (LUCIDE_ICONS[ach.icon] || Award);
+                        const gradientClass = styledBadge ? styledBadge.gradient : 'from-violet-500 to-fuchsia-600';
+                        const isArchived = (ach.archivingLevel || 0) > 0;
+                        const isCustomImg = ach.icon && (ach.icon.startsWith('data:image') || ach.icon.startsWith('http'));
+                        
+                        return (
+                          <div key={ach.id} className={`p-8 border rounded-[40px] flex flex-col justify-between group hover:border-violet-500/30 transition-all shadow-xl relative overflow-hidden ${isArchived ? 'bg-slate-950/20 border-slate-900 opacity-75' : 'bg-slate-900/40 border-slate-800'}`}>
+                            <div className="space-y-6">
+                              <div className="flex justify-between items-start">
+                                <div className={`w-14 h-14 rounded-2xl ${isCustomImg ? 'bg-slate-950 border border-slate-800' : `bg-gradient-to-br ${gradientClass}`} text-white flex items-center justify-center shadow-lg shadow-violet-500/10 overflow-hidden`}>
+                                 {isCustomImg ? (
+                                   <img src={ach.icon} alt={ach.name} className="w-full h-full object-cover" />
+                                 ) : (
+                                   <IconComp className="w-7 h-7" />
+                                 )}
+                                </div>
+                                {isArchived && (
+                                  <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-black rounded-full uppercase tracking-wider font-mono">
+                                    Level {ach.archivingLevel}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className="text-xl font-black">{ach.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">{ach.description}</p>
+                              </div>
+                            </div>
 
-                         <div className="mt-8 pt-6 border-t border-slate-855 flex items-center justify-between">
-                           <div className="space-y-0.5">
-                             <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Parameter: <span className="text-violet-400">{ach.threshold}</span></p>
-                             <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">{ach.count} Earned</p>
-                           </div>
-                           <div className="flex gap-2">
-                             <button 
-                               title="Edit"
-                               onClick={() => handleOpenEditAchievement(ach)}
-                               className="p-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-500 hover:text-white transition-all"
-                             >
-                               <Edit3 className="w-3.5 h-3.5" />
-                             </button>
-                             <button 
-                               title="Force Delete"
-                               onClick={() => handleOpenPurge(ach)}
-                               className="p-2.5 bg-slate-950 border border-slate-855 rounded-xl text-slate-500 hover:text-red-500 transition-all"
-                             >
-                               <Trash2 className="w-3.5 h-3.5" />
-                             </button>
-                           </div>
-                         </div>
-                       </div>
-                     );
-                   })}
-                 </div>
+                            <div className="mt-8 pt-6 border-t border-slate-855 flex flex-col gap-4">
+                              <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                                <div>
+                                  <p>Parameter: <span className="text-violet-400">{ach.threshold}</span></p>
+                                  <p className="mt-1">{ach.count} Earned</p>
+                                </div>
+                                <div>
+                                  {ach.startDate && <p>From: <span className="text-slate-400">{ach.startDate}</span></p>}
+                                  {ach.endDate && <p className="mt-0.5">To: <span className="text-slate-400">{ach.endDate}</span></p>}
+                                </div>
+                              </div>
+                              
+                              <div className="h-px bg-slate-850" />
+                              
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Archival Level:</span>
+                                <ArchivingLevelButtons 
+                                  currentLevel={ach.archivingLevel || 0}
+                                  onChange={async (nextLvl) => {
+                                    if (nextLvl === 3) {
+                                      handleOpenPurge(ach);
+                                    } else {
+                                      await dbService.saveAchievement({ 
+                                        ...ach, 
+                                        archivingLevel: nextLvl, 
+                                        status: nextLvl === 0 ? 'active' : 'archived' 
+                                      });
+                                      loadData();
+                                    }
+                                  }}
+                                />
+                              </div>
+                              
+                              <button 
+                                title="Edit"
+                                onClick={() => handleOpenEditAchievement(ach)}
+                                className="w-full py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" /> Edit Details
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
                </div>
              )}
 
@@ -1555,7 +2422,7 @@ export default function AdminCurriculumPage() {
              {view === 'personalities' && (
                <div className="space-y-8">
                  <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-black text-slate-200">AI Tutor Personalities CRUD</h3>
+                   <h3 className="text-xl font-black text-slate-200">AI Tutor Personalities</h3>
                    <button 
                      onClick={() => setShowAddPersonality(true)}
                      className="px-6 py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-fuchsia-600/10 flex items-center gap-2"
@@ -1565,45 +2432,73 @@ export default function AdminCurriculumPage() {
                  </div>
 
                  {/* PERSONAS GRID */}
-                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                   {personalities.map(p => (
-                     <div key={p.id} className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col justify-between group hover:border-fuchsia-500/30 transition-all shadow-xl relative overflow-hidden">
-                       <div className="space-y-6">
-                         <div className="flex justify-between items-start">
-                           <div className="w-14 h-14 rounded-2xl bg-fuchsia-500/10 text-fuchsia-400 flex items-center justify-center">
-                             <Sparkles className="w-7 h-7" />
-                           </div>
-                           {p.isDefault && (
-                             <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[8px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
-                               <Crown className="w-3 h-3 fill-yellow-500/20" /> Default
-                             </span>
-                           )}
-                         </div>
-                         <div className="space-y-1">
-                           <h3 className="text-xl font-black">{p.name}</h3>
-                           <p className="text-xs text-slate-500 leading-relaxed italic">"{p.prompt}"</p>
-                         </div>
-                       </div>
-                       
-                       <div className="mt-8 pt-6 border-t border-slate-855 flex gap-2">
-                         {!p.isDefault && (
-                           <button 
-                             onClick={() => handleSetDefaultPersona(p)}
-                             className="flex-1 px-4 py-2 border border-slate-850 hover:border-yellow-500/30 text-slate-400 hover:text-yellow-500 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all"
-                           >
-                             Set as Default
-                           </button>
-                         )}
-                         <button 
-                           onClick={() => handleDeletePersona(p.id)}
-                           disabled={p.isDefault}
-                           className={`px-4 py-2 border border-slate-850 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all ${p.isDefault ? 'opacity-40 cursor-not-allowed text-slate-650' : 'hover:border-red-500/30 text-slate-400 hover:text-red-400'}`}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {(() => {
+                      const sortedPersonalities = [...personalities].sort((a, b) => {
+                        const lvlA = a.archivingLevel || 0;
+                        const lvlB = b.archivingLevel || 0;
+                        if (lvlA === 0 && lvlB > 0) return -1;
+                        if (lvlA > 0 && lvlB === 0) return 1;
+                        return lvlA - lvlB;
+                      });
+                      
+                      return sortedPersonalities.map(p => {
+                        const isArchived = (p.archivingLevel || 0) > 0;
+                        return (
+                          <div key={p.id} className={`p-8 border rounded-[40px] flex flex-col justify-between group hover:border-fuchsia-500/30 transition-all shadow-xl relative overflow-hidden ${isArchived ? 'bg-slate-950/20 border-slate-900 opacity-75' : 'bg-slate-900/40 border-slate-800'}`}>
+                            <div className="space-y-6">
+                              <div className="flex justify-between items-start">
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isArchived ? 'bg-slate-950 text-slate-650' : 'bg-fuchsia-500/10 text-fuchsia-400'}`}>
+                                  <Sparkles className="w-7 h-7" />
+                                </div>
+                                <div className="flex gap-1.5 items-center">
+                                  {p.isDefault && (
+                                    <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[8px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
+                                      <Crown className="w-3 h-3 fill-yellow-500/20" /> Default
+                                    </span>
+                                  )}
+                                  {isArchived && (
+                                    <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-black rounded-full uppercase tracking-wider font-mono">
+                                      Level {p.archivingLevel}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className="text-xl font-black">{p.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed italic">"{p.prompt}"</p>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-8 pt-6 border-t border-slate-855 flex flex-col gap-4">
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Archival Level:</span>
+                                <ArchivingLevelButtons 
+                                  currentLevel={p.archivingLevel || 0}
+                                  disableLevel3={p.isDefault}
+                                  onChange={async (nextLvl) => {
+                                    if (nextLvl === 3) {
+                                      await handleDeletePersona(p.id);
+                                    } else {
+                                      await dbService.saveTutorPersonality({ ...p, archivingLevel: nextLvl });
+                                      loadData();
+                                    }
+                                  }}
+                                />
+                              </div>
+                              {!p.isDefault && (
+                                <button 
+                                  onClick={() => handleSetDefaultPersona(p)}
+                                  className="w-full px-4 py-2.5 border border-slate-850 hover:border-yellow-500/30 text-slate-400 hover:text-yellow-500 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all"
+                                >
+                                  Set as Default
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               )}
@@ -1616,7 +2511,7 @@ export default function AdminCurriculumPage() {
       <AnimatePresence>
         {showAddAchievement && (
           <div onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Create Achievement Badge
@@ -1624,7 +2519,7 @@ export default function AdminCurriculumPage() {
                   <button onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
                
-               <form onSubmit={handleCreateAchievement} className="p-10 space-y-6">
+               <form onSubmit={handleCreateAchievement} className="p-10 space-y-6 overflow-y-auto flex-1 pr-4">
                   {badgeError && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl">
                       {badgeError}
@@ -1688,7 +2583,7 @@ export default function AdminCurriculumPage() {
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                            End Validity Date (Optional)
+                            End Date (Optional)
                           </label>
                           <input 
                             type="date"
@@ -1706,6 +2601,49 @@ export default function AdminCurriculumPage() {
 
                     {/* Right Column: Paginated Badge Library Catalog */}
                     <div className="space-y-4">
+                      {/* AI GENERATED BADGES SECTION */}
+                      {((newAch.name && newAch.description) || isGeneratingBadges) && (
+                        <div className="p-6 bg-violet-950/20 border border-violet-500/20 rounded-3xl space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 flex items-center gap-1.5 font-mono">
+                              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
+                              AI Generated Badge Designs
+                            </span>
+                            {isGeneratingBadges && (
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest animate-pulse font-mono">
+                                Generating...
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            {generatedBadges.map((url, idx) => {
+                              const isSelected = badgeIcon === url;
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setBadgeIcon(url)}
+                                  className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                >
+                                  <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center relative">
+                                    <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
+                                  </div>
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider font-mono">
+                                    Option {idx + 1}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                            {!isGeneratingBadges && generatedBadges.length === 0 && (
+                              <div className="col-span-3 text-center py-4 text-[9px] font-black uppercase tracking-widest text-slate-600 font-mono">
+                                Type a Name & Description to trigger generator
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between ml-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Badge Library Catalog
@@ -1713,7 +2651,7 @@ export default function AdminCurriculumPage() {
                         {(() => {
                           const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
                           const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                          const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                          const totalPages = Math.ceil((availableLibraryBadges.length + 1) / 9) || 1;
                           return (
                             <div className="flex items-center gap-2">
                               <button
@@ -1743,12 +2681,21 @@ export default function AdminCurriculumPage() {
                       {(() => {
                         const usedActiveIcons = achievements.filter(a => a.status === 'active').map(a => a.icon);
                         const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                        const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        const totalPages = Math.ceil((availableLibraryBadges.length + 1) / 9) || 1;
                         const curPage = Math.min(creationGalleryPage, totalPages) || 1;
-                        const startIndex = (curPage - 1) * badgePageSize;
-                        const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+                        
+                        let currentPageBadges: StyledBadgeImage[] = [];
+                        let showUpload = false;
+                        if (curPage === 1) {
+                          showUpload = true;
+                          currentPageBadges = availableLibraryBadges.slice(0, 8);
+                        } else {
+                          showUpload = false;
+                          const startIndex = (curPage - 1) * 9 - 1;
+                          currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + 9);
+                        }
 
-                        if (currentPageBadges.length === 0) {
+                        if (currentPageBadges.length === 0 && !showUpload) {
                           return (
                             <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
                               All 50 library badges are currently active in our curriculum!
@@ -1758,25 +2705,30 @@ export default function AdminCurriculumPage() {
 
                         return (
                           <div className="grid grid-cols-3 gap-4">
-                            {/* Custom Badge Upload Trigger Card */}
-                            <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    handleImageFile(e.target.files[0], false);
-                                  }
-                                }}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                              />
-                              <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
-                                <Upload className="w-5 h-5" />
+                            {showUpload && (
+                              <div className={`p-4 border border-dashed rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer ${isCreationDragging ? 'border-violet-500 shadow-lg shadow-violet-500/20 bg-slate-900 scale-105' : 'bg-slate-950/60 border-violet-500/40 hover:border-violet-500'}`}>
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleImageFile(e.target.files[0], false);
+                                    }
+                                  }}
+                                  onDragEnter={() => setIsCreationDragging(true)}
+                                  onDragOver={(e) => { e.preventDefault(); setIsCreationDragging(true); }}
+                                  onDragLeave={() => setIsCreationDragging(false)}
+                                  onDrop={(e) => { setIsCreationDragging(false); }}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                                  <Upload className="w-5 h-5" />
+                                </div>
+                                <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                                  {isCreationDragging ? (lang === 'FR' ? 'Déposer !' : 'Drop here!') : (lang === 'FR' ? 'Uploader / Déposer' : 'Upload / Drag & Drop')}
+                                </span>
                               </div>
-                              <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
-                                {lang === 'FR' ? 'Uploader' : 'Upload'}
-                              </span>
-                            </div>
+                            )}
 
                             {currentPageBadges.map((img) => {
                               const IconComp = LUCIDE_ICONS[img.iconName] || Award;
@@ -1791,10 +2743,10 @@ export default function AdminCurriculumPage() {
                                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                     <IconComp className="w-6 h-6" />
                                   </div>
-                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase truncate max-w-[80px] text-center">
                                     {img.iconName.toUpperCase()}
                                   </span>
-                                  <span className="text-[8px] font-semibold text-slate-500">
+                                  <span className="text-[8px] font-semibold text-slate-500 truncate max-w-[80px] text-center">
                                     {img.colorName}
                                   </span>
                                 </button>
@@ -1815,7 +2767,7 @@ export default function AdminCurriculumPage() {
       <AnimatePresence>
         {selectedAchievement && (
           <div onClick={() => setSelectedAchievement(null)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-885 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Edit Achievement Badge
@@ -1823,7 +2775,7 @@ export default function AdminCurriculumPage() {
                   <button onClick={() => setSelectedAchievement(null)} className="text-slate-650 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
                
-               <div className="p-10 space-y-6">
+               <div className="p-10 space-y-6 overflow-y-auto flex-1 pr-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Left Column: Form Fields */}
                     <div className="space-y-6">
@@ -1878,7 +2830,7 @@ export default function AdminCurriculumPage() {
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                            End Validity Date (Optional)
+                            End Date (Optional)
                           </label>
                           <input 
                             type="date"
@@ -1896,6 +2848,49 @@ export default function AdminCurriculumPage() {
 
                     {/* Right Column: Paginated Badge Library Catalog */}
                     <div className="space-y-4">
+                      {/* AI GENERATED BADGES SECTION */}
+                      {((editName && editDesc) || isEditGeneratingBadges) && (
+                        <div className="p-6 bg-violet-950/20 border border-violet-500/20 rounded-3xl space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 flex items-center gap-1.5 font-mono">
+                              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
+                              AI Generated Badge Designs
+                            </span>
+                            {isEditGeneratingBadges && (
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest animate-pulse font-mono">
+                                Generating...
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            {editGeneratedBadges.map((url, idx) => {
+                              const isSelected = editIcon === url;
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setEditIcon(url)}
+                                  className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                >
+                                  <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center relative">
+                                    <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
+                                  </div>
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider font-mono">
+                                    Option {idx + 1}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                            {!isEditGeneratingBadges && editGeneratedBadges.length === 0 && (
+                              <div className="col-span-3 text-center py-4 text-[9px] font-black uppercase tracking-widest text-slate-600 font-mono">
+                                Type a Name & Description to trigger generator
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between ml-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Badge Library Catalog
@@ -1905,7 +2900,7 @@ export default function AdminCurriculumPage() {
                             .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
                             .map(a => a.icon);
                           const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                          const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                          const totalPages = Math.ceil((availableLibraryBadges.length + 1) / 9) || 1;
                           return (
                             <div className="flex items-center gap-2">
                               <button
@@ -1937,12 +2932,21 @@ export default function AdminCurriculumPage() {
                           .filter(a => a.status === 'active' && a.id !== selectedAchievement?.id)
                           .map(a => a.icon);
                         const availableLibraryBadges = BADGE_LIBRARY.filter(img => !usedActiveIcons.includes(img.id));
-                        const totalPages = Math.ceil(availableLibraryBadges.length / badgePageSize) || 1;
+                        const totalPages = Math.ceil((availableLibraryBadges.length + 1) / 9) || 1;
                         const curPage = Math.min(editionGalleryPage, totalPages) || 1;
-                        const startIndex = (curPage - 1) * badgePageSize;
-                        const currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + badgePageSize);
+                        
+                        let currentPageBadges: StyledBadgeImage[] = [];
+                        let showUpload = false;
+                        if (curPage === 1) {
+                          showUpload = true;
+                          currentPageBadges = availableLibraryBadges.slice(0, 8);
+                        } else {
+                          showUpload = false;
+                          const startIndex = (curPage - 1) * 9 - 1;
+                          currentPageBadges = availableLibraryBadges.slice(startIndex, startIndex + 9);
+                        }
 
-                        if (currentPageBadges.length === 0) {
+                        if (currentPageBadges.length === 0 && !showUpload) {
                           return (
                             <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
                               All 50 library badges are currently active in our curriculum!
@@ -1952,25 +2956,30 @@ export default function AdminCurriculumPage() {
 
                         return (
                           <div className="grid grid-cols-3 gap-4">
-                            {/* Custom Badge Upload Trigger Card */}
-                            <div className="p-4 bg-slate-950/60 border border-dashed border-violet-500/40 hover:border-violet-500 rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer">
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    handleImageFile(e.target.files[0], true);
-                                  }
-                                }}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                              />
-                              <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
-                                <Upload className="w-5 h-5" />
+                            {showUpload && (
+                              <div className={`p-4 border border-dashed rounded-3xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 group relative overflow-hidden cursor-pointer ${isEditionDragging ? 'border-violet-500 shadow-lg shadow-violet-500/20 bg-slate-900 scale-105' : 'bg-slate-950/60 border-violet-500/40 hover:border-violet-500'}`}>
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleImageFile(e.target.files[0], true);
+                                    }
+                                  }}
+                                  onDragEnter={() => setIsEditionDragging(true)}
+                                  onDragOver={(e) => { e.preventDefault(); setIsEditionDragging(true); }}
+                                  onDragLeave={() => setIsEditionDragging(false)}
+                                  onDrop={(e) => { setIsEditionDragging(false); }}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <div className="w-10 h-10 rounded-full bg-violet-650/10 text-violet-400 flex items-center justify-center shadow-md group-hover:bg-violet-600 group-hover:text-white transition-all">
+                                  <Upload className="w-5 h-5" />
+                                </div>
+                                <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
+                                  {isEditionDragging ? (lang === 'FR' ? 'Déposer !' : 'Drop here!') : (lang === 'FR' ? 'Uploader / Déposer' : 'Upload / Drag & Drop')}
+                                </span>
                               </div>
-                              <span className="text-[9px] font-black text-violet-400 tracking-wider uppercase group-hover:text-white transition-colors">
-                                {lang === 'FR' ? 'Uploader' : 'Upload'}
-                              </span>
-                            </div>
+                            )}
 
                             {currentPageBadges.map((img) => {
                               const IconComp = LUCIDE_ICONS[img.iconName] || Award;
@@ -1985,10 +2994,10 @@ export default function AdminCurriculumPage() {
                                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                     <IconComp className="w-6 h-6" />
                                   </div>
-                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase">
+                                  <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase truncate max-w-[80px] text-center">
                                     {img.iconName.toUpperCase()}
                                   </span>
-                                  <span className="text-[8px] font-semibold text-slate-500">
+                                  <span className="text-[8px] font-semibold text-slate-500 truncate max-w-[80px] text-center">
                                     {img.colorName}
                                   </span>
                                 </button>
@@ -2010,32 +3019,39 @@ export default function AdminCurriculumPage() {
         {purgeTarget && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
-               <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
-                  <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
-                  <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
-                     Confirm Badge Delete
-                  </h3>
-               </div>
-               <div className="p-10 space-y-6">
-                  <p className="text-xs text-slate-400 leading-relaxed text-center">
-                     Are you sure you want to delete/archive the badge <span className="text-white font-bold">{purgeTarget.name}</span>? This action is irreversible.
-                  </p>
-                  
-                  <div className="flex gap-4 pt-2">
-                     <button 
-                       onClick={() => setPurgeTarget(null)}
-                       className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900"
-                     >
-                       Cancel
-                     </button>
-                     <button 
-                       onClick={handlePurgeExecute}
-                       className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10"
-                     >
-                       Confirm Delete
-                     </button>
-                  </div>
-               </div>
+               {(() => {
+                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                 return (
+                   <>
+                     <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
+                        <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                        <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
+                           {pStrings.purge_badge_title}
+                        </h3>
+                     </div>
+                     <div className="p-10 space-y-6">
+                        <p className="text-xs text-slate-400 leading-relaxed text-center">
+                           {pStrings.purge_badge_desc.replace("{title}", purgeTarget.name)}
+                        </p>
+                        
+                        <div className="flex gap-4 pt-2">
+                           <button 
+                             onClick={() => setPurgeTarget(null)}
+                             className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900"
+                           >
+                             {pStrings.purge_badge_cancel_btn}
+                           </button>
+                           <button 
+                             onClick={handlePurgeExecute}
+                             className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10"
+                           >
+                             {pStrings.purge_badge_confirm_btn}
+                           </button>
+                        </div>
+                     </div>
+                   </>
+                 );
+               })()}
             </motion.div>
           </div>
         )}
@@ -2158,6 +3174,99 @@ export default function AdminCurriculumPage() {
                      Create Custom Persona
                   </button>
                </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DOUBLE-SAFEGUARD CANCEL TASK MODAL */}
+      <AnimatePresence>
+        {cancelTaskTarget && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
+               {(() => {
+                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                 return (
+                   <>
+                     <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
+                        <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                        <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
+                           {pStrings.cancel_task_title || "Cancel Task"}
+                        </h3>
+                     </div>
+                     <div className="p-10 space-y-6">
+                        <p className="text-xs text-slate-400 leading-relaxed text-center">
+                           {pStrings.task_cancel_confirm.replace("{title}", cancelTaskTarget.title)}
+                        </p>
+                        
+                        <div className="flex gap-4 pt-2">
+                           <button 
+                             onClick={() => setCancelTaskTarget(null)}
+                             className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                           >
+                             {pStrings.purge_badge_cancel_btn}
+                           </button>
+                           <button 
+                             onClick={async () => {
+                               await handleCancelTask(cancelTaskTarget.id, true);
+                               setCancelTaskTarget(null);
+                             }}
+                             className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer"
+                           >
+                             {pStrings.purge_badge_confirm_btn}
+                           </button>
+                        </div>
+                     </div>
+                   </>
+                 );
+               })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DOUBLE-SAFEGUARD PURGE LANGUAGE MODAL */}
+      <AnimatePresence>
+        {purgeLanguageTarget && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
+               {(() => {
+                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                 return (
+                   <>
+                     <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
+                        <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                        <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
+                           {pStrings.purge_lang_title || "Confirm Language Delete"}
+                        </h3>
+                     </div>
+                     <div className="p-10 space-y-6">
+                        <p className="text-xs text-slate-400 leading-relaxed text-center">
+                           {pStrings.purge_lang_desc.replace("{title}", purgeLanguageTarget.label)}
+                        </p>
+                        
+                        <div className="flex gap-4 pt-2">
+                           <button 
+                             onClick={() => setPurgeLanguageTarget(null)}
+                             className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                           >
+                             {pStrings.purge_badge_cancel_btn}
+                           </button>
+                           <button 
+                             onClick={async () => {
+                               await dbService.setLanguageArchivingLevel(purgeLanguageTarget.code, 3);
+                               setPurgeLanguageTarget(null);
+                               await loadData();
+                             }}
+                             className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer"
+                           >
+                             {pStrings.purge_badge_confirm_btn}
+                           </button>
+                        </div>
+                     </div>
+                   </>
+                 );
+               })()}
             </motion.div>
           </div>
         )}

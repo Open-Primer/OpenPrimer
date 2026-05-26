@@ -29,6 +29,7 @@ export interface LanguageInfo {
   code: string;
   flag: string;
   label: string;
+  archivingLevel?: number;
 }
 
 
@@ -189,6 +190,8 @@ export interface MockCourse {
   ratingCount?: number;
   averageRating?: number;
   validations?: number; // Configurable validations threshold metric
+  created_at?: string; // Creation timestamp for new tracking
+  translations?: Record<string, { title: string; description: string }>;
 }
 
 // 1. POPULATED SEED DATA - 10+ RICH USER ACCOUNTS WITH ENGAGEMENT DATA
@@ -358,7 +361,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 1250, 
     is_active: true,
-    validations: 12
+    validations: 12,
+    created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString() // 120 days ago (Old)
   },
   { 
     id: 2, 
@@ -372,7 +376,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 840, 
     is_active: true,
-    validations: 3
+    validations: 3,
+    created_at: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString() // 100 days ago (Old)
   },
   { 
     id: 3, 
@@ -386,7 +391,8 @@ let mockCourses: MockCourse[] = [
     ects: 4, 
     popularity: 2400, 
     is_active: true,
-    validations: 15
+    validations: 15,
+    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString() // 110 days ago (Old)
   },
   { 
     id: 4, 
@@ -400,7 +406,8 @@ let mockCourses: MockCourse[] = [
     ects: 5, 
     popularity: 1800, 
     is_active: true,
-    validations: 8
+    validations: 8,
+    created_at: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString() // 95 days ago (Old)
   },
   { 
     id: 5, 
@@ -414,7 +421,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 1500, 
     is_active: true,
-    validations: 2
+    validations: 2,
+    created_at: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString() // 150 days ago (Old)
   },
   { 
     id: 6, 
@@ -428,7 +436,8 @@ let mockCourses: MockCourse[] = [
     ects: 5, 
     popularity: 950, 
     is_active: true,
-    validations: 1
+    validations: 1,
+    created_at: new Date(Date.now() - 92 * 24 * 60 * 60 * 1000).toISOString() // 92 days ago (Old)
   },
   { 
     id: 7, 
@@ -442,7 +451,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 3100, 
     is_active: true,
-    validations: 25
+    validations: 25,
+    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days ago (New!)
   },
   { 
     id: 8, 
@@ -456,7 +466,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 4200, 
     is_active: true,
-    validations: 32
+    validations: 32,
+    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString() // 110 days ago (Old)
   },
   { 
     id: 9, 
@@ -470,7 +481,8 @@ let mockCourses: MockCourse[] = [
     ects: 5, 
     popularity: 1100, 
     is_active: true,
-    validations: 4
+    validations: 4,
+    created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString() // 180 days ago (Old)
   },
   { 
     id: 10, 
@@ -484,7 +496,8 @@ let mockCourses: MockCourse[] = [
     ects: 4, 
     popularity: 1600, 
     is_active: true,
-    validations: 6
+    validations: 6,
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days ago (New!)
   },
   { 
     id: 11, 
@@ -498,7 +511,8 @@ let mockCourses: MockCourse[] = [
     ects: 6, 
     popularity: 1850, 
     is_active: true,
-    validations: 11
+    validations: 11,
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago (New!)
   }
 ];
 
@@ -1324,15 +1338,27 @@ export const dbService = {
 
   setCourseArchivingLevel: async (courseId: number, level: number) => {
     if (isOffline) {
-      mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
+      if (level === 3) {
+        mockCourses = mockCourses.filter(c => c.id !== courseId);
+      } else {
+        mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
+      }
       setLocalStorageItem('openprimer_courses', mockCourses);
       return { data: null, error: null };
     }
     try {
+      if (level === 3) {
+        const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+        return { data, error };
+      }
       const { data, error } = await supabase.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
       return { data, error };
     } catch (e) {
-      mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
+      if (level === 3) {
+        mockCourses = mockCourses.filter(c => c.id !== courseId);
+      } else {
+        mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
+      }
       setLocalStorageItem('openprimer_courses', mockCourses);
       return { data: null, error: null };
     }
@@ -1448,18 +1474,39 @@ export const dbService = {
 
   // DYNAMIC LANGUAGES
   getAvailableLanguages: async () => {
+    const filtered = availableLanguagesList.filter(l => (l.archivingLevel ?? 0) !== 2);
+    return { data: filtered, error: null };
+  },
+
+  getLanguagesAdmin: async () => {
     return { data: availableLanguagesList, error: null };
   },
 
   registerLanguage: async (lang: LanguageInfo) => {
     const existing = availableLanguagesList.find(l => l.code.toUpperCase() === lang.code.toUpperCase());
     if (existing) {
-      availableLanguagesList = availableLanguagesList.map(l => l.code.toUpperCase() === lang.code.toUpperCase() ? lang : l);
+      availableLanguagesList = availableLanguagesList.map(l => l.code.toUpperCase() === lang.code.toUpperCase() ? { ...existing, ...lang } : l);
     } else {
-      availableLanguagesList = [...availableLanguagesList, lang];
+      availableLanguagesList = [...availableLanguagesList, { ...lang, archivingLevel: 0 }];
     }
     setLocalStorageItem('openprimer_languages', availableLanguagesList);
     return { data: lang, error: null };
+  },
+
+  setLanguageArchivingLevel: async (code: string, level: number) => {
+    if (level === 3) {
+      availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
+    } else {
+      availableLanguagesList = availableLanguagesList.map(l => l.code.toUpperCase() === code.toUpperCase() ? { ...l, archivingLevel: level } : l);
+    }
+    setLocalStorageItem('openprimer_languages', availableLanguagesList);
+    return { data: null, error: null };
+  },
+
+  deleteLanguage: async (code: string) => {
+    availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
+    setLocalStorageItem('openprimer_languages', availableLanguagesList);
+    return { data: null, error: null };
   },
 
   // ACHIEVEMENTS / BADGES
@@ -1551,11 +1598,43 @@ export const dbService = {
       id: mockCourses.length > 0 ? Math.max(...mockCourses.map(c => c.id)) + 1 : 1,
       popularity: 0,
       is_active: true,
-      archivingLevel: 0
+      archivingLevel: 0,
+      created_at: new Date().toISOString()
     };
     mockCourses = [newCourse, ...mockCourses];
     setLocalStorageItem('openprimer_courses', mockCourses);
     return { data: newCourse, error: null };
+  },
+
+  saveCourse: async (course: any) => {
+    // Determine the numeric ID to search for
+    const searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
+    const existing = mockCourses.find(c => c.id === searchId);
+    let finalCourse: MockCourse;
+    if (existing) {
+      finalCourse = { ...existing, ...course, id: searchId };
+      mockCourses = mockCourses.map(c => c.id === searchId ? finalCourse : c);
+    } else {
+      finalCourse = {
+        id: searchId || (mockCourses.length > 0 ? Math.max(...mockCourses.map(c => c.id)) + 1 : 1),
+        title: course.title,
+        slug: course.slug || course.title.toLowerCase().replace(/ /g, '_'),
+        level: course.level || 'L1',
+        subject: course.subject || 'General',
+        description: course.description || '',
+        languages: course.languages || ['en'],
+        langs: course.langs || course.languages || ['en'],
+        ects: course.ects || 6,
+        popularity: course.popularity || 0,
+        is_active: course.is_active !== undefined ? course.is_active : true,
+        archivingLevel: course.archivingLevel !== undefined ? course.archivingLevel : 0,
+        translations: course.translations || {},
+        created_at: course.created_at || new Date().toISOString()
+      };
+      mockCourses = [...mockCourses, finalCourse];
+    }
+    setLocalStorageItem('openprimer_courses', mockCourses);
+    return { data: finalCourse, error: null };
   },
 
   // TRANSLATION REQUESTS APIS

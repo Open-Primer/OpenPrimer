@@ -40,7 +40,7 @@ test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', (
     
     // Delete button for default persona should be disabled
     const socraticCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Socratic Coach' }) }).first();
-    const socraticDeleteBtn = socraticCard.locator('button:has-text("Delete")');
+    const socraticDeleteBtn = socraticCard.locator('button[title*="Delete"]');
     await expect(socraticDeleteBtn).toBeDisabled();
 
     // Add New Personality
@@ -80,12 +80,12 @@ test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', (
       await dialog.accept();
     });
     const newSocraticCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Socratic Coach' }) }).first();
-    await newSocraticCard.locator('button:has-text("Delete")').click();
+    await newSocraticCard.locator('button[title*="Delete"]').click();
     await expect(page.locator('h3:has-text("Socratic Coach")')).not.toBeVisible();
 
     // Try deleting Philosophical Stoic, which is now default. It should fail since it's default!
     const updatedStoicCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Philosophical Stoic' }) }).first();
-    await expect(updatedStoicCard.locator('button:has-text("Delete")')).toBeDisabled();
+    await expect(updatedStoicCard.locator('button[title*="Delete"]')).toBeDisabled();
   });
 
 });
