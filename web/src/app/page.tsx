@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { TopNav, AITutorOverlay, Footer } from '@/components/RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,7 +68,7 @@ export default function Home() {
   }, [search, lang]);
 
   // Guest Registration State
-  const [authState, setAuthState] = useState<'signup' | 'login' | 'verify'>('signup');
+  const [authModal, setAuthModal] = useState<'signup' | 'login' | 'verify' | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -100,9 +100,9 @@ export default function Home() {
     const handleTriggerAuth = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail === 'login') {
-        setAuthState('login');
+        setAuthModal('login');
       } else if (customEvent.detail === 'signup') {
-        setAuthState('signup');
+        setAuthModal('signup');
       }
     };
     window.addEventListener('op_trigger_auth_state', handleTriggerAuth);
@@ -111,9 +111,9 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const authParam = params.get('auth');
       if (authParam === 'login') {
-        setAuthState('login');
+        setAuthModal('login');
       } else if (authParam === 'signup') {
-        setAuthState('signup');
+        setAuthModal('signup');
       }
     }
 
@@ -125,15 +125,15 @@ export default function Home() {
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setErrorMsg('Veuillez remplir tous les champs requis.');
+      setErrorMsg(lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.');
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMsg('Les mots de passe ne correspondent pas.');
+      setErrorMsg(lang === 'FR' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.');
       return;
     }
     setErrorMsg('');
-    setAuthState('verify');
+    setAuthModal('verify');
   };
 
   const handleSimulateValidation = () => {
@@ -149,13 +149,13 @@ export default function Home() {
     localStorage.setItem('op_registration_verified', 'true');
     setJustVerified(true);
     setErrorMsg('');
-    setAuthState('login'); // Switch to login form!
+    setAuthModal('login'); // Switch to login form!
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMsg('Veuillez entrer vos identifiants.');
+      setErrorMsg(lang === 'FR' ? 'Veuillez entrer vos identifiants.' : 'Please enter your credentials.');
       return;
     }
 
@@ -174,322 +174,18 @@ export default function Home() {
     localStorage.setItem('op_user_profile', JSON.stringify(testProfile));
     localStorage.setItem('op_session', 'true');
     setIsLoggedIn(true);
+    setAuthModal(null);
     router.push('/catalog');
   };
 
   if (!mounted) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-screen bg-background" />;
   }
 
-  // GUEST LANDING PAGE GATEWAY
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
-        <TopNav />
-        <div className="fixed inset-0 bg-blue-600/5 blur-[120px] pointer-events-none" />
-
-        <div className="flex-1 max-w-7xl mx-auto w-full px-8 pt-24 pb-16 grid lg:grid-cols-12 gap-16 items-center">
-          {/* Left Column: Brand Storytelling & Premium Accolades */}
-          <div className="lg:col-span-6 space-y-8">
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">
-              <Sparkle className="w-4 h-4 text-blue-400 animate-pulse" />
-              <span>{lang === 'FR' ? "DÉPÔT D'EXCELLENCE ACADÉMIQUE" : "DEPOT OF ACADEMIC EXCELLENCE"}</span>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-white">
-              {s.universal_knowledge} <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-                {s.finally_free}
-              </span>
-            </h1>
-
-            <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-lg">
-              {s.summary}
-            </p>
-
-            <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-900">
-              <div>
-                <h4 className="text-2xl font-black text-white">5+</h4>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
-                  {lang === 'FR' ? "Langues" : "Languages"}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-2xl font-black text-white">100%</h4>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
-                  {lang === 'FR' ? "Libre" : "Free"}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-2xl font-black text-white">L1 - L3</h4>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
-                  {lang === 'FR' ? "Niveaux" : "Levels"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Dynamic Interactive Auth Form */}
-          <div className="lg:col-span-6 flex justify-center">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-[48px] p-8 md:p-10 backdrop-blur-3xl shadow-2xl relative"
-            >
-              <AnimatePresence mode="wait">
-                {authState === 'signup' && (
-                  <motion.div 
-                    key="signup"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                  >
-                    <div className="text-center mb-6">
-                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
-                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">Créer un Compte</h2>
-                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">Commencer votre parcours</p>
-                    </div>
-
-                    {errorMsg && (
-                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errorMsg}</span>
-                      </div>
-                    )}
-
-                    <form onSubmit={handleSignupSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Prénom</label>
-                          <div className="relative">
-                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                            <input 
-                              required
-                              value={firstName}
-                              onChange={(e) => setFirstName(e.target.value)}
-                              placeholder="Jean"
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Nom</label>
-                          <div className="relative">
-                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                            <input 
-                              required
-                              value={lastName}
-                              onChange={(e) => setLastName(e.target.value)}
-                              placeholder="Dupont"
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Adresse Email</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                          <input 
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="name@email.com"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                          />
-                        </div>
-                      </div>
-                                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Mot de passe</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                          <input 
-                            type={showPassword ? 'text' : 'password'}
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
-                          >
-                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Confirmer le mot de passe</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                          <input 
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            required
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button 
-                        type="submit"
-                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 animate-pulse"
-                      >
-                        Valider mon inscription <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </form>
-
-                    <p className="mt-6 text-center text-xs text-slate-600">
-                      Déjà un compte ? <button onClick={() => { setErrorMsg(''); setAuthState('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">Se connecter</button>
-                    </p>
-                  </motion.div>
-                )}
-
-                {authState === 'login' && (
-                  <motion.div 
-                    key="login"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                  >
-                    <div className="text-center mb-6">
-                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
-                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">Connexion</h2>
-                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">Accéder au Dépôt</p>
-                    </div>
-
-                    {justVerified && (
-                      <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold flex items-start gap-3 shadow-lg shadow-emerald-500/5">
-                        <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <p className="font-bold text-white uppercase text-[8px] tracking-wider">Compte validé avec succès !</p>
-                          <p className="text-slate-400 leading-normal text-[10px] font-medium">Votre inscription est confirmée. Connectez-vous maintenant pour choisir vos cours et composer votre curriculum.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {errorMsg && (
-                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errorMsg}</span>
-                      </div>
-                    )}
-
-                    <form onSubmit={handleLoginSubmit} className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Adresse Email</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                          <input 
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="name@email.com"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">Mot de passe</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
-                          <input 
-                            type={showPassword ? 'text' : 'password'}
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
-                          >
-                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button 
-                        type="submit"
-                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
-                      >
-                        Se Connecter
-                      </button>
-                    </form>
-
-                    <p className="mt-6 text-center text-xs text-slate-600">
-                      Nouveau ? <button onClick={() => { setErrorMsg(''); setAuthState('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">Créer un compte</button>
-                    </p>
-                  </motion.div>
-                )}
-
-                {authState === 'verify' && (
-                  <motion.div 
-                    key="verify"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-4"
-                  >
-                    <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto mb-4 border border-blue-500/20">
-                      <Mail className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Vérifier l'Email</h3>
-                    <p className="text-[10px] text-slate-500 leading-relaxed mt-2 mb-6">
-                      Un lien de validation a été envoyé à <span className="text-slate-300 font-bold">{email}</span>. Veuillez confirmer votre email pour débloquer votre accès.
-                    </p>
-
-                    <div className="bg-slate-950/60 border border-slate-850 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
-                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-850 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
-                        EMAIL SIMULÉ
-                      </div>
-                      <p className="font-bold text-white mb-2">Bienvenue sur OpenPrimer !</p>
-                      <button 
-                        onClick={handleSimulateValidation}
-                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10 cursor-pointer"
-                      >
-                        Valider mon compte & Se Connecter
-                      </button>
-                    </div>
-
-                    <button onClick={() => setAuthState('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
-                      Retour
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </div>
-
-        <Footer />
-      </div>
-    );
-  }
-
-  // LOGGED-IN HOME DASHBOARD
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 font-sans overflow-hidden text-white">
+    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30 font-sans overflow-x-hidden transition-colors duration-300 relative">
       <TopNav />
-      <AITutorOverlay lang="EN" />
+      <AITutorOverlay lang={lang} />
       
       {/* Background Glow */}
       <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
@@ -512,7 +208,7 @@ export default function Home() {
 
         {/* Title */}
         <div className="text-center mb-16">
-          <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-white">
+          <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-foreground">
             {s.universal_knowledge} <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
               {s.finally_free}
@@ -547,7 +243,7 @@ export default function Home() {
               />
               <button 
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2 flex items-center justify-center"
+                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full transition-all shadow-lg shadow-blue-600/20 mr-2 flex items-center justify-center cursor-pointer"
               >
                 <ArrowRight className="w-6 h-6" />
               </button>
@@ -566,7 +262,7 @@ export default function Home() {
                     <button
                       key={idx}
                       onClick={() => router.push(`/catalog?search=${encodeURIComponent(sug.title)}`)}
-                      className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-slate-850 rounded-2xl transition-colors text-left"
+                      className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-slate-850 rounded-2xl transition-colors text-left cursor-pointer"
                     >
                       <div>
                         <p className="text-sm font-bold text-white">{sug.title}</p>
@@ -591,7 +287,7 @@ export default function Home() {
               <button 
                 key={course.id}
                 onClick={() => router.push(`/catalog?search=${encodeURIComponent(course.searchQuery)}`)}
-                className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group`}
+                className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group cursor-pointer`}
               >
                 <GraduationCap className="w-5 h-5 mb-3 text-slate-500 group-hover:text-current transition-colors" />
                 <h4 className="text-xs font-black tracking-tight leading-tight group-hover:text-white transition-colors">{course.title}</h4>
@@ -642,7 +338,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">
                  <Globe className="w-4 h-4" /> {s.mission_sub}
               </div>
-              <h2 className="text-4xl font-black tracking-tighter text-white">{s.mission}</h2>
+              <h2 className="text-4xl font-black tracking-tighter text-foreground">{s.mission}</h2>
               <p className="text-slate-500 leading-relaxed italic">
                 "{s.mission_desc}"
               </p>
@@ -678,6 +374,308 @@ export default function Home() {
 
         <Footer />
       </div>
+
+      {/* Floating Auth Modal */}
+      <AnimatePresence>
+        {authModal && (
+          <div 
+            onClick={() => setAuthModal(null)}
+            className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-[48px] p-8 md:p-10 backdrop-blur-3xl shadow-2xl relative cursor-default text-slate-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button X */}
+              <button 
+                onClick={() => setAuthModal(null)} 
+                className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-pulse"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <AnimatePresence mode="wait">
+                {authModal === 'signup' && (
+                  <motion.div 
+                    key="signup"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <div className="text-center mb-6">
+                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
+                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">
+                        {lang === 'FR' ? "Créer un Compte" : "Create an Account"}
+                      </h2>
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">
+                        {lang === 'FR' ? "Commencer votre parcours" : "Begin your journey"}
+                      </p>
+                    </div>
+
+                    {errorMsg && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSignupSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                            {lang === 'FR' ? "Prénom" : "First Name"}
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <input 
+                              required
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              placeholder={lang === 'FR' ? "Jean" : "John"}
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                            {lang === 'FR' ? "Nom" : "Last Name"}
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <input 
+                              required
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              placeholder={lang === 'FR' ? "Dupont" : "Doe"}
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                          {lang === 'FR' ? "Adresse Email" : "Email Address"}
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@email.com"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                          {lang === 'FR' ? "Mot de passe" : "Password"}
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                          {lang === 'FR' ? "Confirmer le mot de passe" : "Confirm Password"}
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            required
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {lang === 'FR' ? "Valider mon inscription" : "Validate Registration"} <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+
+                    <p className="mt-6 text-center text-xs text-slate-600">
+                      {lang === 'FR' ? "Déjà un compte ?" : "Already registered?"} <button onClick={() => { setErrorMsg(''); setAuthModal('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{lang === 'FR' ? "Se connecter" : "Log In"}</button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {authModal === 'login' && (
+                  <motion.div 
+                    key="login"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <div className="text-center mb-6">
+                      <OpenPrimerIcon className="w-12 h-12 mx-auto mb-3" />
+                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">
+                        {lang === 'FR' ? "Connexion" : "Log In"}
+                      </h2>
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-1">
+                        {lang === 'FR' ? "Accéder au Dépôt" : "Access the Repository"}
+                      </p>
+                    </div>
+
+                    {justVerified && (
+                      <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold flex items-start gap-3 shadow-lg shadow-emerald-500/5">
+                        <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-bold text-white uppercase text-[8px] tracking-wider">
+                            {lang === 'FR' ? "Compte validé avec succès !" : "Account validated successfully!"}
+                          </p>
+                          <p className="text-slate-400 leading-normal text-[10px] font-medium">
+                            {lang === 'FR' 
+                              ? "Votre inscription est confirmée. Connectez-vous maintenant pour choisir vos cours et composer votre curriculum."
+                              : "Your registration is confirmed. Connect now to choose your courses and compose your curriculum."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {errorMsg && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleLoginSubmit} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                          {lang === 'FR' ? "Adresse Email" : "Email Address"}
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@email.com"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                          {lang === 'FR' ? "Mot de passe" : "Password"}
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <input 
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+                      >
+                        {lang === 'FR' ? "Se Connecter" : "Log In"}
+                      </button>
+                    </form>
+
+                    <p className="mt-6 text-center text-xs text-slate-600">
+                      {lang === 'FR' ? "Nouveau ?" : "New to OpenPrimer?"} <button onClick={() => { setErrorMsg(''); setAuthModal('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{lang === 'FR' ? "Créer un compte" : "Create an Account"}</button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {authModal === 'verify' && (
+                  <motion.div 
+                    key="verify"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-4"
+                  >
+                    <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto mb-4 border border-blue-500/20">
+                      <Mail className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight">
+                      {lang === 'FR' ? "Vérifier l'Email" : "Verify Email"}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 leading-relaxed mt-2 mb-6">
+                      {lang === 'FR' 
+                        ? <>Un lien de validation a été envoyé à <span className="text-slate-300 font-bold">{email}</span>. Veuillez confirmer votre email pour débloquer votre accès.</>
+                        : <>A validation link has been sent to <span className="text-slate-300 font-bold">{email}</span>. Please confirm your email to unlock your access.</>}
+                    </p>
+
+                    <div className="bg-slate-950/60 border border-slate-850 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
+                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-850 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
+                        {lang === 'FR' ? "EMAIL SIMULÉ" : "SIMULATED EMAIL"}
+                      </div>
+                      <p className="font-bold text-white mb-2">
+                        {lang === 'FR' ? "Bienvenue sur OpenPrimer !" : "Welcome to OpenPrimer!"}
+                      </p>
+                      <button 
+                        onClick={handleSimulateValidation}
+                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10 cursor-pointer"
+                      >
+                        {lang === 'FR' ? "Valider mon compte & Se Connecter" : "Verify Account & Log In"}
+                      </button>
+                    </div>
+
+                    <button onClick={() => setAuthModal('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
+                      {lang === 'FR' ? "Retour" : "Back"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
