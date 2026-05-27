@@ -596,6 +596,7 @@ export default function AdminCurriculumPage() {
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
   const [courseArchiveTarget, setCourseArchiveTarget] = useState<any | null>(null);
   const [curriculumArchivalPending, setCurriculumArchivalPending] = useState<{ course: any; nextLevel: number; parentCurricula: any[] } | null>(null);
+  const [curriculumCascadePending, setCurriculumCascadePending] = useState<{ curriculum: any; nextLevel: number; childCourses: any[] } | null>(null);
   const [deleteTutorTarget, setDeleteTutorTarget] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [infoModal, setInfoModal] = useState<{ title: string; message: string } | null>(null);
@@ -3554,7 +3555,16 @@ export default function AdminCurriculumPage() {
                                     currentLevel={currentLevel}
                                     lang={lang}
                                     onChange={async (nextLvl) => {
-                                      // Check if this course is inside any parent curricula that are active (lower archiving level than nextLvl)
+                                      // 1. If it IS a curriculum, offer to optional cascade to child courses
+                                      if (isCurriculum) {
+                                        const targetChilds = courses.filter(c => course.childCourses?.includes(c.id) && (c.archivingLevel || 0) < nextLvl);
+                                        if (targetChilds.length > 0) {
+                                          setCurriculumCascadePending({ curriculum: course, nextLevel: nextLvl, childCourses: targetChilds });
+                                          return;
+                                        }
+                                      }
+
+                                      // 2. If it is NOT a curriculum, enforce standard parent validation
                                       const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.includes(course.id) && (c.archivingLevel || 0) < nextLvl);
                                       if (activeParents.length > 0) {
                                         setCurriculumArchivalPending({ course, nextLevel: nextLvl, parentCurricula: activeParents });
@@ -4962,6 +4972,94 @@ export default function AdminCurriculumPage() {
                     loadData();
                   }} className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/10 cursor-pointer">
                     {lang === 'FR' ? 'Archiver Tout' : 'Archive All'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CURRICULUM CASCADE (OPTIONAL) ARCHIVAL MODAL */}
+      <AnimatePresence>
+        {curriculumCascadePending && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCurriculumCascadePending(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-violet-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                <Layers className="w-6 h-6 text-violet-500 animate-pulse" />
+                <h3 className="text-lg font-black text-violet-400 uppercase tracking-widest">
+                  {lang === 'FR' ? 'Option de cascade' : 'Cascade Option'}
+                </h3>
+              </div>
+              <div className="p-10 space-y-6">
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {lang === 'FR' 
+                    ? `Vous archivez le curriculum "${curriculumCascadePending.curriculum.title}" au niveau d'archivage ${curriculumCascadePending.nextLevel}.`
+                    : `You are setting the curriculum "${curriculumCascadePending.curriculum.title}" to archiving level ${curriculumCascadePending.nextLevel}.`
+                  }
+                </p>
+                <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                  {lang === 'FR'
+                    ? `Souhaitez-vous également appliquer ce niveau d'archivage aux cours associés de ce curriculum ? (${curriculumCascadePending.childCourses.length} cours trouvés).`
+                    : `Would you also like to cascade this archiving level to all associated child courses? (${curriculumCascadePending.childCourses.length} courses found).`
+                  }
+                </p>
+                <div className="flex flex-col gap-3 pt-2">
+                  <button onClick={async () => {
+                    const { curriculum, nextLevel, childCourses } = curriculumCascadePending;
+                    // Archive child courses
+                    for (const child of childCourses) {
+                      await dbService.setCourseArchivingLevel(child.id, nextLevel);
+                    }
+                    // Archive curriculum itself
+                    if (nextLevel === 3) {
+                      setCurriculumCascadePending(null);
+                      setCourseArchiveTarget({ course: curriculum });
+                      return;
+                    }
+                    await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    setCurriculumCascadePending(null);
+                    showToast(
+                      lang === 'FR' 
+                        ? 'Curriculum et tous ses cours archivés avec succès' 
+                        : 'Curriculum and all child courses successfully archived', 
+                      'success'
+                    );
+                    loadData();
+                  }} className="w-full py-4 text-white font-black uppercase text-[10px] rounded-xl bg-violet-600 hover:bg-violet-550 shadow-lg shadow-violet-600/10 cursor-pointer text-center">
+                    {lang === 'FR' ? 'Archiver le curriculum + ses cours' : 'Archive Curriculum & Courses'}
+                  </button>
+                  
+                  <button onClick={async () => {
+                    const { curriculum, nextLevel } = curriculumCascadePending;
+                    // Archive only curriculum
+                    if (nextLevel === 3) {
+                      setCurriculumCascadePending(null);
+                      setCourseArchiveTarget({ course: curriculum });
+                      return;
+                    }
+                    await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    setCurriculumCascadePending(null);
+                    showToast(
+                      lang === 'FR' 
+                        ? 'Curriculum archivé uniquement (les cours restent actifs)' 
+                        : 'Curriculum archived only (courses remain active)', 
+                      'success'
+                    );
+                    loadData();
+                  }} className="w-full py-4 text-slate-300 font-black uppercase text-[10px] rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 cursor-pointer text-center">
+                    {lang === 'FR' ? 'Archiver le curriculum uniquement' : 'Archive Curriculum Only'}
+                  </button>
+
+                  <button onClick={() => setCurriculumCascadePending(null)} className="w-full py-4 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-950 border border-transparent cursor-pointer text-center">
+                    {lang === 'FR' ? 'Annuler' : 'Cancel'}
                   </button>
                 </div>
               </div>
