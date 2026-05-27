@@ -417,6 +417,7 @@ export const CatalogPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
+  const [filterType, setFilterType] = useState<'All' | 'Course' | 'Curriculum'>('All');
 
   // Free Client-Side Translation States for Courses
   const [translatedCourses, setTranslatedCourses] = useState<Record<number, { title: string; description: string }>>({});
@@ -642,7 +643,12 @@ export const CatalogPage = () => {
                           ));
     const matchesSaved = subjectFilter === 'Saved' ? bookmarks.includes(c.id) : true;
     const matchesNew = showNewOnly ? isNew : true;
-    return matchesLang && matchesSearch && matchesSaved && matchesNew;
+    const matchesFilterType = filterType === 'All'
+      ? true
+      : filterType === 'Course'
+        ? !c.isCurriculum
+        : c.isCurriculum;
+    return matchesLang && matchesSearch && matchesSaved && matchesNew && matchesFilterType;
   });
 
   return (
@@ -705,6 +711,27 @@ export const CatalogPage = () => {
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
+            </div>
+
+            {/* Catalog Filter Mode (All / Courses / Curricula) */}
+            <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
+              {[
+                { key: 'All', label: { EN: 'All', FR: 'Tout', ES: 'Todo', DE: 'Alle', ZH: '全部', IT: 'Tutti' } },
+                { key: 'Course', label: { EN: 'Courses', FR: 'Cours', ES: 'Cursos', DE: 'Kurse', ZH: '课程', IT: 'Corsi' } },
+                { key: 'Curriculum', label: { EN: 'Curricula', FR: 'Curriculums', ES: 'Planes', DE: 'Lehrpläne', ZH: '课程体系', IT: 'Curriculum' } }
+              ].map(opt => {
+                const active = filterType === opt.key;
+                const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
+                return (
+                  <button 
+                    key={opt.key}
+                    onClick={() => setFilterType(opt.key as any)}
+                    className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                  >
+                    {labelText}
+                  </button>
+                );
+              })}
             </div>
             
             {/* Standalone Premium New Courses Filter Toggle */}
@@ -1075,101 +1102,220 @@ export const PhilosophyPage = () => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  const PHILOSOPHY_STEPS = {
+    EN: [
+      { step: '01', title: 'Atomic Decomposition', desc: "We break every course into modules that focus on a single core concept. You can't move forward until you can explain the current module in simple terms." },
+      { step: '02', title: 'Socratic Feedback Loop', desc: "Instead of providing answers, our AI Tutor asks the questions that lead you to the answer. This is the 'Socratic Overlay' that prevents passive reading." },
+      { step: '03', title: 'Cross-Linguistic Synthesis', desc: "By switching languages, students activate different cognitive pathways, reinforcing the concept's abstraction from mere vocabulary." }
+    ],
+    FR: [
+      { step: '01', title: 'Décomposition Atomique', desc: "Nous divisons chaque cours en modules centrés sur un concept clé unique. Vous ne pouvez progresser que lorsque vous pouvez l'expliquer simplement." },
+      { step: '02', title: 'Boucle Socratique', desc: "Au lieu de donner des réponses directes, notre tuteur IA pose des questions qui vous guident vers la solution pour éviter la lecture passive." },
+      { step: '03', title: 'Synthèse Trans-Linguistique', desc: "En alternant les langues, l'étudiant active diverses voies cognitives, renforçant l'abstraction du concept au-delà du simple vocabulaire." }
+    ],
+    ES: [
+      { step: '01', title: 'Descomposición Atómica', desc: "Dividimos cada curso en módulos centrados en un solo concepto clave. No puedes avanzar hasta que puedas explicar el módulo actual en términos simples." },
+      { step: '02', title: 'Bucle de Retroalimentación Socrática', desc: "En lugar de proporcionar respuestas, nuestro Tutor de IA hace las preguntas que te guían hacia la respuesta para evitar la lectura pasiva." },
+      { step: '03', title: 'Síntesis Translingüística', desc: "Al cambiar de idioma, los estudiantes activan diferentes vías cognitivas, reforzando la abstracción del concepto más allá del vocabulario." }
+    ],
+    DE: [
+      { step: '01', title: 'Atomare Zerlegung', desc: "Wir zerlegen jeden Kurs in Module, die sich auf ein einzelnes Kernkonzept konzentrieren. Sie können erst fortfahren, wenn Sie das aktuelle Modul in einfachen Worten erklären können." },
+      { step: '02', title: 'Sokratische Feedbackschleife', desc: "Anstatt Antworten zu geben, stellt unser KI-Tutor Fragen, die Sie zur Antwort führen, um passives Lesen zu verhindern." },
+      { step: '03', title: 'Kognitive Sprachsynthese', desc: "Durch den Wechsel der Sprachen aktivieren die Lernenden unterschiedliche kognitive Pfade und vertiefen das Verständnis des Konzepts." }
+    ],
+    IT: [
+      { step: '01', title: 'Decomposizione Atomica', desc: "Dividiamo ogni corso in moduli incentrati su un singolo concetto chiave. Non puoi andare avanti finché non sai spiegare il modulo corrente in termini semplici." },
+      { step: '02', title: 'Ciclo di Feedback Socratico', desc: "Invece di fornire risposte, il nostro Tutor IA pone domande che ti guidano alla risposta, prevenendo la lettura passiva." },
+      { step: '03', title: 'Sintesi Trans-Linguistica', desc: "Cambiando lingua, gli studenti attivano percorsi cognitivi diversi, rafforzando l'astrazione del concetto dal semplice vocabolario." }
+    ],
+    ZH: [
+      { step: '01', title: '原子化分解', desc: "我们将每门课程拆分为专注于单一核心概念的模块。只有在你能用简单的语言解释当前模块时，才能继续前进。" },
+      { step: '02', title: '苏格拉底式反馈闭环', desc: "我们的AI导师不会直接提供答案，而是通过提问引导你找到答案，防止被动阅读。" },
+      { step: '03', title: '跨语言合成认知', desc: "通过切换语言，学生可以激活不同的认知途径，增强概念从单纯词汇中的学术抽象理解。" }
+    ]
+  };
+
+  const steps = PHILOSOPHY_STEPS[lang.toUpperCase() as keyof typeof PHILOSOPHY_STEPS] || PHILOSOPHY_STEPS.EN;
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
-    <div className="max-w-5xl mx-auto px-8 pt-32 pb-24">
-      {/* SECTION 1: MISSION */}
-      <header className="mb-32 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
-          {t.mission_sub}
-        </div>
-        <h1 className="text-6xl md:text-7xl font-black tracking-tighter mb-10 leading-[0.9] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{t.mission}</h1>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-          {t.mission_desc}
-        </p>
-      </header>
-
-      <div className="grid md:grid-cols-2 gap-12 mb-40">
-         <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-blue-500/30 transition-all">
-            <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
-               <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20"><Globe className="w-6 h-6" /></div>
-               {t.accessibility}
-            </h3>
-            <p className="text-slate-400 leading-relaxed">
-               {t.accessibility_desc}
-            </p>
-         </div>
-         <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-emerald-500/30 transition-all">
-            <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
-               <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20"><Target className="w-6 h-6" /></div>
-               {t.quality}
-            </h3>
-            <p className="text-slate-400 leading-relaxed">
-               {t.quality_desc}
-            </p>
-         </div>
-      </div>
-
-      {/* SECTION 2: METHODOLOGY */}
-      <div className="mb-40">
-        <div className="flex flex-col md:flex-row gap-20 items-start">
-          <div className="md:w-1/3 sticky top-32">
-            <h2 className="text-4xl font-black tracking-tighter mb-6">{t.methodology_desc}</h2>
-            <p className="text-slate-500 leading-relaxed">
-              {t.tutor} {t.placeholder.toLowerCase()}
-            </p>
+      <div className="max-w-5xl mx-auto px-8 pt-32 pb-24">
+        {/* SECTION 1: MISSION */}
+        <header className="mb-32 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
+            {t.mission_sub}
           </div>
-          <div className="md:w-2/3 space-y-6">
-             {[
-               { step: "01", title: "Atomic Decomposition", desc: "We break every course into modules that focus on a single core concept. You can't move forward until you can explain the current module in simple terms." },
-               { step: "02", title: "Socratic Feedback Loop", desc: "Instead of providing answers, our AI Tutor asks the questions that lead you to the answer. This is the 'Socratic Overlay' that prevents passive reading." },
-               { step: "03", title: "Cross-Linguistic Synthesis", desc: "By switching languages, students activate different cognitive pathways, reinforcing the concept's abstraction from mere vocabulary." }
-             ].map(item => (
-               <div key={item.step} className="p-10 bg-slate-900/20 border border-slate-900 rounded-[40px] group hover:bg-slate-900/40 transition-all">
-                  <div className="text-3xl font-black text-slate-800 group-hover:text-blue-500 transition-colors mb-4">{item.step}</div>
-                  <h3 className="text-xl font-black mb-2 text-slate-200">{item.title}</h3>
-                  <p className="text-slate-500 leading-relaxed">{item.desc}</p>
-               </div>
-             ))}
+          <h1 className="text-6xl md:text-7xl font-black tracking-tighter mb-10 leading-[0.9] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{t.mission}</h1>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            {t.mission_desc}
+          </p>
+        </header>
+
+        <div className="grid md:grid-cols-2 gap-12 mb-40">
+           <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-blue-500/30 transition-all">
+              <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20"><Globe className="w-6 h-6" /></div>
+                 {t.accessibility}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                 {t.accessibility_desc}
+              </p>
+           </div>
+           <div className="p-12 bg-slate-900/30 border border-slate-800 rounded-[60px] backdrop-blur-3xl group hover:border-emerald-500/30 transition-all">
+              <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20"><Target className="w-6 h-6" /></div>
+                 {t.quality}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                 {t.quality_desc}
+              </p>
+           </div>
+        </div>
+
+        {/* SECTION 2: METHODOLOGY */}
+        <div className="mb-40">
+          <div className="flex flex-col md:flex-row gap-20 items-start">
+            <div className="md:w-1/3 sticky top-32">
+              <h2 className="text-4xl font-black tracking-tighter mb-6">{t.methodology_desc}</h2>
+              <p className="text-slate-500 leading-relaxed">
+                {t.tutor} {t.placeholder.toLowerCase()}
+              </p>
+            </div>
+            <div className="md:w-2/3 space-y-6">
+               {steps.map(item => (
+                 <div key={item.step} className="p-10 bg-slate-900/20 border border-slate-900 rounded-[40px] group hover:bg-slate-900/40 transition-all">
+                    <div className="text-3xl font-black text-slate-800 group-hover:text-blue-500 transition-colors mb-4">{item.step}</div>
+                    <h3 className="text-xl font-black mb-2 text-slate-200">{item.title}</h3>
+                    <p className="text-slate-500 leading-relaxed">{item.desc}</p>
+                 </div>
+               ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* SECTION 3: OPEN SOURCE */}
-      <div className="p-20 bg-gradient-to-br from-blue-600/10 to-transparent border border-blue-500/20 rounded-[80px] text-center">
-        <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white mx-auto mb-10 border border-slate-800 shadow-2xl">
-           <Zap className="w-10 h-10 text-blue-500" />
-        </div>
-        <h2 className="text-4xl font-black tracking-tighter mb-6">{t.transparency}</h2>
-        <p className="text-slate-400 text-lg leading-relaxed mb-12 max-w-2xl mx-auto">
-          {t.transparency_desc}
-        </p>
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-          <a 
-            href="https://github.com/Open-Primer/OpenPrimer" 
-            target="_blank" 
-            className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all shadow-2xl"
-          >
-            GitHub Repository <ChevronRight className="w-4 h-4" />
-          </a>
-          <Link href="/contact" className="text-blue-500 font-black uppercase tracking-widest text-[10px] hover:text-blue-400 transition-colors">
-            Contact Support
-          </Link>
+        {/* SECTION 3: OPEN SOURCE */}
+        <div className="p-20 bg-gradient-to-br from-blue-600/10 to-transparent border border-blue-500/20 rounded-[80px] text-center">
+          <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white mx-auto mb-10 border border-slate-800 shadow-2xl">
+             <Zap className="w-10 h-10 text-blue-500" />
+          </div>
+          <h2 className="text-4xl font-black tracking-tighter mb-6">{t.transparency}</h2>
+          <p className="text-slate-400 text-lg leading-relaxed mb-12 max-w-2xl mx-auto">
+            {t.transparency_desc}
+          </p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            <a 
+              href="https://github.com/Open-Primer/OpenPrimer" 
+              target="_blank" 
+              className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all shadow-2xl"
+            >
+              GitHub Repository <ChevronRight className="w-4 h-4" />
+            </a>
+            <Link href="/contact" className="text-blue-500 font-black uppercase tracking-widest text-[10px] hover:text-blue-400 transition-colors">
+              Contact Support
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
       <Footer />
     </div>
   );
 };
 
-// --- PAGE: CONTACT ---
 export const ContactPage = () => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
+
+  const CONTACT_STRINGS = {
+    EN: {
+      title: "Get in Touch",
+      desc: "Reach out to our global ops team for partnerships or feedback on the Feynman Engine.",
+      support: "Global Support Operations",
+      success_title: "Message Received",
+      success_desc: "We will get back to you shortly.",
+      name_placeholder: "Full Name",
+      email_placeholder: "Email Address",
+      message_placeholder: "Your Message",
+      btn_sending: "Dispatching...",
+      btn_send: "Send Inquiry",
+      alert_err: "An error occurred. Please try again.",
+      alert_fail: "Failed to send message. Please try again later."
+    },
+    FR: {
+      title: "Contactez-nous",
+      desc: "Contactez notre équipe opérationnelle mondiale pour des partenariats ou des retours sur le moteur Feynman.",
+      support: "Opérations de Support Mondial",
+      success_title: "Message Reçu",
+      success_desc: "Nous reviendrons vers vous très prochainement.",
+      name_placeholder: "Nom Complet",
+      email_placeholder: "Adresse Email",
+      message_placeholder: "Votre Message",
+      btn_sending: "Envoi en cours...",
+      btn_send: "Envoyer ma demande",
+      alert_err: "Une erreur est survenue. Veuillez réessayer.",
+      alert_fail: "Échec de l'envoi. Veuillez réessayer plus tard."
+    },
+    ES: {
+      title: "Ponerse en Contacto",
+      desc: "Comuníquese con nuestro equipo de operaciones globales para asociaciones o comentarios sobre el Motor Feynman.",
+      support: "Operaciones de Soporte Global",
+      success_title: "Mensaje Recibido",
+      success_desc: "Nos pondremos en contacto con usted en breve.",
+      name_placeholder: "Nombre Completo",
+      email_placeholder: "Correo Electrónico",
+      message_placeholder: "Tu Mensaje",
+      btn_sending: "Enviando...",
+      btn_send: "Enviar Consulta",
+      alert_err: "Ocurrió un error. Por favor, inténtelo de nuevo.",
+      alert_fail: "Error al enviar el message. Por favor, inténtelo más tarde."
+    },
+    DE: {
+      title: "Kontaktieren Sie uns",
+      desc: "Wenden Sie sich an unser globales Betriebsteam für Partnerschaften oder Feedback zur Feynman-Engine.",
+      support: "Globaler Supportbetrieb",
+      success_title: "Nachricht empfangen",
+      success_desc: "Wir werden uns in Kürze bei Ihnen melden.",
+      name_placeholder: "Vollständiger Name",
+      email_placeholder: "E-Mail-Adresse",
+      message_placeholder: "Ihre Nachricht",
+      btn_sending: "Wird gesendet...",
+      btn_send: "Anfrage senden",
+      alert_err: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      alert_fail: "Fehler beim Senden der Nachricht. Bitte versuchen Sie es später noch einmal."
+    },
+    IT: {
+      title: "Contattaci",
+      desc: "Contatta il nostro team operativo globale per partnership o feedback sul Feynman Engine.",
+      support: "Operazioni di Supporto Globale",
+      success_title: "Messaggio Ricevuto",
+      success_desc: "Ti risponderemo al più presto.",
+      name_placeholder: "Nome Completo",
+      email_placeholder: "Indirizzo Email",
+      message_placeholder: "Il Tuo Messaggio",
+      btn_sending: "Invio in corso...",
+      btn_send: "Invia Richiesta",
+      alert_err: "Si è verificato un errore. Riprova.",
+      alert_fail: "Impossibile inviare il messaggio. Riprova più tardi."
+    },
+    ZH: {
+      title: "联系我们",
+      desc: "联系我们的全球运营团队以获取合作机会或对费曼引擎的反馈。",
+      support: "全球支持运营",
+      success_title: "收到消息",
+      success_desc: "我们将很快与您联系。",
+      name_placeholder: "姓名",
+      email_placeholder: "电子邮件地址",
+      message_placeholder: "您的消息",
+      btn_sending: "正在发送...",
+      btn_send: "发送咨询",
+      alert_err: "发生错误。请重试。",
+      alert_fail: "发送消息失败。请稍后重试。"
+    }
+  };
+
+  const c = CONTACT_STRINGS[lang.toUpperCase() as keyof typeof CONTACT_STRINGS] || CONTACT_STRINGS.EN;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1189,9 +1335,9 @@ export const ContactPage = () => {
         body: JSON.stringify(data)
       });
       if (resp.ok) setIsSent(true);
-      else alert("Failed to send message. Please try again later.");
+      else alert(c.alert_fail);
     } catch (err) {
-      alert("An error occurred. Please try again.");
+      alert(c.alert_err);
     } finally {
       setIsSending(false);
     }
@@ -1203,15 +1349,15 @@ export const ContactPage = () => {
       <div className="max-w-4xl mx-auto px-8 pt-32 pb-24">
         <div className="flex items-center gap-3 mb-12 text-violet-500">
           <Mail className="w-8 h-8" />
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Get in Touch</h1>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{c.title}</h1>
         </div>
         <div className="grid md:grid-cols-2 gap-12">
           <div className="space-y-12">
-            <p className="text-slate-400 leading-relaxed">Reach out to our global ops team for partnerships or feedback on the Feynman Engine.</p>
+            <p className="text-slate-400 leading-relaxed">{c.desc}</p>
             <div className="flex items-center gap-4">
                <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500"><Globe className="w-5 h-5" /></div>
                <div>
-                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Global Support Operations</p>
+                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{c.support}</p>
                  <p className="font-bold text-slate-200 uppercase tracking-tight">support@openprimer.org</p>
                </div>
             </div>
@@ -1222,22 +1368,22 @@ export const ContactPage = () => {
                   <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto mb-6">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-xl font-black mb-2 uppercase tracking-tighter">Message Received</h3>
-                  <p className="text-slate-500 text-sm">We will get back to you shortly.</p>
+                  <h3 className="text-xl font-black mb-2 uppercase tracking-tighter">{c.success_title}</h3>
+                  <p className="text-slate-500 text-sm">{c.success_desc}</p>
                 </div>
               ) : (
                 <form className="space-y-6" onSubmit={handleSubmit}>
                    <div className="flex flex-col gap-4">
-                      <input name="name" type="text" placeholder="Full Name" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
-                      <input name="email" type="email" placeholder="Email Address" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
+                      <input name="name" type="text" placeholder={c.name_placeholder} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
+                      <input name="email" type="email" placeholder={c.email_placeholder} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                    </div>
-                   <textarea name="message" placeholder="Your Message" className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-40 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
+                   <textarea name="message" placeholder={c.message_placeholder} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm h-40 focus:outline-none focus:border-blue-500/50 transition-all resize-none" required></textarea>
                     <button 
                       type="submit" 
                       disabled={isSending}
                       className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20"
                     >
-                      {isSending ? "Dispatching..." : "Send Inquiry"}
+                      {isSending ? c.btn_sending : c.btn_send}
                     </button>
                 </form>
               )}
@@ -1249,48 +1395,144 @@ export const ContactPage = () => {
   );
 };
 
-// --- PAGE: TERMS ---
 export const TermsPage = () => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  const TERMS_STRINGS = {
+    EN: {
+      title: "Terms of Service",
+      date: "Effective Date: May 11, 2026",
+      sec1_t: "1. Acceptable Use",
+      sec1_d: "OpenPrimer is an academic resource. Users are expected to interact with the AI Tutor respectfully and use the platform for genuine learning purposes.",
+      sec2_t: "2. Intellectual Property",
+      sec2_d: "All core software is licensed under MIT. Academic content is licensed under CC BY-NC-SA 4.0, allowing non-commercial sharing with proper attribution.",
+      sec3_t: "3. Limitation of Liability",
+      sec3_d: "The platform is provided 'as-is'. While we strive for absolute academic rigor, users should always cross-reference critical information with official university sources."
+    },
+    FR: {
+      title: "Conditions d'utilisation",
+      date: "Date d'effet : 11 mai 2026",
+      sec1_t: "1. Utilisation acceptable",
+      sec1_d: "OpenPrimer est une ressource académique. Les utilisateurs doivent interagir respectueusement avec le tuteur IA et utiliser la plateforme à des fins d'apprentissage réel.",
+      sec2_t: "2. Propriété intellectuelle",
+      sec2_d: "Tous les logiciels de base sont sous licence MIT. Le contenu académique est sous licence CC BY-NC-SA 4.0, autorisant le partage non commercial avec attribution correcte.",
+      sec3_t: "3. Limitation de responsabilité",
+      sec3_d: "La plateforme est fournie 'en l'état'. Bien que nous visions une rigueur académique absolue, les utilisateurs doivent toujours recouper les informations critiques avec des sources universitaires officielles."
+    },
+    ES: {
+      title: "Términos del Servicio",
+      date: "Fecha de vigencia: 11 de mayo de 2026",
+      sec1_t: "1. Uso Aceptable",
+      sec1_d: "OpenPrimer es un recurso académico. Se espera que los usuarios interactúen con el Tutor de IA de manera respetuosa y utilicen la plataforma para fines de aprendizaje genuino.",
+      sec2_t: "2. Propiedad Intelectual",
+      sec2_d: "Todo el software principal tiene licencia MIT. El contenido académico tiene licencia CC BY-NC-SA 4.0, lo que permite compartirlo de manera no comercial con la atribución adecuada.",
+      sec3_t: "3. Limitación de Responsabilidad",
+      sec3_d: "La plataforma se proporciona 'tal cual'. Aunque nos esforzamos por lograr un rigor académico absoluto, los usuarios siempre deben contrastar la información crítica con fuentes universitarias oficiales."
+    },
+    DE: {
+      title: "Nutzungsbedingungen",
+      date: "Inkrafttreten: 11. Mai 2026",
+      sec1_t: "1. Zulässige Nutzung",
+      sec1_d: "OpenPrimer is eine akademische Ressource. Es wird erwartet, dass Benutzer respektvoll mit dem KI-Tutor interagieren und die Plattform für echte Lernzwecke nutzen.",
+      sec2_t: "2. Geistiges Eigentum",
+      sec2_d: "Die gesamte Kernsoftware ist unter MIT lizenziert. Akademische Inhalte sind unter CC BY-NC-SA 4.0 lizenziert, was die nicht-kommerzielle Weitergabe bei angemessener Nennung erlaubt.",
+      sec3_t: "3. Haftungsbeschränkung",
+      sec3_d: "Die pflichtbewusste Plattform wird ohne Mängelgewähr bereitgestellt. Obwohl wir uns um absolute akademische Genauigkeit bemühen, sollten Benutzer wichtige Informationen immer mit offiziellen Universitätsquellen abgleichen."
+    },
+    IT: {
+      title: "Termini di Servizio",
+      date: "Data di Decorrenza: 11 Maggio 2026",
+      sec1_t: "1. Uso Consentito",
+      sec1_d: "OpenPrimer è una risorsa accademica. Gli utenti sono tenuti a interagire con il Tutor IA in modo rispettoso e a utilizzare la piattaforma per scopi di apprendimento autentico.",
+      sec2_t: "2. Proprietà Intellettuale",
+      sec2_d: "Tutto il software principale è concesso in licenza MIT. Il contenuto accademico è concesso in licenza CC BY-NC-SA 4.0, consentendo la condivisione non commerciale con corretta attribuzione.",
+      sec3_t: "3. Limitazione di Responsabilità",
+      sec3_d: "La piattaforma viene fornita 'così com'è'. Sebbene ci impegniamo per il massimo rigore accademico, gli utenti dovrebbero sempre verificare le informazioni critiche con fonti universitarie ufficiali."
+    },
+    ZH: {
+      title: "服务条款",
+      date: "生效日期：2026年5月11日",
+      sec1_t: "1. 合理使用",
+      sec1_d: "OpenPrimer 是一项学术资源。用户应尊重地与 AI 导师互动，并将该平台用于真正的学习目的。",
+      sec2_t: "2. 知识产权",
+      sec2_d: "所有核心软件均采用 MIT 许可。学术内容采用 CC BY-NC-SA 4.0 许可，允许在提供适当署名的前提下进行非商业性分享。",
+      sec3_t: "3. 免责声明",
+      sec3_d: "该平台按“原样”提供。虽然我们力求绝对的学术严谨性，但用户应始终将关键信息 with 官方大学来源进行交叉比对。"
+    }
+  };
+
+  const c = TERMS_STRINGS[lang.toUpperCase() as keyof typeof TERMS_STRINGS] || TERMS_STRINGS.EN;
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
-    <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
-      <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Terms of Service</h1>
-      <p className="text-slate-400">Effective Date: May 11, 2026</p>
-      <h2>1. Acceptable Use</h2>
-      <p>OpenPrimer is an academic resource. Users are expected to interact with the AI Tutor respectfully and use the platform for genuine learning purposes.</p>
-      <h2>2. Intellectual Property</h2>
-      <p>All core software is licensed under MIT. Academic content is licensed under CC BY-NC-SA 4.0, allowing non-commercial sharing with proper attribution.</p>
-      <h2>3. Limitation of Liability</h2>
-      <p>The platform is provided "as-is". While we strive for absolute academic rigor, users should always cross-reference critical information with official university sources.</p>
-    </div>
+      <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{c.title}</h1>
+        <p className="text-slate-400">{c.date}</p>
+        <h2>{c.sec1_t}</h2>
+        <p>{c.sec1_d}</p>
+        <h2>{c.sec2_t}</h2>
+        <p>{c.sec2_d}</p>
+        <h2>{c.sec3_t}</h2>
+        <p>{c.sec3_d}</p>
+      </div>
       <Footer />
     </div>
   );
 };
 
-// --- PAGE: PRIVACY ---
 export const PrivacyPage = () => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  const PRIVACY_STRINGS = {
+    EN: {
+      title: "Privacy Policy",
+      tagline: '"Your data, your progress, your sovereignty."',
+      desc: "We do not sell your data. Your learning progress is used exclusively to calibrate the AI Tutor for your specific needs. We comply with GDPR and global privacy standards for academic data protection."
+    },
+    FR: {
+      title: "Politique de confidentialité",
+      tagline: '"Vos données, votre progression, votre souveraineté."',
+      desc: "Nous ne vendons pas vos données. Votre progression d'apprentissage est exclusivement utilisée pour calibrer le tuteur IA selon vos besoins spécifiques. Nous respectons le RGPD et les normes mondiales de protection des données académiques."
+    },
+    ES: {
+      title: "Política de Privacidad",
+      tagline: '"Tus datos, tu progreso, tu soberanía."',
+      desc: "No vendemos tus datos. Tu progreso de aprendizaje se utiliza exclusivamente para calibrar el Tutor de IA para tus necesidades específicas. Cumplimos con el RGPD y los estándares globales de privacidad para la protección de datos académicos."
+    },
+    DE: {
+      title: "Datenschutz-Bestimmungen",
+      tagline: '"Ihre Daten, Ihr Fortschritt, Ihre Souveränität."',
+      desc: "Wir verkaufen Ihre Daten nicht. Ihr Lernfortschritt wird ausschließlich dazu verwendet, den KI-Tutor auf Ihre spezifischen Bedürfnisse abzustimmen. Wir halten uns an die DSGVO und globale Datenschutzstandards für akademische Daten."
+    },
+    IT: {
+      title: "Informativa sulla Privacy",
+      tagline: '"I tuoi dati, i tuoi progressi, la tua sovranità."',
+      desc: "Non vendiamo i tuoi dati. I tuoi progressi di apprendimento sono utilizzati esclusivamente per calibrare il Tutor IA in base alle tue esigenze specifiche. Rispettiamo il GDPR e gli standard globali di privacy per la protezione dei dati accademici."
+    },
+    ZH: {
+      title: "隐私政策",
+      tagline: "“您的数据，您的进步，您的自主权。”",
+      desc: "我们不出售您的数据。您的学习进度仅用于针对您的特定需求调整 AI 导师。我们遵守 GDPR 和全球学术数据保护隐私标准。"
+    }
+  };
+
+  const c = PRIVACY_STRINGS[lang.toUpperCase() as keyof typeof PRIVACY_STRINGS] || PRIVACY_STRINGS.EN;
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav />
-    <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
-      <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">Privacy Policy</h1>
-      <p className="text-slate-400 text-sm italic">"Your data, your progress, your sovereignty."</p>
-      <p>We do not sell your data. Your learning progress is used exclusively to calibrate the AI Tutor for your specific needs. We comply with GDPR and global privacy standards for academic data protection.</p>
-    </div>
+      <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{c.title}</h1>
+        <p className="text-slate-400 text-sm italic">{c.tagline}</p>
+        <p>{c.desc}</p>
+      </div>
       <Footer />
     </div>
   );
 };
-
-// --- PAGE: SYLLABUS ---
 export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
