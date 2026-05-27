@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 
-const CONTENT_PATH = path.join(process.cwd(), '../content');
+const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
+  ? path.join(process.cwd(), 'content')
+  : path.join(process.cwd(), '../content');
 
 export interface NavItem {
   name: string;
@@ -13,7 +15,9 @@ export interface NavItem {
 }
 
 export function getSyllabus() {
-  const syllabusPath = path.join(process.cwd(), '../generator/syllabus.json');
+  const syllabusPath = fs.existsSync(path.join(process.cwd(), 'syllabus.json'))
+    ? path.join(process.cwd(), 'syllabus.json')
+    : path.join(process.cwd(), '../generator/syllabus.json');
   if (fs.existsSync(syllabusPath)) {
     return JSON.parse(fs.readFileSync(syllabusPath, 'utf-8'));
   }
