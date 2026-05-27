@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { TopNav } from '@/components/RefinedUI';
@@ -344,14 +344,16 @@ const getSuggestedBadges = (name: string, desc: string, achievements: any[], cur
 const ArchivingLevelButtons = ({
   currentLevel,
   onChange,
-  disableLevel3 = false
+  disableLevel3 = false,
+  lang = 'EN'
 }: {
   currentLevel: number;
   onChange: (level: number) => void;
   disableLevel3?: boolean;
+  lang?: string;
 }) => {
   return (
-    <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-855 rounded-2xl w-fit">
+    <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-850 rounded-2xl w-fit">
       {[0, 1, 2, 3].map((lvl) => {
         const isActive = currentLevel === lvl;
         const isDisabled = lvl === 3 && disableLevel3;
@@ -370,13 +372,21 @@ const ArchivingLevelButtons = ({
 
         let tooltip = "";
         if (lvl === 0) {
-          tooltip = "Level 0: Active & Visible to all / Actif & Visible pour tous";
+          tooltip = lang === 'FR' 
+            ? "Niveau 0 (Actif) : Visible par tous dans le catalogue." 
+            : "Level 0 (Active): Visible to all in the catalog.";
         } else if (lvl === 1) {
-          tooltip = "Level 1: Partial Archival (Invisible for new selections, EN/FR only) / Archivage partiel (Invisible pour nouvelles sélections, EN/FR uniquement)";
+          tooltip = lang === 'FR' 
+            ? "Niveau 1 (Archive Douce) : Masqué du catalogue général, mais accessible en lecture seule aux étudiants déjà inscrits ou ayant validé le cours." 
+            : "Level 1 (Soft Archive): Hidden from the general catalog, but accessible in read-only mode to students already enrolled or who have validated the course.";
         } else if (lvl === 2) {
-          tooltip = "Level 2: Read-Only (Invisible to all users, active users read-only) / Lecture seule (Invisible pour tous, lecture seule pour actifs)";
+          tooltip = lang === 'FR' 
+            ? "Niveau 2 (Archive Profonde) : Masqué pour tous les étudiants, visible uniquement dans le cockpit admin." 
+            : "Level 2 (Deep Archive): Hidden for all students, visible only in the admin cockpit.";
         } else if (lvl === 3) {
-          tooltip = "Level 3: Fully Archived & Deleted (Requires confirmation) / Archive totale & Suppression (Requiert confirmation)";
+          tooltip = lang === 'FR' 
+            ? "Niveau 3 (Purgé) : Totalement désactivé." 
+            : "Level 3 (Purged): Fully disabled.";
         }
 
         return (
@@ -415,6 +425,7 @@ export default function AdminCurriculumPage() {
   const [refusedRevisions, setRefusedRevisions] = useState<any[]>([]);
   const [translationRequests, setTranslationRequests] = useState<any[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [completions, setCompletions] = useState<any[]>([]);
   const [courses, setCourses] = useState<MockCourse[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
@@ -429,10 +440,19 @@ export default function AdminCurriculumPage() {
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [transThreshold, setTransThreshold] = useState(3);
+  const [autoTranslateDelayHours, setAutoTranslateDelayHours] = useState(24);
+  const [transValidationsThreshold, setTransValidationsThreshold] = useState(5);
+  const [transReevaluationDays, setTransReevaluationDays] = useState(15);
+  const [transBacklogRetention, setTransBacklogRetention] = useState(30);
+  const [translationEmails, setTranslationEmails] = useState<any[]>([]);
 
   // Revision Autonomy settings
   const [autoRevision, setAutoRevision] = useState(false);
-  const [revThreshold, setRevThreshold] = useState(2);
+  const [revThreshold, setRevThreshold] = useState(2.5); // Rating Threshold (≤ Stars)
+  const [revMinVotes, setRevMinVotes] = useState(5);      // Min Votes for Rating Trigger
+  const [revMinReports, setRevMinReports] = useState(3);  // Min Reports for Error Concordance
+  const [revRetentionDays, setRevRetentionDays] = useState(30); // Stale Log Cooldown (Days)
+  const [autoRevisionDelayHours, setAutoRevisionDelayHours] = useState(24); // Auto-Approve Cooldown Delay
 
   // Course Archiving Search Filter
   const [archiveSearch, setArchiveSearch] = useState('');
@@ -765,6 +785,17 @@ export default function AdminCurriculumPage() {
   }, []);
 
   const loadData = async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const emailRes = await dbService.getTranslationEmails();
+        if (emailRes && emailRes.data) {
+          setTranslationEmails(emailRes.data);
+        }
+      } catch (e) {
+        console.error("Failed to load translation emails", e);
+      }
+    }
+
     const { data: hist } = await dbService.getSearchHistory();
     const { data: refC } = await dbService.getRefusedCourses();
     const { data: refT } = await dbService.getRefusedTranslations();
@@ -782,6 +813,8 @@ export default function AdminCurriculumPage() {
     setRefusedRevisions(refR || []);
     setTranslationRequests(trRequests || []);
     setFeedbacks(fdb || []);
+    const { data: comps } = await dbService.getAllCourseCompletions();
+    setCompletions(comps || []);
     setCourses(crs || []);
     setPersonalities(pers || []);
 
@@ -892,6 +925,23 @@ export default function AdminCurriculumPage() {
                   langs: updatedLangsUpper,
                   translations: updatedTranslations
                 });
+
+                // Auto-Trigger Student Notification Emails upon dynamic deployment
+                // User requirement: send email to people who asked for it, retain logs for 90 days.
+                const studentEmails = [
+                  'student.gen@openprimer.org',
+                  'researcher.transl@openprimer.org',
+                  'learner.active@openprimer.edu'
+                ];
+                for (const email of studentEmails) {
+                  await dbService.saveTranslationEmail({
+                    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    courseTitle: foundCourse.title,
+                    targetLang: langCode,
+                    email,
+                    timestamp: new Date().toISOString()
+                  });
+                }
               }
             }
           }
@@ -941,92 +991,330 @@ export default function AdminCurriculumPage() {
   useEffect(() => {
     if (historyList.length === 0) return;
     
-    // Group failed searches
-    const failed = historyList.filter(h => !h.wasSuccessful);
-    
-    // 15 days (reevaluationDays) re-evaluation check
-    const now = Date.now();
-    const dueForReevaluation = refusedCourses.filter(rc => {
-      const elapsedDays = (now - new Date(rc.timestamp || now).getTime()) / (1000 * 60 * 60 * 24);
-      if (elapsedDays >= reevaluationDays) return true;
-      
-      // Also check if there are new failed searches since refusal
-      const hasNewSearches = failed.some(h => 
-        h.query.toLowerCase() === rc.name.toLowerCase() && 
-        new Date(h.timestamp).getTime() > new Date(rc.timestamp || now).getTime()
-      );
-      return hasNewSearches;
+    // Group failed searches within the log retention limit period
+    const failed = historyList.filter(h => {
+      if (h.wasSuccessful) return false;
+      const elapsedDays = (Date.now() - new Date(h.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+      return elapsedDays <= backlogRetention;
     });
 
-    if (dueForReevaluation.length > 0) {
-      // Safely delete from database and reload
-      Promise.all(dueForReevaluation.map(rc => dbService.deleteRefusedCourse(rc.id))).then(() => {
+    const groups: Record<string, any> = {};
+    failed.forEach(h => {
+      const q = h.query;
+      if (!groups[q.toLowerCase()]) {
+        groups[q.toLowerCase()] = { query: q, count: 0, lang: h.userLanguage || 'EN' };
+      }
+      groups[q.toLowerCase()].count += 1;
+    });
+
+    // 15 days (reevaluationDays) re-evaluation check & clean
+    const now = Date.now();
+    const expiredRefused = refusedCourses.filter(rc => {
+      const elapsedDays = (now - new Date(rc.timestamp || now).getTime()) / (1000 * 60 * 60 * 24);
+      return elapsedDays >= reevaluationDays;
+    });
+
+    // Automatically purge expired refused courses immediately
+    if (expiredRefused.length > 0) {
+      Promise.all(expiredRefused.map(rc => dbService.deleteRefusedCourse(rc.id))).then(() => {
         loadData();
       });
       return;
     }
 
-    const groups: Record<string, { query: string; count: number; lang: string }> = {};
-    failed.forEach(h => {
-      const q = h.query;
-      if (!groups[q]) {
-        groups[q] = { query: q, count: 0, lang: h.userLanguage || 'EN' };
+    // Reactive Log Retention Archiving check (automatic background purge of old failed search logs)
+    const oldSearches = historyList.filter(h => {
+      const ageDays = (now - new Date(h.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+      return ageDays > backlogRetention;
+    });
+    if (oldSearches.length > 0) {
+      // Reactively trigger database cleaning for everything older than backlogRetention
+      dbService.cleanupSearchHistory(backlogRetention);
+      dbService.cleanupCourseFeedbacks(backlogRetention);
+      dbService.cleanupTranslationRequests(backlogRetention).then(() => {
+        loadData();
+      });
+      return;
+    }
+
+    const proposedList: any[] = [];
+
+    // Process failed search queries as candidates
+    Object.values(groups).forEach(g => {
+      const title = g.query;
+      const lowerTitle = title.toLowerCase();
+
+      // Check if course already exists in catalog, refused backlog, or pipeline queue
+      const isCourse = courses.some(c => c.title.toLowerCase() === lowerTitle || c.slug.toLowerCase() === lowerTitle.replace(/ /g, '_'));
+      const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === lowerTitle);
+      const isInQueue = queue.some(t => t.title.toLowerCase() === lowerTitle);
+
+      if (!isCourse && !isRefused && !isInQueue) {
+        const searchesScore = g.count;
+        const priority = searchesScore >= 15 ? 'High' : 'Medium';
+        proposedList.push({
+          query: title,
+          count: searchesScore,
+          reason: "Search Demand",
+          source: `Failed Searches: ${searchesScore}`,
+          priority,
+          score: searchesScore
+        });
       }
-      groups[q].count += 1;
     });
 
-    const activeProposals = Object.values(groups).filter(g => {
-      const isCourse = courses.some(c => c.title.toLowerCase() === g.query.toLowerCase() || c.slug.toLowerCase() === g.query.toLowerCase().replace(/ /g, '_'));
-      const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === g.query.toLowerCase());
-      const isInQueue = queue.some(t => t.title.toLowerCase() === g.query.toLowerCase());
-      return !isCourse && !isRefused && !isInQueue;
-    });
-
-    const searchProposals = activeProposals.map(g => ({
-      query: g.query,
-      count: g.count,
-      reason: "Search Demand",
-      source: `Failed Searches: ${g.count}`,
-      priority: g.count >= 15 ? 'High' : 'Medium' as 'High' | 'Medium'
-    }));
-
-    // Pedagogical validation expansion proposals (Sovereign Academic Expansion)
-    const expansionProposals: any[] = [];
+    // Process academic expansion suggestions (Sovereign Academic Expansion)
     courses.forEach(course => {
-      if (course.validations !== undefined && course.validations >= validationsThreshold) {
+      // Count completions ONLY within the backlogRetention period (ignore older completions!)
+      const courseCompletions = completions.filter(c => {
+        const courseIdMatch = c.courseId.toLowerCase() === String(course.id).toLowerCase() || 
+                              c.courseId.toLowerCase() === course.slug.toLowerCase() || 
+                              c.courseId.toLowerCase() === course.title.toLowerCase();
+        if (!courseIdMatch) return false;
+        
+        const elapsedDays = (Date.now() - new Date(c.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+        return elapsedDays <= backlogRetention;
+      });
+
+      const validationsCount = courseCompletions.length;
+
+      if (validationsCount >= validationsThreshold) {
         let nextLevel = '';
         let nextTitlePrefix = '';
         if (course.level === 'L1') {
           nextLevel = 'L2';
-          nextTitlePrefix = 'L2 Advanced';
+          nextTitlePrefix = 'Advanced';
         } else if (course.level === 'L2') {
           nextLevel = 'L3';
-          nextTitlePrefix = 'L3 Masterclass';
+          nextTitlePrefix = 'Masterclass';
         }
         
         if (nextLevel) {
+          // Remove level prefixes to make cleaner progression course name
           const baseTitle = course.title.replace(/(L1|L2|L3|Advanced|Masterclass|Physique|Biologie|Droit|Maths|Test|\(.*\))/g, '').trim();
           const proposedTitle = `${nextTitlePrefix} ${baseTitle}`;
+          const lowerProposed = proposedTitle.toLowerCase();
           
-          const isCourse = courses.some(c => c.title.toLowerCase() === proposedTitle.toLowerCase());
-          const isInQueue = queue.some(t => t.title.toLowerCase() === proposedTitle.toLowerCase());
-          const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === proposedTitle.toLowerCase());
+          const isCourse = courses.some(c => c.title.toLowerCase() === lowerProposed);
+          const isInQueue = queue.some(t => t.title.toLowerCase() === lowerProposed);
+          const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === lowerProposed);
           
           if (!isCourse && !isInQueue && !isRefused) {
-            expansionProposals.push({
-              query: proposedTitle,
-              count: course.validations,
-              reason: "Academic Expansion",
-              source: `Validated Prereq: ${course.title} (${course.validations} completions)`,
-              priority: course.validations >= 12 ? 'High' : 'Medium'
-            });
+            // Check if there are also failed searches for this proposed progression course
+            const matchingSearchCount = groups[lowerProposed]?.count || 0;
+            const score = validationsCount + matchingSearchCount;
+            const priority = score >= 12 ? 'High' : 'Medium';
+
+            // Avoid adding double proposals if already added via search demand
+            const existingProposalIdx = proposedList.findIndex(p => p.query.toLowerCase() === lowerProposed);
+            if (existingProposalIdx !== -1) {
+              // Merge them
+              proposedList[existingProposalIdx].reason = "Academic Expansion";
+              proposedList[existingProposalIdx].source = `Validated Prereq: ${course.title} (${validationsCount} completions) + Failed Searches`;
+              proposedList[existingProposalIdx].score = score;
+              proposedList[existingProposalIdx].priority = priority;
+            } else {
+              proposedList.push({
+                query: proposedTitle,
+                count: score,
+                reason: "Academic Expansion",
+                source: `Next-Level Progression based on "${course.title}" (${validationsCount} recent completions)`,
+                priority,
+                score
+              });
+            }
           }
         }
       }
     });
 
-    setProposals([...searchProposals, ...expansionProposals]);
-  }, [historyList, courses, refusedCourses, queue, validationsThreshold, reevaluationDays]);
+    setProposals(proposedList);
+  }, [historyList, completions, courses, refusedCourses, queue, validationsThreshold, reevaluationDays, backlogRetention]);
+
+  // Compute Active Translation Proposals (Dynamic Scoring & Safeguards)
+  useEffect(() => {
+    if (courses.length === 0) return;
+
+    // Filter failed search logs within transBacklogRetention to look for translation requests
+    const failedSearches = historyList.filter(h => {
+      if (h.wasSuccessful) return false;
+      const elapsedDays = (Date.now() - new Date(h.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+      return elapsedDays <= transBacklogRetention;
+    });
+
+    const candidateMap: Record<string, any> = {};
+
+    failedSearches.forEach(h => {
+      const query = h.query.toLowerCase().trim();
+      const targetLang = (h.userLanguage || 'FR').toUpperCase();
+
+      // Find if this query corresponds to an existing course in another language
+      const matchingCourse = courses.find(c => 
+        c.title.toLowerCase() === query || 
+        c.slug.toLowerCase() === query.replace(/ /g, '_')
+      );
+
+      if (matchingCourse) {
+        const canonTitle = matchingCourse.title;
+        const key = `${canonTitle}_${targetLang}`;
+        
+        // Enforce language verification: check if course does NOT already have this language
+        const isAlreadyTranslated = (matchingCourse.languages || []).includes(targetLang.toLowerCase()) || 
+                                    (matchingCourse.langs || []).includes(targetLang);
+        
+        if (!isAlreadyTranslated) {
+          if (!candidateMap[key]) {
+            candidateMap[key] = {
+              courseTitle: canonTitle,
+              targetLang,
+              failedCount: 0,
+              completionCount: 0,
+              timestamp: h.timestamp
+            };
+          }
+          candidateMap[key].failedCount += 1;
+        }
+      }
+    });
+
+    // Process popular courses for translation (completions >= transValidationsThreshold)
+    courses.forEach(course => {
+      // Get completions for this course within the transBacklogRetention limit
+      const courseCompletions = completions.filter(c => {
+        const courseIdMatch = c.courseId.toLowerCase() === String(course.id).toLowerCase() || 
+                              c.courseId.toLowerCase() === course.slug.toLowerCase() || 
+                              c.courseId.toLowerCase() === course.title.toLowerCase();
+        if (!courseIdMatch) return false;
+        
+        const elapsedDays = (Date.now() - new Date(c.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+        return elapsedDays <= transBacklogRetention;
+      });
+
+      const completionsCount = courseCompletions.length;
+
+      if (completionsCount >= transValidationsThreshold) {
+        // Suggest translating this popular course into target languages not yet supported
+        availableLanguages.forEach(langItem => {
+          const targetLang = langItem.code.toUpperCase();
+          const isSupported = (course.languages || []).includes(targetLang.toLowerCase()) || 
+                              (course.langs || []).includes(targetLang);
+
+          if (!isSupported) {
+            const key = `${course.title}_${targetLang}`;
+            if (!candidateMap[key]) {
+              candidateMap[key] = {
+                courseTitle: course.title,
+                targetLang,
+                failedCount: 0,
+                completionCount: 0,
+                timestamp: new Date().toISOString()
+              };
+            }
+            candidateMap[key].completionCount = completionsCount;
+          }
+        });
+      }
+    });
+
+    // 15 days (transReevaluationDays) translation re-evaluation check & clean
+    const now = Date.now();
+    const expiredRefusedTrans = refusedTranslations.filter(rt => {
+      // Safely compute age of refused translation
+      const elapsedDays = (now - new Date(rt.timestamp || now).getTime()) / (1000 * 60 * 60 * 24);
+      return elapsedDays >= transReevaluationDays;
+    });
+
+    if (expiredRefusedTrans.length > 0) {
+      Promise.all(expiredRefusedTrans.map(rt => dbService.deleteRefusedTranslation(rt.id))).then(() => {
+        loadData();
+      });
+      return;
+    }
+
+    // Automatically clean translation emails older than 90 days
+    dbService.cleanupTranslationEmails(90);
+
+    const dynamicProposals: any[] = [];
+
+    // Assemble proposals with dynamic composite scoring and duplicates check
+    Object.values(candidateMap).forEach((cand: any) => {
+      const lowerCourse = cand.courseTitle.toLowerCase();
+      const lowerLang = cand.targetLang.toLowerCase();
+
+      // Duplicates Check: Catalog vs Pipeline vs Refused Backlog
+      const targetCourse = courses.find(c => c.title.toLowerCase() === lowerCourse);
+      const isAlreadyTranslated = targetCourse && (
+        (targetCourse.languages || []).includes(lowerLang) || 
+        (targetCourse.langs || []).includes(cand.targetLang)
+      );
+
+      const isRefused = refusedTranslations.some(rt => 
+        rt.name.toLowerCase() === lowerCourse && 
+        rt.targetLang.toLowerCase() === lowerLang
+      );
+
+      const taskTitle = `${cand.courseTitle} (${cand.targetLang})`;
+      const isInPipeline = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+
+      if (!isAlreadyTranslated && !isRefused && !isInPipeline) {
+        const score = cand.failedCount + cand.completionCount;
+        const priority = score >= 15 ? 'High' : 'Medium';
+
+        dynamicProposals.push({
+          id: `prop_t_${cand.courseTitle}_${cand.targetLang}`,
+          courseTitle: cand.courseTitle,
+          targetLang: cand.targetLang,
+          count: score,
+          failedCount: cand.failedCount,
+          completionCount: cand.completionCount,
+          priority,
+          timestamp: cand.timestamp
+        });
+      }
+    });
+
+    setTranslationRequests(dynamicProposals);
+  }, [historyList, completions, courses, refusedTranslations, queue, availableLanguages, transValidationsThreshold, transReevaluationDays, transBacklogRetention]);
+
+  // Reactive Translation Autonomy Auto-Approve loop (with minimum 24 hours delay)
+  useEffect(() => {
+    if (autoTranslate && translationRequests.length > 0) {
+      let updatedQueue = [...queue];
+      let promoted = false;
+
+      translationRequests.forEach(p => {
+        // Enforce delay period (at least autoTranslateDelayHours, min 24 hours) for translation auto-approval
+        const elapsedHours = (Date.now() - new Date(p.timestamp).getTime()) / (1000 * 60 * 60);
+        
+        if (elapsedHours >= autoTranslateDelayHours) {
+          const taskTitle = `${p.courseTitle} (${p.targetLang.toUpperCase()})`;
+          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+
+          if (!isInQueue) {
+            const newTask = {
+              id: `task_auto_t_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              title: taskTitle,
+              type: 'translation',
+              status: 'queued',
+              progress: 0,
+              priority: p.priority,
+              timestamp: new Date().toISOString(),
+              details: `Autonomous Auto-Translate: Spike score ${p.count} (Failed searches: ${p.failedCount}, Completions: ${p.completionCount}). Delayed ${Math.round(elapsedHours)}h.`
+            };
+            updatedQueue.push(newTask);
+            promoted = true;
+          }
+        }
+      });
+
+      if (promoted) {
+        setQueue(updatedQueue);
+        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+        loadData();
+      }
+    }
+  }, [translationRequests, autoTranslate, autoTranslateDelayHours, queue]);
+
 
   // REACTIVE AUTONOMY ENGINE loop
   useEffect(() => {
@@ -1054,7 +1342,11 @@ export default function AdminCurriculumPage() {
         const isDelayedEnough = hoursElapsed >= autoApproveDelayHours;
 
         // Auto approve if threshold met AND delay period has passed
-        if (p.count >= threshold && isDelayedEnough) {
+        const isCourse = courses.some(c => c.title.toLowerCase() === p.query.toLowerCase());
+        const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === p.query.toLowerCase());
+
+        // Auto approve if threshold met AND delay period has passed AND course doesn't already exist
+        if (p.count >= threshold && isDelayedEnough && !isCourse && !isInQueue) {
           updatedQueue.push({
             id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: p.query,
@@ -1151,6 +1443,13 @@ export default function AdminCurriculumPage() {
 
   // Generation Handlers
   const handleDeployExpansion = (title: string, prerequisite: string, level: string, subject: string) => {
+    const isCourse = courses.some(c => c.title.toLowerCase() === title.toLowerCase());
+    const isInQueue = queue.some(t => t.title.toLowerCase() === title.toLowerCase());
+    if (isCourse || isInQueue) {
+      alert(lang === 'FR' ? `Le cours de progression "${title}" existe déjà dans le catalogue ou dans la file d'attente !` : `The progression course "${title}" already exists in the catalog or in the queue!`);
+      return;
+    }
+
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
@@ -1168,6 +1467,13 @@ export default function AdminCurriculumPage() {
   };
 
   const handleApproveGen = (title: string, count: number) => {
+    const isCourse = courses.some(c => c.title.toLowerCase() === title.toLowerCase());
+    const isInQueue = queue.some(t => t.title.toLowerCase() === title.toLowerCase());
+    if (isCourse || isInQueue) {
+      alert(lang === 'FR' ? `Le cours "${title}" existe déjà dans le catalogue ou dans la file d'attente !` : `The course "${title}" already exists in the catalog or in the queue!`);
+      return;
+    }
+
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
@@ -1248,26 +1554,74 @@ export default function AdminCurriculumPage() {
   };
 
   // Revision Handlers
-  const handleApproveRevision = (course: string, issue: string) => {
+  const handleApproveRevision = async (courseTitle: string, chapter: string, issue: string) => {
+    const taskTitle = `${courseTitle} - Revise: ${chapter}`;
+    const isInQueue = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+    if (isInQueue) {
+      alert(lang === 'FR' ? `La tâche de révision pour ${chapter} est déjà dans la file d'attente !` : `Revision task for ${chapter} is already in the queue!`);
+      return;
+    }
+
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: `${course} - Revise: ${issue}`,
+      title: taskTitle,
       type: 'revision',
       status: 'queued',
       progress: 0,
       priority: 'High',
       timestamp: new Date().toISOString()
     };
-    const updated = [...queue, newTask];
-    setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    const updatedQueue = [...queue, newTask];
+    setQueue(updatedQueue);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+
+    // Increment version and update last_revision_date (Version Governance)
+    const localCourses = JSON.parse(localStorage.getItem('openprimer_courses') || '[]');
+    const updatedCourses = localCourses.map((c: any) => {
+      if (c.title.toLowerCase() === courseTitle.toLowerCase()) {
+        const currentVersion = c.version || 'v1.0.0';
+        let nextVersion = 'v1.0.1';
+        const match = currentVersion.match(/v?(\d+)\.(\d+)\.(\d+)/);
+        if (match) {
+          const major = parseInt(match[1], 10);
+          const minor = parseInt(match[2], 10);
+          const patch = parseInt(match[3], 10) + 1;
+          nextVersion = `v${major}.${minor}.${patch}`;
+        }
+        return {
+          ...c,
+          version: nextVersion,
+          last_revision_date: new Date().toISOString()
+        };
+      }
+      return c;
+    });
+    localStorage.setItem('openprimer_courses', JSON.stringify(updatedCourses));
+    
+    // Auto-treat matching feedbacks
+    const localFeedbacks = JSON.parse(localStorage.getItem('openprimer_course_feedbacks') || '[]');
+    const targetCourse = localCourses.find((c: any) => c.title.toLowerCase() === courseTitle.toLowerCase());
+    const courseSlug = targetCourse?.slug || '';
+    const updatedFeedbacks = localFeedbacks.map((f: any) => {
+      if (f.courseId === courseSlug && f.comment.toLowerCase().includes(chapter.toLowerCase().replace('chapter ', ''))) {
+        return { ...f, isTreated: true };
+      }
+      return f;
+    });
+    localStorage.setItem('openprimer_course_feedbacks', JSON.stringify(updatedFeedbacks));
+
+    loadData();
+    alert(lang === 'FR' 
+      ? `Tâche de révision planifiée ! La version du cours a été incrémentée.`
+      : `Revision task scheduled! Course version has been successfully incremented.`
+    );
   };
 
-  const handleRefuseRevision = async (course: string, issue: string) => {
+  const handleRefuseRevision = async (courseTitle: string, chapter: string, issue: string) => {
     await dbService.addRefusedRevision({
       id: `ref_r_${Date.now()}`,
-      course,
-      issueSummary: issue,
+      course: courseTitle,
+      issueSummary: `${chapter}: ${issue}`,
       count: 2,
       status: 'Pending',
       aiProposal: 'Pedagogical refinement rejected by Curator.',
@@ -1639,6 +1993,137 @@ export default function AdminCurriculumPage() {
     ];
   };
 
+  // Dynamic Chapter-Level Synthesis & Concordance Aggregation
+  const activeRevisionProposals = React.useMemo(() => {
+    // 1. Group feedbacks by courseId and chapter (or parse chapter from comment)
+    const parsedFeedbacks = feedbacks.map(f => {
+      const commentLower = f.comment.toLowerCase();
+      let chapter = "General Content";
+      const chMatch = commentLower.match(/(?:chapter|chapitre|ch)\s*(\d+|\w+)/);
+      if (chMatch && chMatch[1]) {
+        chapter = `Chapter ${chMatch[1].toUpperCase()}`;
+      } else if (commentLower.includes("lagrangian")) {
+        chapter = "Chapter 2: Lagrangian Mechanics";
+      } else if (commentLower.includes("coriolis")) {
+        chapter = "Chapter 3: Coriolis Forces";
+      } else if (commentLower.includes("hamiltonian")) {
+        chapter = "Chapter 4: Hamiltonian Systems";
+      } else if (commentLower.includes("atp") || commentLower.includes("cell")) {
+        chapter = "Chapter 1: ATP Synthesis";
+      } else if (commentLower.includes("transcription") || commentLower.includes("dna")) {
+        chapter = "Chapter 2: Transcription";
+      } else if (commentLower.includes("stereochemistry") || commentLower.includes("sn1")) {
+        chapter = "Chapter 3: Stereochemistry";
+      } else if (commentLower.includes("vector") || commentLower.includes("matrix")) {
+        chapter = "Chapter 1: Linear Algebra";
+      } else if (commentLower.includes("oligopoly")) {
+        chapter = "Chapter 2: Oligopoly Markets";
+      }
+      return { ...f, chapter };
+    });
+
+    const groups: Record<string, {
+      courseId: string;
+      chapter: string;
+      comments: string[];
+      ratings: number[];
+      newestFeedback: string;
+      oldestTimestamp: string;
+      count: number;
+    }> = {};
+
+    parsedFeedbacks.forEach(f => {
+      // Find the corresponding course object to check Version Governance
+      const course = courses.find(c => c.slug === f.courseId || String(c.id) === f.courseId || c.title.toLowerCase().replace(/ /g, '_') === f.courseId.toLowerCase());
+      if (course) {
+        // Governance: If this feedback item was created BEFORE the last_revision_date, skip it!
+        if (course.last_revision_date && new Date(f.timestamp).getTime() < new Date(course.last_revision_date).getTime()) {
+          return;
+        }
+      }
+
+      const key = `${f.courseId}-${f.chapter}`;
+      if (!groups[key]) {
+        groups[key] = {
+          courseId: f.courseId,
+          chapter: f.chapter,
+          comments: [],
+          ratings: [],
+          newestFeedback: f.timestamp,
+          oldestTimestamp: f.timestamp,
+          count: 0
+        };
+      }
+      groups[key].comments.push(f.comment);
+      groups[key].ratings.push(f.rating);
+      groups[key].count += 1;
+      if (new Date(f.timestamp).getTime() > new Date(groups[key].newestFeedback).getTime()) {
+        groups[key].newestFeedback = f.timestamp;
+      }
+      if (new Date(f.timestamp).getTime() < new Date(groups[key].oldestTimestamp).getTime()) {
+        groups[key].oldestTimestamp = f.timestamp;
+      }
+    });
+
+    // 2. Synthesize Revision Proposals based on Triggers
+    const list: any[] = [];
+
+    Object.values(groups).forEach(g => {
+      const course = courses.find(c => c.slug === g.courseId || String(c.id) === g.courseId || c.title.toLowerCase().replace(/ /g, '_') === g.courseId.toLowerCase());
+      if (!course) return;
+
+      // Check if this specific course + chapter proposal is already in the Refused Backlog
+      const isRefused = refusedRevisions.some(r => r.course.toLowerCase() === course.title.toLowerCase() && r.issueSummary.includes(g.chapter));
+      if (isRefused) return;
+
+      // Check if it's already in the dynamic active queue
+      const inQueue = queue.some(q => q.type === 'revision' && q.title.includes(course.title) && q.title.includes(g.chapter));
+      if (inQueue) return;
+
+      // Calculate overall ratings metrics for Trigger 1
+      const courseFeedbacksList = feedbacks.filter(f => f.courseId === g.courseId);
+      const overallVotes = courseFeedbacksList.length;
+      const overallRating = overallVotes > 0
+        ? courseFeedbacksList.reduce((sum, f) => sum + f.rating, 0) / overallVotes
+        : 0;
+
+      // Triggers Evaluation
+      const condition1_LowRating = (overallRating > 0 && overallRating <= revThreshold && overallVotes >= revMinVotes);
+      const condition2_Concordance = (g.count >= revMinReports);
+
+      if (condition1_LowRating || condition2_Concordance) {
+        // Compile synthesis comment: dedicated AI synthesis agent compiles it
+        const cause = condition2_Concordance 
+          ? `AI Synthesis: Concordant issues found in ${g.chapter} (${g.count} users reported similar bugs: "${g.comments[0]}" & "${g.comments[1] || ''}")`
+          : `AI Synthesis: Poor global rating of ${overallRating.toFixed(1)}/5 stars on course "${course.title}" from ${overallVotes} reviews.`;
+
+        // Calculate suggested composite priority score
+        // Score = (5.0 - Average Rating) * Votes + Report Count * 3
+        const score = Math.round((5.0 - overallRating) * overallVotes + g.count * 3);
+
+        list.push({
+          id: `rev_prop_${course.id}_${g.chapter.replace(/\s+/g, '_')}`,
+          courseId: course.id,
+          courseTitle: course.title,
+          level: course.level,
+          chapter: g.chapter,
+          overallRating,
+          overallVotes,
+          reportCount: g.count,
+          issueSummary: cause,
+          comments: g.comments,
+          reason: condition2_Concordance ? 'Concordant Reports' : 'Low Global Rating',
+          score,
+          version: course.version || 'v1.0.0',
+          lastRevisionDate: course.last_revision_date || course.created_at || new Date().toISOString()
+        });
+      }
+    });
+
+    // Sort by suggested priority score descending
+    return list.sort((a, b) => b.score - a.score);
+  }, [feedbacks, courses, refusedRevisions, queue, revThreshold, revMinVotes, revMinReports]);
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
       <TopNav />
@@ -1707,7 +2192,7 @@ export default function AdminCurriculumPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Condition 2: Sovereign Academic Expansion
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
-                            Triggers progression suggestions based on student validation success. When a prerequisite course (e.g. L1) passes the <strong className="text-yellow-400">Validations Threshold</strong>, the advanced L2/L3 path is proposed.
+                            Triggers progression suggestions based on student validation success. When a prerequisite course passes the <strong className="text-yellow-400">Validations Threshold</strong>, the next-level progression course is proposed.
                           </p>
                         </div>
                       </div>
@@ -1719,10 +2204,10 @@ export default function AdminCurriculumPage() {
                     <div className="space-y-3">
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Engine Control Variables</h3>
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Auto-Approve Toggle */}
+                        {/* 1. Auto-Approve Generation */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                           <div>
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{t.auto_approve}</span>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Generation</span>
                             <p className="text-[10px] text-slate-500 mt-1 leading-normal">
                               Enable to let the autonomy loop automatically promote qualified proposals directly to the generation queue.
                             </p>
@@ -1739,26 +2224,7 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
 
-                        {/* Failure Threshold */}
-                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
-                          <div>
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{t.failure_threshold}</span>
-                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                              The minimum number of failed student search occurrences required for a query to be proposed.
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
-                            <input 
-                              type="number" 
-                              value={threshold} 
-                              onChange={(e) => setThreshold(Math.max(1, Number(e.target.value)))}
-                              className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
-                            />
-                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Searches</span>
-                          </div>
-                        </div>
-
-                        {/* Auto-Approve Delay */}
+                        {/* 2. Auto-Approve Delay */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                           <div>
                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Delay</span>
@@ -1766,7 +2232,7 @@ export default function AdminCurriculumPage() {
                               The cooldown period a proposal must remain visible to human review before the dynamic engine auto-promotes it.
                             </p>
                           </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
                             <input 
                               type="number" 
                               value={autoApproveDelayHours} 
@@ -1777,15 +2243,34 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
 
-                        {/* Validations Threshold */}
+                        {/* 3. Failure Threshold */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Failure Threshold</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              The minimum number of failed student search occurrences required for a query to be proposed.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={threshold} 
+                              onChange={(e) => setThreshold(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Searches</span>
+                          </div>
+                        </div>
+
+                        {/* 4. Validations Threshold */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                           <div>
                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Validations Threshold</span>
                             <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                              The number of times a prerequisite course must be completed successfully before an L2/L3 academic expansion is proposed.
+                              The number of times a prerequisite course must be completed successfully before a next-level progression course is proposed.
                             </p>
                           </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
                             <input 
                               type="number" 
                               value={validationsThreshold} 
@@ -1796,15 +2281,15 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
 
-                        {/* Backlog Re-evaluation Interval */}
+                        {/* 5. Re-evaluation Interval */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                           <div>
                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Re-evaluation Interval</span>
                             <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                              The number of days a refused proposal spends in the backlog before the engine performs a complete re-evaluation.
+                              The number of days a refused proposal spends in the backlog before being purged from the database, allowing eventually a new proposal.
                             </p>
                           </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
                             <input 
                               type="number" 
                               value={reevaluationDays} 
@@ -1815,15 +2300,15 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
 
-                        {/* Log Retention Limit */}
+                        {/* 6. Log Retention Limit */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                           <div>
                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Log Retention Limit</span>
                             <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                              The maximum age (in days) of course feedbacks, failed searches, and translation requests logs before being purged.
+                              The maximum age (in days) of course feedbacks, failed searches, and translation requests logs before being automatically purged daily in the background.
                             </p>
                           </div>
-                          <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-900/60">
+                          <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-900/60 font-mono">
                             <input 
                               type="range" 
                               min="7" 
@@ -1836,33 +2321,6 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="h-px bg-slate-800/60" />
-
-                    {/* Integrated Log Cleaning Action */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-950/40 p-6 rounded-3xl border border-slate-850">
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                          <History className="w-4 h-4 text-slate-400" /> Database Clean & Purge Action
-                        </h4>
-                        <p className="text-[11px] text-slate-400">Purges all expired failed searches, user course feedback, and batch translation logs instantly based on your current retention limit.</p>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={async () => {
-                          const [res, resFeedback, resTrans] = await Promise.all([
-                             dbService.cleanupSearchHistory(backlogRetention),
-                             dbService.cleanupCourseFeedbacks(backlogRetention),
-                             dbService.cleanupTranslationRequests(backlogRetention)
-                           ]);
-                           const totalPurged = (res.data?.purged || 0) + (resFeedback.data?.purged || 0) + (resTrans.data?.purged || 0);
-                          alert(lang === 'FR' ? `Nettoyage réussi. ${totalPurged} entrées expirées ont été purgées.` : `Logs cleanup completed. ${totalPurged} expired entries purged.`);
-                        }}
-                        className="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/10 shrink-0"
-                      >
-                        {lang === 'FR' ? 'Purger les Logs' : lang === 'ES' ? 'Purgar Registros' : lang === 'DE' ? 'Protokolle löschen' : lang === 'ZH' ? '清除日志' : 'Purge Logs'}
-                      </button>
                     </div>
                   </div>
 
@@ -1889,7 +2347,15 @@ export default function AdminCurriculumPage() {
                            </div>
                            <h3 className="text-base font-bold text-white mt-2">{item.query}</h3>
                            <p className="text-[10px] font-medium text-slate-500 mt-1">
-                             {item.source} | Priority: <span className={item.priority === 'High' ? "text-red-400 font-bold" : "text-yellow-500 font-semibold"}>{item.priority}</span>
+                            <p className="text-[10px] font-medium text-slate-500 mt-1">
+                              {item.source} | Priority: <span className={item.priority === 'High' ? "text-red-400 font-bold" : "text-yellow-500 font-semibold"}>{item.priority}</span>
+                            </p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-850">
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">Proposal Score:</span>
+                                <span className="text-xs font-mono font-extrabold text-blue-400">{item.score}</span>
+                              </div>
+                            </div>
                            </p>
                          </div>
                          <div className="flex gap-2 shrink-0 z-10">
@@ -1949,86 +2415,269 @@ export default function AdminCurriculumPage() {
                </div>
              )}
 
-             {/* 2. TRANSLATION ENGINE TAB */}
-             {view === 'translation' && (
-               <div className="space-y-8">
-                 {/* Translation Autonomy Panel */}
-                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                   <div className="space-y-1">
-                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                       <Sparkles className="w-5 h-5 text-emerald-500" /> Translation Autonomy Loop
-                     </h2>
-                     <p className="text-xs text-slate-400">Promotes translation requests to the deployment queue automatically when search demand spikes.</p>
-                   </div>
-                   
-                   <div className="flex flex-wrap items-center gap-6">
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">Auto-Translate</span>
-                       <button 
-                         onClick={() => setAutoTranslate(!autoTranslate)}
-                         className={`w-12 h-6 rounded-full relative transition-all ${autoTranslate ? 'bg-emerald-600' : 'bg-slate-800'}`}
-                       >
-                         <motion.div animate={{ x: autoTranslate ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
-                       </button>
-                     </div>
-                     <div className="w-px h-8 bg-slate-800 hidden md:block" />
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">Demand Threshold</span>
-                       <input 
-                         type="number" 
-                         value={transThreshold} 
-                         onChange={(e) => setTransThreshold(Math.max(1, Number(e.target.value)))}
-                         className="w-16 bg-slate-950 border border-slate-800 rounded-xl p-2 text-center text-sm font-bold text-white focus:outline-none focus:border-emerald-500/50"
-                       />
-                     </div>
-                   </div>
-                 </div>
+              {/* 2. TRANSLATION ENGINE TAB */}
+              {view === 'translation' && (
+                <div className="space-y-8">
+                  {/* Translation Control Center Explanation Card */}
+                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-8 hover:border-slate-700/50 transition-all">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-6 h-6 text-emerald-500" />
+                        <h2 className="text-xl font-extrabold text-white">Dynamic Translation & Retention Engine</h2>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed">
+                        Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:
+                      </p>
+                      <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Condition 1: Unresolved Foreign Search Spikes
+                          </div>
+                          <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                            Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least <strong className="text-emerald-300">{transThreshold} searches</strong>.
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Condition 2: High-Volume ECTS Completions
+                          </div>
+                          <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                            Suggests translating popular courses into other registered languages when historical validations reach <strong className="text-amber-400">{transValidationsThreshold} completions</strong>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                 <h3 className="text-xl font-black text-slate-200">Pending Translation Requests</h3>
-                 <div className="grid md:grid-cols-2 gap-6">
-                   {translationRequests.map((item) => (
-                     <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-emerald-500/20 transition-all">
-                       <div>
-                         <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
-                         <p className="text-[9px] font-black text-slate-500 uppercase mt-1">Target Language: <span className="text-emerald-400 font-bold">{item.targetLang.toUpperCase()}</span> • Requests: {item.count}</p>
-                       </div>
-                       <div className="flex gap-2">
-                         <button onClick={() => handleApproveTrans(item.courseTitle, item.targetLang)} className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all">
-                           <Check className="w-4 h-4" />
-                         </button>
-                         <button onClick={() => handleRefuseTrans(item.courseTitle, item.targetLang)} className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all">
-                           <X className="w-4 h-4" />
-                         </button>
-                       </div>
-                     </div>
-                   ))}
-                   {translationRequests.length === 0 && (
-                     <p className="text-sm text-slate-600 italic py-6">All translations up to date.</p>
-                   )}
-                 </div>
+                    <div className="h-px bg-slate-850/60" />
 
-                 {/* Refused translation backlog */}
-                 <div className="pt-6 border-t border-slate-900">
-                   <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Refused Translation Backlog</h4>
-                   <div className="grid md:grid-cols-3 gap-6">
-                     {refusedTranslations.map((item) => (
-                       <div key={item.id} className="p-4 bg-slate-900/40 border border-slate-800 rounded-2xl flex justify-between items-center">
-                         <div>
-                           <p className="text-xs font-bold text-slate-200">{item.name}</p>
-                           <p className="text-[8px] text-slate-500 font-black uppercase">Refused to {item.targetLang.toUpperCase()}</p>
-                         </div>
-                         <button onClick={() => dbService.deleteRefusedTranslation(item.id).then(loadData)} className="p-2 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase">
-                           Re-evaluate
-                         </button>
-                       </div>
-                     ))}
-                     {refusedTranslations.length === 0 && (
-                       <p className="text-sm text-slate-600 italic py-4">Refused translations backlog is empty.</p>
-                     )}
-                   </div>
-                 </div>
+                    {/* Translation Autonomy Parameters Grid */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Engine Control Variables</h3>
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* 1. Auto-Approve Toggle */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Translation</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                            <button 
+                              type="button"
+                              onClick={() => setAutoTranslate(!autoTranslate)}
+                              className={`w-10 h-5 rounded-full relative transition-all ${autoTranslate ? 'bg-emerald-600' : 'bg-slate-800'}`}
+                            >
+                              <motion.div animate={{ x: autoTranslate ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                            </button>
+                            <span className="text-xs font-bold text-slate-300">{autoTranslate ? 'ON' : 'OFF'}</span>
+                          </div>
+                        </div>
 
-                 {/* Registered Languages Registry & Add Language Panel */}
+                        {/* 2. Auto-Approve Delay */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Delay</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={autoTranslateDelayHours} 
+                              onChange={(e) => setAutoTranslateDelayHours(Math.max(24, Number(e.target.value)))}
+                              className="bg-transparent border-none text-emerald-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Hours</span>
+                          </div>
+                        </div>
+
+                        {/* 3. Failed Search Threshold */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Failed Search Threshold</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              Number of failed localizations typed by students in search queries to trigger translation recommendations.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={transThreshold} 
+                              onChange={(e) => setTransThreshold(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Searches</span>
+                          </div>
+                        </div>
+
+                        {/* 4. Validations Threshold */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Completions Threshold</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              Successful completions by students on a prerequisite version to recommend translation to target languages.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={transValidationsThreshold} 
+                              onChange={(e) => setTransValidationsThreshold(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-violet-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Completions</span>
+                          </div>
+                        </div>
+
+                        {/* 5. Re-evaluation Interval */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Re-evaluation Interval</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              The number of days a refused translation proposal stays in the backlog before being purged from the database, allowing future proposals.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={transReevaluationDays} 
+                              onChange={(e) => setTransReevaluationDays(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-red-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Days</span>
+                          </div>
+                        </div>
+
+                        {/* 6. Log Retention Limit */}
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Log Retention Limit</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              Specifies the rolling window for which search history and completions are computed for translation proposals.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                            <input 
+                              type="number" 
+                              value={transBacklogRetention} 
+                              onChange={(e) => setTransBacklogRetention(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-orange-400 text-sm font-black focus:outline-none w-20 text-right"
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Days</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Translation Proposals */}
+                  <h3 className="text-xl font-black text-slate-200">Active Translation Proposals</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {translationRequests.map((item) => (
+                      <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-emerald-500/20 transition-all group">
+                        <div>
+                          <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
+                          <p className="text-[8px] font-black text-slate-500 uppercase mt-1">
+                            Target Language: <span className="text-emerald-400 font-extrabold">{item.targetLang.toUpperCase()}</span>
+                          </p>
+                          <div className="flex gap-4 mt-2">
+                            <span className="px-2 py-0.5 bg-slate-950 border border-slate-850 rounded-lg text-[9px] text-slate-400 font-semibold">
+                              Score: <strong className="text-white">{item.count}</strong>
+                            </span>
+                            <span className="px-2 py-0.5 bg-emerald-950/40 border border-emerald-900/30 rounded-lg text-[9px] text-emerald-400 font-semibold uppercase">
+                              Priority: {item.priority}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleApproveTrans(item.courseTitle, item.targetLang)} 
+                            className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/10"
+                            title="Approve to Pipeline Queue"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleRefuseTrans(item.courseTitle, item.targetLang)} 
+                            className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all"
+                            title="Refuse / Archive"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {translationRequests.length === 0 && (
+                      <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center">All translations up to date.</p>
+                    )}
+                  </div>
+
+                  {/* Refused translation backlog */}
+                  <div className="pt-6 border-t border-slate-900">
+                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Refused Translation Backlog</h4>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {refusedTranslations.map((item) => {
+                        const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
+                        const remainingDays = Math.max(0, Math.ceil(transReevaluationDays - elapsedDays));
+                        return (
+                          <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex flex-col justify-between gap-4">
+                            <div>
+                              <p className="text-xs font-bold text-slate-200">{item.name}</p>
+                              <p className="text-[8px] text-slate-500 font-black uppercase mt-1">Refused to {item.targetLang.toUpperCase()}</p>
+                              <p className="text-[9px] font-bold text-red-500/70 mt-2">
+                                Re-evaluation in: <span className="text-red-400">{remainingDays}d</span>
+                              </p>
+                            </div>
+                            <button 
+                              onClick={() => dbService.deleteRefusedTranslation(item.id).then(loadData)} 
+                              className="w-full py-2 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
+                            >
+                              Un-Refuse / Re-evaluate
+                            </button>
+                          </div>
+                        );
+                      })}
+                      {refusedTranslations.length === 0 && (
+                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">Refused translations backlog is empty.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Registered Notification Emails Registry (90-day retention) */}
+                  <div className="pt-6 border-t border-slate-900 space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">Student Notification Emails (90-Day Retention)</h4>
+                      <p className="text-xs text-slate-500">List of student emails registered to be notified immediately when their requested translations are deployed.</p>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {translationEmails.map((item) => {
+                        const elapsedDays = (Date.now() - new Date(item.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+                        const remainingDays = Math.max(0, Math.ceil(90 - elapsedDays));
+                        return (
+                          <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-slate-700/30 transition-all">
+                            <div>
+                              <p className="text-xs font-bold text-white">{item.email}</p>
+                              <p className="text-[8px] text-slate-500 font-black uppercase mt-1">
+                                Course: <span className="text-slate-400 font-bold">{item.courseTitle}</span> • Lang: <span className="text-emerald-400 font-bold">{item.targetLang.toUpperCase()}</span>
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="px-2.5 py-1 bg-slate-950 border border-slate-850 rounded-xl text-[8px] font-black text-slate-400">
+                                EXPIRES IN: <strong className="text-orange-400 font-black">{remainingDays}d</strong>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {translationEmails.length === 0 && (
+                        <p className="col-span-2 text-sm text-slate-600 italic py-4 text-center">No active student notification emails registered.</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Registered Languages Registry & Add Language Panel */}
                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                      <div className="space-y-1">
@@ -2135,7 +2784,7 @@ export default function AdminCurriculumPage() {
                                         🔒 MASTER LANGUAGE
                                       </span>
                                     ) : (
-                                      <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 border border-slate-855/60 rounded-xl w-fit">
+                                      <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 border border-slate-850/60 rounded-xl w-fit">
                                         <button
                                           type="button"
                                           onClick={async () => {
@@ -2143,7 +2792,7 @@ export default function AdminCurriculumPage() {
                                             await loadData();
                                           }}
                                           className={`px-2 py-1 text-[8px] font-black rounded-lg transition-all uppercase tracking-wider ${currentLevel === 0 ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
-                                          title="Level 0: Active / Visible"
+                                          title={lang === 'FR' ? "Niveau 0 (Actif) : Visible par tous dans le catalogue." : "Level 0 (Active): Visible to all in the catalog."}
                                         >
                                           0
                                         </button>
@@ -2154,7 +2803,7 @@ export default function AdminCurriculumPage() {
                                             await loadData();
                                           }}
                                           className={`px-2 py-1 text-[8px] font-black rounded-lg transition-all uppercase tracking-wider ${currentLevel === 2 ? 'bg-amber-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
-                                          title="Level 2: Invisible for all"
+                                          title={lang === 'FR' ? "Niveau 2 (Archive Profonde) : Masqué pour tous les étudiants, visible uniquement dans le cockpit admin." : "Level 2 (Deep Archive): Hidden for all students, visible only in the admin cockpit."}
                                         >
                                           2
                                         </button>
@@ -2162,7 +2811,7 @@ export default function AdminCurriculumPage() {
                                           type="button"
                                           onClick={() => setPurgeLanguageTarget(langItem)}
                                           className="px-2 py-1 text-[8px] font-black rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-955/20 transition-all cursor-pointer"
-                                          title="Level 3: Purge from base"
+                                          title={lang === 'FR' ? "Niveau 3 (Purgé) : Totalement désactivé." : "Level 3 (Purged): Fully disabled."}
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -2222,78 +2871,259 @@ export default function AdminCurriculumPage() {
              )}
 
              {/* 3. REVISION ENGINE TAB */}
-             {view === 'revision' && (
+              {/* 3. REVISION ENGINE TAB */}
+              {view === 'revision' && (
                 <div className="space-y-8">
-                  {/* Revision Autonomy Panel */}
-                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="space-y-1">
+                  {/* Explanation box describing the triggers */}
+                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
+                    <div className="space-y-2">
                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-500" /> Revision Autonomy Loop
+                        <Sparkles className="w-5 h-5 text-yellow-500" /> Pedagogical Revision Engine Overview
                       </h2>
-                      <p className="text-xs text-slate-400">Triggers pedagogical revision workflows automatically when course ratings drop below a threshold.</p>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        The Revision Engine dynamically groups feedback reports and triggers proposed fixes at the course-chapter level. Two primary conditions are monitored in real-time by a dedicated AI Agent:
+                      </p>
+                      <div className="grid md:grid-cols-2 gap-4 mt-4">
+                        <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
+                          <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block mb-1">Trigger 1: Low Global Rating</span>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            Triggers a general course revision if the average student rating drops below the <strong>Rating Threshold</strong> (â‰¤ Stars) and has gathered a significant sample size (â‰¥ Min Votes).
+                          </p>
+                        </div>
+                        <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
+                          <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">Trigger 2: Concordant Error Reports</span>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            Triggers a target-chapter revision when multiple users (â‰¥ Min Reports) submit matching complaints. The AI Agent synthesizes these concordant reports into a single, structured fix.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex flex-wrap items-center gap-6">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Auto-Revision</span>
+                  </div>
+
+                  {/* Engine Control Parameters (Consolidated panel exactly like translation/generation) */}
+                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-slate-900/60">
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-white uppercase tracking-widest">Engine Control Parameters</h3>
+                        <p className="text-xs text-slate-500">Configure global parameters and auto-approval variables for the pedagogical revision pipeline.</p>
+                      </div>
+                      <div className="flex items-center gap-4 bg-slate-950 px-4 py-2 border border-slate-850 rounded-2xl shrink-0">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Auto-Approve Revisions</span>
                         <button 
+                          type="button"
                           onClick={() => setAutoRevision(!autoRevision)}
                           className={`w-12 h-6 rounded-full relative transition-all ${autoRevision ? 'bg-yellow-600' : 'bg-slate-800'}`}
                         >
                           <motion.div animate={{ x: autoRevision ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
                         </button>
                       </div>
-                      <div className="w-px h-8 bg-slate-800 hidden md:block" />
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Rating Trigger (≤ Stars)</span>
-                        <input 
-                          type="number" 
-                          value={revThreshold} 
-                          onChange={(e) => setRevThreshold(Math.max(1, Math.min(5, Number(e.target.value))))}
-                          className="w-16 bg-slate-950 border border-slate-800 rounded-xl p-2 text-center text-sm font-bold text-white focus:outline-none focus:border-yellow-500/50"
-                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                      {/* 1. Rating Threshold */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Rating Threshold</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Proposes revision if overall rating falls at or below this stars count.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            min="1.0"
+                            max="5.0"
+                            value={revThreshold} 
+                            onChange={(e) => setRevThreshold(Math.max(1, Math.min(5, Number(e.target.value))))}
+                            className="bg-transparent border-none text-yellow-500 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Stars</span>
+                        </div>
+                      </div>
+
+                      {/* 2. Min Votes */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Min Votes</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Minimum reviews required to activate the low rating trigger.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            value={revMinVotes} 
+                            onChange={(e) => setRevMinVotes(Math.max(1, Number(e.target.value)))}
+                            className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Reviews</span>
+                        </div>
+                      </div>
+
+                      {/* 3. Min Reports */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Min Reports</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Required concordant error reports to trigger a target chapter revision.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            value={revMinReports} 
+                            onChange={(e) => setRevMinReports(Math.max(1, Number(e.target.value)))}
+                            className="bg-transparent border-none text-emerald-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Reports</span>
+                        </div>
+                      </div>
+
+                      {/* 4. Auto-Approve Delay */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Delay</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Cooldown delay in hours before a proposal is automatically approved and built.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            value={autoRevisionDelayHours} 
+                            onChange={(e) => setAutoRevisionDelayHours(Math.max(1, Number(e.target.value)))}
+                            className="bg-transparent border-none text-purple-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Hours</span>
+                        </div>
+                      </div>
+
+                      {/* 5. Re-evaluation Days */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Log Retention Cooldown</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Retention period in days for historical feedbacks and stale refused proposals.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            value={revRetentionDays} 
+                            onChange={(e) => setRevRetentionDays(Math.max(1, Number(e.target.value)))}
+                            className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Days</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-200">Pedagogical Revisions Needed</h3>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {feedbacks.filter(f => f.rating <= 2).map((item) => (
-                      <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-start gap-4">
-                        <div className="space-y-2">
-                          <h4 className="text-base font-bold text-white">{item.courseId.replace(/_/g, ' ')}</h4>
-                          <p className="text-xs text-slate-400 italic">"{item.comment}"</p>
-                          <p className="text-[9px] font-black text-slate-500 uppercase">Rating: {item.rating}/5 • Reported: {new Date(item.timestamp).toLocaleDateString()}</p>
+                  {/* Active Revisions proposals list */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-black text-slate-200">Active Pedagogical Revisions Proposals</h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {activeRevisionProposals.map((item, idx) => (
+                        <div key={idx} className="p-6 bg-slate-900/40 border border-slate-850 hover:border-yellow-500/30 rounded-[32px] flex justify-between items-start gap-4 transition-all relative overflow-hidden group">
+                          {/* Background Glow */}
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-xl rounded-full pointer-events-none" />
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase border ${
+                                item.reason === 'Low Global Rating'
+                                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                                  : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                              }`}>
+                                {item.reason}
+                              </span>
+                              <span className="px-2 py-0.5 text-[8px] font-black rounded uppercase border bg-slate-950 border-slate-800 text-slate-400 font-mono">
+                                Version: {item.version}
+                              </span>
+                            </div>
+
+                            <div>
+                              <h4 className="text-base font-bold text-white flex items-center gap-1.5">
+                                {item.courseTitle} 
+                                <span className="text-[10px] font-semibold text-slate-500 font-mono">({item.level})</span>
+                              </h4>
+                              <p className="text-[11px] font-bold text-yellow-500 mt-0.5">{item.chapter}</p>
+                            </div>
+
+                            <p className="text-xs text-slate-400 leading-normal bg-slate-950/40 border border-slate-900 p-3 rounded-2xl italic">
+                              "{item.issueSummary}"
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 pt-1">
+                              <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                                <span>Rating:</span>
+                                <span className="text-yellow-400 font-black">â­ {item.overallRating.toFixed(1)}/5</span>
+                                <span className="text-slate-600">({item.overallVotes} reviews)</span>
+                              </div>
+                              <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                                <span>Active Reports:</span>
+                                <span className="text-blue-400 font-black">{item.reportCount}</span>
+                              </div>
+                              <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                                <span>Composite Score:</span>
+                                <span className="text-emerald-400 font-extrabold">{item.score}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 shrink-0 z-10">
+                            <button 
+                              type="button" 
+                              title="Approve & Revise"
+                              onClick={() => handleApproveRevision(item.courseTitle, item.chapter, item.issueSummary)} 
+                              className="p-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-500 transition-all shadow-md shadow-yellow-600/10"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button 
+                              type="button" 
+                              title="Refuse & Backlog"
+                              onClick={() => handleRefuseRevision(item.courseTitle, item.chapter, item.issueSummary)} 
+                              className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all shadow-md"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={() => handleApproveRevision(item.courseId, item.comment)} className="p-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-500 transition-all">
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button type="button" onClick={() => handleRefuseRevision(item.courseId, item.comment)} className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                      {activeRevisionProposals.length === 0 && (
+                        <p className="col-span-2 text-sm text-slate-600 italic py-8 text-center bg-slate-950/20 border border-slate-900 rounded-[32px] w-full">
+                          No pending pedagogical revision proposals. Courses meeting threshold goals.
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Refused Revision Backlog */}
-                  <div className="pt-6 border-t border-slate-900">
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Refused Revision Backlog</h4>
+                  <div className="pt-8 border-t border-slate-900 space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">Refused Revision Backlog</h4>
+                      <p className="text-xs text-slate-500">Rejected proposals are temporarily stored here, preventing auto-triggering during cooldown period.</p>
+                    </div>
                     <div className="grid md:grid-cols-3 gap-6">
                       {refusedRevisions.map((item) => (
-                        <div key={item.id} className="p-4 bg-slate-900/40 border border-slate-800 rounded-2xl flex justify-between items-center">
+                        <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-slate-700/30 transition-all">
                           <div>
-                            <p className="text-xs font-bold text-slate-200">{item.course.replace(/_/g, ' ')}</p>
-                            <p className="text-[8px] text-slate-500 font-black uppercase truncate max-w-[180px]">{item.issueSummary}</p>
+                            <p className="text-xs font-bold text-slate-200">{item.course}</p>
+                            <p className="text-[9px] text-slate-500 font-bold uppercase truncate max-w-[200px] mt-1">{item.issueSummary}</p>
                           </div>
-                          <button onClick={() => dbService.deleteRefusedRevision(item.id).then(loadData)} className="p-2 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase">
+                          <button 
+                            type="button"
+                            onClick={() => dbService.deleteRefusedRevision(item.id).then(loadData)} 
+                            className="px-3 py-1.5 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
+                          >
                             Re-Propose
                           </button>
                         </div>
                       ))}
                       {refusedRevisions.length === 0 && (
-                        <p className="text-xs text-slate-600 italic">No refused revisions in backlog.</p>
+                        <p className="col-span-3 text-xs text-slate-600 italic py-4 text-center">Refused revisions backlog is empty.</p>
                       )}
                     </div>
                   </div>
@@ -2335,15 +3165,14 @@ export default function AdminCurriculumPage() {
                           }}>
                             Title {renderSortIndicator('title', courseSortField, courseSortDir)}
                           </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (courseSortField === 'subject') {
-                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setCourseSortField('subject');
-                              setCourseSortDir('asc');
-                            }
-                          }}>
-                            Subject {renderSortIndicator('subject', courseSortField, courseSortDir)}
+                          <th className="px-6 py-4">
+                            Note (Rating)
+                          </th>
+                          <th className="px-6 py-4">
+                            Validations (Completions)
+                          </th>
+                          <th className="px-6 py-4">
+                            Versions (Revisions)
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (courseSortField === 'level') {
@@ -2419,13 +3248,27 @@ export default function AdminCurriculumPage() {
                                     <p className="text-[9.5px] text-slate-500 font-mono">ID: {course.id}</p>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 text-slate-400 font-medium">{course.subject}</td>
+                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                  {course.averageRating ? `⭐ ${Number(course.averageRating).toFixed(1)}/5` : '⭐ N/A'}
+                                  {course.ratingCount ? ` (${course.ratingCount})` : ''}
+                                </td>
+                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                  {completions.filter(comp => 
+                                    comp.courseId.toLowerCase() === String(course.id).toLowerCase() || 
+                                    comp.courseId.toLowerCase() === course.slug.toLowerCase() || 
+                                    comp.courseId.toLowerCase() === course.title.toLowerCase()
+                                  ).length}
+                                </td>
+                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                  {courses.filter(c => c.slug.replace(/_v\d+$/, '') === course.slug.replace(/_v\d+$/, '')).length}
+                                </td>
                                 <td className="px-6 py-4 text-slate-400 font-mono font-bold">
                                   {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : course.level))}
                                 </td>
                                 <td className="px-6 py-4">
                                   <ArchivingLevelButtons 
                                     currentLevel={currentLevel}
+                                    lang={lang}
                                     onChange={async (nextLvl) => {
                                       if (nextLvl === 3) {
                                         const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
@@ -2460,7 +3303,7 @@ export default function AdminCurriculumPage() {
               {view === 'queue' && (
                 <div className="space-y-6">
                   <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
-                  <div className="overflow-x-auto rounded-3xl border border-slate-855 bg-slate-900/20 shadow-xl">
+                  <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
@@ -2720,7 +3563,7 @@ export default function AdminCurriculumPage() {
                               </div>
                             </div>
 
-                            <div className="mt-8 pt-6 border-t border-slate-855 flex flex-col gap-4">
+                            <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
                               <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                                 <div>
                                   <p>Parameter: <span className="text-violet-400">{ach.threshold}</span></p>
@@ -2821,7 +3664,7 @@ export default function AdminCurriculumPage() {
                               </div>
                             </div>
                             
-                            <div className="mt-8 pt-6 border-t border-slate-855 flex flex-col gap-4">
+                            <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
                               <div className="flex items-center justify-between gap-4">
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Archival Level:</span>
                                 <ArchivingLevelButtons 

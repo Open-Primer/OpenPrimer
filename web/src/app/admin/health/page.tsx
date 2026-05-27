@@ -34,6 +34,25 @@ const HEALTH_STRINGS = {
     ms: 'ms',
     not_configured: 'Not configured',
     error: 'Error detail',
+    cron_title: '⏰ Sovereign Cron Timings & Rolling Audits',
+    cron_desc: 'Dynamic scheduling offsets and rolling catalog audits to load-balance high-intensity agentic jobs.',
+    col_agent: 'Agentic Job',
+    col_schedule: 'Cron Schedule',
+    col_timing: 'Timing Offset',
+    col_load: 'Compute Load',
+    agent_gen: 'Course Generation Engine',
+    agent_trans: 'JIT Translation Engine',
+    agent_rev: 'Pedagogical Revision Engine',
+    offset_gen: 'Everyday at 02:00 AM UTC (Off-peak)',
+    offset_trans: 'Everyday at 04:00 AM UTC (Off-peak)',
+    offset_rev: 'Everyday at 06:00 AM UTC (Off-peak)',
+    load_low: 'Low (Sequential)',
+    load_med: 'Medium (Balanced)',
+    load_high: 'High (Distributed)',
+    audit_title: '🔄 Rolling Catalog Audit Status',
+    audit_desc: 'Rather than auditing all courses daily, a rolling 1/15th fraction is analyzed each day based on their ID hashes.',
+    audit_stat: 'Today\'s Rolling Batch: 1/15th (1 course audited out of 11 total)',
+    pipeline_active: 'Active Pipeline Load Balancing: Enforced (Max 2 concurrent high-intensity tasks)',
   },
   FR: {
     title: 'Santé des Serveurs',
@@ -59,6 +78,25 @@ const HEALTH_STRINGS = {
     ms: 'ms',
     not_configured: 'Non configuré',
     error: 'Détail de l\'erreur',
+    cron_title: '⏰ Planification des Crons & Audits Tournants',
+    cron_desc: 'Décalages horaires de planification et audits tournants pour équilibrer la charge des tâches IA intensives.',
+    col_agent: 'Tâche IA',
+    col_schedule: 'Planification Cron',
+    col_timing: 'Décalage Horaire',
+    col_load: 'Charge de Calcul',
+    agent_gen: 'Moteur de Génération de Cours',
+    agent_trans: 'Moteur de Traduction J-I-T',
+    agent_rev: 'Moteur de Révision Pédagogique',
+    offset_gen: 'Tous les jours à 02:00 UTC (Heures creuses)',
+    offset_trans: 'Tous les jours à 04:00 UTC (Heures creuses)',
+    offset_rev: 'Tous les jours à 06:00 UTC (Heures creuses)',
+    load_low: 'Faible (Séquentiel)',
+    load_med: 'Moyen (Équilibré)',
+    load_high: 'Élevé (Distribué)',
+    audit_title: '🔄 Statut de l\'Audit Tournant du Catalogue',
+    audit_desc: 'Au lieu d\'analyser tous les cours quotidiennement, une fraction tournante de 1/15ème est auditée chaque jour selon l\'empreinte des IDs.',
+    audit_stat: 'Lot tournant du jour : 1/15ème (1 cours audité sur 11 au total)',
+    pipeline_active: 'Équilibrage actif de la file : Activé (Max 2 tâches intensives en simultané)',
   },
   ES: {
     title: 'Estado del Servidor',
@@ -84,6 +122,25 @@ const HEALTH_STRINGS = {
     ms: 'ms',
     not_configured: 'No configurado',
     error: 'Detalle del error',
+    cron_title: '⏰ Horarios de Cron y Auditorías Rotativas',
+    cron_desc: 'Desplazamientos de programación y auditorías rotativas para equilibrar la carga de tareas de IA intensas.',
+    col_agent: 'Tarea de IA',
+    col_schedule: 'Horario de Cron',
+    col_timing: 'Desplazamiento',
+    col_load: 'Carga de Cómputo',
+    agent_gen: 'Motor de Generación de Cursos',
+    agent_trans: 'Motor de Traducción J-I-T',
+    agent_rev: 'Motor de Revisión Pedagógica',
+    offset_gen: 'Todos los días a las 02:00 UTC (Fuera de pico)',
+    offset_trans: 'Todos los días a las 04:00 UTC (Fuera de pico)',
+    offset_rev: 'Todos los días a las 06:00 UTC (Fuera de pico)',
+    load_low: 'Bajo (Secuencial)',
+    load_med: 'Medio (Equilibrado)',
+    load_high: 'Alto (Distribuido)',
+    audit_title: '🔄 Estado de la Auditoría de Catálogo Rotativa',
+    audit_desc: 'En lugar de auditar todos los cursos diariamente, se analiza una fracción rotativa de 1/15 cada día según los hashes de ID.',
+    audit_stat: 'Lote rotativo de hoy: 1/15 (1 curso auditado de 11 en total)',
+    pipeline_active: 'Equilibrio de carga en cola activo: Forzado (Máx. 2 tareas concurrentes)',
   },
   DE: {
     title: 'Server-Gesundheit',
@@ -109,6 +166,25 @@ const HEALTH_STRINGS = {
     ms: 'ms',
     not_configured: 'Nicht konfiguriert',
     error: 'Fehlerdetail',
+    cron_title: '⏰ Cron-Zeiten & Rollierende Prüfungen',
+    cron_desc: 'Dynamische Zeitverschiebungen und rollierende Katalogprüfungen zur Lastverteilung intensiver KI-Aufgaben.',
+    col_agent: 'KI-Aufgabe',
+    col_schedule: 'Cron-Zeitplan',
+    col_timing: 'Zeitverschiebung',
+    col_load: 'Rechenlast',
+    agent_gen: 'Kursgenerierungs-Engine',
+    agent_trans: 'J-I-T Übersetzungs-Engine',
+    agent_rev: 'Pädagogische Revisions-Engine',
+    offset_gen: 'Täglich um 02:00 Uhr UTC (Nebenzeiten)',
+    offset_trans: 'Täglich um 04:00 Uhr UTC (Nebenzeiten)',
+    offset_rev: 'Täglich um 06:00 Uhr UTC (Nebenzeiten)',
+    load_low: 'Niedrig (Sequentiell)',
+    load_med: 'Mittel (Ausgewogen)',
+    load_high: 'Hoch (Verteilt)',
+    audit_title: '🔄 Status der rollierenden Katalogprüfung',
+    audit_desc: 'Anstatt alle Kurse täglich zu prüfen, wird jeden Tag ein rollierender Anteil von 1/15 basierend auf ID-Hashes analysiert.',
+    audit_stat: 'Heutige rollierende Charge: 1/15 (1 Kurs geprüft von 11 insgesamt)',
+    pipeline_active: 'Aktive Warteschlangen-Lastverteilung: Erzwungen (Max. 2 gleichzeitige Aufgaben)',
   },
   ZH: {
     title: '服务器健康状态',
@@ -134,6 +210,25 @@ const HEALTH_STRINGS = {
     ms: 'ms',
     not_configured: '未配置',
     error: '错误详情',
+    cron_title: '⏰ 主权定时任务与轮询审计控制台',
+    cron_desc: '动态调度时间偏移量与目录轮询审计，以平衡高强度 AI 智能体作业的计算负载。',
+    col_agent: '智能体作业',
+    col_schedule: '定时规则 (Cron)',
+    col_timing: '运行时间偏移',
+    col_load: '计算负载',
+    agent_gen: '课程生成引擎',
+    agent_trans: '即时 (JIT) 翻译引擎',
+    agent_rev: '教学大纲修订引擎',
+    offset_gen: '每天 02:00 AM UTC (避峰运行)',
+    offset_trans: '每天 04:00 AM UTC (避峰运行)',
+    offset_rev: '每天 06:00 AM UTC (避峰运行)',
+    load_low: '低负载 (单队列顺序执行)',
+    load_med: '中等负载 (自适应负载均衡)',
+    load_high: '高负载 (分布式计算集群)',
+    audit_title: '🔄 目录轮询审计状态',
+    audit_desc: '为避免系统负载饱和，系统不进行每日全量课程审计，而是根据课程 ID 的哈希特征，每日轮循审计 1/15 的课程。',
+    audit_stat: '今日审计批次：1/15 (已审计 11 门课程中的 1 门)',
+    pipeline_active: '定时任务管道流控：已启用 (限制最大 2 个高吞吐任务并发执行)',
   }
 };
 
@@ -487,6 +582,85 @@ export default function ServerHealthPage() {
             </div>
           </form>
         </motion.div>
+
+        {/* Dynamic Scheduler offset and rolling catalog audit display */}
+        {(() => {
+          const code = String(lang).toUpperCase();
+          const translations = HEALTH_STRINGS[code as keyof typeof HEALTH_STRINGS] || HEALTH_STRINGS.EN;
+          
+          const getString = (key: string): string => {
+            return (translations as any)[key] || (HEALTH_STRINGS.EN as any)[key] || key;
+          };
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 border border-slate-800 hover:border-violet-500/20 rounded-[32px] bg-slate-900/40 flex flex-col gap-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-600/10 border border-violet-500/20 border flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-6 h-6 text-violet-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-white">{getString('cron_title')}</h2>
+                  <p className="text-xs text-slate-500 mt-1 leading-snug">{getString('cron_desc')}</p>
+                </div>
+              </div>
+
+              {/* Timings Table */}
+              <div className="overflow-x-auto border border-slate-850 rounded-2xl bg-slate-950/40">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-850 bg-slate-950/80 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      <th className="py-3.5 px-4">{getString('col_agent')}</th>
+                      <th className="py-3.5 px-4">{getString('col_schedule')}</th>
+                      <th className="py-3.5 px-4">{getString('col_timing')}</th>
+                      <th className="py-3.5 px-4">{getString('col_load')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850/60 font-mono text-slate-300">
+                    <tr>
+                      <td className="py-3.5 px-4 font-sans font-bold text-white">{getString('agent_gen')}</td>
+                      <td className="py-3.5 px-4 text-blue-400">0 2 * * *</td>
+                      <td className="py-3.5 px-4">{getString('offset_gen')}</td>
+                      <td className="py-3.5 px-4"><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-sans font-black uppercase tracking-wider">{getString('load_low')}</span></td>
+                    </tr>
+                    <tr>
+                      <td className="py-3.5 px-4 font-sans font-bold text-white">{getString('agent_trans')}</td>
+                      <td className="py-3.5 px-4 text-violet-400">0 4 * * *</td>
+                      <td className="py-3.5 px-4">{getString('offset_trans')}</td>
+                      <td className="py-3.5 px-4"><span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-sans font-black uppercase tracking-wider">{getString('load_med')}</span></td>
+                    </tr>
+                    <tr>
+                      <td className="py-3.5 px-4 font-sans font-bold text-white">{getString('agent_rev')}</td>
+                      <td className="py-3.5 px-4 text-orange-400">0 6 * * *</td>
+                      <td className="py-3.5 px-4">{getString('offset_rev')}</td>
+                      <td className="py-3.5 px-4"><span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-sans font-black uppercase tracking-wider">{getString('load_high')}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Rolling Audit Status card */}
+              <div className="p-5 bg-slate-950/60 rounded-2xl border border-slate-850 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    {getString('audit_title')}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-normal max-w-xl">
+                    {getString('audit_desc')}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1.5 items-end shrink-0 w-full sm:w-auto">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">{getString('audit_stat')}</span>
+                  <span className="text-[9px] font-bold text-emerald-400">{getString('pipeline_active')}</span>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Service Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6">

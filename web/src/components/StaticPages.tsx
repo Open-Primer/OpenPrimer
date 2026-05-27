@@ -406,8 +406,8 @@ export const CatalogPage = () => {
       if (saved) {
         setEnrolledIds(JSON.parse(saved));
       } else {
-        // Enrolled initially in Mechanics (1) and Cell Biology (3)
-        const defaults = [1, 3];
+        // Enrolled initially in Mechanics (1), Cell Biology (3) and AI Curriculum (12)
+        const defaults = [1, 3, 12];
         localStorage.setItem('op_enrolled_courses', JSON.stringify(defaults));
         setEnrolledIds(defaults);
       }

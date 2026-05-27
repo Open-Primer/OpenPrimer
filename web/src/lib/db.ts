@@ -195,6 +195,8 @@ export interface MockCourse {
   created_at?: string; // Creation timestamp for new tracking (NEW badge < 90 days)
   last_revision_date?: string; // Last content revision — displayed on cards
   translations?: Record<string, { title: string; description: string }>;
+  isCurriculum?: boolean;
+  childCourses?: number[];
 }
 
 export const getCanonicalCourseId = (slugOrId: string | number): number => {
@@ -548,6 +550,24 @@ let mockCourses: MockCourse[] = [
     validations: 11,
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago (New!)
     last_revision_date: new Date().toISOString()  // Revised today
+  },
+  { 
+    id: 12, 
+    title: "Sovereign AI Mastery Curriculum", 
+    slug: "sovereign-ai-curriculum", 
+    level: "L2", 
+    subject: "Mathematics", 
+    description: "An elite academic syllabus detailing dynamic artificial intelligence systems, sovereign LLMs, and neural grid controllers.", 
+    languages: ["en", "fr", "es", "de", "zh"], 
+    langs: ["en", "fr", "es", "de", "zh"],
+    ects: 18, 
+    popularity: 4950, 
+    is_active: true,
+    validations: 20,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago (New!)
+    last_revision_date: new Date().toISOString(),
+    isCurriculum: true,
+    childCourses: [7, 8, 11]
   }
 ];
 
@@ -803,6 +823,100 @@ let initialContactFeedbacks: ContactFeedback[] = [
   { id: 'fb_3', name: 'Aleksei Volkov', email: 'avolkov@itmo.ru', message: 'Are you planning to release a mobile application? The responsive web UI is fantastic, but offline study is crucial for transit.', timestamp: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString() }
 ];
 
+
+export interface CourseCompletionEntry {
+  id: string;
+  courseId: string;
+  timestamp: string;
+}
+
+// Generate completions database list
+const generatePreseededCourseCompletions = (): CourseCompletionEntry[] => {
+  const completions: CourseCompletionEntry[] = [];
+  
+  // Generate completions for Biologie Test (15 validations total)
+  for (let i = 0; i < 10; i++) {
+    const daysAgo = Math.floor(Math.random() * 5); // recent (within 5 days)
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_bio_rec_${i}`,
+      courseId: 'Biologie_Test',
+      timestamp: d.toISOString()
+    });
+  }
+  for (let i = 0; i < 5; i++) {
+    const daysAgo = 40 + Math.floor(Math.random() * 10); // old (40-50 days ago)
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_bio_old_${i}`,
+      courseId: 'Biologie_Test',
+      timestamp: d.toISOString()
+    });
+  }
+
+  // Generate completions for Maths Test (Linear Algebra) (25 validations total)
+  for (let i = 0; i < 18; i++) {
+    const daysAgo = Math.floor(Math.random() * 5);
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_math_rec_${i}`,
+      courseId: 'Maths_Test',
+      timestamp: d.toISOString()
+    });
+  }
+  for (let i = 0; i < 7; i++) {
+    const daysAgo = 40 + Math.floor(Math.random() * 10);
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_math_old_${i}`,
+      courseId: 'Maths_Test',
+      timestamp: d.toISOString()
+    });
+  }
+
+  // Generate completions for Maths Test L1 (Calculus I) (32 validations total)
+  for (let i = 0; i < 22; i++) {
+    const daysAgo = Math.floor(Math.random() * 5);
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_calc_rec_${i}`,
+      courseId: 'Maths_Test_L1',
+      timestamp: d.toISOString()
+    });
+  }
+  for (let i = 0; i < 10; i++) {
+    const daysAgo = 40 + Math.floor(Math.random() * 10);
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    completions.push({
+      id: `comp_calc_old_${i}`,
+      courseId: 'Maths_Test_L1',
+      timestamp: d.toISOString()
+    });
+  }
+
+  return completions;
+};
+
+let courseCompletionsList: CourseCompletionEntry[] = [];
+
+export interface TranslationEmailNotification {
+  id: string;
+  courseTitle: string;
+  targetLang: string;
+  email: string;
+  timestamp: string;
+}
+
+let translationEmailsList: TranslationEmailNotification[] = [
+  { id: 'em_1', courseTitle: 'Classical Mechanics', targetLang: 'es', email: 'physics_student@openprimer.org', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'em_2', courseTitle: 'Cell Biology', targetLang: 'de', email: 'bio_scholar@openprimer.de', timestamp: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString() } // Expired (95 days)
+];
 let contactFeedbacksList: ContactFeedback[] = initialContactFeedbacks;
 
 export let initialLanguages: LanguageInfo[] = [
@@ -1082,6 +1196,10 @@ if (isBrowser) {
       l.code.toUpperCase() === 'EN' ? { ...l, archivingLevel: 0 } : l
     );
   }
+  courseCompletionsList = getLocalStorageItem('openprimer_course_completions', generatePreseededCourseCompletions());
+  setLocalStorageItem('openprimer_course_completions', courseCompletionsList);
+  translationEmailsList = getLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+  setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
   contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', initialContactFeedbacks);
   
   // Save initially to sync
@@ -1114,6 +1232,28 @@ const isOffline = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBL
 
 export const dbService = {
   // SYLLABUS & CURRICULUM
+  getAllCourseCompletions: async () => {
+    return { data: courseCompletionsList, error: null };
+  },
+  getTranslationEmails: async () => {
+    return { data: translationEmailsList, error: null };
+  },
+  saveTranslationEmail: async (email: TranslationEmailNotification) => {
+    translationEmailsList = [email, ...translationEmailsList.filter(e => e.id !== email.id)];
+    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+    return { data: email, error: null };
+  },
+  deleteTranslationEmail: async (id: string) => {
+    translationEmailsList = translationEmailsList.filter(e => e.id !== id);
+    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+    return { data: null, error: null };
+  },
+  cleanupTranslationEmails: async (retentionDays: number) => {
+    const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+    translationEmailsList = translationEmailsList.filter(e => new Date(e.timestamp).getTime() >= cutoff);
+    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+    return { data: null, error: null };
+  },
   getSyllabus: async (id: string) => {
     if (isOffline) {
       const course = mockCourses.find(c => c.slug === id);
@@ -1131,13 +1271,32 @@ export const dbService = {
   
   getAllCourses: async () => {
     const computedCourses = mockCourses.map(c => {
-      const feedbacks = courseFeedbacks.filter(f => getCanonicalCourseId(f.courseId) === getCanonicalCourseId(c.id));
+      // Aggregate feedbacks across all revisions/versions of this course (matching canonical slug)
+      const feedbacks = courseFeedbacks.filter(f => {
+        const fId = String(f.courseId).toLowerCase();
+        const currentSlug = c.slug.toLowerCase();
+        // Match direct slug or versioned slugs like 'maths_test_v1', 'maths_test_version2'
+        return fId === currentSlug || fId.replace(/_(v\d+|version\d+)/g, '') === currentSlug;
+      });
+      
       const ratingCount = feedbacks.length;
       const averageRating = ratingCount > 0
         ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
         : 0;
+
+      // Aggregate dynamic completions/validations across all revisions/versions of this course
+      const courseCompletions = courseCompletionsList.filter(comp => {
+        const compId = comp.courseId.toLowerCase();
+        const currentSlug = c.slug.toLowerCase();
+        const currentId = String(c.id).toLowerCase();
+        const currentTitle = c.title.toLowerCase();
+        return compId === currentId || compId === currentSlug || compId === currentTitle || compId.replace(/_(v\d+|version\d+)/g, '') === currentSlug;
+      });
+      const totalValidations = courseCompletions.length;
+
       return {
         ...c,
+        validations: totalValidations > 0 ? totalValidations : (c.validations || 0),
         ratingCount,
         averageRating
       };
@@ -1316,7 +1475,7 @@ export const dbService = {
   // PROGRESS TRACKING SERVICE
   getUserProgress: async (userId: string) => {
     const isBrowser = typeof window !== 'undefined';
-    const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3]') : [1, 3];
+    const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3, 12]') : [1, 3, 12];
     const progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
     
     // Map enrolled IDs to mockCourses
@@ -1331,7 +1490,9 @@ export const dbService = {
         slug: course?.slug || '',
         progress: prog,
         created_at: course?.created_at || null,
-        last_revision_date: course?.last_revision_date || null
+        last_revision_date: course?.last_revision_date || null,
+        isCurriculum: course?.isCurriculum || false,
+        childCourses: course?.childCourses || []
       };
     });
 
