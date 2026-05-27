@@ -24,6 +24,7 @@ export default function CurriculumPage() {
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
+  const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
 
   useEffect(() => {
     async function loadProgress() {
@@ -216,82 +217,11 @@ export default function CurriculumPage() {
                    </h2>
                    <div className="grid md:grid-cols-2 gap-8">
                      {activeCourses.map((course: any) => {
-                       const getCoursePath = (c: any) => {
-                         const slug = c.slug;
-                         if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-                           return '/L1/Physics/Classical_Mechanics/introduction';
-                         }
-                         if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-                           return '/L2/Physics/Physique_Test_L2/introduction';
-                         }
-                         if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-                           return '/L1/Biology/Cell_Biology/introduction';
-                         }
-                         if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-                           return '/L1/Biology/Biologie_Test_L1/introduction';
-                         }
-                         if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-                           return '/L1/Law/Droit_Test/introduction';
-                         }
-                         return '/catalog';
-                       };
-
-                       const formatCourseLevel = (level: string | number) => {
-                         const lvlStr = String(level).toUpperCase();
-                         const isEn = lang.toUpperCase() === 'EN';
-                         const isZh = lang.toUpperCase() === 'ZH';
-                         const isEs = lang.toUpperCase() === 'ES';
-                         const isDe = lang.toUpperCase() === 'DE';
-
-                         if (lvlStr === 'L1') {
-                           if (isEn) return '101';
-                           if (isZh) return '大一 (101)';
-                           if (isEs) return 'L1 (101)';
-                           if (isDe) return 'L1 (101)';
-                           return 'L1';
-                         }
-                         if (lvlStr === 'L2') {
-                           if (isEn) return '201';
-                           if (isZh) return '大二 (201)';
-                           if (isEs) return 'L2 (201)';
-                           if (isDe) return 'L2 (201)';
-                           return 'L2';
-                         }
-                         if (lvlStr === 'L3') {
-                           if (isEn) return '301';
-                           if (isZh) return '大三 (301)';
-                           if (isEs) return 'L3 (301)';
-                           if (isDe) return 'L3 (301)';
-                           return 'L3';
-                         }
-                         return lvlStr;
-                       };
-
-                       const getLocalizedTitle = (c: any) => {
-                         const isEn = lang.toUpperCase() === 'EN';
-                         const slug = c.slug;
-                         if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-                           return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-                         }
-                         if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-                           return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-                         }
-                         if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-                           return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-                         }
-                         if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-                           return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-                         }
-                         if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-                           return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-                         }
-                         return t[c.title_key as keyof typeof t] || c.title_key;
-                       };
-
                        const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
                        const ratingCount = courseDetails?.ratingCount || 0;
                        const averageRating = courseDetails?.averageRating || 0;
                        const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
+                       
                        const cardContent = (
                           <div className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}>
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
@@ -323,13 +253,25 @@ export default function CurriculumPage() {
                                     >
                                       <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                                     </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setAbandonTarget(courseDetails || course);
+                                      }}
+                                      title={lang === 'FR' ? 'Abandonner' : 'Abandon'}
+                                      className="p-2 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-950/30 transition-all cursor-pointer flex items-center justify-center"
+                                    >
+                                      <Icons.Trash2 className="w-4 h-4" />
+                                    </button>
                                     <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                      {formatCourseLevel(course.level)}
+                                      {course.level}
                                     </span>
                                  </div>
                               </div>
                               <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
-                                {getLocalizedTitle(course)}
+                                {course.title}
                               </h3>
                               <p className="text-sm text-slate-500 mb-6">{course.subject}</p>
                               
@@ -345,7 +287,6 @@ export default function CurriculumPage() {
                                 />
                               </div>
 
-                              {/* Time spent indicator card */}
                               <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -356,27 +297,7 @@ export default function CurriculumPage() {
                                 </span>
                               </div>
 
-                              {/* Disenroll (Opt-Out) button with dynamic warnings */}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (confirm(lang === 'FR' 
-                                    ? `Êtes-vous sûr de vouloir vous désinscrire (Opt-Out) du cours "${getLocalizedTitle(course)}" ?\n\nConséquences :\n- Votre progression actuelle (leçons, avancement) sur ce cours sera réinitialisée.\n- Vos succès déverrouillés et vos Mastery Points globaux restent intacts.\n- Vous pourrez ensuite vous réinscrire librement à une version plus récente.` 
-                                    : `Are you sure you want to disenroll (Opt-Out) from "${getLocalizedTitle(course)}"?\n\nConsequences:\n- Your current lesson progression on this course will be reset.\n- Your unlocked achievements and global Mastery Points remain completely safe.\n- You can then freely re-enroll in a more recent version.`
-                                  )) {
-                                    handleOptOut(course.id);
-                                  }
-                                }}
-                                className="w-full py-2.5 mb-4 border border-red-500/20 hover:border-red-500/50 bg-red-955/20 hover:bg-red-955/40 text-red-400 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2"
-                              >
-                                <Icons.Trash2 className="w-3 h-3" />
-                                {lang === 'FR' ? 'Abandonner (Opt-Out)' : 'Abandon (Opt-Out)'}
-                              </button>
-                              
-                              {/* Continue button at bottom of curriculum module */}
-                              <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center">
+                              <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center mt-auto">
                                  <span className={`text-[9px] font-black uppercase tracking-widest ${isCurr ? 'text-violet-400' : 'text-slate-500 group-hover:text-blue-400'} transition-colors`}>
                                     {isCurr ? (lang === 'FR' ? 'Gérer le Curriculum' : 'Manage Curriculum') : (lang.toUpperCase() === 'FR' ? 'Continuer le cours' : 'Continue Course')}
                                  </span>
@@ -394,7 +315,7 @@ export default function CurriculumPage() {
                        }
 
                        return (
-                         <Link key={course.id} href={getCoursePath(course)} className="group">
+                         <Link key={course.id} href={`/course/${course.slug}`} className="group">
                            {cardContent}
                          </Link>
                        );
@@ -764,6 +685,62 @@ export default function CurriculumPage() {
             </div>
           );
         })()}
+      </AnimatePresence>
+
+      {/* 🔮 DOUBLE-SAFEGUARD GLASSMORPHIC OPT-OUT MODAL */}
+      <AnimatePresence>
+        {abandonTarget && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-950/85 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-gradient-to-br from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-red-500/30 rounded-[40px] shadow-2xl p-10 relative overflow-hidden"
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="flex items-center gap-4 text-red-500 mb-6">
+                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center">
+                  <Icons.AlertTriangle className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 block mb-1">
+                    {lang === 'FR' ? 'CONFIRMATION DE DÉSINSCRIPTION' : 'DISENROLLMENT CONFIRMATION'}
+                  </span>
+                  <h3 className="text-xl font-black text-white">
+                    {lang === 'FR' ? 'Abandonner le module ?' : 'Abandon Module?'}
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-400 leading-relaxed mb-8">
+                {lang === 'FR' 
+                  ? `Êtes-vous absolument sûr de vouloir abandonner "${abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course')}" ? Votre progression locale sur ce module sera réinitialisée, mais vos points de maîtrise globaux et succès restent pleinement préservés.`
+                  : `Are you absolutely sure you want to abandon "${abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course')}"? Your local progress on this module will be reset, but your global mastery points and achievements remain fully secure.`}
+              </p>
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setAbandonTarget(null)}
+                  className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
+                >
+                  {lang === 'FR' ? 'Annuler' : 'Cancel'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOptOut(abandonTarget.id);
+                    setAbandonTarget(null);
+                  }}
+                  className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
+                >
+                  {lang === 'FR' ? 'Confirmer' : 'Confirm'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
      <Footer />

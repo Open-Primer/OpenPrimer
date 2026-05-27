@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { TopNav } from '@/components/RefinedUI';
@@ -509,6 +509,15 @@ export default function AdminCurriculumPage() {
   // Double-Safeguard Target Modals
   const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
+  const [courseArchiveTarget, setCourseArchiveTarget] = useState<any | null>(null);
+  const [deleteTutorTarget, setDeleteTutorTarget] = useState<any | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [infoModal, setInfoModal] = useState<{ title: string; message: string } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   // Drag and Drop Badge Upload Dragging States
   const [isCreationDragging, setIsCreationDragging] = useState(false);
@@ -846,12 +855,36 @@ export default function AdminCurriculumPage() {
 
     if (typeof window !== 'undefined') {
       const q = window.localStorage.getItem('openprimer_pipeline_queue');
-      setQueue(q ? JSON.parse(q) : []);
+      if (q) {
+        const parsed = JSON.parse(q);
+        // Migrate: stamp completedAt for already-completed tasks and extract targetLang for translation tasks
+        const migrated = parsed.map((t: any) => {
+          const updates: any = {};
+          if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
+            updates.completedAt = t.timestamp
+              ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
+              : new Date().toISOString();
+          }
+          if (t.type === 'translation' && !t.targetLang) {
+            const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
+            if (m) updates.targetLang = m[1];
+          }
+          return Object.keys(updates).length ? { ...t, ...updates } : t;
+        });
+        // Save back if any migration happened
+        const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
+        if (needsSave) localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(migrated));
+        setQueue(migrated);
+      } else {
+        setQueue([]);
+      }
     }
   };
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(loadData, 10_000);
+    return () => clearInterval(interval);
   }, []);
 
   // Priority-Based Tasks execution scheduling loop (runs every 4 seconds)
@@ -869,7 +902,8 @@ export default function AdminCurriculumPage() {
             return {
               ...t,
               progress: nextProgress,
-              status: nextProgress >= 100 ? 'complete' : 'running'
+              status: nextProgress >= 100 ? 'complete' : 'running',
+              ...(nextProgress >= 100 ? { completedAt: new Date().toISOString() } : {})
             };
           }
           return t;
@@ -1470,7 +1504,7 @@ export default function AdminCurriculumPage() {
     const isCourse = courses.some(c => c.title.toLowerCase() === title.toLowerCase());
     const isInQueue = queue.some(t => t.title.toLowerCase() === title.toLowerCase());
     if (isCourse || isInQueue) {
-      alert(lang === 'FR' ? `Le cours "${title}" existe déjà dans le catalogue ou dans la file d'attente !` : `The course "${title}" already exists in the catalog or in the queue!`);
+      showToast(lang === 'FR' ? `Le cours "${title}" existe déjà dans le catalogue ou dans la file d'attente !` : `The course "${title}" already exists in the catalog or in the queue!`, 'info');
       return;
     }
 
@@ -1514,7 +1548,7 @@ export default function AdminCurriculumPage() {
     // Prevent duplicates in queue
     const isInQueue = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
     if (isInQueue) {
-      alert(lang === 'FR' ? `La tâche de traduction pour ${targetLang.toUpperCase()} est déjà dans la file d'attente !` : `Translation task for ${targetLang.toUpperCase()} is already in the queue!`);
+      showToast(lang === 'FR' ? `La tâche de traduction pour ${targetLang.toUpperCase()} est déjà dans la file d'attente !` : `Translation task for ${targetLang.toUpperCase()} is already in the queue!`, 'info');
       return;
     }
 
@@ -1522,7 +1556,7 @@ export default function AdminCurriculumPage() {
     const targetCourse = courses.find(c => c.title.toLowerCase() === courseTitle.toLowerCase());
     const alreadyTranslated = targetCourse && targetCourse.translations && targetCourse.translations[targetLang.toUpperCase()];
     if (alreadyTranslated) {
-      alert(lang === 'FR' ? `Ce cours est déjà traduit en ${targetLang.toUpperCase()} !` : `This course is already translated into ${targetLang.toUpperCase()}!`);
+      showToast(lang === 'FR' ? `Ce cours est déjà traduit en ${targetLang.toUpperCase()} !` : `This course is already translated into ${targetLang.toUpperCase()}!`, 'info');
       return;
     }
 
@@ -1533,6 +1567,7 @@ export default function AdminCurriculumPage() {
       status: 'queued',
       progress: 0,
       priority: 'Medium',
+      targetLang: targetLang.toUpperCase(),
       timestamp: new Date().toISOString()
     };
     const updated = [...queue, newTask];
@@ -1639,14 +1674,11 @@ export default function AdminCurriculumPage() {
     const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
 
     if (taskToCancel.type === 'translation') {
-      alert(pStrings.translation_cancel_error);
+      showToast(pStrings.translation_cancel_error, 'info');
       return;
     }
 
-    if (!bypassConfirm) {
-      const confirmed = window.confirm(pStrings.task_cancel_confirm.replace("{title}", taskToCancel.title));
-      if (!confirmed) return;
-    }
+    // Modal confirmation handled by cancelTaskTarget state
 
     const updated = queue.filter(t => t.id !== id);
     localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
@@ -1763,14 +1795,13 @@ export default function AdminCurriculumPage() {
   const handleDeletePersona = async (id: string) => {
     const target = personalities.find(p => p.id === id);
     if (!target) return;
+    setDeleteTutorTarget(target);
+  };
 
-    const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
-    const confirmed = window.confirm(pStrings.tutor_confirm.replace("{title}", target.name));
-    if (!confirmed) return;
-
+  const handleDeletePersonaConfirmed = async (id: string) => {
     const res = await dbService.deleteTutorPersonality(id);
     if (res.error) {
-      alert(res.error.message);
+      setInfoModal({ title: lang === 'FR' ? 'Erreur' : 'Error', message: res.error.message });
     } else {
       if (typeof window !== 'undefined') {
         const activeTutor = window.localStorage.getItem('op_active_tutor_personality');
@@ -1934,7 +1965,7 @@ export default function AdminCurriculumPage() {
     // Prevent duplicate language registration
     const alreadyExists = availableLanguages.some(l => l.code.toUpperCase().trim() === codeUpper);
     if (alreadyExists) {
-      alert(lang === 'FR' ? `La langue ${codeUpper} est déjà enregistrée !` : `Language ${codeUpper} is already registered!`);
+      showToast(lang === 'FR' ? `La langue ${codeUpper} est déjà enregistrée !` : `Language ${codeUpper} is already registered!`, 'info');
       return;
     }
 
@@ -2645,39 +2676,24 @@ export default function AdminCurriculumPage() {
                     </div>
                   </div>
 
-                  {/* Registered Notification Emails Registry (90-day retention) */}
-                  <div className="pt-6 border-t border-slate-900 space-y-4">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">Student Notification Emails (90-Day Retention)</h4>
-                      <p className="text-xs text-slate-500">List of student emails registered to be notified immediately when their requested translations are deployed.</p>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {translationEmails.map((item) => {
-                        const elapsedDays = (Date.now() - new Date(item.timestamp).getTime()) / (1000 * 60 * 60 * 24);
-                        const remainingDays = Math.max(0, Math.ceil(90 - elapsedDays));
-                        return (
-                          <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-slate-700/30 transition-all">
-                            <div>
-                              <p className="text-xs font-bold text-white">{item.email}</p>
-                              <p className="text-[8px] text-slate-500 font-black uppercase mt-1">
-                                Course: <span className="text-slate-400 font-bold">{item.courseTitle}</span> • Lang: <span className="text-emerald-400 font-bold">{item.targetLang.toUpperCase()}</span>
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <span className="px-2.5 py-1 bg-slate-950 border border-slate-850 rounded-xl text-[8px] font-black text-slate-400">
-                                EXPIRES IN: <strong className="text-orange-400 font-black">{remainingDays}d</strong>
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {translationEmails.length === 0 && (
-                        <p className="col-span-2 text-sm text-slate-600 italic py-4 text-center">No active student notification emails registered.</p>
-                      )}
+                  {/* Course Launch Notification Counter */}
+                  <div className="pt-6 border-t border-slate-900">
+                    <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">Course Launch Notification Queue</h4>
+                        </div>
+                        <p className="text-xs text-slate-500">Users waiting to be notified when their requested course translation goes live (90-day auto-purge).</p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1 shrink-0 ml-8">
+                        <span className="text-4xl font-black text-emerald-400">{translationEmails.length}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Registered Languages Registry & Add Language Panel */}
+
+                  {/* Registered Languages Registry & Add Language Panel */}                  {/* Registered Languages Registry & Add Language Panel */}
                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                      <div className="space-y-1">
@@ -3174,6 +3190,9 @@ export default function AdminCurriculumPage() {
                           <th className="px-6 py-4">
                             Versions (Revisions)
                           </th>
+                          <th className="px-6 py-4">
+                            Languages
+                          </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (courseSortField === 'level') {
                               setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
@@ -3262,6 +3281,14 @@ export default function AdminCurriculumPage() {
                                 <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
                                   {courses.filter(c => c.slug.replace(/_v\d+$/, '') === course.slug.replace(/_v\d+$/, '')).length}
                                 </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex flex-wrap gap-1">
+                                    {(course.languages || course.langs || []).map((l: string) => (
+                                      <span key={l} className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[8px] font-black uppercase text-slate-400">{l}</span>
+                                    ))}
+                                    {!(course.languages || course.langs || []).length && <span className="text-slate-700 font-black">--</span>}
+                                  </div>
+                                </td>
                                 <td className="px-6 py-4 text-slate-400 font-mono font-bold">
                                   {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : course.level))}
                                 </td>
@@ -3270,11 +3297,7 @@ export default function AdminCurriculumPage() {
                                     currentLevel={currentLevel}
                                     lang={lang}
                                     onChange={async (nextLvl) => {
-                                      if (nextLvl === 3) {
-                                        const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
-                                        const confirmed = window.confirm(pStrings.course_confirm.replace("{title}", course.title));
-                                        if (!confirmed) return;
-                                      }
+                                      if (nextLvl === 3) { setCourseArchiveTarget({ course }); return; }
                                       await dbService.setCourseArchivingLevel(course.id, nextLvl);
                                       loadData();
                                     }}
@@ -3337,6 +3360,8 @@ export default function AdminCurriculumPage() {
                           }}>
                             Level {renderSortIndicator('level', queueSortField, queueSortDir)}
                           </th>
+                          <th className="px-6 py-4">Language</th>
+                          <th className="px-6 py-4">Completed</th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'type') {
                               setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
@@ -3416,6 +3441,14 @@ export default function AdminCurriculumPage() {
                               <td className="px-6 py-4 font-mono text-[9px] text-slate-500">{task.id}</td>
                               <td className="px-6 py-4 font-bold text-slate-200">{task.title}</td>
                               <td className="px-6 py-4 font-mono font-bold text-slate-400">{formatCourseLevel(task.level)}</td>
+                              <td className="px-6 py-4">
+                                {task.targetLang ? (
+                                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black rounded-full uppercase">{task.targetLang}</span>
+                                ) : <span className="text-slate-700 font-black">—</span>}
+                              </td>
+                              <td className="px-6 py-4 font-mono text-[9px] text-slate-500">
+                                {task.completedAt ? new Date(task.completedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span className="text-slate-700">—</span>}
+                              </td>
                               <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{task.type}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-2.5 py-1 text-[8px] font-black rounded-full uppercase border ${statusColor}`}>
@@ -4211,8 +4244,8 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD PURGE CONFIRM MODAL */}
       <AnimatePresence>
         {purgeTarget && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
+          <div onClick={() => setPurgeTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                  return (
@@ -4376,7 +4409,7 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD CANCEL TASK MODAL */}
       <AnimatePresence>
         {cancelTaskTarget && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
+          <div onClick={() => setCancelTaskTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
@@ -4422,7 +4455,7 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD PURGE LANGUAGE MODAL */}
       <AnimatePresence>
         {purgeLanguageTarget && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md">
+          <div onClick={() => setPurgeLanguageTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
@@ -4461,6 +4494,124 @@ export default function AdminCurriculumPage() {
                    </>
                  );
                })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className={`fixed bottom-8 right-8 z-[400] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold backdrop-blur-sm border ${
+              toastMessage.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300' :
+              toastMessage.type === 'error' ? 'bg-red-950/90 border-red-500/30 text-red-300' :
+              'bg-slate-900/90 border-slate-700/50 text-slate-200'
+            }`}
+          >
+            {toastMessage.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />}
+            {toastMessage.type === 'error' && <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />}
+            {toastMessage.type === 'info' && <Activity className="w-5 h-5 text-blue-400 shrink-0" />}
+            <span>{toastMessage.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* INFO / ERROR MODAL */}
+      <AnimatePresence>
+        {infoModal && (
+          <div onClick={() => setInfoModal(null)} className="fixed inset-0 z-[350] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                <ShieldAlert className="w-6 h-6 text-red-500" />
+                <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{infoModal.title}</h3>
+              </div>
+              <div className="p-10 space-y-6">
+                <p className="text-xs text-slate-400 leading-relaxed text-center">{infoModal.message}</p>
+                <button onClick={() => setInfoModal(null)} className="w-full py-4 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white font-black uppercase text-[10px] rounded-xl transition-all cursor-pointer">
+                  {lang === 'FR' ? 'Fermer' : 'Dismiss'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* COURSE ARCHIVE LEVEL 3 CONFIRM MODAL */}
+      <AnimatePresence>
+        {courseArchiveTarget && (
+          <div onClick={() => setCourseArchiveTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              {(() => {
+                const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                return (
+                  <>
+                    <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                      <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                      <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{lang === 'FR' ? "Confirmer l'archivage" : 'Confirm Archive'}</h3>
+                    </div>
+                    <div className="p-10 space-y-6">
+                      <p className="text-xs text-slate-400 leading-relaxed text-center">
+                        {pStrings.course_confirm.replace('{title}', courseArchiveTarget.course?.title || '')}
+                      </p>
+                      <div className="flex gap-4 pt-2">
+                        <button onClick={() => setCourseArchiveTarget(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                          {pStrings.purge_badge_cancel_btn}
+                        </button>
+                        <button onClick={async () => {
+                          await dbService.setCourseArchivingLevel(courseArchiveTarget.course.id, 3);
+                          setCourseArchiveTarget(null);
+                          loadData();
+                        }} className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer">
+                          {pStrings.purge_badge_confirm_btn}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DELETE TUTOR PERSONALITY CONFIRM MODAL */}
+      <AnimatePresence>
+        {deleteTutorTarget && (
+          <div onClick={() => setDeleteTutorTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
+            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              {(() => {
+                const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
+                return (
+                  <>
+                    <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                      <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                      <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{lang === 'FR' ? 'Supprimer la personnalité' : 'Delete Personality'}</h3>
+                    </div>
+                    <div className="p-10 space-y-6">
+                      <p className="text-xs text-slate-400 leading-relaxed text-center">
+                        {pStrings.tutor_confirm.replace('{title}', deleteTutorTarget.name)}
+                      </p>
+                      <div className="flex gap-4 pt-2">
+                        <button onClick={() => setDeleteTutorTarget(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                          {pStrings.purge_badge_cancel_btn}
+                        </button>
+                        <button onClick={async () => {
+                          await handleDeletePersonaConfirmed(deleteTutorTarget.id);
+                          setDeleteTutorTarget(null);
+                          showToast(lang === 'FR' ? 'Personnalité supprimée.' : 'Personality deleted.', 'success');
+                          loadData();
+                        }} className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer">
+                          {pStrings.purge_badge_confirm_btn}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
           </div>
         )}

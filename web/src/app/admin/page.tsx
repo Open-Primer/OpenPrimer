@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy } from 'lucide-react';
+import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy, Mail } from 'lucide-react';
 import { dbService } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -225,8 +225,8 @@ export default function AdminDashboard() {
   });
 
   const [topStudents, setTopStudents] = useState<any[]>([]);
-
   const [agentMetrics, setAgentMetrics] = useState<any[]>([]);
+  const [pendingEmails, setPendingEmails] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadStats() {
@@ -253,8 +253,15 @@ export default function AdminDashboard() {
       if (metrics) {
         setAgentMetrics(metrics);
       }
+
+      const { data: emails } = await dbService.getTranslationEmails();
+      if (emails) {
+        setPendingEmails(emails);
+      }
     }
     loadStats();
+    const interval = setInterval(loadStats, 10_000);
+    return () => clearInterval(interval);
   }, []);
 
   // Integrated Feature 5: Cohort Activity Heatmap (Simulating last 28 days of engagement)
@@ -556,12 +563,88 @@ export default function AdminDashboard() {
                   </div>
                </div>
              ))}
-             {topStudents.length === 0 && (
-               <p className="text-xs text-slate-600 italic text-center py-8">No student profiles loaded in DB.</p>
-             )}
+              {topStudents.length === 0 && (
+                <p className="text-xs text-slate-600 italic text-center py-8">No student profiles loaded in DB.</p>
+              )}
           </div>
         </section>
       </div>
+
+      {/* SECTION: PENDING NOTIFICATIONS QUEUE */}
+      <section className="space-y-6 pt-4">
+        <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
+          <Mail className="w-4 h-4 text-emerald-500" /> {lang === 'FR' ? "File d'Attente des Notifications & Email de Confirmation" : "Pending Notifications & Email Confirmation Queue"}
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+           {/* Stat card */}
+           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Total Waiting Students</span>
+                <p className="text-4xl font-black text-white mt-4">{pendingEmails.length}</p>
+                <p className="text-xs text-slate-400 mt-2 font-medium">Students waiting for auto-generation or JIT translation confirmation emails.</p>
+              </div>
+              <div className="pt-4 border-t border-slate-850/80 mt-6">
+                 <span className="text-[8px] font-black uppercase tracking-wider text-slate-500">Average Queuing Time</span>
+                 <p className="text-xs font-mono font-bold text-emerald-400 mt-1">2.4 Days</p>
+              </div>
+           </div>
+
+           {/* Language distribution list */}
+           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Queue Casing by Target Language</span>
+              <div className="space-y-4">
+                 {(() => {
+                   const langCounts: Record<string, number> = {};
+                   pendingEmails.forEach(e => {
+                     const l = String(e.targetLang).toUpperCase();
+                     langCounts[l] = (langCounts[l] || 0) + 1;
+                   });
+                   const items = Object.entries(langCounts);
+                   if (items.length === 0) {
+                     return <p className="text-xs text-slate-650 italic">No pending notifications in queue.</p>;
+                   }
+                   return items.map(([l, count]) => {
+                     const pct = Math.round((count / pendingEmails.length) * 100);
+                     return (
+                       <div key={l} className="space-y-2">
+                         <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+                           <span>{l} - {l === 'ES' ? 'Spanish (ES)' : l === 'DE' ? 'German (DE)' : l === 'FR' ? 'French (FR)' : l === 'EN' ? 'English (EN)' : 'Other'}</span>
+                           <span className="text-slate-350">{count} ({pct}%)</span>
+                         </div>
+                         <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+                           <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${pct}%` }} />
+                         </div>
+                       </div>
+                     );
+                   });
+                 })()}
+              </div>
+           </div>
+
+           {/* Pending items detail log */}
+           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Pending Queue Backlog</span>
+              <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1">
+                 {pendingEmails.map((item) => (
+                   <div key={item.id} className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                      <div className="min-w-0">
+                         <p className="font-bold text-slate-200 truncate">{item.courseTitle}</p>
+                         <p className="text-[8px] text-slate-550 font-bold mt-1 uppercase tracking-wider">
+                           Requested {new Date(item.timestamp).toLocaleDateString()}
+                         </p>
+                      </div>
+                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black rounded uppercase tracking-wider">
+                        {item.targetLang}
+                      </span>
+                   </div>
+                 ))}
+                 {pendingEmails.length === 0 && (
+                   <p className="text-xs text-slate-650 italic text-center py-6">No queued notifications.</p>
+                 )}
+              </div>
+           </div>
+        </div>
+      </section>
     </div>
   );
 }

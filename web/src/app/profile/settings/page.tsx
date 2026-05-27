@@ -18,6 +18,7 @@ export default function ProfileSettingsPage() {
   });
   const [readingMode, setReadingMode] = useState('dark');
   const [showToast, setShowToast] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     // Load dynamic profile
@@ -147,7 +148,7 @@ export default function ProfileSettingsPage() {
                     <p className="font-black text-white uppercase tracking-widest text-xs">{t.delete_account}</p>
                     <p className="text-xs text-slate-500 mt-1 italic">{t.delete_desc}</p>
                  </div>
-                 <button onClick={() => confirm("Delete permanently?")} className="flex items-center gap-3 px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
+                 <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-3 px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
                     <Trash2 className="w-4 h-4" /> {t.delete_account}
                  </button>
               </div>
@@ -164,6 +165,62 @@ export default function ProfileSettingsPage() {
             <span className="text-sm font-black uppercase tracking-widest">{t.profile_updated}</span>
           </motion.div>
         )}
+
+        {showDeleteConfirm && (
+           <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-950/85 backdrop-blur-xl">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="w-full max-w-lg bg-gradient-to-br from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-red-500/30 rounded-[40px] shadow-2xl p-10 relative overflow-hidden"
+             >
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+               
+               <div className="flex items-center gap-4 text-red-500 mb-6">
+                 <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center">
+                   <ShieldAlert className="w-6 h-6 animate-pulse" />
+                 </div>
+                 <div>
+                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 block mb-1">
+                     {lang === 'FR' ? 'CONFIRMATION DE SUPPRESSION' : 'ACCOUNT DELETION CONFIRMATION'}
+                   </span>
+                   <h3 className="text-xl font-black text-white">
+                     {lang === 'FR' ? 'Supprimer définitivement ?' : 'Delete permanently?'}
+                   </h3>
+                 </div>
+               </div>
+
+               <p className="text-sm text-slate-400 leading-relaxed mb-8">
+                 {lang === 'FR' 
+                   ? "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible et effacera toute votre progression locale, vos certificats et vos cours créés."
+                   : "Are you absolutely sure you want to permanently delete your account? This action is irreversible and will erase all your local progress, certificates, and custom courses."}
+               </p>
+
+               <div className="flex gap-4">
+                 <button
+                   type="button"
+                   onClick={() => setShowDeleteConfirm(false)}
+                   className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
+                 >
+                   {lang === 'FR' ? 'Annuler' : 'Cancel'}
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     if (typeof window !== 'undefined') {
+                       localStorage.clear();
+                       window.location.href = '/';
+                     }
+                     setShowDeleteConfirm(false);
+                   }}
+                   className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
+                 >
+                   {lang === 'FR' ? 'Confirmer' : 'Confirm'}
+                 </button>
+               </div>
+             </motion.div>
+           </div>
+         )}
       </AnimatePresence>
     </div>
   );

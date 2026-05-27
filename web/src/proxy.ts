@@ -8,7 +8,7 @@ const rateLimitStore = new Map<string, { count: number, lastReset: number }>();
 const LIMIT = 10; // requests per minute
 const WINDOW = 60 * 1000; // 1 minute in ms
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Only apply to AI and sensitive API routes
   if (request.nextUrl.pathname.startsWith('/api/tutor') || 
       request.nextUrl.pathname.startsWith('/api/generate')) {

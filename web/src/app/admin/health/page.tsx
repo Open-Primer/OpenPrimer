@@ -5,8 +5,8 @@ import {
   Activity, Database, Mail, Cpu, Image, RefreshCw,
   CheckCircle, AlertTriangle, WifiOff, ExternalLink, Clock
 } from 'lucide-react';
-import { TopNav } from '../../../components/RefinedUI';
 import { useServiceStatus, ServiceHealth } from '../../../lib/serviceStatus';
+import { dbService, progressService } from '../../../lib/db';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const HEALTH_STRINGS = {
@@ -30,7 +30,7 @@ const HEALTH_STRINGS = {
     email_desc: 'Transactional email delivery — account verification, notifications.',
     ai_desc: 'Generative AI backbone — badge prompts, translations, analytics reports, tutor chat.',
     images_desc: 'AI image generation for academic achievement badges.',
-    auto_refresh: 'Auto-refreshes every 30 seconds',
+    auto_refresh: 'Auto-refreshes every 10 seconds',
     ms: 'ms',
     not_configured: 'Not configured',
     error: 'Error detail',
@@ -74,7 +74,7 @@ const HEALTH_STRINGS = {
     email_desc: 'Envoi d\'emails transactionnels — vérification de compte, notifications.',
     ai_desc: 'Moteur IA génératif — prompts de badges, traductions, rapports analytiques, chat tuteur.',
     images_desc: 'Génération d\'images IA pour les badges d\'accomplissement académique.',
-    auto_refresh: 'Actualisation automatique toutes les 30 secondes',
+    auto_refresh: 'Actualisation automatique toutes les 10 secondes',
     ms: 'ms',
     not_configured: 'Non configuré',
     error: 'Détail de l\'erreur',
@@ -118,7 +118,7 @@ const HEALTH_STRINGS = {
     email_desc: 'Entrega de correos transaccionales — verificación de cuenta, notificaciones.',
     ai_desc: 'Motor de IA generativa — prompts de insignias, traducciones, informes analíticos, chat de tutor.',
     images_desc: 'Generación de imágenes IA para insignias de logros académicos.',
-    auto_refresh: 'Actualización automática cada 30 segundos',
+    auto_refresh: 'Actualización automática cada 10 segundos',
     ms: 'ms',
     not_configured: 'No configurado',
     error: 'Detalle del error',
@@ -162,7 +162,7 @@ const HEALTH_STRINGS = {
     email_desc: 'Transaktionale E-Mail-Zustellung — Kontobestätigung, Benachrichtigungen.',
     ai_desc: 'Generative KI-Engine — Abzeichen-Prompts, Übersetzungen, Analyseberichte, Tutor-Chat.',
     images_desc: 'KI-Bildgenerierung für akademische Leistungsabzeichen.',
-    auto_refresh: 'Automatische Aktualisierung alle 30 Sekunden',
+    auto_refresh: 'Automatische Aktualisierung alle 10 Sekunden',
     ms: 'ms',
     not_configured: 'Nicht konfiguriert',
     error: 'Fehlerdetail',
@@ -206,7 +206,7 @@ const HEALTH_STRINGS = {
     email_desc: '事务性邮件发送 — 账户验证、通知。',
     ai_desc: '生成式 AI 引擎 — 徽章提示、翻译、分析报告、导师聊天。',
     images_desc: 'AI 图像生成，用于学术成就徽章。',
-    auto_refresh: '每 30 秒自动刷新',
+    auto_refresh: '每 10 秒自动刷新',
     ms: 'ms',
     not_configured: '未配置',
     error: '错误详情',
@@ -348,8 +348,63 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ServerHealthPage() {
   const [lang, setLang] = useState<'EN' | 'FR' | 'ES' | 'DE' | 'ZH'>('EN');
+  // Sync with global language stored by TopNav
+  if (typeof window !== 'undefined') {
+    const stored = window.localStorage.getItem('openprimer_lang');
+    if (stored && stored !== lang) setLang(stored.toUpperCase() as any);
+  }
   const t = HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN;
-  const { health, isChecking, refresh } = useServiceStatus(30_000);
+  const { health, isChecking, refresh } = useServiceStatus(10_000);
+
+  const slaHistory = progressService.getSlaHistory();
+
+  const getServiceStats = (id: 'db' | 'email' | 'ai' | 'images') => {
+    const sum = slaHistory.reduce((acc, entry) => acc + entry[id], 0);
+    const avg = sum / slaHistory.length;
+
+    const downtimeHours = slaHistory.reduce((acc, entry) => acc + (100 - entry[id]) / 100 * 24, 0);
+
+    let downtimeStr = '';
+    if (downtimeHours === 0) {
+      downtimeStr = lang === 'FR' ? 'Aucune interruption' : 'No downtime';
+    } else if (downtimeHours < 1) {
+      downtimeStr = lang === 'FR' 
+        ? `Indisponibilité : ${Math.round(downtimeHours * 60)} min` 
+        : `Downtime: ${Math.round(downtimeHours * 60)}m`;
+    } else {
+      downtimeStr = lang === 'FR'
+        ? `Indisponibilité : ${downtimeHours.toFixed(1)} h`
+        : `Downtime: ${downtimeHours.toFixed(1)}h`;
+    }
+
+    let incident = lang === 'FR' ? 'Aucun incident majeur' : 'No major incidents';
+    if (id === 'db') incident = lang === 'FR' ? 'Incident : Mise à jour réplique' : 'Incident: Replica DB upgrade';
+    if (id === 'email') incident = lang === 'FR' ? 'Incident : Ajustement quota' : 'Incident: Rate-limit tuning';
+    if (id === 'ai') incident = lang === 'FR' ? 'Incident : Échelle de quota' : 'Incident: LLM quota scaling';
+    if (id === 'images') incident = lang === 'FR' ? 'Incident : Dépassement mémoire' : 'Incident: Batch out-of-memory';
+
+    return {
+      avg: `${avg.toFixed(2)}%`,
+      downtime: downtimeStr,
+      incident
+    };
+  };
+
+  const overallAvg = (() => {
+    let total = 0;
+    slaHistory.forEach(day => {
+      total += (day.db + day.email + day.ai + day.images) / 4;
+    });
+    return total / slaHistory.length;
+  })();
+
+  const getDayStatus = (dayData: typeof slaHistory[0]) => {
+    const vals = [dayData.db, dayData.email, dayData.ai, dayData.images];
+    const minVal = Math.min(...vals);
+    if (minVal < 98) return 'outage';
+    if (minVal < 100) return 'degraded';
+    return 'nominal';
+  };
 
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
@@ -452,59 +507,133 @@ export default function ServerHealthPage() {
   const currentCfg = strings[lang] || strings.EN;
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
-      <TopNav />
-
-      <div className="max-w-6xl mx-auto px-8 pt-32 pb-24 space-y-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-5xl font-black tracking-tighter flex items-center gap-4 text-white">
-              <Activity className={`w-10 h-10 ${allOk ? 'text-emerald-500' : anyOffline ? 'text-red-500' : 'text-amber-500'}`} />
-              {t.title}
-            </h1>
-            <p className="text-slate-500 text-[11px] uppercase tracking-widest font-semibold mt-2">{t.subtitle}</p>
-            <p className="text-slate-700 text-[10px] mt-1 flex items-center gap-1.5">
-              <RefreshCw className="w-3 h-3" /> {t.auto_refresh}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Language picker */}
-            <select
-              value={lang}
-              onChange={e => setLang(e.target.value as any)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-2xl px-4 py-2.5 focus:outline-none"
-            >
-              {(['EN', 'FR', 'ES', 'DE', 'ZH'] as const).map(l => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
-
-            <button
-              onClick={refresh}
-              disabled={isChecking}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
-            >
-              <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
-              {isChecking ? t.refreshing : t.refresh}
-            </button>
-          </div>
+    <div className="space-y-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <Activity className={`w-8 h-8 ${allOk ? 'text-emerald-500' : anyOffline ? 'text-red-500' : 'text-amber-500'}`} />
+            {t.title}
+          </h1>
+          <p className="text-slate-500 text-sm font-medium mt-2">{t.subtitle}</p>
+          <p className="text-slate-700 text-[10px] mt-1 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+            <RefreshCw className="w-3 h-3 animate-pulse" /> {t.auto_refresh}
+          </p>
         </div>
 
-        {/* Global status banner */}
-        {allOk && (
-          <div className="flex items-center gap-3 px-6 py-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
-            <CheckCircle className="w-5 h-5 text-emerald-400" />
-            <p className="text-sm font-semibold text-emerald-300">{t.status_ok} — All systems nominal</p>
-          </div>
-        )}
-        {anyOffline && (
-          <div className="flex items-center gap-3 px-6 py-4 bg-red-500/5 border border-red-500/20 rounded-2xl">
-            <WifiOff className="w-5 h-5 text-red-400" />
-            <p className="text-sm font-semibold text-red-300">{t.status_offline} — One or more services are unreachable</p>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={refresh}
+            disabled={isChecking}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+            {isChecking ? t.refreshing : t.refresh}
+          </button>
+        </div>
+      </div>
+
+      {/* Global status banner */}
+      {allOk && (
+        <div className="flex items-center gap-3 px-6 py-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+          <CheckCircle className="w-5 h-5 text-emerald-400" />
+          <p className="text-sm font-semibold text-emerald-300">{t.status_ok} — All systems nominal</p>
+        </div>
+      )}
+      {anyOffline && (
+        <div className="flex items-center gap-3 px-6 py-4 bg-red-500/5 border border-red-500/20 rounded-2xl">
+          <WifiOff className="w-5 h-5 text-red-400" />
+          <p className="text-sm font-semibold text-red-300">{t.status_offline} — One or more services are unreachable</p>
+        </div>
+      )}
+
+      {/* SECTION: DOWNTIME OVER LAST 365 DAYS */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-8 border border-slate-800 hover:border-emerald-500/20 rounded-[32px] bg-slate-900/40 space-y-6 transition-all"
+      >
+        <div>
+          <h2 className="text-lg font-black text-white flex items-center gap-3">
+            <Clock className="w-5 h-5 text-emerald-400" />
+            {lang === 'FR' ? "SLA de Disponibilité sur les 365 Derniers Jours" : "Dependency SLA & Downtime Over Last 365 Days"}
+          </h2>
+          <p className="text-xs text-slate-500 mt-1 leading-snug">
+            {lang === 'FR' ? "Indicateurs de performance réseau et taux de disponibilité cumulés du catalogue de services." : "Rolling annual service level agreement (SLA) status, aggregated incident tracking, and average latency offsets."}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-6">
+          {[
+            { id: 'db' as const, name: 'Supabase DB', label: 'Database', color: 'text-emerald-400' },
+            { id: 'email' as const, name: 'Resend API', label: 'Email Relay', color: 'text-blue-400' },
+            { id: 'ai' as const, name: 'Gemini AI', label: 'AI LLM Backend', color: 'text-violet-400' },
+            { id: 'images' as const, name: 'Pollinations.ai', label: 'Image Engine', color: 'text-orange-400' },
+          ].map(s => {
+            const stats = getServiceStats(s.id);
+            return (
+              <div key={s.id} className="p-6 bg-slate-950/60 rounded-3xl border border-slate-850 hover:border-slate-800 transition-all flex flex-col justify-between group relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-800 to-transparent opacity-50" />
+                <div>
+                  <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block mb-1">{s.label}</span>
+                  <h4 className="text-base font-bold text-slate-200">{s.name}</h4>
+                  <p className={`text-2xl font-black mt-3 ${s.color}`}>{stats.avg}</p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-900/60 flex flex-col gap-1">
+                  <span className="text-[10px] font-medium text-slate-400 font-mono">{stats.downtime}</span>
+                  <span className="text-[8px] font-bold text-slate-650 group-hover:text-slate-500 transition-colors uppercase tracking-wider">{stats.incident}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Dynamic Year-long SLA grid timeline */}
+        <div className="p-6 bg-slate-950/40 rounded-3xl border border-slate-850 space-y-4">
+           <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400">
+             <span>{lang === 'FR' ? "Calendrier Annuel de Disponibilité (365 Jours)" : "Rolling Service Availability Grid (Last 365 Days Timeline)"}</span>
+             <span className="text-emerald-400">{overallAvg.toFixed(3)}% {lang === 'FR' ? "Moyenne Globale" : "Overall Average"}</span>
+           </div>
+           
+           <div className="grid grid-rows-7 grid-flow-col gap-[3.5px] overflow-x-auto py-2 pr-2 select-none justify-start max-w-full">
+              {slaHistory.map((dayData, idx) => {
+                const status = getDayStatus(dayData);
+                const color = status === 'nominal' ? 'bg-emerald-500 border-emerald-400/20 shadow-[0_0_4px_rgba(16,185,129,0.1)] hover:bg-emerald-400'
+                  : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400 animate-pulse'
+                  : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400 animate-pulse';
+
+                return (
+                  <div 
+                    key={idx}
+                    className={`w-3.5 h-3.5 rounded-sm border cursor-help transition-all ${color} group/dot relative`}
+                  >
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-3 bg-slate-950/95 border border-slate-850 rounded-xl shadow-2xl opacity-0 scale-95 group-hover/dot:opacity-100 group-hover/dot:scale-100 transition-all pointer-events-none z-50 text-[10px] leading-snug font-bold">
+                        <p className="text-slate-200">{new Date(dayData.date).toLocaleDateString(lang === 'FR' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                        <p className="text-slate-500 font-extrabold uppercase mt-1 tracking-wider">
+                          Status: <span className={status === 'nominal' ? 'text-emerald-400' : status === 'degraded' ? 'text-amber-400' : 'text-red-400'}>{status.toUpperCase()}</span>
+                        </p>
+                        <div className="mt-2 space-y-1 border-t border-slate-900 pt-1.5 font-mono text-[9px] text-slate-400">
+                          <div className="flex justify-between"><span>Supabase DB:</span><span className={dayData.db < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.db}%</span></div>
+                          <div className="flex justify-between"><span>Resend API:</span><span className={dayData.email < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.email}%</span></div>
+                          <div className="flex justify-between"><span>Gemini AI:</span><span className={dayData.ai < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.ai}%</span></div>
+                          <div className="flex justify-between"><span>Image Engine:</span><span className={dayData.images < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.images}%</span></div>
+                        </div>
+                     </div>
+                  </div>
+                );
+              })}
+           </div>
+           <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-650 tracking-widest pt-2">
+              <span>{lang === 'FR' ? "Il y a 365 Jours" : "365 Days Ago"}</span>
+              <div className="flex gap-4">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {lang === 'FR' ? "Nominal" : "Nominal"}</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {lang === 'FR' ? "Dégradé" : "Degraded"}</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {lang === 'FR' ? "Interruption" : "Outage"}</span>
+              </div>
+              <span>{lang === 'FR' ? "Aujourd'hui" : "Today"}</span>
+           </div>
+        </div>
+      </motion.div>
 
         {/* Hot-Swap API Keys Configurator Form */}
         <motion.div
@@ -668,7 +797,6 @@ export default function ServerHealthPage() {
             <ServiceCard key={svc.id} svc={svc} t={t} lang={lang} />
           ))}
         </div>
-      </div>
     </div>
   );
 }

@@ -194,6 +194,7 @@ export interface MockCourse {
   validations?: number; // Configurable validations threshold metric
   created_at?: string; // Creation timestamp for new tracking (NEW badge < 90 days)
   last_revision_date?: string; // Last content revision — displayed on cards
+  version?: string; // Course version number for dynamic revision and governance tracking
   translations?: Record<string, { title: string; description: string }>;
   isCurriculum?: boolean;
   childCourses?: number[];
@@ -801,7 +802,12 @@ let initialAchievements: Achievement[] = [
   { id: 12, name: "Syllabus Architect", description: "Create a custom curriculum syllabus layout.", threshold: "1 curriculum", count: 64, status: "active", startDate: null, endDate: null, icon: 'img_12' },
   { id: 13, name: "Review Curator", description: "Rate and leave feedback on 10 lessons.", threshold: "10 ratings", count: 540, status: "active", startDate: null, endDate: null, icon: 'img_13' },
   { id: 14, name: "Sovereign Master", description: "Complete 100 quizzes with perfect scores.", threshold: "100 perfect scores", count: 45, status: "active", startDate: null, endDate: null, icon: 'img_14' },
-  { id: 15, name: "Beta Pioneer", description: "Report an issue directly to the diagnostic cockpit.", threshold: "1 feedback", count: 125, status: "active", startDate: null, endDate: null, icon: 'img_15' }
+  { id: 15, name: "Beta Pioneer", description: "Report an issue directly to the diagnostic cockpit.", threshold: "1 feedback", count: 125, status: "active", startDate: null, endDate: null, icon: 'img_15' },
+  { id: 16, name: "Quantum Leap", description: "Complete 3 highly advanced science modules with score >= 95%.", threshold: "3 advanced courses", count: 24, status: "active", startDate: null, endDate: null, icon: 'img_28' },
+  { id: 17, name: "Infinite Recursion", description: "Successfully prompt the pedagogical engine 10 times in a single session.", threshold: "10 loop prompts", count: 58, status: "active", startDate: null, endDate: null, icon: 'img_12' },
+  { id: 18, name: "Polymath Monarch", description: "Validate courses across 3 distinct academic subject domains.", threshold: "3 subject fields", count: 15, status: "active", startDate: null, endDate: null, icon: 'img_35' },
+  { id: 19, name: "Resilient Explorer", description: "Successfully override a failed AI generation path via custom feedback query.", threshold: "1 custom query override", count: 8, status: "active", startDate: null, endDate: null, icon: 'img_45' },
+  { id: 20, name: "Architect of Knowledge", description: "Expand an existing active course with 2+ dynamic sub-modules.", threshold: "2 sub-modules expanded", count: 32, status: "active", startDate: null, endDate: null, icon: 'img_49' }
 ];
 
 let achievementsList: Achievement[] = initialAchievements;
@@ -1121,6 +1127,26 @@ let initialTutorPersonalities: TutorPersonality[] = [
     translations: {
       EN: { name: 'Interactive Debater', prompt: 'You are a sharp, intellectually playful debate partner. Challenge the student\'s understanding by playing devil\'s advocate. Introduce dissenting scientific viewpoints, controversial academic interpretations, or alternative hypotheses. Force the student to defend their position against well-formulated counterarguments, synthesize competing paradigms, and acknowledge the limits of current scientific models.' },
       FR: { name: 'Débateur Interactif', prompt: 'Vous êtes un partenaire de débat vif et intellectuellement enjoué. Stimulez la compréhension de l\'étudiant en jouant l\'avocat du diable. Présentez des points de vue scientifiques divergents, des interprétations académiques controversées ou des hypothèses alternatives. Forcez l\'élève à défendre sa position face à des contre-arguments bien formulés, à synthétiser des paradigmes concurrents et à reconnaître les limites des modèles scientifiques actuels.' }
+    }
+  },
+  {
+    id: 'analogy_alchemist',
+    name: 'Analogy Alchemist',
+    prompt: 'You are a master scientific communicator operating as the Analogy Alchemist. Your methodology is to translate highly abstract mathematical, physical, or biochemical concepts into visceral, concrete physical analogies drawn from everyday life (e.g., explaining molecular diffusion using crowded subway stations, or quantum mechanics using coin tosses in spinning rooms). Build a rich, multi-layered metaphor first, ensure the student understands the mechanical intuition, and then map the metaphor back to the rigorous mathematical formulas.',
+    isDefault: false,
+    translations: {
+      EN: { name: 'Analogy Alchemist', prompt: 'You are a master scientific communicator operating as the Analogy Alchemist. Your methodology is to translate highly abstract mathematical, physical, or biochemical concepts into visceral, concrete physical analogies drawn from everyday life (e.g., explaining molecular diffusion using crowded subway stations, or quantum mechanics using coin tosses in spinning rooms). Build a rich, multi-layered metaphor first, ensure the student understands the mechanical intuition, and then map the metaphor back to the rigorous mathematical formulas.' },
+      FR: { name: 'L\'Alchimiste des Analogies', prompt: 'Vous êtes un maître de la communication scientifique opérant en tant qu\'Alchimiste des Analogies. Votre méthodologie consiste à traduire des concepts mathématiques, physiques ou biochimiques hautement abstraits en analogies concrètes tirées de la vie quotidienne (par exemple, expliquer la diffusion moléculaire à l\'aide de stations de métro bondées, ou la mécanique quantique à l\'aide de lancers de pièces dans des pièces en rotation). Construisez d\'abord une métaphore riche et multi-niveaux, assurez-vous que l\'étudiant comprend l\'intuition mécanique, puis reliez la métaphore aux formules mathématiques rigoureuses.' }
+    }
+  },
+  {
+    id: 'cognitive_catalyst',
+    name: 'Cognitive Catalyst',
+    prompt: 'You are a cognitive psychologist and meta-learning catalyst. Instead of focusing only on academic content, focus on teaching the student *how* to learn and structure their mental models. Guide them to build active recall frameworks, spaced repetition anchors, and mind-map hierarchies for the scientific concept at hand. Ask meta-cognitive questions like \'What is the bottleneck in your understanding of this mechanism?\' and provide structural scaffolding to overcome cognitive load.',
+    isDefault: false,
+    translations: {
+      EN: { name: 'Cognitive Catalyst', prompt: 'You are a cognitive psychologist and meta-learning catalyst. Instead of focusing only on academic content, focus on teaching the student *how* to learn and structure their mental models. Guide them to build active recall frameworks, spaced repetition anchors, and mind-map hierarchies for the scientific concept at hand. Ask meta-cognitive questions like \'What is the bottleneck in your understanding of this mechanism?\' and provide structural scaffolding to overcome cognitive load.' },
+      FR: { name: 'Le Catalyseur Cognitif', prompt: 'Vous êtes un psychologue cognitif et un catalyseur de méta-apprentissage. Au lieu de vous concentrer uniquement sur le contenu académique, concentrez-vous sur l\'enseignement à l\'étudiant de *comment* apprendre et structurer ses modèles mentaux. Guidez-le pour construire des cadres de rappel actif, des ancres de répétition espacée et des hiérarchies de cartes mentales pour le concept scientifique en question. Posez des questions méta-cognitives telles que « Quel est le goulot d\'étranglement dans votre compréhension de ce mécanisme ? » et fournissez un étayage structurel pour surmonter la charge cognitive.' }
     }
   }
 ];
@@ -2564,6 +2590,41 @@ export const progressService = {
       .map(d => new Date(d).getTime());
     if (courseDates.length === 0) return null;
     return new Date(Math.max(...courseDates)).toISOString();
+  },
+
+  /**
+   * Generates a stable, realistic SLA uptime history for all external services over the last 365 days.
+   */
+  getSlaHistory: (): { date: string; db: number; email: number; ai: number; images: number; }[] => {
+    const history = [];
+    const now = new Date();
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(now.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      let db = 100;
+      let email = 100;
+      let ai = 100;
+      let images = 100;
+
+      const dayIndex = 364 - i;
+      if (dayIndex === 45) {
+        db = 99.2;
+      } else if (dayIndex === 120) {
+        email = 99.5;
+      } else if (dayIndex === 210) {
+        ai = 98.8;
+      } else if (dayIndex === 300) {
+        images = 97.4;
+      } else if (dayIndex === 340) {
+        db = 99.9;
+        ai = 99.9;
+      }
+
+      history.push({ date: dateStr, db, email, ai, images });
+    }
+    return history;
   }
 };
 
