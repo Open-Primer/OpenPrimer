@@ -595,6 +595,7 @@ export default function AdminCurriculumPage() {
   const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
   const [courseArchiveTarget, setCourseArchiveTarget] = useState<any | null>(null);
+  const [curriculumArchivalPending, setCurriculumArchivalPending] = useState<{ course: any; nextLevel: number; parentCurricula: any[] } | null>(null);
   const [deleteTutorTarget, setDeleteTutorTarget] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [infoModal, setInfoModal] = useState<{ title: string; message: string } | null>(null);
@@ -3366,102 +3367,119 @@ export default function AdminCurriculumPage() {
               )}
 
               {/* 4. COURSE ARCHIVING TAB */}
-              {view === 'archiving' && (
-                <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-black text-slate-200">Curriculum Registry and Archival Control</h3>
-                      <p className="text-xs text-slate-400">Search courses and archive/unarchive specific languages or entire courses instantly.</p>
-                    </div>
-                    {/* Search Bar */}
-                    <div className="relative w-full md:w-80">
-                      <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
-                      <input 
-                        type="text"
-                        placeholder="Search courses..."
-                        value={archiveSearch}
-                        onChange={(e) => setArchiveSearch(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
-                      />
-                    </div>
-                  </div>
+              {view === 'archiving' && (() => {
+                const allFilteredCourses = [...courses]
+                  .filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase()))
+                  .sort((a, b) => {
+                    let valA = a[courseSortField as keyof typeof a];
+                    let valB = b[courseSortField as keyof typeof b];
+                    if (typeof valA === 'string') {
+                      valA = valA.toLowerCase();
+                      valB = (valB as string).toLowerCase();
+                    }
+                    if (valA === undefined) return 1;
+                    if (valB === undefined) return -1;
+                    if (valA < valB) return courseSortDir === 'asc' ? -1 : 1;
+                    if (valA > valB) return courseSortDir === 'asc' ? 1 : -1;
+                    return 0;
+                  });
 
-                  <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (courseSortField === 'title') {
-                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setCourseSortField('title');
-                              setCourseSortDir('asc');
-                            }
-                          }}>
-                            Title {renderSortIndicator('title', courseSortField, courseSortDir)}
-                          </th>
-                          <th className="px-6 py-4">
-                            Note (Rating)
-                          </th>
-                          <th className="px-6 py-4">
-                            Validations (Completions)
-                          </th>
-                          <th className="px-6 py-4">
-                            Versions (Revisions)
-                          </th>
-                          <th className="px-6 py-4">
-                            Languages
-                          </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (courseSortField === 'level') {
-                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setCourseSortField('level');
-                              setCourseSortDir('asc');
-                            }
-                          }}>
-                            Level {renderSortIndicator('level', courseSortField, courseSortDir)}
-                          </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (courseSortField === 'archivingLevel') {
-                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setCourseSortField('archivingLevel');
-                              setCourseSortDir('asc');
-                            }
-                          }}>
-                            Archival Level Control {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
-                          </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (courseSortField === 'is_active') {
-                              setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setCourseSortField('is_active');
-                              setCourseSortDir('asc');
-                            }
-                          }}>
-                            Status {renderSortIndicator('is_active', courseSortField, courseSortDir)}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-850/50">
-                        {[...courses]
-                          .filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase()))
-                          .sort((a, b) => {
-                            let valA = a[courseSortField as keyof typeof a];
-                            let valB = b[courseSortField as keyof typeof b];
-                            if (typeof valA === 'string') {
-                              valA = valA.toLowerCase();
-                              valB = (valB as string).toLowerCase();
-                            }
-                            if (valA === undefined) return 1;
-                            if (valB === undefined) return -1;
-                            if (valA < valB) return courseSortDir === 'asc' ? -1 : 1;
-                            if (valA > valB) return courseSortDir === 'asc' ? 1 : -1;
-                            return 0;
-                          })
-                          .map(course => {
+                const displayedCourses = allFilteredCourses.slice(0, 30);
+
+                return (
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-black text-slate-200">
+                          Curriculum Registry and Archival Control
+                          {allFilteredCourses.length > 30 && (
+                            <span className="text-xs font-semibold text-amber-500 ml-3 normal-case tracking-normal">
+                              ({allFilteredCourses.length} results, displaying only 30)
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs text-slate-400">Search courses and archive/unarchive specific languages or entire courses instantly.</p>
+                      </div>
+                      {/* Search Bar */}
+                      <div className="relative w-full md:w-80">
+                        <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                        <input 
+                          type="text"
+                          placeholder="Search courses..."
+                          value={archiveSearch}
+                          onChange={(e) => setArchiveSearch(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'title') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('title');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Title {renderSortIndicator('title', courseSortField, courseSortDir)}
+                            </th>
+                            <th className="px-6 py-4">
+                              Classification
+                            </th>
+                            <th className="px-6 py-4">
+                              Note (Rating)
+                            </th>
+                            <th className="px-6 py-4">
+                              Validations (Completions)
+                            </th>
+                            <th className="px-6 py-4">
+                              Versions (Revisions)
+                            </th>
+                            <th className="px-6 py-4">
+                              Languages
+                            </th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'level') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('level');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Level {renderSortIndicator('level', courseSortField, courseSortDir)}
+                            </th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'archivingLevel') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('archivingLevel');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Archival Level Control {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
+                            </th>
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'is_active') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('is_active');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Status {renderSortIndicator('is_active', courseSortField, courseSortDir)}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-850/50">
+                          {displayedCourses.map(course => {
                             const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
+                            const isCurriculum = course.isCurriculum || false;
+                            const containingCurricula = courses.filter(c => c.isCurriculum && c.childCourses?.includes(course.id));
+                            const isInCurriculum = containingCurricula.length > 0;
 
                             // Label and color definitions based on dynamic level
                             let statusLabel = lang === 'FR' ? 'Actif' : 'Active';
@@ -3485,6 +3503,26 @@ export default function AdminCurriculumPage() {
                                     <p className="text-sm">{course.title}</p>
                                     <p className="text-[9.5px] text-slate-500 font-mono">ID: {course.id}</p>
                                   </div>
+                                </td>
+                                <td className="px-6 py-4 text-slate-300 font-medium">
+                                  {isCurriculum ? (
+                                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
+                                      Curriculum
+                                    </span>
+                                  ) : isInCurriculum ? (
+                                    <div className="space-y-1">
+                                      <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
+                                        In Curriculum
+                                      </span>
+                                      <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
+                                        {containingCurricula.map(cc => cc.title).join(', ')}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
+                                      Standalone
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
                                   {course.averageRating ? `⭐ ${Number(course.averageRating).toFixed(1)}/5` : '⭐ N/A'}
@@ -3516,6 +3554,13 @@ export default function AdminCurriculumPage() {
                                     currentLevel={currentLevel}
                                     lang={lang}
                                     onChange={async (nextLvl) => {
+                                      // Check if this course is inside any parent curricula that are active (lower archiving level than nextLvl)
+                                      const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.includes(course.id) && (c.archivingLevel || 0) < nextLvl);
+                                      if (activeParents.length > 0) {
+                                        setCurriculumArchivalPending({ course, nextLevel: nextLvl, parentCurricula: activeParents });
+                                        return;
+                                      }
+
                                       if (nextLvl === 3) { setCourseArchiveTarget({ course }); return; }
                                       await dbService.setCourseArchivingLevel(course.id, nextLvl);
                                       loadData();
@@ -3530,16 +3575,17 @@ export default function AdminCurriculumPage() {
                               </tr>
                             );
                           })}
-                        {courses.filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase())).length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-slate-655 italic">No courses found matching your query.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          {allFilteredCourses.length === 0 && (
+                            <tr>
+                              <td colSpan={9} className="px-6 py-12 text-center text-slate-655 italic">No courses found matching your query.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* 5. PIPELINE QUEUE TAB */}
               {view === 'queue' && (
@@ -4853,6 +4899,72 @@ export default function AdminCurriculumPage() {
                   </>
                 );
               })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CURRICULUM ARCHIVAL WARNING & CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {curriculumArchivalPending && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCurriculumArchivalPending(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-amber-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                <AlertCircle className="w-6 h-6 text-amber-500 animate-pulse" />
+                <h3 className="text-lg font-black text-amber-400 uppercase tracking-widest">
+                  {lang === 'FR' ? 'Dépendance Active' : 'Active Dependency'}
+                </h3>
+              </div>
+              <div className="p-10 space-y-6">
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {lang === 'FR' 
+                    ? `Ce cours fait partie d'un curriculum actif : "${curriculumArchivalPending.parentCurricula.map(c => c.title).join(', ')}". Pour modifier son niveau d'archivage vers le niveau ${curriculumArchivalPending.nextLevel}, le curriculum parent doit être archivé au moins au même niveau d'abord.`
+                    : `This course belongs to active curricula: "${curriculumArchivalPending.parentCurricula.map(c => c.title).join(', ')}". To set this course to archiving level ${curriculumArchivalPending.nextLevel}, the parent curricula must be archived to the same level first.`
+                  }
+                </p>
+                <p className="text-xs text-amber-500 font-bold leading-relaxed">
+                  {lang === 'FR'
+                    ? `Voulez-vous archiver le(s) curriculum(s) parent(s) au niveau ${curriculumArchivalPending.nextLevel} d'abord, puis archiver ce cours ?`
+                    : `Would you like to archive the parent curricula to level ${curriculumArchivalPending.nextLevel} first, and then proceed with this course?`
+                  }
+                </p>
+                <div className="flex gap-4 pt-2">
+                  <button onClick={() => setCurriculumArchivalPending(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                    {lang === 'FR' ? 'Annuler' : 'Cancel'}
+                  </button>
+                  <button onClick={async () => {
+                    const { course, nextLevel, parentCurricula } = curriculumArchivalPending;
+                    // First archive all parent curricula to nextLevel
+                    for (const curr of parentCurricula) {
+                      await dbService.setCourseArchivingLevel(curr.id, nextLevel);
+                    }
+                    // Then archive the course itself
+                    if (nextLevel === 3) {
+                      setCurriculumArchivalPending(null);
+                      setCourseArchiveTarget({ course });
+                      return;
+                    }
+                    await dbService.setCourseArchivingLevel(course.id, nextLevel);
+                    setCurriculumArchivalPending(null);
+                    showToast(
+                      lang === 'FR' 
+                        ? 'Curriculum(s) et cours archivés avec succès' 
+                        : 'Curriculum(s) and course successfully archived', 
+                      'success'
+                    );
+                    loadData();
+                  }} className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/10 cursor-pointer">
+                    {lang === 'FR' ? 'Archiver Tout' : 'Archive All'}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
