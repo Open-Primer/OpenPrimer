@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy, Mail } from 'lucide-react';
+import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy, Mail, LayoutDashboard } from 'lucide-react';
 import { dbService } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -282,10 +282,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-12">
-      <header>
-        <h1 className="text-3xl font-black tracking-tight mb-2">{t.welcome}</h1>
-        <p className="text-slate-500 text-sm font-medium">{t.subwelcome}</p>
-      </header>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <LayoutDashboard className="w-8 h-8 text-blue-500" />
+            {t.welcome}
+          </h1>
+          <p className="text-xs text-slate-400 font-medium">{t.subwelcome}</p>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatCard 
@@ -621,26 +626,78 @@ export default function AdminDashboard() {
               </div>
            </div>
 
-           {/* Pending items detail log */}
+           {/* Pending items — AGGREGATED by course + language */}
            <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Pending Queue Backlog</span>
-              <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1">
-                 {pendingEmails.map((item) => (
-                   <div key={item.id} className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl flex items-center justify-between gap-3 text-xs">
-                      <div className="min-w-0">
-                         <p className="font-bold text-slate-200 truncate">{item.courseTitle}</p>
-                         <p className="text-[8px] text-slate-550 font-bold mt-1 uppercase tracking-wider">
-                           Requested {new Date(item.timestamp).toLocaleDateString()}
-                         </p>
-                      </div>
-                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black rounded uppercase tracking-wider">
-                        {item.targetLang}
-                      </span>
-                   </div>
-                 ))}
-                 {pendingEmails.length === 0 && (
-                   <p className="text-xs text-slate-650 italic text-center py-6">No queued notifications.</p>
-                 )}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending Queue Backlog</span>
+                {pendingEmails.length > 0 && (
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">
+                    {(() => {
+                      const uniqueJobs = new Map<string, number>();
+                      pendingEmails.forEach(item => {
+                        const key = `${item.courseTitle}|${item.targetLang}`;
+                        uniqueJobs.set(key, (uniqueJobs.get(key) || 0) + 1);
+                      });
+                      return `${uniqueJobs.size} unique jobs · ${pendingEmails.length} total subscribers`;
+                    })()}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
+                {(() => {
+                  if (pendingEmails.length === 0) {
+                    return (
+                      <p className="text-xs text-slate-650 italic text-center py-6">No queued notifications.</p>
+                    );
+                  }
+                  // Aggregate: group by courseTitle + targetLang
+                  const aggregated = new Map<string, { courseTitle: string; targetLang: string; count: number; oldest: string }>();
+                  pendingEmails.forEach(item => {
+                    const key = `${item.courseTitle}|${item.targetLang}`;
+                    const existing = aggregated.get(key);
+                    if (!existing) {
+                      aggregated.set(key, { courseTitle: item.courseTitle, targetLang: item.targetLang, count: 1, oldest: item.timestamp });
+                    } else {
+                      existing.count += 1;
+                      // Track oldest request for SLA awareness
+                      if (item.timestamp < existing.oldest) existing.oldest = item.timestamp;
+                    }
+                  });
+                  // Sort by count descending (highest demand first)
+                  const sorted = Array.from(aggregated.values()).sort((a, b) => b.count - a.count);
+                  const MAX_VISIBLE = 10;
+                  const visible = sorted.slice(0, MAX_VISIBLE);
+                  const overflow = sorted.length - MAX_VISIBLE;
+                  return (
+                    <>
+                      {visible.map((job) => (
+                        <div key={`${job.courseTitle}|${job.targetLang}`} className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-slate-200 truncate">{job.courseTitle}</p>
+                            <p className="text-[8px] text-slate-550 font-bold mt-1 uppercase tracking-wider">
+                              Oldest request: {new Date(job.oldest).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black rounded uppercase tracking-wider">
+                              {job.targetLang}
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-full text-[8px] font-black border ${job.count >= 10 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-slate-800 text-slate-400 border-slate-700/30'}`}>
+                              ×{job.count}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {overflow > 0 && (
+                        <div className="p-3 rounded-2xl border border-dashed border-slate-850 text-center">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
+                            + {overflow} more unique job{overflow > 1 ? 's' : ''} not shown
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
            </div>
         </div>

@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { TopNav } from '@/components/RefinedUI';
+import { useLanguage } from '@/context/LanguageContext';
 import { 
   History, MessageSquare, ShieldCheck, Zap, ChevronRight, CheckCircle, 
   Clock, AlertCircle, Settings, Filter, Database, Eye, Check, X, 
   Edit3, Trash2, ShieldAlert, Bell, Play, RefreshCw, BarChart3, Award,
   Sparkles, Star, Trophy, Crown, Book, Layers, Activity, Heart, Globe, Flame,
   Compass, Map, GraduationCap, Target, Cpu, Key, Lock, Lightbulb, Rocket, Search,
-  Upload
+  Upload, BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage } from '@/lib/db';
@@ -412,7 +412,8 @@ const ArchivingLevelButtons = ({
 };
 
 export default function AdminCurriculumPage() {
-  const [lang, setLang] = useState<'EN' | 'FR' | 'ES' | 'DE' | 'ZH'>('EN');
+  const { language: globalLang } = useLanguage();
+  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
   const t = CURRICULUM_STRINGS[lang] || CURRICULUM_STRINGS.EN;
 
   const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities'>('generation');
@@ -783,15 +784,7 @@ export default function AdminCurriculumPage() {
     return () => clearTimeout(timer);
   }, [editName, editDesc, selectedAchievement]);
 
-  // Load language and database elements
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem('openprimer_lang') as any;
-      if (stored) {
-        setLang(stored.toUpperCase());
-      }
-    }
-  }, []);
+  // Language is provided by useLanguage context — no manual localStorage sync needed.
 
   const loadData = async () => {
     if (typeof window !== 'undefined') {
@@ -2156,44 +2149,43 @@ export default function AdminCurriculumPage() {
   }, [feedbacks, courses, refusedRevisions, queue, revThreshold, revMinVotes, revMinReports]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500">
-      <TopNav />
-      
-      <div className="max-w-7xl mx-auto px-8 pt-32 pb-24">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-8">
-          <div>
-            <h1 className="text-5xl font-black tracking-tighter flex items-center gap-4 text-white">
-              <Database className="w-10 h-10 text-blue-500" /> {t.title}
-            </h1>
-            <p className="text-slate-500 font-medium mt-2 uppercase tracking-widest text-[10px]">{t.subtitle}</p>
-            
-            {/* TABS GRID */}
-            <div className="flex flex-wrap gap-2 mt-8">
-               {[
-                 { id: 'generation', label: t.tab_generation, color: 'bg-blue-600' },
-                 { id: 'translation', label: t.tab_translation, color: 'bg-emerald-600' },
-                 { id: 'revision', label: t.tab_revision, color: 'bg-yellow-600' },
-                 { id: 'archiving', label: t.tab_archiving, color: 'bg-pink-600' },
-                 { id: 'queue', label: t.tab_queue, color: 'bg-cyan-600' },
-                 { id: 'achievements', label: t.tab_achievements, color: 'bg-violet-600' },
-                 { id: 'personalities', label: t.tab_personalities, color: 'bg-fuchsia-600' }
-               ].map(tab => (
-                 <button 
-                   key={tab.id}
-                   onClick={() => setView(tab.id as any)} 
-                   className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? `${tab.color} text-white shadow-lg` : 'bg-slate-900 text-slate-500 hover:text-white border border-slate-850'}`}
-                 >
-                    {tab.label}
-                 </button>
-               ))}
-            </div>
+    <div className="space-y-12 pb-20">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+        <div className="space-y-2 w-full">
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <BookOpen className="w-8 h-8 text-blue-500" />
+            {t.title}
+          </h1>
+          <p className="text-xs text-slate-400 mt-2 font-medium">
+            {t.subtitle}
+          </p>
+          
+          {/* TABS GRID */}
+          <div className="flex flex-wrap gap-2 pt-6">
+             {[
+               { id: 'generation', label: t.tab_generation, color: 'bg-blue-600' },
+               { id: 'translation', label: t.tab_translation, color: 'bg-emerald-600' },
+               { id: 'revision', label: t.tab_revision, color: 'bg-yellow-600' },
+               { id: 'archiving', label: t.tab_archiving, color: 'bg-pink-600' },
+               { id: 'queue', label: t.tab_queue, color: 'bg-cyan-600' },
+               { id: 'achievements', label: t.tab_achievements, color: 'bg-violet-600' },
+               { id: 'personalities', label: t.tab_personalities, color: 'bg-fuchsia-600' }
+             ].map(tab => (
+               <button 
+                 key={tab.id}
+                 onClick={() => setView(tab.id as any)} 
+                 className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? `${tab.color} text-white shadow-lg` : 'bg-slate-900 text-slate-500 hover:text-white border border-slate-850'}`}
+               >
+                  {tab.label}
+               </button>
+             ))}
           </div>
         </div>
+      </div>
 
         {/* MAIN BODY AREA */}
-        <div className="grid lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-12 space-y-8">
+        <div className="space-y-8">
              
              {/* 1. GENERATION ENGINE TAB */}
              {view === 'generation' && (
@@ -3731,8 +3723,6 @@ export default function AdminCurriculumPage() {
               )}
 
            </div>
-         </div>
-       </div>
 
       {/* ACHIEVEMENT ADD MODAL */}
       <AnimatePresence>

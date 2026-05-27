@@ -101,10 +101,13 @@ export default function AdminUsers() {
  
   return (
     <div className="space-y-12 pb-20">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-foreground">Identity Control</h1>
-          <p className="text-slate-500 text-sm font-medium">Manage platform security and administrative roles.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <UserCog className="w-8 h-8 text-blue-500" />
+            Identity Control
+          </h1>
+          <p className="text-xs text-slate-400 font-medium">Manage platform security and administrative roles.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <button 
@@ -124,7 +127,7 @@ export default function AdminUsers() {
              />
           </div>
         </div>
-      </header>
+      </div>
  
       <div className="bg-slate-900/40 border border-slate-800/50 rounded-[40px] overflow-hidden shadow-2xl">
         <table className="w-full text-left border-collapse">
