@@ -986,14 +986,34 @@ export const CatalogPage = () => {
               </div>
 
               {/* Prerequisites */}
-              <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2">Prerequisites</p>
-                <div className="flex flex-wrap gap-2">
-                  {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites || []).map((pre, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-slate-950 rounded-lg text-[9px] font-bold text-slate-400 border border-slate-850">{pre}</span>
-                  ))}
+              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
+                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
+                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
+                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
+                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
+                      
+                      return (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60">
+                          <span className="text-[10px] font-bold text-slate-300">{pre}</span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                            isSatisfied 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            {isSatisfied 
+                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
+                              : (lang === 'FR' ? "⚠ Requis" : "⚠ Required")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Syllabus Units */}
               <div className="space-y-6 mb-10">
@@ -1297,7 +1317,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className={`grid grid-cols-1 ${course.prerequisites && course.prerequisites.length > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-16`}>
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Mastery Weight</p>
@@ -1308,11 +1328,13 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Expected Time</p>
               <p className="text-2xl font-black text-white">{course.hours} Hours</p>
            </div>
-           <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
-              <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prerequisites</p>
-              <p className="text-[10px] font-bold text-slate-400 leading-tight mt-2">{course.prerequisites.join(' • ')}</p>
-           </div>
+           {course.prerequisites && course.prerequisites.length > 0 && (
+             <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
+                <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prerequisites</p>
+                <p className="text-[10px] font-bold text-slate-400 leading-tight mt-2">{course.prerequisites.join(' • ')}</p>
+             </div>
+           )}
         </div>
 
         <div className="space-y-12">

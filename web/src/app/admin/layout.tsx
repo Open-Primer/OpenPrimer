@@ -235,6 +235,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="font-sans text-lg font-black tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
             <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 ml-6 italic">{t.cockpit}</p>
+            
+            {/* Stunning glowing Mockup Mode indicator badge */}
+            <div className="mt-4 ml-6 inline-flex items-center gap-2 px-3 py-1 bg-violet-500/10 border border-violet-500/35 rounded-full shadow-lg shadow-violet-500/5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+              </span>
+              <span className="text-[8px] font-black uppercase tracking-widest text-violet-400">Mockup Active</span>
+            </div>
           </div>
 
           <nav className="flex-1 px-4 space-y-1">
@@ -265,8 +274,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-background flex flex-col h-full">
           {/* Top Navbar */}
           <header className="h-20 border-b border-slate-900 bg-background/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
-            <div>
+            <div className="flex items-center gap-3">
               <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.admin_panel}</span>
+              <div className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded-md flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>Simulated Sandbox</span>
+              </div>
             </div>
             
             <div className="flex items-center gap-6">

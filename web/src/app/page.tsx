@@ -179,7 +179,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [search, setSearch] = useState('');
-  const [stats, setStats] = useState({ total_students: 0, active_curricula: 0, total_languages: 0, total_courses: 0 });
+  const [stats, setStats] = useState<any>(null);
 
   const allSearchableModules = [
     { title: lang === 'FR' ? "Mécanique Classique" : "Classical Mechanics", category: s.physics || 'Physics' },
@@ -546,13 +546,13 @@ export default function Home() {
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-blue-500/30 transition-all duration-300 backdrop-blur-xl group">
                   <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500 group-hover:scale-105 transition-transform duration-300">
-                    {stats.total_languages || 2}
+                    {stats ? stats.total_languages : 5}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">{s.languages}</p>
                </div>
                <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-violet-500/30 transition-all duration-300 backdrop-blur-xl group sm:mt-6">
                   <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-violet-500 group-hover:scale-105 transition-transform duration-300">
-                    {stats.active_curricula || 10}
+                    {stats ? stats.active_curricula : 12}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
                     {lang === 'FR' ? "Cursus" : "Curricula"}
@@ -560,7 +560,7 @@ export default function Home() {
                </div>
                <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-xl group sm:mt-12">
                   <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-500 group-hover:scale-105 transition-transform duration-300">
-                    {stats.total_courses || 25}
+                    {stats ? stats.total_courses : 36}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
                     {lang === 'FR' ? "Cours Totaux" : "Total Courses"}

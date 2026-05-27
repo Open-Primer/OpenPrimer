@@ -625,6 +625,8 @@ export default function AdminCurriculumPage() {
   const [manualTutor, setManualTutor] = useState('socratic');
   const [manualPriority, setManualPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
   const [showManualConfirm, setShowManualConfirm] = useState(false);
+  const [disciplinesList, setDisciplinesList] = useState<string[]>(['Physics', 'Biology', 'Mathematics', 'Law', 'Humanities / Letters', 'Social Sciences', 'Computer Science', 'Medicine', 'Economics', 'Chemistry']);
+  const [customDisciplineName, setCustomDisciplineName] = useState('');
 
   // ─── AI Generated Badge States ─────────────────────────────────────────────
   const [generatedBadges, setGeneratedBadges] = useState<string[]>([]);
@@ -2531,16 +2533,26 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Sujet / Discipline" : "Subject / Discipline"}
                         </label>
                         <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          <option value="Physics">{lang === 'FR' ? "Physique" : "Physics"}</option>
-                          <option value="Biology">{lang === 'FR' ? "Biologie" : "Biology"}</option>
-                          <option value="Mathematics">{lang === 'FR' ? "Mathématiques" : "Mathematics"}</option>
-                          <option value="Chemistry">{lang === 'FR' ? "Chimie" : "Chemistry"}</option>
-                          <option value="Computer Science">{lang === 'FR' ? "Informatique" : "Computer Science"}</option>
-                          <option value="Economics">{lang === 'FR' ? "Économie" : "Economics"}</option>
-                          <option value="Law">{lang === 'FR' ? "Droit" : "Law"}</option>
-                          <option value="General">{lang === 'FR' ? "Général" : "General"}</option>
+                          {disciplinesList.map((d) => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                          <option value="NEW_CUSTOM">➕ {lang === 'FR' ? "Ajouter une discipline..." : "Add custom discipline..."}</option>
                         </select>
                       </div>
+                      {manualSubject === 'NEW_CUSTOM' && (
+                        <div className="space-y-2 col-span-1 sm:col-span-2">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                            {lang === 'FR' ? "Nom de la Discipline Personnalisée" : "Custom Discipline Name"}
+                          </label>
+                          <input 
+                            type="text" 
+                            value={customDisciplineName} 
+                            onChange={(e) => setCustomDisciplineName(e.target.value)} 
+                            placeholder={lang === 'FR' ? "Ex: Neurosciences, Astronomie..." : "e.g. Neurosciences, Astronomy..."} 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder-slate-600" 
+                          />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
                           {lang === 'FR' ? "Langue Initiale" : "Initial Language"}
