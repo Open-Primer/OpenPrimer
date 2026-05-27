@@ -13,6 +13,13 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const applyTheme = (theme: string) => {
       const root = document.documentElement;
+      
+      // Clean up the initial flash-prevention tag to let client classes and inline styles take over
+      const ssrStyle = document.getElementById("op-theme-style");
+      if (ssrStyle) {
+        ssrStyle.remove();
+      }
+
       if (theme === "paper") {
         root.style.setProperty("--background", "#fcfaf2");
         root.style.setProperty("--foreground", "#0f172a");

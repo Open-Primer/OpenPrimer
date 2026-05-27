@@ -107,13 +107,148 @@ export const Summary = ({ items }: { items?: string[] }) => {
   );
 };
 
+const getProgressionStorage = (): Storage | null => {
+  if (typeof window === 'undefined') return null;
+  const session = localStorage.getItem('op_session');
+  const loggedIn = session !== 'false' && session !== null;
+  return loggedIn ? localStorage : sessionStorage;
+};
+
+const GuestFootnote = () => {
+  const { language } = useLanguage();
+  
+  const handleAuthClick = (mode: 'login' | 'signup') => {
+    window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: mode }));
+  };
+
+  const messages: Record<string, React.ReactNode> = {
+    FR: (
+      <>
+        💡 En mode invité, votre progression est temporaire.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Créer un compte gratuit
+        </button>{" "}
+        ou{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          se connecter
+        </button>{" "}
+        pour la sauvegarder définitivement et débloquer votre tuteur IA personnel !
+      </>
+    ),
+    EN: (
+      <>
+        💡 In guest mode, progress is temporary.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Sign up for free
+        </button>{" "}
+        or{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          log in
+        </button>{" "}
+        to save it permanently and unlock your personal AI tutor!
+      </>
+    ),
+    ES: (
+      <>
+        💡 En modo invitado, tu progreso es temporal. ¡{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Crea una cuenta gratis
+        </button>{" "}
+        o{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          inicia sesión
+        </button>{" "}
+        para guardarlo permanentemente y desbloquear tu tutor personal de IA!
+      </>
+    ),
+    DE: (
+      <>
+        💡 Im Gastmodus ist Ihr Fortschritt vorübergehend.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Registrieren Sie sich kostenlos
+        </button>{" "}
+        oder{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          melden Sie sich an
+        </button>{" "}
+        um ihn dauerhaft zu sichern und Ihren persönlichen KI-Tutor freizuschalten!
+      </>
+    ),
+    ZH: (
+      <>
+        💡 在游客模式下，您的学习进度是暂时的。{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          注册免费账户
+        </button>{" "}
+        或{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          登录账户
+        </button>{" "}
+        以永久保存进度并解锁专属个人AI导师！
+      </>
+    )
+  };
+
+  return (
+    <span className="text-[10px] font-medium text-slate-400 block w-full mt-4 border-t border-slate-800/40 pt-3 select-none leading-relaxed">
+      {messages[language.toUpperCase()] || messages.EN}
+    </span>
+  );
+};
+
 // Auto-Évaluation (Pré/Post)
 export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" | "post" }) => {
   const { language } = useLanguage();
   const t = ADVANCED_STRINGS[language as keyof typeof ADVANCED_STRINGS] || ADVANCED_STRINGS.EN;
+  const [selected, setSelected] = React.useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(true);
+  const [isReadOnly, setIsReadOnly] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const session = localStorage.getItem('op_session');
+    const loggedIn = session !== 'false' && session !== null;
+    setIsLoggedIn(loggedIn);
+
+    const storage = getProgressionStorage();
+    if (storage) {
+      const pathname = window.location.pathname;
+      const savedLvl = storage.getItem(`op_selfeval_${type}_${pathname}`);
+      if (savedLvl) {
+        setSelected(parseInt(savedLvl, 10));
+      }
+
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (visited.includes(pathname)) {
+        setIsReadOnly(true);
+        if (!savedLvl) {
+          setSelected(5); // Default to highly confident if completed but not rated
+        }
+      }
+    }
+  }, [type]);
+
+  const handleRate = (lvl: number) => {
+    if (isReadOnly) return;
+    setSelected(lvl);
+    
+    const storage = getProgressionStorage();
+    if (storage) {
+      const pathname = window.location.pathname;
+      storage.setItem(`op_selfeval_${type}_${pathname}`, String(lvl));
+
+      // Save progression locally for guest & logged-in users alike!
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (!visited.includes(pathname)) {
+        visited.push(pathname);
+        storage.setItem('op_visited_pages', JSON.stringify(visited));
+        window.dispatchEvent(new Event('op_progress_updated'));
+      }
+    }
+  };
 
   return (
-    <div className="my-10 p-8 rounded-3xl bg-blue-600/10 border border-blue-500/30">
+    <div className={`my-10 p-8 rounded-3xl bg-blue-600/10 border ${isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-blue-500/30'} transition-all`}>
       <div className="flex items-center gap-3 mb-6">
         <Target className="w-6 h-6 text-blue-400" />
         <h4 className="text-white font-black uppercase text-xs tracking-widest">
@@ -127,11 +262,24 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
       </p>
       <div className="flex gap-4">
         {[1, 2, 3, 4, 5].map(lvl => (
-          <button key={lvl} className="flex-1 h-12 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500 text-slate-500 hover:text-white font-black transition-all cursor-pointer">
+          <button 
+            key={lvl} 
+            onClick={() => handleRate(lvl)}
+            disabled={isReadOnly}
+            className={`flex-1 h-12 rounded-xl transition-all font-black border ${
+              selected === lvl
+                ? "bg-blue-600 border-blue-500 text-white cursor-default shadow-lg shadow-blue-600/20"
+                : isReadOnly
+                  ? "bg-slate-950/40 border-slate-900 text-slate-650 cursor-default opacity-40"
+                  : "bg-slate-900 border-slate-800 hover:border-blue-500 text-slate-500 hover:text-white cursor-pointer"
+            }`}
+          >
             {lvl}
           </button>
         ))}
       </div>
+
+      {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
   );
 };

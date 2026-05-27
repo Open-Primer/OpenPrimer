@@ -376,6 +376,33 @@ const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; pre
       { title: "Consumer Theory", modules: ["Preferences & Utility", "Budget Constraint", "Optimal Choice"] },
       { title: "Producer Theory", modules: ["Production Functions", "Cost Minimization", "Profit Maximization"] }
     ]
+  },
+  11: {
+    ects: 6,
+    hours: 150,
+    prerequisites: ["High School Mathematics"],
+    units: [
+      { title: "Probability", modules: ["Combinatorics", "Bayes Theorem", "Random Variables"] },
+      { title: "Statistical Inference", modules: ["Hypothesis Testing", "Confidence Intervals", "Regression"] }
+    ]
+  },
+  12: {
+    ects: 18,
+    hours: 450,
+    prerequisites: ["Linear Algebra", "Calculus I", "L1 Statistics"],
+    units: [
+      { title: "Foundations & Networks", modules: ["Neural Networks", "Gradient Descent", "Backpropagation"] },
+      { title: "Sovereign Systems & LLMs", modules: ["Attention Mechanisms", "Model Sharding", "Distributed Inference"] }
+    ]
+  },
+  18: {
+    ects: 26,
+    hours: 650,
+    prerequisites: ["High School General Sciences"],
+    units: [
+      { title: "Structure & Genetics L1", modules: ["Cell Biology", "Molecular Genetics"] },
+      { title: "Biochemistry & Microbiology L1", modules: ["Structural Biochemistry", "Microbiology", "General Ecology"] }
+    ]
   }
 };
 
@@ -636,7 +663,7 @@ export const CatalogPage = () => {
                   </p>
                </div>
                {!isLoggedIn && (
-                  <div className="mt-3 px-4 py-3 bg-gradient-to-r from-blue-950/60 via-blue-900/30 to-blue-950/60 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 rounded-2xl max-w-md text-[11px] leading-relaxed text-blue-400/90 font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5">
+                  <div className="translation-guide-banner mt-3 px-4 py-3 bg-gradient-to-r from-blue-950/60 via-blue-900/30 to-blue-950/60 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 rounded-2xl max-w-md text-[11px] leading-relaxed text-blue-400/90 font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5">
                     <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
                     <div>
                       <span className="font-bold text-white uppercase text-[8px] tracking-wider block mb-1">
@@ -740,10 +767,26 @@ export const CatalogPage = () => {
                     )}
 
                     <div className="flex justify-between items-center mb-6 w-full gap-4">
-                      <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                        <Book className="w-6 h-6" />
-                      </div>
+                      {course.isCurriculum ? (
+                        <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={lang === 'FR' ? "Curriculum complet" : "Complete Curriculum"}>
+                          <GraduationCap className="w-6 h-6" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                          <Book className="w-6 h-6" />
+                        </div>
+                      )}
                       <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
+                        {/* Course / Curriculum Differentiating Badge */}
+                        {course.isCurriculum ? (
+                          <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
+                            {lang === 'FR' ? '🎓 Curriculum' : '🎓 Curriculum'}
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
+                            {lang === 'FR' ? '📖 Cours' : '📖 Course'}
+                          </span>
+                        )}
                         {/* Unified gold star rating badge */}
                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />

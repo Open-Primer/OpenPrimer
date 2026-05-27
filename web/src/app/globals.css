@@ -186,22 +186,58 @@ nextjs-portal {
   color: #475569 !important;
 }
 
-.theme-paper .bg-slate-900\/40,
-.theme-paper .bg-slate-900\/20,
-.theme-paper .bg-slate-950\/20,
-.theme-paper .bg-slate-950\/40,
-.theme-paper .bg-slate-950\/50,
-.theme-paper .bg-slate-950\/80,
 .theme-paper .bg-slate-950,
-.theme-paper .bg-slate-900 {
+.theme-paper .bg-slate-900,
+.theme-paper .bg-slate-850,
+.theme-paper .bg-slate-800,
+.theme-paper .bg-slate-950\/95,
+.theme-paper .bg-slate-950\/90,
+.theme-paper .bg-slate-950\/80,
+.theme-paper .bg-slate-950\/70,
+.theme-paper .bg-slate-950\/60,
+.theme-paper .bg-slate-950\/50,
+.theme-paper .bg-slate-950\/40,
+.theme-paper .bg-slate-950\/30,
+.theme-paper .bg-slate-950\/20,
+.theme-paper .bg-slate-950\/10,
+.theme-paper .bg-slate-900\/95,
+.theme-paper .bg-slate-900\/90,
+.theme-paper .bg-slate-900\/80,
+.theme-paper .bg-slate-900\/70,
+.theme-paper .bg-slate-900\/60,
+.theme-paper .bg-slate-900\/50,
+.theme-paper .bg-slate-900\/40,
+.theme-paper .bg-slate-900\/30,
+.theme-paper .bg-slate-900\/20,
+.theme-paper .bg-slate-900\/10,
+.theme-paper .bg-slate-800\/95,
+.theme-paper .bg-slate-800\/90,
+.theme-paper .bg-slate-800\/80,
+.theme-paper .bg-slate-800\/70,
+.theme-paper .bg-slate-800\/60,
+.theme-paper .bg-slate-800\/50,
+.theme-paper .bg-slate-800\/40,
+.theme-paper .bg-slate-800\/30,
+.theme-paper .bg-slate-800\/20,
+.theme-paper .bg-slate-800\/10,
+.theme-paper .bg-slate-955\/75,
+.theme-paper [class*="bg-slate-950"],
+.theme-paper [class*="bg-slate-900"],
+.theme-paper [class*="bg-slate-850"],
+.theme-paper [class*="bg-slate-800"] {
   background-color: #f4f1e5 !important;
+  background-image: none !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
 }
 
 .theme-paper .border-slate-800,
 .theme-paper .border-slate-850,
-.theme-paper .border-slate-900 {
+.theme-paper .border-slate-900,
+.theme-paper .border-slate-700\/30,
+.theme-paper .border-slate-700\/20,
+.theme-paper .border-slate-700\/50,
+.theme-paper .border-slate-700 {
   border-color: #dbd5be !important;
 }
 
@@ -214,15 +250,19 @@ nextjs-portal {
 .theme-paper input[type="number"],
 .theme-paper input[type="date"],
 .theme-paper select,
-.theme-paper textarea {
+.theme-paper textarea,
+.theme-paper input {
   background-color: #faf8f0 !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
 }
 
 .theme-paper input::placeholder,
-.theme-paper textarea::placeholder {
-  color: #94a3b8 !important;
+.theme-paper textarea::placeholder,
+.theme-paper input::-webkit-input-placeholder,
+.theme-paper textarea::-webkit-input-placeholder {
+  color: #475569 !important;
+  opacity: 1 !important;
 }
 
 .theme-paper .hover\:bg-slate-900\/20:hover {
@@ -234,116 +274,150 @@ nextjs-portal {
   border-color: #dbd5be !important;
 }
 
+/* AI Pedagogical Summary Overrides */
+.theme-paper .ai-summary-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), #faf8f0) !important;
+  border-color: #dbd5be !important;
+}
+
 /* --- High-Contrast Bulletproof Overrides for Tailwind v4 on Paper Mode --- */
-body.theme-paper,
-body.theme-paper main,
-body.theme-paper div,
-body.theme-paper h1,
-body.theme-paper h2,
-body.theme-paper h3,
-body.theme-paper h4,
-body.theme-paper h5,
-body.theme-paper h6,
-body.theme-paper p,
-body.theme-paper span,
-body.theme-paper strong,
-body.theme-paper label,
-body.theme-paper th,
-body.theme-paper td {
+.theme-paper,
+.theme-paper main,
+.theme-paper div,
+.theme-paper h1,
+.theme-paper h2,
+.theme-paper h3,
+.theme-paper h4,
+.theme-paper h5,
+.theme-paper h6,
+.theme-paper p,
+.theme-paper span,
+.theme-paper strong,
+.theme-paper label,
+.theme-paper th,
+.theme-paper td {
   text-shadow: none !important;
 }
 
 /* Elevate default text class specificities */
-body.theme-paper h1,
-body.theme-paper h2,
-body.theme-paper h3,
-body.theme-paper h4,
-body.theme-paper h5,
-body.theme-paper h6,
-body.theme-paper .text-white,
-body.theme-paper .text-slate-100,
-body.theme-paper .text-slate-200,
-body.theme-paper .text-slate-300,
-body.theme-paper .text-slate-350,
-body.theme-paper .text-slate-400 {
+.theme-paper h1,
+.theme-paper h2,
+.theme-paper h3,
+.theme-paper h4,
+.theme-paper h5,
+.theme-paper h6,
+.theme-paper .text-white,
+.theme-paper .text-slate-100,
+.theme-paper .text-slate-200,
+.theme-paper .text-slate-300,
+.theme-paper .text-slate-350,
+.theme-paper .text-slate-400 {
   color: #0f172a !important; /* Dark Slate-900 */
 }
 
-body.theme-paper .text-slate-500,
-body.theme-paper .text-slate-550,
-body.theme-paper .text-slate-600,
-body.theme-paper .text-slate-655 {
+/* Restore crisp white text inside primary/success/danger buttons and user chat bubbles */
+.theme-paper .bg-blue-600,
+.theme-paper .bg-blue-600 *,
+.theme-paper .bg-emerald-600,
+.theme-paper .bg-emerald-600 *,
+.theme-paper .bg-red-650,
+.theme-paper .bg-red-650 *,
+.theme-paper .bg-red-600,
+.theme-paper .bg-red-600 * {
+  color: #ffffff !important;
+}
+
+.theme-paper .text-slate-500,
+.theme-paper .text-slate-550,
+.theme-paper .text-slate-600,
+.theme-paper .text-slate-655 {
   color: #334155 !important; /* Slate-700 for beautiful secondary readability */
 }
 
 /* Elegant high-contrast colored text overrides */
-body.theme-paper .text-blue-300,
-body.theme-paper .text-blue-400,
-body.theme-paper .text-blue-500,
-body.theme-paper .text-blue-600 {
+.theme-paper .text-blue-300,
+.theme-paper .text-blue-400,
+.theme-paper .text-blue-500,
+.theme-paper .text-blue-600 {
   color: #1d4ed8 !important; /* Elegant Dark Indigo/Blue */
 }
 
-body.theme-paper .text-yellow-450,
-body.theme-paper .text-yellow-400,
-body.theme-paper .text-yellow-500,
-body.theme-paper .text-yellow-600 {
+.theme-paper .text-yellow-450,
+.theme-paper .text-yellow-400,
+.theme-paper .text-yellow-500,
+.theme-paper .text-yellow-600 {
   color: #92400e !important; /* Deep Golden Amber */
 }
 
-body.theme-paper .text-violet-400,
-body.theme-paper .text-violet-500,
-body.theme-paper .text-violet-600 {
+.theme-paper .text-violet-400,
+.theme-paper .text-violet-500,
+.theme-paper .text-violet-600 {
   color: #6d28d9 !important; /* Rich Dark Purple */
 }
 
-body.theme-paper .text-emerald-450,
-body.theme-paper .text-emerald-400,
-body.theme-paper .text-emerald-500,
-body.theme-paper .text-emerald-600 {
+.theme-paper .text-emerald-450,
+.theme-paper .text-emerald-400,
+.theme-paper .text-emerald-500,
+.theme-paper .text-emerald-600 {
   color: #065f46 !important; /* Rich Deep Forest Green */
 }
 
-body.theme-paper .text-fuchsia-400,
-body.theme-paper .text-fuchsia-500,
-body.theme-paper .text-fuchsia-600 {
+.theme-paper .text-fuchsia-400,
+.theme-paper .text-fuchsia-500,
+.theme-paper .text-fuchsia-600 {
   color: #a21caf !important; /* Deep Magenta */
 }
 
-body.theme-paper .text-amber-500,
-body.theme-paper .text-amber-600 {
+.theme-paper .text-amber-500,
+.theme-paper .text-amber-600 {
   color: #b45309 !important; /* Strong Amber */
 }
 
-body.theme-paper .text-red-400,
-body.theme-paper .text-red-500,
-body.theme-paper .text-red-650 {
+.theme-paper .text-red-400,
+.theme-paper .text-red-500,
+.theme-paper .text-red-650 {
   color: #991b1b !important; /* Deep Crimson */
 }
 
 /* Bulletproof Background and Border overrides for all Slate-based elements */
-body.theme-paper [class*="bg-slate-950"],
-body.theme-paper [class*="bg-slate-900"],
-body.theme-paper [class*="bg-slate-850"],
-body.theme-paper [class*="bg-slate-800"] {
+.theme-paper [class*="bg-slate-950"],
+.theme-paper [class*="bg-slate-900"],
+.theme-paper [class*="bg-slate-850"],
+.theme-paper [class*="bg-slate-800"] {
   background-color: #f3efe0 !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
 }
 
-body.theme-paper [class*="border-slate-"] {
+/* AI Tutor Assistant Chat Bubble Specific Separator Contrast */
+.theme-paper .bg-slate-800\/50 {
+  background-color: #eae5d3 !important;
+  border: 1px solid #dbd5be !important;
+  color: #0f172a !important;
+}
+
+/* Polished list highlights and dropdown item hovers */
+.theme-paper .hover\:bg-slate-800:hover,
+.theme-paper .hover\:bg-slate-900:hover,
+.theme-paper .hover\:bg-slate-950:hover,
+.theme-paper .hover\:bg-slate-850:hover,
+.theme-paper .group:hover .group-hover\:bg-slate-800 {
+  background-color: #dbd5be !important;
+}
+
+.theme-paper [class*="border-slate-"] {
   border-color: #dbd5be !important;
 }
 
-body.theme-paper [class*="divide-slate-"] > * {
+.theme-paper [class*="divide-slate-"] > * {
   border-color: #dbd5be !important;
 }
 
 /* Scrollbars in Paper Mode */
-body.theme-paper ::-webkit-scrollbar-thumb {
+.theme-paper ::-webkit-scrollbar-thumb {
   background: rgba(15, 23, 42, 0.15) !important;
 }
-body.theme-paper ::-webkit-scrollbar-thumb:hover {
+.theme-paper ::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.3) !important;
 }
 
@@ -515,5 +589,58 @@ body.theme-paper ::-webkit-scrollbar-thumb:hover {
 /* Hide Distracting Metadata, badges, and lines in Focus Mode */
 .theme-focus .distraction-free-hide {
   display: none !important;
+}
+
+/* Custom premium styles for warning and translation guide banners across themes */
+.theme-paper .translation-guide-banner {
+  background-color: #eff6ff !important;
+  background-image: none !important;
+  border-color: #bfdbfe !important;
+  color: #1e3a8a !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05) !important;
+}
+.theme-paper .translation-guide-banner span {
+  color: #1e40af !important;
+}
+.theme-paper .translation-guide-banner svg {
+  color: #2563eb !important;
+}
+
+.theme-focus .translation-guide-banner {
+  background-color: #0a0a0a !important;
+  background-image: none !important;
+  border-color: #262626 !important;
+  color: #a3a3a3 !important;
+}
+.theme-focus .translation-guide-banner span {
+  color: #ffffff !important;
+}
+.theme-focus .translation-guide-banner svg {
+  color: #737373 !important;
+}
+
+/* Polished header separation and definition in Focus Theme */
+.theme-focus nav {
+  background-color: #0d0d0d !important;
+  border-bottom: 1px solid #262626 !important;
+}
+.theme-focus nav span.text-white {
+  color: #ffffff !important;
+}
+.theme-focus nav .text-blue-500 {
+  color: #a3a3a3 !important;
+}
+
+/* Stunning deep dark-blue matching navigation and footer for Default/Dark Theme */
+.theme-dark nav,
+body:not(.theme-paper):not(.theme-focus) nav {
+  background-color: rgba(2, 6, 23, 0.85) !important;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.7) !important;
+}
+
+.theme-dark footer,
+body:not(.theme-paper):not(.theme-focus) footer {
+  background-color: #01040f !important;
+  border-top: 1px solid rgba(30, 41, 59, 0.5) !important;
 }
 

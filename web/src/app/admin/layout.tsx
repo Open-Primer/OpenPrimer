@@ -197,7 +197,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-8">
             <Link href="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-4 h-4 text-slate-500" />
-              <span className="text-lg font-black tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
+              <span className="font-sans text-lg font-black tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
             <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 ml-6 italic">{t.cockpit}</p>
           </div>

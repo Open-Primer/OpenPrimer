@@ -99,12 +99,74 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       return `${moduleLabel} • ${lvlVal}`;
     };
 
+    const getLocalizedSubject = (currentLang: string, sub: string) => {
+      const lUpper = currentLang.toUpperCase();
+      const subLower = sub.toLowerCase().trim();
+
+      const dict: Record<string, Record<string, string>> = {
+        physics: {
+          FR: "Physique",
+          ES: "Física",
+          DE: "Physik",
+          ZH: "物理",
+          IT: "Fisica"
+        },
+        "classical mechanics": {
+          FR: "Mécanique Classique",
+          ES: "Mecánica Clásica",
+          DE: "Klassische Mechanik",
+          ZH: "经典力学",
+          IT: "Meccanica Classica"
+        },
+        biology: {
+          FR: "Biologie",
+          ES: "Biología",
+          DE: "Biologie",
+          ZH: "生物",
+          IT: "Biologia"
+        },
+        chemistry: {
+          FR: "Chimie",
+          ES: "Química",
+          DE: "Chemie",
+          ZH: "化学",
+          IT: "Chimica"
+        },
+        law: {
+          FR: "Droit",
+          ES: "Derecho",
+          DE: "Recht",
+          ZH: "法律",
+          IT: "Diritto"
+        },
+        mathematics: {
+          FR: "Mathématiques",
+          ES: "Matemáticas",
+          DE: "Mathematik",
+          ZH: "数学",
+          IT: "Matematica"
+        },
+        economics: {
+          FR: "Économie",
+          ES: "Economía",
+          DE: "Wirtschaft",
+          ZH: "经济学",
+          IT: "Economia"
+        }
+      };
+
+      if (dict[subLower] && dict[subLower][lUpper]) {
+        return dict[subLower][lUpper];
+      }
+      return sub;
+    };
+
     return (
       <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-12 distraction-free-hide">
-            <Link href="/catalog" className="hover:text-blue-500 transition-colors">{subject}</Link>
+            <Link href="/catalog" className="hover:text-blue-500 transition-colors">{getLocalizedSubject(lang, subject)}</Link>
             <ChevronRight className="w-3 h-3 text-slate-800" />
             <span className="text-slate-500">{moduleName}</span>
             <ChevronRight className="w-3 h-3 text-slate-800" />

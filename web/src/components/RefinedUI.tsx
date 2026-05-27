@@ -52,7 +52,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "Total Credits", knowledge_points: "Knowledge Points", learning_time: "Learning Time",
     active_modules: "Active Modules", progress: "Progress", tutor_summary: "AI Pedagogical Summary",
     tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview",
-    classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law"
+    classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law",
+    search_course: "Search this course...", course_progress: "Course Progress"
   },
   FR: { 
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
@@ -93,7 +94,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "Crédits Totaux", knowledge_points: "Points de Savoir", learning_time: "Temps d'Apprentissage",
     active_modules: "Modules Actifs", progress: "Progression", tutor_summary: "Résumé Pédagogique IA",
     tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum",
-    classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel"
+    classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel",
+    search_course: "Rechercher dans ce cours...", course_progress: "Progression du Cours"
   },
   ES: { 
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
@@ -134,7 +136,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "Créditos Totales", knowledge_points: "Puntos de Conocimiento", learning_time: "Tiempo de Aprendizaje",
     active_modules: "Módulos Activos", progress: "Progreso", tutor_summary: "Resumen Pedagógico IA",
     tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo",
-    classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional"
+    classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional",
+    search_course: "Buscar en este curso...", course_progress: "Progreso del Curso"
   },
   DE: { 
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
@@ -175,7 +178,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "Gesamt-Credits", knowledge_points: "Wissenspunkte", learning_time: "Lernzeit",
     active_modules: "Aktive Module", progress: "Fortschritt", tutor_summary: "KI-Pädagogische Zusammenfassung",
     tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick",
-    classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht"
+    classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht",
+    search_course: "Diesen Kurs durchsuchen...", course_progress: "Kursfortschritt"
   },
   ZH: { 
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
@@ -216,7 +220,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "总学分", knowledge_points: "知识点", learning_time: "学习时长",
     active_modules: "当前模块", progress: "进度", tutor_summary: "AI 教学总结",
     tutor_feedback: "学术反馈", curriculum_overview: "课程概览",
-    classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法"
+    classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法",
+    search_course: "搜索此课程...", course_progress: "课程进度"
   },
   IT: { 
     my_progress: "Il Mio Progresso", admin: "Console Amministratore", settings: "Impostazioni Account",
@@ -257,7 +262,8 @@ const STATIC_UI_STRINGS = {
     total_credits: "Crediti Totali", knowledge_points: "Punti di Conoscenza", learning_time: "Tempo di Apprendimento",
     active_modules: "Moduli Attivi", progress: "Progresso", tutor_summary: "Riepilogo Pedagogico IA",
     tutor_feedback: "Feedback Accademico", curriculum_overview: "Panoramica del Tuo Curriculum",
-    classical_mechanics: "Meccanica Classica", cell_biology: "Biologia Cellulare", constitutional_law: "Diritto Costituzionale"
+    classical_mechanics: "Meccanica Classica", cell_biology: "Biologia Cellulare", constitutional_law: "Diritto Costituzionale",
+    search_course: "Cerca in questo corso...", course_progress: "Progresso del Corso"
   }
 };
 
@@ -373,48 +379,33 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     async function loadPersonalities() {
       const { data } = await dbService.getTutorPersonalities();
       if (data && data.length > 0) {
-        // Respect standardized archiving levels:
-        // Level 0: Active, visible for all
-        // Level 1: Invisible for new selection (can't select, doesn't appear unless already active)
-        // Level 2: Invisible for users that were using it (therefore invisible for all users)
-        const filtered = data.filter(p => {
-          const currentLevel = typeof p.archivingLevel === 'number' ? p.archivingLevel : 0;
-          if (currentLevel >= 2) return false;
-          if (currentLevel === 1) {
-            const activeId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
-            if (activeId !== p.id) {
-              return false;
+        setPersonalities(data);
+        
+        const syncActiveTutor = () => {
+          const storedId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
+          const active = data.find(p => p.id === storedId);
+          if (active) {
+            setPersona(active.name);
+          } else {
+            const defaultPers = data.find(p => p.isDefault) || data[0];
+            if (defaultPers) {
+              setPersona(defaultPers.name);
+              localStorage.setItem('op_active_tutor_personality', defaultPers.id);
             }
           }
-          return true;
-        });
+        };
 
-        setPersonalities(filtered);
-        
-        const storedId = localStorage.getItem('op_active_tutor_personality');
-        const active = filtered.find(p => p.id === storedId);
-        
-        if (active) {
-          setPersona(active.name);
-        } else {
-          const defaultPers = filtered.find(p => p.isDefault) || filtered[0];
-          if (defaultPers) {
-            setPersona(defaultPers.name);
-            localStorage.setItem('op_active_tutor_personality', defaultPers.id);
-          }
-        }
+        syncActiveTutor();
+        window.addEventListener('op_active_tutor_changed', syncActiveTutor);
+        window.addEventListener('storage', syncActiveTutor);
+        return () => {
+          window.removeEventListener('op_active_tutor_changed', syncActiveTutor);
+          window.removeEventListener('storage', syncActiveTutor);
+        };
       }
     }
     loadPersonalities();
-  }, [isOpen]); // Also re-check when opening overlay to sync changes in real-time!
-
-  const handlePersonaChange = (personaName: string) => {
-    setPersona(personaName);
-    const selected = personalities.find(p => p.name === personaName);
-    if (selected) {
-      localStorage.setItem('op_active_tutor_personality', selected.id);
-    }
-  };
+  }, [isOpen]);
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
     if (typeof window !== 'undefined') {
@@ -546,18 +537,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div>
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
-                   <select 
-                     value={persona} 
-                     onChange={(e) => handlePersonaChange(e.target.value)}
-                     className="bg-transparent text-sm font-bold text-white focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
-                     disabled={!isLoggedIn}
-                   >
-                     {personalities.map(p => (
-                       <option key={p.id} value={p.name} className="bg-slate-900 text-white">
-                         {p.translations?.[lang]?.name || p.name}
-                       </option>
-                     ))}
-                   </select>
+                   <span className="text-sm font-bold text-white">
+                     {getPersonaName(persona)}
+                   </span>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
@@ -572,10 +554,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                   <h3 className="text-lg font-black tracking-tight text-white">
                     {lang === 'FR' ? `Tuteur ${getPersonaName(persona)} IA` : `${getPersonaName(persona)} AI Tutor`}
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed max-w-[300px]">
+                  <p className="text-xs text-slate-400 leading-relaxed max-w-[320px]">
                     {lang === 'FR' 
-                      ? "Le contenu pédagogique est libre et gratuit. Cependant, l'interaction avec le Tuteur IA nécessite une connexion afin d'initialiser votre session et gérer votre suivi pédagogique au mieux." 
-                      : "Course materials are completely free. However, AI interaction requires being signed in to initialize your session context and track your pedagogical progress at its best."}
+                      ? "Un compte gratuit est disponible pour vous permettre de suivre l'intégralité du cursus, enregistrer durablement votre progression et bénéficier des fonctionnalités d'un tuteur IA personnel d'exception !" 
+                      : "A free account is available to let you follow the full curriculum, save your progress permanently, and benefit from the features of an exceptional personal AI tutor!"}
                   </p>
                 </div>
                 <div className="w-full space-y-2.5 pt-4">
@@ -602,14 +584,20 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="px-6 py-3 bg-red-500/10 border-b border-red-500/20 text-red-400 flex items-center justify-between text-[10px] font-black uppercase tracking-widest gap-2 shrink-0 overflow-hidden"
+                      className="px-6 py-3.5 bg-amber-500/10 border-b border-amber-500/25 text-amber-500 flex items-center justify-between text-[9px] font-black uppercase tracking-widest gap-3 shrink-0 overflow-hidden"
                     >
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>{lang === 'FR' ? 'Connexion perdue... reconnexion' : 'Lost connection... retrying'}</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-5 h-5 bg-amber-500/20 rounded-lg flex items-center justify-center text-amber-400 shrink-0">
+                          <Loader2 className="w-3 h-3 animate-spin stroke-[3]" />
+                        </div>
+                        <span className="leading-tight">
+                          {lang === 'FR' 
+                            ? 'Difficultés de connexion détectées... reconnexion automatique' 
+                            : 'Connection difficulties detected... retrying automatically'}
+                        </span>
                       </div>
-                      <div className="bg-red-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse shrink-0">
-                        {lang === 'FR' ? 'Service Dégradé' : 'Degraded Service'}
+                      <div className="bg-amber-500/20 px-2.5 py-1 rounded-lg text-[7px] font-black uppercase animate-pulse shrink-0 text-amber-400 border border-amber-500/30">
+                        {lang === 'FR' ? 'Patienter' : 'Please Wait'}
                       </div>
                     </motion.div>
                   )}
@@ -635,7 +623,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
                 <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
                   <div className="relative">
-                    <input disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
+                    <input type="text" disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
                     <button disabled={isOffline} onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"><Send className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -884,7 +872,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[100] px-8 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[1000] px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
         {isCoursePage && toggleSidebar && (
           <button 
@@ -896,7 +884,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         )}
         <Link href="/" className="flex items-center gap-3 group">
           <OpenPrimerIcon className="w-9 h-9" />
-          <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
+          <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
         </Link>
         <Link href="/catalog" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-400 transition-colors ml-4 hidden md:block">
            {t.catalog}
@@ -1119,7 +1107,7 @@ export const Footer = () => {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-8 group">
               <OpenPrimerIcon className="w-10 h-10" />
-              <span className="font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
+              <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed italic">
               {t.footer_desc}

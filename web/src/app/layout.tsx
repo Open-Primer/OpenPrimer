@@ -19,6 +19,52 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('op_reading_mode') || 'dark';
+                  var root = document.documentElement;
+                  if (theme === 'paper') {
+                    root.style.setProperty('--background', '#fcfaf2');
+                    root.style.setProperty('--foreground', '#0f172a');
+                    root.classList.add('theme-paper');
+                    root.classList.remove('dark', 'theme-focus');
+                    document.write('<style id="op-theme-style">body{background-color:#fcfaf2!important;color:#0f172a!important;font-family:Georgia,Cambria,"Times New Roman",Times,serif!important;}</style>');
+                  } else if (theme === 'focus') {
+                    root.style.setProperty('--background', '#000000');
+                    root.style.setProperty('--foreground', '#94a3b8');
+                    root.classList.add('theme-focus');
+                    root.classList.remove('dark', 'theme-paper');
+                    document.write('<style id="op-theme-style">body{background-color:#000000!important;color:#94a3b8!important;}</style>');
+                  } else {
+                    root.style.setProperty('--background', '#020617');
+                    root.style.setProperty('--foreground', '#f8fafc');
+                    root.classList.add('dark');
+                    root.classList.remove('theme-paper', 'theme-focus');
+                    document.write('<style id="op-theme-style">body{background-color:#020617!important;color:#f8fafc!important;}</style>');
+                  }
+                  
+                  document.addEventListener('DOMContentLoaded', function() {
+                    if (theme === 'paper') {
+                      document.body.classList.add('theme-paper');
+                      document.body.classList.remove('theme-focus', 'theme-dark');
+                    } else if (theme === 'focus') {
+                      document.body.classList.add('theme-focus');
+                      document.body.classList.remove('theme-paper', 'theme-dark');
+                    } else {
+                      document.body.classList.add('theme-dark');
+                      document.body.classList.remove('theme-paper', 'theme-focus');
+                    }
+                  });
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.className} selection:bg-blue-500/30`}>
         <ClientProviders>
           <Gatekeeper>

@@ -26,9 +26,101 @@ export default function CurriculumPage() {
   const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
   const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
 
+  const [showTutorModal, setShowTutorModal] = useState(false);
+  const [activeTutorId, setActiveTutorId] = useState('socratic');
+
+  const TUTORS = [
+    {
+      id: 'socratic',
+      emoji: '💬',
+      nameEN: 'Socratic Coach',
+      nameFR: 'Tuteur Socratique',
+      descEN: 'Pushes you to think for yourself by asking deep, guiding questions.',
+      descFR: 'Vous pousse à réfléchir par vous-même en vous guidant par des questions profondes.'
+    },
+    {
+      id: 'direct',
+      emoji: '⚡',
+      nameEN: 'Direct Synthesizer',
+      nameFR: 'Synthétiseur Direct',
+      descEN: 'Outcome-focused, precise, and direct. Ideal for fast high-efficiency study.',
+      descFR: 'Synthétique, ultra-précis et efficace. Idéal pour des révisions rapides.'
+    },
+    {
+      id: 'gamified',
+      emoji: '🚀',
+      nameEN: 'Gamified Companion',
+      nameFR: 'Compagnon Ludique',
+      descEN: 'High-energy partner celebrating every milestone and streak with high-fives.',
+      descFR: 'Partenaire hyper-enthousiaste célébrant chaque réussite et point gagné.'
+    },
+    {
+      id: 'historical',
+      emoji: '📚',
+      nameEN: 'Historical Storyteller',
+      nameFR: 'Conteur Historique',
+      descEN: 'Frames concepts inside the thrilling stories of the scholars who built them.',
+      descFR: 'Replace chaque formule dans l\'aventure historique des savants qui l\'ont forgée.'
+    },
+    {
+      id: 'feynman',
+      emoji: '💡',
+      nameEN: 'Feynman Simplifier',
+      nameFR: 'Simplificateur Feynman',
+      descEN: 'Master of simple analogies. Explains complex ideas as if to a complete beginner.',
+      descFR: 'Le maître des analogies simples. Explique la complexité comme si vous aviez 10 ans.'
+    },
+    {
+      id: 'proof',
+      emoji: '📐',
+      nameEN: 'Proof Master',
+      nameFR: 'Maître des Preuves',
+      descEN: 'Rigorous and formal, emphasizing axiomatic math proofs and complete derivation.',
+      descFR: 'Régissant et formel, axé sur les démonstrations axiomatiques et la dérivation complète.'
+    }
+  ];
+
+  const getActiveTutorName = () => {
+    const tMatch = TUTORS.find(t => t.id === activeTutorId);
+    if (!tMatch) return 'Socratic Coach';
+    return lang === 'FR' ? tMatch.nameFR : tMatch.nameEN;
+  };
+
+  const handleSelectTutor = async (id: string) => {
+    localStorage.setItem('op_active_tutor_personality', id);
+    setActiveTutorId(id);
+    
+    // Sync with database if connected
+    const savedProfile = localStorage.getItem('op_user_profile');
+    const loggedIn = localStorage.getItem('op_session');
+    if (savedProfile && loggedIn) {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const profile = JSON.parse(savedProfile);
+        const userId = profile.id;
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({ tutor_choice: id })
+            .eq('id', userId);
+          console.log(`Tutor choice updated in Supabase: ${id}`);
+        }
+      } catch (e) {
+        console.error("Error updating tutor choice in Supabase:", e);
+      }
+    }
+    
+    // Notify all components of the active tutor change
+    window.dispatchEvent(new Event('op_active_tutor_changed'));
+    
+    // Reload user progress immediately to update the pedagogical summary card in real-time!
+    const data = await dbService.getUserProgress('u1', lang);
+    setProgress(data);
+  };
+
   useEffect(() => {
     async function loadProgress() {
-      const data = await dbService.getUserProgress('u1'); // Mock user
+      const data = await dbService.getUserProgress('u1', lang); // Mock user
       setProgress(data);
       const { data: coursesData } = await dbService.getAllCourses();
       if (coursesData) setCourses(coursesData);
@@ -53,6 +145,9 @@ export default function CurriculumPage() {
     const savedBookmarks = localStorage.getItem('op_bookmarks');
     if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
 
+    // Load active tutor
+    setActiveTutorId(localStorage.getItem('op_active_tutor_personality') || 'socratic');
+
     // Load initial reading mode and define dynamic header buttons listener
     const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
     setReadingMode(savedMode);
@@ -61,7 +156,7 @@ export default function CurriculumPage() {
       setReadingMode(mode);
       localStorage.setItem('op_reading_mode', mode);
     };
-  }, []);
+  }, [lang]);
 
 
   const toggleBookmark = (id: number, e: React.MouseEvent) => {
@@ -117,15 +212,27 @@ export default function CurriculumPage() {
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-16 p-10 bg-gradient-to-br from-blue-600/10 via-slate-900/40 to-slate-950 border border-blue-500/20 rounded-[60px] relative overflow-hidden"
+          className="mb-16 p-10 bg-gradient-to-br from-blue-600/10 via-slate-900/40 to-slate-950 border border-blue-500/20 rounded-[60px] relative overflow-hidden ai-summary-card"
         >
            <div className="absolute top-0 right-0 p-8 opacity-10">
               <Brain className="w-32 h-32 text-blue-400" />
            </div>
            <div className="relative z-10">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400 mb-6 flex items-center gap-3">
-                 <Sparkles className="w-4 h-4" /> {t.tutor_summary}
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400 flex items-center gap-3">
+                   <Sparkles className="w-4 h-4 animate-pulse" /> {t.tutor_summary}
+                </h3>
+                <button 
+                  onClick={() => setShowTutorModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.97] z-20 self-start sm:self-auto"
+                >
+                  <Brain className="w-3.5 h-3.5" />
+                  <span>
+                    {lang === 'FR' ? `Tuteur : ${getActiveTutorName()}` : `Tutor: ${getActiveTutorName()}`}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                </button>
+              </div>
               <p className="text-xl md:text-2xl font-bold leading-relaxed text-slate-200 max-w-3xl italic">
                  "{progress.aiSummary}"
               </p>
@@ -737,6 +844,96 @@ export default function CurriculumPage() {
                 >
                   {lang === 'FR' ? 'Confirmer' : 'Confirm'}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TUTOR SELECTOR MODAL */}
+      <AnimatePresence>
+        {showTutorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/20">
+                    <Brain className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                      {lang === 'FR' ? "Sélectionner un Tuteur IA" : "Select an AI Tutor"}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-semibold">
+                      {lang === 'FR' ? "Choisissez le style pédagogique adapté à vos besoins" : "Choose the pedagogical voice that matches your style"}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowTutorModal(false)}
+                  className="p-3 text-slate-500 hover:text-white rounded-2xl hover:bg-slate-850 transition-all cursor-pointer"
+                >
+                  <Icons.X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar bg-slate-900/50">
+                {TUTORS.map(tOption => {
+                  const isSelected = tOption.id === activeTutorId;
+                  return (
+                    <div 
+                      key={tOption.id}
+                      onClick={() => handleSelectTutor(tOption.id)}
+                      className={`p-6 rounded-3xl border transition-all cursor-pointer flex items-center justify-between gap-6 group relative overflow-hidden ${
+                        isSelected 
+                          ? 'bg-blue-600/10 border-blue-500/60 shadow-lg shadow-blue-500/5' 
+                          : 'bg-slate-950/30 border-slate-850 hover:border-slate-700 hover:bg-slate-950/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-5">
+                        <div className={`w-14 h-14 rounded-2xl text-2xl flex items-center justify-center transition-all ${
+                          isSelected ? 'bg-blue-600/20 scale-105' : 'bg-slate-900 group-hover:scale-105'
+                        }`}>
+                          {tOption.emoji}
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm text-white tracking-wide flex items-center gap-2">
+                            {lang === 'FR' ? tOption.nameFR : tOption.nameEN}
+                            {isSelected && (
+                              <span className="px-2.5 py-0.5 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-wider">
+                                {lang === 'FR' ? 'Actif' : 'Active'}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed max-w-md">
+                            {lang === 'FR' ? tOption.descFR : tOption.descEN}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                        isSelected 
+                          ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
+                          : 'border-slate-850 group-hover:border-slate-750 text-transparent group-hover:text-slate-655'
+                      }`}>
+                        <Icons.Check className="w-4 h-4 stroke-[3]" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-8 border-t border-slate-800 bg-slate-950/40 text-center">
+                <p className="text-xs text-slate-500 font-semibold italic">
+                  {lang === 'FR' 
+                    ? "💡 Revenez ici à tout moment pour changer de tuteur et adapter votre accompagnement."
+                    : "💡 Come back here at any time to change your tutor and adapt your learning support."}
+                </p>
               </div>
             </motion.div>
           </div>

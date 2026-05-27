@@ -21,6 +21,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [isCompleted, setIsCompleted] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [userComment, setUserComment] = useState<string>('');
+  const [nextCoursePath, setNextCoursePath] = useState<string | null>(null);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
@@ -47,6 +48,79 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         }
       });
     }
+
+    // Check next course in curriculum path asynchronously (whether logged in or not)
+    dbService.getAllCourses().then(async (res) => {
+      if (!res || !res.data) return;
+      const courses = res.data;
+      const currentCourse = courses.find(
+        (c: any) => c.slug.toLowerCase() === courseId.toLowerCase() || c.id.toString() === courseId.toString()
+      );
+      if (!currentCourse) return;
+
+      const currentCourseId = currentCourse.id;
+
+      // Find if this course is part of any curriculum
+      const parentCurriculum = courses.find(
+        (c: any) => c.isCurriculum && c.childCourses && c.childCourses.includes(currentCourseId)
+      );
+
+      if (parentCurriculum) {
+        const childIds = parentCurriculum.childCourses;
+        const currentIndex = childIds.indexOf(currentCourseId);
+
+        if (currentIndex !== -1 && currentIndex < childIds.length - 1) {
+          // If logged in, look for the first subsequent incomplete child
+          if (loggedIn) {
+            try {
+              const progressMap = typeof window !== 'undefined' ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
+              for (let i = currentIndex + 1; i < childIds.length; i++) {
+                const nextChildId = childIds[i];
+                const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
+                if (nextChildCourse) {
+                  const prog = progressMap[nextChildCourse.slug] ?? progressMap[nextChildId] ?? 0;
+                  if (prog < 100) {
+                    setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+                    return;
+                  }
+                }
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+
+          // Fallback or not logged in: immediate next child
+          const nextChildId = childIds[currentIndex + 1];
+          const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
+          if (nextChildCourse) {
+            setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+            return;
+          }
+        }
+      }
+
+      // If not in a curriculum or last course, and logged in, find any other active incomplete course
+      if (loggedIn) {
+        try {
+          const progress = await dbService.getUserProgress('u1');
+          if (progress && progress.activeModules) {
+            const nextActiveModule = progress.activeModules.find(
+              (m: any) => !m.isCurriculum && m.id !== currentCourseId && m.progress < 100
+            );
+            if (nextActiveModule) {
+              const matchedCourse = courses.find((c: any) => c.id === nextActiveModule.id);
+              if (matchedCourse) {
+                setNextCoursePath(`/${matchedCourse.level}/${matchedCourse.subject}/${matchedCourse.slug}/introduction`);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
   }, [courseId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,7 +234,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               </Link>
               
               <Link 
-                href="/catalog" 
+                href={nextCoursePath || (isLoggedIn ? "/profile/curriculum" : "/catalog")} 
                 className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/10"
               >
                 {isFr ? "Continuer mon Cursus" : "Continue My Journey"}
@@ -188,10 +262,12 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         </p>
         <div className="pt-4">
           <Link 
-            href="/profile/curriculum" 
+            href={nextCoursePath || "/profile/curriculum"} 
             className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/20"
           >
-            {isFr ? "Retourner au Curriculum" : "Return to My Curriculum"} <ChevronRight className="w-4 h-4" />
+            {nextCoursePath 
+              ? (isFr ? "Continuer mon Cursus" : "Continue My Journey")
+              : (isFr ? "Retourner au Curriculum" : "Return to My Curriculum")} <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -263,7 +339,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
           <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-900/50">
             <Link 
-              href="/profile/curriculum" 
+              href={nextCoursePath || "/profile/curriculum"} 
               className="text-xs font-black uppercase text-slate-500 hover:text-slate-350 transition-colors"
             >
               {isFr ? "Passer" : "Skip"}

@@ -580,7 +580,6 @@ export default function AdminCurriculumPage() {
 
   // Backlog Retention Days
   const [backlogRetention, setBacklogRetention] = useState(30);
-  const [transRetention, setTransRetention] = useState(30);
 
   // Sorting States
   const [courseSortField, setCourseSortField] = useState<string>('title');
@@ -1410,6 +1409,7 @@ export default function AdminCurriculumPage() {
               status: 'queued',
               progress: 0,
               priority: p.priority,
+              targetLang: p.targetLang.toUpperCase(),
               timestamp: new Date().toISOString(),
               details: `Autonomous Auto-Translate: Spike score ${p.count} (Failed searches: ${p.failedCount}, Completions: ${p.completionCount}). Delayed ${Math.round(elapsedHours)}h.`
             };
@@ -1504,6 +1504,7 @@ export default function AdminCurriculumPage() {
               status: 'queued',
               progress: 0,
               priority: 'Medium',
+              targetLang: tr.targetLang.toUpperCase(),
               timestamp: new Date().toISOString()
             });
             promoted = true;
@@ -1819,10 +1820,11 @@ export default function AdminCurriculumPage() {
     const samples = [
       {
         id: `task_trans_${Date.now()}`,
-        title: "Spanish Language Package Creation",
+        title: "Spanish Language Package Creation (ES)",
         type: "translation",
         status: "running",
         priority: "High",
+        targetLang: "ES",
         level: "L1"
       },
       {
@@ -2931,42 +2933,6 @@ export default function AdminCurriculumPage() {
                     </div>
                  </div>
 
-                 {/* Requests Retention & Purge Panel */}
-                 <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                   <div className="space-y-1">
-                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                       <History className="w-5 h-5 text-emerald-400" /> Translation Requests & Logs Retention
-                     </h2>
-                     <p className="text-xs text-slate-400">
-                       Configure log retention limits for dynamic user translation requests and purge stale/un-acted translation backlogs.
-                     </p>
-                   </div>
-                   
-                   <div className="flex flex-wrap items-center gap-6">
-                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-400 uppercase">Retention:</span>
-                       <input 
-                         type="range" 
-                         min="7" 
-                         max="90" 
-                         value={transRetention} 
-                         onChange={(e) => setTransRetention(Number(e.target.value))}
-                         className="w-28 accent-emerald-500 cursor-pointer"
-                       />
-                       <span className="text-xs font-mono font-bold text-emerald-400 w-8 text-center">{transRetention}d</span>
-                     </div>
-                     <button 
-                       type="button"
-                       onClick={async () => {
-                         const res = await dbService.cleanupTranslationRequests(transRetention);
-                         alert(lang === 'FR' ? `Nettoyage réussi. ${res.data?.purged || 0} entrées expirées ont été purgées.` : `Translation logs cleanup completed. ${res.data?.purged || 0} expired entries purged.`);
-                       }}
-                       className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/10"
-                     >
-                       Purge Logs
-                     </button>
-                   </div>
-                 </div>
                </div>
              )}
 

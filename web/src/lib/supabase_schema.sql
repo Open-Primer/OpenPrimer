@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   favorites TEXT[] DEFAULT '{}'::text[],
   ai_coach_message TEXT,
   preferred_lang VARCHAR(10) DEFAULT 'EN',
-  last_visited_page JSONB DEFAULT '{}'::jsonb
+  last_visited_page JSONB DEFAULT '{}'::jsonb,
+  tutor_choice VARCHAR(100) DEFAULT 'socratic'
 );
 
 -- Seed Initial Admin User

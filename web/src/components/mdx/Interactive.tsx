@@ -88,6 +88,95 @@ const INTERACTIVE_STRINGS = {
   }
 };
 
+const getProgressionStorage = (): Storage | null => {
+  if (typeof window === 'undefined') return null;
+  const session = localStorage.getItem('op_session');
+  const loggedIn = session !== 'false' && session !== null;
+  return loggedIn ? localStorage : sessionStorage;
+};
+
+const GuestFootnote = () => {
+  const { language } = useLanguage();
+  
+  const handleAuthClick = (mode: 'login' | 'signup') => {
+    window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: mode }));
+  };
+
+  const messages: Record<string, React.ReactNode> = {
+    FR: (
+      <>
+        💡 En mode invité, votre progression est temporaire.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Créer un compte gratuit
+        </button>{" "}
+        ou{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          se connecter
+        </button>{" "}
+        pour la sauvegarder définitivement et débloquer votre tuteur IA personnel !
+      </>
+    ),
+    EN: (
+      <>
+        💡 In guest mode, progress is temporary.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Sign up for free
+        </button>{" "}
+        or{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          log in
+        </button>{" "}
+        to save it permanently and unlock your personal AI tutor!
+      </>
+    ),
+    ES: (
+      <>
+        💡 En modo invitado, tu progreso es temporal. ¡{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Crea una cuenta gratis
+        </button>{" "}
+        o{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          inicia sesión
+        </button>{" "}
+        para guardarlo permanentemente y desbloquear tu tutor personal de IA!
+      </>
+    ),
+    DE: (
+      <>
+        💡 Im Gastmodus ist Ihr Fortschritt vorübergehend.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Registrieren Sie sich kostenlos
+        </button>{" "}
+        oder{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          melden Sie sich an
+        </button>{" "}
+        um ihn dauerhaft zu sichern und Ihren persönlichen KI-Tutor freizuschalten!
+      </>
+    ),
+    ZH: (
+      <>
+        💡 在游客模式下，您的学习进度是暂时的。{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          注册免费账户
+        </button>{" "}
+        或{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          登录账户
+        </button>{" "}
+        以永久保存进度并解锁专属个人AI导师！
+      </>
+    )
+  };
+
+  return (
+    <span className="text-[10px] font-medium text-slate-400 block w-full mt-2 border-t border-slate-800/40 pt-2 select-none">
+      {messages[language.toUpperCase()] || messages.EN}
+    </span>
+  );
+};
+
 // Composant Texte à Trous
 export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: string }) => {
   const { language } = useLanguage();
@@ -95,49 +184,78 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   const [input, setInput] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session !== 'false');
-  }, []);
+    const loggedIn = session !== 'false' && session !== null;
+    setIsLoggedIn(loggedIn);
+
+    const storage = getProgressionStorage();
+    if (storage) {
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (visited.includes(window.location.pathname)) {
+        setIsReadOnly(true);
+        // Autofill correct answer when completed
+        setInput(answer);
+        setIsCorrect(true);
+      }
+    }
+  }, [answer]);
 
   const check = () => {
-    if (!isLoggedIn) {
-      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
-      return;
-    }
-    if (input.toLowerCase().trim() === answer.toLowerCase().trim()) {
+    if (isReadOnly) return;
+    
+    const correct = input.toLowerCase().trim() === answer.toLowerCase().trim();
+    if (correct) {
       setIsCorrect(true);
+      
+      // Update progress locally in correct storage
+      const storage = getProgressionStorage();
+      if (storage) {
+        const pathname = window.location.pathname;
+        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+        if (!visited.includes(pathname)) {
+          visited.push(pathname);
+          storage.setItem('op_visited_pages', JSON.stringify(visited));
+          window.dispatchEvent(new Event('op_progress_updated'));
+        }
+      }
     } else {
       setIsCorrect(false);
     }
   };
 
   return (
-    <div className="my-8 p-6 rounded-3xl bg-slate-900/50 border border-slate-800 flex flex-wrap items-center gap-3">
+    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-slate-800'} flex flex-wrap items-center gap-3 transition-all`}>
       <span className="text-slate-300 font-medium">{sentence.split('[...]')[0]}</span>
       <input 
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        className={`bg-slate-950 border ${isCorrect === true ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all`}
+        className={`bg-slate-950 border ${isCorrect === true ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
         placeholder={t.placeholder_answer}
-        disabled={!isLoggedIn}
+        disabled={isReadOnly}
       />
       <span className="text-slate-300 font-medium">{sentence.split('[...]')[1]}</span>
-      <button 
-        onClick={check}
-        className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
-      >
-        {!isLoggedIn ? (language === 'FR' ? 'Débloquer' : 'Unlock') : t.validate}
-      </button>
-      {isCorrect === true && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-pulse" />}
-      {!isLoggedIn && (
-        <span className="text-[10px] font-bold text-slate-550 block w-full mt-2">
-          {language === 'FR' 
-            ? "💡 Les exercices interactifs nécessitent d'être connecté pour gérer votre suivi pédagogique au mieux." 
-            : "💡 Interactive exercises require a signed-in session to track your pedagogical progress at its best."}
+      
+      {!isReadOnly && (
+        <button 
+          onClick={check}
+          className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+        >
+          {t.validate}
+        </button>
+      )}
+
+      {isReadOnly && (
+        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
+          <CheckCircle2 className="w-3.5 h-3.5" /> {language === 'FR' ? 'Validé' : 'Validated'}
         </span>
       )}
+
+      {isCorrect === true && !isReadOnly && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-pulse" />}
+      
+      {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
   );
 };
@@ -165,13 +283,26 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session !== 'false');
-  }, []);
+    const loggedIn = session !== 'false' && session !== null;
+    setIsLoggedIn(loggedIn);
+
+    const storage = getProgressionStorage();
+    if (storage) {
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (visited.includes(window.location.pathname)) {
+        setIsReadOnly(true);
+        setText(language === 'FR' ? "Exercice complété avec succès lors de la session." : "Exercise completed successfully during this session.");
+        setFeedback(language === 'FR' ? "Technique de Feynman : validée." : "Feynman Technique: validated.");
+      }
+    }
+  }, [language]);
 
   const analyze = async () => {
+    if (isReadOnly) return;
     if (!isLoggedIn) {
       window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
       return;
@@ -183,26 +314,47 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
     }, 2000);
   };
 
+  const feynmanDescMap: Record<string, string> = {
+    FR: "La technique de Feynman nécessite un tuteur IA personnel pour analyser et valider activement votre rédaction. Un compte gratuit est disponible pour vous permettre de suivre le cursus, enregistrer votre progression et bénéficier de votre tuteur IA personnel !",
+    EN: "The Feynman technique requires a personal AI tutor to analyze and validate your explanation. A free account is available to allow you to follow the curriculum, save your progress, and benefit from a personal AI tutor!",
+    ES: "La técnica de Feynman requiere un tutor de IA personal para analizar y validar tu explicación. ¡Hay una cuenta gratuita disponible para permitirte seguir el plan de estudios, guardar tu progreso y beneficiarte de un tutor de IA personal!",
+    DE: "Die Feynman-Methode erfordert einen persönlichen KI-Tutor, um Ihre Erklärung zu analysieren und zu validieren. Ein kostenloses Konto ist verfügbar, mit dem Sie dem Lehrplan folgen, Ihren Fortschritt speichern und von einem persönlichen KI-Tutor profitieren können!",
+    ZH: "费曼学习法需要专属AI导师来分析和验证您的解释。我们提供免费账户，让您能够完整体验课程、记录学习进度，并享有专属个人AI导师！"
+  };
+
+  const feynmanDesc = feynmanDescMap[language.toUpperCase()] || feynmanDescMap.EN;
+
   return (
-    <div className="my-8 p-8 rounded-[40px] bg-indigo-600/5 border border-indigo-600/20 relative overflow-hidden">
+    <div className={`my-8 p-8 rounded-[40px] bg-indigo-600/5 border ${isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-indigo-600/20'} relative overflow-hidden`}>
       <h4 className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
         {t.feynman_title} {concept}
       </h4>
       <p className="text-slate-400 text-sm mb-4">{t.feynman_desc}</p>
+      
       <textarea 
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full h-32 bg-slate-950 border border-slate-800 rounded-2xl p-4 outline-none focus:border-indigo-500 transition-all resize-none text-white disabled:opacity-40"
+        className="w-full h-32 bg-slate-950 border border-slate-800 rounded-2xl p-4 outline-none focus:border-indigo-500 transition-all resize-none text-white disabled:opacity-60"
         placeholder={t.feynman_placeholder}
-        disabled={!isLoggedIn}
+        disabled={!isLoggedIn || isReadOnly}
       />
-      <button 
-        onClick={analyze}
-        disabled={isLoading}
-        className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
-      >
-        {!isLoggedIn ? (language === 'FR' ? 'Débloquer l\'Analyse IA' : 'Unlock AI Analysis') : isLoading ? t.feynman_submitting : t.feynman_submit}
-      </button>
+      
+      {!isReadOnly && (
+        <button 
+          onClick={analyze}
+          disabled={isLoading}
+          className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+        >
+          {!isLoggedIn ? (language === 'FR' ? 'Débloquer l\'Analyse IA' : 'Unlock AI Analysis') : isLoading ? t.feynman_submitting : t.feynman_submit}
+        </button>
+      )}
+
+      {isReadOnly && (
+        <div className="mt-4 flex items-center gap-1.5 select-none text-emerald-400 font-bold text-xs">
+          <CheckCircle2 className="w-4 h-4" /> {language === 'FR' ? 'Validation validée par le Tuteur IA' : 'Validation completed by AI Tutor'}
+        </div>
+      )}
+
       {feedback && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
@@ -212,24 +364,23 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
           {feedback}
         </motion.div>
       )}
+
       {!isLoggedIn && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center space-y-4">
+        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 animate-pulse">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <div>
-            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Analyse Feynman active" : "Active Feynman Analysis"}</h5>
-            <p className="text-[11px] text-slate-400 max-w-[280px] mt-1">
-              {language === 'FR' 
-                ? "L'analyse et la validation récursive par l'IA nécessitent une connexion active afin de gérer votre suivi pédagogique au mieux." 
-                : "Dynamic verification and recursive AI analysis require a signed-in session to manage your pedagogical progress at its best."}
+            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Tuteur IA Recommandé" : "AI Tutor Recommended"}</h5>
+            <p className="text-[11px] text-slate-300 max-w-[320px] mt-2 leading-relaxed px-4">
+              {feynmanDesc}
             </p>
           </div>
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
             className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
           >
-            {language === 'FR' ? "S'inscrire et s'exercer" : "Sign Up to Practice"}
+            {language === 'FR' ? "S'inscrire gratuitement" : "Sign up for free"}
           </button>
         </div>
       )}
@@ -245,22 +396,48 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
   const [revealed, setRevealed] = useState(false);
   const safeOptions = Array.isArray(options) ? options : [];
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session !== 'false');
+    const loggedIn = session !== 'false' && session !== null;
+    setIsLoggedIn(loggedIn);
+
+    const storage = getProgressionStorage();
+    if (storage) {
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (visited.includes(window.location.pathname)) {
+        setIsReadOnly(true);
+        setSelected(0); // Mock first selected
+        setRevealed(true);
+      }
+    }
   }, []);
 
   const handleSelect = (idx: number) => {
-    if (!isLoggedIn) {
-      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
-      return;
-    }
+    if (isReadOnly) return;
     setSelected(idx);
   };
 
+  const revealPrediction = () => {
+    if (isReadOnly) return;
+    setRevealed(true);
+
+    // Save progression in correct storage adapter
+    const storage = getProgressionStorage();
+    if (storage) {
+      const pathname = window.location.pathname;
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (!visited.includes(pathname)) {
+        visited.push(pathname);
+        storage.setItem('op_visited_pages', JSON.stringify(visited));
+        window.dispatchEvent(new Event('op_progress_updated'));
+      }
+    }
+  };
+
   return (
-    <div className="my-10 p-8 rounded-[40px] bg-amber-600/5 border border-amber-600/20 relative overflow-hidden">
+    <div className={`my-10 p-8 rounded-[40px] bg-amber-600/5 border ${isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-600/20'} relative overflow-hidden transition-all`}>
       <h4 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
         {t.predict_title}
       </h4>
@@ -270,21 +447,24 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
           <button
             key={i}
             onClick={() => handleSelect(i)}
-            className={`w-full text-left p-4 rounded-2xl border transition-all ${selected === i ? 'bg-amber-600/20 border-amber-500 text-amber-200 cursor-default' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 cursor-pointer'}`}
+            disabled={isReadOnly}
+            className={`w-full text-left p-4 rounded-2xl border transition-all ${selected === i ? 'bg-amber-600/20 border-amber-500 text-amber-200 cursor-default' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 cursor-pointer disabled:opacity-50'}`}
           >
             {opt}
           </button>
         ))}
       </div>
-      {!revealed && selected !== null && isLoggedIn && (
+      
+      {!revealed && selected !== null && (
         <button 
-          onClick={() => setRevealed(true)}
+          onClick={revealPrediction}
           className="mt-6 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
         >
           {t.predict_reveal}
         </button>
       )}
-      {revealed && isLoggedIn && (
+      
+      {revealed && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -294,27 +474,8 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
           {t.predict_exp_desc}
         </motion.div>
       )}
-      {!isLoggedIn && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-600/10 border border-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          </div>
-          <div>
-            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Défi de Prédiction Protégé" : "Protected Prediction Challenge"}</h5>
-            <p className="text-[11px] text-slate-400 max-w-[280px] mt-1">
-              {language === 'FR' 
-                ? "La soumission de prédictions et l'analyse théorique détaillée nécessitent d'être connecté afin de gérer votre suivi pédagogique au mieux." 
-                : "Submitting predictions and unlocking analytical theoretical details require a signed-in session to manage your pedagogical progress at its best."}
-            </p>
-          </div>
-          <button 
-            onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
-            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-amber-600/20"
-          >
-            {language === 'FR' ? "Se connecter et voter" : "Sign In to Vote"}
-          </button>
-        </div>
-      )}
+
+      {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
   );
 };

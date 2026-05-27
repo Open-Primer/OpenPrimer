@@ -1885,6 +1885,151 @@ export const authService = {
 // CHECK IF OFFLINE MODE (Supabase missing or configured with placeholder)
 const isOffline = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project');
 
+function generatePedagogicalSummary(
+  activeModules: any[], 
+  masteryPoints: number, 
+  studyStreakDays: number, 
+  totalMinutes: number, 
+  activeLang: string, 
+  tutorId: string
+): string {
+  const isFr = activeLang === 'FR';
+  const isIt = activeLang === 'IT';
+  const isEs = activeLang === 'ES';
+  const isDe = activeLang === 'DE';
+  const isZh = activeLang === 'ZH';
+
+  // Find most active / highest progress course that is not 100% yet
+  let focusModule = activeModules.find((m: any) => !m.isCurriculum && m.progress > 0 && m.progress < 100);
+  if (!focusModule) {
+    focusModule = activeModules.find((m: any) => !m.isCurriculum && m.progress > 0);
+  }
+  if (!focusModule) {
+    focusModule = activeModules.find((m: any) => !m.isCurriculum);
+  }
+
+  const moduleName = focusModule 
+    ? (isFr ? (focusModule.title === "Classical Mechanics" ? "Mécanique Classique" : focusModule.title) 
+       : focusModule.title) 
+    : (isFr ? "Physique" : "Physics");
+  
+  const progVal = focusModule ? focusModule.progress : 12;
+  const streakVal = studyStreakDays || 1;
+
+  if (tutorId === 'direct') {
+    if (isFr) {
+      return `Bilan : ${moduleName} complété à ${progVal}%. Série d'étude de ${streakVal} jours. Points de Maîtrise : ${masteryPoints}. Prochain objectif : consolider l'emplacement actuel de lecture et finaliser les défis restants. Ciblez l'efficacité active.`;
+    }
+    if (isIt) {
+      return `Riepilogo: ${moduleName} completato al ${progVal}%. Serie di studio di ${streakVal} giorni. Punti di Maestria: ${masteryPoints}. Prossimo obiettivo: consolidare la lettura attuale e completare le sfide rimanenti. Massimizza l'efficienza.`;
+    }
+    if (isEs) {
+      return `Resumen: ${moduleName} completado al ${progVal}%. Racha de estudio de ${streakVal} días. Puntos de Maestría: ${masteryPoints}. Próximo objetivo: consolidar la lectura actual y finalizar los desafíos. Apunta a la eficiencia.`;
+    }
+    if (isDe) {
+      return `Zusammenfassung: ${moduleName} zu ${progVal}% abgeschlossen. Lernserie von ${streakVal} Tagen. Meisterpunkte: ${masteryPoints}. Nächstes Ziel: aktuellen Lesestand festigen und verbleibende Aufgaben lösen.`;
+    }
+    if (isZh) {
+      return `报告：${moduleName}已完成 ${progVal}%。连续学习 ${streakVal} 天。掌握点数：${masteryPoints}。下一步目标：巩固当前阅读进度，并完成余下的知识挑战。注重高效。`;
+    }
+    return `Summary: ${moduleName} completed at ${progVal}%. ${streakVal}-day study streak active. Mastery Points: ${masteryPoints}. Next target: consolidate active reading location and complete remaining challenges. Focus on efficiency.`;
+  }
+
+  if (tutorId === 'gamified') {
+    if (isFr) {
+      return `🚀 Incroyable travail ! Tu as accumulé ${masteryPoints} Points de Maîtrise et ta série est de ${streakVal} jours ! Tu es déjà à ${progVal}% sur ${moduleName}. Prochaine étape : continuer à lire et à surmonter les obstacles ! C'est parti ! ⭐`;
+    }
+    if (isIt) {
+      return `🚀 Lavoro fantastico! Hai accumulato ${masteryPoints} Punti di Maestria e la tua serie è di ${streakVal} giorni! Sei già al ${progVal}% su ${moduleName}. Prossimo passo: continua a leggere e supera ogni ostacolo! Avanti così! ⭐`;
+    }
+    if (isEs) {
+      return `🚀 ¡Trabajo increíble! ¡Has acumulado ${masteryPoints} Puntos de Maestría y tu racha es de ${streakVal} días! Ya estás al ${progVal}% en ${moduleName}. ¡Próximo paso: sigue leyendo y supera los retos! ¡Vamos! ⭐`;
+    }
+    if (isDe) {
+      return `🚀 Fantastisch! Du hast ${masteryPoints} Meisterpunkte gesammelt und deine Serie beträgt ${streakVal} Tage! Du bist bereits zu ${progVal}% fertig mit ${moduleName}. Nächster Schritt: Weiterlesen und die nächste Stufe zünden! ⭐`;
+    }
+    if (isZh) {
+      return `🚀 太棒了！你已累积 ${masteryPoints} 掌握点数，连续学习了 ${streakVal} 天！你的${moduleName}进度已达 ${progVal}%。下一步：继续翻阅新篇章，突破自我！加油！⭐`;
+    }
+    return `🚀 Awesome work! You have accumulated ${masteryPoints} Mastery Points and your study streak is at ${streakVal} days! You are already at ${progVal}% on ${moduleName}. Next step: keep reading and crush the remaining milestones! Let's go! ⭐`;
+  }
+
+  if (tutorId === 'historical') {
+    if (isFr) {
+      return `📚 À l'instar des grands savants de l'histoire, vous progressez noblement dans ${moduleName} (complété à ${progVal}%). Avec ${masteryPoints} Points de Maîtrise et ${streakVal} jours d'assiduité, vous tracez votre propre voie. Poursuivez cette quête intellectuelle.`;
+    }
+    if (isIt) {
+      return `📚 Come i grandi scienziati della storia, stai progredendo nobilmente in ${moduleName} (completato al ${progVal}%). Con ${masteryPoints} Punti di Maestria e ${streakVal} giorni di studio, tracci la tua strada. Continua questa nobile ricerca.`;
+    }
+    if (isEs) {
+      return `📚 Al igual que los grandes pensadores de la historia, estás progresando con nobleza en ${moduleName} (completado al ${progVal}%). Con ${masteryPoints} Puntos de Maestría y ${streakVal} días de estudio, forjas tu propio camino. Continúa.`;
+    }
+    if (isDe) {
+      return `📚 Wie die großen Geister der Geschichte machst du edle Fortschritte in ${moduleName} (${progVal}% abgeschlossen). Mit ${masteryPoints} Meisterpunkten und einer Serie von ${streakVal} Tagen baust du dein Fundament auf.`;
+    }
+    if (isZh) {
+      return `📚 如同历史上的伟大先贤一般，你在${moduleName}的求知之路上稳步前行（进度 ${progVal}%）。目前已获得 ${masteryPoints} 掌握点数与连续 learning ${streakVal} 天的成就。继续探寻真理.`;
+    }
+    return `📚 Like the great scholars of history, you are progressing nobly in ${moduleName} (completed at ${progVal}%). With ${masteryPoints} Mastery Points and a ${streakVal}-day streak, you are carving your own legacy. Continue this intellectual quest.`;
+  }
+
+  if (tutorId === 'feynman') {
+    if (isFr) {
+      return `💡 Simplifions les choses ! Vous êtes à ${progVal}% sur ${moduleName}. Avec une série d'étude de ${streakVal} jours et ${masteryPoints} points cumulés, vous avancez bien. Pouvez-vous expliquer le dernier chapitre lu à un novice ? C'est la clé de la maîtrise !`;
+    }
+    if (isIt) {
+      return `💡 Semplifichiamo le cose! Sei al ${progVal}% su ${moduleName}. Con una serie di studio di ${streakVal} giorni e ${masteryPoints} punti, procedi alla grande. Prova a spiegare l'ultimo argomento letto a un principiante!`;
+    }
+    if (isEs) {
+      return `💡 ¡Simplifiquemos las cosas! Estás al ${progVal}% en ${moduleName}. Con una racha de ${streakVal} días y ${masteryPoints} puntos, vas muy bien. ¿Puedes explicar lo último que leíste a un novato? ¡Esa es la clave!`;
+    }
+    if (isDe) {
+      return `💡 Lass es uns einfach machen! Du bist zu ${progVal}% fertig mit ${moduleName}. Mit einer Serie von ${streakVal} Tagen und ${masteryPoints} Punkten bist du auf einem super Weg. Erkläre das Gelernte einem Anfänger, um es zu festigen!`;
+    }
+    if (isZh) {
+      return `💡 让我们用最简单的话来说！你的${moduleName}进度已达 ${progVal}%。连续学习 ${streakVal} 天，获得 ${masteryPoints} 掌握点数。试着用最浅显的话向他人解释你刚阅读의知识，这才是彻底掌握的秘诀！`;
+    }
+    return `💡 Let's keep it simple! You are at ${progVal}% on ${moduleName}. With a ${streakVal}-day study streak and ${masteryPoints} points, you are building solid intuition. Try explaining your last read concept to a beginner to lock it in!`;
+  }
+
+  if (tutorId === 'proof') {
+    if (isFr) {
+      return `📐 Rigueur formelle activée. ${moduleName} est validé à ${progVal}%. Vos ${masteryPoints} Points de Maîtrise démontrent l'exactitude de vos déductions formelles sur ${streakVal} jours. Prochaine proposition : formaliser la suite de votre lecture et démontrer chaque théorème.`;
+    }
+    if (isIt) {
+      return `📐 Rigore formale attivo. ${moduleName} è completato al ${progVal}%. I tuoi ${masteryPoints} Punti di Maestria dimostrano la precisione formale delle tue deduzioni su ${streakVal} giorni. Prossima proposizione: formalizzare il seguito della lettura.`;
+    }
+    if (isEs) {
+      return `📐 Rigor formal activado. ${moduleName} está al ${progVal}%. Tus ${masteryPoints} Puntos de Maestría validan el rigor analítico de tus deducciones a lo largo de ${streakVal} días. Siguiente paso: formalizar el resto de las lecturas.`;
+    }
+    if (isDe) {
+      return `📐 Formale Strenge aktiv. ${moduleName} ist zu ${progVal}% abgeschlossen. Deine ${masteryPoints} Meisterpunkte beweisen die präzise Deduktion über ${streakVal} Tage hinweg. Nächster Satz: Den verbleibenden Stoff formal verifizieren.`;
+    }
+    if (isZh) {
+      return `📐 严谨逻辑验证中。${moduleName}完成度 ${progVal}%。你在 ${streakVal} 天内获得的 ${masteryPoints} 掌握点数验证了你的推导准确度。下一个命题：形式化后续阅读的理论，并严格论证每一个定理。`;
+    }
+    return `📐 Formal rigor activated. ${moduleName} is validated at ${progVal}%. Your ${masteryPoints} Mastery Points demonstrate analytical precision over a ${streakVal}-day period. Next proposition: formalize your reading progression and verify each theorem.`;
+  }
+
+  // DEFAULT (Socratic Coach):
+  if (isFr) {
+    return `💬 Vous montrez une rigueur exemplaire sur ${moduleName} (progression : ${progVal}%). Avec ${streakVal} jours d'activité constante et ${masteryPoints} points, comment l'emplacement de lecture actuel résonne-t-il avec les principes fondateurs ? Interrogez-vous là-dessus.`;
+  }
+  if (isIt) {
+    return `💬 Mostri un rigore esemplare su ${moduleName} (progresso: ${progVal}%). Con ${streakVal} giorni di attività costante e ${masteryPoints} punti, in che modo la lettura attuale risuona con i principi fondamentali del corso? Rifletti su questo.`;
+  }
+  if (isEs) {
+    return `💬 Demuestras un rigor ejemplar en ${moduleName} (progreso: ${progVal}%). Con ${streakVal} días de actividad constante y ${masteryPoints} puntos, ¿cómo resuona tu lectura actual con los principios fundamentales? Reflexiona sobre ello.`;
+  }
+  if (isDe) {
+    return `💬 Du zeigst vorbildliche Strenge bei ${moduleName} (Fortschritt: ${progVal}%). Wie verbindet sich dein aktueller Lesestand mit den Grundprinzipien des Fachs? Reflektiere über diese tiefere Frage.`;
+  }
+  if (isZh) {
+    return `💬 你在${moduleName}（进度：${progVal}%）的学习中展现了极佳 of 严谨度。连续 ${streakVal} 天坚持学习并累积 ${masteryPoints} 点数。思考一下：你当前阅读的内容与核心基本原理之间有着怎样的内在关联？`;
+  }
+  return `💬 You have shown exceptional rigor in ${moduleName} (progress: ${progVal}%). With ${streakVal} days of consistent activity and ${masteryPoints} mastery points, how does your current reading location connect to the fundamental axioms? Inquire deeper.`;
+}
+
 export const dbService = {
   // SYLLABUS & CURRICULUM
   getAllCourseCompletions: async () => {
@@ -2128,10 +2273,12 @@ export const dbService = {
   },
 
   // PROGRESS TRACKING SERVICE
-  getUserProgress: async (userId: string) => {
+  getUserProgress: async (userId: string, lang?: string) => {
     const isBrowser = typeof window !== 'undefined';
     const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3, 12]') : [1, 3, 12];
     const progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
+    
+    const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
     
     // Map enrolled IDs to mockCourses
     const activeModules = enrolled.map((id: number) => {
@@ -2168,15 +2315,12 @@ export const dbService = {
     const earnedAchievements = progressService.evaluateAchievements(achievementsList);
 
     // ── Mastery Points — cumulative, additive, NEVER decreases ──
-    // Each correct quiz answer = +1 pt. Adding more courses always helps, never hurts.
-    // We also persist a "floor" so the score can't regress if localStorage is partially cleared.
     const quizResults = progressService.getQuizResults();
     const quizEntries = Object.values(quizResults) as any[];
     const rawMasteryPoints = quizEntries.reduce(
       (sum: number, q: any) => sum + (q.correctAnswers || 0),
       0
     );
-    // Persist floor: take the max of computed vs stored floor
     const storedFloor = isBrowser
       ? parseInt(window.localStorage.getItem('op_mastery_floor') || '0', 10)
       : 0;
@@ -2201,6 +2345,67 @@ export const dbService = {
     const completedCount = activeModules.filter((m: any) => m.progress === 100).length;
     const inProgressCount = activeModules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
 
+    // Fetch tutor preference and dynamically generate pedagogical summary!
+    let tutorId = isBrowser ? (window.localStorage.getItem('op_active_tutor_personality') || 'socratic') : 'socratic';
+    
+    // Sync with database if connected
+    if (isBrowser) {
+      const savedProfile = window.localStorage.getItem('op_user_profile');
+      const loggedIn = window.localStorage.getItem('op_session');
+      if (savedProfile && loggedIn) {
+        try {
+          const profile = JSON.parse(savedProfile);
+          const userId = profile.id;
+          if (userId) {
+            // Fetch live tutor choice from Supabase profiles
+            const { data } = await supabase
+              .from('profiles')
+              .select('tutor_choice')
+              .eq('id', userId)
+              .single();
+            if (data?.tutor_choice) {
+              tutorId = data.tutor_choice;
+              window.localStorage.setItem('op_active_tutor_personality', tutorId);
+            }
+          }
+        } catch (e) {
+          console.error("Error reading tutor choice from database:", e);
+        }
+      }
+
+      // Revert to Socratic if tutor is archived
+      const activeTutor = tutorPersonalitiesList.find(p => p.id === tutorId);
+      if (!activeTutor || (activeTutor.archivingLevel && activeTutor.archivingLevel > 0)) {
+        tutorId = 'socratic';
+        window.localStorage.setItem('op_active_tutor_personality', 'socratic');
+        
+        // Update database as well
+        const savedProfile = window.localStorage.getItem('op_user_profile');
+        const loggedIn = window.localStorage.getItem('op_session');
+        if (savedProfile && loggedIn) {
+          try {
+            const profile = JSON.parse(savedProfile);
+            if (profile.id) {
+              supabase
+                .from('profiles')
+                .update({ tutor_choice: 'socratic' })
+                .eq('id', profile.id)
+                .then(() => console.log('Successfully reverted archived tutor choice to Socratic in Supabase'));
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    const aiSummary = generatePedagogicalSummary(
+      activeModules,
+      masteryPoints,
+      studyStreakDays,
+      totalMinutes,
+      activeLang,
+      tutorId
+    );
+
     return {
       masteryPoints,
       studyStreakDays,
@@ -2210,7 +2415,7 @@ export const dbService = {
       totalMinutes,
       activeModules,
       earnedAchievementsCount: earnedAchievements.length,
-      aiSummary: "You have shown exceptional rigor in Classical Mechanics. Your next milestone is the Lagrangian synthesis. In Biology, we suggest focusing on ATP cycles to reach the L2 threshold."
+      aiSummary: aiSummary
     };
   },
 
@@ -2984,6 +3189,44 @@ export const progressService = {
     window.sessionStorage.setItem(`op_session_start_${lessonPath}`, new Date().toISOString());
     progressService.recordCourseEnrollment(slug);
     progressService.recordPageVisit(lessonPath, slug);
+  },
+
+  saveLocationAndCompletion: async (slug: string, scrollTop: number, percentage: number, path: string) => {
+    if (typeof window === 'undefined') return;
+    const loggedIn = window.localStorage.getItem('op_session');
+    if (!loggedIn) return;
+    
+    const savedProfile = window.localStorage.getItem('op_user_profile');
+    if (!savedProfile) return;
+    
+    try {
+      const profile = JSON.parse(savedProfile);
+      const userId = profile.id;
+      if (!userId) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('last_visited_page')
+        .eq('id', userId)
+        .single();
+      
+      const currentLoc = data?.last_visited_page || {};
+      currentLoc[slug] = {
+        scrollTop,
+        percentage,
+        path,
+        updatedAt: new Date().toISOString()
+      };
+
+      await supabase
+        .from('profiles')
+        .update({ last_visited_page: currentLoc })
+        .eq('id', userId);
+        
+      console.log(`Successfully synced location in Supabase for ${slug}: scroll ${scrollTop}, progress ${percentage}%`);
+    } catch (err) {
+      console.error("Error syncing location to Supabase:", err);
+    }
   },
 
   commitLessonTime: (slug: string, lessonPath: string) => {
