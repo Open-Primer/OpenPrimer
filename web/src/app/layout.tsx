@@ -31,18 +31,18 @@ export default function RootLayout({
                     root.style.setProperty('--background', '#fcfaf2');
                     root.style.setProperty('--foreground', '#0f172a');
                     root.classList.add('theme-paper');
-                    root.classList.remove('dark', 'theme-focus');
+                    root.classList.remove('dark', 'theme-dark', 'theme-focus');
                     document.write('<style id="op-theme-style">body{background-color:#fcfaf2!important;color:#0f172a!important;font-family:Georgia,Cambria,"Times New Roman",Times,serif!important;}</style>');
                   } else if (theme === 'focus') {
                     root.style.setProperty('--background', '#000000');
                     root.style.setProperty('--foreground', '#94a3b8');
                     root.classList.add('theme-focus');
-                    root.classList.remove('dark', 'theme-paper');
+                    root.classList.remove('dark', 'theme-dark', 'theme-paper');
                     document.write('<style id="op-theme-style">body{background-color:#000000!important;color:#94a3b8!important;}</style>');
                   } else {
                     root.style.setProperty('--background', '#020617');
                     root.style.setProperty('--foreground', '#f8fafc');
-                    root.classList.add('dark');
+                    root.classList.add('dark', 'theme-dark');
                     root.classList.remove('theme-paper', 'theme-focus');
                     document.write('<style id="op-theme-style">body{background-color:#020617!important;color:#f8fafc!important;}</style>');
                   }

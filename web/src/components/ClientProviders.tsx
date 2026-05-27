@@ -23,6 +23,8 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       if (theme === "paper") {
         root.style.setProperty("--background", "#fcfaf2");
         root.style.setProperty("--foreground", "#0f172a");
+        root.classList.add("theme-paper");
+        root.classList.remove("theme-focus", "theme-dark", "dark");
         document.body.style.backgroundColor = "#fcfaf2";
         document.body.style.color = "#0f172a";
         document.body.style.fontFamily = 'Georgia, Cambria, "Times New Roman", Times, serif';
@@ -31,6 +33,8 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       } else if (theme === "focus") {
         root.style.setProperty("--background", "#000000");
         root.style.setProperty("--foreground", "#94a3b8");
+        root.classList.add("theme-focus");
+        root.classList.remove("theme-paper", "theme-dark", "dark");
         document.body.style.backgroundColor = "#000000";
         document.body.style.color = "#94a3b8";
         document.body.style.fontFamily = "";
@@ -39,6 +43,8 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       } else {
         root.style.setProperty("--background", "#020617");
         root.style.setProperty("--foreground", "#f8fafc");
+        root.classList.add("theme-dark", "dark");
+        root.classList.remove("theme-paper", "theme-focus");
         document.body.style.backgroundColor = "#020617";
         document.body.style.color = "#f8fafc";
         document.body.style.fontFamily = "";

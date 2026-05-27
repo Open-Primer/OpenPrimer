@@ -127,3 +127,48 @@ CREATE TABLE IF NOT EXISTS task_queue (
   logs TEXT[] DEFAULT '{}'::text[],
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 9. Row Level Security (RLS) & Access Control Policies
+
+-- Profiles security: restrict users to their own profiles, while maintaining fallback support for testing sandbox accounts (e.g. 'u1')
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid()::text = id OR id = 'u1');
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid()::text = id OR id = 'u1');
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON profiles;
+CREATE POLICY "Enable insert for authenticated users only" ON profiles FOR INSERT WITH CHECK (auth.uid()::text = id OR id = 'u1');
+
+-- Languages security: read access for anyone, write access blocked (restricted to service_role)
+ALTER TABLE languages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to languages" ON languages;
+CREATE POLICY "Allow public read access to languages" ON languages FOR SELECT USING (true);
+
+-- Achievements security: read access for anyone, write access blocked
+ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to achievements" ON achievements;
+CREATE POLICY "Allow public read access to achievements" ON achievements FOR SELECT USING (true);
+
+-- Tutor Personalities security: read access for anyone, write access blocked
+ALTER TABLE tutor_personalities ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to tutor_personalities" ON tutor_personalities;
+CREATE POLICY "Allow public read access to tutor_personalities" ON tutor_personalities FOR SELECT USING (true);
+
+-- Courses security: read access for anyone, write access blocked
+ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to courses" ON courses;
+CREATE POLICY "Allow public read access to courses" ON courses FOR SELECT USING (true);
+
+-- Contact Feedbacks security: public can write (send messages), but reading/modifying is blocked for the public
+ALTER TABLE contact_feedbacks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow anyone to insert feedback" ON contact_feedbacks;
+CREATE POLICY "Allow anyone to insert feedback" ON contact_feedbacks FOR INSERT WITH CHECK (true);
+
+-- Search Logs security: public can insert search queries, but reading/modifying is blocked for the public
+ALTER TABLE search_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow anyone to insert search logs" ON search_logs;
+CREATE POLICY "Allow anyone to insert search logs" ON search_logs FOR INSERT WITH CHECK (true);
+
+-- Pipeline Task Queue security: all public access is completely blocked (restricted to service_role server-side operations only)
+ALTER TABLE task_queue ENABLE ROW LEVEL SECURITY;
+

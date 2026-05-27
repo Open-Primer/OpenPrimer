@@ -28,11 +28,24 @@ export async function POST(request: Request) {
     }
 
     // 2. Assemble context-aware instruction prompt
+    const langUpper = (language || 'EN').toUpperCase();
     const contextInstruction = pageContext 
-      ? `Contexte de la page étudiée par l'élève :\n---\n${pageContext}\n---\n`
+      ? (langUpper === 'FR' ? `Contexte de la page étudiée par l'élève :\n---\n${pageContext}\n---\n` : `Context of the studied page by the student:\n---\n${pageContext}\n---\n`)
       : "";
 
-    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}Veuillez toujours répondre de manière concise dans la langue de l'utilisateur (${language.toUpperCase()}). N'utilisez pas de méta-commentaires.`;
+    // Dynamically localized final instruction directive in the course's target language
+    let directive = `Veuillez toujours répondre de manière concise et rigoureuse dans la langue du cours (Français). N'utilisez aucun méta-commentaire.`;
+    if (langUpper === 'EN') {
+      directive = `Please always respond concisely and rigorously in the course language (English). Do not use any meta-comments.`;
+    } else if (langUpper === 'ES') {
+      directive = `Por favor, responda siempre de manera concisa y rigurosa en el idioma del curso (Español). No utilice meta-comentarios.`;
+    } else if (langUpper === 'DE') {
+      directive = `Bitte antworten Sie immer prägnant und präzise in der Kurssprache (Deutsch). Verwenden Sie keine Meta-Kommentare.`;
+    } else if (langUpper === 'ZH') {
+      directive = `请始终用课程语言（中文）简洁且严谨地回答。请勿使用任何元评论。`;
+    }
+
+    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${directive}`;
 
     // 3. Format history for Gemini API
     // Map roles: 'assistant' -> 'model', 'user' -> 'user'
