@@ -914,7 +914,7 @@ export const CatalogPage = () => {
               
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
                 {lang === 'FR' ? "Votre inscription a été validée avec succès. Il ne vous reste plus qu'à choisir les cours qui vous intéressent dans le catalogue ci-dessous pour composer votre premier curriculum personnalisé !" :
-                 lang === 'ES' ? "Su registro se ha validado correctamente. ¡Solo tiene que elegir los cursos que le interesan en el catálogo siguiente para componer su primer plan de estudios personalizado!" :
+                 lang === 'ES' ? "Su registro se ha validado correctamente. ¡Solo tiene que elegir los cookies que le interesan en el catálogo siguiente para componer su primer plan de estudios personalizado!" :
                  lang === 'DE' ? "Ihre Registrierung wurde erfolgreich bestätigt. Wählen Sie nun einfach die Kurse, die Sie interessieren, aus dem untenstehenden Katalog aus, um Ihren ersten personalisierten Lehrplan zu erstellen!" :
                  lang === 'ZH' ? "您的注册已成功通过验证。现在，您只需从下方的目录中选择您感兴趣的课程，即可构建您的第一个个性化课程表！" :
                  "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
@@ -938,12 +938,16 @@ export const CatalogPage = () => {
       {/* Socratic Interactive Syllabus Enrollment Overlay Panel */}
       <AnimatePresence>
         {selectedEnrollCourse && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div 
+            onClick={() => setSelectedEnrollCourse(null)} 
+            className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar"
+              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
             >
               <button 
                 onClick={() => setSelectedEnrollCourse(null)}
@@ -1011,7 +1015,7 @@ export const CatalogPage = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                <button
+                <button 
                   onClick={() => setSelectedEnrollCourse(null)}
                   className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
                 >
@@ -1032,7 +1036,7 @@ export const CatalogPage = () => {
                     // Redirect to course
                     window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
                   }}
-                  className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer animate-bounce"
+                  className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Rocket className="w-4 h-4" />
                   {isLoggedIn ? (lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning") : (lang === 'FR' ? "Créer un Compte pour s'Inscrire" : "Sign Up to Enroll")}

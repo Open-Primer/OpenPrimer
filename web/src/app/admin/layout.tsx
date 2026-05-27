@@ -101,6 +101,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [activeDropdown, setActiveDropdown] = React.useState<'lang' | 'user' | null>(null);
   const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
   const [readingMode, setReadingMode] = React.useState('dark');
+  const [dynamicEmail, setDynamicEmail] = React.useState('admin@openprimer.org');
+  const [dynamicRole, setDynamicRole] = React.useState('Administrator');
   
   const { language: lang, setLanguage: setLang } = useLanguage();
   const t = ADMIN_STRINGS[lang as keyof typeof ADMIN_STRINGS] || ADMIN_STRINGS.EN;
@@ -137,12 +139,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     window.dispatchEvent(new CustomEvent('op_reading_mode_changed', { detail: modeKey }));
   };
 
+  // Load dynamic user identity: Supabase session first, localStorage fallback
   React.useEffect(() => {
+    const loadUserIdentity = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          setDynamicEmail(user.email);
+          setDynamicRole(user.email === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
+          return;
+        }
+      } catch {
+        // Supabase unavailable — fall through to localStorage
+      }
+      // Fallback: read from localStorage profile set at login
+      const profileStr = localStorage.getItem('op_user_profile');
+      if (profileStr) {
+        try {
+          const profile = JSON.parse(profileStr);
+          if (profile.email) {
+            setDynamicEmail(profile.email);
+            setDynamicRole(profile.role === 'admin' ? 'Administrator' : 'User');
+          }
+        } catch {}
+      }
+    };
+
     const session = localStorage.getItem('op_session');
     if (session !== 'true') {
       router.push('/login');
     } else {
       setIsAuthorized(true);
+      loadUserIdentity();
     }
   }, [router]);
 
@@ -170,8 +199,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { code: 'ZH', flag: '🇨🇳', label: '中文' }
   ];
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.auth.signOut();
+    } catch {}
+    // Purge all local session data
+    localStorage.removeItem('op_session');
+    localStorage.removeItem('op_user_profile');
     router.push('/');
   };
 
@@ -286,8 +321,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
                       <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_as}</p>
-                        <p className="text-xs font-bold text-white truncate">silvere@openprimer.org</p>
-                        <p className="text-[8px] font-black uppercase tracking-widest text-blue-500 mt-1">Administrator</p>
+                        <p className="text-xs font-bold text-white truncate">{dynamicEmail}</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-blue-500 mt-1">{dynamicRole}</p>
                       </div>
                       <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
                         <GraduationCap className="w-4 h-4" /> {t.my_curriculum}

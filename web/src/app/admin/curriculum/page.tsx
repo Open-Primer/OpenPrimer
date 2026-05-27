@@ -616,6 +616,16 @@ export default function AdminCurriculumPage() {
   // Academic Suggestions validations threshold
   const [validationsThreshold, setValidationsThreshold] = useState(5);
 
+  // Manual curriculum / course proposal form states
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualType, setManualType] = useState<'curriculum' | 'course'>('course');
+  const [manualLevel, setManualLevel] = useState('L1');
+  const [manualSubject, setManualSubject] = useState('Physics');
+  const [manualLang, setManualLang] = useState('EN');
+  const [manualTutor, setManualTutor] = useState('socratic');
+  const [manualPriority, setManualPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
+  const [showManualConfirm, setShowManualConfirm] = useState(false);
+
   // ─── AI Generated Badge States ─────────────────────────────────────────────
   const [generatedBadges, setGeneratedBadges] = useState<string[]>([]);
   const [isGeneratingBadges, setIsGeneratingBadges] = useState(false);
@@ -1579,6 +1589,42 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
+  const handleCreateManualTask = () => {
+    if (!manualTitle.trim()) {
+      showToast(lang === 'FR' ? "Le titre du cours/curriculum ne peut pas être vide !" : "Course/curriculum title cannot be empty!", 'error');
+      return;
+    }
+
+    const title = manualTitle.trim();
+    const isCourse = courses.some(c => c.title.toLowerCase() === title.toLowerCase());
+    const isInQueue = queue.some(t => t.title.toLowerCase() === title.toLowerCase());
+    if (isCourse || isInQueue) {
+      showToast(lang === 'FR' ? `Le cours ou curriculum "${title}" existe déjà !` : `The course or curriculum "${title}" already exists!`, 'info');
+      return;
+    }
+
+    const newTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: title,
+      type: 'generation',
+      status: 'queued',
+      progress: 0,
+      priority: manualPriority,
+      timestamp: new Date().toISOString(),
+      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "${manualTutor}"`
+    };
+
+    const updated = [...queue, newTask];
+    setQueue(updated);
+    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    
+    // Clear form
+    setManualTitle('');
+    setShowManualConfirm(false);
+    showToast(lang === 'FR' ? "Proposition académique manuelle ajoutée avec succès !" : "Manual academic proposal added successfully!", 'success');
+    loadData();
+  };
+
   const handleApproveGen = (title: string, count: number) => {
     const isCourse = courses.some(c => c.title.toLowerCase() === title.toLowerCase());
     const isInQueue = queue.some(t => t.title.toLowerCase() === title.toLowerCase());
@@ -2431,6 +2477,117 @@ export default function AdminCurriculumPage() {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Manual Academic Proposal Panel */}
+                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 hover:border-slate-700/50 transition-all">
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-6 h-6 text-blue-500" />
+                      <h2 className="text-xl font-extrabold text-white">
+                        {lang === 'FR' ? "Proposition Académique Manuelle" : "Manual Academic Proposal"}
+                      </h2>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      {lang === 'FR'
+                        ? "Initiez manuellement la création d'un nouveau cours ou curriculum. Le pipeline d'IA assemblera la structure sémantique et les modules pédagogiques."
+                        : "Manually initiate the creation of a new course or curriculum. The AI pipeline will assemble the semantic structure and pedagogical modules."}
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+                      <div className="space-y-2 col-span-1 md:col-span-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Titre du Cours / Cursus" : "Course / Curriculum Title"}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={lang === 'FR' ? "Ex: Introduction à la Relativité Générale" : "e.g., Intro to General Relativity"}
+                          value={manualTitle}
+                          onChange={(e) => setManualTitle(e.target.value)}
+                          className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-700"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Type de Contenu" : "Content Type"}
+                        </label>
+                        <select value={manualType} onChange={(e) => setManualType(e.target.value as 'curriculum' | 'course')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="course">{lang === 'FR' ? "Cours Simple" : "Simple Course"}</option>
+                          <option value="curriculum">{lang === 'FR' ? "Cursus Complet" : "Full Curriculum"}</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Niveau Académique" : "Academic Level"}
+                        </label>
+                        <select value={manualLevel} onChange={(e) => setManualLevel(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="L1">L1 – First Year</option>
+                          <option value="L2">L2 – Second Year</option>
+                          <option value="L3">L3 – Third Year</option>
+                          <option value="Master">Master / Graduate</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Sujet / Discipline" : "Subject / Discipline"}
+                        </label>
+                        <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="Physics">{lang === 'FR' ? "Physique" : "Physics"}</option>
+                          <option value="Biology">{lang === 'FR' ? "Biologie" : "Biology"}</option>
+                          <option value="Mathematics">{lang === 'FR' ? "Mathématiques" : "Mathematics"}</option>
+                          <option value="Chemistry">{lang === 'FR' ? "Chimie" : "Chemistry"}</option>
+                          <option value="Computer Science">{lang === 'FR' ? "Informatique" : "Computer Science"}</option>
+                          <option value="Economics">{lang === 'FR' ? "Économie" : "Economics"}</option>
+                          <option value="Law">{lang === 'FR' ? "Droit" : "Law"}</option>
+                          <option value="General">{lang === 'FR' ? "Général" : "General"}</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Langue Initiale" : "Initial Language"}
+                        </label>
+                        <select value={manualLang} onChange={(e) => setManualLang(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="EN">English 🇺🇸</option>
+                          <option value="FR">Français 🇫🇷</option>
+                          <option value="ES">Español 🇪🇸</option>
+                          <option value="DE">Deutsch 🇩🇪</option>
+                          <option value="ZH">中文 🇨🇳</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Tuteur IA Pédagogique" : "AI Pedagogical Tutor"}
+                        </label>
+                        <select value={manualTutor} onChange={(e) => setManualTutor(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          {personalities.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {lang === 'FR' ? "Priorité du Pipeline" : "Pipeline Priority"}
+                        </label>
+                        <select value={manualPriority} onChange={(e) => setManualPriority(e.target.value as 'High' | 'Medium' | 'Low')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="Low">{lang === 'FR' ? "Basse" : "Low"}</option>
+                          <option value="Medium">{lang === 'FR' ? "Moyenne" : "Medium"}</option>
+                          <option value="High">{lang === 'FR' ? "Haute" : "High"}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!manualTitle.trim()) {
+                            showToast(lang === 'FR' ? "Le titre ne peut pas être vide !" : "Title cannot be empty!", 'error');
+                            return;
+                          }
+                          setShowManualConfirm(true);
+                        }}
+                        className="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                      >
+                        <Zap className="w-4 h-4" /> {lang === 'FR' ? "Créer la Proposition" : "Create Academic Proposal"}
+                      </button>
                     </div>
                   </div>
 
@@ -4730,6 +4887,84 @@ export default function AdminCurriculumPage() {
                   </>
                 );
               })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MANUAL ACADEMIC GENERATION CONFIRM MODAL */}
+      <AnimatePresence>
+        {showManualConfirm && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowManualConfirm(false)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-lg bg-slate-900 border border-blue-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              <div className="p-8 border-b border-slate-850 bg-blue-955/20 flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-blue-500 animate-pulse" />
+                <h3 className="text-lg font-black text-blue-400 uppercase tracking-widest">
+                  {lang === 'FR' ? "Confirmer la génération" : "Confirm Content Generation"}
+                </h3>
+              </div>
+              <div className="p-10 space-y-6">
+                <div className="bg-slate-950/80 rounded-3xl p-6 border border-slate-850 space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Titre" : "Title"}</span>
+                      <span className="text-white font-bold">{manualTitle}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Type" : "Type"}</span>
+                      <span className="text-white font-bold capitalize">{manualType}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Niveau" : "Level"}</span>
+                      <span className="text-white font-bold">{manualLevel}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Sujet" : "Subject"}</span>
+                      <span className="text-white font-bold">{manualSubject}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Langue Initiale" : "Language"}</span>
+                      <span className="text-white font-bold">{manualLang}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Tuteur IA" : "AI Tutor"}</span>
+                      <span className="text-white font-bold">{personalities.find(p => p.id === manualTutor)?.name || manualTutor}</span>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-slate-900/60">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Priorité" : "Priority"}</span>
+                    <span className={`text-xs font-bold ${manualPriority === 'High' ? 'text-red-400' : 'text-blue-400'}`}>{manualPriority}</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-400 leading-relaxed text-center">
+                  {lang === 'FR' 
+                    ? "En confirmant, ce nouveau contenu académique sera instantanément poussé dans le pipeline de validation de l'IA pour être assemblé en temps réel."
+                    : "By confirming, this new academic content will be instantly pushed to the AI validation pipeline to be built in real-time."}
+                </p>
+                
+                <div className="flex gap-4 pt-2">
+                  <button 
+                    onClick={() => setShowManualConfirm(false)} 
+                    className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                  >
+                    {lang === 'FR' ? "Annuler" : "Cancel"}
+                  </button>
+                  <button 
+                    onClick={handleCreateManualTask} 
+                    className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/10 cursor-pointer"
+                  >
+                    {lang === 'FR' ? "Confirmer & Lancer" : "Confirm & Launch"}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
