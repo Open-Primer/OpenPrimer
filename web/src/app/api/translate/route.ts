@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isRateLimited } from '@/lib/rateLimit';
+import { z } from 'zod';
+
+const translateSchema = z.object({
+  slug: z.string().min(1),
+  targetLang: z.string().min(2).max(10),
+  sourceContent: z.string().min(1)
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { slug, targetLang, sourceContent } = await req.json();
+    // 1. IP-Based Rate Limiting (20 requests per minute)
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (isRateLimited(ip, 20, 60000)) {
+      return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
+    // 2. Strict Input Schema Validation using Zod
+    const body = await req.json();
+    const parsed = translateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload structure.', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { slug, targetLang, sourceContent } = parsed.data;
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     console.log(`[JIT-TRANSLATE] Translating ${slug} to ${targetLang} using Gemini...`);

@@ -1,17 +1,29 @@
 import { NextResponse } from 'next/server';
+import { isRateLimited } from '@/lib/rateLimit';
+import { z } from 'zod';
+
+const batchTranslateSchema = z.object({
+  fields: z.record(z.string(), z.string()).refine(val => Object.keys(val).length > 0, { message: "Fields must not be empty" }),
+  targetLangs: z.array(z.string().min(2).max(10)).min(1)
+});
 
 export async function POST(request: Request) {
   try {
-    const { fields, targetLangs } = await request.json();
+    // 1. IP-Based Rate Limiting (20 requests per minute)
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (isRateLimited(ip, 20, 60000)) {
+      return NextResponse.json({ success: false, error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
+    // 2. Strict Input Schema Validation using Zod
+    const body = await request.json();
+    const parsed = batchTranslateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: 'Invalid payload structure.', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { fields, targetLangs } = parsed.data;
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-
-    if (!fields || !targetLangs || !Array.isArray(targetLangs)) {
-      return NextResponse.json({ success: false, error: 'Fields and targetLangs array are required.' }, { status: 400 });
-    }
-
-    if (targetLangs.length === 0) {
-      return NextResponse.json({ success: true, translations: {} });
-    }
 
     if (apiKey) {
       console.log(`[BATCH-TRANSLATE] Translating fields to [${targetLangs.join(', ')}] using Gemini...`);

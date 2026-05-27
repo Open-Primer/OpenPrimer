@@ -1,22 +1,45 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
+import { isRateLimited } from '@/lib/rateLimit';
+import { z } from 'zod';
+
+const chatSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant', 'system']),
+      content: z.string().min(1)
+    })
+  ).min(1),
+  persona: z.string().min(1),
+  pageContext: z.string().optional(),
+  language: z.string().min(2).max(10)
+});
 
 export async function POST(request: Request) {
   try {
-    const { messages, persona, pageContext, language } = await request.json();
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ success: false, error: 'Messages history is required.' }, { status: 400 });
+    // 1. IP-Based Rate Limiting (20 requests per minute)
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (isRateLimited(ip, 20, 60000)) {
+      return NextResponse.json({ success: false, error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
     }
 
-    // 1. Fetch the active system prompt for this persona from database
+    // 2. Strict Input Schema Validation using Zod
+    const body = await request.json();
+    const parsed = chatSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: 'Invalid payload structure.', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { messages, persona, pageContext, language } = parsed.data;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const langUpper = (language || 'EN').toUpperCase();
+
+    // 3. Fetch the active system prompt for this persona from database
     let systemPrompt = "You are a helpful academic tutor.";
     try {
       const { data: personalities } = await dbService.getTutorPersonalities();
       const matching = personalities?.find((p: any) => p.name === persona || p.id === persona);
       if (matching) {
-        const langUpper = (language || 'EN').toUpperCase();
         if (matching.translations?.[langUpper]?.prompt) {
           systemPrompt = matching.translations[langUpper].prompt;
         } else if (matching.prompt) {
@@ -27,22 +50,36 @@ export async function POST(request: Request) {
       console.warn('[TUTOR CHAT] Failed to query tutor personality from database, using defaults.', e);
     }
 
-    // 2. Assemble context-aware instruction prompt
-    const langUpper = (language || 'EN').toUpperCase();
+    // 4. Resolve the language name dynamically from the Supabase 'languages' table
+    let langName = 'English';
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: langData } = await supabase
+        .from('languages')
+        .select('label')
+        .eq('code', langUpper)
+        .single();
+      if (langData?.label) {
+        langName = langData.label;
+      } else {
+        // Safe mapping fallbacks
+        const fallbacks: Record<string, string> = {
+          FR: 'Français', EN: 'English', ES: 'Español', DE: 'Deutsch', ZH: '中文'
+        };
+        langName = fallbacks[langUpper] || langUpper;
+      }
+    } catch (e) {
+      console.warn('[TUTOR CHAT] Error dynamically retrieving language name from database:', e);
+    }
+
     const contextInstruction = pageContext 
       ? (langUpper === 'FR' ? `Contexte de la page étudiée par l'élève :\n---\n${pageContext}\n---\n` : `Context of the studied page by the student:\n---\n${pageContext}\n---\n`)
       : "";
 
-    // Dynamically localized final instruction directive in the course's target language
-    let directive = `Veuillez toujours répondre de manière concise et rigoureuse dans la langue du cours (Français). N'utilisez aucun méta-commentaire.`;
-    if (langUpper === 'EN') {
-      directive = `Please always respond concisely and rigorously in the course language (English). Do not use any meta-comments.`;
-    } else if (langUpper === 'ES') {
-      directive = `Por favor, responda siempre de manera concisa y rigurosa en el idioma del curso (Español). No utilice meta-comentarios.`;
-    } else if (langUpper === 'DE') {
-      directive = `Bitte antworten Sie immer prägnant und präzise in der Kurssprache (Deutsch). Verwenden Sie keine Meta-Kommentare.`;
-    } else if (langUpper === 'ZH') {
-      directive = `请始终用课程语言（中文）简洁且严谨地回答。请勿使用任何元评论。`;
+    // Dynamically localized final instruction directive in the dynamic course language retrieved from Supabase
+    let directive = `Veuillez toujours répondre de manière concise et rigoureuse dans la langue du cours (${langName}). N'utilisez aucun méta-commentaire ou préambule de politesse. Répondez strictement en ${langName}.`;
+    if (langUpper !== 'FR') {
+      directive = `Please always respond concisely and rigorously in the course language: ${langName} (Language Code: ${langUpper}). Do not use any meta-comments or polite conversational preamble. Respond strictly in ${langName}.`;
     }
 
     const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${directive}`;
