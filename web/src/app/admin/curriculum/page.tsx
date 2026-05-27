@@ -57,7 +57,24 @@ export const CURRICULUM_STRINGS = {
     type_name_confirm: "Type name here...",
     strict_parameter_error: "Strict Parameter Error: All fields are required!",
     strict_validation_reject: "Strict Validation Reject: Threshold must be positive!",
-    success: "Success"
+    success: "Success",
+    empty_trans: "No translation requests in queue.",
+    refused_trans_backlog: "Refused Translation Backlog",
+    unrefuse_reevaluate: "Remove & Force Re-Evaluate",
+    empty_refused_trans: "No refused translations in backlog.",
+    course_launch_queue: "Course Launch Dispatch Queue",
+    course_launch_queue_desc: "Monitor course translations compiled and ready for dispatch to registered student domains.",
+    pending: "Pending",
+    registry_title: "Registered Languages Registry",
+    registry_desc: "Configure target translation languages, control their access levels, or purge them.",
+    register_new: "Register New Language",
+    col_flag: "Flag",
+    col_code: "Code",
+    col_label: "Language Label",
+    col_control: "Pedagogical Control Level",
+    col_status: "Active Status",
+    status_archived_invisible: "Archived & Hidden",
+    status_active: "Active"
   },
   FR: {
     title: "Centre de Contrôle du Cursus",
@@ -102,7 +119,24 @@ export const CURRICULUM_STRINGS = {
     type_name_confirm: "Entrez le nom ici...",
     strict_parameter_error: "Erreur Paramètre Strict : Tous les champs sont requis !",
     strict_validation_reject: "Rejet de Validation Stricte : Le seuil doit être positif !",
-    success: "Succès"
+    success: "Succès",
+    empty_trans: "Aucune demande de traduction dans la file.",
+    refused_trans_backlog: "Backlog des Traductions Refusées",
+    unrefuse_reevaluate: "Retirer & Forcer la Ré-évaluation",
+    empty_refused_trans: "Aucune traduction refusée dans le backlog.",
+    course_launch_queue: "File d'attente de lancement des cours",
+    course_launch_queue_desc: "Surveiller les traductions compilées prêtes à être envoyées aux étudiants.",
+    pending: "En attente",
+    registry_title: "Registre des langues enregistrées",
+    registry_desc: "Configurez les langues cibles, gérez leur visibilité ou purgez-les.",
+    register_new: "Enregistrer une langue",
+    col_flag: "Drapeau",
+    col_code: "Code",
+    col_label: "Nom de la langue",
+    col_control: "Niveau de contrôle pédagogique",
+    col_status: "Statut actif",
+    status_archived_invisible: "Archivée & Masquée",
+    status_active: "Active"
   },
   ES: {
     title: "Gobernanza Académica",
@@ -143,7 +177,24 @@ export const CURRICULUM_STRINGS = {
     type_name_confirm: "Escriba el nombre aquí...",
     strict_parameter_error: "Error Paramètre Strict: Todos los campos son obligatorios.",
     strict_validation_reject: "Rejet de Validation Stricte: ¡El umbral debe ser positivo!",
-    success: "Éxito"
+    success: "Éxito",
+    empty_trans: "No hay solicitudes de traducción en la cola.",
+    refused_trans_backlog: "Historial de Traducciones Rechazadas",
+    unrefuse_reevaluate: "Eliminar y Forzar Re-evaluación",
+    empty_refused_trans: "No hay traducciones rechazadas en el historial.",
+    course_launch_queue: "Cola de Envío de Cursos",
+    course_launch_queue_desc: "Supervisar las traducciones compiladas y listas para enviar a los estudiantes.",
+    pending: "Pendiente",
+    registry_title: "Registro de Idiomas Registrados",
+    registry_desc: "Configure los idiomas de destino, controle sus niveles de acceso o elimínelos.",
+    register_new: "Registrar Nuevo Idioma",
+    col_flag: "Bandera",
+    col_code: "Código",
+    col_label: "Idioma",
+    col_control: "Nivel de Control Pedagógico",
+    col_status: "Estado Activo",
+    status_archived_invisible: "Archivado y Oculto",
+    status_active: "Activo"
   },
   DE: {
     title: "Akademische Governance",
@@ -184,7 +235,24 @@ export const CURRICULUM_STRINGS = {
     type_name_confirm: "Geben Sie den Namen hier ein...",
     strict_parameter_error: "Error Paramètre Strict: Alle Felder sind erforderlich!",
     strict_validation_reject: "Rejet de Validation Stricte: Der Schwellenwert muss positiv sein!",
-    success: "Erfolg"
+    success: "Erfolg",
+    empty_trans: "Keine Übersetzungsanfragen in der Warteschlange.",
+    refused_trans_backlog: "Abgelehnte Übersetzungen Backlog",
+    unrefuse_reevaluate: "Entfernen & Re-Evaluierung erzwingen",
+    empty_refused_trans: "Keine abgelehnten Übersetzungen im Backlog.",
+    course_launch_queue: "Kursstart-Warteschlange",
+    course_launch_queue_desc: "Überwachen Sie kompilierte Kursübersetzungen, die für den Versand bereit sind.",
+    pending: "Ausstehend",
+    registry_title: "Registrierte Sprachen",
+    registry_desc: "Verwalten Sie Zielsprachen, deren Zugriffsebenen oder löschen Sie diese.",
+    register_new: "Neue Sprache registrieren",
+    col_flag: "Flagge",
+    col_code: "Code",
+    col_label: "Sprache",
+    col_control: "Pädagogische Kontrollebene",
+    col_status: "Aktiver Status",
+    status_archived_invisible: "Archiviert & Versteckt",
+    status_active: "Aktiv"
   },
   ZH: {
     title: "学术治理中心",
@@ -225,7 +293,24 @@ export const CURRICULUM_STRINGS = {
     type_name_confirm: "在此输入名称以确认...",
     strict_parameter_error: "Error Paramètre Strict: 所有字段均为必填项！",
     strict_validation_reject: "Rejet de Validation Stricte: 阈值必须为正数！",
-    success: "成功"
+    success: "成功",
+    empty_trans: "队列中没有翻译请求。",
+    refused_trans_backlog: "已拒绝的翻译积压",
+    unrefuse_reevaluate: "删除并强制重新评估",
+    empty_refused_trans: "积压中没有已拒绝的的翻译。",
+    course_launch_queue: "课程发布分发队列",
+    course_launch_queue_desc: "监控已编译并准备分发到学生终端的课程翻译。",
+    pending: "排队中",
+    registry_title: "已注册语言注册表",
+    registry_desc: "配置目标翻译语言，控制其访问权限级别，或进行清除。",
+    register_new: "注册新语言",
+    col_flag: "国旗/图标",
+    col_code: "代码",
+    col_label: "语言名称",
+    col_control: "教学控制级别",
+    col_status: "活跃状态",
+    status_archived_invisible: "已归档且隐藏",
+    status_active: "活跃"
   }
 };
 
@@ -2633,13 +2718,13 @@ export default function AdminCurriculumPage() {
                       </div>
                     ))}
                     {translationRequests.length === 0 && (
-                      <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center">All translations up to date.</p>
+                      <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center">{t.empty_trans}</p>
                     )}
                   </div>
 
                   {/* Refused translation backlog */}
                   <div className="pt-6 border-t border-slate-900">
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Refused Translation Backlog</h4>
+                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">{t.refused_trans_backlog}</h4>
                     <div className="grid md:grid-cols-3 gap-6">
                       {refusedTranslations.map((item) => {
                         const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
@@ -2650,20 +2735,20 @@ export default function AdminCurriculumPage() {
                               <p className="text-xs font-bold text-slate-200">{item.name}</p>
                               <p className="text-[8px] text-slate-500 font-black uppercase mt-1">Refused to {item.targetLang.toUpperCase()}</p>
                               <p className="text-[9px] font-bold text-red-500/70 mt-2">
-                                Re-evaluation in: <span className="text-red-400">{remainingDays}d</span>
+                                {lang === 'FR' ? 'Ré-évaluation dans :' : lang === 'ES' ? 'Re-evaluación en :' : lang === 'DE' ? 'Re-Evaluierung in :' : lang === 'ZH' ? '重新评估于：' : 'Re-evaluation in:'} <span className="text-red-400">{remainingDays}d</span>
                               </p>
                             </div>
                             <button 
                               onClick={() => dbService.deleteRefusedTranslation(item.id).then(loadData)} 
                               className="w-full py-2 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
                             >
-                              Un-Refuse / Re-evaluate
+                              {t.unrefuse_reevaluate}
                             </button>
                           </div>
                         );
                       })}
                       {refusedTranslations.length === 0 && (
-                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">Refused translations backlog is empty.</p>
+                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">{t.empty_refused_trans}</p>
                       )}
                     </div>
                   </div>
@@ -2674,26 +2759,26 @@ export default function AdminCurriculumPage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">Course Launch Notification Queue</h4>
+                          <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">{t.course_launch_queue}</h4>
                         </div>
-                        <p className="text-xs text-slate-500">Users waiting to be notified when their requested course translation goes live (90-day auto-purge).</p>
+                        <p className="text-xs text-slate-500">{t.course_launch_queue_desc}</p>
                       </div>
                       <div className="flex flex-col items-center gap-1 shrink-0 ml-8">
                         <span className="text-4xl font-black text-emerald-400">{translationEmails.length}</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t.pending}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Registered Languages Registry & Add Language Panel */}                  {/* Registered Languages Registry & Add Language Panel */}
+                  {/* Registered Languages Registry & Add Language Panel */}
                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                      <div className="space-y-1">
                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                         <Globe className="w-5 h-5 text-emerald-500" /> Dynamic Languages Registry
+                         <Globe className="w-5 h-5 text-emerald-500" /> {t.registry_title}
                        </h2>
                        <p className="text-xs text-slate-400">
-                         Registered languages that are dynamically recognized for localization compilation and student translation requests.
+                         {t.registry_desc}
                        </p>
                      </div>
                      <button
@@ -2701,7 +2786,7 @@ export default function AdminCurriculumPage() {
                        onClick={() => setShowAddLanguage(true)}
                        className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/10 shrink-0"
                      >
-                       Register New Language
+                       {t.register_new}
                      </button>
                    </div>
 
@@ -2717,7 +2802,7 @@ export default function AdminCurriculumPage() {
                                 setLangSortDir('asc');
                               }
                             }}>
-                              Flag {renderSortIndicator('flag', langSortField, langSortDir)}
+                              {t.col_flag} {renderSortIndicator('flag', langSortField, langSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (langSortField === 'code') {
@@ -2727,7 +2812,7 @@ export default function AdminCurriculumPage() {
                                 setLangSortDir('asc');
                               }
                             }}>
-                              Code {renderSortIndicator('code', langSortField, langSortDir)}
+                              {t.col_code} {renderSortIndicator('code', langSortField, langSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (langSortField === 'label') {
@@ -2737,9 +2822,9 @@ export default function AdminCurriculumPage() {
                                 setLangSortDir('asc');
                               }
                             }}>
-                              Label {renderSortIndicator('label', langSortField, langSortDir)}
+                              {t.col_label} {renderSortIndicator('label', langSortField, langSortDir)}
                             </th>
-                            <th className="px-6 py-4">Archiving Level Control</th>
+                            <th className="px-6 py-4">{t.col_control}</th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (langSortField === 'archivingLevel') {
                                 setLangSortDir(langSortDir === 'asc' ? 'desc' : 'asc');
@@ -2748,7 +2833,7 @@ export default function AdminCurriculumPage() {
                                 setLangSortDir('asc');
                               }
                             }}>
-                              Status {renderSortIndicator('archivingLevel', langSortField, langSortDir)}
+                              {t.col_status} {renderSortIndicator('archivingLevel', langSortField, langSortDir)}
                             </th>
                           </tr>
                         </thead>
@@ -2773,17 +2858,24 @@ export default function AdminCurriculumPage() {
                             })
                             .map((langItem, idx) => {
                               const currentLevel = langItem.archivingLevel || 0;
-                              let statusLabel = lang === 'FR' ? 'Actif' : 'Active';
-                              let statusColor = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-                              
-                              if (currentLevel === 2) {
-                                statusLabel = lang === 'FR' ? 'Archivé (Invisible)' : 'Archived (Invisible)';
-                                statusColor = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
-                              }
+                              let statusLabel = currentLevel === 2 ? t.status_archived_invisible : t.status_active;
+                              let statusColor = currentLevel === 2 
+                                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
                               
                               return (
                                 <tr key={idx} className="hover:bg-slate-900/20 transition-colors">
-                                  <td className="px-6 py-4 text-2xl">{langItem.flag || '🌐'}</td>
+                                  <td className="px-6 py-4">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold uppercase tracking-wider border shadow-md transition-all select-none ${
+                                      langItem.code.toUpperCase() === 'EN'
+                                        ? 'bg-blue-950/40 border-blue-500/30 text-blue-400 shadow-blue-950/20'
+                                        : currentLevel === 2
+                                          ? 'bg-slate-950/60 border-slate-800 text-slate-500'
+                                          : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400 shadow-emerald-950/20'
+                                    }`}>
+                                      {langItem.code.substring(0, 2).toUpperCase()}
+                                    </div>
+                                  </td>
                                   <td className="px-6 py-4 font-mono font-bold text-slate-200">{langItem.code}</td>
                                   <td className="px-6 py-4 text-slate-400 font-medium">{langItem.label}</td>
                                   <td className="px-6 py-4">
@@ -3583,8 +3675,8 @@ export default function AdminCurriculumPage() {
                                 )}
                               </div>
                               <div className="space-y-1">
-                                <h3 className="text-xl font-black">{ach.name}</h3>
-                                <p className="text-xs text-slate-500 leading-relaxed">{ach.description}</p>
+                                <h3 className="text-xl font-black">{ach.translations?.[lang]?.name || ach.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">{ach.translations?.[lang]?.description || ach.description}</p>
                               </div>
                             </div>
 
@@ -3684,8 +3776,8 @@ export default function AdminCurriculumPage() {
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <h3 className="text-xl font-black">{p.name}</h3>
-                                <p className="text-xs text-slate-500 leading-relaxed italic">"{p.prompt}"</p>
+                                <h3 className="text-xl font-black">{p.translations?.[lang]?.name || p.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed italic">"{p.translations?.[lang]?.prompt || p.prompt}"</p>
                               </div>
                             </div>
                             
@@ -3727,8 +3819,15 @@ export default function AdminCurriculumPage() {
       {/* ACHIEVEMENT ADD MODAL */}
       <AnimatePresence>
         {showAddAchievement && (
-          <div onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowAddAchievement(false); setBadgeError(null); }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Create Achievement Badge
@@ -3983,8 +4082,15 @@ export default function AdminCurriculumPage() {
       {/* ACHIEVEMENT EDIT MODAL */}
       <AnimatePresence>
         {selectedAchievement && (
-          <div onClick={() => setSelectedAchievement(null)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-4xl bg-slate-900 border border-slate-885 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedAchievement(null)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-885 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> Edit Achievement Badge
@@ -4234,8 +4340,15 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD PURGE CONFIRM MODAL */}
       <AnimatePresence>
         {purgeTarget && (
-          <div onClick={() => setPurgeTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPurgeTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                  return (
@@ -4277,8 +4390,15 @@ export default function AdminCurriculumPage() {
       {/* DYNAMIC LANGUAGE ADD MODAL */}
       <AnimatePresence>
         {showAddLanguage && (
-          <div onClick={() => setShowAddLanguage(false)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddLanguage(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Globe className="w-6 h-6 text-emerald-500" /> Register New Language
@@ -4340,8 +4460,15 @@ export default function AdminCurriculumPage() {
       {/* PERSONALITY ADD MODAL */}
       <AnimatePresence>
         {showAddPersonality && (
-          <div onClick={() => setShowAddPersonality(false)} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddPersonality(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Sparkles className="w-6 h-6 text-fuchsia-500" /> Create Custom Tutor Persona
@@ -4399,8 +4526,15 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD CANCEL TASK MODAL */}
       <AnimatePresence>
         {cancelTaskTarget && (
-          <div onClick={() => setCancelTaskTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCancelTaskTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                  return (
@@ -4445,8 +4579,15 @@ export default function AdminCurriculumPage() {
       {/* DOUBLE-SAFEGUARD PURGE LANGUAGE MODAL */}
       <AnimatePresence>
         {purgeLanguageTarget && (
-          <div onClick={() => setPurgeLanguageTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPurgeLanguageTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
                {(() => {
                  const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                  return (
@@ -4513,8 +4654,15 @@ export default function AdminCurriculumPage() {
       {/* INFO / ERROR MODAL */}
       <AnimatePresence>
         {infoModal && (
-          <div onClick={() => setInfoModal(null)} className="fixed inset-0 z-[350] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[350] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setInfoModal(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               <div className="p-8 border-b border-slate-850 flex items-center gap-3">
                 <ShieldAlert className="w-6 h-6 text-red-500" />
                 <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{infoModal.title}</h3>
@@ -4533,8 +4681,15 @@ export default function AdminCurriculumPage() {
       {/* COURSE ARCHIVE LEVEL 3 CONFIRM MODAL */}
       <AnimatePresence>
         {courseArchiveTarget && (
-          <div onClick={() => setCourseArchiveTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCourseArchiveTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               {(() => {
                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                 return (
@@ -4571,8 +4726,15 @@ export default function AdminCurriculumPage() {
       {/* DELETE TUTOR PERSONALITY CONFIRM MODAL */}
       <AnimatePresence>
         {deleteTutorTarget && (
-          <div onClick={() => setDeleteTutorTarget(null)} className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/90 backdrop-blur-md cursor-pointer">
-            <motion.div onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteTutorTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               {(() => {
                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                 return (

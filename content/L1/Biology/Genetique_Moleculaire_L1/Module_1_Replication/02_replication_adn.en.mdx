@@ -1,0 +1,134 @@
+---
+title: "DNA Replication: Mechanisms and Fidelity"
+level: "L1"
+subject: "Biology"
+module: "Genetique_Moleculaire_L1"
+section: 2
+version: "1.0.0"
+updatedAt: "2026-05-27"
+lang: "en"
+---
+
+# Lesson 2: DNA Replication — Mechanisms and Fidelity
+
+DNA replication is the process by which a cell copies its genome before dividing, ensuring that each daughter cell receives a faithful and complete copy of the genetic information. Its precision is staggering: one error per ~10¹⁰ integrated nucleotides.
+
+<SelfEval title="DNA Replication" type="pre" />
+
+## 1. Principle: Semi-Conservative Replication
+
+The Meselson and Stahl experiment (1958), using heavy isotope ¹⁵N to label parental DNA, demonstrated that replication is **semi-conservative**: each daughter DNA molecule consists of one **parental strand** (conserved) and one **newly synthesized strand**.
+
+This model was opposed to the two rejected alternatives:
+- **Conservative**: parental DNA is preserved intact, and an entirely new double helix is synthesized
+- **Dispersive**: parental strands are fragmented and randomly distributed
+
+## 2. Steps of Replication
+
+### 2.1 Initiation: Opening the Fork
+
+Replication begins at specific DNA sequences called **replication origins** (oriC in *E. coli*, multiple ARS in eukaryotes).
+
+**In Eukaryotes:**
+1. The **ORC (Origin Recognition Complex)** binds to ARS throughout the cell cycle
+2. In G1, **Cdc6** and **Cdt1** recruit **MCM2-7** helicases (hexamers) → formation of the **pre-replication complex (pre-RC)**
+3. At S-phase entry, **CDK-S** and **DDK** kinases phosphorylate and activate MCMs → replication starts
+
+### 2.2 Fork Progression
+
+At the **replication fork**, several enzymes act in concert:
+
+| Enzyme | Role |
+|--------|------|
+| **Helicase (MCM2-7)** | Unwinds the double helix (consumes ATP) |
+| **SSB / RPA** | Stabilizes separated strands (single-strand binding proteins) |
+| **Topoisomerase I** | Resolves positive supercoils ahead of the fork |
+| **Topoisomerase II** | Decatenates daughter chromosomes |
+| **Primase** | Synthesizes short RNA primers ~10 nt |
+| **DNA Polymerase δ/ε** | Synthesizes leading strand (ε) and lagging strand (δ) |
+| **RNase H / FEN1** | Removes RNA primers |
+| **DNA Ligase** | Joins Okazaki fragments |
+
+### 2.3 The Polarity Problem
+
+**DNA polymerase** can only synthesize DNA **5'→3'**. Yet the two template strands are antiparallel. Solution:
+
+- **Leading strand**: continuous synthesis 5'→3', in the direction of fork progression
+- **Lagging strand**: discontinuous synthesis **5'→3'** but **opposite to fork direction** → production of **Okazaki fragments** (~100-200 nt in eukaryotes, ~1000-2000 nt in prokaryotes), each preceded by an RNA primer
+
+<MetaNote title="Okazaki Fragments">
+  Reiji Okazaki (1968) discovered these short fragments by incorporating radioactive thymidine for very short periods. The discontinuous synthesis of the lagging strand involves looping the template — the **replisome** keeps both polymerases associated, forming a loop in the lagging strand template.
+</MetaNote>
+
+## 3. Molecular Actors in Replication Fidelity
+
+The precision of replication (~10⁻¹⁰ errors per base) relies on three successive mechanisms:
+
+### 3.1 Intrinsic Selectivity of DNA Polymerase
+
+DNA Pol δ/ε tests the geometry of each base pair in its **active site** before catalysis. A mismatch alters the site geometry → spontaneous error rate: **~10⁻⁵** per base.
+
+### 3.2 3'→5' Exonuclease Activity (Proofreading)
+
+DNA Pol δ/ε has an integrated **3'→5' exonuclease** activity: if an incorrect base is incorporated, the polymerase "backs up," excises the wrong nucleotide, and reinserts the correct one. Improvement: **~10⁻² to 10⁻³** → final error rate: **~10⁻⁷ to 10⁻⁸** per base.
+
+### 3.3 Post-Replication Mismatch Repair (MMR)
+
+The **MMR system** detects and corrects residual mismatches after replication (MutS/MutL in prokaryotes; MSH2-MSH6/MLH1 in eukaryotes). Final error rate: **~10⁻¹⁰** per base.
+
+## 4. Replication Cycle Control
+
+Replication must be **triggered only once per cell cycle**, at each origin. Several mechanisms contribute:
+
+- **Destruction of Cdc6 and Cdt1** after initiation (prevents pre-RC reassembly)
+- **ORC phosphorylation** by CDKs (inactivates ORC after initiation)
+- **Geminin** inhibits Cdt1 outside of G1
+
+> Cancer is often characterized by dysregulation of cell cycle control: loss of S/G2M checkpoints, cyclin overexpression, Rb or p53 mutations.
+
+## 5. Active Recall Quiz
+
+<FillInBlanks 
+  sentence="The Meselson and Stahl experiment (1958) demonstrated that DNA replication is [...]." 
+  answer="semi-conservative" 
+/>
+
+<FillInBlanks 
+  sentence="The enzyme that synthesizes short RNA primers required for replication is [...]." 
+  answer="primase" 
+/>
+
+<FillInBlanks 
+  sentence="Short fragments synthesized discontinuously on the lagging strand are called [...] fragments." 
+  answer="Okazaki" 
+/>
+
+<Quiz>
+  <Question q="What is the direction of DNA polymerase synthesis?">
+    <Option text="3'→5' only" />
+    <Option text="5'→3' only" correct />
+    <Option text="Both directions simultaneously" />
+    <Option text="No preferred direction" />
+  </Question>
+  <Question q="Which DNA polymerase mechanism improves replication fidelity by excising incorrectly incorporated bases?">
+    <Option text="5'→3' ligase activity" />
+    <Option text="3'→5' exonuclease activity (proofreading)" correct />
+    <Option text="DNA demethylation" />
+    <Option text="Histone phosphorylation" />
+  </Question>
+  <Question q="Which protein inhibits Cdt1 outside of G1 phase to prevent replication re-initiation?">
+    <Option text="Cyclin B" />
+    <Option text="RPA" />
+    <Option text="Geminin" correct />
+    <Option text="MCM2" />
+  </Question>
+</Quiz>
+
+## ✍️ Lesson Summary
+
+<Summary items={['**Semi-conservative** replication: 1 parental strand + 1 newly synthesized strand', '**Initiation** at replication origins (ORC, MCM2-7, CDK-S)', '**Leading strand**: continuous synthesis; **lagging strand**: Okazaki fragments', '**Fidelity**: intrinsic selectivity + proofreading + MMR → ~10⁻¹⁰ errors/base', 'Replication triggered **once per cycle** via anti-re-licensing mechanisms']} />
+
+<SelfEval title="DNA Replication" type="post" />
+
+---
+*OpenPrimer Industrial Grade Certified*

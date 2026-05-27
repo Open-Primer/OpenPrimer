@@ -509,14 +509,14 @@ export default function ServerHealthPage() {
   return (
     <div className="space-y-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+        <div className="space-y-2">
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
             <Activity className={`w-8 h-8 ${allOk ? 'text-emerald-500' : anyOffline ? 'text-red-500' : 'text-amber-500'}`} />
             {t.title}
           </h1>
-          <p className="text-slate-500 text-sm font-medium mt-2">{t.subtitle}</p>
-          <p className="text-slate-700 text-[10px] mt-1 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+          <p className="text-xs text-slate-400 font-medium">{t.subtitle}</p>
+          <p className="text-slate-700 text-[10px] pt-1 flex items-center gap-1.5 font-bold uppercase tracking-wider">
             <RefreshCw className="w-3 h-3 animate-pulse" /> {t.auto_refresh}
           </p>
         </div>

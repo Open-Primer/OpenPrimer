@@ -1,0 +1,152 @@
+---
+title: "Transcription et Traduction : L'Expression des Gènes"
+level: "L1"
+subject: "Biology"
+module: "Genetique_Moleculaire_L1"
+section: 3
+version: "1.0.0"
+updatedAt: "2026-05-27"
+lang: "fr"
+---
+
+# Leçon 3 : Transcription et Traduction — L'Expression des Gènes
+
+L'expression des gènes est le processus par lequel l'information encodée dans une séquence d'ADN est convertie en protéine fonctionnelle. Ce processus en deux étapes — **transcription** (ADN → ARN) puis **traduction** (ARN → Protéine) — est la manifestation moléculaire du Dogme Central.
+
+<SelfEval title="Transcription et Traduction" type="pre" />
+
+## 1. La Transcription : De l'ADN à l'ARNm
+
+### 1.1 L'ARN Polymérase : Le Moteur de la Transcription
+
+Contrairement à la réplication, la transcription ne requiert **pas d'amorce** : l'**ARN polymérase** initie directement la synthèse d'ARN à partir d'une extrémité libre. Elle synthétise l'ARN dans le sens **5'→3'**, en utilisant le brin matriciel (antisens, 3'→5') comme template.
+
+Chez les eucaryotes, trois ARN polymérases majeures :
+- **ARN Pol I** : synthèse des ARNr (sauf 5S)
+- **ARN Pol II** : synthèse des ARNm (protéines) et petits ARN
+- **ARN Pol III** : synthèse des ARNt, ARNr 5S
+
+### 1.2 Les Étapes de la Transcription (Eucaryotes)
+
+**Initiation :**
+L'ARN Pol II est recrutée au **promoteur** (région riche en TATA box, ~25-30 pb en amont du +1) par les facteurs généraux de transcription (TFIID, TFIIA, TFIIB, TFIIE, TFIIF, TFIIH) formant le **complexe de pré-initiation (PIC)**. TFIIH possède une activité kinase qui phosphoryle le **domaine C-terminal (CTD)** de l'ARN Pol II, signal de passage en mode élongation.
+
+**Élongation :**
+L'ARN Pol II avance le long du brin matriciel à ~20-100 nt/s, créant une **bulle de transcription** (~12-14 nt). L'ARN naissant est libéré dans la lumière de la bulle.
+
+**Terminaison :**
+Chez les eucaryotes, la terminaison implique le signal **AAUAAA** dans l'ARNm → clivage et polyadénylation par le complexe CPSF/CstF.
+
+### 1.3 Maturation de l'ARNm Pré-Messager
+
+Le pré-ARNm eucaryote subit trois modifications majeures avant d'être exporté :
+
+1. **Coiffe 7-méthylguanosine (m7G)** en 5' : ajoutée cotranscriptionnellement, protège contre les exonucléases et facilite la reconnaissance par les ribosomes
+2. **Queue poly(A)** en 3' : ~200 adénosines ajoutées par la poly(A) polymérase, stabilise l'ARNm et favorise l'export nucléaire
+3. **Épissage (splicing)** : excision des **introns** (non codants) et jonction des **exons** (codants) par le **spliceosome** (complexe ribonucléoprotéique de ~5 snRNPs : U1, U2, U4, U5, U6)
+
+<MetaNote title="Épissage Alternatif : Un Gène, Plusieurs Protéines">
+  L'épissage alternatif permet à un seul gène de produire plusieurs protéines différentes selon le tissu ou la condition physiologique. Le gène de la **troponine T** cardiaque produit plus de 60 isoformes par épissage alternatif. Environ **95%** des gènes humains à introns multiples subissent un épissage alternatif.
+</MetaNote>
+
+## 2. Le Code Génétique
+
+Le code génétique est le système de correspondance entre les **codons** (triplets de bases de l'ARNm) et les **acides aminés** (ou signaux d'arrêt) qu'ils encodent.
+
+**Propriétés du code génétique :**
+- **Universel** : identique (avec de rares exceptions) chez tous les organismes vivants
+- **Non-chevauchant** : chaque base appartient à un seul codon
+- **Dégénéré (redondant)** : 64 codons pour 20 acides aminés + 3 codons stop → plusieurs codons encodent le même acide aminé (synonymes)
+- **Non ambigu** : un codon donné encode toujours le même acide aminé
+
+**Codons spéciaux :**
+- **AUG** : codon d'initiation (Met) — **toujours le premier codon traduit**
+- **UAA, UAG, UGA** : codons stop (non-sens) — aucun acide aminé
+
+## 3. La Traduction : De l'ARNm à la Protéine
+
+### 3.1 Les ARNt : Adaptateurs du Code
+
+Les **ARN de transfert (ARNt)** sont les adaptateurs moléculaires qui relient codons et acides aminés :
+- Chaque ARNt possède un **anticodon** (boucle qui s'apparie au codon de l'ARNm)
+- Chaque ARNt est chargé en acide aminé spécifique par une **aminoacyl-ARNt synthétase** (aa-RS) — la fidélité de la traduction dépend de ces enzymes
+
+### 3.2 Le Ribosome : La Machine Traductrice
+
+Le ribosome eucaryote (80S) est composé de :
+- **Petite sous-unité 40S** : décode l'ARNm, lie le début de la traduction
+- **Grande sous-unité 60S** : catalyse la formation des liaisons peptidiques (activité **peptidyl-transférase** portée par l'ARNr 28S)
+
+Le ribosome possède trois sites fonctionnels pour les ARNt :
+- **Site A (Aminoacyl)** : accueil du nouvel ARNt chargé
+- **Site P (Peptidyl)** : ARNt portant la chaîne peptidique en cours
+- **Site E (Exit)** : ARNt déchargé, prêt à quitter
+
+### 3.3 Étapes de la Traduction
+
+**Initiation :**
+1. La sous-unité 40S, associée aux facteurs eIF (eIF1, eIF2, eIF3, eIF4F), scanne l'ARNm depuis la coiffe 5' jusqu'au premier **AUG** en contexte Kozak optimal
+2. L'ARNt initiateur (Met-ARNt_i^Met) s'apparie à l'AUG au site P
+3. La sous-unité 60S se joint → formation du ribosome 80S fonctionnel
+
+**Élongation :**
+Pour chaque acide aminé ajouté :
+1. Un aminoacyl-ARNt entre au site A (avec eEF1A·GTP)
+2. La peptidyl-transférase catalyse la formation de la liaison peptidique (site A → P)
+3. La translocation déplace le ribosome de 3 nt vers le 3' (eEF2·GTP)
+
+**Terminaison :**
+Un codon stop au site A est reconnu par les **facteurs de libération** (eRF1 + eRF3) → hydrolyse de la liaison ester entre le peptide et le dernier ARNt → libération de la protéine.
+
+## 4. Quiz de Rappel Actif
+
+<FillInBlanks 
+  sentence="La maturation du pré-ARNm eucaryote implique l'ajout d'une coiffe [...] en 5', d'une queue [...] en 3', et l'épissage des introns." 
+  answer="m7G / poly(A)" 
+/>
+
+<FillInBlanks 
+  sentence="Le codon d'initiation de la traduction, encodant la méthionine, est [...]." 
+  answer="AUG" 
+/>
+
+<FillInBlanks 
+  sentence="Le site [...] du ribosome accueille l'ARNt portant la chaîne peptidique en cours d'élongation." 
+  answer="P" 
+/>
+
+<Quiz>
+  <Question q="Quelle ARN polymérase eucaryote est responsable de la synthèse des ARNm codant pour les protéines ?">
+    <Option text="ARN Pol I" />
+    <Option text="ARN Pol II" correct />
+    <Option text="ARN Pol III" />
+    <Option text="ARN Pol IV" />
+  </Question>
+  <Question q="Combien de codons stop existent dans le code génétique standard ?">
+    <Option text="1 (UAA seulement)" />
+    <Option text="2 (UAA et UAG)" />
+    <Option text="3 (UAA, UAG, UGA)" correct />
+    <Option text="4" />
+  </Question>
+  <Question q="Quelle est l'activité enzymatique de la grande sous-unité du ribosome qui catalyse la formation des liaisons peptidiques ?">
+    <Option text="Kinase protéique" />
+    <Option text="Peptidyl-transférase" correct />
+    <Option text="Aminoacyl-ARNt synthétase" />
+    <Option text="Topoisomérase" />
+  </Question>
+  <Question q="Le phénomène par lequel un seul gène peut produire plusieurs protéines différentes est appelé :">
+    <Option text="Mutation somatique" />
+    <Option text="Épissage alternatif" correct />
+    <Option text="Translocation chromosomique" />
+    <Option text="Méthylation de l'ADN" />
+  </Question>
+</Quiz>
+
+## ✍️ Résumé de la Leçon
+
+<Summary items={['**Transcription** (ARN Pol II) : promoteur → élongation → terminaison + polyadénylation', '**Maturation ARNm** : coiffe m7G + queue poly(A) + épissage des introns', 'Le **code génétique** : 64 codons, universel, dégénéré, non ambigu', '**AUG** = codon d\'initiation ; **UAA/UAG/UGA** = codons stop', '**Traduction** (ribosome 80S) : initiation (AUG Kozak) → élongation → terminaison', 'Sites A/P/E du ribosome + ARNt adaptateurs + aminoacyl-ARNt synthétases']} />
+
+<SelfEval title="Transcription et Traduction" type="post" />
+
+---
+*Certifié de Qualité Industrielle OpenPrimer*

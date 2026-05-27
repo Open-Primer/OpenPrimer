@@ -24,7 +24,7 @@ interface ServiceToastProps {
 
 export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
   // Auto-refresh every 10s — consistent with health page
-  const { health, isChecking } = useServiceStatus(10_000);
+  const { health, isChecking, refresh } = useServiceStatus(10_000);
   const degraded = getDegradedServices(health);
   const [justRestored, setJustRestored] = useState<ServiceHealth[]>([]);
   const [prevDegradedIds, setPrevDegradedIds] = useState<string[]>([]);
@@ -100,8 +100,19 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
                 {STATUS_MSGS[svc.status]?.[L] || svc.status}
               </p>
             </div>
-            {/* Spinner shows auto-refresh is active — no manual dismiss */}
-            <RefreshCw className={`w-3 h-3 flex-shrink-0 ${isChecking ? 'animate-spin text-slate-400' : 'text-slate-700'}`} />
+            {/* Clickable manual refresh wheel button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                refresh();
+              }}
+              disabled={isChecking}
+              title={lang === 'FR' ? 'Actualiser manuellement' : 'Refresh manually'}
+              className={`p-1.5 hover:bg-slate-900/60 rounded-xl transition-all flex items-center justify-center border border-transparent hover:border-slate-800 active:scale-95 group cursor-pointer ${isChecking ? 'cursor-not-allowed opacity-50' : ''}`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-500 ${isChecking ? 'animate-spin text-emerald-400' : 'text-slate-500 group-hover:text-slate-200 group-hover:rotate-180'}`} />
+            </button>
           </motion.div>
         ))}
       </AnimatePresence>

@@ -57,11 +57,11 @@ export default function AdminFeedbackPage() {
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tight flex items-center gap-3 text-white">
-            <MessageSquare className="w-9 h-9 text-rose-500" />
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <MessageSquare className="w-8 h-8 text-rose-500" />
             {lang === 'FR' ? 'Boîte de Réception des Messages' : 'Inquiries & Feedback'}
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 font-medium">
             {lang === 'FR' 
               ? 'Consultez les messages envoyés depuis le formulaire de contact. Rétention automatique stricte de 90 jours.' 
               : 'Read-only log of submitted website contact form inquiries. Strict 90-day automatic retention policy.'}

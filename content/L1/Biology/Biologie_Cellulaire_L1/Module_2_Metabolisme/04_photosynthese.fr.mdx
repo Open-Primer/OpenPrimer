@@ -1,0 +1,113 @@
+---
+title: "La Photosynthèse : Convertir la Lumière en Matière"
+level: "L1"
+subject: "Biology"
+module: "Biologie_Cellulaire_L1"
+section: 4
+version: "1.0.0"
+updatedAt: "2026-05-27"
+lang: "fr"
+---
+
+# Leçon 4 : La Photosynthèse — Convertir la Lumière en Matière
+
+La photosynthèse est le processus biochimique fondamental qui permet aux organismes photosynthétiques (végétaux, algues, cyanobactéries) de convertir l'**énergie lumineuse** en **énergie chimique** stockée sous forme de glucides. Sans photosynthèse, pratiquement aucune vie complexe ne serait possible sur Terre.
+
+<SelfEval title="La Photosynthèse" type="pre" />
+
+## 1. Équation Générale et Localisation
+
+L'équation globale de la photosynthèse est :
+
+> 6 CO₂ + 6 H₂O + **énergie lumineuse** → C₆H₁₂O₆ + 6 O₂
+
+La photosynthèse se déroule dans les **chloroplastes** — organites à double membrane possédant un troisième système membranaire interne, les **thylakoïdes**, organisés en empilements appelés **granas**.
+
+<MetaNote title="Comparaison Chloroplaste / Mitochondrie">
+  Chloroplastes et mitochondries partagent une origine endosymbiotique, mais dans des directions opposées sur le plan énergétique : les mitochondries **consomment** du glucose et **produisent** de l'ATP, les chloroplastes **produisent** du glucose en **consommant** de l'énergie lumineuse.
+</MetaNote>
+
+## 2. Phase Photochimique (Réactions Claires)
+
+Les réactions photochimiques se déroulent dans les **membranes des thylakoïdes** et captent l'énergie lumineuse pour produire ATP et NADPH.
+
+### 2.1 Les Photosystèmes
+
+Les chloroplastes possèdent deux photosystèmes (complexes pigment-protéine) :
+
+- **Photosystème II (PS II)** : Centre réactionnel P680 (absorbe à 680 nm). Utilise l'énergie lumineuse pour oxyder l'eau : **2 H₂O → O₂ + 4H⁺ + 4e⁻**. C'est la source de l'oxygène atmosphérique.
+- **Photosystème I (PS I)** : Centre réactionnel P700 (absorbe à 700 nm). Réduit le NADP⁺ en NADPH.
+
+### 2.2 Transport des Électrons
+
+Les électrons circulent de PS II vers PS I via une chaîne de transport (plastoquinone, complexe b6f, plastocyanine), en pompant des H⁺ dans la lumière des thylakoïdes — créant un gradient qui permet à l'**ATP synthase chloroplastique (CF₀CF₁)** de synthétiser de l'ATP.
+
+**Bilan des réactions claires (pour 2 molécules d'eau) :**
+- 🟢 Produit : 3 ATP + 2 NADPH + 1 O₂
+- 🔴 Consommé : Énergie lumineuse (lumière)
+
+## 3. Phase Métabolique (Cycle de Calvin)
+
+Le **cycle de Calvin** se déroule dans le **stroma** du chloroplaste et utilise l'ATP et le NADPH produits lors des réactions claires pour fixer le CO₂ atmosphérique en glucides.
+
+### 3.1 Les 3 Étapes du Cycle
+
+**Étape 1 — Carboxylation :**
+- L'enzyme **RuBisCO** (ribulose-1,5-bisphosphate carboxylase/oxygénase) fixe le CO₂ sur le **RuBP** (ribulose-1,5-bisphosphate, 5C) → 2 molécules de **3-phosphoglycérate (3-PGA, 3C)**
+
+**Étape 2 — Réduction :**
+- Le 3-PGA est réduit en **glycéraldéhyde-3-phosphate (G3P)** en utilisant **ATP + NADPH**
+- Le G3P est le précurseur de tous les glucides (glucose, saccharose, amidon)
+
+**Étape 3 — Régénération du RuBP :**
+- Une partie du G3P est utilisée pour régénérer le **RuBP** (accepteur de CO₂) en utilisant de l'**ATP**
+
+**Bilan pour fixer 3 CO₂ (= 1 tour complet) :**
+- 🔴 Consommé : 3 CO₂ + 9 ATP + 6 NADPH
+- 🟢 Produit : 1 G3P (3C) net + 3 RuBP régénéré
+
+<MetaNote title="RuBisCO : Enzyme la Plus Abondante de la Biosphère">
+  RuBisCO est l'enzyme la plus abondante sur Terre (~0,7 milliard de tonnes). Elle fixe inefficacement le CO₂ car elle peut aussi réagir avec l'O₂ (photorespiration), une réaction qui réduit le rendement photosynthétique. Les plantes C4 (maïs, canne à sucre) ont évolué des mécanismes pour concentrer le CO₂ autour de la RuBisCO et éviter ce problème.
+</MetaNote>
+
+## 4. Quiz de Rappel Actif
+
+<FillInBlanks 
+  sentence="L'oxygène produit lors de la photosynthèse provient de l'oxydation de l'[...] par le Photosystème II." 
+  answer="eau (H₂O)" 
+/>
+
+<FillInBlanks 
+  sentence="L'enzyme fixant le CO₂ atmosphérique sur le RuBP dans le cycle de Calvin est la [...]." 
+  answer="RuBisCO" 
+/>
+
+<Quiz>
+  <Question q="Où se déroule le cycle de Calvin ?">
+    <Option text="Membranes des thylakoïdes" />
+    <Option text="Stroma du chloroplaste" correct />
+    <Option text="Matrice mitochondriale" />
+    <Option text="Cytosol" />
+  </Question>
+  <Question q="Quel est le centre réactionnel du Photosystème II et sa longueur d'onde d'absorption ?">
+    <Option text="P700, 700 nm" />
+    <Option text="P680, 680 nm" correct />
+    <Option text="P650, 650 nm" />
+    <Option text="P720, 720 nm" />
+  </Question>
+  <Question q="Quelle est la source directe de l'oxygène (O₂) libéré lors de la photosynthèse ?">
+    <Option text="La réduction du CO₂" />
+    <Option text="L'oxydation du glucose" />
+    <Option text="Le photosystème I" />
+    <Option text="L'oxydation de l'eau par le Photosystème II" correct />
+  </Question>
+</Quiz>
+
+## ✍️ Résumé de la Leçon
+
+<Summary items={['La photosynthèse : **lumière → énergie chimique** dans les chloroplastes', '**Réactions claires** (thylakoïdes) : ATP + NADPH + O₂ depuis H₂O', '**Cycle de Calvin** (stroma) : fixation du CO₂ via RuBisCO → G3P', 'Les plantes **C4** concentrent le CO₂ pour optimiser la RuBisCO', 'Photosynthèse et respiration : **processus complémentaires** (anabolisme vs catabolisme)']} />
+
+<SelfEval title="La Photosynthèse" type="post" />
+
+---
+*Certifié de Qualité Industrielle OpenPrimer*

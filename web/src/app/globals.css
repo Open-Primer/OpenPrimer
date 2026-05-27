@@ -160,6 +160,193 @@ nextjs-portal {
   background-color: #ede9d9 !important;
 }
 
+/* --- Curated Administration & Dashboard Overrides in Paper Theme --- */
+.theme-paper h1,
+.theme-paper h2,
+.theme-paper h3,
+.theme-paper h4,
+.theme-paper h5,
+.theme-paper h6 {
+  color: #0f172a !important;
+}
+
+.theme-paper .text-white,
+.theme-paper .text-slate-100,
+.theme-paper .text-slate-200,
+.theme-paper .text-slate-300,
+.theme-paper .text-slate-350,
+.theme-paper .text-slate-400 {
+  color: #0f172a !important;
+}
+
+.theme-paper .text-slate-500,
+.theme-paper .text-slate-550,
+.theme-paper .text-slate-600,
+.theme-paper .text-slate-655 {
+  color: #475569 !important;
+}
+
+.theme-paper .bg-slate-900\/40,
+.theme-paper .bg-slate-900\/20,
+.theme-paper .bg-slate-950\/20,
+.theme-paper .bg-slate-950\/40,
+.theme-paper .bg-slate-950\/50,
+.theme-paper .bg-slate-950\/80,
+.theme-paper .bg-slate-950,
+.theme-paper .bg-slate-900 {
+  background-color: #f4f1e5 !important;
+  border-color: #dbd5be !important;
+  color: #0f172a !important;
+}
+
+.theme-paper .border-slate-800,
+.theme-paper .border-slate-850,
+.theme-paper .border-slate-900 {
+  border-color: #dbd5be !important;
+}
+
+.theme-paper .divide-slate-850\/50 > *,
+.theme-paper .divide-slate-850 > * {
+  border-color: #dbd5be !important;
+}
+
+.theme-paper input[type="text"],
+.theme-paper input[type="number"],
+.theme-paper input[type="date"],
+.theme-paper select,
+.theme-paper textarea {
+  background-color: #faf8f0 !important;
+  border-color: #dbd5be !important;
+  color: #0f172a !important;
+}
+
+.theme-paper input::placeholder,
+.theme-paper textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.theme-paper .hover\:bg-slate-900\/20:hover {
+  background-color: #eae5d3 !important;
+}
+
+.theme-paper header {
+  background-color: rgba(252, 250, 242, 0.8) !important;
+  border-color: #dbd5be !important;
+}
+
+/* --- High-Contrast Bulletproof Overrides for Tailwind v4 on Paper Mode --- */
+body.theme-paper,
+body.theme-paper main,
+body.theme-paper div,
+body.theme-paper h1,
+body.theme-paper h2,
+body.theme-paper h3,
+body.theme-paper h4,
+body.theme-paper h5,
+body.theme-paper h6,
+body.theme-paper p,
+body.theme-paper span,
+body.theme-paper strong,
+body.theme-paper label,
+body.theme-paper th,
+body.theme-paper td {
+  text-shadow: none !important;
+}
+
+/* Elevate default text class specificities */
+body.theme-paper h1,
+body.theme-paper h2,
+body.theme-paper h3,
+body.theme-paper h4,
+body.theme-paper h5,
+body.theme-paper h6,
+body.theme-paper .text-white,
+body.theme-paper .text-slate-100,
+body.theme-paper .text-slate-200,
+body.theme-paper .text-slate-300,
+body.theme-paper .text-slate-350,
+body.theme-paper .text-slate-400 {
+  color: #0f172a !important; /* Dark Slate-900 */
+}
+
+body.theme-paper .text-slate-500,
+body.theme-paper .text-slate-550,
+body.theme-paper .text-slate-600,
+body.theme-paper .text-slate-655 {
+  color: #334155 !important; /* Slate-700 for beautiful secondary readability */
+}
+
+/* Elegant high-contrast colored text overrides */
+body.theme-paper .text-blue-300,
+body.theme-paper .text-blue-400,
+body.theme-paper .text-blue-500,
+body.theme-paper .text-blue-600 {
+  color: #1d4ed8 !important; /* Elegant Dark Indigo/Blue */
+}
+
+body.theme-paper .text-yellow-450,
+body.theme-paper .text-yellow-400,
+body.theme-paper .text-yellow-500,
+body.theme-paper .text-yellow-600 {
+  color: #92400e !important; /* Deep Golden Amber */
+}
+
+body.theme-paper .text-violet-400,
+body.theme-paper .text-violet-500,
+body.theme-paper .text-violet-600 {
+  color: #6d28d9 !important; /* Rich Dark Purple */
+}
+
+body.theme-paper .text-emerald-450,
+body.theme-paper .text-emerald-400,
+body.theme-paper .text-emerald-500,
+body.theme-paper .text-emerald-600 {
+  color: #065f46 !important; /* Rich Deep Forest Green */
+}
+
+body.theme-paper .text-fuchsia-400,
+body.theme-paper .text-fuchsia-500,
+body.theme-paper .text-fuchsia-600 {
+  color: #a21caf !important; /* Deep Magenta */
+}
+
+body.theme-paper .text-amber-500,
+body.theme-paper .text-amber-600 {
+  color: #b45309 !important; /* Strong Amber */
+}
+
+body.theme-paper .text-red-400,
+body.theme-paper .text-red-500,
+body.theme-paper .text-red-650 {
+  color: #991b1b !important; /* Deep Crimson */
+}
+
+/* Bulletproof Background and Border overrides for all Slate-based elements */
+body.theme-paper [class*="bg-slate-950"],
+body.theme-paper [class*="bg-slate-900"],
+body.theme-paper [class*="bg-slate-850"],
+body.theme-paper [class*="bg-slate-800"] {
+  background-color: #f3efe0 !important;
+  border-color: #dbd5be !important;
+  color: #0f172a !important;
+}
+
+body.theme-paper [class*="border-slate-"] {
+  border-color: #dbd5be !important;
+}
+
+body.theme-paper [class*="divide-slate-"] > * {
+  border-color: #dbd5be !important;
+}
+
+/* Scrollbars in Paper Mode */
+body.theme-paper ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15) !important;
+}
+body.theme-paper ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.3) !important;
+}
+
 
 /* --- 2. FOCUS THEME (DISTRACTION-FREE MONOCHROME PITCH BLACK) --- */
 .theme-focus {

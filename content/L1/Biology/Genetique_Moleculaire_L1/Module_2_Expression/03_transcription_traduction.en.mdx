@@ -1,0 +1,152 @@
+---
+title: "Transcription and Translation: Gene Expression"
+level: "L1"
+subject: "Biology"
+module: "Genetique_Moleculaire_L1"
+section: 3
+version: "1.0.0"
+updatedAt: "2026-05-27"
+lang: "en"
+---
+
+# Lesson 3: Transcription and Translation — Gene Expression
+
+Gene expression is the process by which information encoded in a DNA sequence is converted into functional protein. This two-step process — **transcription** (DNA → RNA) then **translation** (RNA → Protein) — is the molecular manifestation of the Central Dogma.
+
+<SelfEval title="Transcription and Translation" type="pre" />
+
+## 1. Transcription: From DNA to mRNA
+
+### 1.1 RNA Polymerase: The Transcription Engine
+
+Unlike replication, transcription requires **no primer**: **RNA polymerase** directly initiates RNA synthesis from a free end. It synthesizes RNA in the **5'→3'** direction, using the template strand (antisense, 3'→5') as a template.
+
+In eukaryotes, three major RNA polymerases:
+- **RNA Pol I**: synthesizes rRNAs (except 5S)
+- **RNA Pol II**: synthesizes mRNAs (proteins) and small RNAs
+- **RNA Pol III**: synthesizes tRNAs, 5S rRNA
+
+### 1.2 Steps of Transcription (Eukaryotes)
+
+**Initiation:**
+RNA Pol II is recruited to the **promoter** (region rich in TATA box, ~25-30 bp upstream of +1) by general transcription factors (TFIID, TFIIA, TFIIB, TFIIE, TFIIF, TFIIH) forming the **pre-initiation complex (PIC)**. TFIIH has kinase activity that phosphorylates the **C-terminal domain (CTD)** of RNA Pol II, signaling the transition to elongation mode.
+
+**Elongation:**
+RNA Pol II advances along the template strand at ~20-100 nt/s, creating a **transcription bubble** (~12-14 nt). The nascent RNA is released into the bubble lumen.
+
+**Termination:**
+In eukaryotes, termination involves the **AAUAAA** signal in the mRNA → cleavage and polyadenylation by the CPSF/CstF complex.
+
+### 1.3 Maturation of Pre-Messenger RNA
+
+Eukaryotic pre-mRNA undergoes three major modifications before being exported:
+
+1. **7-methylguanosine cap (m7G)** at 5': added co-transcriptionally, protects against exonucleases and facilitates ribosome recognition
+2. **Poly(A) tail** at 3': ~200 adenosines added by poly(A) polymerase, stabilizes mRNA and promotes nuclear export
+3. **Splicing**: excision of **introns** (noncoding) and joining of **exons** (coding) by the **spliceosome** (ribonucleoprotein complex of ~5 snRNPs: U1, U2, U4, U5, U6)
+
+<MetaNote title="Alternative Splicing: One Gene, Multiple Proteins">
+  Alternative splicing allows a single gene to produce several different proteins depending on tissue or physiological condition. The **cardiac troponin T** gene produces more than 60 isoforms by alternative splicing. Approximately **95%** of human genes with multiple introns undergo alternative splicing.
+</MetaNote>
+
+## 2. The Genetic Code
+
+The genetic code is the correspondence system between **codons** (mRNA base triplets) and the **amino acids** (or stop signals) they encode.
+
+**Properties of the genetic code:**
+- **Universal**: identical (with rare exceptions) in all living organisms
+- **Non-overlapping**: each base belongs to a single codon
+- **Degenerate (redundant)**: 64 codons for 20 amino acids + 3 stop codons → multiple codons encode the same amino acid (synonymous)
+- **Unambiguous**: a given codon always encodes the same amino acid
+
+**Special codons:**
+- **AUG**: initiation codon (Met) — **always the first translated codon**
+- **UAA, UAG, UGA**: stop codons (nonsense) — no amino acid
+
+## 3. Translation: From mRNA to Protein
+
+### 3.1 tRNAs: Adaptors of the Code
+
+**Transfer RNAs (tRNAs)** are the molecular adaptors linking codons and amino acids:
+- Each tRNA has an **anticodon** (loop that pairs with the mRNA codon)
+- Each tRNA is charged with its specific amino acid by an **aminoacyl-tRNA synthetase** (aa-RS) — translation fidelity depends on these enzymes
+
+### 3.2 The Ribosome: The Translation Machine
+
+The eukaryotic ribosome (80S) is composed of:
+- **Small subunit 40S**: decodes mRNA, binds translation initiation
+- **Large subunit 60S**: catalyzes peptide bond formation (**peptidyltransferase** activity carried by 28S rRNA)
+
+The ribosome has three functional sites for tRNAs:
+- **A site (Aminoacyl)**: accepts incoming charged tRNA
+- **P site (Peptidyl)**: holds tRNA carrying the growing peptide chain
+- **E site (Exit)**: discharged tRNA, ready to leave
+
+### 3.3 Steps of Translation
+
+**Initiation:**
+1. The 40S subunit, associated with eIF factors (eIF1, eIF2, eIF3, eIF4F), scans the mRNA from the 5' cap to the first **AUG** in optimal Kozak context
+2. Initiator tRNA (Met-tRNA_i^Met) pairs with AUG at the P site
+3. The 60S subunit joins → formation of functional 80S ribosome
+
+**Elongation:**
+For each amino acid added:
+1. An aminoacyl-tRNA enters the A site (with eEF1A·GTP)
+2. Peptidyltransferase catalyzes peptide bond formation (A site → P site)
+3. Translocation moves the ribosome 3 nt toward 3' (eEF2·GTP)
+
+**Termination:**
+A stop codon at the A site is recognized by **release factors** (eRF1 + eRF3) → hydrolysis of the ester bond between peptide and last tRNA → protein release.
+
+## 4. Active Recall Quiz
+
+<FillInBlanks 
+  sentence="Eukaryotic pre-mRNA maturation involves adding an [...] cap at 5', a [...] tail at 3', and intron splicing." 
+  answer="m7G / poly(A)" 
+/>
+
+<FillInBlanks 
+  sentence="The translation initiation codon, encoding methionine, is [...]." 
+  answer="AUG" 
+/>
+
+<FillInBlanks 
+  sentence="The [...] site of the ribosome holds the tRNA carrying the growing peptide chain during elongation." 
+  answer="P" 
+/>
+
+<Quiz>
+  <Question q="Which eukaryotic RNA polymerase is responsible for synthesizing protein-coding mRNAs?">
+    <Option text="RNA Pol I" />
+    <Option text="RNA Pol II" correct />
+    <Option text="RNA Pol III" />
+    <Option text="RNA Pol IV" />
+  </Question>
+  <Question q="How many stop codons exist in the standard genetic code?">
+    <Option text="1 (UAA only)" />
+    <Option text="2 (UAA and UAG)" />
+    <Option text="3 (UAA, UAG, UGA)" correct />
+    <Option text="4" />
+  </Question>
+  <Question q="What is the enzymatic activity of the large ribosomal subunit that catalyzes peptide bond formation?">
+    <Option text="Protein kinase" />
+    <Option text="Peptidyltransferase" correct />
+    <Option text="Aminoacyl-tRNA synthetase" />
+    <Option text="Topoisomerase" />
+  </Question>
+  <Question q="The phenomenon by which a single gene can produce multiple different proteins is called:">
+    <Option text="Somatic mutation" />
+    <Option text="Alternative splicing" correct />
+    <Option text="Chromosomal translocation" />
+    <Option text="DNA methylation" />
+  </Question>
+</Quiz>
+
+## ✍️ Lesson Summary
+
+<Summary items={['**Transcription** (RNA Pol II): promoter → elongation → termination + polyadenylation', '**mRNA maturation**: m7G cap + poly(A) tail + intron splicing', 'The **genetic code**: 64 codons, universal, degenerate, unambiguous', '**AUG** = initiation codon; **UAA/UAG/UGA** = stop codons', '**Translation** (80S ribosome): initiation (Kozak AUG) → elongation → termination', 'Ribosome A/P/E sites + tRNA adaptors + aminoacyl-tRNA synthetases']} />
+
+<SelfEval title="Transcription and Translation" type="post" />
+
+---
+*OpenPrimer Industrial Grade Certified*

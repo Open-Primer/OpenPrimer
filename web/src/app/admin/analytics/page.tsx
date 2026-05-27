@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { TopNav } from '@/components/RefinedUI';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, TrendingUp, AlertCircle, Sparkles, Plus, ChevronRight, BarChart3, Brain, ArrowUpRight } from 'lucide-react';
 
@@ -44,38 +44,19 @@ export default function SearchAnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500/30">
-      <TopNav />
-      
-      <main className="max-w-7xl mx-auto pt-32 px-8 pb-32">
-        <header className="mb-16">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 mb-4"
-          >
-             <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400 border border-blue-500/20">
-               <Brain className="w-5 h-5" />
-             </div>
-             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Research Intelligence</p>
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl font-black tracking-tighter mb-4"
-          >
+    <div className="space-y-12 pb-20">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+            <Brain className="w-8 h-8 text-blue-500" />
             Search <span className="text-blue-500 italic">Analytics Agent</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-slate-500 max-w-2xl text-lg leading-relaxed"
-          >
+          </h1>
+          <p className="text-xs text-slate-400 font-medium">
             Monitor student intent and use the Agent to identify critical pedagogical gaps in the repository.
-          </motion.p>
-        </header>
+          </p>
+        </div>
+      </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Top Searches List */}
@@ -187,7 +168,6 @@ export default function SearchAnalyticsPage() {
             </motion.div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
