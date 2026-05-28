@@ -2514,8 +2514,12 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Type de Contenu" : "Content Type"}
                         </label>
                         <select value={manualType} onChange={(e) => setManualType(e.target.value as 'curriculum' | 'course')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          <option value="course">{lang === 'FR' ? "Cours Autonome" : "Standalone Course"}</option>
-                          <option value="curriculum">{lang === 'FR' ? "Cursus Complet" : "Full Curriculum"}</option>
+                          <option value="course">
+                            {lang === 'FR' ? "Cours Autonome" : lang === 'ES' ? "Curso Autónomo" : lang === 'DE' ? "Eigenständiger Kurs" : (lang === 'ZH' || lang === 'ZN') ? "独立课程" : "Standalone Course"}
+                          </option>
+                          <option value="curriculum">
+                            {lang === 'FR' ? "Cursus Complet" : lang === 'ES' ? "Plan de Estudios Completo" : lang === 'DE' ? "Vollständiger Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "完整课程体系" : "Full Curriculum"}
+                          </option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -3571,12 +3575,12 @@ export default function AdminCurriculumPage() {
                                 <td className="px-6 py-4 text-slate-300 font-medium">
                                   {isCurriculum ? (
                                     <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
-                                      {lang === 'FR' ? "Cursus" : "Curriculum"}
+                                      {lang === 'FR' ? "Cursus" : lang === 'ES' ? "Plan de Estudios" : lang === 'DE' ? "Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "课程体系" : "Curriculum"}
                                     </span>
                                   ) : isInCurriculum ? (
                                     <div className="space-y-1">
                                       <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
-                                        {lang === 'FR' ? "Dans un Cursus" : "In Curriculum"}
+                                        {lang === 'FR' ? "Dans un Cursus" : lang === 'ES' ? "En el Plan de Estudios" : lang === 'DE' ? "Im Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "在课程体系中" : "In Curriculum"}
                                       </span>
                                       <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
                                         {containingCurricula.map(cc => cc.title).join(', ')}
@@ -3584,7 +3588,7 @@ export default function AdminCurriculumPage() {
                                     </div>
                                   ) : (
                                     <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
-                                      {lang === 'FR' ? "Autonome" : "Standalone"}
+                                      {lang === 'FR' ? "Autonome" : lang === 'ES' ? "Independiente" : lang === 'DE' ? "Eigenständig" : (lang === 'ZH' || lang === 'ZN') ? "独立课程" : "Standalone"}
                                     </span>
                                   )}
                                 </td>
