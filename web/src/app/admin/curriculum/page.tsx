@@ -3571,12 +3571,12 @@ export default function AdminCurriculumPage() {
                                 <td className="px-6 py-4 text-slate-300 font-medium">
                                   {isCurriculum ? (
                                     <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
-                                      Curriculum
+                                      {lang === 'FR' ? "Cursus" : "Curriculum"}
                                     </span>
                                   ) : isInCurriculum ? (
                                     <div className="space-y-1">
                                       <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
-                                        In Curriculum
+                                        {lang === 'FR' ? "Dans un Cursus" : "In Curriculum"}
                                       </span>
                                       <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
                                         {containingCurricula.map(cc => cc.title).join(', ')}
@@ -3584,7 +3584,7 @@ export default function AdminCurriculumPage() {
                                     </div>
                                   ) : (
                                     <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
-                                      Standalone
+                                      {lang === 'FR' ? "Autonome" : "Standalone"}
                                     </span>
                                   )}
                                 </td>
