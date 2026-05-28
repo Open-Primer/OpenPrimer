@@ -4,9 +4,24 @@ import { dbService } from '../../../../lib/db';
 export async function POST(request: Request) {
   try {
     const { firstName, lastName, email, password, preferredLang, selectedCourses } = await request.json();
-    const resendApiKey = process.env.RESEND_API_KEY;
+
+    // Server-side password complexity enforcement (12 chars min + complexity)
+    const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
+    if (!password || !PASSWORD_REGEX.test(password)) {
+      const msgs: Record<string, string> = {
+        FR: 'Le mot de passe doit contenir au moins 12 caract\u00e8res, incluant une lettre majuscule, une lettre minuscule, un nombre et un caract\u00e8re sp\u00e9cial.',
+        ES: 'La contrase\u00f1a debe tener al menos 12 caracteres, incluyendo una letra may\u00fascula, una letra min\u00fascula, un n\u00famero y un car\u00e1cter especial.',
+        DE: 'Das Passwort muss mindestens 12 Zeichen lang sein und einen Gro\u00dfbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
+        ZH: '\u5bc6\u7801\u957f\u5ea6\u5fc5\u987b\u81f3\u5c11\u4e3a 12 \u4e2a\u5b57\u7b26\uff0c\u4e14\u5fc5\u987b\u5305\u542b\u5927\u5c0f\u5199\u5b57\u6bcd\u3001\u6570\u5b57\u53ca\u7279\u6b8a\u5b57\u7b26\u3002',
+        EN: 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'
+      };
+      const lang = (preferredLang || 'EN').toUpperCase();
+      return NextResponse.json({ success: false, error: msgs[lang] || msgs.EN }, { status: 400 });
+    }
+
     const host = request.headers.get('host') || 'localhost:3000';
     const proto = request.headers.get('x-forwarded-proto') || 'http';
+    const resendApiKey = process.env.RESEND_API_KEY;
 
     // 1. Generate unique verification token
     const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);

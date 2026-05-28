@@ -25,7 +25,75 @@ export function getSyllabus() {
 }
 
 export function getNavigationTree(dir = '', lang: string = 'en'): NavItem[] {
-  const fullPath = path.join(CONTENT_PATH, dir);
+  let fullPath = path.join(CONTENT_PATH, dir);
+
+  // Sibling version fallback if the directory does not exist or has no matching files for the language
+  const parts = dir.split('/');
+  if (parts.length === 3) {
+    const [level, subject, requestedFolder] = parts;
+    const requestedPath = path.join(CONTENT_PATH, level, subject, requestedFolder);
+    
+    // Check if the requested directory has files for this language
+    let hasFilesForLang = false;
+    if (fs.existsSync(requestedPath)) {
+      try {
+        const files = fs.readdirSync(requestedPath);
+        hasFilesForLang = files.some(f => f.endsWith(`.${lang}.mdx`));
+        if (!hasFilesForLang) {
+          // Check nested folders
+          for (const f of files) {
+            const sub = path.join(requestedPath, f);
+            if (fs.statSync(sub).isDirectory()) {
+              const subFiles = fs.readdirSync(sub);
+              if (subFiles.some(sf => sf.endsWith(`.${lang}.mdx`))) {
+                hasFilesForLang = true;
+                break;
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!hasFilesForLang) {
+      const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
+      const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
+      const parentDir = path.join(CONTENT_PATH, level, subject);
+      if (fs.existsSync(parentDir)) {
+        try {
+          const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
+            .map(dirent => dirent.name);
+          
+          for (const sibling of siblingDirs) {
+            const siblingPath = path.join(parentDir, sibling);
+            // Check if sibling has files in this language
+            let siblingHasFiles = false;
+            const siblingFiles = fs.readdirSync(siblingPath);
+            if (siblingFiles.some(f => f.endsWith(`.${lang}.mdx`))) {
+              siblingHasFiles = true;
+            } else {
+              for (const f of siblingFiles) {
+                const sub = path.join(siblingPath, f);
+                if (fs.statSync(sub).isDirectory()) {
+                  if (fs.readdirSync(sub).some(sf => sf.endsWith(`.${lang}.mdx`))) {
+                    siblingHasFiles = true;
+                    break;
+                  }
+                }
+              }
+            }
+            if (siblingHasFiles) {
+              console.log(`[Navigation Fallback] Using sibling directory: ${sibling} for language ${lang}`);
+              fullPath = siblingPath;
+              break;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
   if (!fs.existsSync(fullPath)) return [];
 
   const items = fs.readdirSync(fullPath, { withFileTypes: true });
@@ -59,9 +127,38 @@ export function getNavigationTree(dir = '', lang: string = 'en'): NavItem[] {
 
 export async function getPageContent(slug: string[], lang: string = 'en') {
   const baseFilePath = path.join(CONTENT_PATH, ...slug);
+  let filePath = baseFilePath + `.${lang}.mdx`;
   
-  // Strict check: only allow page loading if the target language translation file exists
-  const filePath = baseFilePath + `.${lang}.mdx`;
+  // Fallback: If requested language does not exist for this specific versioned course folder,
+  // we try to locate other versioned folders of the same course that HAVE this page in this language!
+  if (!fs.existsSync(filePath) && slug.length >= 3) {
+    const level = slug[0];
+    const subject = slug[1];
+    const requestedFolder = slug[2];
+    const rest = slug.slice(3);
+
+    const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
+    const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
+    const parentDir = path.join(CONTENT_PATH, level, subject);
+    if (fs.existsSync(parentDir)) {
+      try {
+        const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
+          .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
+          .map(dirent => dirent.name);
+
+        for (const sibling of siblingDirs) {
+          const candidatePath = path.join(parentDir, sibling, ...rest) + `.${lang}.mdx`;
+          if (fs.existsSync(candidatePath)) {
+            console.log(`[Version Fallback] File not found in ${requestedFolder} for ${lang}. Falling back to sibling version: ${sibling}`);
+            filePath = candidatePath;
+            break;
+          }
+        }
+      } catch (err) {
+        console.error("Error in sibling version resolution fallback:", err);
+      }
+    }
+  }
   
   console.log("=== getPageContent ===");
   console.log("slug:", slug);
@@ -84,9 +181,35 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 }
 
 export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
-  const baseFilePath = path.join(CONTENT_PATH, ...slug);
-  const dirPath = path.dirname(baseFilePath);
-  const baseName = path.basename(baseFilePath);
+  let baseFilePath = path.join(CONTENT_PATH, ...slug);
+  let dirPath = path.dirname(baseFilePath);
+  let baseName = path.basename(baseFilePath);
+  
+  if (!fs.existsSync(dirPath) && slug.length >= 3) {
+    const level = slug[0];
+    const subject = slug[1];
+    const requestedFolder = slug[2];
+    const rest = slug.slice(3);
+
+    const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
+    const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
+    const parentDir = path.join(CONTENT_PATH, level, subject);
+    if (fs.existsSync(parentDir)) {
+      try {
+        const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
+          .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
+          .map(dirent => dirent.name);
+        for (const sibling of siblingDirs) {
+          const candidateDirPath = path.join(parentDir, sibling, ...rest.slice(0, -1));
+          if (fs.existsSync(candidateDirPath)) {
+            dirPath = candidateDirPath;
+            baseName = rest[rest.length - 1] || '';
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+  }
   
   if (!fs.existsSync(dirPath)) return null;
   

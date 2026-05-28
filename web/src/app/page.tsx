@@ -308,7 +308,6 @@ export default function Home() {
         ES: 'La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.',
         DE: 'Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
         ZH: '密码必须至少包含 12 个字符，且必须包含一个大写字母、一个小写字母、一个数字和一个特殊字符。',
-        ZN: '密码必须至少包含 12 个字符，且必须包含一个大写字母、一个小写字母、一个数字和一个特殊字符。',
         IT: 'La password deve contenere almeno 12 caratteri, inclusa una lettera maiuscola, una lettera minuscola, un numero e un carattere speciale.'
       };
       setErrorMsg(msgs[lang] || 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.');

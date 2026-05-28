@@ -1,0 +1,85 @@
+import { test, expect } from '@playwright/test';
+
+const BASE_URL = 'http://localhost:3000';
+
+test.describe('OpenPrimer Anti-Corruption Archival Cascade Integration Suite', () => {
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('openprimer_lang', 'EN');
+      localStorage.setItem('op_session', 'true');
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+    });
+    await page.reload();
+  });
+
+  test('Archival Cascade: should purge pipeline tasks and translation requests when course/curriculum is archived', async ({ page }) => {
+    // 1. Visit page and pre-seed active pipeline tasks and translation requests for "Classical Mechanics"
+    await page.goto(`${BASE_URL}/admin/curriculum`);
+    await expect(page.locator('h1')).toContainText(/Curriculum Control Center|Centre de Contrôle/);
+
+    await page.evaluate(() => {
+      // Seed pipeline queue with a translation task for Classical Mechanics
+      const mockQueue = [
+        {
+          id: 'test_task_1',
+          title: 'Classical Mechanics - Translate to FR',
+          type: 'translation',
+          status: 'queued',
+          progress: 0,
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: 'test_task_2',
+          title: 'Intro to Programming - Translate to FR',
+          type: 'translation',
+          status: 'queued',
+          progress: 0,
+          timestamp: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(mockQueue));
+      
+      // Seed database translation request list
+      (window as any).dbService.addTranslationRequest({
+        courseId: 'Classical_Mechanics',
+        courseTitle: 'Classical Mechanics',
+        targetLang: 'FR',
+        popularityScore: 100,
+        archivingLevel: 0
+      });
+    });
+
+    // 2. Perform archiving on Classical Mechanics in the UI
+    await page.reload();
+    
+    // Go to Pipeline Queue to verify seeded tasks are there
+    await page.click('button:has-text("Pipeline Queue"), button:has-text("File d\'Attente")');
+    await expect(page.locator('text=Classical Mechanics - Translate to FR')).toBeVisible({ timeout: 10000 });
+    
+    // Go to "Course Archiving" tab
+    await page.click('button:has-text("Course Archiving"), button:has-text("Archivage des Cours")');
+    
+    // Find Classical Mechanics row and click the button for level 2
+    const row = page.locator('tr:has-text("Classical Mechanics")').first();
+    await expect(row).toBeVisible({ timeout: 10000 });
+    
+    const lvl2Button = row.locator('button').nth(2); // Button at index 2 (Level 2)
+    await expect(lvl2Button).toBeVisible({ timeout: 10000 });
+    await lvl2Button.click();
+    
+    // Accept dependency confirmation modal if it appears due to parent curriculum dependency
+    const confirmArchiveBtn = page.locator('button:has-text("Archive All"), button:has-text("Archiver Tout")');
+    await expect(confirmArchiveBtn).toBeVisible({ timeout: 5000 });
+    await confirmArchiveBtn.click();
+    
+    // 3. Verify that the Classical Mechanics task is automatically halted and purged!
+    await page.click('button:has-text("Pipeline Queue"), button:has-text("File d\'Attente")');
+    await expect(page.locator('text=Classical Mechanics - Translate to FR')).not.toBeVisible({ timeout: 15000 });
+    
+    // Verify that unrelated tasks are NOT affected
+    await expect(page.locator('text=Intro to Programming - Translate to FR')).toBeVisible({ timeout: 10000 });
+  });
+
+});

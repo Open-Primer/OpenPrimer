@@ -221,6 +221,7 @@ export const getCanonicalCourseId = (slugOrId: string | number): number => {
   if (s === 'microbiologie-l1' || s === 'microbiologie_l1' || s === '16') return 16;
   if (s === 'ecologie-generale-l1' || s === 'ecologie_generale_l1' || s === '17') return 17;
   if (s === 'bio-l1-fondamentaux' || s === 'bio_l1_fondamentaux' || s === '18') return 18;
+  if (s === 'sciences-l1-tronc-commun' || s === 'sciences_l1_tronc_commun' || s === '19') return 19;
   
   const parsed = parseInt(String(slugOrId));
   if (!isNaN(parsed)) return parsed;
@@ -698,6 +699,34 @@ let mockCourses: MockCourse[] = [
     translations: {
       EN: { title: "L1 Biology Curriculum — Fundamentals", description: "Complete first-year Biology Bachelor curriculum. Covers cell biology, molecular genetics, structural biochemistry, microbiology, and general ecology." },
       FR: { title: "Curriculum L1 Biologie — Fondamentaux", description: "Curriculum complet de première année de Licence en Biologie. Couvre la biologie cellulaire, la génétique moléculaire, la biochimie structurale, la microbiologie et l'écologie générale." }
+    }
+  },
+  // ── TRONC COMMUN L1 SCIENCES — PHYSICS + CALCULUS + CELL BIOLOGY ───────────
+  {
+    id: 19,
+    title: "Tronc Commun L1 Sciences",
+    slug: "Sciences_L1_Tronc_Commun",
+    level: "L1",
+    subject: "Physics",
+    description: "Curriculum de tronc commun première année scientifique. Regroupe la Mécanique Classique (Newton), le Calcul Intégral et Différentiel, et la Biologie Cellulaire. Idéal pour les étudiants en médecine, ingénierie ou sciences fondamentales.",
+    languages: ["en", "fr", "es", "de", "zh"],
+    langs: ["en", "fr", "es", "de", "zh"],
+    ects: 16,
+    popularity: 5800,
+    is_active: true,
+    validations: 14,
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago (New!)
+    last_revision_date: new Date().toISOString(),
+    isCurriculum: true,
+    childCourses: [1, 3, 8],  // Classical Mechanics + Cell Biology + Calculus I
+    ratingCount: 312,
+    averageRating: 4.9,
+    translations: {
+      EN: { title: "L1 Sciences Common Core", description: "First-year science common core curriculum. Combines Classical Mechanics (Newton), Integral & Differential Calculus, and Cell Biology. Ideal for medicine, engineering, or fundamental sciences students." },
+      FR: { title: "Tronc Commun L1 Sciences", description: "Curriculum de tronc commun première année scientifique. Regroupe la Mécanique Classique (Newton), le Calcul Intégral et Différentiel, et la Biologie Cellulaire." },
+      ES: { title: "Núcleo Común L1 Ciencias", description: "Currículo básico de ciencias de primer año. Combina Mecánica Clásica (Newton), Cálculo Integral y Diferencial, y Biología Celular." },
+      DE: { title: "Grundstudium L1 Naturwissenschaften", description: "Grundstudiums-Curriculum der Naturwissenschaften im 1. Jahr. Kombiniert Klassische Mechanik (Newton), Integral- und Differentialrechnung sowie Zellbiologie." },
+      ZH: { title: "一年级理科公共核心课程", description: "一年级理科公共核心课程，涵盖经典力学（牛顿）、微积分与积分学以及细胞生物学，适合医学、工程及基础科学专业学生。" }
     }
   }
 ];
@@ -1829,7 +1858,15 @@ let refusedRevisionsList: RefusedRevisionEntry[] = initialRefusedRevisions;
 
 if (isBrowser) {
   users = getLocalStorageItem('openprimer_users', users);
-  mockCourses = getLocalStorageItem('openprimer_courses', mockCourses);
+  const storedCourses = getLocalStorageItem('openprimer_courses', mockCourses);
+  const mergedCourses = [...storedCourses];
+  mockCourses.forEach(initialC => {
+    if (!mergedCourses.some(c => c.id === initialC.id)) {
+      mergedCourses.push(initialC);
+    }
+  });
+  mockCourses = mergedCourses;
+  setLocalStorageItem('openprimer_courses', mockCourses);
   reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
   uvs = getLocalStorageItem('openprimer_uvs', uvs);
   achievementsList = getLocalStorageItem('openprimer_achievements', initialAchievements);
@@ -2029,6 +2066,78 @@ function generatePedagogicalSummary(
   }
   return `💬 You have shown exceptional rigor in ${moduleName} (progress: ${progVal}%). With ${streakVal} days of consistent activity and ${masteryPoints} mastery points, how does your current reading location connect to the fundamental axioms? Inquire deeper.`;
 }
+
+const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
+  const course = mockCourses.find(c => c.id === courseId);
+  if (!course) return;
+
+  const titlesToPurge = new Set<string>();
+  titlesToPurge.add(course.title);
+  
+  if (course.childCourses) {
+    course.childCourses.forEach(childId => {
+      const childCourse = mockCourses.find(c => c.id === childId);
+      if (childCourse) {
+        titlesToPurge.add(childCourse.title);
+      }
+    });
+  }
+
+  // 1. Purge from local storage pipeline queue
+  if (typeof window !== 'undefined') {
+    const qStr = window.localStorage.getItem('openprimer_pipeline_queue');
+    if (qStr) {
+      try {
+        const queueList = JSON.parse(qStr);
+        if (Array.isArray(queueList)) {
+          const filteredQueue = queueList.filter((task: any) => {
+            if (!task || !task.title) return true;
+            
+            // Check if it's a translation or revision task
+            const isTranslation = task.type === 'translation';
+            const isRevision = task.type === 'revision';
+            
+            if (isTranslation || isRevision) {
+              // Check if task title starts with or contains any target course/curriculum title
+              const matchesAny = Array.from(titlesToPurge).some(title => {
+                const titleLower = title.toLowerCase();
+                const taskTitleLower = String(task.title).toLowerCase();
+                return taskTitleLower.startsWith(titleLower) || taskTitleLower.includes(titleLower);
+              });
+              if (matchesAny) {
+                console.log(`[Anti-Corruption] Halting and purging pipeline task: "${task.title}" (Type: ${task.type})`);
+                return false; // Remove this task!
+              }
+            }
+            return true;
+          });
+          window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(filteredQueue));
+        }
+      } catch (e) {
+        console.error("Error parsing/updating pipeline queue", e);
+      }
+    }
+  }
+
+  // 2. Purge from translationRequestsList and openprimer_translation_requests
+  const originalReqsLength = translationRequestsList.length;
+  translationRequestsList = translationRequestsList.filter(req => {
+    if (!req || !req.courseTitle) return true;
+    const matchesAny = Array.from(titlesToPurge).some(title => {
+      return req.courseTitle.toLowerCase() === title.toLowerCase();
+    });
+    if (matchesAny) {
+      console.log(`[Anti-Corruption] Purging translation request: "${req.courseTitle}" to "${req.targetLang}"`);
+      return false; // Remove this request!
+    }
+    return true;
+  });
+  if (translationRequestsList.length !== originalReqsLength) {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('openprimer_translation_requests', JSON.stringify(translationRequestsList));
+    }
+  }
+};
 
 export const dbService = {
   // SYLLABUS & CURRICULUM
@@ -2544,6 +2653,9 @@ export const dbService = {
   },
 
   setCourseArchivingLevel: async (courseId: number, level: number) => {
+    if (level > 0) {
+      purgePipelineAndRequestsForCourseOrCurriculum(courseId);
+    }
     if (isOffline) {
       if (level === 3) {
         mockCourses = mockCourses.filter(c => c.id !== courseId);
@@ -2584,6 +2696,9 @@ export const dbService = {
           
           // If all languages are archived, set archiving level to 3 (fully archived), else 0/active
           const allArchived = c.languages.every((l: string) => updated.includes(l));
+          if (allArchived) {
+            purgePipelineAndRequestsForCourseOrCurriculum(courseId);
+          }
           return { 
             ...c, 
             archivedLanguages: updated,
@@ -2600,6 +2715,9 @@ export const dbService = {
   },
 
   archiveAllCourseLanguages: async (courseId: number, archive: boolean) => {
+    if (archive) {
+      purgePipelineAndRequestsForCourseOrCurriculum(courseId);
+    }
     if (isOffline) {
       mockCourses = mockCourses.map(c => {
         if (c.id === courseId) {

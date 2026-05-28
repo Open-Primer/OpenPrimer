@@ -425,6 +425,162 @@ const getSuggestedBadges = (name: string, desc: string, achievements: any[], cur
 };
 
 
+
+// ── ACADEMIC LEVEL SYSTEM (10 levels: Foundation→L3) ─────────────────────────
+export const ACADEMIC_LEVELS = [
+  { value: 'foundation_1', EN: 'Foundation 1 (Ages 6–9)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundacional 1 (6–9 años)', DE: 'Grundstufe 1 (6–9 J.)', ZH: '\u57fa\u7840\u4e00\u9636\uff086\u20139\u5c81\uff09' },
+  { value: 'foundation_2', EN: 'Foundation 2 (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundacional 2 (9–11 años)', DE: 'Grundstufe 2 (9–11 J.)', ZH: '\u57fa\u7840\u4e8c\u9636\uff089\u201311\u5c81\uff09' },
+  { value: 'secondary_1', EN: 'Secondary 1 (Ages 11–13)', FR: 'Secondaire 1 (6ème–5ème)', ES: 'Secundaria 1 (11–13 años)', DE: 'Sekundarstufe I-1 (11–13 J.)', ZH: '\u521d\u4e2d\u4e00\u9636\uff0811\u201313\u5c81\uff09' },
+  { value: 'secondary_2', EN: 'Secondary 2 (Ages 13–15)', FR: 'Secondaire 2 (4ème–3ème)', ES: 'Secundaria 2 (13–15 años)', DE: 'Sekundarstufe I-2 (13–15 J.)', ZH: '\u521d\u4e2d\u4e8c\u9636\uff0813\u201315\u5c81\uff09' },
+  { value: 'preuni_1',     EN: 'Pre-University 1 (Age 15–16)', FR: 'Lycée 1 — Seconde', ES: 'Bachillerato 1 (15–16 años)', DE: 'Gymnasium — Klasse 10', ZH: '\u9ad8\u4e2d\u4e00\u5e74\u7ea7\uff0815\u201316\u5c81\uff09' },
+  { value: 'preuni_2',     EN: 'Pre-University 2 (Age 16–17)', FR: 'Lycée 2 — Première', ES: 'Bachillerato 2 (16–17 años)', DE: 'Gymnasium — Klasse 11', ZH: '\u9ad8\u4e2d\u4e8c\u5e74\u7ea7\uff0816\u201317\u5c81\uff09' },
+  { value: 'preuni_3',     EN: 'Pre-University 3 — Final Year', FR: 'Lycée 3 — Terminale', ES: 'Bachillerato 3 — Selectividad', DE: 'Abitur — Abschlussklasse', ZH: '\u9ad8\u4e2d\u4e09\u5e74\u7ea7\uff08\u9ad8\u8003\uff09' },
+  { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Primer Año', DE: 'L1 — 1. Studienjahr', ZH: 'L1 — \u5927\u4e00' },
+  { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Segundo Año', DE: 'L2 — 2. Studienjahr', ZH: 'L2 — \u5927\u4e8c' },
+  { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — \u5927\u4e09\uff08\u5b68\u58eb\uff09' },
+] as const;
+
+export const DISCIPLINES = [
+  { value: 'mathematics',        EN: 'Mathematics', FR: 'Mathématiques', ES: 'Matemáticas', DE: 'Mathematik', ZH: '\u6570\u5b66' },
+  { value: 'statistics',         EN: 'Statistics & Probability', FR: 'Statistiques & Probabilités', ES: 'Estadística y Probabilidad', DE: 'Statistik & Wahrscheinlichkeit', ZH: '\u7edf\u8ba1\u4e0e\u6982\u7387\u8bba' },
+  { value: 'physics',            EN: 'Physics', FR: 'Physique', ES: 'Física', DE: 'Physik', ZH: '\u7269\u7406\u5b66' },
+  { value: 'chemistry',          EN: 'Chemistry', FR: 'Chimie', ES: 'Química', DE: 'Chemie', ZH: '\u5316\u5b66' },
+  { value: 'biology',            EN: 'Biology', FR: 'Biologie', ES: 'Biología', DE: 'Biologie', ZH: '\u751f\u7269\u5b66' },
+  { value: 'biochemistry',       EN: 'Biochemistry', FR: 'Biochimie', ES: 'Bioquímica', DE: 'Biochemie', ZH: '\u751f\u7269\u5316\u5b66' },
+  { value: 'genetics',           EN: 'Genetics', FR: 'Génétique', ES: 'Genética', DE: 'Genetik', ZH: '\u9057\u4f20\u5b66' },
+  { value: 'computer_science',   EN: 'Computer Science', FR: 'Informatique', ES: 'Informática', DE: 'Informatik', ZH: '\u8ba1\u7b97\u673a\u79d1\u5b66' },
+  { value: 'data_science',       EN: 'Data Science & Analytics', FR: 'Science des Données', ES: 'Ciencia de Datos', DE: 'Datenwissenschaft', ZH: '\u6570\u636e\u79d1\u5b66' },
+  { value: 'law',                EN: 'Law', FR: 'Droit', ES: 'Derecho', DE: 'Rechtswissenschaften', ZH: '\u6cd5\u5b66' },
+  { value: 'criminology',        EN: 'Criminology', FR: 'Criminologie', ES: 'Criminología', DE: 'Kriminologie', ZH: '\u72af\u7f6a\u5b66' },
+  { value: 'political_science',  EN: 'Political Science', FR: 'Science Politique', ES: 'Ciencia Política', DE: 'Politikwissenschaft', ZH: '\u653f\u6cbb\u5b66' },
+  { value: 'economics',          EN: 'Economics', FR: 'Économie', ES: 'Economía', DE: 'Wirtschaftswissenschaften', ZH: '\u7ecf\u6d48\u5b66' },
+  { value: 'sociology',          EN: 'Sociology', FR: 'Sociologie', ES: 'Sociología', DE: 'Soziologie', ZH: '\u793e\u4f1a\u5b66' },
+  { value: 'psychology',         EN: 'Psychology', FR: 'Psychologie', ES: 'Psicología', DE: 'Psychologie', ZH: '\u5fc3\u7406\u5b66' },
+  { value: 'social_psychology',  EN: 'Social Psychology', FR: 'Psychologie Sociale', ES: 'Psicología Social', DE: 'Sozialpsychologie', ZH: '\u793e\u4f1a\u5fc3\u7406\u5b66' },
+  { value: 'cognitive_science',  EN: 'Cognitive Science', FR: 'Sciences Cognitives', ES: 'Ciencia Cognitiva', DE: 'Kognitionswissenschaft', ZH: '\u8ba4\u77e5\u79d1\u5b66' },
+  { value: 'history',            EN: 'History', FR: 'Histoire', ES: 'Historia', DE: 'Geschichte', ZH: '\u5386\u53f2\u5b66' },
+  { value: 'philosophy',         EN: 'Philosophy', FR: 'Philosophie', ES: 'Filosofía', DE: 'Philosophie', ZH: '\u54f2\u5b66' },
+  { value: 'theology',           EN: 'Theology', FR: 'Théologie', ES: 'Teología', DE: 'Theologie', ZH: '\u795e\u5b66' },
+  { value: 'anthropology',       EN: 'Anthropology', FR: 'Anthropologie', ES: 'Antropología', DE: 'Anthropologie', ZH: '\u4eba\u7c7b\u5b66' },
+  { value: 'performing_arts',    EN: 'Performing Arts (Dance & Theater)', FR: 'Arts du Spectacle (Danse & Théâtre)', ES: 'Artes Escénicas (Danza y Teatro)', DE: 'Darstellende Kunst', ZH: '\u8868\u6f14\u827a\u672f\uff08\u821e\u8e45\u4e0e\u620f\u5267\uff09' },
+  { value: 'fine_arts',          EN: 'Fine Arts & Design', FR: 'Beaux-Arts & Design', ES: 'Bellas Artes y Diseño', DE: 'Bildende Kunst & Design', ZH: '\u7f8e\u672f\u4e0e\u8bbe\u8ba1' },
+  { value: 'musicology',         EN: 'Musicology', FR: 'Musicologie', ES: 'Musicología', DE: 'Musikwissenschaft', ZH: '\u97f3\u4e50\u5b66' },
+  { value: 'literature',         EN: 'Literature', FR: 'Littérature', ES: 'Literatura', DE: 'Literatur', ZH: '\u6587\u5b66' },
+  { value: 'linguistics',        EN: 'Linguistics', FR: 'Linguistique', ES: 'Lingüística', DE: 'Linguistik', ZH: '\u8bed\u8a00\u5b66' },
+  { value: 'geography',          EN: 'Geography', FR: 'Géographie', ES: 'Geografía', DE: 'Geographie', ZH: '\u5730\u7406\u5b66' },
+  { value: 'geology',            EN: 'Geology & Earth Sciences', FR: 'Géologie & Sciences de la Terre', ES: 'Geología', DE: 'Geologie', ZH: '\u5730\u8d28\u5b66' },
+  { value: 'astronomy',          EN: 'Astronomy & Astrophysics', FR: 'Astronomie & Astrophysique', ES: 'Astronomía', DE: 'Astronomie', ZH: '\u5929\u6587\u5b66' },
+  { value: 'medicine',           EN: 'Medicine & Surgery', FR: 'Médecine & Chirurgie', ES: 'Medicina', DE: 'Medizin', ZH: '\u533b\u5b66' },
+  { value: 'pharmacology',       EN: 'Pharmacology', FR: 'Pharmacologie', ES: 'Farmacología', DE: 'Pharmakologie', ZH: '\u836f\u7406\u5b66' },
+  { value: 'neuroscience',       EN: 'Neuroscience', FR: 'Neurosciences', ES: 'Neurociencia', DE: 'Neurowissenschaften', ZH: '\u795e\u7ecf\u79d1\u5b66' },
+  { value: 'mechanical_eng',     EN: 'Mechanical Engineering', FR: 'Génie Mécanique', ES: 'Ingeniería Mecánica', DE: 'Maschinenbau', ZH: '\u673a\u68b0\u5de5\u7a0b' },
+  { value: 'electrical_eng',     EN: 'Electrical Engineering', FR: 'Génie Électrique', ES: 'Ingeniería Eléctrica', DE: 'Elektrotechnik', ZH: '\u7535\u6c14\u5de5\u7a0b' },
+  { value: 'chemical_eng',       EN: 'Chemical Engineering', FR: 'Génie Chimique', ES: 'Ingeniería Química', DE: 'Chemieingenieurwesen', ZH: '\u5316\u5b66\u5de5\u7a0b' },
+  { value: 'civil_eng',          EN: 'Civil Engineering', FR: 'Génie Civil', ES: 'Ingeniería Civil', DE: 'Bauingenieurwesen', ZH: '\u571f\u6728\u5de5\u7a0b' },
+  { value: 'aerospace_eng',      EN: 'Aerospace Engineering', FR: 'Génie Aérospatial', ES: 'Ingeniería Aeroespacial', DE: 'Luft- und Raumfahrttechnik', ZH: '\u822a\u7a7a\u822a\u5929\u5de5\u7a0b' },
+  { value: 'materials_science',  EN: 'Materials Science', FR: 'Science des Matériaux', ES: 'Ciencia de Materiales', DE: 'Materialwissenschaft', ZH: '\u6750\u6599\u79d1\u5b66' },
+  { value: 'environmental_sci',  EN: 'Environmental Science', FR: "Sciences de l'Environnement", ES: 'Ciencias Ambientales', DE: 'Umweltwissenschaften', ZH: '\u73af\u5883\u79d1\u5b66' },
+  { value: 'management',         EN: 'Business Management', FR: 'Gestion des Affaires', ES: 'Administración de Empresas', DE: 'Betriebswirtschaftslehre', ZH: '\u5de5\u5546\u7ba1\u7406' },
+  { value: 'finance',            EN: 'Finance & Accounting', FR: 'Finance & Comptabilité', ES: 'Finanzas y Contabilidad', DE: 'Finanzwesen', ZH: '\u91d1\u878d\u4e0e\u4f1a\u8ba1' },
+  { value: 'education',          EN: 'Pedagogy & Education', FR: 'Pédagogie & Éducation', ES: 'Pedagogía y Educación', DE: 'Pédagogik', ZH: '\u6559\u80b2\u5b66' }
+] as const;
+
+export const getLevelLabel = (value: string, lang: string): string => {
+  const lvl = ACADEMIC_LEVELS.find(l => l.value === value);
+  if (!lvl) return value;
+  const k = lang.toUpperCase();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`op_lang_levels_${k}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[value]) return parsed[value];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  const key = k as keyof typeof lvl;
+  return (lvl[key] as string) || lvl.EN;
+};
+
+export const getDisciplineLabel = (value: string, lang: string): string => {
+  const disc = DISCIPLINES.find(d => d.value === value);
+  if (!disc) return value;
+  const k = lang.toUpperCase();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`op_lang_disciplines_${k}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[value]) return parsed[value];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  const key = k as keyof typeof disc;
+  return (disc[key] as string) || disc.EN;
+};
+
+export const translateMetadataForLanguage = async (targetLang: string) => {
+  const targetLower = targetLang.toLowerCase();
+  
+  // 1. Translate all Academic Levels
+  const translatedLevels: Record<string, string> = {};
+  for (const lvl of ACADEMIC_LEVELS) {
+    try {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLower}&dt=t&q=${encodeURIComponent(lvl.EN)}`);
+      const data = await res.json();
+      const translatedText = data[0].map((x: any) => x[0]).join('');
+      translatedLevels[lvl.value] = translatedText;
+    } catch (e) {
+      console.error(`Failed to translate academic level ${lvl.value}`, e);
+      translatedLevels[lvl.value] = lvl.EN;
+    }
+  }
+  localStorage.setItem(`op_lang_levels_${targetLang}`, JSON.stringify(translatedLevels));
+
+  // 2. Translate all Disciplines
+  const translatedDisciplines: Record<string, string> = {};
+  for (const disc of DISCIPLINES) {
+    try {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLower}&dt=t&q=${encodeURIComponent(disc.EN)}`);
+      const data = await res.json();
+      const translatedText = data[0].map((x: any) => x[0]).join('');
+      translatedDisciplines[disc.value] = translatedText;
+    } catch (e) {
+      console.error(`Failed to translate discipline ${disc.value}`, e);
+      translatedDisciplines[disc.value] = disc.EN;
+    }
+  }
+  localStorage.setItem(`op_lang_disciplines_${targetLang}`, JSON.stringify(translatedDisciplines));
+};
+
+const POTENTIAL_CURRICULA = [
+  {
+    title: "Tronc Commun L1 Sciences",
+    level: "L1",
+    subject: "Physics",
+    childCourses: [1, 3, 8],
+    description: "Curriculum de tronc commun première année scientifique. Regroupe la Mécanique Classique (Newton), le Calcul Intégral et Différentiel, et la Biologie Cellulaire."
+  },
+  {
+    title: "L1 Biology Curriculum — Fundamentals",
+    level: "L1",
+    subject: "Biology",
+    childCourses: [13, 14, 15, 16, 17],
+    description: "Complete first-year Biology Bachelor curriculum. Covers cell biology, molecular genetics, structural biochemistry, microbiology, and general ecology."
+  },
+  {
+    title: "Sovereign AI Mastery Curriculum",
+    level: "L2",
+    subject: "Mathematics",
+    childCourses: [7, 8, 11],
+    description: "An elite academic syllabus detailing dynamic artificial intelligence systems, sovereign LLMs, and neural grid controllers."
+  }
+];
+
 // --- COMPONENT: ARCHIVING LEVEL BUTTONS (0, 1, 2, 3) ---
 const ArchivingLevelButtons = ({
   currentLevel,
@@ -1251,6 +1407,34 @@ export default function AdminCurriculumPage() {
       }
     });
 
+    // Condition 3: Complete Core Curriculum Synthesis (Synthetic Curriculum Synthesis)
+    POTENTIAL_CURRICULA.forEach(curr => {
+      const exists = courses.some(c => c.isCurriculum && c.title.toLowerCase() === curr.title.toLowerCase()) ||
+                     queue.some(t => t.isCurriculum && t.title.toLowerCase() === curr.title.toLowerCase());
+      
+      if (!exists) {
+        // Check if all constituent childCourses exist in the system as active courses
+        const allConstituentsExist = curr.childCourses.every(childId => 
+          courses.some(c => c.id === childId)
+        );
+        
+        if (allConstituentsExist) {
+          proposedList.push({
+            query: curr.title,
+            count: 15,
+            reason: "Curriculum Synthesis",
+            source: `Condition 3: All constituent courses (${curr.childCourses.join(', ')}) exist in catalog.`,
+            priority: "High",
+            score: 15,
+            isCurriculum: true,
+            level: curr.level,
+            subject: curr.subject,
+            description: curr.description
+          });
+        }
+      }
+    });
+
     setProposals(proposedList);
   }, [historyList, completions, courses, refusedCourses, queue, validationsThreshold, reevaluationDays, backlogRetention]);
 
@@ -1611,9 +1795,9 @@ export default function AdminCurriculumPage() {
       type: 'generation',
       status: 'queued',
       progress: 0,
-      priority: manualPriority,
+      priority: 'High',
       timestamp: new Date().toISOString(),
-      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "${manualTutor}"`
+      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`
     };
 
     const updated = [...queue, newTask];
@@ -2104,6 +2288,12 @@ export default function AdminCurriculumPage() {
       label: newLangLabel,
       flag: resolvedFlag
     });
+    // Trigger background auto-translation for new language taxonomy
+    try {
+      translateMetadataForLanguage(codeUpper);
+    } catch (err) {
+      console.error("Auto-translation of taxonomy failed:", err);
+    }
     setNewLangCode('');
     setNewLangLabel('');
     setNewLangFlag('');
@@ -2335,9 +2525,9 @@ export default function AdminCurriculumPage() {
                         <h2 className="text-xl font-extrabold text-white">Dynamic Autonomy & Retention Engine</h2>
                       </div>
                       <p className="text-sm text-slate-400 leading-relaxed">
-                        Manages the lifecycle of new course proposals and log archiving. Proposals are automatically generated by the engine under two dynamic pedagogical conditions:
+                        Manages the lifecycle of new course proposals and log archiving. Proposals are automatically generated by the engine under three dynamic pedagogical conditions:
                       </p>
-                      <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+                      <div className="grid md:grid-cols-3 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Condition 1: Failed Search Demands
@@ -2352,6 +2542,14 @@ export default function AdminCurriculumPage() {
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
                             Triggers progression suggestions based on student validation success. When a prerequisite course passes the <strong className="text-yellow-400">Validations Threshold</strong>, the next-level progression course is proposed.
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-500 uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Condition 3: Complete Core Curriculum Synthesis
+                          </div>
+                          <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                            Triggers when all constituent courses of an ungenerated curriculum exist. Automatically unifies isolated course blocks into a cohesive, structured learning pathway.
                           </p>
                         </div>
                       </div>
@@ -2515,10 +2713,10 @@ export default function AdminCurriculumPage() {
                         </label>
                         <select value={manualType} onChange={(e) => setManualType(e.target.value as 'curriculum' | 'course')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
                           <option value="course">
-                            {lang === 'FR' ? "Cours Autonome" : lang === 'ES' ? "Curso Autónomo" : lang === 'DE' ? "Eigenständiger Kurs" : (lang === 'ZH' || lang === 'ZN') ? "独立课程" : "Standalone Course"}
+                            {lang === 'FR' ? "Cours Autonome" : lang === 'ES' ? "Curso Autónomo" : lang === 'DE' ? "Eigenständiger Kurs" : (lang === 'ZH') ? "独立课程" : "Standalone Course"}
                           </option>
                           <option value="curriculum">
-                            {lang === 'FR' ? "Cursus Complet" : lang === 'ES' ? "Plan de Estudios Completo" : lang === 'DE' ? "Vollständiger Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "完整课程体系" : "Full Curriculum"}
+                            {lang === 'FR' ? "Cursus Complet" : lang === 'ES' ? "Plan de Estudios Completo" : lang === 'DE' ? "Vollständiger Lehrplan" : (lang === 'ZH') ? "完整课程体系" : "Full Curriculum"}
                           </option>
                         </select>
                       </div>
@@ -2527,10 +2725,9 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Niveau Académique" : "Academic Level"}
                         </label>
                         <select value={manualLevel} onChange={(e) => setManualLevel(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          <option value="L1">L1 – First Year</option>
-                          <option value="L2">L2 – Second Year</option>
-                          <option value="L3">L3 – Third Year</option>
-                          <option value="Master">Master / Graduate</option>
+                          {ACADEMIC_LEVELS.map(lvl => (
+                            <option key={lvl.value} value={lvl.value}>{getLevelLabel(lvl.value, lang)}</option>
+                          ))}
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -2538,8 +2735,8 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Sujet / Discipline" : "Subject / Discipline"}
                         </label>
                         <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          {disciplinesList.map((d) => (
-                            <option key={d} value={d}>{d}</option>
+                          {DISCIPLINES.map((d) => (
+                            <option key={d.value} value={d.value}>{getDisciplineLabel(d.value, lang)}</option>
                           ))}
                           <option value="NEW_CUSTOM">➕ {lang === 'FR' ? "Ajouter une discipline..." : "Add custom discipline..."}</option>
                         </select>
@@ -2570,25 +2767,11 @@ export default function AdminCurriculumPage() {
                           <option value="ZH">中文 🇨🇳</option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
-                          {lang === 'FR' ? "Tuteur IA Pédagogique" : "AI Pedagogical Tutor"}
-                        </label>
-                        <select value={manualTutor} onChange={(e) => setManualTutor(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          {personalities.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
-                          {lang === 'FR' ? "Priorité du Pipeline" : "Pipeline Priority"}
-                        </label>
-                        <select value={manualPriority} onChange={(e) => setManualPriority(e.target.value as 'High' | 'Medium' | 'Low')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          <option value="Low">{lang === 'FR' ? "Basse" : "Low"}</option>
-                          <option value="Medium">{lang === 'FR' ? "Moyenne" : "Medium"}</option>
-                          <option value="High">{lang === 'FR' ? "Haute" : "High"}</option>
-                        </select>
+                      <div className="col-span-1 md:col-span-2 p-4 bg-red-950/20 border border-red-500/20 rounded-2xl flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                        <p className="text-[10px] font-medium text-red-400/90 leading-relaxed">
+                          {lang === 'FR' ? "Toutes les propositions manuelles sont soumises avec une priorité HAUTE au pipeline IA souverain. Aucun tuteur manuel externe n'est requis." : "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required."}
+                        </p>
                       </div>
                     </div>
                     <div className="flex justify-end pt-2">
@@ -3575,12 +3758,12 @@ export default function AdminCurriculumPage() {
                                 <td className="px-6 py-4 text-slate-300 font-medium">
                                   {isCurriculum ? (
                                     <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
-                                      {lang === 'FR' ? "Cursus" : lang === 'ES' ? "Plan de Estudios" : lang === 'DE' ? "Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "课程体系" : "Curriculum"}
+                                      {lang === 'FR' ? "Cursus" : lang === 'ES' ? "Plan de Estudios" : lang === 'DE' ? "Lehrplan" : (lang === 'ZH') ? "课程体系" : "Curriculum"}
                                     </span>
                                   ) : isInCurriculum ? (
                                     <div className="space-y-1">
                                       <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
-                                        {lang === 'FR' ? "Dans un Cursus" : lang === 'ES' ? "En el Plan de Estudios" : lang === 'DE' ? "Im Lehrplan" : (lang === 'ZH' || lang === 'ZN') ? "在课程体系中" : "In Curriculum"}
+                                        {lang === 'FR' ? "Dans un Cursus" : lang === 'ES' ? "En el Plan de Estudios" : lang === 'DE' ? "Im Lehrplan" : (lang === 'ZH') ? "在课程体系中" : "In Curriculum"}
                                       </span>
                                       <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
                                         {containingCurricula.map(cc => cc.title).join(', ')}
@@ -3588,7 +3771,7 @@ export default function AdminCurriculumPage() {
                                     </div>
                                   ) : (
                                     <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
-                                      {lang === 'FR' ? "Autonome" : lang === 'ES' ? "Independiente" : lang === 'DE' ? "Eigenständig" : (lang === 'ZH' || lang === 'ZN') ? "独立课程" : "Standalone"}
+                                      {lang === 'FR' ? "Autonome" : lang === 'ES' ? "Independiente" : lang === 'DE' ? "Eigenständig" : (lang === 'ZH') ? "独立课程" : "Standalone"}
                                     </span>
                                   )}
                                 </td>
@@ -5241,13 +5424,12 @@ export default function AdminCurriculumPage() {
                       <span className="text-white font-bold">{manualLang}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Tuteur IA" : "AI Tutor"}</span>
-                      <span className="text-white font-bold">{personalities.find(p => p.id === manualTutor)?.name || manualTutor}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Priorité Pipeline" : "Pipeline Priority"}</span>
+                      <span className="text-red-400 font-extrabold uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        {lang === 'FR' ? "HAUTE (Pipeline Souverain)" : "HIGH (Sovereign Pipeline)"}
+                      </span>
                     </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-900/60">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{lang === 'FR' ? "Priorité" : "Priority"}</span>
-                    <span className={`text-xs font-bold ${manualPriority === 'High' ? 'text-red-400' : 'text-blue-400'}`}>{manualPriority}</span>
                   </div>
                 </div>
 

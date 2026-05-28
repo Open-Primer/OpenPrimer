@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService } from '@/lib/db';
 
-// ── Smart Empty State: No courses found ──────────────────────────────────────
+// ── Smart Empty State: No courses found ───────────────────────────────────────────
 const SUBJECT_SUGGESTIONS = [
   { label: 'Mathematics', icon: Calculator, href: '/catalog?search=Mathematics', color: 'blue' },
   { label: 'Physics', icon: Atom, href: '/catalog?search=Physics', color: 'violet' },
@@ -22,6 +22,15 @@ const SUBJECT_SUGGESTIONS = [
   { label: 'Law', icon: Scale, href: '/catalog?search=Law', color: 'pink' },
   { label: 'Computer Science', icon: BrainCircuit, href: '/catalog?search=Computer', color: 'cyan' },
 ];
+
+const SUGGESTIONS_TRANSLATIONS: Record<string, Record<string, string>> = {
+  'Mathematics': { EN: 'Mathematics', FR: 'Mathématiques', ES: 'Matemáticas', DE: 'Mathematik', ZH: '数学' },
+  'Physics': { EN: 'Physics', FR: 'Physique', ES: 'Física', DE: 'Physik', ZH: '物理学' },
+  'Biology': { EN: 'Biology', FR: 'Biologie', ES: 'Biología', DE: 'Biologie', ZH: '生物学' },
+  'Chemistry': { EN: 'Chemistry', FR: 'Chimie', ES: 'Química', DE: 'Chemie', ZH: '化学' },
+  'Law': { EN: 'Law', FR: 'Droit', ES: 'Derecho', DE: 'Rechtswissenschaften', ZH: '法学' },
+  'Computer Science': { EN: 'Computer Science', FR: 'Informatique', ES: 'Informática', DE: 'Informatik', ZH: '计算机科学' },
+};
 
 const EMPTY_STATE_STRINGS = {
   EN: {
@@ -205,7 +214,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
                   </div>
                 )}
 
-                {/* Email field — blocking */}
+                {/* Email field â€” blocking */}
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                   <input
@@ -243,7 +252,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
         </div>
 
         {/* Alternative subject suggestions */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {SUBJECT_SUGGESTIONS.map((s) => {
             const IconComp = s.icon;
             const colorMap: Record<string, string> = {
@@ -262,7 +271,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
               >
                 <IconComp className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 group-hover:text-white transition-colors">
-                  {s.label}
+                  {SUGGESTIONS_TRANSLATIONS[s.label]?.[lang] || s.label}
                 </span>
               </Link>
             );
@@ -301,7 +310,7 @@ const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; pre
     hours: 200,
     prerequisites: ["Classical Mechanics L1", "Linear Algebra"],
     units: [
-      { title: "Quantum States", modules: ["Wave-Particle Duality", "Schrödinger Equation", "State Vectors"] },
+      { title: "Quantum States", modules: ["Wave-Particle Duality", "SchrÃ¶dinger Equation", "State Vectors"] },
       { title: "Quantum Operators", modules: ["Hermitian Operators", "Eigenvalues", "Uncertainty Principle"] }
     ]
   },
@@ -542,7 +551,7 @@ export const CatalogPage = () => {
     const id = course.id;
 
     if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
-      return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
+      return isEn ? "Physics: Classical Mechanics" : "Physique : MÃ©canique Classique";
     }
     if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
       return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
@@ -551,16 +560,16 @@ export const CatalogPage = () => {
       return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
     }
     if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
-      return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
+      return isEn ? "Biology: Molecular Genetics" : "Biologie : GÃ©nÃ©tique MolÃ©culaire";
     }
     if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
       return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
     }
     if (slug === 'Droit_Test_L2' || id === 6) {
-      return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
+      return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit PÃ©nal (L2)";
     }
     if (slug === 'Maths_Test' || id === 7) {
-      return isEn ? "Mathematics: Linear Algebra" : "Mathématiques : Algèbre Linéaire";
+      return isEn ? "Mathematics: Linear Algebra" : "Mathématiques : AlgÃ¨bre LinÃ©aire";
     }
     if (slug === 'Maths_Test_L1' || id === 8) {
       return isEn ? "Mathematics: Calculus I" : "Mathématiques : Analyse I";
@@ -569,7 +578,7 @@ export const CatalogPage = () => {
       return isEn ? "Chemistry: Organic Chemistry" : "Chimie : Chimie Organique";
     }
     if (slug === 'Economie_Test' || id === 10) {
-      return isEn ? "Economics: Microeconomics" : "Économie : Microéconomie";
+      return isEn ? "Economics: Microeconomics" : "Ã‰conomie : MicroÃ©conomie";
     }
     return course.title;
   };
@@ -583,21 +592,21 @@ export const CatalogPage = () => {
 
     if (lvlStr === 'L1') {
       if (isEn) return '101';
-      if (isZh) return '大一 (101)';
+      if (isZh) return 'å¤§ä¸€ (101)';
       if (isEs) return 'L1 (101)';
       if (isDe) return 'L1 (101)';
       return 'L1';
     }
     if (lvlStr === 'L2') {
       if (isEn) return '201';
-      if (isZh) return '大二 (201)';
+      if (isZh) return 'å¤§äºŒ (201)';
       if (isEs) return 'L2 (201)';
       if (isDe) return 'L2 (201)';
       return 'L2';
     }
     if (lvlStr === 'L3') {
       if (isEn) return '301';
-      if (isZh) return '大三 (301)';
+      if (isZh) return 'å¤§ä¸‰ (301)';
       if (isEs) return 'L3 (301)';
       if (isDe) return 'L3 (301)';
       return 'L3';
@@ -605,7 +614,7 @@ export const CatalogPage = () => {
 
     if (/^\d+$/.test(lvlStr)) {
       const num = parseInt(lvlStr, 10);
-      if (isZh) return `${num}年级`;
+      if (isZh) return `${num}å¹´çº§`;
       if (isEn) return `Grade ${num}`;
       if (lang.toUpperCase() === 'FR') return `Niveau ${num}`;
       if (isEs) return `Grado ${num}`;
@@ -638,8 +647,8 @@ export const CatalogPage = () => {
                           (isNew && (
                             searchQuery.toLowerCase() === 'new' || 
                             searchQuery.toLowerCase() === 'nouveau' || 
-                            searchQuery.toLowerCase() === 'nouveauté' ||
-                            searchQuery.toLowerCase() === 'nouveautés'
+                            searchQuery.toLowerCase() === 'nouveautÃ©' ||
+                            searchQuery.toLowerCase() === 'nouveautÃ©s'
                           ));
     const matchesSaved = subjectFilter === 'Saved' ? bookmarks.includes(c.id) : true;
     const matchesNew = showNewOnly ? isNew : true;
@@ -665,7 +674,7 @@ export const CatalogPage = () => {
                <div className="flex items-center gap-2 text-slate-500">
                   <Globe className="w-4 h-4" />
                   <p className="font-semibold text-xs uppercase tracking-wider">
-                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? '当前语言：' : lang.toUpperCase() === 'IT' ? 'Lingua attiva :' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'Français' : lang.toUpperCase() === 'ES' ? 'Español' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? '中文' : lang.toUpperCase() === 'IT' ? 'Italiano' : 'English'}
+                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? 'å½“å‰è¯­è¨€ï¼š' : lang.toUpperCase() === 'IT' ? 'Lingua attiva :' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'FranÃ§ais' : lang.toUpperCase() === 'ES' ? 'EspaÃ±ol' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? 'ä¸­æ–‡' : lang.toUpperCase() === 'IT' ? 'Italiano' : 'English'}
                   </p>
                </div>
                {!isLoggedIn && (
@@ -674,18 +683,18 @@ export const CatalogPage = () => {
                     <div>
                       <span className="font-bold text-white uppercase text-[8px] tracking-wider block mb-1">
                         {lang.toUpperCase() === 'FR' ? 'GUIDE DE TRADUCTION DU CATALOGUE' : 
-                         lang.toUpperCase() === 'ES' ? 'GUÍA DE TRADUCCIÓN DEL CATÁLOGO' : 
-                         lang.toUpperCase() === 'DE' ? 'KATALOG-ÜBERSETZUNGSLEITFADEN' : 
-                         lang.toUpperCase() === 'ZH' ? '课程目录语言切换指南' : 
+                         lang.toUpperCase() === 'ES' ? 'GUÃA DE TRADUCCIÃ“N DEL CATÃLOGO' : 
+                         lang.toUpperCase() === 'DE' ? 'KATALOG-ÃœBERSETZUNGSLEITFADEN' : 
+                         lang.toUpperCase() === 'ZH' ? 'è¯¾ç¨‹ç›®å½•è¯­è¨€åˆ‡æ¢æŒ‡å—' : 
                          lang.toUpperCase() === 'IT' ? 'GUIDA ALLA TRADUZIONE DEL CATALOGO' : 
                          'CATALOG TRANSLATION GUIDE'}
                       </span>
-                      {lang.toUpperCase() === 'FR' ? '💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d\'autres langues.' : 
-                       lang.toUpperCase() === 'ES' ? '💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.' : 
-                       lang.toUpperCase() === 'DE' ? '💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
-                       lang.toUpperCase() === 'ZH' ? '💡 在顶部导航栏中切换语言，即可探索其他语言 of 课程目录。' : 
-                       lang.toUpperCase() === 'IT' ? '💡 Cambia la lingua nella barra di navigazione superiore per scoprire i corsi in altre lingue.' : 
-                       '💡 Change the language in the top navigation bar to discover courses in other languages.'}
+                      {lang.toUpperCase() === 'FR' ? 'ðŸ’¡ Changez la langue dans la barre de navigation supÃ©rieure pour dÃ©couvrir des cours dans d\'autres langues.' : 
+                       lang.toUpperCase() === 'ES' ? 'ðŸ’¡ Cambie el idioma en la barra de navegaciÃ³n superior para descubrir cursos en otros idiomas.' : 
+                       lang.toUpperCase() === 'DE' ? 'ðŸ’¡ Ã„ndern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
+                       lang.toUpperCase() === 'ZH' ? 'ðŸ’¡ åœ¨é¡¶éƒ¨å¯¼èˆªæ ä¸­åˆ‡æ¢è¯­è¨€ï¼Œå³å¯æŽ¢ç´¢å…¶ä»–è¯­è¨€ of è¯¾ç¨‹ç›®å½•ã€‚' : 
+                       lang.toUpperCase() === 'IT' ? 'ðŸ’¡ Cambia la lingua nella barra di navigazione superiore per scoprire i corsi in altre lingue.' : 
+                       'ðŸ’¡ Change the language in the top navigation bar to discover courses in other languages.'}
                     </div>
                   </div>
                )}
@@ -716,9 +725,9 @@ export const CatalogPage = () => {
             {/* Catalog Filter Mode (All / Courses / Curricula) */}
             <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
               {[
-                { key: 'All', label: { EN: 'All', FR: 'Tout', ES: 'Todo', DE: 'Alle', ZH: '全部', IT: 'Tutti' } },
-                { key: 'Course', label: { EN: 'Courses', FR: 'Cours', ES: 'Cursos', DE: 'Kurse', ZH: '课程', IT: 'Corsi' } },
-                { key: 'Curriculum', label: { EN: 'Curricula', FR: 'Curriculums', ES: 'Planes', DE: 'Lehrpläne', ZH: '课程体系', IT: 'Curriculum' } }
+                { key: 'All', label: { EN: 'All', FR: 'Tout', ES: 'Todo', DE: 'Alle', ZH: 'å…¨éƒ¨', IT: 'Tutti' } },
+                { key: 'Course', label: { EN: 'Courses', FR: 'Cours', ES: 'Cursos', DE: 'Kurse', ZH: 'è¯¾ç¨‹', IT: 'Corsi' } },
+                { key: 'Curriculum', label: { EN: 'Curricula', FR: 'Curriculums', ES: 'Planes', DE: 'LehrplÃ¤ne', ZH: 'è¯¾ç¨‹ä½“ç³»', IT: 'Curriculum' } }
               ].map(opt => {
                 const active = filterType === opt.key;
                 const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
@@ -741,10 +750,10 @@ export const CatalogPage = () => {
             >
               <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
               <span className="hidden sm:inline">
-                {lang.toUpperCase() === 'FR' ? 'Nouveautés' : 
+                {lang.toUpperCase() === 'FR' ? 'NouveautÃ©s' : 
                  lang.toUpperCase() === 'ES' ? 'Nuevos' : 
                  lang.toUpperCase() === 'DE' ? 'Neuheiten' : 
-                 lang.toUpperCase() === 'ZH' ? '最新课程' : 'New Only'}
+                 lang.toUpperCase() === 'ZH' ? 'æœ€æ–°è¯¾ç¨‹' : 'New Only'}
               </span>
             </button>
 
@@ -781,17 +790,34 @@ export const CatalogPage = () => {
                 >
                   <div className="p-8 bg-slate-900/40 border border-slate-880/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
                     
-                    {/* Ultra Flashy corner diagonal Ribbon */}
-                    {isCourseNew(course) && (
-                      <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
-                        <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
-                          {lang.toUpperCase() === 'FR' ? 'Nouveau' : 
-                           lang.toUpperCase() === 'ES' ? 'Nuevo' : 
-                           lang.toUpperCase() === 'DE' ? 'Neu' : 
-                           lang.toUpperCase() === 'ZH' ? '最新' : 'New'}
+                    {/* Corner ribbon: NEW takes priority over REVISED */}
+                    {(() => {
+                      const isNew = isCourseNew(course);
+                      const isRecentlyRevised = !isNew &&
+                        course.last_revision_date &&
+                        (Date.now() - new Date(course.last_revision_date).getTime()) < 30 * 24 * 60 * 60 * 1000;
+                      if (isNew) return (
+                        <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                          <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
+                            {lang.toUpperCase() === 'FR' ? 'Nouveau' :
+                             lang.toUpperCase() === 'ES' ? 'Nuevo' :
+                             lang.toUpperCase() === 'DE' ? 'Neu' :
+                             lang.toUpperCase() === 'ZH' ? 'æœ€æ–°' : 'New'}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                      if (isRecentlyRevised) return (
+                        <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                          <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
+                            {lang.toUpperCase() === 'FR' ? 'RÃ©visÃ©' :
+                             lang.toUpperCase() === 'ES' ? 'Revisado' :
+                             lang.toUpperCase() === 'DE' ? 'Ãœberarbeitet' :
+                             lang.toUpperCase() === 'ZH' ? 'å·²æ›´æ–°' : 'Revised'}
+                          </div>
+                        </div>
+                      );
+                      return null;
+                    })()}
 
                     <div className="flex justify-between items-center mb-6 w-full gap-4">
                       {course.isCurriculum ? (
@@ -807,15 +833,15 @@ export const CatalogPage = () => {
                         {/* Course / Curriculum Differentiating Badge */}
                         {course.isCurriculum ? (
                           <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
-                            {lang === 'FR' ? '🎓 Curriculum' : '🎓 Curriculum'}
+                            {lang === 'FR' ? 'ðŸŽ“ Curriculum' : 'ðŸŽ“ Curriculum'}
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
-                            {lang === 'FR' ? '📖 Cours' : '📖 Course'}
+                            {lang === 'FR' ? 'ðŸ“– Cours' : 'ðŸ“– Course'}
                           </span>
                         )}
                         {/* Unified gold star rating badge */}
-                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 â€” ${course.ratingCount ?? 0} reviews`}>
                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                           {(course.averageRating && course.averageRating > 0) ? course.averageRating.toFixed(1) : "3.4"} ({(course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12})
                         </span>
@@ -848,19 +874,6 @@ export const CatalogPage = () => {
                       {translatedCourses[course.id]?.description || course.description}
                     </p>
 
-                    {/* LAST REVISION DATE */}
-                    <div className="mb-4 flex items-center gap-1.5 text-[9px] font-bold text-slate-600 uppercase tracking-wider">
-                      <ShieldCheck className="w-3 h-3 text-slate-600" />
-                      {lang === 'FR' ? 'Dernière révision :' : 'Last revised:'}&nbsp;
-                      <span className={`font-black ${
-                        course.last_revision_date && 
-                        (Date.now() - new Date(course.last_revision_date).getTime()) < 30 * 24 * 60 * 60 * 1000
-                          ? 'text-emerald-500'
-                          : 'text-slate-500'
-                      }`}>
-                        {progressService.formatRevisionDate(course.last_revision_date, lang)}
-                      </span>
-                    </div>
 
                     {/* PROGRESS INDICATOR (only visible if logged in AND enrolled) */}
                     {isLoggedIn && isEnrolled && (
@@ -873,7 +886,7 @@ export const CatalogPage = () => {
                             <div className="h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" style={{ width: `${progressPercent}%` }} />
                          </div>
                          <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
-                           <span>{lang === 'FR' ? 'Temps passé :' : 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
+                           <span>{lang === 'FR' ? 'Temps passÃ© :' : 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
                            <span>{lang === 'FR' ? 'Attendu :' : 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h</span>
                          </div>
                       </div>
@@ -891,7 +904,7 @@ export const CatalogPage = () => {
                         }}
                         className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white`}
                       >
-                         {!isLoggedIn ? (lang === 'FR' ? 'Commencer à apprendre' : 'Start learning') : isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
+                         {!isLoggedIn ? (lang === 'FR' ? 'Commencer Ã  apprendre' : 'Start learning') : isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
                       </button>
                       <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
@@ -933,17 +946,17 @@ export const CatalogPage = () => {
 
               <h2 className="text-2xl font-black text-white mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
                 {lang === 'FR' ? "Bienvenue sur OpenPrimer !" :
-                 lang === 'ES' ? "¡Bienvenido a OpenPrimer!" :
+                 lang === 'ES' ? "Â¡Bienvenido a OpenPrimer!" :
                  lang === 'DE' ? "Willkommen bei OpenPrimer!" :
-                 lang === 'ZH' ? "欢迎来到 OpenPrimer！" :
+                 lang === 'ZH' ? "æ¬¢è¿Žæ¥åˆ° OpenPrimerï¼" :
                  "Welcome to OpenPrimer!"}
               </h2>
               
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                {lang === 'FR' ? "Votre inscription a été validée avec succès. Il ne vous reste plus qu'à choisir les cours qui vous intéressent dans le catalogue ci-dessous pour composer votre premier curriculum personnalisé !" :
-                 lang === 'ES' ? "Su registro se ha validado correctamente. ¡Solo tiene que elegir los cookies que le interesan en el catálogo siguiente para componer su primer plan de estudios personalizado!" :
-                 lang === 'DE' ? "Ihre Registrierung wurde erfolgreich bestätigt. Wählen Sie nun einfach die Kurse, die Sie interessieren, aus dem untenstehenden Katalog aus, um Ihren ersten personalisierten Lehrplan zu erstellen!" :
-                 lang === 'ZH' ? "您的注册已成功通过验证。现在，您只需从下方的目录中选择您感兴趣的课程，即可构建您的第一个个性化课程表！" :
+                {lang === 'FR' ? "Votre inscription a Ã©tÃ© validÃ©e avec succÃ¨s. Il ne vous reste plus qu'Ã  choisir les cours qui vous intÃ©ressent dans le catalogue ci-dessous pour composer votre premier curriculum personnalisÃ© !" :
+                 lang === 'ES' ? "Su registro se ha validado correctamente. Â¡Solo tiene que elegir los cookies que le interesan en el catÃ¡logo siguiente para componer su primer plan de estudios personalizado!" :
+                 lang === 'DE' ? "Ihre Registrierung wurde erfolgreich bestÃ¤tigt. WÃ¤hlen Sie nun einfach die Kurse, die Sie interessieren, aus dem untenstehenden Katalog aus, um Ihren ersten personalisierten Lehrplan zu erstellen!" :
+                 lang === 'ZH' ? "æ‚¨çš„æ³¨å†Œå·²æˆåŠŸé€šè¿‡éªŒè¯ã€‚çŽ°åœ¨ï¼Œæ‚¨åªéœ€ä»Žä¸‹æ–¹çš„ç›®å½•ä¸­é€‰æ‹©æ‚¨æ„Ÿå…´è¶£çš„è¯¾ç¨‹ï¼Œå³å¯æž„å»ºæ‚¨çš„ç¬¬ä¸€ä¸ªä¸ªæ€§åŒ–è¯¾ç¨‹è¡¨ï¼" :
                  "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
               </p>
 
@@ -951,10 +964,10 @@ export const CatalogPage = () => {
                 onClick={dismissWelcomePopup}
                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
               >
-                {lang === 'FR' ? "Commencer à explorer" :
+                {lang === 'FR' ? "Commencer Ã  explorer" :
                  lang === 'ES' ? "Empezar a explorar" :
                  lang === 'DE' ? "Jetzt erkunden" :
-                 lang === 'ZH' ? "开始探索" :
+                 lang === 'ZH' ? "å¼€å§‹æŽ¢ç´¢" :
                  "Start Exploring"}
               </button>
             </motion.div>
@@ -1016,7 +1029,7 @@ export const CatalogPage = () => {
               {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
                 <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
                   <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                    {lang === 'FR' ? "PrÃ©requis AcadÃ©miques" : "Academic Prerequisites"}
                   </p>
                   <div className="flex flex-col gap-2">
                     {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
@@ -1032,8 +1045,8 @@ export const CatalogPage = () => {
                               : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}>
                             {isSatisfied 
-                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
-                              : (lang === 'FR' ? "⚠ Requis" : "⚠ Required")}
+                              ? (lang === 'FR' ? "âœ“ DÃ©bloquÃ©" : "âœ“ Unlocked") 
+                              : (lang === 'FR' ? "âš  Requis" : "âš  Required")}
                           </span>
                         </div>
                       );
@@ -1065,7 +1078,7 @@ export const CatalogPage = () => {
                 <div className="space-y-6 pt-4 border-t border-slate-850 w-full">
                   <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl">
                     <h5 className="text-xs font-black text-blue-400 uppercase tracking-wider mb-2 font-sans">
-                      {lang === 'FR' ? "Pourquoi créer un compte ?" : "Why create an account?"}
+                      {lang === 'FR' ? "Pourquoi crÃ©er un compte ?" : "Why create an account?"}
                     </h5>
                     <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                       {lang === 'FR' 
@@ -1082,7 +1095,7 @@ export const CatalogPage = () => {
                       }}
                       className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 text-center cursor-pointer font-sans"
                     >
-                      {lang === 'FR' ? "Créer un Compte" : "Create an Account"}
+                      {lang === 'FR' ? "CrÃ©er un Compte" : "Create an Account"}
                     </button>
                     <button 
                       onClick={() => {
@@ -1103,7 +1116,7 @@ export const CatalogPage = () => {
                       }}
                       className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2 inline-flex items-center gap-1.5 font-sans"
                     >
-                      <span>{lang === 'FR' ? "Démarrer avec des fonctions limitées" : "Start learning with limited features"}</span>
+                      <span>{lang === 'FR' ? "DÃ©marrer avec des fonctions limitÃ©es" : "Start learning with limited features"}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -1153,29 +1166,29 @@ export const PhilosophyPage = () => {
       { step: '03', title: 'Cross-Linguistic Synthesis', desc: "By switching languages, students activate different cognitive pathways, reinforcing the concept's abstraction from mere vocabulary." }
     ],
     FR: [
-      { step: '01', title: 'Décomposition Atomique', desc: "Nous divisons chaque cours en modules centrés sur un concept clé unique. Vous ne pouvez progresser que lorsque vous pouvez l'expliquer simplement." },
-      { step: '02', title: 'Boucle Socratique', desc: "Au lieu de donner des réponses directes, notre tuteur IA pose des questions qui vous guident vers la solution pour éviter la lecture passive." },
-      { step: '03', title: 'Synthèse Trans-Linguistique', desc: "En alternant les langues, l'étudiant active diverses voies cognitives, renforçant l'abstraction du concept au-delà du simple vocabulaire." }
+      { step: '01', title: 'DÃ©composition Atomique', desc: "Nous divisons chaque cours en modules centrÃ©s sur un concept clÃ© unique. Vous ne pouvez progresser que lorsque vous pouvez l'expliquer simplement." },
+      { step: '02', title: 'Boucle Socratique', desc: "Au lieu de donner des rÃ©ponses directes, notre tuteur IA pose des questions qui vous guident vers la solution pour Ã©viter la lecture passive." },
+      { step: '03', title: 'SynthÃ¨se Trans-Linguistique', desc: "En alternant les langues, l'Ã©tudiant active diverses voies cognitives, renforÃ§ant l'abstraction du concept au-delÃ  du simple vocabulaire." }
     ],
     ES: [
-      { step: '01', title: 'Descomposición Atómica', desc: "Dividimos cada curso en módulos centrados en un solo concepto clave. No puedes avanzar hasta que puedas explicar el módulo actual en términos simples." },
-      { step: '02', title: 'Bucle de Retroalimentación Socrática', desc: "En lugar de proporcionar respuestas, nuestro Tutor de IA hace las preguntas que te guían hacia la respuesta para evitar la lectura pasiva." },
-      { step: '03', title: 'Síntesis Translingüística', desc: "Al cambiar de idioma, los estudiantes activan diferentes vías cognitivas, reforzando la abstracción del concepto más allá del vocabulario." }
+      { step: '01', title: 'DescomposiciÃ³n AtÃ³mica', desc: "Dividimos cada curso en mÃ³dulos centrados en un solo concepto clave. No puedes avanzar hasta que puedas explicar el mÃ³dulo actual en tÃ©rminos simples." },
+      { step: '02', title: 'Bucle de RetroalimentaciÃ³n SocrÃ¡tica', desc: "En lugar de proporcionar respuestas, nuestro Tutor de IA hace las preguntas que te guÃ­an hacia la respuesta para evitar la lectura pasiva." },
+      { step: '03', title: 'SÃ­ntesis TranslingÃ¼Ã­stica', desc: "Al cambiar de idioma, los estudiantes activan diferentes vÃ­as cognitivas, reforzando la abstracciÃ³n del concepto mÃ¡s allÃ¡ del vocabulario." }
     ],
     DE: [
-      { step: '01', title: 'Atomare Zerlegung', desc: "Wir zerlegen jeden Kurs in Module, die sich auf ein einzelnes Kernkonzept konzentrieren. Sie können erst fortfahren, wenn Sie das aktuelle Modul in einfachen Worten erklären können." },
-      { step: '02', title: 'Sokratische Feedbackschleife', desc: "Anstatt Antworten zu geben, stellt unser KI-Tutor Fragen, die Sie zur Antwort führen, um passives Lesen zu verhindern." },
-      { step: '03', title: 'Kognitive Sprachsynthese', desc: "Durch den Wechsel der Sprachen aktivieren die Lernenden unterschiedliche kognitive Pfade und vertiefen das Verständnis des Konzepts." }
+      { step: '01', title: 'Atomare Zerlegung', desc: "Wir zerlegen jeden Kurs in Module, die sich auf ein einzelnes Kernkonzept konzentrieren. Sie kÃ¶nnen erst fortfahren, wenn Sie das aktuelle Modul in einfachen Worten erklÃ¤ren kÃ¶nnen." },
+      { step: '02', title: 'Sokratische Feedbackschleife', desc: "Anstatt Antworten zu geben, stellt unser KI-Tutor Fragen, die Sie zur Antwort fÃ¼hren, um passives Lesen zu verhindern." },
+      { step: '03', title: 'Kognitive Sprachsynthese', desc: "Durch den Wechsel der Sprachen aktivieren die Lernenden unterschiedliche kognitive Pfade und vertiefen das VerstÃ¤ndnis des Konzepts." }
     ],
     IT: [
-      { step: '01', title: 'Decomposizione Atomica', desc: "Dividiamo ogni corso in moduli incentrati su un singolo concetto chiave. Non puoi andare avanti finché non sai spiegare il modulo corrente in termini semplici." },
+      { step: '01', title: 'Decomposizione Atomica', desc: "Dividiamo ogni corso in moduli incentrati su un singolo concetto chiave. Non puoi andare avanti finchÃ© non sai spiegare il modulo corrente in termini semplici." },
       { step: '02', title: 'Ciclo di Feedback Socratico', desc: "Invece di fornire risposte, il nostro Tutor IA pone domande che ti guidano alla risposta, prevenendo la lettura passiva." },
       { step: '03', title: 'Sintesi Trans-Linguistica', desc: "Cambiando lingua, gli studenti attivano percorsi cognitivi diversi, rafforzando l'astrazione del concetto dal semplice vocabolario." }
     ],
     ZH: [
-      { step: '01', title: '原子化分解', desc: "我们将每门课程拆分为专注于单一核心概念的模块。只有在你能用简单的语言解释当前模块时，才能继续前进。" },
-      { step: '02', title: '苏格拉底式反馈闭环', desc: "我们的AI导师不会直接提供答案，而是通过提问引导你找到答案，防止被动阅读。" },
-      { step: '03', title: '跨语言合成认知', desc: "通过切换语言，学生可以激活不同的认知途径，增强概念从单纯词汇中的学术抽象理解。" }
+      { step: '01', title: 'åŽŸå­åŒ–åˆ†è§£', desc: "æˆ‘ä»¬å°†æ¯é—¨è¯¾ç¨‹æ‹†åˆ†ä¸ºä¸“æ³¨äºŽå•ä¸€æ ¸å¿ƒæ¦‚å¿µçš„æ¨¡å—ã€‚åªæœ‰åœ¨ä½ èƒ½ç”¨ç®€å•çš„è¯­è¨€è§£é‡Šå½“å‰æ¨¡å—æ—¶ï¼Œæ‰èƒ½ç»§ç»­å‰è¿›ã€‚" },
+      { step: '02', title: 'è‹æ ¼æ‹‰åº•å¼åé¦ˆé—­çŽ¯', desc: "æˆ‘ä»¬çš„AIå¯¼å¸ˆä¸ä¼šç›´æŽ¥æä¾›ç­”æ¡ˆï¼Œè€Œæ˜¯é€šè¿‡æé—®å¼•å¯¼ä½ æ‰¾åˆ°ç­”æ¡ˆï¼Œé˜²æ­¢è¢«åŠ¨é˜…è¯»ã€‚" },
+      { step: '03', title: 'è·¨è¯­è¨€åˆæˆè®¤çŸ¥', desc: "é€šè¿‡åˆ‡æ¢è¯­è¨€ï¼Œå­¦ç”Ÿå¯ä»¥æ¿€æ´»ä¸åŒçš„è®¤çŸ¥é€”å¾„ï¼Œå¢žå¼ºæ¦‚å¿µä»Žå•çº¯è¯æ±‡ä¸­çš„å­¦æœ¯æŠ½è±¡ç†è§£ã€‚" }
     ]
   };
 
@@ -1289,73 +1302,73 @@ export const ContactPage = () => {
     },
     FR: {
       title: "Contactez-nous",
-      desc: "Contactez notre équipe opérationnelle mondiale pour des partenariats ou des retours sur le moteur Feynman.",
-      support: "Opérations de Support Mondial",
-      success_title: "Message Reçu",
-      success_desc: "Nous reviendrons vers vous très prochainement.",
+      desc: "Contactez notre Ã©quipe opÃ©rationnelle mondiale pour des partenariats ou des retours sur le moteur Feynman.",
+      support: "OpÃ©rations de Support Mondial",
+      success_title: "Message ReÃ§u",
+      success_desc: "Nous reviendrons vers vous trÃ¨s prochainement.",
       name_placeholder: "Nom Complet",
       email_placeholder: "Adresse Email",
       message_placeholder: "Votre Message",
       btn_sending: "Envoi en cours...",
       btn_send: "Envoyer ma demande",
-      alert_err: "Une erreur est survenue. Veuillez réessayer.",
-      alert_fail: "Échec de l'envoi. Veuillez réessayer plus tard."
+      alert_err: "Une erreur est survenue. Veuillez rÃ©essayer.",
+      alert_fail: "Ã‰chec de l'envoi. Veuillez rÃ©essayer plus tard."
     },
     ES: {
       title: "Ponerse en Contacto",
-      desc: "Comuníquese con nuestro equipo de operaciones globales para asociaciones o comentarios sobre el Motor Feynman.",
+      desc: "ComunÃ­quese con nuestro equipo de operaciones globales para asociaciones o comentarios sobre el Motor Feynman.",
       support: "Operaciones de Soporte Global",
       success_title: "Mensaje Recibido",
       success_desc: "Nos pondremos en contacto con usted en breve.",
       name_placeholder: "Nombre Completo",
-      email_placeholder: "Correo Electrónico",
+      email_placeholder: "Correo ElectrÃ³nico",
       message_placeholder: "Tu Mensaje",
       btn_sending: "Enviando...",
       btn_send: "Enviar Consulta",
-      alert_err: "Ocurrió un error. Por favor, inténtelo de nuevo.",
-      alert_fail: "Error al enviar el message. Por favor, inténtelo más tarde."
+      alert_err: "OcurriÃ³ un error. Por favor, intÃ©ntelo de nuevo.",
+      alert_fail: "Error al enviar el message. Por favor, intÃ©ntelo mÃ¡s tarde."
     },
     DE: {
       title: "Kontaktieren Sie uns",
-      desc: "Wenden Sie sich an unser globales Betriebsteam für Partnerschaften oder Feedback zur Feynman-Engine.",
+      desc: "Wenden Sie sich an unser globales Betriebsteam fÃ¼r Partnerschaften oder Feedback zur Feynman-Engine.",
       support: "Globaler Supportbetrieb",
       success_title: "Nachricht empfangen",
-      success_desc: "Wir werden uns in Kürze bei Ihnen melden.",
-      name_placeholder: "Vollständiger Name",
+      success_desc: "Wir werden uns in KÃ¼rze bei Ihnen melden.",
+      name_placeholder: "VollstÃ¤ndiger Name",
       email_placeholder: "E-Mail-Adresse",
       message_placeholder: "Ihre Nachricht",
       btn_sending: "Wird gesendet...",
       btn_send: "Anfrage senden",
       alert_err: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
-      alert_fail: "Fehler beim Senden der Nachricht. Bitte versuchen Sie es später noch einmal."
+      alert_fail: "Fehler beim Senden der Nachricht. Bitte versuchen Sie es spÃ¤ter noch einmal."
     },
     IT: {
       title: "Contattaci",
       desc: "Contatta il nostro team operativo globale per partnership o feedback sul Feynman Engine.",
       support: "Operazioni di Supporto Globale",
       success_title: "Messaggio Ricevuto",
-      success_desc: "Ti risponderemo al più presto.",
+      success_desc: "Ti risponderemo al piÃ¹ presto.",
       name_placeholder: "Nome Completo",
       email_placeholder: "Indirizzo Email",
       message_placeholder: "Il Tuo Messaggio",
       btn_sending: "Invio in corso...",
       btn_send: "Invia Richiesta",
-      alert_err: "Si è verificato un errore. Riprova.",
-      alert_fail: "Impossibile inviare il messaggio. Riprova più tardi."
+      alert_err: "Si Ã¨ verificato un errore. Riprova.",
+      alert_fail: "Impossibile inviare il messaggio. Riprova piÃ¹ tardi."
     },
     ZH: {
-      title: "联系我们",
-      desc: "联系我们的全球运营团队以获取合作机会或对费曼引擎的反馈。",
-      support: "全球支持运营",
-      success_title: "收到消息",
-      success_desc: "我们将很快与您联系。",
-      name_placeholder: "姓名",
-      email_placeholder: "电子邮件地址",
-      message_placeholder: "您的消息",
-      btn_sending: "正在发送...",
-      btn_send: "发送咨询",
-      alert_err: "发生错误。请重试。",
-      alert_fail: "发送消息失败。请稍后重试。"
+      title: "è”ç³»æˆ‘ä»¬",
+      desc: "è”ç³»æˆ‘ä»¬çš„å…¨çƒè¿è¥å›¢é˜Ÿä»¥èŽ·å–åˆä½œæœºä¼šæˆ–å¯¹è´¹æ›¼å¼•æ“Žçš„åé¦ˆã€‚",
+      support: "å…¨çƒæ”¯æŒè¿è¥",
+      success_title: "æ”¶åˆ°æ¶ˆæ¯",
+      success_desc: "æˆ‘ä»¬å°†å¾ˆå¿«ä¸Žæ‚¨è”ç³»ã€‚",
+      name_placeholder: "å§“å",
+      email_placeholder: "ç”µå­é‚®ä»¶åœ°å€",
+      message_placeholder: "æ‚¨çš„æ¶ˆæ¯",
+      btn_sending: "æ­£åœ¨å‘é€...",
+      btn_send: "å‘é€å’¨è¯¢",
+      alert_err: "å‘ç”Ÿé”™è¯¯ã€‚è¯·é‡è¯•ã€‚",
+      alert_fail: "å‘é€æ¶ˆæ¯å¤±è´¥ã€‚è¯·ç¨åŽé‡è¯•ã€‚"
     }
   };
 
@@ -1458,51 +1471,51 @@ export const TermsPage = () => {
       title: "Conditions d'utilisation",
       date: "Date d'effet : 11 mai 2026",
       sec1_t: "1. Utilisation acceptable",
-      sec1_d: "OpenPrimer est une ressource académique. Les utilisateurs doivent interagir respectueusement avec le tuteur IA et utiliser la plateforme à des fins d'apprentissage réel.",
-      sec2_t: "2. Propriété intellectuelle",
-      sec2_d: "Tous les logiciels de base sont sous licence MIT. Le contenu académique est sous licence CC BY-NC-SA 4.0, autorisant le partage non commercial avec attribution correcte.",
-      sec3_t: "3. Limitation de responsabilité",
-      sec3_d: "La plateforme est fournie 'en l'état'. Bien que nous visions une rigueur académique absolue, les utilisateurs doivent toujours recouper les informations critiques avec des sources universitaires officielles."
+      sec1_d: "OpenPrimer est une ressource acadÃ©mique. Les utilisateurs doivent interagir respectueusement avec le tuteur IA et utiliser la plateforme Ã  des fins d'apprentissage rÃ©el.",
+      sec2_t: "2. PropriÃ©tÃ© intellectuelle",
+      sec2_d: "Tous les logiciels de base sont sous licence MIT. Le contenu acadÃ©mique est sous licence CC BY-NC-SA 4.0, autorisant le partage non commercial avec attribution correcte.",
+      sec3_t: "3. Limitation de responsabilitÃ©",
+      sec3_d: "La plateforme est fournie 'en l'Ã©tat'. Bien que nous visions une rigueur acadÃ©mique absolue, les utilisateurs doivent toujours recouper les informations critiques avec des sources universitaires officielles."
     },
     ES: {
-      title: "Términos del Servicio",
+      title: "TÃ©rminos del Servicio",
       date: "Fecha de vigencia: 11 de mayo de 2026",
       sec1_t: "1. Uso Aceptable",
-      sec1_d: "OpenPrimer es un recurso académico. Se espera que los usuarios interactúen con el Tutor de IA de manera respetuosa y utilicen la plataforma para fines de aprendizaje genuino.",
+      sec1_d: "OpenPrimer es un recurso acadÃ©mico. Se espera que los usuarios interactÃºen con el Tutor de IA de manera respetuosa y utilicen la plataforma para fines de aprendizaje genuino.",
       sec2_t: "2. Propiedad Intelectual",
-      sec2_d: "Todo el software principal tiene licencia MIT. El contenido académico tiene licencia CC BY-NC-SA 4.0, lo que permite compartirlo de manera no comercial con la atribución adecuada.",
-      sec3_t: "3. Limitación de Responsabilidad",
-      sec3_d: "La plataforma se proporciona 'tal cual'. Aunque nos esforzamos por lograr un rigor académico absoluto, los usuarios siempre deben contrastar la información crítica con fuentes universitarias oficiales."
+      sec2_d: "Todo el software principal tiene licencia MIT. El contenido acadÃ©mico tiene licencia CC BY-NC-SA 4.0, lo que permite compartirlo de manera no comercial con la atribuciÃ³n adecuada.",
+      sec3_t: "3. LimitaciÃ³n de Responsabilidad",
+      sec3_d: "La plataforma se proporciona 'tal cual'. Aunque nos esforzamos por lograr un rigor acadÃ©mico absoluto, los usuarios siempre deben contrastar la informaciÃ³n crÃ­tica con fuentes universitarias oficiales."
     },
     DE: {
       title: "Nutzungsbedingungen",
       date: "Inkrafttreten: 11. Mai 2026",
-      sec1_t: "1. Zulässige Nutzung",
-      sec1_d: "OpenPrimer is eine akademische Ressource. Es wird erwartet, dass Benutzer respektvoll mit dem KI-Tutor interagieren und die Plattform für echte Lernzwecke nutzen.",
+      sec1_t: "1. ZulÃ¤ssige Nutzung",
+      sec1_d: "OpenPrimer is eine akademische Ressource. Es wird erwartet, dass Benutzer respektvoll mit dem KI-Tutor interagieren und die Plattform fÃ¼r echte Lernzwecke nutzen.",
       sec2_t: "2. Geistiges Eigentum",
       sec2_d: "Die gesamte Kernsoftware ist unter MIT lizenziert. Akademische Inhalte sind unter CC BY-NC-SA 4.0 lizenziert, was die nicht-kommerzielle Weitergabe bei angemessener Nennung erlaubt.",
-      sec3_t: "3. Haftungsbeschränkung",
-      sec3_d: "Die pflichtbewusste Plattform wird ohne Mängelgewähr bereitgestellt. Obwohl wir uns um absolute akademische Genauigkeit bemühen, sollten Benutzer wichtige Informationen immer mit offiziellen Universitätsquellen abgleichen."
+      sec3_t: "3. HaftungsbeschrÃ¤nkung",
+      sec3_d: "Die pflichtbewusste Plattform wird ohne MÃ¤ngelgewÃ¤hr bereitgestellt. Obwohl wir uns um absolute akademische Genauigkeit bemÃ¼hen, sollten Benutzer wichtige Informationen immer mit offiziellen UniversitÃ¤tsquellen abgleichen."
     },
     IT: {
       title: "Termini di Servizio",
       date: "Data di Decorrenza: 11 Maggio 2026",
       sec1_t: "1. Uso Consentito",
-      sec1_d: "OpenPrimer è una risorsa accademica. Gli utenti sono tenuti a interagire con il Tutor IA in modo rispettoso e a utilizzare la piattaforma per scopi di apprendimento autentico.",
-      sec2_t: "2. Proprietà Intellettuale",
-      sec2_d: "Tutto il software principale è concesso in licenza MIT. Il contenuto accademico è concesso in licenza CC BY-NC-SA 4.0, consentendo la condivisione non commerciale con corretta attribuzione.",
-      sec3_t: "3. Limitazione di Responsabilità",
-      sec3_d: "La piattaforma viene fornita 'così com'è'. Sebbene ci impegniamo per il massimo rigore accademico, gli utenti dovrebbero sempre verificare le informazioni critiche con fonti universitarie ufficiali."
+      sec1_d: "OpenPrimer Ã¨ una risorsa accademica. Gli utenti sono tenuti a interagire con il Tutor IA in modo rispettoso e a utilizzare la piattaforma per scopi di apprendimento autentico.",
+      sec2_t: "2. ProprietÃ  Intellettuale",
+      sec2_d: "Tutto il software principale Ã¨ concesso in licenza MIT. Il contenuto accademico Ã¨ concesso in licenza CC BY-NC-SA 4.0, consentendo la condivisione non commerciale con corretta attribuzione.",
+      sec3_t: "3. Limitazione di ResponsabilitÃ ",
+      sec3_d: "La piattaforma viene fornita 'cosÃ¬ com'Ã¨'. Sebbene ci impegniamo per il massimo rigore accademico, gli utenti dovrebbero sempre verificare le informazioni critiche con fonti universitarie ufficiali."
     },
     ZH: {
-      title: "服务条款",
-      date: "生效日期：2026年5月11日",
-      sec1_t: "1. 合理使用",
-      sec1_d: "OpenPrimer 是一项学术资源。用户应尊重地与 AI 导师互动，并将该平台用于真正的学习目的。",
-      sec2_t: "2. 知识产权",
-      sec2_d: "所有核心软件均采用 MIT 许可。学术内容采用 CC BY-NC-SA 4.0 许可，允许在提供适当署名的前提下进行非商业性分享。",
-      sec3_t: "3. 免责声明",
-      sec3_d: "该平台按“原样”提供。虽然我们力求绝对的学术严谨性，但用户应始终将关键信息 with 官方大学来源进行交叉比对。"
+      title: "æœåŠ¡æ¡æ¬¾",
+      date: "ç”Ÿæ•ˆæ—¥æœŸï¼š2026å¹´5æœˆ11æ—¥",
+      sec1_t: "1. åˆç†ä½¿ç”¨",
+      sec1_d: "OpenPrimer æ˜¯ä¸€é¡¹å­¦æœ¯èµ„æºã€‚ç”¨æˆ·åº”å°Šé‡åœ°ä¸Ž AI å¯¼å¸ˆäº’åŠ¨ï¼Œå¹¶å°†è¯¥å¹³å°ç”¨äºŽçœŸæ­£çš„å­¦ä¹ ç›®çš„ã€‚",
+      sec2_t: "2. çŸ¥è¯†äº§æƒ",
+      sec2_d: "æ‰€æœ‰æ ¸å¿ƒè½¯ä»¶å‡é‡‡ç”¨ MIT è®¸å¯ã€‚å­¦æœ¯å†…å®¹é‡‡ç”¨ CC BY-NC-SA 4.0 è®¸å¯ï¼Œå…è®¸åœ¨æä¾›é€‚å½“ç½²åçš„å‰æä¸‹è¿›è¡Œéžå•†ä¸šæ€§åˆ†äº«ã€‚",
+      sec3_t: "3. å…è´£å£°æ˜Ž",
+      sec3_d: "è¯¥å¹³å°æŒ‰â€œåŽŸæ ·â€æä¾›ã€‚è™½ç„¶æˆ‘ä»¬åŠ›æ±‚ç»å¯¹çš„å­¦æœ¯ä¸¥è°¨æ€§ï¼Œä½†ç”¨æˆ·åº”å§‹ç»ˆå°†å…³é”®ä¿¡æ¯ with å®˜æ–¹å¤§å­¦æ¥æºè¿›è¡Œäº¤å‰æ¯”å¯¹ã€‚"
     }
   };
 
@@ -1537,29 +1550,29 @@ export const PrivacyPage = () => {
       desc: "We do not sell your data. Your learning progress is used exclusively to calibrate the AI Tutor for your specific needs. We comply with GDPR and global privacy standards for academic data protection."
     },
     FR: {
-      title: "Politique de confidentialité",
-      tagline: '"Vos données, votre progression, votre souveraineté."',
-      desc: "Nous ne vendons pas vos données. Votre progression d'apprentissage est exclusivement utilisée pour calibrer le tuteur IA selon vos besoins spécifiques. Nous respectons le RGPD et les normes mondiales de protection des données académiques."
+      title: "Politique de confidentialitÃ©",
+      tagline: '"Vos donnÃ©es, votre progression, votre souverainetÃ©."',
+      desc: "Nous ne vendons pas vos donnÃ©es. Votre progression d'apprentissage est exclusivement utilisÃ©e pour calibrer le tuteur IA selon vos besoins spÃ©cifiques. Nous respectons le RGPD et les normes mondiales de protection des donnÃ©es acadÃ©miques."
     },
     ES: {
-      title: "Política de Privacidad",
-      tagline: '"Tus datos, tu progreso, tu soberanía."',
-      desc: "No vendemos tus datos. Tu progreso de aprendizaje se utiliza exclusivamente para calibrar el Tutor de IA para tus necesidades específicas. Cumplimos con el RGPD y los estándares globales de privacidad para la protección de datos académicos."
+      title: "PolÃ­tica de Privacidad",
+      tagline: '"Tus datos, tu progreso, tu soberanÃ­a."',
+      desc: "No vendemos tus datos. Tu progreso de aprendizaje se utiliza exclusivamente para calibrar el Tutor de IA para tus necesidades especÃ­ficas. Cumplimos con el RGPD y los estÃ¡ndares globales de privacidad para la protecciÃ³n de datos acadÃ©micos."
     },
     DE: {
       title: "Datenschutz-Bestimmungen",
-      tagline: '"Ihre Daten, Ihr Fortschritt, Ihre Souveränität."',
-      desc: "Wir verkaufen Ihre Daten nicht. Ihr Lernfortschritt wird ausschließlich dazu verwendet, den KI-Tutor auf Ihre spezifischen Bedürfnisse abzustimmen. Wir halten uns an die DSGVO und globale Datenschutzstandards für akademische Daten."
+      tagline: '"Ihre Daten, Ihr Fortschritt, Ihre SouverÃ¤nitÃ¤t."',
+      desc: "Wir verkaufen Ihre Daten nicht. Ihr Lernfortschritt wird ausschlieÃŸlich dazu verwendet, den KI-Tutor auf Ihre spezifischen BedÃ¼rfnisse abzustimmen. Wir halten uns an die DSGVO und globale Datenschutzstandards fÃ¼r akademische Daten."
     },
     IT: {
       title: "Informativa sulla Privacy",
-      tagline: '"I tuoi dati, i tuoi progressi, la tua sovranità."',
+      tagline: '"I tuoi dati, i tuoi progressi, la tua sovranitÃ ."',
       desc: "Non vendiamo i tuoi dati. I tuoi progressi di apprendimento sono utilizzati esclusivamente per calibrare il Tutor IA in base alle tue esigenze specifiche. Rispettiamo il GDPR e gli standard globali di privacy per la protezione dei dati accademici."
     },
     ZH: {
-      title: "隐私政策",
-      tagline: "“您的数据，您的进步，您的自主权。”",
-      desc: "我们不出售您的数据。您的学习进度仅用于针对您的特定需求调整 AI 导师。我们遵守 GDPR 和全球学术数据保护隐私标准。"
+      title: "éšç§æ”¿ç­–",
+      tagline: "â€œæ‚¨çš„æ•°æ®ï¼Œæ‚¨çš„è¿›æ­¥ï¼Œæ‚¨çš„è‡ªä¸»æƒã€‚â€",
+      desc: "æˆ‘ä»¬ä¸å‡ºå”®æ‚¨çš„æ•°æ®ã€‚æ‚¨çš„å­¦ä¹ è¿›åº¦ä»…ç”¨äºŽé’ˆå¯¹æ‚¨çš„ç‰¹å®šéœ€æ±‚è°ƒæ•´ AI å¯¼å¸ˆã€‚æˆ‘ä»¬éµå®ˆ GDPR å’Œå…¨çƒå­¦æœ¯æ•°æ®ä¿æŠ¤éšç§æ ‡å‡†ã€‚"
     }
   };
 
@@ -1618,7 +1631,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
              <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
                 <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prerequisites</p>
-                <p className="text-[10px] font-bold text-slate-400 leading-tight mt-2">{course.prerequisites.join(' • ')}</p>
+                <p className="text-[10px] font-bold text-slate-400 leading-tight mt-2">{course.prerequisites.join(' â€¢ ')}</p>
              </div>
            )}
         </div>

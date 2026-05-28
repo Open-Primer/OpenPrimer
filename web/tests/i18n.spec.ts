@@ -49,6 +49,13 @@ test('should navigate to the catalog', async ({ page, context }) => {
   // Check if at least one course card is rendered (dynamic)
   // Note: This requires the database to be populated
   const cards = page.locator('.group.block.h-full');
+  
+  // Wait for either cards or "No courses found" message to render
+  await Promise.race([
+    page.waitForSelector('.group.block.h-full', { timeout: 5000 }).catch(() => {}),
+    page.waitForSelector('text=No courses found', { timeout: 5000 }).catch(() => {})
+  ]);
+
   // Even if 0 cards, the search message should appear
   if (await cards.count() === 0) {
     await expect(page.locator('text=No courses found')).toBeVisible();

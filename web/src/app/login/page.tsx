@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { Mail, Lock, ArrowRight, AlertCircle, Sparkles, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Footer } from '@/components/RefinedUI';
+import { Footer, UI_STRINGS } from '@/components/RefinedUI';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Keys to purge from localStorage on each successful login to prevent stale mock data
 const STALE_CACHE_KEYS = [
@@ -31,6 +32,8 @@ function purgeStaleLocalCache() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -42,7 +45,7 @@ export default function LoginPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMsg('Veuillez renseigner votre email et votre mot de passe.');
+      setErrorMsg(t.email_required_error || 'Please enter your email and password.');
       return;
     }
 
@@ -117,7 +120,7 @@ export default function LoginPage() {
       return;
     }
 
-    setErrorMsg('Identifiants incorrects. Vérifiez votre email et mot de passe.');
+    setErrorMsg(t.invalid_credentials || 'Incorrect credentials.');
     setIsLoading(false);
   };
 
@@ -156,10 +159,10 @@ export default function LoginPage() {
                 <div className="text-center mb-8">
                   <OpenPrimerIcon className="w-14 h-14 mx-auto mb-4" />
                   <h1 className="text-3xl md:text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-                    SE CONNECTER
+                    {t.welcome_back?.toUpperCase() || 'SE CONNECTER'}
                   </h1>
                   <p className="text-slate-500 text-xs mt-2 uppercase tracking-widest font-black">
-                    Accéder au dépôt OpenPrimer
+                    {t.access_repo}
                   </p>
                 </div>
 
@@ -175,8 +178,8 @@ export default function LoginPage() {
                     {authMode === 'live' ? <ShieldCheck className="w-4 h-4 shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
                     <span>
                       {authMode === 'live'
-                        ? 'Authentification sécurisée réussie ! Redirection...'
-                        : 'Connexion démo réussie. Redirection...'
+                        ? (t.verified_success || 'Authentication successful! Redirecting...')
+                        : (t.verified_desc || 'Demo login successful. Redirecting...')
                       }
                     </span>
                   </div>
@@ -230,10 +233,10 @@ export default function LoginPage() {
                     {isLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                        Vérification...
+                        {t.verifying}
                       </span>
                     ) : (
-                      <>Se Connecter <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
+                      <>{t.login} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
                     )}
                   </button>
                 </form>
@@ -243,7 +246,7 @@ export default function LoginPage() {
                     <div className="w-full border-t border-slate-800/80" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase tracking-widest font-black text-[9px]">
-                    <span className="bg-slate-950 px-4 text-slate-600">Ou continuer avec</span>
+                    <span className="bg-slate-950 px-4 text-slate-600">{t.or_continue_with}</span>
                   </div>
                 </div>
 
@@ -282,15 +285,15 @@ export default function LoginPage() {
               >
                 <div className="text-center mb-8">
                   <Lock className="w-14 h-14 mx-auto mb-4 text-blue-500" />
-                  <h1 className="text-3xl font-black tracking-tight text-white">RÉCUPÉRATION</h1>
+                  <h1 className="text-3xl font-black tracking-tight text-white">{t.reset_password?.toUpperCase()}</h1>
                   <p className="text-slate-500 text-xs mt-2 uppercase tracking-widest font-black">
-                    Mot de passe oublié
+                    {t.forgot_password}
                   </p>
                 </div>
 
                 <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">Votre Adresse Email</label>
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">{t.enter_email}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                       <input 
@@ -326,7 +329,7 @@ export default function LoginPage() {
           </AnimatePresence>
 
           <p className="mt-8 text-center text-xs text-slate-600">
-            Nouveau sur OpenPrimer ? <Link href="/signup" className="text-blue-500 font-bold hover:underline">Créer un compte</Link>
+            {t.new_to_op} <Link href="/signup" className="text-blue-500 font-bold hover:underline">{t.create_an_account}</Link>
           </p>
         </motion.div>
       </div>
