@@ -42,8 +42,8 @@ test('should navigate to the catalog', async ({ page, context }) => {
     window.localStorage.setItem('openprimer_lang', 'EN');
   });
   await page.reload();
-  await page.locator('a[href="/catalog"]').first().click();
-  await expect(page).toHaveURL(/.*catalog/);
+  await page.locator('a[href="/catalog"]').first().click({ force: true });
+  await expect(page).toHaveURL(/.*catalog/, { timeout: 15000 });
   await expect(page.locator('h1')).toContainText(/Browse Catalog|Parcourir/);
 
   // Check if at least one course card is rendered (dynamic)

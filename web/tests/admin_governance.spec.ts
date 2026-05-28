@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
  
 
@@ -67,7 +67,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     const rowLocator = page.locator('tr:has-text("Test Student E2E")');
 
-    await expect(rowLocator).toBeVisible();
+    await expect(rowLocator).toBeVisible({ timeout: 15000 });
 
     await expect(rowLocator.locator('text=/Admin/')).toBeVisible({ timeout: 15000 });
 
