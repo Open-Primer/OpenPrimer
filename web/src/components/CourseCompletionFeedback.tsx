@@ -65,7 +65,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         (c: any) => c.isCurriculum && c.childCourses && c.childCourses.includes(currentCourseId)
       );
 
-      if (parentCurriculum) {
+      if (parentCurriculum && parentCurriculum.childCourses) {
         const childIds = parentCurriculum.childCourses;
         const currentIndex = childIds.indexOf(currentCourseId);
 

@@ -1029,7 +1029,7 @@ export const CatalogPage = () => {
               {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
                 <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
                   <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {lang === 'FR' ? "PrÃ©requis AcadÃ©miques" : "Academic Prerequisites"}
+                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
                   </p>
                   <div className="flex flex-col gap-2">
                     {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
@@ -1045,8 +1045,8 @@ export const CatalogPage = () => {
                               : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}>
                             {isSatisfied 
-                              ? (lang === 'FR' ? "âœ“ DÃ©bloquÃ©" : "âœ“ Unlocked") 
-                              : (lang === 'FR' ? "âš  Requis" : "âš  Required")}
+                              ? (lang === 'FR' ? "\u2713 D\u00e9bloqu\u00e9" : "\u2713 Unlocked") 
+                              : (lang === 'FR' ? "\u26a0\ufe0f Requis" : "\u26a0\ufe0f Required")}
                           </span>
                         </div>
                       );

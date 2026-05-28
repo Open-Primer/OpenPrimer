@@ -1919,8 +1919,44 @@ export const authService = {
   isAdmin: () => users[0].role === 'admin'
 };
 
+export const isSandboxFallbackAllowed = (): boolean => {
+  if (process.env.NODE_ENV === 'production') {
+    return false;
+  }
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('op_allow_sandbox') !== 'false';
+  }
+  return true;
+};
+
+export const handleDatabaseError = (error: any) => {
+  console.error("🚨 [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
+      detail: { message: error?.message || String(error) }
+    }));
+  }
+};
+
+async function withFallback<T>(
+  supabaseOp: () => Promise<any> | any,
+  fallbackValue: T
+): Promise<{ data: T | null; error: any }> {
+  try {
+    const { data, error } = await supabaseOp();
+    if (error) throw error;
+    return { data, error: null };
+  } catch (e: any) {
+    if (!isSandboxFallbackAllowed()) {
+      handleDatabaseError(e);
+      return { data: null, error: e };
+    }
+    return { data: fallbackValue, error: null };
+  }
+}
+
 // CHECK IF OFFLINE MODE (Supabase missing or configured with placeholder)
-const isOffline = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project');
+const isOffline = (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) && isSandboxFallbackAllowed();
 
 function generatePedagogicalSummary(
   activeModules: any[], 
@@ -2165,17 +2201,18 @@ export const dbService = {
   },
   getSyllabus: async (id: string) => {
     if (isOffline) {
+      if (!isSandboxFallbackAllowed()) {
+        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
+        handleDatabaseError(err);
+        return { data: null, error: err };
+      }
       const course = mockCourses.find(c => c.slug === id);
       return { data: course || null, error: null };
     }
-    try {
-      const { data, error } = await supabase.from('courses').select('*').eq('slug', id).single();
-      if (error) throw error;
-      return { data, error: null };
-    } catch (e) {
-      const course = mockCourses.find(c => c.slug === id);
-      return { data: course || null, error: null };
-    }
+    return withFallback(
+      () => supabase.from('courses').select('*').eq('slug', id).single(),
+      mockCourses.find(c => c.slug === id) || null
+    );
   },
   
   getAllCourses: async () => {
@@ -2212,15 +2249,20 @@ export const dbService = {
     });
 
     if (isOffline) {
+      if (!isSandboxFallbackAllowed()) {
+        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
+        handleDatabaseError(err);
+        return { data: null, error: err };
+      }
       return { data: computedCourses, error: null };
     }
-    try {
-      const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
-      if (error) throw error;
-      return { data: data || computedCourses, error: null };
-    } catch (e) {
-      return { data: computedCourses, error: null };
-    }
+    return withFallback(
+      async () => {
+        const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
+        return { data, error };
+      },
+      computedCourses
+    );
   },
 
   // USER MGMT

@@ -555,6 +555,71 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
     }
   }
   localStorage.setItem(`op_lang_disciplines_${targetLang}`, JSON.stringify(translatedDisciplines));
+
+  // 3. Translate Socratic Game UI labels automatically
+  const gameTranslations: Record<string, string> = {};
+  const uiLabels = [
+    { key: 'title', val: "The Garden of Socrates" },
+    { key: 'subtitle', val: "The server is offline. Harmonize your thoughts while it restores." },
+    { key: 'offline_status', val: "Interrupted Connection (503)" },
+    { key: 'fragments_label', val: "Fragments of thought" },
+    { key: 'construction_label', val: "Constructed thought" },
+    { key: 'empty_placeholder', val: "Tap the scrambled fragments below in order..." },
+    { key: 'success_label', val: "Wisdom Acquired!" },
+    { key: 'attribution_label', val: "Restored thought from" },
+    { key: 'solved_label', val: "riddles solved" },
+    { key: 'reconnect_btn', val: "Check Connection" },
+    { key: 'next_btn', val: "Next" },
+    { key: 'reconnect_checking', val: "Checking..." }
+  ];
+
+  for (const ui of uiLabels) {
+    try {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLower}&dt=t&q=${encodeURIComponent(ui.val)}`);
+      const data = await res.json();
+      const translatedText = data[0].map((x: any) => x[0]).join('');
+      gameTranslations[ui.key] = translatedText;
+    } catch (e) {
+      gameTranslations[ui.key] = ui.val;
+    }
+  }
+
+  // 4. Translate Socratic Game Quotes automatically
+  const baseQuotes = [
+    { sentence: "I only know that I know nothing", author: "Socrates" },
+    { sentence: "Education is the kindling of a flame", author: "Plato" },
+    { sentence: "Wisdom begins with the definition of terms", author: "Confucius" },
+    { sentence: "The mind is everything, what you think you become", author: "Buddha" },
+    { sentence: "It is not because things are difficult that we do not dare", author: "Seneca" },
+    { sentence: "The quality of your life depends upon the quality of your thoughts", author: "Marcus Aurelius" },
+    { sentence: "A journey of a thousand miles begins with a single step", author: "Lao Tzu" },
+    { sentence: "Good speech is rarer than emerald", author: "Ptahhotep" },
+    { sentence: "I think therefore I am", author: "Descartes" },
+    { sentence: "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself", author: "Rumi" }
+  ];
+
+  const translatedQuotes = [];
+  for (const quote of baseQuotes) {
+    try {
+      const res1 = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLower}&dt=t&q=${encodeURIComponent(quote.sentence)}`);
+      const data1 = await res1.json();
+      const sentenceTr = data1[0].map((x: any) => x[0]).join('');
+
+      const res2 = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLower}&dt=t&q=${encodeURIComponent(quote.author)}`);
+      const data2 = await res2.json();
+      const authorTr = data2[0].map((x: any) => x[0]).join('');
+
+      translatedQuotes.push({
+        sentence: sentenceTr,
+        author: authorTr
+      });
+    } catch (e) {
+      translatedQuotes.push(quote);
+    }
+  }
+
+  gameTranslations['quotes'] = JSON.stringify(translatedQuotes);
+  localStorage.setItem(`op_lang_game_${targetLang}`, JSON.stringify(gameTranslations));
 };
 
 const POTENTIAL_CURRICULA = [

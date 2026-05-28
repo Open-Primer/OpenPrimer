@@ -6,9 +6,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BADGE_LIBRARY } from "@/lib/db";
 import * as Icons from "lucide-react";
 import { X } from "lucide-react";
+import DatabaseOfflineGame from "./DatabaseOfflineGame";
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<any[]>([]);
+  const [dbFailed, setDbFailed] = useState(false);
 
   useEffect(() => {
     const applyTheme = (theme: string) => {
@@ -77,18 +79,24 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       }, 5000);
     };
 
+    const handleDbFailure = () => {
+      setDbFailed(true);
+    };
+
     window.addEventListener("op_reading_mode_changed", handleThemeChange);
     window.addEventListener("op_achievement_unlocked", handleAchievement);
+    window.addEventListener("op_database_connection_failure", handleDbFailure);
 
     return () => {
       window.removeEventListener("op_reading_mode_changed", handleThemeChange);
       window.removeEventListener("op_achievement_unlocked", handleAchievement);
+      window.removeEventListener("op_database_connection_failure", handleDbFailure);
     };
   }, []);
 
   return (
     <LanguageProvider>
-      {children}
+      {dbFailed ? <DatabaseOfflineGame /> : children}
 
       {/* Floating Achievement Toast Manager */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 max-w-sm w-full pointer-events-none px-4 sm:px-0">
