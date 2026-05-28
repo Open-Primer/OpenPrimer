@@ -6,8 +6,79 @@ import { motion } from 'framer-motion';
 import { dbService, ContactFeedback } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 
+export const FEEDBACK_STRINGS = {
+  EN: {
+    title: "Inquiries & Feedback",
+    subtitle: "Read-only log of submitted website contact form inquiries. Strict 90-day automatic retention policy.",
+    refresh: "Refresh Feed",
+    loading: "Loading feedback feed...",
+    days_left: "days left",
+    translating: "Translating...",
+    show_original: "Show Original",
+    translate: "Translate",
+    reply: "Reply via Email",
+    empty_title: "No inquiries found",
+    empty_desc: "Your contact mailbox is currently clean and empty."
+  },
+  FR: {
+    title: "Boîte de Réception des Messages",
+    subtitle: "Consultez les messages envoyés depuis le formulaire de contact. Rétention automatique stricte de 90 jours.",
+    refresh: "Rafraîchir",
+    loading: "Chargement des messages...",
+    days_left: "jours restants",
+    translating: "Traduction...",
+    show_original: "Voir Original",
+    translate: "Traduire",
+    reply: "Répondre par Email",
+    empty_title: "Boîte vide",
+    empty_desc: "Aucun message de contact n'est présent dans la boîte."
+  },
+  ES: {
+    title: "Consultas y Comentarios",
+    subtitle: "Registro de solo lectura de las consultas enviadas. Política de retención automática estricta de 90 días.",
+    refresh: "Actualizar",
+    loading: "Cargando comentarios...",
+    days_left: "días restantes",
+    translating: "Traduciendo...",
+    show_original: "Ver Original",
+    translate: "Traducir",
+    reply: "Responder por Correo",
+    empty_title: "No se encontraron consultas",
+    empty_desc: "Su buzón de contacto está actualmente limpio y vacío."
+  },
+  DE: {
+    title: "Anfragen & Feedback",
+    subtitle: "Schreibgeschütztes Protokoll eingegangener Kontaktformularanfragen. Strikte automatische Aufbewahrungsfrist von 90 Tagen.",
+    refresh: "Aktualisieren",
+    loading: "Feedback-Feed wird geladen...",
+    days_left: "Tage übrig",
+    translating: "Wird übersetzt...",
+    show_original: "Original anzeigen",
+    translate: "Übersetzen",
+    reply: "Per E-Mail antworten",
+    empty_title: "Keine Anfragen gefunden",
+    empty_desc: "Ihr Kontaktpostfach ist derzeit sauber und leer."
+  },
+  ZH: {
+    title: "咨询与反馈",
+    subtitle: "提交的网站联系表单咨询的只读日志。严格的90天自动保留政策。",
+    refresh: "刷新列表",
+    loading: "正在加载反馈列表...",
+    days_left: "天剩余",
+    translating: "正在翻译...",
+    show_original: "显示原文",
+    translate: "翻译",
+    reply: "通过邮件回复",
+    empty_title: "未找到咨询信息",
+    empty_desc: "您的联系邮箱目前干净且空无一物。"
+  }
+};
+
 export default function AdminFeedbackPage() {
-  const { language: lang } = useLanguage();
+  const { language: globalLang } = useLanguage();
+  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  const t = FEEDBACK_STRINGS[lang] || FEEDBACK_STRINGS.EN;
+
   const [contactFeedbacks, setContactFeedbacks] = useState<ContactFeedback[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -59,27 +130,25 @@ export default function AdminFeedbackPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
             <MessageSquare className="w-8 h-8 text-rose-500" />
-            {lang === 'FR' ? 'Boîte de Réception des Messages' : 'Inquiries & Feedback'}
+            {t.title}
           </h1>
           <p className="text-xs text-slate-400 font-medium">
-            {lang === 'FR' 
-              ? 'Consultez les messages envoyés depuis le formulaire de contact. Rétention automatique stricte de 90 jours.' 
-              : 'Read-only log of submitted website contact form inquiries. Strict 90-day automatic retention policy.'}
+            {t.subtitle}
           </p>
         </div>
 
         <button 
           onClick={loadFeedbacks}
-          className="px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-750 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all shadow-md"
+          className="px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-750 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all shadow-md cursor-pointer"
         >
-          {lang === 'FR' ? 'Rafraîchir' : 'Refresh Feed'}
+          {t.refresh}
         </button>
       </div>
 
       {loading ? (
         <div className="py-24 text-center space-y-4">
           <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 font-mono italic">Loading feedback feed...</p>
+          <p className="text-xs text-slate-500 font-mono italic">{t.loading}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -118,7 +187,7 @@ export default function AdminFeedbackPage() {
                     
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span className="px-3 py-1 border border-rose-500/25 bg-rose-500/5 text-rose-400 text-[8px] font-black uppercase rounded-full tracking-wider animate-pulse">
-                        {daysRemaining} {lang === 'FR' ? 'jours restants' : 'days left'}
+                        {daysRemaining} {t.days_left}
                       </span>
                       <span className="text-[9px] text-slate-500 font-mono font-semibold">
                         {formattedDate}
@@ -142,9 +211,9 @@ export default function AdminFeedbackPage() {
                       >
                         <Globe className={`w-3.5 h-3.5 ${translatingIds[fb.id] ? 'animate-spin' : ''}`} />
                         <span>
-                          {translatingIds[fb.id] ? (lang === 'FR' ? 'Traduction...' : 'Translating...') : 
-                           translatedMessages[fb.id] ? (lang === 'FR' ? 'Voir Original' : 'Show Original') :
-                           (lang === 'FR' ? 'Traduire' : 'Translate')}
+                          {translatingIds[fb.id] ? t.translating : 
+                           translatedMessages[fb.id] ? t.show_original :
+                           t.translate}
                         </span>
                       </button>
                     </div>
@@ -158,7 +227,7 @@ export default function AdminFeedbackPage() {
                     className="flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white text-[9.5px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-600/10 cursor-pointer"
                   >
                     <Mail className="w-3.5 h-3.5" />
-                    {lang === 'FR' ? 'Répondre par Email' : 'Reply via Email'}
+                    {t.reply}
                   </a>
                 </div>
               </motion.div>
@@ -169,11 +238,9 @@ export default function AdminFeedbackPage() {
             <div className="col-span-full p-24 border-2 border-dashed border-slate-900 rounded-[48px] text-center space-y-4">
               <MessageSquare className="w-12 h-12 text-slate-800 mx-auto" />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-400">{lang === 'FR' ? 'Boîte vide' : 'No inquiries found'}</p>
+                <p className="text-sm font-bold text-slate-400">{t.empty_title}</p>
                 <p className="text-xs text-slate-655 max-w-xs mx-auto">
-                  {lang === 'FR' 
-                    ? 'Aucun message de contact n\'est présent dans la boîte.' 
-                    : 'Your contact mailbox is currently clean and empty.'}
+                  {t.empty_desc}
                 </p>
               </div>
             </div>

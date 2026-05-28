@@ -319,7 +319,6 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
 
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   const getPersonaName = (pName: string) => {
     const selected = personalities.find(p => p.name === pName || p.id === pName);
@@ -537,9 +536,29 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div>
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
-                   <span className="text-sm font-bold text-white">
-                     {getPersonaName(persona)}
-                   </span>
+                                       <select
+                      value={persona}
+                      onChange={(e) => {
+                        const nextPersona = e.target.value;
+                        setPersona(nextPersona);
+                        const selected = personalities.find(p => p.name === nextPersona || p.id === nextPersona || p.translations?.EN?.name === nextPersona);
+                        if (selected) {
+                          localStorage.setItem('op_active_tutor_personality', selected.id);
+                          window.dispatchEvent(new CustomEvent('op_active_tutor_changed'));
+                        }
+                      }}
+                      className="bg-transparent text-sm font-bold text-white border-none focus:outline-none focus:ring-0 cursor-pointer p-0 pr-6"
+                    >
+                      {personalities.length > 0 ? (
+                        personalities.map(p => (
+                          <option key={p.id} value={p.name} className="bg-slate-900 text-white text-xs">
+                            {p.translations?.[lang]?.name || p.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="Socratic Coach" className="bg-slate-900 text-white text-xs">Socratic Coach</option>
+                      )}
+                    </select>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
@@ -633,45 +652,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
         )}
       </AnimatePresence>
 
-      {/* Guest Hover Sign-In Tooltip */}
-      <AnimatePresence>
-        {showTooltip && !isLoggedIn && !isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="absolute bottom-20 right-0 w-72 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl backdrop-blur-3xl space-y-3 z-50 text-left"
-          >
-            <div className="flex items-center gap-2 text-blue-400">
-              <Sparkles className="w-4 h-4 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
-                {lang === 'FR' ? `Tuteur ${getPersonaName(persona)} IA` : `${getPersonaName(persona)} AI Tutor`}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {lang === 'FR' 
-                ? "Le contenu pédagogique est libre et gratuit. Cependant, l'interaction avec le Tuteur IA nécessite une connexion afin d'initialiser votre session et gérer votre suivi pédagogique au mieux." 
-                : "Course materials are completely free. However, AI interaction requires being signed in to initialize your session context and track your pedagogical progress at its best."}
-            </p>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAuthClick('signup');
-              }}
-              className="w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg cursor-pointer text-center"
-            >
-              {lang === 'FR' ? "Créer un Compte" : "Sign Up"}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.button 
         whileHover={{ scale: 1.1 }} 
         whileTap={{ scale: 0.9 }} 
         onClick={() => setIsOpen(!isOpen)}
-        onMouseEnter={() => !isLoggedIn && setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
         className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group cursor-pointer"
       >
         <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />

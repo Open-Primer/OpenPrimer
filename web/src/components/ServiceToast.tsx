@@ -15,6 +15,7 @@ const SERVICE_LABELS: Record<string, Record<string, string>> = {
 const STATUS_MSGS: Record<string, Record<string, string>> = {
   offline:  { EN: 'offline – retrying…', FR: 'hors ligne – reconnexion…', ES: 'sin conexión – reintentando…', DE: 'offline – Wiederverbindung…', ZH: '离线 – 重试中…' },
   degraded: { EN: 'degraded – monitoring…', FR: 'dégradé – surveillance…', ES: 'degradado – monitoreando…', DE: 'eingeschränkt – Überwachung…', ZH: '服务降级 – 监测中…' },
+  unauthorized: { EN: 'authentication required', FR: 'authentification requise', ES: 'autenticación requerida', DE: 'Authentifizierung erforderlich', ZH: '需要身份验证' },
   ok:       { EN: '✓ restored', FR: '✓ rétabli', ES: '✓ restablecido', DE: '✓ wiederhergestellt', ZH: '✓ 已恢复' },
 };
 

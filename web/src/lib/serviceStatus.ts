@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-export type ServiceStatus = 'ok' | 'degraded' | 'offline' | 'unknown';
+export type ServiceStatus = 'ok' | 'degraded' | 'offline' | 'unknown' | 'unauthorized';
 
 export interface ServiceHealth {
   id: string;

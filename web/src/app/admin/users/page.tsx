@@ -4,6 +4,175 @@ import React, { useState, useEffect } from 'react';
 import { dbService, UserProfile, UserRole } from '@/lib/db';
 import { Search, UserCog, Shield, ShieldCheck, Mail, Calendar, ChevronRight, Ban, Trash2, Check, X, AlertCircle, PlusCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+
+export const USERS_STRINGS = {
+  EN: {
+    title: "Identity Control",
+    subtitle: "Manage platform security and administrative roles.",
+    add_student: "Add Student",
+    search_placeholder: "Search students...",
+    col_identity: "Identity",
+    col_privileges: "Privileges",
+    col_progress: "Progress",
+    col_status: "Status",
+    col_access: "Access Control",
+    admin_role: "Admin",
+    student_role: "Student",
+    status_blocked: "Blocked",
+    status_active: "Active",
+    confirm_title: "Confirm Action",
+    confirm_msg: "Are you sure you want to perform this action? This action may be irreversible.",
+    cancel: "Cancel",
+    execute: "Execute",
+    add_title: "Add New Student",
+    full_name: "Full Name",
+    email_address: "Email Address",
+    system_role: "System Role",
+    lang_pref: "Language Preference",
+    visual_theme: "Visual Theme",
+    create_profile: "Create Student Profile",
+    error_required: "Name and Email are strictly required fields.",
+    error_email: "Please supply a valid corporate or academic email address.",
+    student_opt: "🎓 Student Profile (Default)",
+    admin_opt: "🛡️ Administrator privileges",
+    theme_default: "✨ Default (Dark)",
+    theme_paper: "📜 Paper (Sepia)",
+    theme_focus: "👁️ Focus (Black)"
+  },
+  FR: {
+    title: "Contrôle d'Identité",
+    subtitle: "Gérez la sécurité de la plateforme et les rôles administratifs.",
+    add_student: "Ajouter un Étudiant",
+    search_placeholder: "Rechercher des étudiants...",
+    col_identity: "Identité",
+    col_privileges: "Privilèges",
+    col_progress: "Progression",
+    col_status: "Statut",
+    col_access: "Contrôle d'Accès",
+    admin_role: "Admin",
+    student_role: "Étudiant",
+    status_blocked: "Bloqué",
+    status_active: "Actif",
+    confirm_title: "Confirmer l'Action",
+    confirm_msg: "Êtes-vous sûr de vouloir effectuer cette action ? Cette action peut être irréversible.",
+    cancel: "Annuler",
+    execute: "Exécuter",
+    add_title: "Ajouter un Nouvel Étudiant",
+    full_name: "Nom Complet",
+    email_address: "Adresse Email",
+    system_role: "Rôle Système",
+    lang_pref: "Préférence de Langue",
+    visual_theme: "Thème Visuel",
+    create_profile: "Créer le Profil Étudiant",
+    error_required: "Le nom et l'email sont strictement requis.",
+    error_email: "Veuillez fournir une adresse email valide.",
+    student_opt: "🎓 Profil Étudiant (Par défaut)",
+    admin_opt: "🛡️ Privilèges Administrateur",
+    theme_default: "✨ Par défaut (Sombre)",
+    theme_paper: "📜 Papier (Sépia)",
+    theme_focus: "👁️ Focus (Noir)"
+  },
+  ES: {
+    title: "Control de Identidad",
+    subtitle: "Gestione la seguridad de la plataforma y los roles administrativos.",
+    add_student: "Añadir Estudiante",
+    search_placeholder: "Buscar estudiantes...",
+    col_identity: "Identidad",
+    col_privileges: "Privilegios",
+    col_progress: "Progreso",
+    col_status: "Estado",
+    col_access: "Control de Acceso",
+    admin_role: "Administrador",
+    student_role: "Estudiante",
+    status_blocked: "Bloqueado",
+    status_active: "Activo",
+    confirm_title: "Confirmar Acción",
+    confirm_msg: "¿Está seguro de que desea realizar esta acción? Esta acción puede ser irreversible.",
+    cancel: "Cancelar",
+    execute: "Ejecutar",
+    add_title: "Añadir Nuevo Estudiante",
+    full_name: "Nombre Completo",
+    email_address: "Dirección de Correo",
+    system_role: "Rol del Sistema",
+    lang_pref: "Preferencia de Idioma",
+    visual_theme: "Tema Visual",
+    create_profile: "Crear Perfil de Estudiante",
+    error_required: "El nombre y el correo electrónico son campos estrictamente requeridos.",
+    error_email: "Por favor proporcione una dirección de correo válida.",
+    student_opt: "🎓 Perfil de Estudiante (Predeterminado)",
+    admin_opt: "🛡️ Privilegios de Administrador",
+    theme_default: "✨ Predeterminado (Oscuro)",
+    theme_paper: "📜 Papel (Sepia)",
+    theme_focus: "👁️ Enfoque (Negro)"
+  },
+  DE: {
+    title: "Identitätskontrolle",
+    subtitle: "Verwalten Sie die Plattformsicherheit und administrative Rollen.",
+    add_student: "Student hinzufügen",
+    search_placeholder: "Studenten suchen...",
+    col_identity: "Identität",
+    col_privileges: "Privilegien",
+    col_progress: "Fortschritt",
+    col_status: "Status",
+    col_access: "Zugriffskontrolle",
+    admin_role: "Admin",
+    student_role: "Student",
+    status_blocked: "Blockiert",
+    status_active: "Aktiv",
+    confirm_title: "Aktion bestätigen",
+    confirm_msg: "Sind Sie sicher, dass Sie diese Aktion ausführen möchten? Diese Aktion kann unwiderruflich sein.",
+    cancel: "Abbrechen",
+    execute: "Ausführen",
+    add_title: "Neuen Studenten hinzufügen",
+    full_name: "Vollständiger Name",
+    email_address: "E-Mail-Adresse",
+    system_role: "Systemrolle",
+    lang_pref: "Bevorzugte Sprache",
+    visual_theme: "Visuelles Thema",
+    create_profile: "Studentenprofil erstellen",
+    error_required: "Name und E-Mail-Adresse sind Pflichtfelder.",
+    error_email: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    student_opt: "🎓 Studentenprofil (Standard)",
+    admin_opt: "🛡️ Administratorrechte",
+    theme_default: "✨ Standard (Dunkel)",
+    theme_paper: "📜 Papier (Sepia)",
+    theme_focus: "👁️ Fokus (Schwarz)"
+  },
+  ZH: {
+    title: "身份与权限控制",
+    subtitle: "管理平台安全架构和管理员权限角色。",
+    add_student: "添加学生",
+    search_placeholder: "搜索学生账号...",
+    col_identity: "身份信息",
+    col_privileges: "特权角色",
+    col_progress: "学习进度",
+    col_status: "账号状态",
+    col_access: "访问控制",
+    admin_role: "管理员",
+    student_role: "学生",
+    status_blocked: "已封禁",
+    status_active: "活跃",
+    confirm_title: "确认执行操作",
+    confirm_msg: "您确定要执行此操作吗？该操作可能是不可逆的。",
+    cancel: "取消",
+    execute: "执行",
+    add_title: "注册新学生账号",
+    full_name: "姓名",
+    email_address: "电子邮箱地址",
+    system_role: "系统角色",
+    lang_pref: "首选语言偏好",
+    visual_theme: "界面视觉主题",
+    create_profile: "创建学生档案",
+    error_required: "姓名和邮箱是必填项！",
+    error_email: "请输入有效的公司或学校电子邮箱地址。",
+    student_opt: "🎓 普通学生账号 (默认)",
+    admin_opt: "🛡️ 平台系统管理员权限",
+    theme_default: "✨ 默认极黑 (深色)",
+    theme_paper: "📜 羊皮纸张 (褐色)",
+    theme_focus: "👁️ 专注模式 (纯黑)"
+  }
+};
 
 const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
   if (field !== currentField) return <span className="ml-1 text-slate-700 hover:text-slate-400 cursor-pointer">⇅</span>;
@@ -11,6 +180,10 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
 };
  
 export default function AdminUsers() {
+  const { language: globalLang } = useLanguage();
+  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  const t = USERS_STRINGS[lang] || USERS_STRINGS.EN;
+
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSortField, setUserSortField] = useState<string>('name');
   const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('asc');
@@ -52,12 +225,12 @@ export default function AdminUsers() {
     setNewUserError(null);
  
     if (!newName.trim() || !newEmail.trim()) {
-      setNewUserError("Name and Email are strictly required fields.");
+      setNewUserError(t.error_required);
       return;
     }
  
     if (!newEmail.includes('@') || !newEmail.includes('.')) {
-      setNewUserError("Please supply a valid corporate or academic email address.");
+      setNewUserError(t.error_email);
       return;
     }
  
@@ -84,7 +257,7 @@ export default function AdminUsers() {
     u.name.toLowerCase().includes(search.toLowerCase()) || 
     u.email.toLowerCase().includes(search.toLowerCase())
   );
-
+ 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     let valA = a[userSortField as keyof typeof a];
     let valB = b[userSortField as keyof typeof b];
@@ -105,9 +278,9 @@ export default function AdminUsers() {
         <div className="space-y-2">
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
             <UserCog className="w-8 h-8 text-blue-500" />
-            Identity Control
+            {t.title}
           </h1>
-          <p className="text-xs text-slate-400 font-medium">Manage platform security and administrative roles.</p>
+          <p className="text-xs text-slate-400 font-medium">{t.subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <button 
@@ -115,14 +288,14 @@ export default function AdminUsers() {
             id="add-student-btn"
             className="flex items-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-blue-600/10 active:scale-95"
           >
-            <PlusCircle className="w-4 h-4" /> Add Student
+            <PlusCircle className="w-4 h-4" /> {t.add_student}
           </button>
           <div className="relative w-72">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
              <input 
                value={search}
                onChange={(e) => setSearch(e.target.value)}
-               placeholder="Search students..." 
+               placeholder={t.search_placeholder} 
                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium" 
              />
           </div>
@@ -141,7 +314,7 @@ export default function AdminUsers() {
                   setUserSortDir('asc');
                 }
               }}>
-                Identity {renderSortIndicator('name', userSortField, userSortDir)}
+                {t.col_identity} {renderSortIndicator('name', userSortField, userSortDir)}
               </th>
               <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
                 if (userSortField === 'role') {
@@ -151,7 +324,7 @@ export default function AdminUsers() {
                   setUserSortDir('asc');
                 }
               }}>
-                Privileges {renderSortIndicator('role', userSortField, userSortDir)}
+                {t.col_privileges} {renderSortIndicator('role', userSortField, userSortDir)}
               </th>
               <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
                 if (userSortField === 'level') {
@@ -161,7 +334,7 @@ export default function AdminUsers() {
                   setUserSortDir('asc');
                 }
               }}>
-                Progress {renderSortIndicator('level', userSortField, userSortDir)}
+                {t.col_progress} {renderSortIndicator('level', userSortField, userSortDir)}
               </th>
               <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer select-none" onClick={() => {
                 if (userSortField === 'isBlocked') {
@@ -171,9 +344,9 @@ export default function AdminUsers() {
                   setUserSortDir('asc');
                 }
               }}>
-                Status {renderSortIndicator('isBlocked', userSortField, userSortDir)}
+                {t.col_status} {renderSortIndicator('isBlocked', userSortField, userSortDir)}
               </th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">Access Control</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">{t.col_access}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/30">
@@ -201,10 +374,10 @@ export default function AdminUsers() {
                    >
                      {user.role === 'admin' ? (
                        <span className="px-2 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1 border border-blue-500/20">
-                         <ShieldCheck className="w-3 h-3" /> Admin
+                         <ShieldCheck className="w-3 h-3" /> {t.admin_role}
                        </span>
                      ) : (
-                       <span className="px-2 py-1 rounded-md bg-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-widest hover:text-blue-400 transition-colors">Student</span>
+                       <span className="px-2 py-1 rounded-md bg-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-widest hover:text-blue-400 transition-colors">{t.student_role}</span>
                      )}
                    </button>
                 </td>
@@ -233,11 +406,11 @@ export default function AdminUsers() {
                    >
                      {user.isBlocked ? (
                         <span className="px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-red-500/20 transition-colors" data-testid={`status-label-${user.id}`}>
-                          <Ban className="w-3 h-3" /> Blocked
+                          <Ban className="w-3 h-3" /> {t.status_blocked}
                         </span>
                      ) : (
                         <span className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-emerald-500/20 transition-colors" data-testid={`status-label-${user.id}`}>
-                          <Check className="w-3 h-3" /> Active
+                          <Check className="w-3 h-3" /> {t.status_active}
                         </span>
                      )}
                    </button>
@@ -246,7 +419,7 @@ export default function AdminUsers() {
                    <div className="flex justify-end gap-2">
                      <button 
                       onClick={() => setConfirmingAction({ type: 'delete', userId: user.id })}
-                      className="p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-white hover:bg-red-650 transition-all delete-user-btn"
+                      className="p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-white hover:bg-red-650 transition-all delete-user-btn cursor-pointer"
                       data-testid={`delete-btn-${user.id}`}
                       title="Delete User"
                      >
@@ -272,13 +445,13 @@ export default function AdminUsers() {
               <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-6 mx-auto">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-black mb-2 text-center text-white">Confirm Action</h3>
+              <h3 className="text-xl font-black mb-2 text-center text-white">{t.confirm_title}</h3>
               <p className="text-slate-500 text-center text-xs mb-8">
-                Are you sure you want to {confirmingAction.type} this user? This action may be irreversible.
+                {t.confirm_msg}
               </p>
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setConfirmingAction(null)} className="py-4 rounded-2xl bg-slate-800 text-slate-300 font-black text-[10px] uppercase tracking-widest cursor-pointer">Cancel</button>
-                <button onClick={handleAction} id="confirm-execute-btn" className="py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-widest cursor-pointer">Execute</button>
+                <button onClick={() => setConfirmingAction(null)} className="py-4 rounded-2xl bg-slate-800 text-slate-300 font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.cancel}</button>
+                <button onClick={handleAction} id="confirm-execute-btn" className="py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.execute}</button>
               </div>
             </motion.div>
           </div>
@@ -295,7 +468,7 @@ export default function AdminUsers() {
               className="relative w-full max-w-md p-8 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl"
             >
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-lg font-black uppercase tracking-wider text-white">Add New Student</h3>
+                <h3 className="text-lg font-black uppercase tracking-wider text-white">{t.add_title}</h3>
                 <button onClick={() => setIsAddUserOpen(false)} className="text-slate-500 hover:text-white cursor-pointer"><X className="w-5 h-5" /></button>
               </div>
  
@@ -308,7 +481,7 @@ export default function AdminUsers() {
                 )}
  
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">Full Name <span className="text-red-500">*</span></label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.full_name} <span className="text-red-500">*</span></label>
                   <input 
                     required
                     type="text"
@@ -321,7 +494,7 @@ export default function AdminUsers() {
                 </div>
  
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">Email Address <span className="text-red-500">*</span></label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.email_address} <span className="text-red-500">*</span></label>
                   <input 
                     required
                     type="email"
@@ -332,23 +505,23 @@ export default function AdminUsers() {
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
                   />
                 </div>
-
+ 
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">System Role</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.system_role}</label>
                   <select 
                     id="student-role-select"
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value as UserRole)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
                   >
-                    <option value="student" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🎓 Student Profile (Default)</option>
-                    <option value="admin" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🛡️ Administrator privileges</option>
+                    <option value="student" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.student_opt}</option>
+                    <option value="admin" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.admin_opt}</option>
                   </select>
                 </div>
-
+ 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">Language Preference</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.lang_pref}</label>
                     <select 
                       id="student-lang-select"
                       value={newLang}
@@ -362,18 +535,18 @@ export default function AdminUsers() {
                       <option value="ZH" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇨🇳 中文 (ZH)</option>
                     </select>
                   </div>
-
+ 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">Visual Theme</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.visual_theme}</label>
                     <select 
                       id="student-theme-select"
                       value={newReadingMode}
                       onChange={(e) => setNewReadingMode(e.target.value)}
                       className="w-full bg-slate-955 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
                     >
-                      <option value="default" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>✨ Default (Dark)</option>
-                      <option value="paper" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>📜 Paper (Sepia)</option>
-                      <option value="focus" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>👁️ Focus (Black)</option>
+                      <option value="default" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_default}</option>
+                      <option value="paper" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_paper}</option>
+                      <option value="focus" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_focus}</option>
                     </select>
                   </div>
                 </div>
@@ -383,7 +556,7 @@ export default function AdminUsers() {
                   id="submit-student-btn"
                   className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 cursor-pointer active:scale-95 transition-all mt-4"
                 >
-                  Create Student Profile
+                  {t.create_profile}
                 </button>
               </form>
             </motion.div>

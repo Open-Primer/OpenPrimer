@@ -5,9 +5,12 @@ const BASE_URL = 'http://localhost:3000';
 test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', () => {
 
   test.beforeEach(async ({ page }) => {
-    // 1. Force the English locale via localStorage for uniform testing
     await page.goto(BASE_URL);
-    await page.evaluate(() => localStorage.setItem('openprimer_lang', 'EN'));
+    await page.evaluate(() => {
+      localStorage.setItem('openprimer_lang', 'EN');
+      localStorage.setItem('op_session', 'true');
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+    });
     await page.reload();
   });
 
@@ -76,11 +79,16 @@ test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', (
     await stoicCard.locator('button:has-text("Set as Default")').click();
 
     // Now delete Socratic Coach cleanly
-    page.once('dialog', async dialog => {
-      await dialog.accept();
-    });
+    // Open custom confirmation modal by clicking level 3 button
+    // Custom modal handled below
+    // Listener removed
     const newSocraticCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Socratic Coach' }) }).first();
     await newSocraticCard.locator('button[title*="Delete"]').click();
+    
+    // Accept custom double-safeguard modal
+    const confirmBtn = page.locator('button:has-text("Confirm Delete"), button:has-text("Confirmer la suppression")').first();
+    await expect(confirmBtn).toBeVisible();
+    await confirmBtn.click();
     await expect(page.locator('h3:has-text("Socratic Coach")')).not.toBeVisible();
 
     // Try deleting Philosophical Stoic, which is now default. It should fail since it's default!

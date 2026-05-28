@@ -198,6 +198,11 @@ export const DASHBOARD_STRINGS = {
   }
 };
 
+const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
+  if (field !== currentField) return <span className="ml-1 text-slate-700 hover:text-slate-400 cursor-pointer">⇅</span>;
+  return currentDir === 'asc' ? <span className="ml-1 text-blue-400 cursor-pointer">▲</span> : <span className="ml-1 text-blue-400 cursor-pointer">▼</span>;
+};
+
 const StatCard = ({ title, value, icon, trend }: { title: string, value: string, icon: React.ReactNode, trend: string }) => (
   <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all group">
     <div className="flex justify-between items-start mb-6">
@@ -227,6 +232,8 @@ export default function AdminDashboard() {
   const [topStudents, setTopStudents] = useState<any[]>([]);
   const [agentMetrics, setAgentMetrics] = useState<any[]>([]);
   const [pendingEmails, setPendingEmails] = useState<any[]>([]);
+  const [metricsSortField, setMetricsSortField] = useState<string>('name');
+  const [metricsSortDir, setMetricsSortDir] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     async function loadStats() {
@@ -279,6 +286,32 @@ export default function AdminDashboard() {
     if (val < 30) return 'bg-emerald-600 border-emerald-500';
     return 'bg-emerald-400 border-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]';
   };
+
+  const sortedMetrics = [...agentMetrics].sort((a, b) => {
+    if (metricsSortField === 'name') {
+      const valA = (lang === 'FR' ? a.nameFR : a.nameEN || '').toLowerCase();
+      const valB = (lang === 'FR' ? b.nameFR : b.nameEN || '').toLowerCase();
+      if (valA < valB) return metricsSortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return metricsSortDir === 'asc' ? 1 : -1;
+      return 0;
+    }
+    if (metricsSortField === 'avgResponseTime') {
+      const numA = parseFloat(a.avgResponseTime || '0');
+      const numB = parseFloat(b.avgResponseTime || '0');
+      return metricsSortDir === 'asc' ? numA - numB : numB - numA;
+    }
+    let valA = a[metricsSortField as keyof typeof a];
+    let valB = b[metricsSortField as keyof typeof b];
+    if (typeof valA === 'string') {
+      valA = valA.toLowerCase();
+      valB = (valB as string).toLowerCase();
+    }
+    if (valA === undefined) return 1;
+    if (valB === undefined) return -1;
+    if (valA < valB) return metricsSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return metricsSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="space-y-12">
@@ -333,15 +366,60 @@ export default function AdminDashboard() {
             <table className="w-full border-collapse text-left text-xs text-slate-350">
               <thead>
                 <tr className="border-b border-slate-850 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                  <th className="px-6 py-4">{t.agent_name}</th>
-                  <th className="px-6 py-4">{t.cost_launch}</th>
-                  <th className="px-6 py-4">{t.cost_30d}</th>
-                  <th className="px-6 py-4">{t.requests}</th>
-                  <th className="px-6 py-4">{t.latency}</th>
+                  <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                    if (metricsSortField === 'name') {
+                      setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setMetricsSortField('name');
+                      setMetricsSortDir('asc');
+                    }
+                  }}>
+                    {t.agent_name} {renderSortIndicator('name', metricsSortField, metricsSortDir)}
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                    if (metricsSortField === 'totalCost') {
+                      setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setMetricsSortField('totalCost');
+                      setMetricsSortDir('asc');
+                    }
+                  }}>
+                    {t.cost_launch} {renderSortIndicator('totalCost', metricsSortField, metricsSortDir)}
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                    if (metricsSortField === 'rolling30DaysCost') {
+                      setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setMetricsSortField('rolling30DaysCost');
+                      setMetricsSortDir('asc');
+                    }
+                  }}>
+                    {t.cost_30d} {renderSortIndicator('rolling30DaysCost', metricsSortField, metricsSortDir)}
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                    if (metricsSortField === 'requests') {
+                      setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setMetricsSortField('requests');
+                      setMetricsSortDir('asc');
+                    }
+                  }}>
+                    {t.requests} {renderSortIndicator('requests', metricsSortField, metricsSortDir)}
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                    if (metricsSortField === 'avgResponseTime') {
+                      setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setMetricsSortField('avgResponseTime');
+                      setMetricsSortDir('asc');
+                    }
+                  }}>
+                    {t.latency} {renderSortIndicator('avgResponseTime', metricsSortField, metricsSortDir)}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850/50">
-                {agentMetrics.map((item) => (
+                {sortedMetrics.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-900/20 transition-all">
                     <td className="px-6 py-4 font-bold text-slate-200">
                       {lang === 'FR' ? item.nameFR : item.nameEN}

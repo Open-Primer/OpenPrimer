@@ -2136,6 +2136,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       users = users.filter(u => u.id !== id);
@@ -2151,8 +2152,10 @@ export const dbService = {
       return { data: null, error: null };
     }
     try {
-      const { data: user } = await supabase.from('profiles').select('isBlocked').eq('id', id).single();
+      const { data: user, error: selectError } = await supabase.from('profiles').select('isBlocked').eq('id', id).single();
+      if (selectError || !user) throw selectError || new Error("User not found");
       const { data, error } = await supabase.from('profiles').update({ isBlocked: !user?.isBlocked }).eq('id', id);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       users = users.map(u => u.id === id ? { ...u, isBlocked: !u.isBlocked } : u);
@@ -2169,6 +2172,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       users = users.map(u => u.id === id ? { ...u, role: role as UserRole } : u);
@@ -2203,10 +2207,11 @@ export const dbService = {
           const statsData = await res.json();
           return {
             data: {
-              total_students: users.length,
+              total_students: statsData.total_students,
               active_curricula: statsData.total_curricula,
               total_languages: statsData.total_languages,
               total_courses: statsData.total_courses,
+              validation_rate: statsData.validation_rate,
               platform_rating: "4.8/5"
             },
             error: null
@@ -2494,6 +2499,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('id', id);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       reportClusters = reportClusters.map(c => c.id === id ? { ...c, status: 'Fixed' } : c);
@@ -2510,6 +2516,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('status', 'Pending');
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       reportClusters = reportClusters.map(c => c.status === 'Pending' ? { ...c, status: 'Fixed' } : c);
@@ -2527,6 +2534,7 @@ export const dbService = {
     try {
       const { data: course } = await supabase.from('courses').select('is_active').eq('id', courseId).single();
       const { data, error } = await supabase.from('courses').update({ is_active: !course?.is_active }).eq('id', courseId);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, is_active: !c.is_active } : c);
@@ -2548,9 +2556,11 @@ export const dbService = {
     try {
       if (level === 3) {
         const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+        if (error) throw error;
         return { data, error };
       }
       const { data, error } = await supabase.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       if (level === 3) {
@@ -2616,6 +2626,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       mockCourses = mockCourses.filter(c => c.id !== courseId);
@@ -2797,6 +2808,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('achievements').delete().eq('id', id);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       return { data: null, error: null };
@@ -3089,6 +3101,7 @@ export const dbService = {
     }
     try {
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+      if (error) throw error;
       return { data, error };
     } catch (e) {
       return { data: null, error: null };

@@ -1061,34 +1061,78 @@ export const CatalogPage = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setSelectedEnrollCourse(null)}
-                  className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (!isLoggedIn) {
+              {!isLoggedIn ? (
+                <div className="space-y-6 pt-4 border-t border-slate-850 w-full">
+                  <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl">
+                    <h5 className="text-xs font-black text-blue-400 uppercase tracking-wider mb-2 font-sans">
+                      {lang === 'FR' ? "Pourquoi créer un compte ?" : "Why create an account?"}
+                    </h5>
+                    <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                      {lang === 'FR' 
+                        ? "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'obtenir vos ECTS, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes." 
+                        : "A free account allows you to save your progress permanently, earn your academic ECTS validations, unlock certifications, and interact with your personal AI Tutor."}
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => {
+                        setSelectedEnrollCourse(null);
+                        window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
+                      }}
+                      className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 text-center cursor-pointer font-sans"
+                    >
+                      {lang === 'FR' ? "Créer un Compte" : "Create an Account"}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setSelectedEnrollCourse(null);
+                        window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'login' }));
+                      }}
+                      className="flex-1 py-3.5 bg-slate-800 border border-slate-750 text-slate-300 font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:text-white hover:border-slate-700 text-center cursor-pointer font-sans"
+                    >
+                      {lang === 'FR' ? "Se Connecter" : "Log In"}
+                    </button>
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <button
+                      onClick={() => {
+                        setSelectedEnrollCourse(null);
+                        window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+                      }}
+                      className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2 inline-flex items-center gap-1.5 font-sans"
+                    >
+                      <span>{lang === 'FR' ? "Démarrer avec des fonctions limitées" : "Start learning with limited features"}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4 w-full">
+                  <button 
+                    onClick={() => setSelectedEnrollCourse(null)}
+                    className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer font-sans"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Enroll course
+                      const updated = [...enrolledIds, selectedEnrollCourse.id];
+                      setEnrolledIds(updated);
+                      localStorage.setItem('op_enrolled_courses', JSON.stringify(updated));
                       setSelectedEnrollCourse(null);
-                      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
-                      return;
-                    }
-                    // Enroll course
-                    const updated = [...enrolledIds, selectedEnrollCourse.id];
-                    setEnrolledIds(updated);
-                    localStorage.setItem('op_enrolled_courses', JSON.stringify(updated));
-                    setSelectedEnrollCourse(null);
-                    // Redirect to course
-                    window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
-                  }}
-                  className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Rocket className="w-4 h-4" />
-                  {isLoggedIn ? (lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning") : (lang === 'FR' ? "Créer un Compte pour s'Inscrire" : "Sign Up to Enroll")}
-                </button>
-              </div>
+                      // Redirect to course
+                      window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+                    }}
+                    className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer font-sans"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    {lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning"}
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity, Database, Mail, Cpu, Image, RefreshCw,
-  CheckCircle, AlertTriangle, WifiOff, ExternalLink, Clock
+  CheckCircle, AlertTriangle, WifiOff, ExternalLink, Clock,
+  Lock, Eye, EyeOff
 } from 'lucide-react';
 import { useServiceStatus, ServiceHealth } from '../../../lib/serviceStatus';
 import { dbService, progressService } from '../../../lib/db';
@@ -21,6 +22,7 @@ const HEALTH_STRINGS = {
     status_ok: 'Operational',
     status_degraded: 'Degraded',
     status_offline: 'Offline',
+    status_unauthorized: 'Auth Required',
     status_unknown: 'Unknown',
     health_db: 'Supabase Database',
     health_email: 'Resend Email API',
@@ -65,6 +67,7 @@ const HEALTH_STRINGS = {
     status_ok: 'Opérationnel',
     status_degraded: 'Dégradé',
     status_offline: 'Hors ligne',
+    status_unauthorized: 'Auth Requise',
     status_unknown: 'Inconnu',
     health_db: 'Base de données Supabase',
     health_email: 'API Email Resend',
@@ -109,6 +112,7 @@ const HEALTH_STRINGS = {
     status_ok: 'Operacional',
     status_degraded: 'Degradado',
     status_offline: 'Sin conexión',
+    status_unauthorized: 'Auth Requerido',
     status_unknown: 'Desconocido',
     health_db: 'Base de datos Supabase',
     health_email: 'API de Email Resend',
@@ -153,6 +157,7 @@ const HEALTH_STRINGS = {
     status_ok: 'Betriebsbereit',
     status_degraded: 'Eingeschränkt',
     status_offline: 'Offline',
+    status_unauthorized: 'Auth Erforderlich',
     status_unknown: 'Unbekannt',
     health_db: 'Supabase Datenbank',
     health_email: 'Resend E-Mail API',
@@ -197,6 +202,7 @@ const HEALTH_STRINGS = {
     status_ok: '正常运行',
     status_degraded: '服务降级',
     status_offline: '离线',
+    status_unauthorized: '需要验证',
     status_unknown: '未知',
     health_db: 'Supabase 数据库',
     health_email: 'Resend 邮件 API',
@@ -259,6 +265,11 @@ function StatusBadge({ status, t }: { status: ServiceHealth['status']; t: typeof
       <AlertTriangle className="w-3 h-3" /> {t.status_degraded}
     </span>
   );
+  if (status === 'unauthorized') return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-black rounded-full uppercase tracking-widest">
+      <Lock className="w-3 h-3" /> {(t as any).status_unauthorized || 'Auth Required'}
+    </span>
+  );
   if (status === 'offline') return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-black rounded-full uppercase tracking-widest">
       <WifiOff className="w-3 h-3" /> {t.status_offline}
@@ -281,7 +292,7 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
 
   const borderColor = svc.status === 'ok' ? 'border-slate-800 hover:border-emerald-500/20'
     : svc.status === 'offline' ? 'border-red-500/20'
-    : svc.status === 'degraded' ? 'border-amber-500/20'
+    : svc.status === 'degraded' || svc.status === 'unauthorized' ? 'border-amber-500/20'
     : 'border-slate-800';
 
   return (
@@ -410,6 +421,9 @@ export default function ServerHealthPage() {
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
   const [resendApiKey, setResendApiKey] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [showSbKey, setShowSbKey] = useState(false);
+  const [showResendKey, setShowResendKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [notif, setNotif] = useState<string | null>(null);
 
   // Load hot-swap keys on mount
@@ -424,10 +438,18 @@ export default function ServerHealthPage() {
 
   const handleSaveKeys = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('op_supabase_url', supabaseUrl);
-    localStorage.setItem('op_supabase_anon_key', supabaseAnonKey);
-    localStorage.setItem('op_resend_api_key', resendApiKey);
-    localStorage.setItem('op_gemini_api_key', geminiApiKey);
+    if (supabaseUrl) localStorage.setItem('op_supabase_url', supabaseUrl);
+    else localStorage.removeItem('op_supabase_url');
+
+    if (supabaseAnonKey) localStorage.setItem('op_supabase_anon_key', supabaseAnonKey);
+    else localStorage.removeItem('op_supabase_anon_key');
+
+    if (resendApiKey) localStorage.setItem('op_resend_api_key', resendApiKey);
+    else localStorage.removeItem('op_resend_api_key');
+
+    if (geminiApiKey) localStorage.setItem('op_gemini_api_key', geminiApiKey);
+    else localStorage.removeItem('op_gemini_api_key');
+
     setNotif(lang === 'FR' ? 'Clés API appliquées avec succès à chaud !' : 'API Keys successfully hot-swapped!');
     setTimeout(() => setNotif(null), 4000);
     refresh();
@@ -660,38 +682,65 @@ export default function ServerHealthPage() {
                 value={supabaseUrl}
                 onChange={e => setSupabaseUrl(e.target.value)}
                 placeholder="https://xxx.supabase.co"
-                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_sb_key}</label>
-              <input
-                type="password"
-                value={supabaseAnonKey}
-                onChange={e => setSupabaseAnonKey(e.target.value)}
-                placeholder="••••••••••••••••••••••••••••"
-                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
-              />
+              <div className="relative">
+                <input
+                  type={showSbKey ? "text" : "password"}
+                  value={supabaseAnonKey}
+                  onChange={e => setSupabaseAnonKey(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSbKey(!showSbKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-fade-in"
+                >
+                  {showSbKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_resend}</label>
-              <input
-                type="password"
-                value={resendApiKey}
-                onChange={e => setResendApiKey(e.target.value)}
-                placeholder="re_xxxxxxxxxxxxxx"
-                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
-              />
+              <div className="relative">
+                <input
+                  type={showResendKey ? "text" : "password"}
+                  value={resendApiKey}
+                  onChange={e => setResendApiKey(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResendKey(!showResendKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-fade-in"
+                >
+                  {showResendKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_gemini}</label>
-              <input
-                type="password"
-                value={geminiApiKey}
-                onChange={e => setGeminiApiKey(e.target.value)}
-                placeholder="AIzaSyxxxxxxxxxxxxxxx"
-                className="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
-              />
+              <div className="relative">
+                <input
+                  type={showGeminiKey ? "text" : "password"}
+                  value={geminiApiKey}
+                  onChange={e => setGeminiApiKey(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGeminiKey(!showGeminiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-fade-in"
+                >
+                  {showGeminiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="md:col-span-2 flex flex-col md:flex-row gap-4 mt-2">

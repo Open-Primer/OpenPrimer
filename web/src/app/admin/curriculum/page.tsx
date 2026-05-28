@@ -141,17 +141,17 @@ export const CURRICULUM_STRINGS = {
   ES: {
     title: "Gobernanza Académica",
     subtitle: "Ciclo de vida del plan de estudios y garantía de calidad",
-    tab_generation: "Générateur de Cursus",
+    tab_generation: "Generador de Cursus",
     tab_translation: "Traductor de Cursus",
-    tab_revision: "Revisor Pédagogico",
+    tab_revision: "Revisor Pedagógico",
     tab_archiving: "Archivo de Cursus",
     tab_queue: "Cola de Tareas",
     tab_achievements: "Badges y Medallas",
-    tab_personalities: "Personalidades Tuteur",
-    auto_approve: "Génération Auto-Approuvée",
-    failure_threshold: "Seuil d'Approbation",
-    active_proposals: "Propositions Académiques Actives",
-    refused_backlog: "Backlog des Refusés",
+    tab_personalities: "Personalidades Tutor",
+    auto_approve: "Auto-aprobar generación",
+    failure_threshold: "Umbral de fallos para auto-aprobar",
+    active_proposals: "Propuestas académicas activas",
+    refused_backlog: "Historial de rechazados",
     status_live: "Actif",
     status_archived: "Archivé",
     status_pending: "En Attente",
@@ -171,12 +171,12 @@ export const CURRICULUM_STRINGS = {
     threshold_param: "Umbral",
     suggested_icons: "Iconos Sugeridos",
     multilang_compilation: "Compilación Multi-Lenguaje",
-    save: "Enregistrer",
+    save: "Guardar",
     cancel: "Cancelar",
-    confirm_purge: "Purger",
+    confirm_purge: "Purgar",
     type_name_confirm: "Escriba el nombre aquí...",
-    strict_parameter_error: "Error Paramètre Strict: Todos los campos son obligatorios.",
-    strict_validation_reject: "Rejet de Validation Stricte: ¡El umbral debe ser positivo!",
+    strict_parameter_error: "Error de parámetro estricto: Todos los campos son obligatorios.",
+    strict_validation_reject: "Rechazo de validación estricta: ¡El umbral debe ser positivo!",
     success: "Éxito",
     empty_trans: "No hay solicitudes de traducción en la cola.",
     refused_trans_backlog: "Historial de Traducciones Rechazadas",
@@ -206,10 +206,10 @@ export const CURRICULUM_STRINGS = {
     tab_queue: "Auftragswarteschlange",
     tab_achievements: "Errungenschaften",
     tab_personalities: "Tutor-Persönlichkeiten",
-    auto_approve: "Génération Auto-Approuvée",
-    failure_threshold: "Seuil d'Approbation",
-    active_proposals: "Propositions Académiques Actives",
-    refused_backlog: "Backlog des Refusés",
+    auto_approve: "Generierung automatisch freigeben",
+    failure_threshold: "Fehlerschwelle zur automatischen Freigabe",
+    active_proposals: "Aktive akademische Vorschläge",
+    refused_backlog: "Abgelehnte Vorschläge",
     status_live: "Aktiv",
     status_archived: "Archiviert",
     status_pending: "In Warteschlange",
@@ -229,12 +229,12 @@ export const CURRICULUM_STRINGS = {
     threshold_param: "Schwellenwert",
     suggested_icons: "Vorgeschlagene Symbole",
     multilang_compilation: "Mehrsprachige Übersetzung",
-    save: "Enregistrer",
+    save: "Speichern",
     cancel: "Abbrechen",
-    confirm_purge: "Purger",
+    confirm_purge: "Bereinigen",
     type_name_confirm: "Geben Sie den Namen hier ein...",
-    strict_parameter_error: "Error Paramètre Strict: Alle Felder sind erforderlich!",
-    strict_validation_reject: "Rejet de Validation Stricte: Der Schwellenwert muss positiv sein!",
+    strict_parameter_error: "Strikter Parameterfehler: Alle Felder sind erforderlich!",
+    strict_validation_reject: "Strikte Validierungsablehnung: Der Schwellenwert muss positiv sein!",
     success: "Erfolg",
     empty_trans: "Keine Übersetzungsanfragen in der Warteschlange.",
     refused_trans_backlog: "Abgelehnte Übersetzungen Backlog",
@@ -264,10 +264,10 @@ export const CURRICULUM_STRINGS = {
     tab_queue: "管道队列监控",
     tab_achievements: "成就勋章管理",
     tab_personalities: "导师个性配置",
-    auto_approve: "Génération Auto-Approuvée",
-    failure_threshold: "Seuil d'Approbation",
-    active_proposals: "Propositions Académiques Actives",
-    refused_backlog: "Backlog des Refusés",
+    auto_approve: "自动批准生成",
+    failure_threshold: "自动批准失败阈值",
+    active_proposals: "活跃学术提案",
+    refused_backlog: "已拒绝积压",
     status_live: "发布中",
     status_archived: "已归档",
     status_pending: "排队中",
@@ -287,12 +287,12 @@ export const CURRICULUM_STRINGS = {
     threshold_param: "阈值参数",
     suggested_icons: "AI 推荐图标",
     multilang_compilation: "多语言翻译汇编",
-    save: "Enregistrer",
+    save: "保存",
     cancel: "取消",
-    confirm_purge: "Purger",
+    confirm_purge: "强制清除",
     type_name_confirm: "在此输入名称以确认...",
-    strict_parameter_error: "Error Paramètre Strict: 所有字段均为必填项！",
-    strict_validation_reject: "Rejet de Validation Stricte: 阈值必须为正数！",
+    strict_parameter_error: "严格参数错误：所有字段均为必填项！",
+    strict_validation_reject: "严格验证拒绝：阈值必须为正值！",
     success: "成功",
     empty_trans: "队列中没有翻译请求。",
     refused_trans_backlog: "已拒绝的翻译积压",
@@ -470,8 +470,8 @@ const ArchivingLevelButtons = ({
             : "Level 2 (Deep Archive): Hidden for all students, visible only in the admin cockpit.";
         } else if (lvl === 3) {
           tooltip = lang === 'FR' 
-            ? "Niveau 3 (Purgé) : Totalement désactivé." 
-            : "Level 3 (Purged): Fully disabled.";
+            ? "Niveau 3 (Purgé) : Totalement désactivé (Delete)." 
+            : "Level 3 (Purged): Fully disabled (Delete).";
         }
 
         return (
@@ -743,7 +743,7 @@ export default function AdminCurriculumPage() {
   </g>
 </svg>`;
         const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-        return await resizeAndStandardizeImage(svgBase64);
+        return svgBase64;
       } catch (e) {
         console.error("Failed to generate Base64 for library icon", e);
       }
@@ -755,7 +755,7 @@ export default function AdminCurriculumPage() {
   <circle cx="12" cy="12" r="5" stroke="white" stroke-width="2"/>
 </svg>`;
       const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-      return await resizeAndStandardizeImage(svgBase64);
+      return svgBase64;
     } catch (e) {
       return iconKey;
     }
@@ -931,9 +931,7 @@ export default function AdminCurriculumPage() {
       
       if (needsMigration) {
         console.log("[BADGE MIGRATION] Migrating preseeded library badges to rich Base64 in database...");
-        for (const ach of migrated) {
-          await dbService.saveAchievement(ach);
-        }
+        await Promise.all(migrated.map(ach => dbService.saveAchievement(ach)));
         const { data: updatedAchs } = await dbService.getAchievements();
         setAchievements(updatedAchs || migrated);
       } else {
@@ -1810,6 +1808,7 @@ export default function AdminCurriculumPage() {
     // Modal confirmation handled by cancelTaskTarget state
 
     const updated = queue.filter(t => t.id !== id);
+    setQueue(updated);
     localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
     
     if (taskToCancel.type === 'generation') {
@@ -2515,7 +2514,7 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Type de Contenu" : "Content Type"}
                         </label>
                         <select value={manualType} onChange={(e) => setManualType(e.target.value as 'curriculum' | 'course')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          <option value="course">{lang === 'FR' ? "Cours Simple" : "Simple Course"}</option>
+                          <option value="course">{lang === 'FR' ? "Cours Autonome" : "Standalone Course"}</option>
                           <option value="curriculum">{lang === 'FR' ? "Cursus Complet" : "Full Curriculum"}</option>
                         </select>
                       </div>
@@ -3372,14 +3371,43 @@ export default function AdminCurriculumPage() {
                 const allFilteredCourses = [...courses]
                   .filter(c => c.title.toLowerCase().includes(archiveSearch.toLowerCase()) || c.subject.toLowerCase().includes(archiveSearch.toLowerCase()))
                   .sort((a, b) => {
-                    let valA = a[courseSortField as keyof typeof a];
-                    let valB = b[courseSortField as keyof typeof b];
+                    let valA: any;
+                    let valB: any;
+
+                    if (courseSortField === 'isCurriculum') {
+                      valA = a.isCurriculum ? 1 : 0;
+                      valB = b.isCurriculum ? 1 : 0;
+                    } else if (courseSortField === 'averageRating') {
+                      valA = Number(a.averageRating || 0);
+                      valB = Number(b.averageRating || 0);
+                    } else if (courseSortField === 'completions') {
+                      valA = completions.filter(comp => 
+                        comp.courseId.toLowerCase() === String(a.id).toLowerCase() || 
+                        comp.courseId.toLowerCase() === a.slug.toLowerCase() || 
+                        comp.courseId.toLowerCase() === a.title.toLowerCase()
+                      ).length;
+                      valB = completions.filter(comp => 
+                        comp.courseId.toLowerCase() === String(b.id).toLowerCase() || 
+                        comp.courseId.toLowerCase() === b.slug.toLowerCase() || 
+                        comp.courseId.toLowerCase() === b.title.toLowerCase()
+                      ).length;
+                    } else if (courseSortField === 'versions') {
+                      valA = courses.filter(c => c.slug.replace(/_v\d+$/, '') === a.slug.replace(/_v\d+$/, '')).length;
+                      valB = courses.filter(c => c.slug.replace(/_v\d+$/, '') === b.slug.replace(/_v\d+$/, '')).length;
+                    } else if (courseSortField === 'languages') {
+                      valA = (a.languages || a.langs || []).length;
+                      valB = (b.languages || b.langs || []).length;
+                    } else {
+                      valA = a[courseSortField as keyof typeof a];
+                      valB = b[courseSortField as keyof typeof b];
+                    }
+
                     if (typeof valA === 'string') {
                       valA = valA.toLowerCase();
                       valB = (valB as string).toLowerCase();
                     }
-                    if (valA === undefined) return 1;
-                    if (valB === undefined) return -1;
+                    if (valA === undefined || valA === null) return 1;
+                    if (valB === undefined || valB === null) return -1;
                     if (valA < valB) return courseSortDir === 'asc' ? -1 : 1;
                     if (valA > valB) return courseSortDir === 'asc' ? 1 : -1;
                     return 0;
@@ -3428,20 +3456,55 @@ export default function AdminCurriculumPage() {
                             }}>
                               Title {renderSortIndicator('title', courseSortField, courseSortDir)}
                             </th>
-                            <th className="px-6 py-4">
-                              Classification
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'isCurriculum') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('isCurriculum');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Classification {renderSortIndicator('isCurriculum', courseSortField, courseSortDir)}
                             </th>
-                            <th className="px-6 py-4">
-                              Note (Rating)
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'averageRating') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('averageRating');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Note (Rating) {renderSortIndicator('averageRating', courseSortField, courseSortDir)}
                             </th>
-                            <th className="px-6 py-4">
-                              Validations (Completions)
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'completions') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('completions');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Validations (Completions) {renderSortIndicator('completions', courseSortField, courseSortDir)}
                             </th>
-                            <th className="px-6 py-4">
-                              Versions (Revisions)
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'versions') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('versions');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Versions (Revisions) {renderSortIndicator('versions', courseSortField, courseSortDir)}
                             </th>
-                            <th className="px-6 py-4">
-                              Languages
+                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                              if (courseSortField === 'languages') {
+                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setCourseSortField('languages');
+                                setCourseSortDir('asc');
+                              }
+                            }}>
+                              Languages {renderSortIndicator('languages', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'level') {
@@ -3479,7 +3542,7 @@ export default function AdminCurriculumPage() {
                           {displayedCourses.map(course => {
                             const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
                             const isCurriculum = course.isCurriculum || false;
-                            const containingCurricula = courses.filter(c => c.isCurriculum && c.childCourses?.includes(course.id));
+                            const containingCurricula = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)));
                             const isInCurriculum = containingCurricula.length > 0;
 
                             // Label and color definitions based on dynamic level
@@ -3557,7 +3620,7 @@ export default function AdminCurriculumPage() {
                                     onChange={async (nextLvl) => {
                                       // 1. If it IS a curriculum, offer to optional cascade to child courses
                                       if (isCurriculum) {
-                                        const targetChilds = courses.filter(c => course.childCourses?.includes(c.id) && (c.archivingLevel || 0) < nextLvl);
+                                        const targetChilds = courses.filter(c => course.childCourses?.some(cid => String(cid) === String(c.id)) && (c.archivingLevel || 0) < nextLvl);
                                         if (targetChilds.length > 0) {
                                           setCurriculumCascadePending({ curriculum: course, nextLevel: nextLvl, childCourses: targetChilds });
                                           return;
@@ -3565,7 +3628,7 @@ export default function AdminCurriculumPage() {
                                       }
 
                                       // 2. If it is NOT a curriculum, enforce standard parent validation
-                                      const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.includes(course.id) && (c.archivingLevel || 0) < nextLvl);
+                                      const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)) && (c.archivingLevel || 0) < nextLvl);
                                       if (activeParents.length > 0) {
                                         setCurriculumArchivalPending({ course, nextLevel: nextLvl, parentCurricula: activeParents });
                                         return;
@@ -3635,8 +3698,26 @@ export default function AdminCurriculumPage() {
                           }}>
                             Level {renderSortIndicator('level', queueSortField, queueSortDir)}
                           </th>
-                          <th className="px-6 py-4">Language</th>
-                          <th className="px-6 py-4">Completed</th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'targetLang') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('targetLang');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Language {renderSortIndicator('targetLang', queueSortField, queueSortDir)}
+                          </th>
+                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                            if (queueSortField === 'completedAt') {
+                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setQueueSortField('completedAt');
+                              setQueueSortDir('asc');
+                            }
+                          }}>
+                            Completed {renderSortIndicator('completedAt', queueSortField, queueSortDir)}
+                          </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'type') {
                               setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
@@ -4245,7 +4326,7 @@ export default function AdminCurriculumPage() {
                                   key={img.id}
                                   type="button"
                                   onClick={() => setBadgeIcon(img.id)}
-                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
                                 >
                                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                     <IconComp className="w-6 h-6" />
@@ -4503,7 +4584,7 @@ export default function AdminCurriculumPage() {
                                   key={img.id}
                                   type="button"
                                   onClick={() => setEditIcon(img.id)}
-                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                  className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
                                 >
                                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                     <IconComp className="w-6 h-6" />
@@ -4750,7 +4831,7 @@ export default function AdminCurriculumPage() {
                            </button>
                            <button 
                              onClick={async () => {
-                               await handleCancelTask(cancelTaskTarget.id, true);
+                               const targetId = cancelTaskTarget.id; setCancelTaskTarget(null); await handleCancelTask(targetId, true);
                                setCancelTaskTarget(null);
                              }}
                              className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer"

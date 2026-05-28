@@ -29,6 +29,7 @@ function countUniqueMdxLessons(): number {
 
 export async function GET() {
   try {
+    // Fetch dynamic courses
     const { data: courses } = await dbService.getAllCourses();
     const activeCourses = courses || [];
     
@@ -39,16 +40,29 @@ export async function GET() {
     });
     const totalLanguages = uniqueLangs.size || 2;
     
-    // 2. Curricula Count
+    // 2. Curricula Count (Only count active curricula)
     const totalCurricula = activeCourses.filter(c => c.is_active).length || 10;
     
     // 3. Total Courses/Lessons Count
     const totalCourses = countUniqueMdxLessons() || 25;
+
+    // 4. Fetch dynamic student stats
+    const { data: dbUsers } = await dbService.getUsers();
+    const activeUsers = dbUsers || [];
+    const totalStudents = activeUsers.length || 11;
+
+    // 5. Dynamic Validation Rate based on user levels
+    const avgLevel = activeUsers.length > 0
+      ? activeUsers.reduce((acc, u) => acc + (u.level || 0), 0) / activeUsers.length
+      : 11;
+    const validationRate = Math.min(100, Math.round(avgLevel * 7.5)) || 84;
     
     return NextResponse.json({
       total_languages: totalLanguages,
       total_curricula: totalCurricula,
-      total_courses: totalCourses
+      total_courses: totalCourses,
+      total_students: totalStudents,
+      validation_rate: validationRate
     });
   } catch (error) {
     console.error("Error generating dynamic stats:", error);

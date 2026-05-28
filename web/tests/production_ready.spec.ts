@@ -58,8 +58,13 @@ test.describe('OpenPrimer Production Readiness', () => {
   });
 
   test('Admin Console Protection', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('op_session', 'true');
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+    });
+    await page.reload();
     await page.goto(`${BASE_URL}/admin`);
-    // Should show the admin dashboard or login
     await expect(page.locator('text=Project Overview')).toBeVisible();
   });
 

@@ -6,7 +6,7 @@ interface ServiceResult {
   id: string;
   nameKey: string;
   url: string;
-  status: 'ok' | 'degraded' | 'offline';
+  status: 'ok' | 'degraded' | 'offline' | 'unauthorized';
   latencyMs: number | null;
   checkedAt: string;
   errorMessage?: string;
@@ -31,7 +31,10 @@ async function checkSupabase(customUrl?: string, customKey?: string): Promise<Se
   const checkedAt = new Date().toISOString();
 
   if (!url || url.includes('your-project')) {
-    return { id: 'db', nameKey: 'health_db', url: url || 'Not configured', status: 'offline', latencyMs: null, checkedAt, errorMessage: 'SUPABASE_URL not configured' };
+    return { id: 'db', nameKey: 'health_db', url: url || 'Not configured', status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'SUPABASE_URL not configured' };
+  }
+  if (!key || key.includes('your-project')) {
+    return { id: 'db', nameKey: 'health_db', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'SUPABASE_ANON_KEY not configured' };
   }
 
   const start = Date.now();
@@ -42,8 +45,11 @@ async function checkSupabase(customUrl?: string, customKey?: string): Promise<Se
       cache: 'no-store'
     });
     const latencyMs = Date.now() - start;
-    if (res.ok || res.status === 400) { // 400 = no query params but server is alive
+    if (res.ok || res.status === 400) { 
       return { id: 'db', nameKey: 'health_db', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403) {
+      return { id: 'db', nameKey: 'health_db', url, status: 'unauthorized', latencyMs, checkedAt, errorMessage: 'Authentication failed (401/403)' };
     }
     return { id: 'db', nameKey: 'health_db', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
   } catch (e: any) {
@@ -57,7 +63,7 @@ async function checkResend(customKey?: string): Promise<ServiceResult> {
   const checkedAt = new Date().toISOString();
 
   if (!key || key.includes('your-')) {
-    return { id: 'email', nameKey: 'health_email', url, status: 'offline', latencyMs: null, checkedAt, errorMessage: 'RESEND_API_KEY not configured' };
+    return { id: 'email', nameKey: 'health_email', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'RESEND_API_KEY not configured' };
   }
 
   const start = Date.now();
@@ -68,8 +74,20 @@ async function checkResend(customKey?: string): Promise<ServiceResult> {
       cache: 'no-store'
     });
     const latencyMs = Date.now() - start;
-    if (res.ok) return { id: 'email', nameKey: 'health_email', url, status: 'ok', latencyMs, checkedAt };
-    if (res.status === 401) return { id: 'email', nameKey: 'health_email', url, status: 'degraded', latencyMs, checkedAt, errorMessage: 'Invalid API key' };
+    if (res.ok) {
+      return { id: 'email', nameKey: 'health_email', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403) {
+      return { 
+        id: 'email', 
+        nameKey: 'health_email', 
+        url, 
+        status: 'unauthorized', 
+        latencyMs, 
+        checkedAt, 
+        errorMessage: 'Invalid API Key (401/403)' 
+      };
+    }
     return { id: 'email', nameKey: 'health_email', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
   } catch (e: any) {
     return { id: 'email', nameKey: 'health_email', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
@@ -82,7 +100,7 @@ async function checkGemini(customKey?: string): Promise<ServiceResult> {
   const checkedAt = new Date().toISOString();
 
   if (!key) {
-    return { id: 'ai', nameKey: 'health_ai', url, status: 'offline', latencyMs: null, checkedAt, errorMessage: 'GEMINI_API_KEY not configured' };
+    return { id: 'ai', nameKey: 'health_ai', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'GEMINI_API_KEY not configured' };
   }
 
   const start = Date.now();
@@ -92,8 +110,20 @@ async function checkGemini(customKey?: string): Promise<ServiceResult> {
       cache: 'no-store'
     });
     const latencyMs = Date.now() - start;
-    if (res.ok) return { id: 'ai', nameKey: 'health_ai', url, status: 'ok', latencyMs, checkedAt };
-    if (res.status === 400) return { id: 'ai', nameKey: 'health_ai', url, status: 'degraded', latencyMs, checkedAt, errorMessage: 'API reachable, check key permissions' };
+    if (res.ok) {
+      return { id: 'ai', nameKey: 'health_ai', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403 || res.status === 400) {
+      return { 
+        id: 'ai', 
+        nameKey: 'health_ai', 
+        url, 
+        status: 'unauthorized', 
+        latencyMs, 
+        checkedAt, 
+        errorMessage: 'Invalid API Key / Restricted Access (401/403)' 
+      };
+    }
     return { id: 'ai', nameKey: 'health_ai', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
   } catch (e: any) {
     return { id: 'ai', nameKey: 'health_ai', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
@@ -107,7 +137,7 @@ async function checkPollinations(): Promise<ServiceResult> {
   try {
     const res = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(5000), cache: 'no-store' });
     const latencyMs = Date.now() - start;
-    if (res.ok || res.status === 404 || res.status === 405) { // 404/405 = server alive but no root route
+    if (res.ok || res.status === 404 || res.status === 405) { 
       return { id: 'images', nameKey: 'health_images', url, status: 'ok', latencyMs, checkedAt };
     }
     return { id: 'images', nameKey: 'health_images', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };

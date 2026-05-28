@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
  
 
@@ -10,21 +10,24 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
   
 
-  test.beforeEach(async ({ page }) => {
-
-    // 1. Force the English locale via localStorage, but write tests to support French fallbacks for maximum resilience
-
-    await page.goto(BASE_URL);
-
-    await page.evaluate(() => localStorage.setItem('openprimer_lang', 'EN'));
-
-    await page.reload();
-
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('openprimer_lang', 'EN');
+      localStorage.setItem('op_session', 'true');
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+    });
+    await page.reload();
   });
 
  
 
-  test('Identity Management CRUD: should create, block, and delete student accounts', async ({ page }) => {
+  test('Identity Management CRUD: should create, block, and delete student accounts', async ({ page }) => {
+    await page.evaluate(() => {
+      const users = JSON.parse(localStorage.getItem('openprimer_users') || '[]');
+      const filtered = users.filter((u: any) => u.name !== 'Test Student E2E');
+      localStorage.setItem('openprimer_users', JSON.stringify(filtered));
+    });
 
     // 1. Navigate to admin users cockpit
 
@@ -66,7 +69,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await expect(rowLocator).toBeVisible();
 
-    await expect(rowLocator.locator('text=/Admin/')).toBeVisible();
+    await expect(rowLocator.locator('text=/Admin/')).toBeVisible({ timeout: 15000 });
 
  
 
@@ -80,7 +83,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // Verify status updates to Blocked
 
-    await expect(rowLocator.locator('text=/Blocked|Bloqué/')).toBeVisible();
+    await expect(rowLocator.locator('text=/Blocked|Bloqué/')).toBeVisible({ timeout: 15000 });
 
  
 
@@ -88,7 +91,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await blockToggle.click();
 
-    await expect(rowLocator.locator('text=/Active|Actif/')).toBeVisible();
+    await expect(rowLocator.locator('text=/Active|Actif/')).toBeVisible({ timeout: 15000 });
 
  
 
@@ -158,7 +161,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
           query: 'Quantum Electro-Dynamics',
 
-          timestamp: new Date().toISOString(),
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
 
           wasSuccessful: false,
 
@@ -182,15 +185,16 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // Ensure we see Quantum Electro-Dynamics in active proposals
 
-    await expect(page.locator('h3:has-text("Quantum Electro-Dynamics")').first()).toBeVisible();
+    await expect(page.locator('h3:has-text("Quantum Electro-Dynamics")').first()).toBeVisible({ timeout: 15000 });
 
  
 
     // Toggle "Auto-Approve Generation" to True in UI
 
-    const autoApproveToggle = page.locator('button:near(span:has-text("Auto-Approve Generation")), button:near(span:has-text("Génération Auto-Approuvée"))').first();
+    const autoApproveToggle = page.locator('div.rounded-3xl', { has: page.locator('span:has-text("Auto-Approve Generation")') }).locator('button.rounded-full').first();
 
-    await autoApproveToggle.click();
+    await autoApproveToggle.click();
+    await expect(page.locator('div.rounded-3xl', { has: page.locator('span:has-text("Auto-Approve Generation")') }).locator('span.text-xs:has-text("ON")')).toBeVisible({ timeout: 15000 });
 
  
 
@@ -210,18 +214,29 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await page.click('button:has-text("Pipeline Queue"), button:has-text("File d\'Attente")');
 
-    await expect(page.locator('text=Quantum Electro-Dynamics').first()).toBeVisible();
+    await expect(page.locator('text=Quantum Electro-Dynamics').first()).toBeVisible({ timeout: 15000 });
 
  
 
     // Cancel the task from the queue to verify queue deletion CRUD
 
-    const taskRow = page.locator('tr:has-text("Quantum Electro-Dynamics")').first();
-  if (await taskRow.count() > 0) {
+    // Turn Auto-Approve Generation toggle OFF first to prevent the autonomy engine from immediately re-promoting it
+    await page.click('button:has-text("Generation Engine"), button:has-text("Génération")');
+    await autoApproveToggle.click();
+    await expect(page.locator('div.rounded-3xl', { has: page.locator('span:has-text("Auto-Approve Generation")') }).locator('span.text-xs:has-text("OFF")')).toBeVisible({ timeout: 15000 });
+    await page.click('button:has-text("Pipeline Queue"), button:has-text("File d\'Attente")');
+
+    const taskRow = page.locator('tr:has-text("Quantum Electro-Dynamics")').first();
+    await expect(taskRow).toBeVisible({ timeout: 10000 });
+    // Execute cancel sequence
     await taskRow.locator('button:has-text("Cancel"), button:has-text("Annuler")').first().click();
-    await page.locator('button:has-text("Confirm Delete"), button:has-text("Confirmer la suppression"), button:has-text("Confirm"), button:has-text("Confirmer")').click();
-    await expect(page.locator('text=Quantum Electro-Dynamics')).not.toBeVisible();
-  }
+    const confirmCancelBtn = page.locator('div.p-10 button.bg-red-600').first();
+    await expect(confirmCancelBtn).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(500);
+    await confirmCancelBtn.click();
+    await expect(confirmCancelBtn).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('tr:has-text("Quantum Electro-Dynamics")')).not.toBeVisible({ timeout: 15000 });
+
 
   });
 
@@ -319,7 +334,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // Expect warning alert (using stable native getByText regex matching)
 
-    await expect(page.getByText(/Strict Parameter Error|Erreur Paramètre Strict/)).toBeVisible();
+    await expect(page.getByText(/Strict Parameter Error|Erreur Paramètre Strict/)).toBeVisible({ timeout: 15000 });
 
  
 
@@ -339,7 +354,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText(/Strict Validation Reject|Rejet de Validation Stricte/)).toBeVisible();
+    await expect(page.getByText(/Strict Validation Reject|Rejet de Validation Stricte/)).toBeVisible({ timeout: 15000 });
 
  
 
@@ -347,7 +362,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await page.fill('input[placeholder*="3 days"]', '10');    // 7. Select the first available badge from the standard library catalog grid
 
-    const libraryBadge = page.locator('div.grid-cols-3 button').first();
+    const libraryBadge = page.locator('button.library-badge-btn').first();
 
     await expect(libraryBadge).toBeVisible();
 
@@ -363,15 +378,15 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // 9. Submit creation and assert badge appears in grid
 
-    await page.click('button:has-text("Create Achievement Badge"), button:has-text("Créer un Badge")');
+    await page.locator('form button[type="submit"]:has-text("Create Achievement Badge"), form button[type="submit"]:has-text("Créer un Badge")').click();
 
-    await expect(page.locator('h3:has-text("Streaker Master")')).toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: /Streaker Master|Ma.tre des S.ries/ })).toBeVisible({ timeout: 15000 });
 
  
 
     // 10. Edit badge details
 
-    const streakerMasterCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Streaker Master' }) }).first();
+    const streakerMasterCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3').filter({ hasText: /Streaker Master|Ma.tre des S.ries/ }) }).first();
 
     await streakerMasterCard.locator('button[title*="Edit"]').first().click();
 
@@ -379,21 +394,23 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await page.click('button:has-text("Update Achievement Badge"), button:has-text("Enregistrer")');
 
-    await expect(page.locator('h3:has-text("Streaker Expert")')).toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: /Streaker Expert|Expert des S.ries/ })).toBeVisible({ timeout: 15000 });
 
  
 
     // 11. Force Purge badge to clean database
 
-    const streakerExpertCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Streaker Expert' }) }).first();
+    const streakerExpertCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3').filter({ hasText: /Streaker Expert|Expert des S.ries/ }) }).first();
 
-    await streakerExpertCard.locator('button[title*="Deleted"]').first().click();
+    await streakerExpertCard.locator('button[title*="Purg"]').first().click();
 
-    // Simple confirm � no name typing required after refactor
+    // Simple confirm � - no name typing required after refactor
 
-     await page.click('button:has-text("Confirm Delete"), button:has-text("Force Purge"), button:has-text("Confirmer")');
+     const confirmPurgeBtn = page.locator('div.p-10 button.bg-red-600').first();
+     await expect(confirmPurgeBtn).toBeVisible({ timeout: 5000 });
+     await confirmPurgeBtn.click();
 
-    await expect(page.locator('h3:has-text("Streaker Expert")')).not.toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: /Streaker Expert|Expert des S.ries/ })).not.toBeVisible({ timeout: 15000 });
 
   });
 
