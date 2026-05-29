@@ -2754,16 +2754,14 @@ export default function AdminCurriculumPage() {
                               The maximum age (in days) of course feedbacks, failed searches, and translation requests logs before being automatically purged daily in the background.
                             </p>
                           </div>
-                          <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
                             <input 
-                              type="range" 
-                              min="7" 
-                              max="90" 
+                              type="number" 
                               value={backlogRetention} 
-                              onChange={(e) => setBacklogRetention(Number(e.target.value))}
-                              className="w-20 accent-blue-500 cursor-pointer"
+                              onChange={(e) => setBacklogRetention(Math.max(1, Number(e.target.value)))}
+                              className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
                             />
-                            <span className="text-xs font-mono font-bold text-blue-400 min-w-[32px] text-right">{backlogRetention}d</span>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Days</span>
                           </div>
                         </div>
                       </div>
@@ -2824,9 +2822,16 @@ export default function AdminCurriculumPage() {
                           {lang === 'FR' ? "Sujet / Discipline" : "Subject / Discipline"}
                         </label>
                         <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
-                          {DISCIPLINES.map((d) => (
-                            <option key={d.value} value={d.value}>{getDisciplineLabel(d.value, lang)}</option>
-                          ))}
+                          {[...DISCIPLINES]
+                            .map((d) => ({
+                              value: d.value,
+                              label: getDisciplineLabel(d.value, lang)
+                            }))
+                            .sort((a, b) => a.label.localeCompare(b.label, lang))
+                            .map((item) => (
+                              <option key={item.value} value={item.value}>{item.label}</option>
+                            ))
+                          }
                           <option value="NEW_CUSTOM">➕ {lang === 'FR' ? "Ajouter une discipline..." : "Add custom discipline..."}</option>
                         </select>
                       </div>
@@ -3399,13 +3404,13 @@ export default function AdminCurriculumPage() {
                         <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
                           <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block mb-1">Trigger 1: Low Global Rating</span>
                           <p className="text-[10px] text-slate-500 leading-normal">
-                            Triggers a general course revision if the average student rating drops below the <strong>Rating Threshold</strong> (â‰¤ Stars) and has gathered a significant sample size (â‰¥ Min Votes).
+                            Triggers a general course revision if the average student rating drops below the <strong>Rating Threshold</strong> (≤ Stars) and has gathered a significant sample size (≥ Min Votes).
                           </p>
                         </div>
                         <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
                           <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">Trigger 2: Concordant Error Reports</span>
                           <p className="text-[10px] text-slate-500 leading-normal">
-                            Triggers a target-chapter revision when multiple users (â‰¥ Min Reports) submit matching complaints. The AI Agent synthesizes these concordant reports into a single, structured fix.
+                            Triggers a target-chapter revision when multiple users (≥ Min Reports) submit matching complaints. The AI Agent synthesizes these concordant reports into a single, structured fix.
                           </p>
                         </div>
                       </div>
@@ -3419,19 +3424,29 @@ export default function AdminCurriculumPage() {
                         <h3 className="text-base font-bold text-white uppercase tracking-widest">Engine Control Parameters</h3>
                         <p className="text-xs text-slate-500">Configure global parameters and auto-approval variables for the pedagogical revision pipeline.</p>
                       </div>
-                      <div className="flex items-center gap-4 bg-slate-950 px-4 py-2 border border-slate-850 rounded-2xl shrink-0">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Auto-Approve Revisions</span>
-                        <button 
-                          type="button"
-                          onClick={() => setAutoRevision(!autoRevision)}
-                          className={`w-12 h-6 rounded-full relative transition-all ${autoRevision ? 'bg-yellow-600' : 'bg-slate-800'}`}
-                        >
-                          <motion.div animate={{ x: autoRevision ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
-                        </button>
-                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                      {/* 0. Auto-Approve Revisions */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Auto-Approve Revisions</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            Enable to let the pedagogical agent automatically apply qualified fixes directly to target chapters.
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <button 
+                            type="button"
+                            onClick={() => setAutoRevision(!autoRevision)}
+                            className={`w-10 h-5 rounded-full relative transition-all ${autoRevision ? 'bg-yellow-600' : 'bg-slate-800'}`}
+                          >
+                            <motion.div animate={{ x: autoRevision ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                          </button>
+                          <span className="text-xs font-bold text-slate-300">{autoRevision ? 'ON' : 'OFF'}</span>
+                        </div>
+                      </div>
+
                       {/* 1. Rating Threshold */}
                       <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                         <div>
@@ -3570,7 +3585,7 @@ export default function AdminCurriculumPage() {
                             <div className="flex flex-wrap items-center gap-3 pt-1">
                               <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                                 <span>Rating:</span>
-                                <span className="text-yellow-400 font-black">â­ {item.overallRating.toFixed(1)}/5</span>
+                                <span className="text-yellow-400 font-black">⭐ {item.overallRating.toFixed(1)}/5</span>
                                 <span className="text-slate-600">({item.overallVotes} reviews)</span>
                               </div>
                               <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
