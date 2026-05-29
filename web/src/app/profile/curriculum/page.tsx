@@ -699,10 +699,10 @@ export default function CurriculumPage() {
                     <div>
                       <h2 className="text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
                         <svg className="w-6 h-6 text-blue-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                        {lang === 'FR' ? "Poursuites Possibles / Next Steps" : "Recommended Next Steps"}
+                        {lang === 'FR' ? "Poursuites Possibles" : lang === 'ES' ? "Próximos Pasos Recomendados" : lang === 'DE' ? "Empfohlene nächste Schritte" : lang === 'ZH' ? "推荐的下一步课程" : "Recommended Next Steps"}
                       </h2>
                       <p className="text-xs text-slate-500 font-medium mt-1">
-                        {lang === 'FR' ? "Basé sur votre progression académique et vos succès récents" : "Based on your academic progression and recent completions"}
+                        {lang === 'FR' ? "Basé sur votre progression académique et vos succès récents" : lang === 'ES' ? "Basado en tu progresión académica y finalizaciones recientes" : lang === 'DE' ? "Basierend auf Ihrem akademischen Fortschritt und den letzten Abschlüssen" : lang === 'ZH' ? "基于您的学术进展和最近完成的课程" : "Based on your academic progression and recent completions"}
                       </p>
                     </div>
                   </div>
@@ -734,6 +734,12 @@ export default function CurriculumPage() {
                             <p className="text-xs text-slate-500 leading-relaxed font-medium mb-6">
                               {lang === 'FR' 
                                 ? "Explorez ce parcours pour approfondir vos compétences et valider de nouvelles briques d'apprentissage souveraines." 
+                                : lang === 'ES'
+                                ? "Explora este camino para profundizar tus habilidades y validar nuevos elementos del conocimiento soberano."
+                                : lang === 'DE'
+                                ? "Erkunden Sie diesen Pfad, um Ihre Fähigkeiten zu vertiefen und neue Elemente des souveränen Wissens zu validieren."
+                                : lang === 'ZH'
+                                ? "探索这条路径以深化您的技能并验证主权知识的新元素。"
                                 : "Explore this path to deepen your skills and validate new elements of sovereign knowledge."}
                             </p>
                           </div>
@@ -743,13 +749,13 @@ export default function CurriculumPage() {
                               onClick={() => setSelectedEnrollCourse(recCourse)}
                               className="flex-1 py-3 bg-slate-950 border border-slate-850 hover:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer text-center"
                             >
-                              {lang === 'FR' ? "Fiche de présentation" : "Presentation Sheet"}
+                              {lang === 'FR' ? "Fiche de présentation" : lang === 'ES' ? "Ficha de Presentación" : lang === 'DE' ? "Präsentationsblatt" : lang === 'ZH' ? "演示单" : "Presentation Sheet"}
                             </button>
                             <button
                               onClick={() => enrollInRecommended(recCourse)}
                               className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/15 cursor-pointer text-center"
                             >
-                              {lang === 'FR' ? "Ajouter au Curriculum" : "Add to Curriculum"}
+                              {lang === 'FR' ? "Ajouter au Curriculum" : lang === 'ES' ? "Añadir al Currículum" : lang === 'DE' ? "Zum Lehrplan hinzufügen" : lang === 'ZH' ? "添加到课程表" : "Add to Curriculum"}
                             </button>
                           </div>
                         </div>
@@ -764,7 +770,7 @@ export default function CurriculumPage() {
         {/* ACHIEVEMENTS GALLERY */}
         <section className="mt-20">
            <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
-              <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : "Achievements Gallery"}
+              <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : lang === 'ES' ? "Galería de Logros" : lang === 'DE' ? "Errungenschaften-Galerie" : lang === 'ZH' ? "成就荣誉展厅" : "Achievements Gallery"}
            </h2>
            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
              {achievements.map((ach) => {

@@ -1920,11 +1920,18 @@ export const authService = {
 };
 
 export const isSandboxFallbackAllowed = (): boolean => {
-  if (process.env.NODE_ENV === 'production') {
-    return false;
-  }
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('op_allow_sandbox') !== 'false';
+    const allowed = localStorage.getItem('op_allow_sandbox');
+    if (allowed === 'true') return true;
+    if (allowed === 'false') return false;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    // If Supabase credentials are not specified, or are placeholders, automatically allow sandbox
+    const hasKeys = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project');
+    if (!hasKeys) {
+      return true;
+    }
+    return false;
   }
   return true;
 };

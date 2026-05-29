@@ -291,10 +291,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   : 'text-amber-400'
               }`}>
                 {isDbConnected === true
-                  ? (lang === 'FR' ? 'Base Connectée' : 'Database Active')
+                  ? (lang === 'FR' ? 'Base Connectée' : lang === 'ES' ? 'Base de Datos Activa' : lang === 'DE' ? 'Datenbank Aktiv' : lang === 'ZH' ? '数据库激活' : 'Database Active')
                   : isDbConnected === false
-                  ? (lang === 'FR' ? 'Mockup Actif' : 'Mockup Active')
-                  : (lang === 'FR' ? 'Vérification...' : 'Database Check...')}
+                  ? (lang === 'FR' ? 'Mockup Actif' : lang === 'ES' ? 'Mockup Activo' : lang === 'DE' ? 'Mockup Aktiv' : lang === 'ZH' ? '样机激活' : 'Mockup Active')
+                  : (lang === 'FR' ? 'Vérification...' : lang === 'ES' ? 'Comprobando Base de Datos...' : lang === 'DE' ? 'Datenbanküberprüfung...' : lang === 'ZH' ? '数据库检查中...' : 'Database Check...')}
               </span>
             </div>
           </div>
@@ -345,10 +345,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }`} />
                 <span>
                   {isDbConnected === true
-                    ? (lang === 'FR' ? 'Base de Production' : 'Production Active')
+                    ? (lang === 'FR' ? 'Base de Production' : lang === 'ES' ? 'Producción Activa' : lang === 'DE' ? 'Produktionsdatenbank Aktiv' : lang === 'ZH' ? '生产数据库激活' : 'Production Active')
                     : isDbConnected === false
-                    ? (lang === 'FR' ? 'Bac à Sable Simulé' : 'Simulated Sandbox')
-                    : (lang === 'FR' ? 'Diagnostic...' : 'Diagnosing...')}
+                    ? (lang === 'FR' ? 'Bac à Sable Simulé' : lang === 'ES' ? 'Sandbox Simulado' : lang === 'DE' ? 'Simulierte Sandbox' : lang === 'ZH' ? '模拟沙盒' : 'Simulated Sandbox')
+                    : (lang === 'FR' ? 'Diagnostic...' : lang === 'ES' ? 'Diagnosticando...' : lang === 'DE' ? 'Diagnostizieren...' : lang === 'ZH' ? '诊断中...' : 'Diagnosing...')}
                 </span>
               </div>
             </div>
