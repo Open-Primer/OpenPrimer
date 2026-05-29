@@ -329,9 +329,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <header className="h-20 border-b border-slate-900 bg-background/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.admin_panel}</span>
-              <div className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded-md flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                <span>Simulated Sandbox</span>
+              <div className={`px-2.5 py-0.5 border text-[8px] font-black uppercase tracking-widest rounded-md flex items-center gap-1.5 transition-all duration-500 ${
+                isDbConnected === true
+                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                  : isDbConnected === false
+                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                  : 'bg-violet-500/10 border-violet-500/20 text-violet-400'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                  isDbConnected === true
+                    ? 'bg-blue-400'
+                    : isDbConnected === false
+                    ? 'bg-amber-500'
+                    : 'bg-violet-400'
+                }`} />
+                <span>
+                  {isDbConnected === true
+                    ? (lang === 'FR' ? 'Base de Production' : 'Production Active')
+                    : isDbConnected === false
+                    ? (lang === 'FR' ? 'Bac à Sable Simulé' : 'Simulated Sandbox')
+                    : (lang === 'FR' ? 'Diagnostic...' : 'Diagnosing...')}
+                </span>
               </div>
             </div>
             
