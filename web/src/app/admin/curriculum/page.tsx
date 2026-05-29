@@ -400,7 +400,7 @@ export const COCKPIT_DICTIONARY = {
     "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.": "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.",
     "Create Academic Proposal": "Create Academic Proposal",
     "Active Academic Proposals": "Active Academic Proposals",
-    "No pending failed-search or expansion proposals. Clean database.": "No pending failed-search or expansion proposals. Clean database.",
+    "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.": "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.",
     "Proposal Score:": "Proposal Score:",
     "Priority:": "Priority:",
     "Refused Backlog": "Refused Backlog",
@@ -534,7 +534,7 @@ export const COCKPIT_DICTIONARY = {
     "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.": "Toutes les propositions manuelles sont soumises avec une priorité HAUTE au pipeline d'IA souverain. Aucun tuteur externe n'est requis.",
     "Create Academic Proposal": "Créer la Proposition Académique",
     "Active Academic Proposals": "Propositions Académiques Actives",
-    "No pending failed-search or expansion proposals. Clean database.": "Aucune proposition en attente. Base de données propre.",
+    "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.": "Aucune proposition de recherche infructueuse, d'expansion ou de synthèse de cursus en attente. Base de données propre.",
     "Proposal Score:": "Score de Proposition :",
     "Priority:": "Priorité :",
     "Refused Backlog": "Backlog des Propositions Refusées",
@@ -668,7 +668,7 @@ export const COCKPIT_DICTIONARY = {
     "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.": "Las propuestas manuales se envían con prioridad ALTA al pipeline de IA. No requiere tutor externo.",
     "Create Academic Proposal": "Crear Propuesta Académica",
     "Active Academic Proposals": "Propuestas Académicas Activas",
-    "No pending failed-search or expansion proposals. Clean database.": "No hay propuestas pendientes. Base de datos limpia.",
+    "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.": "No hay propuestas pendientes de búsquedas fallidas, expansión o síntesis de plan de estudios. Base de datos limpia.",
     "Proposal Score:": "Puntuación de Propuesta:",
     "Priority:": "Prioridad:",
     "Refused Backlog": "Propuestas Rechazadas",
@@ -802,7 +802,7 @@ export const COCKPIT_DICTIONARY = {
     "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.": "Manuelle Vorschläge werden mit HOHER Priorität an die KI gesendet. Kein externer Tutor nötig.",
     "Create Academic Proposal": "Akademischen Vorschlag Erstellen",
     "Active Academic Proposals": "Aktive Akademische Vorschläge",
-    "No pending failed-search or expansion proposals. Clean database.": "Keine ausstehenden Vorschläge. Saubere Datenbank.",
+    "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.": "Keine ausstehenden Vorschläge für fehlgeschlagene Suchen, Erweiterungen oder Lehrplansynthesen. Saubere Datenbank.",
     "Proposal Score:": "Vorschlag-Score:",
     "Priority:": "Priorität:",
     "Refused Backlog": "Abgelehnte Vorschläge",
@@ -936,7 +936,7 @@ export const COCKPIT_DICTIONARY = {
     "All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.": "所有手动提案将以高优先级提交至 AI 管道，无需分配外部导师。",
     "Create Academic Proposal": "创建学术提案",
     "Active Academic Proposals": "活跃学术提案",
-    "No pending failed-search or expansion proposals. Clean database.": "暂无待处理的学术提案。数据库状态清洁。",
+    "No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.": "暂无未决的搜索失败、扩展或核心课程综合提案。数据库正常。",
     "Proposal Score:": "提案评分:",
     "Priority:": "优先级:",
     "Refused Backlog": "已拒绝积压",
@@ -3735,7 +3735,7 @@ export default function AdminCurriculumPage() {
                        </div>
                      ))}
                      {proposals.length === 0 && (
-                       <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">No pending failed-search or expansion proposals. Clean database.</p>
+                       <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{tr("No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.")}</p>
                      )}
                    </div>
                  </div>
@@ -3968,7 +3968,7 @@ export default function AdminCurriculumPage() {
                       </div>
                     ))}
                     {translationRequests.length === 0 && (
-                      <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center">{t.empty_trans}</p>
+                      <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_trans}</p>
                     )}
                   </div>
 
@@ -3998,7 +3998,7 @@ export default function AdminCurriculumPage() {
                         );
                       })}
                       {refusedTranslations.length === 0 && (
-                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">{t.empty_refused_trans}</p>
+                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_refused_trans}</p>
                       )}
                     </div>
                   </div>

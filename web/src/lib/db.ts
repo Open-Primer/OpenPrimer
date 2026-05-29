@@ -1869,29 +1869,52 @@ let refusedCoursesList: RefusedCourseEntry[] = initialRefusedCourses;
 let refusedTranslationsList: RefusedTranslationEntry[] = initialRefusedTranslations;
 let refusedRevisionsList: RefusedRevisionEntry[] = initialRefusedRevisions;
 
+const isDatabaseConfigured = 
+  typeof process.env.NEXT_PUBLIC_SUPABASE_URL === 'string' &&
+  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') &&
+  process.env.NEXT_PUBLIC_SUPABASE_URL.trim() !== '';
+
 if (isBrowser) {
   users = getLocalStorageItem('openprimer_users', users);
-  const storedCourses = getLocalStorageItem('openprimer_courses', mockCourses);
+  
+  // Clean Database-First Start: bypass mock seeding when Supabase is configured
+  const defaultCourses = isDatabaseConfigured ? [] : mockCourses;
+  const defaultSearchHistory = isDatabaseConfigured ? [] : generatePreseededSearchHistory();
+  const defaultTranslationRequests = isDatabaseConfigured ? [] : initialTranslationRequests;
+  const defaultRefusedCourses = isDatabaseConfigured ? [] : initialRefusedCourses;
+  const defaultRefusedTranslations = isDatabaseConfigured ? [] : initialRefusedTranslations;
+  const defaultRefusedRevisions = isDatabaseConfigured ? [] : initialRefusedRevisions;
+  const defaultCourseFeedbacks = isDatabaseConfigured ? [] : initialCourseFeedbacks;
+  const defaultCourseCompletions = isDatabaseConfigured ? [] : generatePreseededCourseCompletions();
+  const defaultContactFeedbacks = isDatabaseConfigured ? [] : initialContactFeedbacks;
+
+  const storedCourses = getLocalStorageItem('openprimer_courses', defaultCourses);
   const mergedCourses = [...storedCourses];
-  mockCourses.forEach(initialC => {
-    if (!mergedCourses.some(c => c.id === initialC.id)) {
-      mergedCourses.push(initialC);
-    }
-  });
+  if (!isDatabaseConfigured) {
+    mockCourses.forEach(initialC => {
+      if (!mergedCourses.some(c => c.id === initialC.id)) {
+        mergedCourses.push(initialC);
+      }
+    });
+  }
   mockCourses = mergedCourses;
   setLocalStorageItem('openprimer_courses', mockCourses);
+  
   reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
   uvs = getLocalStorageItem('openprimer_uvs', uvs);
   achievementsList = getLocalStorageItem('openprimer_achievements', initialAchievements);
-  searchHistoryList = getLocalStorageItem('openprimer_search_history', generatePreseededSearchHistory());
-  translationRequestsList = getLocalStorageItem('openprimer_translation_requests', initialTranslationRequests);
-  refusedCoursesList = getLocalStorageItem('openprimer_refused_courses', initialRefusedCourses);
-  refusedTranslationsList = getLocalStorageItem('openprimer_refused_translations', initialRefusedTranslations);
-  refusedRevisionsList = getLocalStorageItem('openprimer_refused_revisions', initialRefusedRevisions);
-  courseFeedbacks = getLocalStorageItem('openprimer_course_feedbacks', initialCourseFeedbacks);
+  
+  searchHistoryList = getLocalStorageItem('openprimer_search_history', defaultSearchHistory);
+  translationRequestsList = getLocalStorageItem('openprimer_translation_requests', defaultTranslationRequests);
+  refusedCoursesList = getLocalStorageItem('openprimer_refused_courses', defaultRefusedCourses);
+  refusedTranslationsList = getLocalStorageItem('openprimer_refused_translations', defaultRefusedTranslations);
+  refusedRevisionsList = getLocalStorageItem('openprimer_refused_revisions', defaultRefusedRevisions);
+  courseFeedbacks = getLocalStorageItem('openprimer_course_feedbacks', defaultCourseFeedbacks);
+  
   tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
   agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
   availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
+  
   // Self-healing check for master language English
   const hasEN = availableLanguagesList.some(l => l.code.toUpperCase() === 'EN');
   if (!hasEN) {
@@ -1901,11 +1924,14 @@ if (isBrowser) {
       l.code.toUpperCase() === 'EN' ? { ...l, archivingLevel: 0 } : l
     );
   }
-  courseCompletionsList = getLocalStorageItem('openprimer_course_completions', generatePreseededCourseCompletions());
+  
+  courseCompletionsList = getLocalStorageItem('openprimer_course_completions', defaultCourseCompletions);
   setLocalStorageItem('openprimer_course_completions', courseCompletionsList);
+  
   translationEmailsList = getLocalStorageItem('openprimer_translation_emails', translationEmailsList);
   setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-  contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', initialContactFeedbacks);
+  
+  contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', defaultContactFeedbacks);
   
   // Save initially to sync
   setLocalStorageItem('openprimer_users', users);
