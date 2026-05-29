@@ -6,19 +6,41 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Hybrid Content Authoring & Synchronization
+
+OpenPrimer uses a **Hybrid content pipeline** that bridges local, version-controlled MDX authoring with a live PostgreSQL database (`lessons` table in Supabase) for fast rendering in production.
+
+### Content Synchronization Commands
+
+Inside the `web/` directory, you can run the following utilities to keep your local workspace and live database in sync:
+
+1. **Import local MDX files to Supabase**:
+   ```bash
+   npm run db:import-mdx
+   ```
+   Parses all local `.mdx` files inside `content/` and performs an `UPSERT` into the PostgreSQL `lessons` table on Supabase. Great for publishing your git-tracked markdown updates to production instantly.
+
+2. **Export Supabase database lessons to local MDX**:
+   ```bash
+   npm run db:export-mdx
+   ```
+   Downloads all active lessons from the `lessons` table and writes them back into local `content/` filesystem structures matching the course taxonomy (`[level]/[subject]/[course]/[lesson].[lang].mdx`). Perfect for backing up dynamic AI-generated lessons to Git.
+
+3. **Export static SQL seed data**:
+   ```bash
+   npm run db:export
+   ```
+   Exports a clean SQL insert seed (`supabase_seed.sql`) containing only core catalog and course content while strictly scrubbing out sensitive user profile, feedback, and tracking data.
+
+For complete documentation on switching over and architectural details, see the [Pedagogical Synchronization Guide](../docs/PEDAGOGICAL_SYNC.md).
+
+---
 
 ## Learn More
 

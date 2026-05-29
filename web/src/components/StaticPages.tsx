@@ -636,18 +636,25 @@ export const CatalogPage = () => {
     }
     if (c.is_active === false) return false;
     
-    const matchesLang = c.languages && c.languages.includes(lang.toLowerCase());
+    const matchesLang = c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
     const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
-    const matchesSearch = localizedTitle.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    
+    const stripAccents = (str: string) => {
+      if (!str) return '';
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    const queryClean = stripAccents(searchQuery);
+    const matchesSearch = stripAccents(localizedTitle).includes(queryClean) || 
+                          stripAccents(c.title).includes(queryClean) ||
+                          stripAccents(c.subject).includes(queryClean) ||
+                          stripAccents(c.description).includes(queryClean) ||
                           (isNew && (
-                            searchQuery.toLowerCase() === 'new' || 
-                            searchQuery.toLowerCase() === 'nouveau' || 
-                            searchQuery.toLowerCase() === 'nouveauté' ||
-                            searchQuery.toLowerCase() === 'nouveautés'
+                            queryClean === 'new' || 
+                            queryClean === 'nouveau' || 
+                            queryClean === 'nouveaute' ||
+                            queryClean === 'nouveautes'
                           ));
     const matchesSaved = subjectFilter === 'Saved' ? bookmarks.includes(c.id) : true;
     const matchesNew = showNewOnly ? isNew : true;

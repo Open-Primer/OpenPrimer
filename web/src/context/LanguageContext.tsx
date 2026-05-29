@@ -52,7 +52,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // Layer 1: Instant synchronous browser-locale check
         if (typeof navigator !== 'undefined' && navigator.language) {
           const browserLang = navigator.language.split('-')[0].toUpperCase();
-          if (['FR', 'ES', 'DE', 'ZH', 'IT'].includes(browserLang)) {
+          if (['FR', 'ES', 'DE', 'ZH'].includes(browserLang)) {
             fallbackLang = browserLang;
           }
         }
@@ -69,9 +69,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
               const cc = String(data.country_code).toUpperCase();
               let detectedLang: Language = fallbackLang;
               
-              if (cc === 'IT') {
-                detectedLang = 'IT';
-              } else if (['FR', 'MC', 'GP', 'MQ', 'RE', 'YT'].includes(cc)) {
+              if (['FR', 'MC', 'GP', 'MQ', 'RE', 'YT'].includes(cc)) {
                 detectedLang = 'FR';
               } else if (['ES', 'MX', 'AR', 'CO', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'UY', 'PA', 'GQ'].includes(cc)) {
                 detectedLang = 'ES';

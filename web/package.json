@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "db:export": "node export_db.js",
+    "db:import-mdx": "node import_mdx.js",
+    "db:export-mdx": "node export_mdx.js"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

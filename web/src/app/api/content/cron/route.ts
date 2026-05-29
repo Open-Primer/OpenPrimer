@@ -63,33 +63,52 @@ export async function GET(request: Request) {
 
       // 3. Process task types
       if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
-        // Translation Task
-        logs.push(`[TRANSLATOR] Simulating translation compilation...`);
-        const newId = `crs_${Date.now()}`;
+        logs.push(`[TRANSLATOR] Triggering real academic translation via Gemini 1.5 Flash JIT...`);
+        const targetLang = (nextTask.targetLang || 'fr').toLowerCase();
+        const courseSlug = nextTask.target || nextTask.description?.toLowerCase().replace(/ /g, '_') || '';
         
-        // Simulating the actual DB addition
-        await dbService.saveCourse({
-          id: newId,
-          title: `${nextTask.description} (Translated)`,
-          slug: nextTask.description.toLowerCase().replace(/ /g, '_') + '_translated',
-          description: `Self-contained curriculum translated by Episteme JIT Translation Engine.`,
-          level: 'Beginner',
-          archivingLevel: 0,
-          langs: ['EN', 'FR', 'ES', 'DE', 'ZH']
-        });
+        const { translateCourseContent } = require('@/lib/ai');
+        await translateCourseContent(courseSlug, targetLang);
+        
+        const allCrs = await dbService.getAllCourses();
+        const foundCourse = allCrs.data?.find(c => c.slug === courseSlug);
+        if (foundCourse) {
+          const originalLanguages = foundCourse.languages || [];
+          const updatedLanguages = originalLanguages.includes(targetLang)
+            ? originalLanguages
+            : [...originalLanguages, targetLang];
+
+          const originalLangsUpper = foundCourse.langs || [];
+          const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
+            ? originalLangsUpper
+            : [...originalLangsUpper, targetLang.toUpperCase()];
+
+          await dbService.saveCourse({
+            ...foundCourse,
+            languages: updatedLanguages,
+            langs: updatedLangsUpper
+          });
+        }
       } else {
-        // Generation / Course task
-        logs.push(`[GENERATOR] Initializing MDX Academic Curriculum Engine for "${nextTask.name}"...`);
-        const newId = `crs_${Date.now()}`;
+        logs.push(`[GENERATOR] Triggering real AI lesson generation via Gemini 1.5 Flash...`);
+        const { generateCourseContent } = require('@/lib/ai');
+        const level = nextTask.level || 'Beginner';
+        const targetLang = (nextTask.targetLang || 'en').toLowerCase();
         
+        await generateCourseContent(nextTask.name, level, targetLang);
+        
+        const newId = `crs_${Date.now()}`;
+        const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
         await dbService.saveCourse({
           id: newId,
           title: nextTask.name,
-          slug: nextTask.name.toLowerCase().replace(/ /g, '_'),
+          slug: slug,
           description: `Dynamic sovereign course on "${nextTask.description}". Synthesized autonomously by Gemini 1.5 Pro.`,
-          level: 'Beginner',
+          level: level,
           archivingLevel: 0,
-          langs: ['EN', 'FR']
+          is_active: true,
+          languages: [targetLang],
+          langs: [targetLang.toUpperCase()]
         });
       }
 

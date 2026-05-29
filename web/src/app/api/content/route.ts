@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   try {
     if (type === 'nav') {
-      const tree = getNavigationTree();
+      const tree = await getNavigationTree();
       return NextResponse.json(tree);
     }
 

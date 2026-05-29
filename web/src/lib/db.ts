@@ -1965,25 +1965,15 @@ async function withFallback<T>(
   try {
     const { data, error } = await supabaseOp();
     if (error) throw error;
-    // If database is connected but empty/unseeded, return our beautiful mock fallback data
-    return { data: (data && (!Array.isArray(data) || data.length > 0)) ? data : fallbackValue, error: null };
+    return { data: data !== undefined && data !== null ? data : (Array.isArray(fallbackValue) ? ([] as any) : null), error: null };
   } catch (e: any) {
-    // Notify the UI/Providers of the connection degradation
     handleDatabaseError(e);
-    // Gracefully degrade by returning the offline sandbox mockup data so the UI remains fully functional
-    return { data: fallbackValue, error: e };
+    return { data: Array.isArray(fallbackValue) ? ([] as any) : null, error: e };
   }
 }
 
-// CHECK IF OFFLINE MODE (Supabase missing or configured with placeholder, or sandbox forced via localStorage)
-const isOffline = (() => {
-  if (typeof window !== 'undefined') {
-    const allowed = window.localStorage.getItem('op_allow_sandbox');
-    if (allowed === 'true') return true;
-    if (allowed === 'false') return false;
-  }
-  return (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) && isSandboxFallbackAllowed();
-})();
+// CHECK IF OFFLINE MODE (Permanently false for production-ready direct database mode)
+const isOffline = false;
 
 function generatePedagogicalSummary(
   activeModules: any[], 
@@ -1994,7 +1984,6 @@ function generatePedagogicalSummary(
   tutorId: string
 ): string {
   const isFr = activeLang === 'FR';
-  const isIt = activeLang === 'IT';
   const isEs = activeLang === 'ES';
   const isDe = activeLang === 'DE';
   const isZh = activeLang === 'ZH';
@@ -2020,9 +2009,6 @@ function generatePedagogicalSummary(
     if (isFr) {
       return `Bilan : ${moduleName} complété à ${progVal}%. Série d'étude de ${streakVal} jours. Points de Maîtrise : ${masteryPoints}. Prochain objectif : consolider l'emplacement actuel de lecture et finaliser les défis restants. Ciblez l'efficacité active.`;
     }
-    if (isIt) {
-      return `Riepilogo: ${moduleName} completato al ${progVal}%. Serie di studio di ${streakVal} giorni. Punti di Maestria: ${masteryPoints}. Prossimo obiettivo: consolidare la lettura attuale e completare le sfide rimanenti. Massimizza l'efficienza.`;
-    }
     if (isEs) {
       return `Resumen: ${moduleName} completado al ${progVal}%. Racha de estudio de ${streakVal} días. Puntos de Maestría: ${masteryPoints}. Próximo objetivo: consolidar la lectura actual y finalizar los desafíos. Apunta a la eficiencia.`;
     }
@@ -2038,9 +2024,6 @@ function generatePedagogicalSummary(
   if (tutorId === 'gamified') {
     if (isFr) {
       return `🚀 Incroyable travail ! Tu as accumulé ${masteryPoints} Points de Maîtrise et ta série est de ${streakVal} jours ! Tu es déjà à ${progVal}% sur ${moduleName}. Prochaine étape : continuer à lire et à surmonter les obstacles ! C'est parti ! ⭐`;
-    }
-    if (isIt) {
-      return `🚀 Lavoro fantastico! Hai accumulato ${masteryPoints} Punti di Maestria e la tua serie è di ${streakVal} giorni! Sei già al ${progVal}% su ${moduleName}. Prossimo passo: continua a leggere e supera ogni ostacolo! Avanti così! ⭐`;
     }
     if (isEs) {
       return `🚀 ¡Trabajo increíble! ¡Has acumulado ${masteryPoints} Puntos de Maestría y tu racha es de ${streakVal} días! Ya estás al ${progVal}% en ${moduleName}. ¡Próximo paso: sigue leyendo y supera los retos! ¡Vamos! ⭐`;
@@ -2058,9 +2041,6 @@ function generatePedagogicalSummary(
     if (isFr) {
       return `📚 À l'instar des grands savants de l'histoire, vous progressez noblement dans ${moduleName} (complété à ${progVal}%). Avec ${masteryPoints} Points de Maîtrise et ${streakVal} jours d'assiduité, vous tracez votre propre voie. Poursuivez cette quête intellectuelle.`;
     }
-    if (isIt) {
-      return `📚 Come i grandi scienziati della storia, stai progredendo nobilmente in ${moduleName} (completato al ${progVal}%). Con ${masteryPoints} Punti di Maestria e ${streakVal} giorni di studio, tracci la tua strada. Continua questa nobile ricerca.`;
-    }
     if (isEs) {
       return `📚 Al igual que los grandes pensadores de la historia, estás progresando con nobleza en ${moduleName} (completado al ${progVal}%). Con ${masteryPoints} Puntos de Maestría y ${streakVal} días de estudio, forjas tu propio camino. Continúa.`;
     }
@@ -2076,9 +2056,6 @@ function generatePedagogicalSummary(
   if (tutorId === 'feynman') {
     if (isFr) {
       return `💡 Simplifions les choses ! Vous êtes à ${progVal}% sur ${moduleName}. Avec une série d'étude de ${streakVal} jours et ${masteryPoints} points cumulés, vous avancez bien. Pouvez-vous expliquer le dernier chapitre lu à un novice ? C'est la clé de la maîtrise !`;
-    }
-    if (isIt) {
-      return `💡 Semplifichiamo le cose! Sei al ${progVal}% su ${moduleName}. Con una serie di studio di ${streakVal} giorni e ${masteryPoints} punti, procedi alla grande. Prova a spiegare l'ultimo argomento letto a un principiante!`;
     }
     if (isEs) {
       return `💡 ¡Simplifiquemos las cosas! Estás al ${progVal}% en ${moduleName}. Con una racha de ${streakVal} días y ${masteryPoints} puntos, vas muy bien. ¿Puedes explicar lo último que leíste a un novato? ¡Esa es la clave!`;
@@ -2096,9 +2073,6 @@ function generatePedagogicalSummary(
     if (isFr) {
       return `📐 Rigueur formelle activée. ${moduleName} est validé à ${progVal}%. Vos ${masteryPoints} Points de Maîtrise démontrent l'exactitude de vos déductions formelles sur ${streakVal} jours. Prochaine proposition : formaliser la suite de votre lecture et démontrer chaque théorème.`;
     }
-    if (isIt) {
-      return `📐 Rigore formale attivo. ${moduleName} è completato al ${progVal}%. I tuoi ${masteryPoints} Punti di Maestria dimostrano la precisione formale delle tue deduzioni su ${streakVal} giorni. Prossima proposizione: formalizzare il seguito della lettura.`;
-    }
     if (isEs) {
       return `📐 Rigor formal activado. ${moduleName} está al ${progVal}%. Tus ${masteryPoints} Puntos de Maestría validan el rigor analítico de tus deducciones a lo largo de ${streakVal} días. Siguiente paso: formalizar el resto de las lecturas.`;
     }
@@ -2114,9 +2088,6 @@ function generatePedagogicalSummary(
   // DEFAULT (Socratic Coach):
   if (isFr) {
     return `💬 Vous montrez une rigueur exemplaire sur ${moduleName} (progression : ${progVal}%). Avec ${streakVal} jours d'activité constante et ${masteryPoints} points, comment l'emplacement de lecture actuel résonne-t-il avec les principes fondateurs ? Interrogez-vous là-dessus.`;
-  }
-  if (isIt) {
-    return `💬 Mostri un rigore esemplare su ${moduleName} (progresso: ${progVal}%). Con ${streakVal} giorni di attività costante e ${masteryPoints} punti, in che modo la lettura attuale risuona con i principi fondamentali del corso? Rifletti su questo.`;
   }
   if (isEs) {
     return `💬 Demuestras un rigor ejemplar en ${moduleName} (progreso: ${progVal}%). Con ${streakVal} días de actividad constante y ${masteryPoints} puntos, ¿cómo resuona tu lectura actual con los principios fundamentales? Reflexiona sobre ello.`;
@@ -2205,10 +2176,10 @@ const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
 export const dbService = {
   // SYLLABUS & CURRICULUM
   getAllCourseCompletions: async () => {
-    return { data: courseCompletionsList, error: null };
+    return { data: isOffline ? courseCompletionsList : [], error: null };
   },
   getTranslationEmails: async () => {
-    return { data: translationEmailsList, error: null };
+    return { data: isOffline ? translationEmailsList : [], error: null };
   },
   saveTranslationEmail: async (email: TranslationEmailNotification) => {
     translationEmailsList = [email, ...translationEmailsList.filter(e => e.id !== email.id)];
@@ -2226,6 +2197,45 @@ export const dbService = {
     setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
     return { data: null, error: null };
   },
+  getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('course_slug', courseSlug)
+        .eq('lesson_slug', lessonSlug)
+        .eq('lang', lang.toLowerCase())
+        .single();
+      if (error) throw error;
+      return { data, error: null };
+    } catch (e) {
+      return { data: null, error: e as any };
+    }
+  },
+
+  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }) => {
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .upsert(
+          {
+            course_slug: lesson.course_slug,
+            lesson_slug: lesson.lesson_slug,
+            lang: lesson.lang.toLowerCase(),
+            title: lesson.title,
+            content: lesson.content
+          },
+          { onConflict: 'course_slug,lesson_slug,lang' }
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return { data, error: null };
+    } catch (e) {
+      return { data: null, error: e as any };
+    }
+  },
+
   getSyllabus: async (id: string) => {
     if (isOffline) {
       if (!isSandboxFallbackAllowed()) {
@@ -2300,9 +2310,9 @@ export const dbService = {
     try {
       const { data, error } = await supabase.from('profiles').select('*');
       if (error) throw error;
-      return { data: data || users, error: null };
+      return { data: data || [], error: null };
     } catch (e) {
-      return { data: users, error: null };
+      return { data: [], error: e as any };
     }
   },
 
@@ -2317,9 +2327,7 @@ export const dbService = {
       if (error) throw error;
       return { data, error };
     } catch (e) {
-      users = users.filter(u => u.id !== id);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
+      return { data: null, error: e as any };
     }
   },
 
@@ -2336,9 +2344,7 @@ export const dbService = {
       if (error) throw error;
       return { data, error };
     } catch (e) {
-      users = users.map(u => u.id === id ? { ...u, isBlocked: !u.isBlocked } : u);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
+      return { data: null, error: e as any };
     }
   },
 
@@ -2353,9 +2359,7 @@ export const dbService = {
       if (error) throw error;
       return { data, error };
     } catch (e) {
-      users = users.map(u => u.id === id ? { ...u, role: role as UserRole } : u);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
+      return { data: null, error: e as any };
     }
   },
 
@@ -2433,24 +2437,24 @@ export const dbService = {
       return { 
         data: {
           ...data,
-          active_curricula, // Ensure we have active_curricula counted from DB
-          total_languages,
-          total_courses
+          active_curricula: 0,
+          total_languages: 0,
+          total_courses: 0
         }, 
         error: null 
       };
     } catch (e) {
       return { 
         data: { 
-          total_students, 
-          active_curricula, 
-          validation_rate, 
-          total_course_visits, 
-          platform_rating: "4.8/5",
-          total_languages,
-          total_courses
+          total_students: 0, 
+          active_curricula: 0, 
+          validation_rate: 0, 
+          total_course_visits: 0, 
+          platform_rating: "0.0/5",
+          total_languages: 0,
+          total_courses: 0
         }, 
-        error: null 
+        error: e as any
       };
     }
   },
@@ -2657,9 +2661,9 @@ export const dbService = {
     try {
        const { data, error } = await supabase.from('report_clusters').select('*');
        if (error) throw error;
-       return { data: data || activeReports, error: null };
+       return { data: data || [], error: null };
     } catch (e) {
-      return { data: activeReports, error: null };
+      return { data: [], error: e as any };
     }
   },
 
@@ -3128,7 +3132,18 @@ export const dbService = {
       finalCourse = {
         id: searchId || (mockCourses.length > 0 ? Math.max(...mockCourses.map(c => c.id)) + 1 : 1),
         title: course.title,
-        slug: course.slug || course.title.toLowerCase().replace(/ /g, '_'),
+        slug: course.slug || (() => {
+          const asciiClean = course.title
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s_-]/g, '')
+            .trim()
+            .replace(/\s+/g, '_');
+          return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
+            ? asciiClean
+            : course.title.toLowerCase().trim().replace(/\s+/g, '_');
+        })(),
         level: course.level || 'L1',
         subject: course.subject || 'General',
         description: course.description || '',
@@ -3149,7 +3164,7 @@ export const dbService = {
 
   // TRANSLATION REQUESTS APIS
   getTranslationRequests: async () => {
-    return { data: translationRequestsList, error: null };
+    return { data: isOffline ? translationRequestsList : [], error: null };
   },
 
   addTranslationRequest: async (entry: Omit<TranslationRequestEntry, 'id' | 'timestamp'>) => {
@@ -3178,9 +3193,8 @@ export const dbService = {
     return { data: { purged: originalCount - translationRequestsList.length }, error: null };
   },
 
-  // REFUSED COURSES APIS
   getRefusedCourses: async () => {
-    return { data: refusedCoursesList, error: null };
+    return { data: isOffline ? refusedCoursesList : [], error: null };
   },
 
   addRefusedCourse: async (course: RefusedCourseEntry) => {
@@ -3200,9 +3214,8 @@ export const dbService = {
     return { data: null, error: null };
   },
 
-  // REFUSED TRANSLATIONS APIS
   getRefusedTranslations: async () => {
-    return { data: refusedTranslationsList, error: null };
+    return { data: isOffline ? refusedTranslationsList : [], error: null };
   },
 
   addRefusedTranslation: async (trans: RefusedTranslationEntry) => {
@@ -3222,9 +3235,8 @@ export const dbService = {
     return { data: null, error: null };
   },
 
-  // REFUSED REVISIONS APIS
   getRefusedRevisions: async () => {
-    return { data: refusedRevisionsList, error: null };
+    return { data: isOffline ? refusedRevisionsList : [], error: null };
   },
 
   addRefusedRevision: async (rev: RefusedRevisionEntry) => {
@@ -3316,9 +3328,9 @@ export const dbService = {
         .select('*')
         .gte('created_at', ninetyDaysAgoIso)
         .order('created_at', { ascending: false });
-      return { data, error };
+      return { data: data || [], error };
     } catch (e) {
-      return { data: contactFeedbacksList, error: null };
+      return { data: [], error: e as any };
     }
   },
 

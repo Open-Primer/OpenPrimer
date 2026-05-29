@@ -38,24 +38,26 @@ export async function GET() {
     activeCourses.forEach(c => {
       c.languages?.forEach((l: string) => uniqueLangs.add(l.toLowerCase()));
     });
-    const totalLanguages = uniqueLangs.size || 2;
+    // Default to 2 languages only if we had an error and no courses array was fetched
+    const totalLanguages = courses !== null ? uniqueLangs.size : 2;
     
     // 2. Curricula Count (Only count active curricula)
-    const totalCurricula = activeCourses.filter(c => c.is_active).length || 10;
+    const totalCurricula = courses !== null ? activeCourses.filter((c: any) => c.is_active).length : 10;
     
     // 3. Total Courses/Lessons Count
-    const totalCourses = countUniqueMdxLessons() || 25;
-
+    const mdxCount = countUniqueMdxLessons();
+    const totalCourses = mdxCount > 0 ? mdxCount : 0;
+ 
     // 4. Fetch dynamic student stats
     const { data: dbUsers } = await dbService.getUsers();
     const activeUsers = dbUsers || [];
-    const totalStudents = activeUsers.length || 11;
-
+    const totalStudents = dbUsers !== null ? activeUsers.length : 11;
+ 
     // 5. Dynamic Validation Rate based on user levels
     const avgLevel = activeUsers.length > 0
-      ? activeUsers.reduce((acc, u) => acc + (u.level || 0), 0) / activeUsers.length
-      : 11;
-    const validationRate = Math.min(100, Math.round(avgLevel * 7.5)) || 84;
+      ? activeUsers.reduce((acc: number, u: any) => acc + (u.level || 0), 0) / activeUsers.length
+      : 0;
+    const validationRate = dbUsers !== null ? (activeUsers.length > 0 ? Math.min(100, Math.round(avgLevel * 7.5)) : 0) : 84;
     
     return NextResponse.json({
       total_languages: totalLanguages,

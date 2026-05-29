@@ -1,0 +1,4 @@
+# OpenPrimer Git LFS Configuration
+# Track large Supabase database seed exports using Git LFS to prevent GitHub push size limitations
+web/src/lib/supabase_seed.sql filter=lfs diff=lfs merge=lfs -text
+*.sql filter=lfs diff=lfs merge=lfs -text

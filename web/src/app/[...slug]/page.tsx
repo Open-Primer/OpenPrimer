@@ -40,7 +40,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     });
     
     const coursePath = slug.slice(0, 3).join('/');
-    const rawNav = getNavigationTree(coursePath, lang);
+    const rawNav = await getNavigationTree(coursePath, lang);
     const files = rawNav.filter(item => item.type === 'file');
     const folders = rawNav.filter(item => item.type === 'folder');
     

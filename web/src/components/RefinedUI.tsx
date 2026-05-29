@@ -845,7 +845,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     ES: { flag: '🇪🇸', label: 'Español' },
     DE: { flag: '🇩🇪', label: 'Deutsch' },
     ZH: { flag: '🇨🇳', label: '中文' },
-    IT: { flag: '🇮🇹', label: 'Italiano' },
     PT: { flag: '🇧🇷', label: 'Português' },
     AR: { flag: '🇸🇦', label: 'العربية' },
     JA: { flag: '🇯🇵', label: '日本語' },

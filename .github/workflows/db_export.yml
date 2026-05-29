@@ -1,0 +1,49 @@
+name: OpenPrimer DB Core Export
+
+on:
+  schedule:
+    # Run every night at midnight UTC to keep the public seed up to date with new pedagogical additions
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  export-db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd web
+          npm install
+
+      - name: Run Database Exporter Script
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          cd web
+          npm run db:export
+
+      - name: Commit and Push Seed File
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add web/src/lib/supabase_seed.sql
+          if git diff --staged --quiet; then
+            echo "No database content updates detected."
+          else
+            git commit -m "chore(db): auto-export public database core content to public seed [skip ci]"
+            git push
+          fi
