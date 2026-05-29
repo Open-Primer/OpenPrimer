@@ -294,7 +294,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
   );
 };
 
-const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; prerequisites: string[]; units: { title: string; modules: string[] }[] }> = {
+export const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; prerequisites: string[]; units: { title: string; modules: string[] }[] }> = {
   1: {
     ects: 6,
     hours: 150,
@@ -782,8 +782,14 @@ export const CatalogPage = () => {
                   href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
                   onClick={(e) => {
                     if (isLoggedIn && !isEnrolled) {
-                      e.preventDefault();
-                      setSelectedEnrollCourse(course);
+                      if (!course.isCurriculum) {
+                        const updated = [...enrolledIds, course.id];
+                        setEnrolledIds(updated);
+                        localStorage.setItem("op_enrolled_courses", JSON.stringify(updated));
+                      } else {
+                        e.preventDefault();
+                        setSelectedEnrollCourse(course);
+                      }
                     }
                   }}
                   className="group block h-full"
@@ -1035,10 +1041,29 @@ export const CatalogPage = () => {
                     {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
                       const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
                       const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
+                      const clickable = !!matchedCourse;
                       
+                      const handleClick = () => {
+                        if (matchedCourse) {
+                          setSelectedEnrollCourse(matchedCourse);
+                        }
+                      };
+
                       return (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60">
-                          <span className="text-[10px] font-bold text-slate-300">{pre}</span>
+                        <div 
+                          key={idx} 
+                          onClick={clickable ? handleClick : undefined}
+                          title={clickable ? (lang === 'FR' ? `Voir la fiche de : ${matchedCourse.title}` : `View details for: ${matchedCourse.title}`) : undefined}
+                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
+                            clickable 
+                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
+                              : ''
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                            {pre}
+                            {clickable && <ChevronRight className="w-3 h-3 text-slate-500" />}
+                          </span>
                           <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
                             isSatisfied 
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
@@ -1686,3 +1711,4 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
     </div>
   );
 };
+

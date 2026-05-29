@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
+import { COURSE_SYLLABUS_DETAILS } from '@/components/StaticPages';
 
 
 export default function CurriculumPage() {
@@ -23,8 +24,87 @@ export default function CurriculumPage() {
   const [loading, setLoading] = useState(true);
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
   const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
+
+  const getCoursePath = (c: any) => {
+    const slug = c.slug;
+    if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+      return '/L1/Physics/Classical_Mechanics/introduction';
+    }
+    if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+      return '/L2/Physics/Physique_Test_L2/introduction';
+    }
+    if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+      return '/L1/Biology/Cell_Biology/introduction';
+    }
+    if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+      return '/L1/Biology/Biologie_Test_L1/introduction';
+    }
+    if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+      return '/L1/Law/Droit_Test/introduction';
+    }
+    return '/catalog';
+  };
+
+  const getLocalizedTitle = (c: any) => {
+    const isEn = lang.toUpperCase() === 'EN';
+    const slug = c.slug;
+    if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+      return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
+    }
+    if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+      return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
+    }
+    if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+      return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
+    }
+    if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+      return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
+    }
+    if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+      return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
+    }
+    return t[c.title_key as keyof typeof t] || c.title_key || c.title;
+  };
+
+  const getRecommendations = () => {
+    const activeModSlugs = progress?.activeModules?.map((m: any) => m.slug) || [];
+    const completedSlugs = progress?.activeModules?.filter((m: any) => m.progress === 100).map((m: any) => m.slug) || [];
+
+    const candidates = courses.filter((c: any) => !activeModSlugs.includes(c.slug));
+
+    if (completedSlugs.includes('Classical_Mechanics') || completedSlugs.includes('classical-mechanics')) {
+      return candidates.filter((c: any) => c.slug === 'quantum-physics' || c.slug === 'Physique_Test_L2' || c.slug === 'Calculus_I');
+    }
+    if (completedSlugs.includes('Cell_Biology') || completedSlugs.includes('cell-biology') || completedSlugs.includes('Biologie_Test')) {
+      return candidates.filter((c: any) => c.slug === 'molecular-genetics' || c.slug === 'Biologie_Test_L1');
+    }
+    
+    return candidates.filter((c: any) => c.slug === 'Classical_Mechanics' || c.slug === 'classical-mechanics' || c.slug === 'Biologie_Test' || c.slug === 'cell-biology' || c.slug === 'Droit_Test' || c.slug === 'constitutional-law').slice(0, 2);
+  };
+
+  const enrollInRecommended = (course: any) => {
+    const newEnrolled = [...enrolledIds, course.id];
+    setEnrolledIds(newEnrolled);
+    localStorage.setItem('op_enrolled_courses', JSON.stringify(newEnrolled));
+    
+    const activeModules = progress?.activeModules ? [...progress.activeModules] : [];
+    if (!activeModules.find((m: any) => m.id === course.id)) {
+      activeModules.push({
+        id: course.id,
+        slug: course.slug,
+        title: course.title,
+        subject: course.subject,
+        level: course.level,
+        progress: 0
+      });
+      const updatedProgress = { ...progress, activeModules };
+      setProgress(updatedProgress);
+      localStorage.setItem('op_user_progress', JSON.stringify(updatedProgress));
+    }
+  };
 
   const [showTutorModal, setShowTutorModal] = useState(false);
   const [activeTutorId, setActiveTutorId] = useState('socratic');
@@ -360,6 +440,21 @@ export default function CurriculumPage() {
                                     >
                                       <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                                     </button>
+                                    {!isCurr && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedEnrollCourse(courseDetails || course);
+                                        }}
+                                        title={lang === 'FR' ? 'Fiche de présentation' : 'Presentation sheet'}
+                                        className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                      </button>
+                                    )}
+
                                     <button
                                       type="button"
                                       onClick={(e) => {
@@ -422,7 +517,7 @@ export default function CurriculumPage() {
                        }
 
                        return (
-                         <Link key={course.id} href={`/course/${course.slug}`} className="group">
+                         <Link key={course.id} href={getCoursePath(courseDetails || course)} className="group">
                            {cardContent}
                          </Link>
                        );
@@ -510,6 +605,19 @@ export default function CurriculumPage() {
                                       <Clock className="w-3.5 h-3.5" />
                                       {(courseDetails?.hours ?? 150)}H
                                     </span>
+                                    <button
+                                       type="button"
+                                       onClick={(e) => {
+                                         e.preventDefault();
+                                         e.stopPropagation();
+                                         setSelectedEnrollCourse(courseDetails || course);
+                                       }}
+                                       title={lang === 'FR' ? 'Fiche de présentation' : 'Presentation sheet'}
+                                       className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center mr-1"
+                                     >
+                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                     </button>
+
                                     <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
                                       {formatCourseLevel(course.level)}
                                     </span>
@@ -575,6 +683,83 @@ export default function CurriculumPage() {
             </>
           );
         })()}
+
+          {/* RECOMMENDED NEXT STEPS (POURSUITES D'ÉTUDES) */}
+          {(() => {
+            const recommendations = getRecommendations();
+            if (recommendations.length === 0) return null;
+            
+            return (
+              <section className="mt-20 p-8 rounded-[48px] bg-gradient-to-br from-blue-500/5 via-violet-500/5 to-slate-950/20 border border-blue-500/10 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-violet-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+                <div className="relative z-10">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <div>
+                      <h2 className="text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
+                        <svg className="w-6 h-6 text-blue-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                        {lang === 'FR' ? "Poursuites Possibles / Next Steps" : "Recommended Next Steps"}
+                      </h2>
+                      <p className="text-xs text-slate-500 font-medium mt-1">
+                        {lang === 'FR' ? "Basé sur votre progression académique et vos succès récents" : "Based on your academic progression and recent completions"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {recommendations.map((recCourse: any) => {
+                      const ratingCount = recCourse?.ratingCount || 0;
+                      const averageRating = recCourse?.averageRating || 0;
+                      return (
+                        <div key={recCourse.id} className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl hover:border-blue-500/30 transition-all flex flex-col justify-between group">
+                          <div>
+                            <div className="flex justify-between items-center mb-4 gap-2">
+                              <span className="px-2.5 py-1 bg-slate-850 border border-slate-800 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                {recCourse.subject}
+                              </span>
+                              <div className="flex gap-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1">
+                                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                                  {averageRating > 0 ? averageRating.toFixed(1) : "3.4"}
+                                </span>
+                                <span className="px-2.5 py-1 bg-slate-850 border border-slate-800 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                  {recCourse.level}
+                                </span>
+                              </div>
+                            </div>
+                            <h3 className="text-lg font-black text-white group-hover:text-blue-400 transition-colors mb-2">
+                              {getLocalizedTitle(recCourse)}
+                            </h3>
+                            <p className="text-xs text-slate-500 leading-relaxed font-medium mb-6">
+                              {lang === 'FR' 
+                                ? "Explorez ce parcours pour approfondir vos compétences et valider de nouvelles briques d'apprentissage souveraines." 
+                                : "Explore this path to deepen your skills and validate new elements of sovereign knowledge."}
+                            </p>
+                          </div>
+                          
+                          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-800/50">
+                            <button
+                              onClick={() => setSelectedEnrollCourse(recCourse)}
+                              className="flex-1 py-3 bg-slate-950 border border-slate-850 hover:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer text-center"
+                            >
+                              {lang === 'FR' ? "Fiche de présentation" : "Presentation Sheet"}
+                            </button>
+                            <button
+                              onClick={() => enrollInRecommended(recCourse)}
+                              className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/15 cursor-pointer text-center"
+                            >
+                              {lang === 'FR' ? "Ajouter au Curriculum" : "Add to Curriculum"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            );
+          })()}
 
         {/* ACHIEVEMENTS GALLERY */}
         <section className="mt-20">
@@ -934,6 +1119,153 @@ export default function CurriculumPage() {
                     ? "💡 Revenez ici à tout moment pour changer de tuteur et adapter votre accompagnement."
                     : "💡 Come back here at any time to change your tutor and adapt your learning support."}
                 </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Syllabus Enrollment Drawer Modal */}
+      <AnimatePresence>
+        {selectedEnrollCourse && (
+          <div 
+            onClick={() => setSelectedEnrollCourse(null)} 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer"
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
+            >
+              <button 
+                onClick={() => setSelectedEnrollCourse(null)}
+                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
+                  <h2 className="text-2xl font-black text-white">
+                    {(() => {
+                      const isEn = lang.toUpperCase() === 'EN';
+                      const slug = selectedEnrollCourse.slug;
+                      const id = selectedEnrollCourse.id;
+                      if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
+                        return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
+                      }
+                      if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
+                        return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
+                      }
+                      if (slug === 'Biologie_Test' || slug === 'cell-biology' || id === 3) {
+                        return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
+                      }
+                      if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
+                        return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
+                      }
+                      if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
+                        return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
+                      }
+                      if (slug === 'Droit_Test_L2' || id === 6) {
+                        return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
+                      }
+                      return selectedEnrollCourse.title;
+                    })()}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Duration</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} hrs</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-emerald-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Level</p>
+                  <p className="text-xs font-black text-white">{String(selectedEnrollCourse.level).toUpperCase()}</p>
+                </div>
+              </div>
+
+              {/* Prerequisites */}
+              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
+                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
+                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                  </p>
+                  <div className="flex flex-col gap-2 text-left">
+                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
+                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
+                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
+                      const clickable = !!matchedCourse;
+                      
+                      const handleClick = () => {
+                        if (matchedCourse) {
+                          setSelectedEnrollCourse(matchedCourse);
+                        }
+                      };
+
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={clickable ? handleClick : undefined}
+                          title={clickable ? (lang === 'FR' ? `Voir la fiche de : ${matchedCourse.title}` : `View details for: ${matchedCourse.title}`) : undefined}
+                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
+                            clickable 
+                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
+                              : ''
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5 font-sans">
+                            {pre}
+                            {clickable && <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                            isSatisfied 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            {isSatisfied 
+                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
+                              : (lang === 'FR' ? "⚠️ Requis" : "⚠️ Required")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Syllabus Units */}
+              <div className="space-y-6 mb-10 text-left">
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
+                  <div key={uIdx} className="space-y-3">
+                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
+                    </h4>
+                    <div className="grid gap-2 pl-6">
+                      {unit.modules.map((mod, mIdx) => (
+                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
+                          {mod}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>

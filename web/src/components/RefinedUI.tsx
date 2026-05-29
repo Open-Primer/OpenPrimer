@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
+import { COURSE_SYLLABUS_DETAILS } from './StaticPages';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality } from '@/lib/db';
 
@@ -788,6 +789,35 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSelector = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, showReadingModeSelector?: boolean, onLangChange?: (lang: string) => void }) => {
   const { language: lang, setLanguage: setLang } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [activeCourseData, setActiveCourseData] = useState<any | null>(null);
+  const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('op_enrolled_courses');
+    if (saved) {
+      try {
+        setEnrolledIds(JSON.parse(saved));
+      } catch (e) {}
+    }
+
+    dbService.getAllCourses().then(({ data }) => {
+      if (data) {
+        setCourses(data);
+        if (typeof window !== 'undefined' && isCoursePage) {
+          const parts = window.location.pathname.split('/').filter(Boolean);
+          const slug = parts[2];
+          if (slug) {
+            const matched = data.find((c: any) => c.slug === slug || c.slug?.toLowerCase() === slug.toLowerCase());
+            if (matched) {
+              setActiveCourseData(matched);
+            }
+          }
+        }
+      }
+    });
+  }, [isCoursePage]);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
   const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; } | null>(null);
@@ -1034,6 +1064,17 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           })}
         </div>
 
+        {isCoursePage && activeCourseData && (
+          <button 
+            onClick={() => setSelectedEnrollCourse(activeCourseData)}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-450 hover:border-blue-500/50 transition-all flex items-center gap-2 group cursor-pointer"
+            title={lang === 'FR' ? "Afficher la fiche de présentation" : "Display Presentation Sheet"}
+          >
+            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{lang === 'FR' ? "Fiche du cours" : "Course Sheet"}</span>
+          </button>
+        )}
+
         {isCoursePage && (
           <button 
             onClick={() => setIsReportModalOpen(true)}
@@ -1191,6 +1232,152 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       : (lang === 'FR' ? "Soumettre le Rapport" : "Submit Report")}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+          {/* Syllabus Enrollment Drawer Modal */}
+      <AnimatePresence>
+        {selectedEnrollCourse && (
+          <div 
+            onClick={() => setSelectedEnrollCourse(null)} 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer"
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
+            >
+              <button 
+                onClick={() => setSelectedEnrollCourse(null)}
+                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
+                  <h2 className="text-2xl font-black text-white">
+                    {(() => {
+                      const isEn = lang.toUpperCase() === 'EN';
+                      const slug = selectedEnrollCourse.slug;
+                      const id = selectedEnrollCourse.id;
+                      if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
+                        return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
+                      }
+                      if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
+                        return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
+                      }
+                      if (slug === 'Biologie_Test' || slug === 'cell-biology' || id === 3) {
+                        return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
+                      }
+                      if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
+                        return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
+                      }
+                      if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
+                        return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
+                      }
+                      if (slug === 'Droit_Test_L2' || id === 6) {
+                        return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
+                      }
+                      return selectedEnrollCourse.title;
+                    })()}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Duration</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} hrs</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
+                  <svg className="w-5 h-5 text-emerald-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Level</p>
+                  <p className="text-xs font-black text-white">{String(selectedEnrollCourse.level).toUpperCase()}</p>
+                </div>
+              </div>
+
+              {/* Prerequisites */}
+              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
+                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
+                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                  </p>
+                  <div className="flex flex-col gap-2 text-left">
+                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
+                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
+                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
+                      const clickable = !!matchedCourse;
+                      
+                      const handleClick = () => {
+                        if (matchedCourse) {
+                          setSelectedEnrollCourse(matchedCourse);
+                        }
+                      };
+
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={clickable ? handleClick : undefined}
+                          title={clickable ? (lang === 'FR' ? `Voir la fiche de : ${matchedCourse.title}` : `View details for: ${matchedCourse.title}`) : undefined}
+                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
+                            clickable 
+                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
+                              : ''
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5 font-sans">
+                            {pre}
+                            {clickable && <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                            isSatisfied 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            {isSatisfied 
+                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
+                              : (lang === 'FR' ? "⚠️ Requis" : "⚠️ Required")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Syllabus Units */}
+              <div className="space-y-6 mb-10 text-left">
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
+                  <div key={uIdx} className="space-y-3">
+                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
+                    </h4>
+                    <div className="grid gap-2 pl-6">
+                      {unit.modules.map((mod, mIdx) => (
+                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
+                          {mod}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>

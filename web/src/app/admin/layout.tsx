@@ -103,6 +103,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [readingMode, setReadingMode] = React.useState('dark');
   const [dynamicEmail, setDynamicEmail] = React.useState('admin@openprimer.org');
   const [dynamicRole, setDynamicRole] = React.useState('Administrator');
+  const [isDbConnected, setIsDbConnected] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const isDefaultKey = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
+        if (isDefaultKey) {
+          setIsDbConnected(false);
+          return;
+        }
+        const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+        if (error) {
+          setIsDbConnected(false);
+        } else {
+          setIsDbConnected(true);
+        }
+      } catch {
+        setIsDbConnected(false);
+      }
+    };
+    checkConnection();
+  }, []);
   
   const { language: lang, setLanguage: setLang } = useLanguage();
   const t = ADMIN_STRINGS[lang as keyof typeof ADMIN_STRINGS] || ADMIN_STRINGS.EN;
@@ -236,13 +259,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
             <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 ml-6 italic">{t.cockpit}</p>
             
-            {/* Stunning glowing Mockup Mode indicator badge */}
-            <div className="mt-4 ml-6 inline-flex items-center gap-2 px-3 py-1 bg-violet-500/10 border border-violet-500/35 rounded-full shadow-lg shadow-violet-500/5">
+            {/* Stunning glowing Dynamic Database Mode indicator badge */}
+            <div className={`mt-4 ml-6 inline-flex items-center gap-2 px-3 py-1 rounded-full shadow-lg transition-all duration-500 border ${
+              isDbConnected === true
+                ? 'bg-emerald-500/10 border-emerald-500/35 shadow-emerald-500/5'
+                : isDbConnected === false
+                ? 'bg-violet-500/10 border-violet-500/35 shadow-violet-500/5'
+                : 'bg-amber-500/10 border-amber-500/35 shadow-amber-500/5'
+            }`}>
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  isDbConnected === true
+                    ? 'bg-emerald-400'
+                    : isDbConnected === false
+                    ? 'bg-violet-400'
+                    : 'bg-amber-400'
+                }`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isDbConnected === true
+                    ? 'bg-emerald-500'
+                    : isDbConnected === false
+                    ? 'bg-violet-500'
+                    : 'bg-amber-500'
+                }`}></span>
               </span>
-              <span className="text-[8px] font-black uppercase tracking-widest text-violet-400">Mockup Active</span>
+              <span className={`text-[8px] font-black uppercase tracking-widest ${
+                isDbConnected === true
+                  ? 'text-emerald-400'
+                  : isDbConnected === false
+                  ? 'text-violet-400'
+                  : 'text-amber-400'
+              }`}>
+                {isDbConnected === true
+                  ? (lang === 'FR' ? 'Base Connectée' : 'Database Active')
+                  : isDbConnected === false
+                  ? (lang === 'FR' ? 'Mockup Actif' : 'Mockup Active')
+                  : (lang === 'FR' ? 'Vérification...' : 'Database Check...')}
+              </span>
             </div>
           </div>
 
