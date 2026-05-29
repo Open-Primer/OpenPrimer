@@ -101,13 +101,9 @@ export function useServiceStatus(intervalMs = 30_000) {
         results.forEach(r => { map[r.id] = r; });
         setHealth(map as ServiceHealthMap);
       }
-    } catch (e) {
-      // Network failure — mark all as offline
-      const map: any = {};
-      SERVICES_CONFIG.forEach(s => {
-        map[s.id] = { ...defaultHealth(s.id, s.nameKey, s.url), status: 'offline', checkedAt: new Date().toISOString() };
-      });
-      setHealth(map as ServiceHealthMap);
+    } catch {
+      // Network failure or API not reachable — silently keep previous state (unknown)
+      // Do NOT flip to 'offline' or log to console; this is expected in dev/sandbox.
     } finally {
       setIsChecking(false);
     }

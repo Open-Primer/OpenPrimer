@@ -545,41 +545,7 @@ export const CatalogPage = () => {
   };
 
   const getLocalizedCourseTitle = (course: any) => {
-    const isEn = lang.toUpperCase() === 'EN';
-    const slug = course.slug;
-    const id = course.id;
-
-    if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
-      return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-    }
-    if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
-      return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-    }
-    if (slug === 'Biologie_Test' || slug === 'cell-biology' || id === 3) {
-      return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-    }
-    if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
-      return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-    }
-    if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
-      return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-    }
-    if (slug === 'Droit_Test_L2' || id === 6) {
-      return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
-    }
-    if (slug === 'Maths_Test' || id === 7) {
-      return isEn ? "Mathematics: Linear Algebra" : "Mathématiques : Algèbre Linéaire";
-    }
-    if (slug === 'Maths_Test_L1' || id === 8) {
-      return isEn ? "Mathematics: Calculus I" : "Mathématiques : Analyse I";
-    }
-    if (slug === 'Chimie_Test' || id === 9) {
-      return isEn ? "Chemistry: Organic Chemistry" : "Chimie : Chimie Organique";
-    }
-    if (slug === 'Economie_Test' || id === 10) {
-      return isEn ? "Economics: Microeconomics" : "Économie : Microéconomie";
-    }
-    return course.title;
+    return dbService.getLocalizedCourseTitle(course, lang);
   };
 
   const formatCourseLevel = (level: string | number) => {

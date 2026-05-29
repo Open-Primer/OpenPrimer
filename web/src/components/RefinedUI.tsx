@@ -52,6 +52,7 @@ const STATIC_UI_STRINGS = {
     profile_updated: "Profile Updated Successfully",
     total_credits: "Total Credits", knowledge_points: "Knowledge Points", learning_time: "Learning Time",
     active_modules: "Active Modules", progress: "Progress", tutor_summary: "AI Pedagogical Summary",
+    curricula: "Curricula", total_courses: "Total Courses",
     tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview",
     classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law",
     search_course: "Search this course...", course_progress: "Course Progress",
@@ -118,6 +119,7 @@ const STATIC_UI_STRINGS = {
     profile_updated: "Profil mis à jour avec succès",
     total_credits: "Crédits Totaux", knowledge_points: "Points de Savoir", learning_time: "Temps d'Apprentissage",
     active_modules: "Modules Actifs", progress: "Progression", tutor_summary: "Résumé Pédagogique IA",
+    curricula: "Cursus", total_courses: "Cours Totaux",
     tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum",
     classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel",
     search_course: "Rechercher dans ce cours...", course_progress: "Progression du Cours",
@@ -184,6 +186,7 @@ const STATIC_UI_STRINGS = {
     profile_updated: "Perfil actualizado con éxito",
     total_credits: "Créditos Totales", knowledge_points: "Puntos de Conocimiento", learning_time: "Tiempo de Aprendizaje",
     active_modules: "Módulos Activos", progress: "Progreso", tutor_summary: "Resumen Pedagógico IA",
+    curricula: "Planes de Estudio", total_courses: "Cursos Totales",
     tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo",
     classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional",
     search_course: "Buscar en este curso...", course_progress: "Progreso del Curso",
@@ -250,6 +253,7 @@ const STATIC_UI_STRINGS = {
     profile_updated: "Profil erfolgreich aktualisiert",
     total_credits: "Gesamt-Credits", knowledge_points: "Wissenspunkte", learning_time: "Lernzeit",
     active_modules: "Aktive Module", progress: "Fortschritt", tutor_summary: "KI-Pädagogische Zusammenfassung",
+    curricula: "Lehrpläne", total_courses: "Gesamte Kurse",
     tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick",
     classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht",
     search_course: "Diesen Kurs durchsuchen...", course_progress: "Kursfortschritt",
@@ -316,6 +320,7 @@ const STATIC_UI_STRINGS = {
     profile_updated: "资料更新成功",
     total_credits: "总学分", knowledge_points: "知识点", learning_time: "学习时长",
     active_modules: "当前模块", progress: "进度", tutor_summary: "AI 教学总结",
+    curricula: "学术大纲", total_courses: "全部课程",
     tutor_feedback: "学术反馈", curriculum_overview: "课程概览",
     classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法",
     search_course: "搜索此课程...", course_progress: "课程进度",
@@ -343,48 +348,6 @@ const STATIC_UI_STRINGS = {
     password_placeholder: "••••••••••••", validation_in_progress: "正在验证中",
     validation_verifying_desc: "我们正在核对您的安全验证码...", resend_email_dispatched: "电子邮件验证链接已发送。",
     mailbox_sim_title: "邮箱模拟器", forgot_question: "忘记？", email_required_error: "请输入您的电子邮件和密码。"
-  },
-  IT: { 
-    my_progress: "Il Mio Progresso", admin: "Console Amministratore", settings: "Impostazioni Account",
-    terms: "Termini di Servizio", privacy: "Sovranità dei Dati",
-    copyright: "© 2026 Progetto OpenPrimer • Archivio Accademico Globale dell'IA",
-    all: "Tutti", saved: "Salvati", physics: "Fisica", biology: "Biologia", law: "Diritto", math: "Matematica", search: "Cerca moduli...",
-    tagline: "Il Futuro della Sovranità Accademica Aperta",
-    cta_start: "Inizia ad Imparare", cta_foundation: "Esplora Fondazione",
-    tutor: "Tutor IA", placeholder: "Fai una domanda...", welcome: "Ciao! Sono il tuo tutor OpenPrimer.", 
-    copy: "Link copiato!", report: "Segnala", signout: "Disconnetti", login: "Accedi", signup: "Registrati", profile: "Il Mio Curriculum", 
-    delete: "Elimina Account", langLabel: "Lingua",
-    foundation: "Fondazione", curriculum: "Curriculum", legal: "Legale",
-    philosophy: "La Nostra Filosofia", contact: "Contatta il Supporto", opensource: "Open Source",
-    languages: "Lingue", elite: "Elite",
-    mission: "Sovranità Accademica Universale", mission_sub: "Manifesto del Progetto",
-    mission_desc: "OpenPrimer si basa sulla convinzione che l'istruzione d'élite sia un diritto umano fondamentale, non un privilegio localizzato.",
-    accessibility: "Accessibilità Radicale", accessibility_desc: "Eliminiamo le barriere linguistiche fornendo tutti i contenuti accademici certificati nelle 5 lingue più parlate al mondo.",
-    quality: "Qualità Istituzionale", quality_desc: "Ogni modulo su OpenPrimer è allineato con gli standard internazionali (ECTS, crediti USA).",
-    methodology: "Metodologia", methodology_desc: "La Metodologia Feynman",
-    transparency: "Trasparenza Radicale", transparency_desc: "La logica dell'istruzione non dovrebbe mai essere una scatola nera. OpenPrimer è al 100% Open Source.",
-    universal_knowledge: "La Conoscenza Universale.", finally_free: "Finalmente Libera.",
-    summary: "OpenPrimer sintetizza l'intero percorso scolastico, dalla scuola primaria fino alla laurea, in un'esperienza unica, interattiva e assistita da un tutor IA.",
-    rigor: "Rigore Accademico", rigor_desc: "Curricula universitari completi sintetizzati con il metodo Feynman per la massima profondità.",
-    tutor_desc: "Tutoraggio IA consapevole del contesto integrato direttamente in ogni modulo di apprendimento.",
-    multilingual_desc: "Supporto nativo per EN, FR, ES, DE, IT e ZH. Abbattimento delle barriere linguistiche nell'istruzione.",
-    mission_link: "Scopri la nostra visione", beta_tag: "", elite_tag: "Elite", new_tag: "Novità", try_label: "Prova:",
-    socratic: "Metodo Socratico", pragmatic: "Modalità Pragmatica", academic: "Rigore Accademico",
-    give_example: "Fai un esempio", tell_story: "Racconta una storia", simplify: "Semplifica", test_me: "Mettimi alla prova",
-    analysis: "Analisi accademica in corso...", mode_default: "Predefinito", mode_paper: "Carta", mode_focus: "Focus",
-    footer_desc: "Universalizzazione della conoscenza accademica d'élite attraverso una pedagogia recursiva assistita dall'IA.",
-    logged_in_as: "Accesso effettuato come", my_curriculum: "Il Mio Curriculum", catalog: "Sfoglia il Catalogo",
-    account_mgmt: "Gestione Account", profile_settings: "Impostazioni Profilo",
-    personal_info: "Informazioni Personali", first_name: "Nome", last_name: "Cognome", email_addr: "Indirizzo Email",
-    save_changes: "Salva Modifiche", preferences: "Preferenze", preferred_lang: "Lingua Preferita",
-    lang_desc: "Lingua globale dell'interfaccia e del tutor.", danger_zone: "Zona di Pericolo",
-    delete_account: "Elimina Account", delete_desc: "Questa azione è permanente. Tutti i progressi andranno persi.",
-    profile_updated: "Profilo aggiornato con successo",
-    total_credits: "Crediti Totali", knowledge_points: "Punti di Conoscenza", learning_time: "Tempo di Apprendimento",
-    active_modules: "Moduli Attivi", progress: "Progresso", tutor_summary: "Riepilogo Pedagogico IA",
-    tutor_feedback: "Feedback Accademico", curriculum_overview: "Panoramica del Tuo Curriculum",
-    classical_mechanics: "Meccanica Classica", cell_biology: "Biologia Cellulare", constitutional_law: "Diritto Costituzionale",
-    search_course: "Cerca in questo corso...", course_progress: "Progresso del Corso"
   }
 };
 
@@ -398,7 +361,7 @@ export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
         } catch (e) {}
       }
     }
-    return target[prop as keyof typeof target] || target.EN;
+    return target[prop.toUpperCase() as keyof typeof target] || target.EN;
   }
 }) as any;
 
@@ -414,7 +377,7 @@ interface AITutorOverlayProps {
 export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayProps = {}) => {
   const { language: contextLang } = useLanguage();
   const lang = propLang || contextLang;
-  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
@@ -443,8 +406,8 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
   const getPersonaName = (pName: string) => {
     const selected = personalities.find(p => p.name === pName || p.id === pName);
-    if (selected && selected.translations?.[lang]) {
-      return selected.translations[lang].name;
+    if (selected && selected.translations?.[lang.toUpperCase()]) {
+      return selected.translations[lang.toUpperCase()].name;
     }
     return pName;
   };
@@ -548,7 +511,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const courseSlug = isLPage ? slugParts[3] : 'global';
 
   useEffect(() => {
-    const key = `op_tutor_hist_${courseSlug}_${lang}`;
+    const key = `op_tutor_hist_${courseSlug}_${lang.toUpperCase()}`;
     const saved = localStorage.getItem(key);
     if (saved) {
       setMessages(JSON.parse(saved));
@@ -559,7 +522,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
   useEffect(() => {
     if (messages.length > 1) {
-      const key = `op_tutor_hist_${courseSlug}_${lang}`;
+      const key = `op_tutor_hist_${courseSlug}_${lang.toUpperCase()}`;
       localStorage.setItem(key, JSON.stringify(messages.slice(-10))); // Keep last 10
     }
   }, [messages, courseSlug, lang]);
@@ -685,7 +648,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       {personalities.length > 0 ? (
                         personalities.map(p => (
                           <option key={p.id} value={p.name} className="bg-slate-900 text-white text-xs">
-                            {p.translations?.[lang]?.name || p.name}
+                            {p.translations?.[lang.toUpperCase()]?.name || p.name}
                           </option>
                         ))
                       ) : (
@@ -862,7 +825,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
   const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
   
-  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
     if (typeof window !== 'undefined') {
@@ -1040,17 +1003,17 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         {/* Language Selector */}
         <div className="relative" onMouseEnter={() => setActiveDropdown('lang')} onMouseLeave={() => setActiveDropdown(null)}>
           <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
-            <span className="text-lg">{languages.find(l => l.code === lang)?.flag}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang}</span>
+            <span className="text-lg">{languages.find(l => l.code.toUpperCase() === lang.toUpperCase())?.flag}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang.toUpperCase()}</span>
             <ChevronDown className={`w-3 h-3 text-slate-600 transition-transform ${activeDropdown === 'lang' ? 'rotate-180' : ''}`} />
           </button>
           <AnimatePresence>
             {activeDropdown === 'lang' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
                  {languages.map(l => (
-                   <button key={l.code} onClick={() => handleLanguageSelect(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                   <button key={l.code} onClick={() => handleLanguageSelect(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang.toUpperCase() === l.code.toUpperCase() ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                      <span>{l.flag} {l.label}</span>
-                     {lang === l.code && <CheckCircle className="w-3 h-3" />}
+                     {lang.toUpperCase() === l.code.toUpperCase() && <CheckCircle className="w-3 h-3" />}
                    </button>
                  ))}
               </motion.div>
@@ -1112,7 +1075,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               {activeDropdown === 'user' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
                    <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
-                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">Logged in as</p>
+                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_in_as}</p>
                      <p className="text-xs font-bold text-white truncate">
                        {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Silvere Martin'}
                      </p>

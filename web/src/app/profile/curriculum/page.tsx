@@ -49,24 +49,7 @@ export default function CurriculumPage() {
   };
 
   const getLocalizedTitle = (c: any) => {
-    const isEn = lang.toUpperCase() === 'EN';
-    const slug = c.slug;
-    if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-      return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-    }
-    if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-      return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-    }
-    if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-      return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-    }
-    if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-      return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-    }
-    if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-      return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-    }
-    return t[c.title_key as keyof typeof t] || c.title_key || c.title;
+    return dbService.getLocalizedCourseTitle(c, lang);
   };
 
   const getRecommendations = () => {
@@ -115,55 +98,96 @@ export default function CurriculumPage() {
       emoji: '💬',
       nameEN: 'Socratic Coach',
       nameFR: 'Tuteur Socratique',
+      nameES: 'Entrenador Socrático',
+      nameDE: 'Sokratischer Coach',
+      nameZH: '苏格拉底式导师',
       descEN: 'Pushes you to think for yourself by asking deep, guiding questions.',
-      descFR: 'Vous pousse à réfléchir par vous-même en vous guidant par des questions profondes.'
+      descFR: 'Vous pousse à réfléchir par vous-même en vous guidant par des questions profondes.',
+      descES: 'Te empuja a pensar por ti mismo haciendo preguntas profundas y de guía.',
+      descDE: 'Bringt Sie durch tiefgründige, wegweisende Fragen dazu, selbstständig nachzudenken.',
+      descZH: '通过提出深刻的启发性问题，引导您进行独立思考。'
     },
     {
       id: 'direct',
       emoji: '⚡',
       nameEN: 'Direct Synthesizer',
       nameFR: 'Synthétiseur Direct',
+      nameES: 'Sintetizador Directo',
+      nameDE: 'Direkter Synthesizer',
+      nameZH: '直观总结者',
       descEN: 'Outcome-focused, precise, and direct. Ideal for fast high-efficiency study.',
-      descFR: 'Synthétique, ultra-précis et efficace. Idéal pour des révisions rapides.'
+      descFR: 'Synthétique, ultra-précis et efficace. Idéal pour des révisions rapides.',
+      descES: 'Centrado en los resultados, preciso y directo. Ideal para un estudio de alta eficiencia.',
+      descDE: 'Ergebnisorientiert, präzise und direkt. Ideal für hocheffizientes Lernen.',
+      descZH: '注重结果、精准且直接。非常适合快速而高效的备考复习。'
     },
     {
       id: 'gamified',
       emoji: '🚀',
       nameEN: 'Gamified Companion',
       nameFR: 'Compagnon Ludique',
+      nameES: 'Compañero de Juego',
+      nameDE: 'Spielerischer Begleiter',
+      nameZH: '趣味学习伙伴',
       descEN: 'High-energy partner celebrating every milestone and streak with high-fives.',
-      descFR: 'Partenaire hyper-enthousiaste célébrant chaque réussite et point gagné.'
+      descFR: 'Partenaire hyper-enthousiaste célébrant chaque réussite et point gagné.',
+      descES: 'Socio de alta energía que celebra cada hito y racha con chocadas de manos.',
+      descDE: 'Ein energiegeladener Partner, der jeden Meilenstein und jede Lernserie gebührend feiert.',
+      descZH: '充满活力的搭档，与您击掌庆祝每一个学习里程碑和连续学习天数。'
     },
     {
       id: 'historical',
       emoji: '📚',
       nameEN: 'Historical Storyteller',
       nameFR: 'Conteur Historique',
+      nameES: 'Narrador Histórico',
+      nameDE: 'Historischer Geschichtenerzähler',
+      nameZH: '历史叙事家',
       descEN: 'Frames concepts inside the thrilling stories of the scholars who built them.',
-      descFR: 'Replace chaque formule dans l\'aventure historique des savants qui l\'ont forgée.'
+      descFR: 'Replace chaque formule dans l\'aventure historique des savants qui l\'ont forgée.',
+      descES: 'Encuadra los conceptos dentro de las apasionantes historias de los científicos que los construyeron.',
+      descDE: 'Betrachtet Konzepte im Rahmen der spannenden Lebenswege ihrer Entdecker.',
+      descZH: '将学术概念融入发现这些理论的科学家们惊心动魄的历史故事中。'
     },
     {
       id: 'feynman',
       emoji: '💡',
       nameEN: 'Feynman Simplifier',
       nameFR: 'Simplificateur Feynman',
+      nameES: 'Simplificador Feynman',
+      nameDE: 'Feynman-Vereinfacher',
+      nameZH: '费曼化繁为简者',
       descEN: 'Master of simple analogies. Explains complex ideas as if to a complete beginner.',
-      descFR: 'Le maître des analogies simples. Explique la complexité comme si vous aviez 10 ans.'
+      descFR: 'Le maître des analogies simples. Explique la complexité comme si vous aviez 10 ans.',
+      descES: 'Maestro de las analogías simples. Explica ideas complejas como si fueras un principiante.',
+      descDE: 'Meister der einfachen Analogien. Erklärt komplexe Ideen wie für einen absoluten Anfänger.',
+      descZH: '简单比喻的大师。用最通俗易懂的语言向零基础初学者解释复杂的概念。'
     },
     {
       id: 'proof',
       emoji: '📐',
       nameEN: 'Proof Master',
       nameFR: 'Maître des Preuves',
+      nameES: 'Maestro de Pruebas',
+      nameDE: 'Meister der Beweise',
+      nameZH: '严谨推导大师',
       descEN: 'Rigorous and formal, emphasizing axiomatic math proofs and complete derivation.',
-      descFR: 'Régissant et formel, axé sur les démonstrations axiomatiques et la dérivation complète.'
+      descFR: 'Régissant et formel, axé sur les démonstrations axiomatiques et la dérivation complète.',
+      descES: 'Riguroso y formal, con énfasis en pruebas matemáticas axiomáticas y derivación completa.',
+      descDE: 'Meister der Beweise, mit Schwerpunkt auf axiomatischen mathematischen Beweisen und vollständiger Herleitung.',
+      descZH: '严密且形式化，侧重于公理化数学证明与完整的定理推导。'
     }
   ];
 
   const getActiveTutorName = () => {
     const tMatch = TUTORS.find(t => t.id === activeTutorId);
     if (!tMatch) return 'Socratic Coach';
-    return lang === 'FR' ? tMatch.nameFR : tMatch.nameEN;
+    const code = (lang || 'EN').toUpperCase();
+    if (code === 'FR') return tMatch.nameFR;
+    if (code === 'ES') return tMatch.nameES;
+    if (code === 'DE') return tMatch.nameDE;
+    if (code === 'ZH') return tMatch.nameZH;
+    return tMatch.nameEN;
   };
 
   const handleSelectTutor = async (id: string) => {
@@ -439,7 +463,17 @@ export default function CurriculumPage() {
                                     )}
                                     <button
                                       onClick={(e) => toggleBookmark(course.id, e)}
-                                      title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
+                                      title={bookmarks.includes(course.id) 
+                                        ? (lang === 'FR' ? 'Supprimer des favoris' 
+                                           : lang === 'ES' ? 'Quitar de favoritos' 
+                                           : lang === 'DE' ? 'Aus Lesezeichen entfernen' 
+                                           : lang === 'ZH' ? '从收藏夹中移除' 
+                                           : 'Remove bookmark') 
+                                        : (lang === 'FR' ? 'Sauvegarder ce cours' 
+                                           : lang === 'ES' ? 'Guardar este curso' 
+                                           : lang === 'DE' ? 'Diesen Kurs speichern' 
+                                           : lang === 'ZH' ? '收藏此课程' 
+                                           : 'Save this course')}
                                       className={`p-2 rounded-xl transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
                                     >
                                       <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
@@ -790,8 +824,8 @@ export default function CurriculumPage() {
                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
                        <IconComponent className="w-6 h-6" />
                      </div>
-                     <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.name}</h4>
-                     <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.description}</p>
+                     <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
+                     <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
                      <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
                        {lang === 'FR' ? 'Déverrouillé' : 'Unlocked'}
                      </span>
@@ -1000,18 +1034,32 @@ export default function CurriculumPage() {
                 </div>
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 block mb-1">
-                    {lang === 'FR' ? 'CONFIRMATION DE DÉSINSCRIPTION' : 'DISENROLLMENT CONFIRMATION'}
+                    {lang === 'FR' ? 'CONFIRMATION DE DÉSINSCRIPTION'
+                     : lang === 'ES' ? 'CONFIRMACIÓN DE DESINSCRIPCIÓN'
+                     : lang === 'DE' ? 'BESTÄTIGUNG DER ABMELDUNG'
+                     : lang === 'ZH' ? '取消注册确认'
+                     : 'DISENROLLMENT CONFIRMATION'}
                   </span>
                   <h3 className="text-xl font-black text-white">
-                    {lang === 'FR' ? 'Abandonner le module ?' : 'Abandon Module?'}
+                    {lang === 'FR' ? 'Abandonner le module ?'
+                     : lang === 'ES' ? '¿Abandonar el módulo?'
+                     : lang === 'DE' ? 'Modul abbrechen?'
+                     : lang === 'ZH' ? '放弃模块学习？'
+                     : 'Abandon Module?'}
                   </h3>
                 </div>
               </div>
 
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
                 {lang === 'FR' 
-                  ? `Êtes-vous absolument sûr de vouloir abandonner "${abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course')}" ? Votre progression locale sur ce module sera réinitialisée, mais vos points de maîtrise globaux et succès restent pleinement préservés.`
-                  : `Are you absolutely sure you want to abandon "${abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course')}"? Your local progress on this module will be reset, but your global mastery points and achievements remain fully secure.`}
+                  ? `Êtes-vous absolument sûr de vouloir abandonner "${abandonTarget.title || 'ce cours'}" ? Votre progression locale sur ce module sera réinitialisée, mais vos points de maîtrise globaux et succès restent pleinement préservés.`
+                  : lang === 'ES'
+                  ? `¿Está absolutamente seguro de que desea abandonar "${abandonTarget.title || 'este curso'}"? Su progreso local en este módulo se restablecerá, pero sus puntos globales de maestría e insignias se conservarán.`
+                  : lang === 'DE'
+                  ? `Sind Sie absolut sicher, dass Sie "${abandonTarget.title || 'diesen Kurs'}" abbrechen möchten? Ihr lokaler Fortschritt in diesem Modul wird zurückgesetzt, aber Ihre globalen Meisterpunkte und Errungenschaften bleiben vollständig erhalten.`
+                  : lang === 'ZH'
+                  ? `您确定要放弃学习 "${abandonTarget.title || '该课程'}" 吗？您在该模块的本地进度将被重置，但您的全局掌握点数和成就荣誉仍将被完整保留。`
+                  : `Are you absolutely sure you want to abandon "${abandonTarget.title || 'this course'}"? Your local progress on this module will be reset, but your global mastery points and achievements remain fully secure.`}
               </p>
 
               <div className="flex gap-4">
@@ -1020,7 +1068,11 @@ export default function CurriculumPage() {
                   onClick={() => setAbandonTarget(null)}
                   className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
                 >
-                  {lang === 'FR' ? 'Annuler' : 'Cancel'}
+                  {lang === 'FR' ? 'Annuler'
+                   : lang === 'ES' ? 'Cancelar'
+                   : lang === 'DE' ? 'Abbrechen'
+                   : lang === 'ZH' ? '取消'
+                   : 'Cancel'}
                 </button>
                 <button
                   type="button"
@@ -1030,7 +1082,11 @@ export default function CurriculumPage() {
                   }}
                   className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
                 >
-                  {lang === 'FR' ? 'Confirmer' : 'Confirm'}
+                  {lang === 'FR' ? 'Confirmer'
+                   : lang === 'ES' ? 'Confirmar'
+                   : lang === 'DE' ? 'Bestätigen'
+                   : lang === 'ZH' ? '确认'
+                   : 'Confirm'}
                 </button>
               </div>
             </motion.div>
@@ -1091,15 +1147,27 @@ export default function CurriculumPage() {
                         </div>
                         <div>
                           <h4 className="font-black text-sm text-white tracking-wide flex items-center gap-2">
-                            {lang === 'FR' ? tOption.nameFR : tOption.nameEN}
+                            {lang === 'FR' ? tOption.nameFR
+                             : lang === 'ES' ? tOption.nameES
+                             : lang === 'DE' ? tOption.nameDE
+                             : lang === 'ZH' ? tOption.nameZH
+                             : tOption.nameEN}
                             {isSelected && (
                               <span className="px-2.5 py-0.5 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-wider">
-                                {lang === 'FR' ? 'Actif' : 'Active'}
+                                {lang === 'FR' ? 'Actif'
+                                 : lang === 'ES' ? 'Activo'
+                                 : lang === 'DE' ? 'Aktiv'
+                                 : lang === 'ZH' ? '生效'
+                                 : 'Active'}
                               </span>
                             )}
                           </h4>
                           <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed max-w-md">
-                            {lang === 'FR' ? tOption.descFR : tOption.descEN}
+                            {lang === 'FR' ? tOption.descFR
+                             : lang === 'ES' ? tOption.descES
+                             : lang === 'DE' ? tOption.descDE
+                             : lang === 'ZH' ? tOption.descZH
+                             : tOption.descEN}
                           </p>
                         </div>
                       </div>

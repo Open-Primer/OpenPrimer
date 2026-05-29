@@ -182,33 +182,45 @@ export default function Home() {
   const [stats, setStats] = useState<any>(null);
 
   const allSearchableModules = [
-    { title: lang === 'FR' ? "Mécanique Classique" : "Classical Mechanics", category: s.physics || 'Physics' },
-    { title: lang === 'FR' ? "Physique Quantique" : "Quantum Physics", category: s.physics || 'Physics' },
-    { title: lang === 'FR' ? "Biologie Cellulaire" : "Cell Biology", category: s.biology || 'Biology' },
-    { title: lang === 'FR' ? "Génétique Moléculaire" : "Molecular Genetics", category: s.biology || 'Biology' },
-    { title: lang === 'FR' ? "Droit Constitutionnel" : "Constitutional Law", category: s.law || 'Law' },
-    { title: lang === 'FR' ? "Droit Pénal" : "Criminal Law", category: s.law || 'Law' },
-    { title: lang === 'FR' ? "Algèbre Linéaire" : "Linear Algebra", category: s.math || 'Mathematics' },
-    { title: lang === 'FR' ? "Analyse I" : "Calculus I", category: s.math || 'Mathematics' },
+    { title: dbService.getLocalizedCourseTitle({ id: 1, slug: "Classical_Mechanics", title: "Classical Mechanics" }, lang), category: s.physics || 'Physics' },
+    { title: dbService.getLocalizedCourseTitle({ id: 2, slug: "Physique_Test_L2", title: "Quantum Physics" }, lang), category: s.physics || 'Physics' },
+    { title: dbService.getLocalizedCourseTitle({ id: 3, slug: "Biologie_Test", title: "Cell Biology" }, lang), category: s.biology || 'Biology' },
+    { title: dbService.getLocalizedCourseTitle({ id: 4, slug: "Biologie_Test_L1", title: "Molecular Genetics" }, lang), category: s.biology || 'Biology' },
+    { title: dbService.getLocalizedCourseTitle({ id: 5, slug: "Droit_Test", title: "Constitutional Law" }, lang), category: s.law || 'Law' },
+    { title: dbService.getLocalizedCourseTitle({ id: 6, slug: "Droit_Test_L2", title: "Criminal Law" }, lang), category: s.law || 'Law' },
+    { title: dbService.getLocalizedCourseTitle({ id: 7, slug: "Maths_Test", title: "Linear Algebra" }, lang), category: s.math || 'Mathematics' },
+    { title: dbService.getLocalizedCourseTitle({ id: 8, slug: "Maths_Test_L1", title: "Calculus I" }, lang), category: s.math || 'Mathematics' },
   ];
 
   const popularCourses = [
     {
       id: 1,
-      title: lang === 'FR' ? "Physique : Mécanique Classique" : "Physics: Classical Mechanics",
-      searchQuery: lang === 'FR' ? "Mécanique Classique" : "Classical Mechanics",
+      title: dbService.getLocalizedCourseTitle({ id: 1, slug: "Classical_Mechanics", title: "Classical Mechanics" }, lang),
+      searchQuery: lang === 'FR' ? "Mécanique Classique"
+                 : lang === 'ES' ? "Mecánica Clásica"
+                 : lang === 'DE' ? "Klassische Mechanik"
+                 : lang === 'ZH' ? "经典力学"
+                 : "Classical Mechanics",
       color: "from-blue-500/20 to-blue-600/5 hover:border-blue-500/50 text-blue-400"
     },
     {
       id: 2,
-      title: lang === 'FR' ? "Physique : Physique Quantique" : "Physics: Quantum Physics",
-      searchQuery: lang === 'FR' ? "Physique Quantique" : "Quantum Physics",
+      title: dbService.getLocalizedCourseTitle({ id: 2, slug: "Physique_Test_L2", title: "Quantum Physics" }, lang),
+      searchQuery: lang === 'FR' ? "Physique Quantique"
+                 : lang === 'ES' ? "Física Cuántica"
+                 : lang === 'DE' ? "Quantenphysik"
+                 : lang === 'ZH' ? "量子物理"
+                 : "Quantum Physics",
       color: "from-violet-500/20 to-violet-600/5 hover:border-violet-500/50 text-violet-400"
     },
     {
       id: 3,
-      title: lang === 'FR' ? "Biologie : Biologie Cellulaire" : "Biology: Cell Biology",
-      searchQuery: lang === 'FR' ? "Biologie Cellulaire" : "Cell Biology",
+      title: dbService.getLocalizedCourseTitle({ id: 3, slug: "Biologie_Test", title: "Cell Biology" }, lang),
+      searchQuery: lang === 'FR' ? "Biologie Cellulaire"
+                 : lang === 'ES' ? "Biología Celular"
+                 : lang === 'DE' ? "Zellbiologie"
+                 : lang === 'ZH' ? "细胞生物学"
+                 : "Cell Biology",
       color: "from-emerald-500/20 to-emerald-600/5 hover:border-emerald-500/50 text-emerald-400"
     }
   ];
@@ -555,7 +567,7 @@ export default function Home() {
                     {stats ? stats.active_curricula : 12}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
-                    {lang === 'FR' ? "Cursus" : "Curricula"}
+                    {s.curricula || "Curricula"}
                   </p>
                </div>
                <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-xl group sm:mt-12">
@@ -563,7 +575,7 @@ export default function Home() {
                     {stats ? stats.total_courses : 36}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
-                    {lang === 'FR' ? "Cours Totaux" : "Total Courses"}
+                    {s.total_courses || "Total Courses"}
                   </p>
                </div>
             </div>

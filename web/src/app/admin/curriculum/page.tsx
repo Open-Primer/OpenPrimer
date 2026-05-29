@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
@@ -11,7 +11,7 @@ import {
   Upload, BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage } from '@/lib/db';
+import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage, isDatabaseConfigured } from '@/lib/db';
 
 export const CURRICULUM_STRINGS = {
   EN: {
@@ -1532,6 +1532,18 @@ export default function AdminCurriculumPage() {
   const [langSortField, setLangSortField] = useState<string>('code');
   const [langSortDir, setLangSortDir] = useState<'asc' | 'desc'>('asc');
 
+  // Cockpit Pagination & Search States
+  const CARD_LIMIT = 6;
+  const QUEUE_LIMIT = 10;
+  const [proposalSearch, setProposalSearch] = useState('');
+  const [proposalPage, setProposalPage] = useState(1);
+  const [refusedSearch, setRefusedSearch] = useState('');
+  const [refusedPage, setRefusedPage] = useState(1);
+  const [transSearch, setTransSearch] = useState('');
+  const [transPage, setTransPage] = useState(1);
+  const [queueSearch, setQueueSearch] = useState('');
+  const [queuePage, setQueuePage] = useState(1);
+
   // Double-Safeguard Target Modals
   const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
@@ -1908,29 +1920,36 @@ export default function AdminCurriculumPage() {
     setAvailableLanguages(langs || []);
 
     if (typeof window !== 'undefined') {
-      const q = window.localStorage.getItem('openprimer_pipeline_queue');
-      if (q) {
-        const parsed = JSON.parse(q);
-        // Migrate: stamp completedAt for already-completed tasks and extract targetLang for translation tasks
-        const migrated = parsed.map((t: any) => {
-          const updates: any = {};
-          if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
-            updates.completedAt = t.timestamp
-              ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
-              : new Date().toISOString();
-          }
-          if (t.type === 'translation' && !t.targetLang) {
-            const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
-            if (m) updates.targetLang = m[1];
-          }
-          return Object.keys(updates).length ? { ...t, ...updates } : t;
-        });
-        // Save back if any migration happened
-        const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
-        if (needsSave) localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(migrated));
-        setQueue(migrated);
-      } else {
+      // Production guard: when Supabase is live, purge the stale localStorage queue
+      // so seeded mock tasks never appear in production.
+      if (isDatabaseConfigured) {
+        window.localStorage.removeItem('openprimer_pipeline_queue');
         setQueue([]);
+      } else {
+        const q = window.localStorage.getItem('openprimer_pipeline_queue');
+        if (q) {
+          const parsed = JSON.parse(q);
+          // Migrate: stamp completedAt for already-completed tasks and extract targetLang for translation tasks
+          const migrated = parsed.map((t: any) => {
+            const updates: any = {};
+            if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
+              updates.completedAt = t.timestamp
+                ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
+                : new Date().toISOString();
+            }
+            if (t.type === 'translation' && !t.targetLang) {
+              const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
+              if (m) updates.targetLang = m[1];
+            }
+            return Object.keys(updates).length ? { ...t, ...updates } : t;
+          });
+          // Save back if any migration happened
+          const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
+          if (needsSave) localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(migrated));
+          setQueue(migrated);
+        } else {
+          setQueue([]);
+        }
       }
     }
   };
@@ -3363,6 +3382,70 @@ export default function AdminCurriculumPage() {
     return list.sort((a, b) => b.score - a.score);
   }, [feedbacks, courses, refusedRevisions, queue, revThreshold, revMinVotes, revMinReports]);
 
+  // Cockpit Scale Computed Filtered Arrays
+  const filteredProposals = proposals.filter(item => {
+    const q = item.query || '';
+    const r = item.reason || '';
+    const searchLower = proposalSearch.toLowerCase();
+    return q.toLowerCase().includes(searchLower) || r.toLowerCase().includes(searchLower);
+  });
+  const paginatedProposals = filteredProposals.slice(
+    (proposalPage - 1) * CARD_LIMIT,
+    proposalPage * CARD_LIMIT
+  );
+  const totalProposalPages = Math.ceil(filteredProposals.length / CARD_LIMIT) || 1;
+
+  const filteredRefused = refusedCourses.filter(item => {
+    const name = item.name || '';
+    return name.toLowerCase().includes(refusedSearch.toLowerCase());
+  });
+  const totalRefusedPages = Math.ceil(filteredRefused.length / CARD_LIMIT) || 1;
+  const paginatedRefused = filteredRefused.slice(
+    (Math.min(refusedPage, totalRefusedPages) - 1) * CARD_LIMIT,
+    Math.min(refusedPage, totalRefusedPages) * CARD_LIMIT
+  );
+
+  const filteredTrans = translationRequests.filter(item => {
+    const title = item.courseTitle || '';
+    const langVal = item.targetLang || '';
+    const searchLower = transSearch.toLowerCase();
+    return title.toLowerCase().includes(searchLower) || langVal.toLowerCase().includes(searchLower);
+  });
+  const totalTransPages = Math.ceil(filteredTrans.length / CARD_LIMIT) || 1;
+  const paginatedTrans = filteredTrans.slice(
+    (Math.min(transPage, totalTransPages) - 1) * CARD_LIMIT,
+    Math.min(transPage, totalTransPages) * CARD_LIMIT
+  );
+
+  const filteredQueue = queue.filter(item => {
+    const title = item.title || '';
+    const type = item.type || '';
+    const searchLower = queueSearch.toLowerCase();
+    return title.toLowerCase().includes(searchLower) || type.toLowerCase().includes(searchLower);
+  });
+  // Sort filteredQueue in the computed section so paginatedQueue is correctly sorted+sliced
+  const sortedQueue = [...filteredQueue].sort((a, b) => {
+    if (queueSortField === 'priority') {
+      const pw: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+      const wA = pw[a.priority || 'Medium'] || 0;
+      const wB = pw[b.priority || 'Medium'] || 0;
+      return queueSortDir === 'desc' ? wB - wA : wA - wB;
+    }
+    let valA: any = a[queueSortField] || '';
+    let valB: any = b[queueSortField] || '';
+    if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = String(valB).toLowerCase(); }
+    if (valA < valB) return queueSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return queueSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  const totalQueuePages = Math.ceil(filteredQueue.length / QUEUE_LIMIT) || 1;
+  // Safe page indices — clamp to valid range so deleting items never leaves an empty page
+  const safeProposalPage = Math.min(proposalPage, totalProposalPages);
+  const safeRefusedPage  = Math.min(refusedPage,  totalRefusedPages);
+  const safeTransPage    = Math.min(transPage,    totalTransPages);
+  const safeQueuePage    = Math.min(queuePage,    totalQueuePages);
+  const paginatedQueue   = sortedQueue.slice((safeQueuePage - 1) * QUEUE_LIMIT, safeQueuePage * QUEUE_LIMIT);
+
   return (
     <div className="space-y-12 pb-20">
       {/* HEADER */}
@@ -3686,9 +3769,25 @@ export default function AdminCurriculumPage() {
 
                  {/* Active proposals list */}
                  <div className="space-y-4">
-                   <h3 className="text-xl font-black text-slate-200">{t.active_proposals}</h3>
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <h3 className="text-xl font-black text-slate-200">{t.active_proposals}</h3>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={proposalSearch}
+                          onChange={(e) => { setProposalSearch(e.target.value); setProposalPage(1); }}
+                          placeholder={lang === 'FR' ? '🔍 Filtrer...' : '🔍 Search proposals...'}
+                          className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-blue-500/50 outline-none text-white w-56"
+                        />
+                        {proposals.length > 0 && (
+                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                            {filteredProposals.length}/{proposals.length}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                    <div className="grid md:grid-cols-2 gap-6">
-                     {proposals.map((item, idx) => (
+                     {paginatedProposals.map((item, idx) => (
                        <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-blue-500/30 transition-all group relative overflow-hidden">
                          {item.reason === "Academic Expansion" && (
                            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-xl rounded-full pointer-events-none" />
@@ -3734,17 +3833,40 @@ export default function AdminCurriculumPage() {
                          </div>
                        </div>
                      ))}
-                     {proposals.length === 0 && (
+                     {filteredProposals.length === 0 && (
                        <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{tr("No pending failed-search, expansion, or curriculum synthesis proposals. Clean database.")}</p>
                      )}
                    </div>
                  </div>
 
+                 {totalProposalPages > 1 && (
+                   <div className="flex justify-center items-center gap-4">
+                     <button disabled={proposalPage === 1} onClick={() => setProposalPage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? '◀ Préc.' : '◀ Prev'}</button>
+                     <span className="text-[10px] font-mono font-black text-slate-500">{safeProposalPage} / {totalProposalPages}</span>
+                     <button disabled={proposalPage === totalProposalPages} onClick={() => setProposalPage(p => Math.min(totalProposalPages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? 'Suiv. ▶' : 'Next ▶'}</button>
+                   </div>
+                 )}
                  {/* Refused backlog */}
                  <div className="space-y-4 pt-4 border-t border-slate-900">
-                   <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">{t.refused_backlog}</h4>
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">{t.refused_backlog}</h4>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={refusedSearch}
+                          onChange={(e) => { setRefusedSearch(e.target.value); setRefusedPage(1); }}
+                          placeholder={lang === 'FR' ? '🔍 Filtrer...' : '🔍 Search backlog...'}
+                          className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-red-500/50 outline-none text-white w-52"
+                        />
+                        {refusedCourses.length > 0 && (
+                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                            {filteredRefused.length}/{refusedCourses.length}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                    <div className="grid md:grid-cols-3 gap-6">
-                     {refusedCourses.map((item) => {
+                     {paginatedRefused.map((item) => {
                        const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
                        const remainingDays = Math.max(0, Math.ceil(reevaluationDays - elapsedDays));
                        return (
@@ -3765,10 +3887,17 @@ export default function AdminCurriculumPage() {
                          </div>
                        );
                      })}
-                     {refusedCourses.length === 0 && (
+                     {filteredRefused.length === 0 && (
                        <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center">Refused courses backlog is empty.</p>
                      )}
                    </div>
+                   {totalRefusedPages > 1 && (
+                     <div className="flex justify-center items-center gap-4 pt-2">
+                       <button disabled={refusedPage === 1} onClick={() => setRefusedPage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? '◀ Préc.' : '◀ Prev'}</button>
+                       <span className="text-[10px] font-mono font-black text-slate-500">{safeRefusedPage} / {totalRefusedPages}</span>
+                       <button disabled={refusedPage === totalRefusedPages} onClick={() => setRefusedPage(p => Math.min(totalRefusedPages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? 'Suiv. ▶' : 'Next ▶'}</button>
+                     </div>
+                   )}
                  </div>
                </div>
              )}
@@ -3931,9 +4060,25 @@ export default function AdminCurriculumPage() {
                   </div>
 
                   {/* Active Translation Proposals */}
-                  <h3 className="text-xl font-black text-slate-200">Active Translation Proposals</h3>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 className="text-xl font-black text-slate-200">Active Translation Proposals</h3>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={transSearch}
+                        onChange={(e) => { setTransSearch(e.target.value); setTransPage(1); }}
+                        placeholder={lang === 'FR' ? '🔍 Filtrer...' : '🔍 Search translations...'}
+                        className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-emerald-500/50 outline-none text-white w-56"
+                      />
+                      {translationRequests.length > 0 && (
+                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                          {filteredTrans.length}/{translationRequests.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <div className="grid md:grid-cols-2 gap-6">
-                    {translationRequests.map((item) => (
+                    {paginatedTrans.map((item) => (
                       <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-emerald-500/20 transition-all group">
                         <div>
                           <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
@@ -3967,10 +4112,17 @@ export default function AdminCurriculumPage() {
                         </div>
                       </div>
                     ))}
-                    {translationRequests.length === 0 && (
+                    {filteredTrans.length === 0 && (
                       <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_trans}</p>
                     )}
                   </div>
+                  {totalTransPages > 1 && (
+                    <div className="flex justify-center items-center gap-4">
+                      <button disabled={transPage === 1} onClick={() => setTransPage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? '◀ Préc.' : '◀ Prev'}</button>
+                      <span className="text-[10px] font-mono font-black text-slate-500">{safeTransPage} / {totalTransPages}</span>
+                      <button disabled={transPage === totalTransPages} onClick={() => setTransPage(p => Math.min(totalTransPages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? 'Suiv. ▶' : 'Next ▶'}</button>
+                    </div>
+                  )}
 
                   {/* Refused translation backlog */}
                   <div className="pt-6 border-t border-slate-900">
@@ -4751,33 +4903,49 @@ export default function AdminCurriculumPage() {
               {/* 5. PIPELINE QUEUE TAB */}
               {view === 'queue' && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
-                  <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (queueSortField === 'id') {
-                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setQueueSortField('id');
-                              setQueueSortDir('asc');
-                            }
-                          }}>
-                            Task ID {renderSortIndicator('id', queueSortField, queueSortDir)}
-                          </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (queueSortField === 'title') {
-                              setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
-                            } else {
-                              setQueueSortField('title');
-                              setQueueSortDir('asc');
-                            }
-                          }}>
-                            Course/Topic {renderSortIndicator('title', queueSortField, queueSortDir)}
-                          </th>
-                          <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                            if (queueSortField === 'level') {
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                     <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
+                     <div className="flex items-center gap-3">
+                       <input
+                         type="text"
+                         value={queueSearch}
+                         onChange={(e) => { setQueueSearch(e.target.value); setQueuePage(1); }}
+                         placeholder={lang === 'FR' ? '🔍 Filtrer les tâches...' : '🔍 Search queue...'}
+                         className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-cyan-500/50 outline-none text-white w-56"
+                       />
+                       {queue.length > 0 && (
+                         <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                           {filteredQueue.length}/{queue.length}
+                         </span>
+                       )}
+                     </div>
+                   </div>
+                   <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                     <table className="w-full text-left text-xs border-collapse">
+                       <thead>
+                         <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                             if (queueSortField === 'id') {
+                               setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                             } else {
+                               setQueueSortField('id');
+                               setQueueSortDir('asc');
+                             }
+                           }}>
+                             Task ID {renderSortIndicator('id', queueSortField, queueSortDir)}
+                           </th>
+                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                             if (queueSortField === 'title') {
+                               setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
+                             } else {
+                               setQueueSortField('title');
+                               setQueueSortDir('asc');
+                             }
+                           }}>
+                             Course/Topic {renderSortIndicator('title', queueSortField, queueSortDir)}
+                           </th>
+                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                             if (queueSortField === 'level') {
                               setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
                             } else {
                               setQueueSortField('level');
@@ -4840,7 +5008,7 @@ export default function AdminCurriculumPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/50">
-                        {[...queue]
+                        {[...filteredQueue]
                           .sort((a, b) => {
                             if (queueSortField === 'priority') {
                               const priorityWeights: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
@@ -4971,23 +5139,32 @@ export default function AdminCurriculumPage() {
                             </tr>
                           );
                         })}
-                        {queue.length === 0 && (
+                        {filteredQueue.length === 0 && (
                           <tr>
                             <td colSpan={7} className="px-6 py-16 text-center text-slate-655 italic">
-                              <p className="mb-4 text-xs font-medium text-slate-500">No tasks currently executing in the sovereign loop queue.</p>
-                              <button
-                                type="button"
-                                onClick={handleSeedSampleTasks}
-                                className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/10 transition-all"
-                              >
-                                {lang === 'FR' ? "Générer des tâches d'exemple" : "Seed Sample Pipeline Tasks"}
-                              </button>
+                              <p className="mb-4 text-xs font-medium text-slate-500">{queueSearch ? 'No tasks match your search.' : 'No tasks currently executing in the sovereign loop queue.'}</p>
+                              {!queueSearch && (
+                                <button
+                                  type="button"
+                                  onClick={handleSeedSampleTasks}
+                                  className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/10 transition-all"
+                                >
+                                  {lang === 'FR' ? "Générer des tâches d'exemple" : "Seed Sample Pipeline Tasks"}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </table>
                   </div>
+                  {totalQueuePages > 1 && (
+                    <div className="flex justify-center items-center gap-4">
+                      <button disabled={queuePage === 1} onClick={() => setQueuePage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? '◀ Préc.' : '◀ Prev'}</button>
+                      <span className="text-[10px] font-mono font-black text-slate-500">{safeQueuePage} / {totalQueuePages}</span>
+                      <button disabled={queuePage === totalQueuePages} onClick={() => setQueuePage(p => Math.min(totalQueuePages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{lang === 'FR' ? 'Suiv. ▶' : 'Next ▶'}</button>
+                    </div>
+                  )}
                 </div>
               )}
 

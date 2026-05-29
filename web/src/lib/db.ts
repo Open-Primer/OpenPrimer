@@ -1869,7 +1869,7 @@ let refusedCoursesList: RefusedCourseEntry[] = initialRefusedCourses;
 let refusedTranslationsList: RefusedTranslationEntry[] = initialRefusedTranslations;
 let refusedRevisionsList: RefusedRevisionEntry[] = initialRefusedRevisions;
 
-const isDatabaseConfigured = 
+export const isDatabaseConfigured =
   typeof process.env.NEXT_PUBLIC_SUPABASE_URL === 'string' &&
   !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') &&
   process.env.NEXT_PUBLIC_SUPABASE_URL.trim() !== '';
@@ -1976,7 +1976,10 @@ export const isSandboxFallbackAllowed = (): boolean => {
 };
 
 export const handleDatabaseError = (error: any) => {
-  console.error("🚨 [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+  // Only log in the console when a real DB connection is expected (production/configured env)
+  if (isDatabaseConfigured) {
+    console.error("🚨 [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
       detail: { message: error?.message || String(error) }
@@ -2001,6 +2004,89 @@ async function withFallback<T>(
 // CHECK IF OFFLINE MODE (Permanently false for production-ready direct database mode)
 const isOffline = false;
 
+export const LOCALIZED_COURSE_TITLES: Record<string, Record<string, string>> = {
+  "Classical_Mechanics": {
+    EN: "Physics: Classical Mechanics",
+    FR: "Physique : Mécanique Classique",
+    ES: "Física: Mecánica Clásica",
+    DE: "Physik: Klassische Mechanik",
+    ZH: "物理：经典力学"
+  },
+  "Physique_Test_L2": {
+    EN: "Physics: Quantum Physics (L2)",
+    FR: "Physique : Physique Quantique (L2)",
+    ES: "Física: Física Cuántica (L2)",
+    DE: "Physik: Quantenphysik (L2)",
+    ZH: "物理：量子物理 (L2)"
+  },
+  "Biologie_Test": {
+    EN: "Biology: Cell Biology",
+    FR: "Biologie : Biologie Cellulaire",
+    ES: "Biología: Biología Celular",
+    DE: "Biologie: Zellbiologie",
+    ZH: "生物：细胞生物学"
+  },
+  "Biologie_Test_L1": {
+    EN: "Biology: Molecular Genetics",
+    FR: "Biologie : Génétique Moléculaire",
+    ES: "Biología: Genética Molecular",
+    DE: "Biologie: Molekulargenetik",
+    ZH: "生物：分子遗传学"
+  },
+  "Droit_Test": {
+    EN: "Law: Constitutional Law",
+    FR: "Droit : Droit Constitutionnel",
+    ES: "Derecho: Derecho Constitucional",
+    DE: "Recht: Verfassungsrecht",
+    ZH: "法律：宪法学"
+  },
+  "Droit_Test_L2": {
+    EN: "Law: Criminal Law (L2)",
+    FR: "Droit : Droit Pénal (L2)",
+    ES: "Derecho: Derecho Penal (L2)",
+    DE: "Recht: Strafrecht (L2)",
+    ZH: "法律：刑法学 (L2)"
+  },
+  "Maths_Test": {
+    EN: "Mathematics: Linear Algebra",
+    FR: "Mathématiques : Algèbre Linéaire",
+    ES: "Matemáticas: Álgebra Lineal",
+    DE: "Mathematik: Lineare Algebra",
+    ZH: "数学：线性代数"
+  },
+  "Maths_Test_L1": {
+    EN: "Mathematics: Calculus I",
+    FR: "Mathématiques : Analyse I",
+    ES: "Matemáticas: Cálculo I",
+    DE: "Mathematik: Analysis I",
+    ZH: "数学：微积分 I"
+  },
+  "Chimie_Test": {
+    EN: "Chemistry: Organic Chemistry",
+    FR: "Chimie : Chimie Organique",
+    ES: "Química: Química Orgánica",
+    DE: "Chemie: Organische Chemie",
+    ZH: "化学：有机化学"
+  },
+  "Economie_Test": {
+    EN: "Economics: Microeconomics",
+    FR: "Économie : Microéconomie",
+    ES: "Economía: Microeconomía",
+    DE: "Wirtschaft: Mikroökonomie",
+    ZH: "经济学：微观经济学"
+  }
+};
+
+export function getLocalizedCourseTitleInternal(course: any, lang: string) {
+  const code = (lang || 'EN').toUpperCase();
+  const slug = course.slug || '';
+  const match = LOCALIZED_COURSE_TITLES[slug];
+  if (match) {
+    return match[code] || match['EN'];
+  }
+  return course.title;
+}
+
 function generatePedagogicalSummary(
   activeModules: any[], 
   masteryPoints: number, 
@@ -2024,9 +2110,12 @@ function generatePedagogicalSummary(
   }
 
   const moduleName = focusModule 
-    ? (isFr ? (focusModule.title === "Classical Mechanics" ? "Mécanique Classique" : focusModule.title) 
-       : focusModule.title) 
-    : (isFr ? "Physique" : "Physics");
+    ? getLocalizedCourseTitleInternal(focusModule, activeLang)
+    : (isFr ? "Physique" 
+       : isEs ? "Física" 
+       : isDe ? "Physik" 
+       : isZh ? "物理" 
+       : "Physics");
   
   const progVal = focusModule ? focusModule.progress : 12;
   const streakVal = studyStreakDays || 1;
@@ -2200,6 +2289,11 @@ const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
 };
 
 export const dbService = {
+  // TRANSLATIONS UTILITY
+  getLocalizedCourseTitle: (course: any, lang: string) => {
+    return getLocalizedCourseTitleInternal(course, lang);
+  },
+
   // SYLLABUS & CURRICULUM
   getAllCourseCompletions: async () => {
     return { data: isOffline ? courseCompletionsList : [], error: null };
@@ -2493,23 +2587,24 @@ export const dbService = {
     
     const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
     
-    // Map enrolled IDs to mockCourses
+    // Map enrolled IDs to mockCourses, excluding archived courses
     const activeModules = enrolled.map((id: number) => {
-      const course = mockCourses.find(c => c.id === id);
-      const prog = progressMap[course?.slug || ''] ?? progressMap[id] ?? 0; // Fallback to 0
+      const course = mockCourses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
+      if (!course) return null;
+      const prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0; // Fallback to 0
       return {
-        id: course?.id || id,
-        title: course?.title || course?.slug || 'unknown',
-        subject: course?.subject || 'general',
-        level: course?.level || 'L1',
-        slug: course?.slug || '',
+        id: course.id,
+        title: getLocalizedCourseTitleInternal(course, activeLang),
+        subject: course.subject,
+        level: course.level,
+        slug: course.slug,
         progress: prog,
-        created_at: course?.created_at || null,
-        last_revision_date: course?.last_revision_date || null,
-        isCurriculum: course?.isCurriculum || false,
-        childCourses: course?.childCourses || []
+        created_at: course.created_at || null,
+        last_revision_date: course.last_revision_date || null,
+        isCurriculum: course.isCurriculum || false,
+        childCourses: course.childCourses || []
       };
-    });
+    }).filter(Boolean) as any[];
 
     const totalMinutes = progressService.getTotalLearningMinutes();
     const hours = Math.floor(totalMinutes / 60);
