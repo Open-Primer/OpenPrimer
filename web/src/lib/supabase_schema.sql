@@ -172,3 +172,20 @@ CREATE POLICY "Allow anyone to insert search logs" ON search_logs FOR INSERT WIT
 -- Pipeline Task Queue security: all public access is completely blocked (restricted to service_role server-side operations only)
 ALTER TABLE task_queue ENABLE ROW LEVEL SECURITY;
 
+-- Database privileges configuration: grant SELECT and INSERT privileges on public tables to anon and authenticated roles
+-- Read-only tables select access
+GRANT SELECT ON public.languages TO public, anon, authenticated;
+GRANT SELECT ON public.achievements TO public, anon, authenticated;
+GRANT SELECT ON public.tutor_personalities TO public, anon, authenticated;
+GRANT SELECT ON public.courses TO public, anon, authenticated;
+
+-- Transactional tables select and insert/update access
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO public, anon, authenticated;
+GRANT INSERT, SELECT ON public.contact_feedbacks TO public, anon, authenticated;
+GRANT INSERT, SELECT ON public.search_logs TO public, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.task_queue TO public, anon, authenticated;
+
+-- Sequences usage for insertions
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO public, anon, authenticated;
+
+
