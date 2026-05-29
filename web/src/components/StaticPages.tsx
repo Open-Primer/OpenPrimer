@@ -427,6 +427,7 @@ export const CatalogPage = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
   const [filterType, setFilterType] = useState<'All' | 'Course' | 'Curriculum'>('All');
+  const [sortBy, setSortBy] = useState<'popularity' | 'validations'>('popularity');
 
   // Free Client-Side Translation States for Courses
   const [translatedCourses, setTranslatedCourses] = useState<Record<number, { title: string; description: string }>>({});
@@ -632,6 +633,14 @@ export const CatalogPage = () => {
     return matchesLang && matchesSearch && matchesSaved && matchesNew && matchesFilterType;
   });
 
+  const sortedCourses = [...filteredCourses].sort((a, b) => {
+    if (sortBy === 'popularity') {
+      return (b.popularity || 0) - (a.popularity || 0);
+    } else {
+      return (b.validations || 0) - (a.validations || 0);
+    }
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
       <TopNav onLangChange={(l) => setActiveLang(l as any)} />
@@ -673,7 +682,7 @@ export const CatalogPage = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
             {/* Search Input */}
             <div className="relative group w-full md:w-80">
               <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
@@ -739,12 +748,33 @@ export const CatalogPage = () => {
                 <span className="hidden sm:inline">{t.saved}</span>
               </button>
             )}
+
+            {/* Catalog Sorting Options */}
+            <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
+              {[
+                { key: 'popularity', label: { EN: 'Popularity', FR: 'Popularité', ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热', IT: 'Popolarità' } },
+                { key: 'validations', label: { EN: 'Graduates', FR: 'Diplômés', ES: 'Graduados', DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati' } }
+              ].map(opt => {
+                const active = sortBy === opt.key;
+                const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
+                return (
+                  <button 
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setSortBy(opt.key as any)}
+                    className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                  >
+                    {labelText}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredCourses.length > 0 ? filteredCourses.map((course) => {
+          {sortedCourses.length > 0 ? sortedCourses.map((course) => {
             const isEnrolled = enrolledIds.includes(course.id);
             const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || m.title_key === course.title_key);
             const progressPercent = activeModule ? activeModule.progress : 12;

@@ -2413,13 +2413,24 @@ export const dbService = {
       }
       return { data: computedCourses, error: null };
     }
-    return withFallback(
+    const res = await withFallback(
       async () => {
         const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
         return { data, error };
       },
       computedCourses
     );
+    if (res.data) {
+      const dbCourses = res.data;
+      const merged = [...dbCourses];
+      computedCourses.forEach(c => {
+        if (!merged.some(dbc => dbc.slug === c.slug || String(dbc.id) === String(c.id))) {
+          merged.push(c);
+        }
+      });
+      return { data: merged, error: null };
+    }
+    return res;
   },
 
   // USER MGMT
@@ -3280,6 +3291,26 @@ export const dbService = {
       mockCourses = [...mockCourses, finalCourse];
     }
     setLocalStorageItem('openprimer_courses', mockCourses);
+    if (!isOffline) {
+      try {
+        await supabase.from('courses').upsert({
+          id: finalCourse.id,
+          title: finalCourse.title,
+          slug: finalCourse.slug,
+          level: finalCourse.level,
+          subject: finalCourse.subject,
+          description: finalCourse.description,
+          languages: finalCourse.languages,
+          ects: finalCourse.ects,
+          popularity: finalCourse.popularity,
+          is_active: finalCourse.is_active,
+          archiving_level: finalCourse.archivingLevel,
+          translations: finalCourse.translations
+        });
+      } catch (e) {
+        console.error("Failed to upsert course to Supabase:", e);
+      }
+    }
     return { data: finalCourse, error: null };
   },
 

@@ -5099,40 +5099,48 @@ export default function AdminCurriculumPage() {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
-                                  {isPaused ? (
-                                    <button 
-                                      onClick={() => handleTogglePauseTask(task.id)}
-                                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                    >
-                                      Resume
-                                    </button>
+                                  {task.status === 'complete' || task.status === 'completed' || task.status === 'failed' ? (
+                                    <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
+                                      {lang === 'FR' ? 'Verrouillé (Terminé)' : lang === 'ES' ? 'Bloqueado (Terminado)' : lang === 'DE' ? 'Gesperrt (Fertig)' : lang === 'ZH' ? '锁定 (已完成)' : 'Locked (Done)'}
+                                    </span>
                                   ) : (
-                                    <button 
-                                      onClick={() => handleTogglePauseTask(task.id)}
-                                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                    >
-                                      Pause
-                                    </button>
-                                  )}
-                                  
-                                  {isTranslation ? (
-                                    <button 
-                                      disabled
-                                      title={lang === 'FR' 
-                                        ? "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site." 
-                                        : "New language creation cannot be cancelled due to site instability risk."
-                                      }
-                                      className="px-3 py-1.5 bg-slate-950/40 border border-slate-900 text-slate-700 cursor-not-allowed rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                    >
-                                      Cancel
-                                    </button>
-                                  ) : (
-                                    <button 
-                                      onClick={() => setCancelTaskTarget(task)}
-                                      className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                    >
-                                      Cancel
-                                    </button>
+                                    <>
+                                      {isPaused ? (
+                                        <button 
+                                          onClick={() => handleTogglePauseTask(task.id)}
+                                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                          Resume
+                                        </button>
+                                      ) : (
+                                        <button 
+                                          onClick={() => handleTogglePauseTask(task.id)}
+                                          className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                          Pause
+                                        </button>
+                                      )}
+                                      
+                                      {isTranslation ? (
+                                        <button 
+                                          disabled
+                                          title={lang === 'FR' 
+                                            ? "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site." 
+                                            : "New language creation cannot be cancelled due to site instability risk."
+                                          }
+                                          className="px-3 py-1.5 bg-slate-950/40 border border-slate-900 text-slate-700 cursor-not-allowed rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                          Cancel
+                                        </button>
+                                      ) : (
+                                        <button 
+                                          onClick={() => setCancelTaskTarget(task)}
+                                          className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                          Cancel
+                                        </button>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               </td>
