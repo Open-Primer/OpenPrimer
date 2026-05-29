@@ -401,9 +401,6 @@ export default function Home() {
           className="mb-12 relative"
         >
           <OpenPrimerIcon className="w-24 h-24" />
-          <div className="absolute -top-2 -right-6 bg-blue-600 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg shadow-blue-600/40">
-            {s.beta_tag}
-          </div>
         </motion.div>
 
         {/* Title */}

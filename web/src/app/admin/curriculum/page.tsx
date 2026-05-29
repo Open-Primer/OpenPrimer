@@ -1022,10 +1022,22 @@ export default function AdminCurriculumPage() {
     const timer = setTimeout(async () => {
       setIsGeneratingBadges(true);
       try {
+        let token: string | undefined;
+        try {
+          const { supabase } = await import("@/lib/supabase");
+          const { data: { session } } = await supabase.auth.getSession();
+          token = session?.access_token;
+        } catch (err) {
+          console.warn("[BADGE GEN] Failed to retrieve client auth session token:", err);
+        }
+
         const promises = [1, 2, 3].map(async (num) => {
           const res = await fetch('/api/badges/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
               name: newAch.name,
               description: newAch.description,
@@ -1070,10 +1082,22 @@ export default function AdminCurriculumPage() {
     const timer = setTimeout(async () => {
       setIsEditGeneratingBadges(true);
       try {
+        let token: string | undefined;
+        try {
+          const { supabase } = await import("@/lib/supabase");
+          const { data: { session } } = await supabase.auth.getSession();
+          token = session?.access_token;
+        } catch (err) {
+          console.warn("[BADGE GEN] Failed to retrieve client auth session token:", err);
+        }
+
         const promises = [1, 2, 3].map(async (num) => {
           const res = await fetch('/api/badges/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
               name: editName,
               description: editDesc,

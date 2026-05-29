@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity, Database, Mail, Cpu, Image, RefreshCw,
@@ -427,18 +427,18 @@ export default function ServerHealthPage() {
   const [notif, setNotif] = useState<string | null>(null);
 
   // Load hot-swap keys on mount
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      setSupabaseUrl(localStorage.getItem('op_supabase_url') || '');
+      setSupabaseUrl(localStorage.getItem('op_supabase_url') || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.io');
       setSupabaseAnonKey(localStorage.getItem('op_supabase_anon_key') || '');
       setResendApiKey(localStorage.getItem('op_resend_api_key') || '');
       setGeminiApiKey(localStorage.getItem('op_gemini_api_key') || '');
     }
-  });
+  }, []);
 
   const handleSaveKeys = (e: React.FormEvent) => {
     e.preventDefault();
-    if (supabaseUrl) localStorage.setItem('op_supabase_url', supabaseUrl);
+    if (supabaseUrl && supabaseUrl !== process.env.NEXT_PUBLIC_SUPABASE_URL) localStorage.setItem('op_supabase_url', supabaseUrl);
     else localStorage.removeItem('op_supabase_url');
 
     if (supabaseAnonKey) localStorage.setItem('op_supabase_anon_key', supabaseAnonKey);
@@ -460,7 +460,7 @@ export default function ServerHealthPage() {
     localStorage.removeItem('op_supabase_anon_key');
     localStorage.removeItem('op_resend_api_key');
     localStorage.removeItem('op_gemini_api_key');
-    setSupabaseUrl('');
+    setSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.io');
     setSupabaseAnonKey('');
     setResendApiKey('');
     setGeminiApiKey('');
@@ -679,6 +679,7 @@ export default function ServerHealthPage() {
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_sb_url}</label>
               <input
                 type="text"
+                autoComplete="new-password"
                 value={supabaseUrl}
                 onChange={e => setSupabaseUrl(e.target.value)}
                 placeholder="https://xxx.supabase.co"
@@ -690,6 +691,7 @@ export default function ServerHealthPage() {
               <div className="relative">
                 <input
                   type={showSbKey ? "text" : "password"}
+                  autoComplete="new-password"
                   value={supabaseAnonKey}
                   onChange={e => setSupabaseAnonKey(e.target.value)}
                   placeholder="••••••••••••••••••••••••••••"
@@ -709,6 +711,7 @@ export default function ServerHealthPage() {
               <div className="relative">
                 <input
                   type={showResendKey ? "text" : "password"}
+                  autoComplete="new-password"
                   value={resendApiKey}
                   onChange={e => setResendApiKey(e.target.value)}
                   placeholder="••••••••••••••••••••••••••••"
@@ -728,6 +731,7 @@ export default function ServerHealthPage() {
               <div className="relative">
                 <input
                   type={showGeminiKey ? "text" : "password"}
+                  autoComplete="new-password"
                   value={geminiApiKey}
                   onChange={e => setGeminiApiKey(e.target.value)}
                   placeholder="••••••••••••••••••••••••••••"

@@ -212,7 +212,7 @@ export default function CurriculumPage() {
       setEarnedIds(earned);
 
       // Compute enrolled IDs + curriculum revision date
-      const ids: number[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_enrolled_courses') || '[1, 3, 12]') : [1, 3, 12];
+      const ids: number[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_enrolled_courses') || '[]') : [];
       setEnrolledIds(ids);
       const revDate = progressService.getCurriculumLastRevision(ids);
       setCurriculumRevision(revDate);
@@ -289,107 +289,111 @@ export default function CurriculumPage() {
         </header>
 
         {/* AI PEDAGOGICAL SUMMARY */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-16 p-10 bg-gradient-to-br from-blue-600/10 via-slate-900/40 to-slate-950 border border-blue-500/20 rounded-[60px] relative overflow-hidden ai-summary-card"
-        >
-           <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Brain className="w-32 h-32 text-blue-400" />
-           </div>
-           <div className="relative z-10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400 flex items-center gap-3">
-                   <Sparkles className="w-4 h-4 animate-pulse" /> {t.tutor_summary}
-                </h3>
-                <button 
-                  onClick={() => setShowTutorModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.97] z-20 self-start sm:self-auto"
-                >
-                  <Brain className="w-3.5 h-3.5" />
-                  <span>
-                    {lang === 'FR' ? `Tuteur : ${getActiveTutorName()}` : `Tutor: ${getActiveTutorName()}`}
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                </button>
-              </div>
-              <p className="text-xl md:text-2xl font-bold leading-relaxed text-slate-200 max-w-3xl italic">
-                 "{progress.aiSummary}"
-              </p>
-           </div>
-        </motion.section>
+        {progress.activeModules && progress.activeModules.length > 0 && (
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-16 p-10 bg-gradient-to-br from-blue-600/10 via-slate-900/40 to-slate-950 border border-blue-500/20 rounded-[60px] relative overflow-hidden ai-summary-card"
+          >
+             <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Brain className="w-32 h-32 text-blue-400" />
+             </div>
+             <div className="relative z-10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400 flex items-center gap-3">
+                     <Sparkles className="w-4 h-4 animate-pulse" /> {t.tutor_summary}
+                  </h3>
+                  <button 
+                    onClick={() => setShowTutorModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.97] z-20 self-start sm:self-auto"
+                  >
+                    <Brain className="w-3.5 h-3.5" />
+                    <span>
+                      {lang === 'FR' ? `Tuteur : ${getActiveTutorName()}` : `Tutor: ${getActiveTutorName()}`}
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  </button>
+                </div>
+                <p className="text-xl md:text-2xl font-bold leading-relaxed text-slate-200 max-w-3xl italic">
+                   "{progress.aiSummary}"
+                </p>
+             </div>
+          </motion.section>
+        )}
 
         {/* STATS GRID */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+        {progress.activeModules && progress.activeModules.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
 
-          {/* 🔥 Study Streak */}
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-orange-500/30 transition-all">
-            <div className="text-3xl mb-4">🔥</div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-              {lang === 'FR' ? 'Série d\'étude' : 'Study Streak'}
-            </p>
-            <p className="text-3xl font-black text-white">
-              {progress.studyStreakDays ?? 0}
-              <span className="text-base text-slate-500 font-bold ml-2">
-                {lang === 'FR' ? 'jour' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 ? 's' : ''}
-              </span>
-            </p>
-            <p className="text-[9px] text-slate-600 mt-2 font-medium">
-              {(progress.studyStreakDays ?? 0) >= 7
-                ? (lang === 'FR' ? '🏆 Série impressionnante !' : '🏆 Impressive streak!')
-                : (progress.studyStreakDays ?? 0) >= 3
-                ? (lang === 'FR' ? '⚡ Continue comme ça !' : '⚡ Keep it up!')
-                : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : 'Come back daily to build a streak!')}
-            </p>
-          </div>
+            {/* 🔥 Study Streak */}
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-orange-500/30 transition-all">
+              <div className="text-3xl mb-4">🔥</div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+                {lang === 'FR' ? 'Série d\'étude' : 'Study Streak'}
+              </p>
+              <p className="text-3xl font-black text-white">
+                {progress.studyStreakDays ?? 0}
+                <span className="text-base text-slate-500 font-bold ml-2">
+                  {lang === 'FR' ? 'jour' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 ? 's' : ''}
+                </span>
+              </p>
+              <p className="text-[9px] text-slate-600 mt-2 font-medium">
+                {(progress.studyStreakDays ?? 0) >= 7
+                  ? (lang === 'FR' ? '🏆 Série impressionnante !' : '🏆 Impressive streak!')
+                  : (progress.studyStreakDays ?? 0) >= 3
+                  ? (lang === 'FR' ? '⚡ Continue comme ça !' : '⚡ Keep it up!')
+                  : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : 'Come back daily to build a streak!')}
+              </p>
+            </div>
 
-          {/* ⭐ Mastery Points — always grows */}
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-violet-500/30 transition-all">
-            <Sparkles className="w-8 h-8 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-              {lang === 'FR' ? 'Points de Maîtrise' : 'Mastery Points'}
-            </p>
-            <p className="text-3xl font-black text-white">
-              {progress.masteryPoints ?? 0}
-              <span className="text-base text-slate-500 font-bold ml-2">pt{(progress.masteryPoints ?? 0) !== 1 ? 's' : ''}</span>
-            </p>
-            <p className="text-[9px] font-black uppercase tracking-wider mt-2 text-violet-400">
-              {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : '🏆 Master')
-                : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : '⭐ Expert')
-                : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : '📚 Scholar')
-                : (lang === 'FR' ? '🌱 Apprenti' : '🌱 Apprentice')}
-            </p>
-          </div>
+            {/* ⭐ Mastery Points — always grows */}
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-violet-500/30 transition-all">
+              <Sparkles className="w-8 h-8 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+                {lang === 'FR' ? 'Points de Maîtrise' : 'Mastery Points'}
+              </p>
+              <p className="text-3xl font-black text-white">
+                {progress.masteryPoints ?? 0}
+                <span className="text-base text-slate-500 font-bold ml-2">pt{(progress.masteryPoints ?? 0) !== 1 ? 's' : ''}</span>
+              </p>
+              <p className="text-[9px] font-black uppercase tracking-wider mt-2 text-violet-400">
+                {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : '🏆 Master')
+                  : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : '⭐ Expert')
+                  : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : '📚 Scholar')
+                  : (lang === 'FR' ? '🌱 Apprenti' : '🌱 Apprentice')}
+              </p>
+            </div>
 
-          {/* ⏱ Total Study Hours */}
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-emerald-500/30 transition-all">
-            <Clock className="w-8 h-8 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.learning_time}</p>
-            <p className="text-3xl font-black text-white">{progress.learningTime || "0h 0m"}</p>
-            <p className="text-[9px] text-slate-600 mt-2 font-medium">
-              {(progress.totalMinutes ?? 0) >= 600
-                ? (lang === 'FR' ? '📖 Lecteur assidu' : '📖 Dedicated reader')
-                : (progress.totalMinutes ?? 0) >= 120
-                ? (lang === 'FR' ? '✨ Belle progression' : '✨ Great progress')
-                : (lang === 'FR' ? 'Chaque minute compte !' : 'Every minute counts!')}
-            </p>
-          </div>
+            {/* ⏱ Total Study Hours */}
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-emerald-500/30 transition-all">
+              <Clock className="w-8 h-8 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">{t.learning_time}</p>
+              <p className="text-3xl font-black text-white">{progress.learningTime || "0h 0m"}</p>
+              <p className="text-[9px] text-slate-600 mt-2 font-medium">
+                {(progress.totalMinutes ?? 0) >= 600
+                  ? (lang === 'FR' ? '📖 Lecteur assidu' : '📖 Dedicated reader')
+                  : (progress.totalMinutes ?? 0) >= 120
+                  ? (lang === 'FR' ? '✨ Belle progression' : '✨ Great progress')
+                  : (lang === 'FR' ? 'Chaque minute compte !' : 'Every minute counts!')}
+              </p>
+            </div>
 
-          {/* 📚 Courses Mastered */}
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-blue-500/30 transition-all">
-            <GraduationCap className="w-8 h-8 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-              {lang === 'FR' ? 'Cours Terminés' : 'Courses Mastered'}
-            </p>
-            <p className="text-3xl font-black text-white">{progress.completedCount ?? 0}</p>
-            <p className="text-[9px] text-slate-500 mt-2 font-medium flex items-center gap-1">
-              <span className="text-blue-400 font-black">{progress.inProgressCount ?? 0}</span>
-              &nbsp;{lang === 'FR' ? 'en cours • sur' : 'in progress • of'}
-              &nbsp;<span className="text-slate-400 font-black">{progress.activeModules?.length ?? 0}</span>
-              &nbsp;{lang === 'FR' ? 'inscrits' : 'enrolled'}
-            </p>
+            {/* 📚 Courses Mastered */}
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-blue-500/30 transition-all">
+              <GraduationCap className="w-8 h-8 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+                {lang === 'FR' ? 'Cours Terminés' : 'Courses Mastered'}
+              </p>
+              <p className="text-3xl font-black text-white">{progress.completedCount ?? 0}</p>
+              <p className="text-[9px] text-slate-555 mt-2 font-medium flex items-center gap-1">
+                <span className="text-blue-400 font-black">{progress.inProgressCount ?? 0}</span>
+                &nbsp;{lang === 'FR' ? 'en cours • sur' : 'in progress • of'}
+                &nbsp;<span className="text-slate-400 font-black">{progress.activeModules?.length ?? 0}</span>
+                &nbsp;{lang === 'FR' ? 'inscrits' : 'enrolled'}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {(() => {
           const activeCourses = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
@@ -685,7 +689,7 @@ export default function CurriculumPage() {
         })()}
 
           {/* RECOMMENDED NEXT STEPS (POURSUITES D'ÉTUDES) */}
-          {(() => {
+          {progress.activeModules && progress.activeModules.length > 0 && (() => {
             const recommendations = getRecommendations();
             if (recommendations.length === 0) return null;
             
@@ -768,42 +772,35 @@ export default function CurriculumPage() {
           })()}
 
         {/* ACHIEVEMENTS GALLERY */}
-        <section className="mt-20">
-           <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
-              <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : lang === 'ES' ? "Galería de Logros" : lang === 'DE' ? "Errungenschaften-Galerie" : lang === 'ZH' ? "成就荣誉展厅" : "Achievements Gallery"}
-           </h2>
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-             {achievements.map((ach) => {
-               const isEarned = earnedIds.includes(ach.id);
-               const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
-               const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
+        {achievements.filter(ach => earnedIds.includes(ach.id)).length > 0 && (
+          <section className="mt-20">
+             <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
+                <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : lang === 'ES' ? "Galería de Logros" : lang === 'DE' ? "Errungenschaften-Galerie" : lang === 'ZH' ? "成就荣誉展厅" : "Achievements Gallery"}
+             </h2>
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+               {achievements.filter(ach => earnedIds.includes(ach.id)).map((ach) => {
+                 const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
+                 const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
 
-               return (
-                 <div 
-                   key={ach.id}
-                   className={`p-6 border rounded-[32px] flex flex-col items-center text-center transition-all ${
-                     isEarned 
-                       ? 'bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5' 
-                       : 'bg-slate-950/20 border-slate-800/40 opacity-40 hover:opacity-60'
-                   }`}
-                 >
-                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${isEarned ? badge.gradient : 'from-slate-800 to-slate-900'} flex items-center justify-center text-white mb-4 shadow-lg`}>
-                     <IconComponent className="w-6 h-6" />
+                 return (
+                   <div 
+                     key={ach.id}
+                     className="p-6 border rounded-[32px] flex flex-col items-center text-center transition-all bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5"
+                   >
+                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                       <IconComponent className="w-6 h-6" />
+                     </div>
+                     <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.name}</h4>
+                     <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.description}</p>
+                     <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
+                       {lang === 'FR' ? 'Déverrouillé' : 'Unlocked'}
+                     </span>
                    </div>
-                   <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.name}</h4>
-                   <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.description}</p>
-                   <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${
-                     isEarned 
-                       ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' 
-                       : 'bg-slate-800/40 border-slate-700/30 text-slate-500'
-                   }`}>
-                     {isEarned ? (lang === 'FR' ? 'Déverrouillé' : 'Unlocked') : ach.threshold}
-                   </span>
-                 </div>
-               );
-             })}
-           </div>
-        </section>
+                 );
+               })}
+             </div>
+          </section>
+        )}
       </div>
 
       {/* INTERMEDIATE CURRICULUM DRILL-DOWN MODAL */}

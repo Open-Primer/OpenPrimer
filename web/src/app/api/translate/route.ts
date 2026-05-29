@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
+import { verifySession } from '@/lib/authHelper';
 
 const translateSchema = z.object({
   slug: z.string().min(1),
@@ -10,6 +11,12 @@ const translateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Server-Side Authentication JWT check
+    const user = await verifySession(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
+
     // 1. IP-Based Rate Limiting (20 requests per minute)
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     if (isRateLimited(ip, 20, 60000)) {

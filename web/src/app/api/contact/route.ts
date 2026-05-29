@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../lib/db';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
   try {
+    // 1. IP-Based Rate Limiting (5 requests per minute)
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (isRateLimited(ip, 5, 60000)) {
+      return NextResponse.json({ success: false, error: 'Too many feedback requests. Please try again in a minute.' }, { status: 429 });
+    }
+
     const { name, email, message } = await request.json();
     const redirectionEmail = process.env.SUPPORT_EMAIL_REDIRECTION || 'vanguard.mysterious@gmail.com';
     const resendApiKey = process.env.RESEND_API_KEY;

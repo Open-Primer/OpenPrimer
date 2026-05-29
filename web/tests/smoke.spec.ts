@@ -12,6 +12,7 @@ test.describe('OpenPrimer Smoke Tests', () => {
     }]);
     await page.addInitScript(() => {
       window.localStorage.setItem('openprimer_lang', 'EN');
+      window.localStorage.setItem('op_allow_sandbox', 'true');
     });
   });
   

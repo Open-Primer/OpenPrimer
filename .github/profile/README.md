@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="profile/openprimer_logo.png" width="150" style="border-radius: 32px;" alt="OpenPrimer Logo" />
+  <img src="openprimer_logo.png" width="150" style="border-radius: 32px;" alt="OpenPrimer Logo" />
 </p>
 
 <h1 align="center">🌌 OpenPrimer</h1>

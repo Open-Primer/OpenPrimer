@@ -13,6 +13,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL);
     await page.evaluate(() => {
+      localStorage.setItem('op_allow_sandbox', 'true');
       localStorage.setItem('openprimer_lang', 'EN');
       localStorage.setItem('op_session', 'true');
       localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
@@ -436,9 +437,9 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
       return {
 
-        studentsCount: usersList.length,
+        studentsCount: usersList ? usersList.length : 0,
 
-        coursesCount: coursesList.length
+        coursesCount: coursesList ? coursesList.length : 0
 
       };
 

@@ -38,7 +38,7 @@ const STATIC_UI_STRINGS = {
     rigor: "Academic Rigor", rigor_desc: "Full university curricula synthesized with the Feynman method for maximum depth.",
     tutor_desc: "Context-aware AI tutoring directly integrated into every learning module.",
     multilingual_desc: "Native support for EN, FR, ES, DE, and ZH. Breaking the language barrier in education.",
-    mission_link: "Learn about our vision", beta_tag: "v1.5 Beta", elite_tag: "Elite", new_tag: "New", try_label: "Try:",
+    mission_link: "Learn about our vision", beta_tag: "", elite_tag: "Elite", new_tag: "New", try_label: "Try:",
     socratic: "Socratic Method", pragmatic: "Pragmatic Mode", academic: "Rigorous Academic",
     give_example: "Give Example", tell_story: "Tell Story", simplify: "Simplify", test_me: "Test Me",
     analysis: "Academic analysis in progress...", mode_default: "Default", mode_paper: "Paper", mode_focus: "Focus",
@@ -104,7 +104,7 @@ const STATIC_UI_STRINGS = {
     rigor: "Rigueur Académique", rigor_desc: "Des cursus universitaires complets synthétisés avec la méthode Feynman.",
     tutor_desc: "Tutorat IA contextuel intégré directement dans chaque module d'apprentissage.",
     multilingual_desc: "Support natif pour EN, FR, ES, DE et ZH. Briser la barrière de la langue.",
-    mission_link: "Découvrir notre vision", beta_tag: "v1.5 Beta", elite_tag: "Élite", new_tag: "Nouveau", try_label: "Essayer :",
+    mission_link: "Découvrir notre vision", beta_tag: "", elite_tag: "Élite", new_tag: "Nouveau", try_label: "Essayer :",
     socratic: "Méthode Socratique", pragmatic: "Mode Pragmatique", academic: "Rigueur Académique",
     give_example: "Donner un exemple", tell_story: "Raconter une histoire", simplify: "Simplifier", test_me: "M'évaluer",
     analysis: "Analyse académique en cours...", mode_default: "Défaut", mode_paper: "Papier", mode_focus: "Focus",
@@ -170,7 +170,7 @@ const STATIC_UI_STRINGS = {
     rigor: "Rigor Académico", rigor_desc: "Currículos universitarios completos sintetizados con el método Feynman.",
     tutor_desc: "Tutoría de IA consciente del contexto integrada directamente en cada módulo de aprendizaje.",
     multilingual_desc: "Soporte nativo para EN, FR, ES, DE y ZH. Rompiendo la barrera del idioma.",
-    mission_link: "Conoce nuestra visión", beta_tag: "v1.5 Beta", elite_tag: "Élite", new_tag: "Nuevo", try_label: "Probar:",
+    mission_link: "Conoce nuestra visión", beta_tag: "", elite_tag: "Élite", new_tag: "Nuevo", try_label: "Probar:",
     socratic: "Método Socrático", pragmatic: "Modo Pragmático", academic: "Rigor Académico",
     give_example: "Dar ejemplo", tell_story: "Contar historia", simplify: "Simplificar", test_me: "Evaluarme",
     analysis: "Análisis académico en curso...", mode_default: "Predeterminado", mode_paper: "Papel", mode_focus: "Enfoque",
@@ -236,7 +236,7 @@ const STATIC_UI_STRINGS = {
     rigor: "Akademische Strenge", rigor_desc: "Vollständige universitäre Lehrpläne, synthetisiert mit der Feynman-Methode.",
     tutor_desc: "Kontextbewusstes KI-Tutoring, das direkt in jedes Lernmodul integriert ist.",
     multilingual_desc: "Native Unterstützung für EN, FR, ES, DE und ZH. Überwindung der Sprachbarriere.",
-    mission_link: "Erfahren Sie mehr über unsere Vision", beta_tag: "v1.5 Beta", elite_tag: "Elite", new_tag: "Neu", try_label: "Probieren:",
+    mission_link: "Erfahren Sie mehr über unsere Vision", beta_tag: "", elite_tag: "Elite", new_tag: "Neu", try_label: "Probieren:",
     socratic: "Sokratische Methode", pragmatic: "Pragmatischer Modus", academic: "Akademische Strenge",
     give_example: "Beispiel geben", tell_story: "Geschichte erzählen", simplify: "Vereinfachen", test_me: "Testen Sie mich",
     analysis: "Akademische Analyse läuft...", mode_default: "Standard", mode_paper: "Papier", mode_focus: "Fokus",
@@ -302,7 +302,7 @@ const STATIC_UI_STRINGS = {
     rigor: "严谨学术", rigor_desc: "采用费曼教学法综合的完整大学课程。",
     tutor_desc: "情境感知 AI 辅导，直接集成到每个学习模块中。",
     multilingual_desc: "原生支持英文、法文、西班牙文、德文和中文。打破教育中的语言障碍。",
-    mission_link: "了解我们的愿景", beta_tag: "v1.5 Beta", elite_tag: "精英", new_tag: "新内容", try_label: "尝试：",
+    mission_link: "了解我们的愿景", beta_tag: "", elite_tag: "精英", new_tag: "新内容", try_label: "尝试：",
     socratic: "苏格拉底教学法", pragmatic: "务实模式", academic: "严谨学术",
     give_example: "举例说明", tell_story: "讲述故事", simplify: "简化内容", test_me: "测试我",
     analysis: "正在进行学术分析...", mode_default: "默认", mode_paper: "纸质", mode_focus: "专注",
@@ -368,7 +368,7 @@ const STATIC_UI_STRINGS = {
     rigor: "Rigore Accademico", rigor_desc: "Curricula universitari completi sintetizzati con il metodo Feynman per la massima profondità.",
     tutor_desc: "Tutoraggio IA consapevole del contesto integrato direttamente in ogni modulo di apprendimento.",
     multilingual_desc: "Supporto nativo per EN, FR, ES, DE, IT e ZH. Abbattimento delle barriere linguistiche nell'istruzione.",
-    mission_link: "Scopri la nostra visione", beta_tag: "v1.5 Beta", elite_tag: "Elite", new_tag: "Novità", try_label: "Prova:",
+    mission_link: "Scopri la nostra visione", beta_tag: "", elite_tag: "Elite", new_tag: "Novità", try_label: "Prova:",
     socratic: "Metodo Socratico", pragmatic: "Modalità Pragmatica", academic: "Rigore Accademico",
     give_example: "Fai un esempio", tell_story: "Racconta una storia", simplify: "Semplifica", test_me: "Mettimi alla prova",
     analysis: "Analisi accademica in corso...", mode_default: "Predefinito", mode_paper: "Carta", mode_focus: "Focus",
@@ -576,9 +576,21 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     setMessages(prev => [...prev, { role: 'assistant', content: '...' }]);
     
     try {
+      let token: string | undefined;
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token;
+      } catch (err) {
+        console.warn("[TUTOR CHAT] Failed to retrieve client auth session token:", err);
+      }
+
       const response = await fetch('/api/tutor/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           messages: newMessages,
           persona,

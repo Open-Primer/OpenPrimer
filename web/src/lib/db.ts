@@ -796,6 +796,19 @@ const setLocalStorageItem = <T>(key: string, value: T): void => {
   }
 };
 
+if (isBrowser) {
+  const stored = window.localStorage.getItem('openprimer_users');
+  if (stored) {
+    try {
+      users = JSON.parse(stored);
+    } catch (e) {
+      console.error("Error parsing openprimer_users:", e);
+    }
+  } else {
+    window.localStorage.setItem('openprimer_users', JSON.stringify(users));
+  }
+}
+
 const generatePreseededSearchHistory = (): SearchHistoryEntry[] => {
   const history: SearchHistoryEntry[] = [];
   const now = new Date();
@@ -1952,18 +1965,25 @@ async function withFallback<T>(
   try {
     const { data, error } = await supabaseOp();
     if (error) throw error;
-    return { data, error: null };
+    // If database is connected but empty/unseeded, return our beautiful mock fallback data
+    return { data: (data && (!Array.isArray(data) || data.length > 0)) ? data : fallbackValue, error: null };
   } catch (e: any) {
-    if (!isSandboxFallbackAllowed()) {
-      handleDatabaseError(e);
-      return { data: null, error: e };
-    }
-    return { data: fallbackValue, error: null };
+    // Notify the UI/Providers of the connection degradation
+    handleDatabaseError(e);
+    // Gracefully degrade by returning the offline sandbox mockup data so the UI remains fully functional
+    return { data: fallbackValue, error: e };
   }
 }
 
-// CHECK IF OFFLINE MODE (Supabase missing or configured with placeholder)
-const isOffline = (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) && isSandboxFallbackAllowed();
+// CHECK IF OFFLINE MODE (Supabase missing or configured with placeholder, or sandbox forced via localStorage)
+const isOffline = (() => {
+  if (typeof window !== 'undefined') {
+    const allowed = window.localStorage.getItem('op_allow_sandbox');
+    if (allowed === 'true') return true;
+    if (allowed === 'false') return false;
+  }
+  return (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) && isSandboxFallbackAllowed();
+})();
 
 function generatePedagogicalSummary(
   activeModules: any[], 
@@ -2438,7 +2458,7 @@ export const dbService = {
   // PROGRESS TRACKING SERVICE
   getUserProgress: async (userId: string, lang?: string) => {
     const isBrowser = typeof window !== 'undefined';
-    const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3, 12]') : [1, 3, 12];
+    const enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]') : [];
     const progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
     
     const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
@@ -2446,7 +2466,7 @@ export const dbService = {
     // Map enrolled IDs to mockCourses
     const activeModules = enrolled.map((id: number) => {
       const course = mockCourses.find(c => c.id === id);
-      const prog = progressMap[course?.slug || ''] ?? progressMap[id] ?? 12; // Fallback to 12
+      const prog = progressMap[course?.slug || ''] ?? progressMap[id] ?? 0; // Fallback to 0
       return {
         id: course?.id || id,
         title: course?.title || course?.slug || 'unknown',
@@ -3491,7 +3511,7 @@ export const progressService = {
     if (typeof window === 'undefined') return [];
     const earnedIds: number[] = [];
 
-    const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[1, 3]');
+    const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
     const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}');
     const quizResults = progressService.getQuizResults();
     const totalMinutes = progressService.getTotalLearningMinutes();

@@ -9,6 +9,7 @@ test('verify i18n switching on landing page', async ({ page, context }) => {
   }]);
   await page.goto('http://localhost:3000');
   await page.evaluate(() => {
+    window.localStorage.setItem('op_allow_sandbox', 'true');
     window.localStorage.setItem('openprimer_lang', 'EN');
   });
   await page.reload();
@@ -39,6 +40,7 @@ test('should navigate to the catalog', async ({ page, context }) => {
   }]);
   await page.goto('http://localhost:3000');
   await page.evaluate(() => {
+    window.localStorage.setItem('op_allow_sandbox', 'true');
     window.localStorage.setItem('openprimer_lang', 'EN');
   });
   await page.reload();

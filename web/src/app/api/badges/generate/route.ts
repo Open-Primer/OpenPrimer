@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
+import { verifySession } from '@/lib/authHelper';
 
 export async function POST(request: Request) {
   try {
+    // Server-Side Authentication JWT check
+    const user = await verifySession(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
+
     const { name, description, seed } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 

@@ -10,6 +10,9 @@ test.describe('OpenPrimer Production Readiness', () => {
       value: 'EN',
       url: BASE_URL
     }]);
+    await page.addInitScript(() => {
+      window.localStorage.setItem('op_allow_sandbox', 'true');
+    });
   });
 
   test('Global i18n Switching', async ({ page }) => {
@@ -50,6 +53,11 @@ test.describe('OpenPrimer Production Readiness', () => {
   });
 
   test('User Profile and Curriculum Accessibility', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('op_enrolled_courses', JSON.stringify([1, 2]));
+      localStorage.setItem('op_course_progress', JSON.stringify({ Classical_Mechanics: 45, Physique_Test_L2: 12 }));
+    });
     await page.goto(`${BASE_URL}/profile/curriculum`);
     // Gatekeeper should handle auth or show access restricted if not local
     // For local dev tests, it should load

@@ -79,8 +79,27 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       }, 5000);
     };
 
-    const handleDbFailure = () => {
-      setDbFailed(true);
+    const handleDbFailure = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const message = customEvent.detail?.message || "Database query failed";
+      console.warn("[ClientProviders] Database failure event caught:", message);
+
+      const toastId = Date.now() + Math.random();
+      setToasts((prev) => [
+        ...prev,
+        {
+          toastId,
+          name: "Connection Degraded",
+          description: "Database connection glitch: using secure offline sandbox fallback.",
+          icon: "database_glitch",
+          isGlitch: true
+        }
+      ]);
+
+      // Auto dismiss after 7 seconds
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+      }, 7000);
     };
 
     window.addEventListener("op_reading_mode_changed", handleThemeChange);
@@ -96,13 +115,16 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <LanguageProvider>
-      {dbFailed ? <DatabaseOfflineGame /> : children}
+      {children}
 
       {/* Floating Achievement Toast Manager */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 max-w-sm w-full pointer-events-none px-4 sm:px-0">
         <AnimatePresence>
           {toasts.map((toast) => {
-            const badge = BADGE_LIBRARY.find((b) => b.id === toast.icon) || { iconName: "Award", gradient: "from-blue-500 to-indigo-500" };
+            const isGlitch = toast.isGlitch;
+            const badge = isGlitch 
+              ? { iconName: "WifiOff", gradient: "from-amber-500 to-orange-600" }
+              : BADGE_LIBRARY.find((b) => b.id === toast.icon) || { iconName: "Award", gradient: "from-blue-500 to-indigo-500" };
             const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
 
             return (
@@ -111,18 +133,18 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
                 initial={{ opacity: 0, y: 50, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                className="bg-slate-900/95 border border-amber-500/40 rounded-[32px] p-6 shadow-2xl backdrop-blur-xl flex items-start gap-4 pointer-events-auto relative overflow-hidden"
+                className={`bg-slate-900/95 border ${isGlitch ? 'border-amber-500/50 shadow-amber-500/5' : 'border-amber-500/40 shadow-amber-500/10'} rounded-[32px] p-6 shadow-2xl backdrop-blur-xl flex items-start gap-4 pointer-events-auto relative overflow-hidden`}
               >
                 {/* Subtle colorful neon blur */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${badge.gradient} opacity-5 blur-xl pointer-events-none`} />
 
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shrink-0 shadow-lg shadow-amber-500/10`}>
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shrink-0 shadow-lg`}>
                   <IconComponent className="w-5 h-5" />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-500 block mb-1">
-                    🎉 Achievement Unlocked!
+                  <span className={`text-[8px] font-black uppercase tracking-[0.2em] block mb-1 ${isGlitch ? 'text-amber-400' : 'text-amber-500'}`}>
+                    {isGlitch ? "⚠️ Connection degraded" : "🎉 Achievement Unlocked!"}
                   </span>
                   <h4 className="text-sm font-black text-white mb-0.5 truncate">{toast.name}</h4>
                   <p className="text-[10px] text-slate-400 leading-tight">{toast.description}</p>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
 import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
+import { verifySession } from '@/lib/authHelper';
 
 const chatSchema = z.object({
   messages: z.array(
@@ -17,7 +18,13 @@ const chatSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    // 1. IP-Based Rate Limiting (20 requests per minute)
+    // 1. Server-Side Authentication JWT check
+    const user = await verifySession(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
+
+    // 2. IP-Based Rate Limiting (20 requests per minute)
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
     if (isRateLimited(ip, 20, 60000)) {
       return NextResponse.json({ success: false, error: 'Too many requests. Please try again in a minute.' }, { status: 429 });

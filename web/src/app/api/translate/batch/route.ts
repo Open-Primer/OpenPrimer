@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
+import { verifySession } from '@/lib/authHelper';
 
 const batchTranslateSchema = z.object({
   fields: z.record(z.string(), z.string()).refine(val => Object.keys(val).length > 0, { message: "Fields must not be empty" }),
@@ -9,6 +10,12 @@ const batchTranslateSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // Server-Side Authentication JWT check
+    const user = await verifySession(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
+
     // 1. IP-Based Rate Limiting (20 requests per minute)
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
     if (isRateLimited(ip, 20, 60000)) {

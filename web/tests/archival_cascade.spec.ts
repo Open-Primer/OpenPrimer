@@ -7,6 +7,7 @@ test.describe('OpenPrimer Anti-Corruption Archival Cascade Integration Suite', (
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL);
     await page.evaluate(() => {
+      localStorage.setItem('op_allow_sandbox', 'true');
       localStorage.setItem('openprimer_lang', 'EN');
       localStorage.setItem('op_session', 'true');
       localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));

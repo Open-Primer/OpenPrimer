@@ -29,6 +29,9 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
   const degraded = getDegradedServices(health);
   const [justRestored, setJustRestored] = useState<ServiceHealth[]>([]);
   const [prevDegradedIds, setPrevDegradedIds] = useState<string[]>([]);
+  const [healthyServices, setHealthyServices] = useState<ServiceHealth[]>([]);
+  const [firstLoadDone, setFirstLoadDone] = useState(false);
+  const [wasChecking, setWasChecking] = useState(false);
 
   useEffect(() => {
     const currentDegradedIds = degraded.map(s => s.id);
@@ -49,6 +52,37 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
     }
     setPrevDegradedIds(currentDegradedIds);
   }, [health]);
+
+  // First load healthy status banner trigger
+  useEffect(() => {
+    const healthy = Object.values(health).filter(s => s.status === 'ok');
+    if (healthy.length > 0 && !firstLoadDone && Object.values(health).some(s => s.checkedAt !== null)) {
+      setHealthyServices(healthy);
+      setFirstLoadDone(true);
+      const timer = setTimeout(() => {
+        setHealthyServices([]);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [health, firstLoadDone]);
+
+  // Manual refresh healthy status trigger
+  useEffect(() => {
+    if (isChecking) {
+      setWasChecking(true);
+    } else if (wasChecking) {
+      const healthy = Object.values(health).filter(s => s.status === 'ok');
+      if (healthy.length > 0) {
+        setHealthyServices(healthy);
+        const timer = setTimeout(() => {
+          setHealthyServices([]);
+        }, 6000);
+        setWasChecking(false);
+        return () => clearTimeout(timer);
+      }
+      setWasChecking(false);
+    }
+  }, [isChecking, health, wasChecking]);
 
   const L = (lang || 'EN').toUpperCase() as string;
 
@@ -74,6 +108,36 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
                 initial={{ width: '100%' }}
                 animate={{ width: '0%' }}
                 transition={{ duration: 5, ease: 'linear' }}
+                className="h-full bg-emerald-500"
+              />
+            </div>
+          </motion.div>
+        ))}
+
+        {/* ── Healthy/Operational services: green, auto-dismiss after 6s ── */}
+        {healthyServices.map(svc => (
+          <motion.div
+            key={`healthy-${svc.id}`}
+            initial={{ opacity: 0, x: -20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -20, scale: 0.95 }}
+            className="pointer-events-auto flex items-center gap-3 px-4 py-3 bg-slate-950/95 border border-emerald-500/30 rounded-2xl shadow-2xl backdrop-blur-xl max-w-xs"
+          >
+            <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 animate-pulse" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-200 truncate">
+                {SERVICE_LABELS[svc.nameKey]?.[L] || svc.id}
+              </p>
+              <p className="text-[10px] text-emerald-400 font-bold">
+                {lang === 'FR' ? '✓ opérationnel' : '✓ operational'}
+              </p>
+            </div>
+            {/* Small auto-dismiss progress bar */}
+            <div className="w-12 h-0.5 bg-emerald-955 rounded-full overflow-hidden flex-shrink-0">
+              <motion.div
+                initial={{ width: '100%' }}
+                animate={{ width: '0%' }}
+                transition={{ duration: 6, ease: 'linear' }}
                 className="h-full bg-emerald-500"
               />
             </div>

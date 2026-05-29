@@ -258,45 +258,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="font-sans text-lg font-black tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
             <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 ml-6 italic">{t.cockpit}</p>
-            
-            {/* Stunning glowing Dynamic Database Mode indicator badge */}
-            <div className={`mt-4 ml-6 inline-flex items-center gap-2 px-3 py-1 rounded-full shadow-lg transition-all duration-500 border ${
-              isDbConnected === true
-                ? 'bg-emerald-500/10 border-emerald-500/35 shadow-emerald-500/5'
-                : isDbConnected === false
-                ? 'bg-violet-500/10 border-violet-500/35 shadow-violet-500/5'
-                : 'bg-amber-500/10 border-amber-500/35 shadow-amber-500/5'
-            }`}>
-              <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  isDbConnected === true
-                    ? 'bg-emerald-400'
-                    : isDbConnected === false
-                    ? 'bg-violet-400'
-                    : 'bg-amber-400'
-                }`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  isDbConnected === true
-                    ? 'bg-emerald-500'
-                    : isDbConnected === false
-                    ? 'bg-violet-500'
-                    : 'bg-amber-500'
-                }`}></span>
-              </span>
-              <span className={`text-[8px] font-black uppercase tracking-widest ${
-                isDbConnected === true
-                  ? 'text-emerald-400'
-                  : isDbConnected === false
-                  ? 'text-violet-400'
-                  : 'text-amber-400'
-              }`}>
-                {isDbConnected === true
-                  ? (lang === 'FR' ? 'Base Connectée' : lang === 'ES' ? 'Base de Datos Activa' : lang === 'DE' ? 'Datenbank Aktiv' : lang === 'ZH' ? '数据库激活' : 'Database Active')
-                  : isDbConnected === false
-                  ? (lang === 'FR' ? 'Mockup Actif' : lang === 'ES' ? 'Mockup Activo' : lang === 'DE' ? 'Mockup Aktiv' : lang === 'ZH' ? '样机激活' : 'Mockup Active')
-                  : (lang === 'FR' ? 'Vérification...' : lang === 'ES' ? 'Comprobando Base de Datos...' : lang === 'DE' ? 'Datenbanküberprüfung...' : lang === 'ZH' ? '数据库检查中...' : 'Database Check...')}
-              </span>
-            </div>
           </div>
 
           <nav className="flex-1 px-4 space-y-1">
@@ -329,28 +290,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <header className="h-20 border-b border-slate-900 bg-background/80 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-50">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.admin_panel}</span>
-              <div className={`px-2.5 py-0.5 border text-[8px] font-black uppercase tracking-widest rounded-md flex items-center gap-1.5 transition-all duration-500 ${
-                isDbConnected === true
-                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                  : isDbConnected === false
-                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
-                  : 'bg-violet-500/10 border-violet-500/20 text-violet-400'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                  isDbConnected === true
-                    ? 'bg-blue-400'
-                    : isDbConnected === false
-                    ? 'bg-amber-500'
-                    : 'bg-violet-400'
-                }`} />
-                <span>
-                  {isDbConnected === true
-                    ? (lang === 'FR' ? 'Base de Production' : lang === 'ES' ? 'Producción Activa' : lang === 'DE' ? 'Produktionsdatenbank Aktiv' : lang === 'ZH' ? '生产数据库激活' : 'Production Active')
-                    : isDbConnected === false
-                    ? (lang === 'FR' ? 'Bac à Sable Simulé' : lang === 'ES' ? 'Sandbox Simulado' : lang === 'DE' ? 'Simulierte Sandbox' : lang === 'ZH' ? '模拟沙盒' : 'Simulated Sandbox')
-                    : (lang === 'FR' ? 'Diagnostic...' : lang === 'ES' ? 'Diagnosticando...' : lang === 'DE' ? 'Diagnostizieren...' : lang === 'ZH' ? '诊断中...' : 'Diagnosing...')}
-                </span>
-              </div>
             </div>
             
             <div className="flex items-center gap-6">
