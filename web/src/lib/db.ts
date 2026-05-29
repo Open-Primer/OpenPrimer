@@ -2433,6 +2433,102 @@ export const dbService = {
     return res;
   },
 
+  getPipelineQueue: async () => {
+    if (isOffline || !isDatabaseConfigured) {
+      if (typeof window !== 'undefined') {
+        const q = window.localStorage.getItem('openprimer_pipeline_queue');
+        return { data: q ? JSON.parse(q) : [], error: null };
+      }
+      return { data: [], error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('task_queue').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      const queue = (data || []).map(row => {
+        try {
+          const extra = JSON.parse(row.description || '{}');
+          return {
+            id: String(row.id),
+            title: row.name,
+            type: row.target,
+            status: row.status,
+            priority: row.priority,
+            progress: row.progress,
+            logs: row.logs || [],
+            created_at: row.created_at,
+            ...extra
+          };
+        } catch (e) {
+          return {
+            id: String(row.id),
+            title: row.name,
+            type: row.target,
+            status: row.status,
+            priority: row.priority,
+            progress: row.progress,
+            logs: row.logs || [],
+            created_at: row.created_at
+          };
+        }
+      });
+      return { data: queue, error: null };
+    } catch (e) {
+      console.error("Failed to fetch pipeline queue from Supabase:", e);
+      if (typeof window !== 'undefined') {
+        const q = window.localStorage.getItem('openprimer_pipeline_queue');
+        return { data: q ? JSON.parse(q) : [], error: null };
+      }
+      return { data: [], error: e as any };
+    }
+  },
+
+  savePipelineQueue: async (queue: any[]) => {
+    if (isOffline || !isDatabaseConfigured) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
+      }
+      return { data: queue, error: null };
+    }
+    try {
+      const { error: deleteError } = await supabase.from('task_queue').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (deleteError) throw deleteError;
+
+      if (queue.length > 0) {
+        const rows = queue.map(t => {
+          const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.id);
+          const rowId = isValidUUID ? t.id : undefined;
+          const extra = {
+            level: t.level || 'L1',
+            targetLang: t.targetLang || ''
+          };
+          return {
+            ...(rowId ? { id: rowId } : {}),
+            name: t.title || '',
+            description: JSON.stringify(extra),
+            priority: t.priority || 'Medium',
+            status: t.status || 'queued',
+            progress: t.progress || 0,
+            target: t.type || 'generation',
+            logs: t.logs || []
+          };
+        });
+        const { error: insertError } = await supabase.from('task_queue').insert(rows);
+        if (insertError) throw insertError;
+      }
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
+      }
+      return { data: queue, error: null };
+    } catch (e) {
+      console.error("Failed to save pipeline queue to Supabase:", e);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
+      }
+      return { data: queue, error: e as any };
+    }
+  },
+
   // USER MGMT
   getUsers: async () => {
     if (isOffline) {

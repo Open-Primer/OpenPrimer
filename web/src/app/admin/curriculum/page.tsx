@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
@@ -1919,38 +1919,29 @@ export default function AdminCurriculumPage() {
     }
     setAvailableLanguages(langs || []);
 
-    if (typeof window !== 'undefined') {
-      // Production guard: when Supabase is live, purge the stale localStorage queue
-      // so seeded mock tasks never appear in production.
-      if (isDatabaseConfigured) {
-        window.localStorage.removeItem('openprimer_pipeline_queue');
-        setQueue([]);
-      } else {
-        const q = window.localStorage.getItem('openprimer_pipeline_queue');
-        if (q) {
-          const parsed = JSON.parse(q);
-          // Migrate: stamp completedAt for already-completed tasks and extract targetLang for translation tasks
-          const migrated = parsed.map((t: any) => {
-            const updates: any = {};
-            if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
-              updates.completedAt = t.timestamp
-                ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
-                : new Date().toISOString();
-            }
-            if (t.type === 'translation' && !t.targetLang) {
-              const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
-              if (m) updates.targetLang = m[1];
-            }
-            return Object.keys(updates).length ? { ...t, ...updates } : t;
-          });
-          // Save back if any migration happened
-          const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
-          if (needsSave) localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(migrated));
-          setQueue(migrated);
-        } else {
-          setQueue([]);
+    const qRes = await dbService.getPipelineQueue();
+    if (qRes && qRes.data) {
+      const parsed = qRes.data;
+      const migrated = parsed.map((t: any) => {
+        const updates: any = {};
+        if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
+          updates.completedAt = t.timestamp
+            ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
+            : new Date().toISOString();
         }
+        if (t.type === 'translation' && !t.targetLang) {
+          const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
+          if (m) updates.targetLang = m[1];
+        }
+        return Object.keys(updates).length ? { ...t, ...updates } : t;
+      });
+      const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
+      if (needsSave) {
+        dbService.savePipelineQueue(migrated);
       }
+      setQueue(migrated);
+    } else {
+      setQueue([]);
     }
   };
 
@@ -2098,8 +2089,7 @@ export default function AdminCurriculumPage() {
         }
 
         setQueue(updated);
-        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
-        loadData();
+        dbService.savePipelineQueue(updated).then(() => loadData());
       } else {
         // No task is currently running, select the next queued task by descending priority
         const queuedTasks = queue.filter(t => t.status === 'queued');
@@ -2128,8 +2118,7 @@ export default function AdminCurriculumPage() {
             return t;
           });
           setQueue(updated);
-          localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
-          loadData();
+          dbService.savePipelineQueue(updated).then(() => loadData());
         }
       }
     }, 4000);
@@ -2490,7 +2479,7 @@ export default function AdminCurriculumPage() {
 
       if (promoted) {
         setQueue(updatedQueue);
-        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+        dbService.savePipelineQueue(updatedQueue);
         loadData();
       }
     }
@@ -2545,7 +2534,7 @@ export default function AdminCurriculumPage() {
 
       if (promoted) {
         setQueue(updatedQueue);
-        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+        dbService.savePipelineQueue(updatedQueue);
         loadData();
       }
     }
@@ -2585,7 +2574,7 @@ export default function AdminCurriculumPage() {
 
       if (promoted) {
         setQueue(updatedQueue);
-        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+        dbService.savePipelineQueue(updatedQueue);
         loadData();
       }
     }
@@ -2619,7 +2608,7 @@ export default function AdminCurriculumPage() {
 
       if (promoted) {
         setQueue(updatedQueue);
-        localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+        dbService.savePipelineQueue(updatedQueue);
         loadData();
       }
     }
@@ -2657,7 +2646,7 @@ export default function AdminCurriculumPage() {
     };
     const updated = [...queue, newTask];
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     loadData();
   };
 
@@ -2699,7 +2688,7 @@ export default function AdminCurriculumPage() {
 
     const updated = [...queue, newTask];
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     
     // Clear form
     setManualTitle('');
@@ -2738,7 +2727,7 @@ export default function AdminCurriculumPage() {
     };
     const updated = [...queue, newTask];
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     loadData();
   };
 
@@ -2791,7 +2780,7 @@ export default function AdminCurriculumPage() {
     };
     const updated = [...queue, newTask];
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
   };
 
   const handleRefuseTrans = async (title: string, targetLang: string) => {
@@ -2827,7 +2816,7 @@ export default function AdminCurriculumPage() {
     };
     const updatedQueue = [...queue, newTask];
     setQueue(updatedQueue);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updatedQueue));
+    dbService.savePipelineQueue(updatedQueue);
 
     // Increment version and update last_revision_date (Version Governance)
     const localCourses = JSON.parse(localStorage.getItem('openprimer_courses') || '[]');
@@ -2901,7 +2890,7 @@ export default function AdminCurriculumPage() {
 
     const updated = queue.filter(t => t.id !== id);
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     
     if (taskToCancel.type === 'generation') {
       await dbService.addRefusedCourse({
@@ -2928,7 +2917,7 @@ export default function AdminCurriculumPage() {
       return t;
     });
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     await loadData();
   };
 
@@ -2952,7 +2941,7 @@ export default function AdminCurriculumPage() {
       return t;
     });
     setQueue(updated);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(updated));
+    dbService.savePipelineQueue(updated);
     await loadData();
   };
 
@@ -2986,7 +2975,7 @@ export default function AdminCurriculumPage() {
       }
     ];
     setQueue(samples);
-    localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(samples));
+    dbService.savePipelineQueue(samples);
     await loadData();
   };
 
