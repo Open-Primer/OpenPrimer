@@ -3742,7 +3742,7 @@ export default function AdminCurriculumPage() {
 
                  {/* Refused backlog */}
                  <div className="space-y-4 pt-4 border-t border-slate-900">
-                   <h3 className="text-xl font-black text-slate-200">{t.refused_backlog}</h3>
+                   <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">{t.refused_backlog}</h4>
                    <div className="grid md:grid-cols-3 gap-6">
                      {refusedCourses.map((item) => {
                        const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
