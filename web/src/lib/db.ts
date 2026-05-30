@@ -1919,26 +1919,28 @@ export const isDatabaseConfigured =
   !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') &&
   process.env.NEXT_PUBLIC_SUPABASE_URL.trim() !== '';
 
+if (isDatabaseConfigured) {
+  // 100% Direct Database Mode: No cached mocks or preseeded local storages
+  mockCourses = [];
+  achievementsList = [];
+  tutorPersonalitiesList = [];
+  translationRequestsList = [];
+  refusedCoursesList = [];
+  refusedTranslationsList = [];
+  refusedRevisionsList = [];
+  agentMetricsList = [];
+  courseFeedbacks = [];
+  courseCompletionsList = [];
+  contactFeedbacksList = [];
+  searchHistoryList = [];
+  reportClusters = [];
+  availableLanguagesList = [];
+}
+
 if (isBrowser) {
   users = getLocalStorageItem('openprimer_users', users);
   
-  if (isDatabaseConfigured) {
-    // 100% Direct Database Mode: No cached mocks or preseeded local storages
-    mockCourses = [];
-    achievementsList = [];
-    tutorPersonalitiesList = [];
-    translationRequestsList = [];
-    refusedCoursesList = [];
-    refusedTranslationsList = [];
-    refusedRevisionsList = [];
-    agentMetricsList = [];
-    courseFeedbacks = [];
-    courseCompletionsList = [];
-    contactFeedbacksList = [];
-    searchHistoryList = [];
-    reportClusters = [];
-    availableLanguagesList = [];
-  } else {
+  if (!isDatabaseConfigured) {
     // Hybrid local sandbox mode with full mock preseeding
     const defaultCourses = mockCourses;
     const defaultSearchHistory = generatePreseededSearchHistory();
@@ -2019,6 +2021,7 @@ export const authService = {
 };
 
 export const isSandboxFallbackAllowed = (): boolean => {
+  if (isDatabaseConfigured) return false;
   if (typeof window !== 'undefined') {
     const allowed = localStorage.getItem('op_allow_sandbox');
     if (allowed === 'true') return true;
@@ -2033,7 +2036,7 @@ export const isSandboxFallbackAllowed = (): boolean => {
     return false;
   }
   return true;
-};
+}
 
 export const handleDatabaseError = (error: any) => {
   // Only log in the console when a real DB connection is expected (production/configured env)
