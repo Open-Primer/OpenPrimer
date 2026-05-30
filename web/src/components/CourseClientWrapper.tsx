@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
+import { AudioReader } from '@/components/AudioReader';
 import { usePathname } from 'next/navigation';
 import { progressService } from '@/lib/db';
 
@@ -205,6 +206,7 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
       </div>
 
       <AITutorOverlay pageContext={pageContext} />
+      <AudioReader content={pageContext} lang={typeof window !== 'undefined' ? (localStorage.getItem('openprimer_lang') || 'EN') : 'EN'} />
     </div>
   );
 };

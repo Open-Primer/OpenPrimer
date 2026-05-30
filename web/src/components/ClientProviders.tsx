@@ -8,11 +8,101 @@ import * as Icons from "lucide-react";
 import { X } from "lucide-react";
 import DatabaseOfflineGame from "./DatabaseOfflineGame";
 
+const HUD_TRANSLATIONS = {
+  EN: {
+    title: "Keyboard Command Deck",
+    subtitle: "Sovereign accessibility shortcuts to navigate OpenPrimer hands-free.",
+    close: "Press ESC to close",
+    shortcuts: [
+      { key: "Alt + H", desc: "Return to Student Home" },
+      { key: "Alt + C", desc: "Browse Course Catalog" },
+      { key: "Alt + P", desc: "Open Profile Preferences" },
+      { key: "Alt + A", desc: "Admin Curriculum Cockpit" },
+      { key: "Alt + L", desc: "Access Login Portal" },
+      { key: "Alt + B", desc: "Cycle Themes (Dark, Paper, Focus)" },
+      { key: "Alt + S", desc: "Play / Pause Audio Reader (TTS)" },
+      { key: "Alt + Q", desc: "Stop Audio Reader (TTS)" },
+      { key: "?", desc: "Toggle this Command Deck" }
+    ]
+  },
+  FR: {
+    title: "Pont de Commandes Clavier",
+    subtitle: "Raccourcis d'accessibilité souverains pour naviguer sans souris.",
+    close: "Appuyez sur ESC pour fermer",
+    shortcuts: [
+      { key: "Alt + H", desc: "Retourner à l'Accueil" },
+      { key: "Alt + C", desc: "Parcourir le Catalogue" },
+      { key: "Alt + P", desc: "Ouvrir les Préférences Profil" },
+      { key: "Alt + A", desc: "Console d'Administration" },
+      { key: "Alt + L", desc: "Accéder au Portail de Connexion" },
+      { key: "Alt + B", desc: "Alterner les Thèmes (Sombre, Papier, Focus)" },
+      { key: "Alt + S", desc: "Lire / Suspendre la lecture audio (TTS)" },
+      { key: "Alt + Q", desc: "Arrêter la lecture audio (TTS)" },
+      { key: "?", desc: "Afficher / Fermer ce pont de commandes" }
+    ]
+  },
+  ES: {
+    title: "Consola de Comandos de Teclado",
+    subtitle: "Atajos de accesibilidad soberanos para navegar sin mouse.",
+    close: "Presione ESC para cerrar",
+    shortcuts: [
+      { key: "Alt + H", desc: "Volver al Inicio" },
+      { key: "Alt + C", desc: "Catálogo de Cursos" },
+      { key: "Alt + P", desc: "Ajustes de Perfil" },
+      { key: "Alt + A", desc: "Consola de Administración" },
+      { key: "Alt + L", desc: "Portal de Acceso" },
+      { key: "Alt + B", desc: "Cambiar Tema (Oscuro, Papel, Enfoque)" },
+      { key: "Alt + S", desc: "Reproducir / Pausar Audio (TTS)" },
+      { key: "Alt + Q", desc: "Detener Audio (TTS)" },
+      { key: "?", desc: "Mostrar este panel" }
+    ]
+  },
+  DE: {
+    title: "Tastaturbefehlskonsole",
+    subtitle: "Barrierefreie Shortcuts für eine mausfreie Navigation.",
+    close: "ESC zum Schließen drücken",
+    shortcuts: [
+      { key: "Alt + H", desc: "Zur Startseite wechseln" },
+      { key: "Alt + C", desc: "Kursbereich durchsuchen" },
+      { key: "Alt + P", desc: "Profileinstellungen öffnen" },
+      { key: "Alt + A", desc: "Admin-Dashboard öffnen" },
+      { key: "Alt + L", desc: "Login-Portal aufrufen" },
+      { key: "Alt + B", desc: "Lesemodus wechseln (Dunkel, Papier, Fokus)" },
+      { key: "Alt + S", desc: "Audio abspielen / pausieren (TTS)" },
+      { key: "Alt + Q", desc: "Audio stoppen (TTS)" },
+      { key: "?", desc: "Diese Hilfe anzeigen" }
+    ]
+  },
+  ZH: {
+    title: "键盘控制中心",
+    subtitle: "高效率无障碍快捷键，助您免鼠标流畅操作 OpenPrimer。",
+    close: "按 ESC 键关闭面板",
+    shortcuts: [
+      { key: "Alt + H", desc: "返回首页" },
+      { key: "Alt + C", desc: "浏览课程目录" },
+      { key: "Alt + P", desc: "打开个人偏好设置" },
+      { key: "Alt + A", desc: "进入教务控制台" },
+      { key: "Alt + L", desc: "进入登录门户" },
+      { key: "Alt + B", desc: "切换阅读模式 (深色、纸张、专注)" },
+      { key: "Alt + S", desc: "播放 / 暂停语音朗读 (TTS)" },
+      { key: "Alt + Q", desc: "停止语音朗读 (TTS)" },
+      { key: "?", desc: "显示 / 关闭本控制面板" }
+    ]
+  }
+};
+
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<any[]>([]);
   const [dbFailed, setDbFailed] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [activeLang, setActiveLang] = useState("EN");
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedLang = localStorage.getItem("openprimer_lang") || "EN";
+      setActiveLang(savedLang.toUpperCase());
+    }
+
     const applyTheme = (theme: string) => {
       const root = document.documentElement;
       
@@ -55,9 +145,40 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Apply global accessibility settings
+    const applyAccessibility = () => {
+      if (typeof window === "undefined") return;
+      const root = document.documentElement;
+      const savedProfile = localStorage.getItem("op_user_profile");
+      
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.reduceMotion) {
+            root.classList.add("reduce-motion");
+          } else {
+            root.classList.remove("reduce-motion");
+          }
+
+          if (p.dyslexiaFriendly) {
+            root.classList.add("dyslexia-friendly");
+          } else {
+            root.classList.remove("dyslexia-friendly");
+          }
+
+          if (p.fineVisualControls) {
+            root.classList.add("fine-visual-controls");
+          } else {
+            root.classList.remove("fine-visual-controls");
+          }
+        } catch (err) {}
+      }
+    };
+
     // Load initial theme on client mount
     const savedTheme = localStorage.getItem("op_reading_mode") || "dark";
     applyTheme(savedTheme);
+    applyAccessibility();
 
     // Listen to theme changes dynamically
     const handleThemeChange = (e: Event) => {
@@ -102,12 +223,70 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       }, 7000);
     };
 
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || document.activeElement?.getAttribute("contenteditable") === "true") {
+        return;
+      }
+
+      // Help HUD trigger on ?
+      if (e.key === "?" || (e.shiftKey && e.key === "?") || e.key === "/") {
+        setShowShortcutsHelp((prev) => !prev);
+        e.preventDefault();
+        return;
+      }
+
+      // Help HUD close on Escape
+      if (e.key === "Escape") {
+        setShowShortcutsHelp(false);
+      }
+
+      if (e.altKey) {
+        let targetPath = "";
+        switch (e.key.toLowerCase()) {
+          case "h":
+            targetPath = "/";
+            break;
+          case "c":
+            targetPath = "/catalog";
+            break;
+          case "p":
+            targetPath = "/profile/settings";
+            break;
+          case "a":
+            targetPath = "/admin/curriculum";
+            break;
+          case "l":
+            targetPath = "/login";
+            break;
+          case "b": {
+            const modes = ["dark", "paper", "focus"];
+            const currentMode = localStorage.getItem("op_reading_mode") || "dark";
+            const nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+            localStorage.setItem("op_reading_mode", nextMode);
+            window.dispatchEvent(new CustomEvent("op_reading_mode_changed", { detail: nextMode }));
+            e.preventDefault();
+            break;
+          }
+        }
+
+        if (targetPath) {
+          e.preventDefault();
+          window.location.href = targetPath;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalShortcuts);
     window.addEventListener("op_reading_mode_changed", handleThemeChange);
+    window.addEventListener("op_accessibility_preferences_changed", applyAccessibility);
     window.addEventListener("op_achievement_unlocked", handleAchievement);
     window.addEventListener("op_database_connection_failure", handleDbFailure);
 
     return () => {
+      window.removeEventListener("keydown", handleGlobalShortcuts);
       window.removeEventListener("op_reading_mode_changed", handleThemeChange);
+      window.removeEventListener("op_accessibility_preferences_changed", applyAccessibility);
       window.removeEventListener("op_achievement_unlocked", handleAchievement);
       window.removeEventListener("op_database_connection_failure", handleDbFailure);
     };
@@ -161,6 +340,71 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           })}
         </AnimatePresence>
       </div>
+
+      {/* Visual Command Deck HUD */}
+      <AnimatePresence>
+        {showShortcutsHelp && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-2xl bg-slate-900/90 border border-slate-800 rounded-[40px] shadow-2xl p-8 md:p-10 relative overflow-hidden text-slate-100 font-sans"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="hud-title"
+            >
+              {/* Blur highlights */}
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="flex items-start justify-between mb-8 border-b border-slate-800 pb-6">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-blue-400 block mb-1">
+                    {activeLang === "FR" ? "PONT D'ACCESSIBILITÉ" : "SOVEREIGN ACCESSIBILITY"}
+                  </span>
+                  <h3 id="hud-title" className="text-2xl font-black text-white">
+                    {HUD_TRANSLATIONS[activeLang as keyof typeof HUD_TRANSLATIONS]?.title || HUD_TRANSLATIONS.EN.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {HUD_TRANSLATIONS[activeLang as keyof typeof HUD_TRANSLATIONS]?.subtitle || HUD_TRANSLATIONS.EN.subtitle}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowShortcutsHelp(false)}
+                  className="p-2 text-slate-500 hover:text-white rounded-full bg-slate-950/40 border border-slate-850 hover:bg-slate-950/80 transition-all cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Grid of Shortcuts */}
+              <div className="grid sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 mb-8">
+                {(HUD_TRANSLATIONS[activeLang as keyof typeof HUD_TRANSLATIONS]?.shortcuts || HUD_TRANSLATIONS.EN.shortcuts).map((shortcut, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/40 border border-slate-850 hover:border-slate-800 transition-colors"
+                  >
+                    <span className="text-xs text-slate-400">{shortcut.desc}</span>
+                    <kbd className="bg-slate-950 text-[10px] font-black text-blue-400 border border-slate-800 px-2.5 py-1 rounded-xl shadow-lg font-mono">
+                      {shortcut.key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 border-t border-slate-800 pt-6">
+                <span>OpenPrimer Universal Accessibility HUD</span>
+                <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                  <Icons.Keyboard className="w-4 h-4" />
+                  {HUD_TRANSLATIONS[activeLang as keyof typeof HUD_TRANSLATIONS]?.close || HUD_TRANSLATIONS.EN.close}
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </LanguageProvider>
   );
 }

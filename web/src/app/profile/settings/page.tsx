@@ -5,10 +5,148 @@ import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
 import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { Eye, Volume2, Keyboard, Brain as BrainIcon } from 'lucide-react';
+
+const ACCESSIBILITY_GUIDE = {
+  EN: {
+    title: "Radical Accessibility Guide",
+    subtitle: "How to navigate and use OpenPrimer based on your specific needs.",
+    visual: "Visual Impairments (Screen Readers & Zoom)",
+    visual_desc: "OpenPrimer is built using semantic HTML5 and SVG-only assets. If using screen readers like NVDA or VoiceOver, you can navigate headings logically. Images are replaced by semantic CSS drawings or Lucide icons, preventing unlabeled image clutter.",
+    auditory: "Hearing Impairments (Visual Indicators)",
+    auditory_desc: "Every auditory notification or event has a dual visual equivalent. Success sound triggers display sliding achievements cards, and database connections issue visible warning badges.",
+    keyboard: "Advanced Keyboard Navigation & Shortcuts",
+    keyboard_desc: "Press 'Tab' to move between items, highlighted by our high-contrast focus rings. Use global Alt-key combinations to jump instantly anywhere:",
+    key_home: "Alt + H : Return to Home page",
+    key_catalog: "Alt + C : Browse Course Catalog",
+    key_settings: "Alt + P : Profile Preferences & Settings",
+    key_admin: "Alt + A : Curriculum Admin Cockpit",
+    key_theme: "Alt + B : Cycle Reading Themes (Dark, Paper, Focus)",
+    cognitive: "Cognitive Load & Focus Themes",
+    cognitive_desc: "Utilize reading themes in the top navigation bar. Select 'Paper Mode' for high-contrast literary reading (similar to high-quality books), or 'Focus Mode' for pure pitch-black distraction-free interface."
+  },
+  FR: {
+    title: "Guide d'Accessibilité Radicale",
+    subtitle: "Comment naviguer et utiliser OpenPrimer selon vos besoins spécifiques.",
+    visual: "Déficiences Visuelles (Lecteurs d'écran & Zoom)",
+    visual_desc: "OpenPrimer est conçu avec du HTML5 sémantique et des graphismes exclusivement vectoriels. Avec NVDA ou VoiceOver, vous pouvez naviguer de façon logique. Les images superflues sont remplacées par des icônes sémantiques ou tracés CSS épurés.",
+    auditory: "Déficiences Auditives (Signaux Visuels)",
+    auditory_desc: "Chaque notification ou signal sonore possède un équivalent visuel. L'obtention de badges déclenche des cartes animées et les alertes réseau s'affichent sous forme de badges colorés.",
+    keyboard: "Navigation Clavier Avancée & Raccourcis",
+    keyboard_desc: "Naviguez avec 'Tab', mis en valeur par notre anneau de focus haute visibilité. Utilisez nos combinaisons Alt pour naviguer instantanément :",
+    key_home: "Alt + H : Retourner à l'Accueil",
+    key_catalog: "Alt + C : Parcourir le Catalogue",
+    key_settings: "Alt + P : Préférences et Profil",
+    key_admin: "Alt + A : Console d'Administration",
+    key_theme: "Alt + B : Alterner les Thèmes (Sombre, Papier, Focus)",
+    cognitive: "Fatigue Cognitive & Thèmes de Lecture",
+    cognitive_desc: "Utilisez les modes de lecture dans la barre supérieure. Le mode 'Papier' offre un contraste littéraire chaleureux (style livre), et le mode 'Focus' élimine toute distraction pour ne laisser que le texte."
+  },
+  ES: {
+    title: "Guía de Accesibilidad Radical",
+    subtitle: "Cómo navegar y utilizar OpenPrimer según sus necesidades específicas.",
+    visual: "Discapacidades Visuales (Lectores de pantalla y Zoom)",
+    visual_desc: "OpenPrimer está construido utilizando HTML5 semántico y vectores SVG. Con lectores como NVDA o VoiceOver, la navegación por encabezados es completamente fluida y libre de imágenes genéricas sin etiqueta.",
+    auditory: "Discapacidades Auditivas (Indicadores Visuales)",
+    auditory_desc: "Cualquier notificación sonora tiene un equivalente visual dual. Los logros desbloqueados muestran tarjetas animadas y los fallos de red generan advertencias visibles claras.",
+    keyboard: "Navegación Teclado Avanzada y Shortcuts",
+    keyboard_desc: "Presione 'Tab' para desplazarse, con la ayuda de nuestro anillo de enfoque de alto contraste. Utilice combinaciones con Alt para navegar instantáneamente:",
+    key_home: "Alt + H : Volver al Inicio",
+    key_catalog: "Alt + C : Catálogo de Cursos",
+    key_settings: "Alt + P : Ajustes de Perfil",
+    key_admin: "Alt + A : Consola de Administración",
+    key_theme: "Alt + B : Cambiar Tema (Oscuro, Papel, Enfoque)",
+    cognitive: "Carga Cognitiva y Temas de Enfoque",
+    cognitive_desc: "Utilice los temas de lectura de la barra superior. El modo 'Papel' brinda una lectura de alto contraste (tipo libro) y el modo 'Enfoque' elmina toda distracción visual."
+  },
+  DE: {
+    title: "Radikale Barrierefreiheit-Leitfaden",
+    subtitle: "Navigation und Nutzung von OpenPrimer basierend auf Ihren spezifischen Anforderungen.",
+    visual: "Sehbehinderungen (Bildschirmleser & Zoom)",
+    visual_desc: "OpenPrimer basiert auf semantischem HTML5 und reinen SVG-Vektoren. Screenreader wie NVDA oder VoiceOver können Überschriften logisch ansteuern. Überflüssige Bilder wurden komplett vermieden.",
+    auditory: "Hörbehinderungen (Visuelle Indikoren)",
+    auditory_desc: "Jede akustische Benachrichtigung hat eine visuelle Entsprechung. Erfolge werden als animierte Karten eingeblendet, Netzwerkfehler werden als sichtbare Warnungen signalisiert.",
+    keyboard: "Erweiterte Tastaturnavigation & Shortcuts",
+    keyboard_desc: "Nutzen Sie 'Tab' für eine präzise Navigation mit unserem kontrastreichen Fokusrahmen. Verwenden Sie Alt-Tastenkombinationen für schnelle Navigation:",
+    key_home: "Alt + H : Zur Startseite wechseln",
+    key_catalog: "Alt + C : Kursbereich durchsuchen",
+    key_settings: "Alt + P : Profileinstellungen & Präferenzen",
+    key_admin: "Alt + A : Admin-Dashboard öffnen",
+    key_theme: "Alt + B : Lesemodus wechseln (Dunkel, Papier, Fokus)",
+    cognitive: "Kognitive Entlastung & Fokusthemen",
+    cognitive_desc: "Nutzen Sie die Lesemodi in der oberen Navigationsleiste. Wählen Sie den 'Papiermodus' für literarischen Kontrast oder den 'Fokusmodus' für ablenkungsfreie monochrome Konzentration."
+  },
+  ZH: {
+    title: "彻底的无障碍导航指南",
+    subtitle: "如何根据您的特定需求，在 OpenPrimer 中顺畅浏览和学习。",
+    visual: "视觉障碍（屏幕阅读器与放大镜）",
+    visual_desc: "OpenPrimer 完全基于语义化的 HTML5 和纯矢量 SVG 构建。在使用 NVDA 或 VoiceOver 等屏幕阅读器时，您可以逻辑清晰地浏览标题和内容，完全没有无标签图片的干扰。",
+    auditory: "听觉障碍（双重视觉指示）",
+    auditory_desc: "所有的声音反馈都有对应的视觉替代方案。解锁徽章时会滑出精美的动画卡片，网络连接故障时也会显示清晰的彩色警示徽章。",
+    keyboard: "高级键盘导航与全局快捷键",
+    keyboard_desc: "使用 'Tab' 键移动焦点，我们高对比度的焦点发光环将为您精准导航。使用 Alt 组合键随时随地一键触达：",
+    key_home: "Alt + H : 返回首页 / 账户主页",
+    key_catalog: "Alt + C : 浏览课程目录",
+    key_settings: "Alt + P : 偏好与资料设置",
+    key_admin: "Alt + A : 教务管理控制台",
+    key_theme: "Alt + B : 一键切换阅读主题（深色、纸张、专注）",
+    cognitive: "认知减负与专注主题",
+    cognitive_desc: "利用顶部导航栏的专属阅读主题。选择“纸张模式”享受温暖的书本纸张般对比度，或选择“专注模式”进入极致纯黑、过滤一切杂质的沉浸式界面。"
+  }
+};
+
+const ACC_TRANSLATIONS = {
+  EN: {
+    section_title: "Active Accessibility Configuration",
+    reduce_motion: "Reduce Interface Motion",
+    reduce_motion_desc: "Disables all background gradient shifts, hover transitions, and slide animations.",
+    dyslexia: "Dyslexia-Friendly Layout",
+    dyslexia_desc: "Replaces reading typefaces with highly readable Comic-style lettering and increases word spacing.",
+    visual_ctrl: "Fine Reading Controls",
+    visual_ctrl_desc: "Enlarges academic text baseline size and optimizes readability baseline width."
+  },
+  FR: {
+    section_title: "Configuration Active de l'Accessibilité",
+    reduce_motion: "Réduction des Mouvements de l'Interface",
+    reduce_motion_desc: "Désactive les déplacements de dégradés, les zooms de boutons et les animations de survol.",
+    dyslexia: "Typographie Adaptée à la Dyslexie",
+    dyslexia_desc: "Bascule vers une police à haute lisibilité avec un espacement des mots et lettres accru.",
+    visual_ctrl: "Contrôles Fins de l'Affichage",
+    visual_ctrl_desc: "Agrandit la taille de base des textes d'apprentissage pour un confort visuel optimal.",
+  },
+  ES: {
+    section_title: "Configuración Activa de Accesibilidad",
+    reduce_motion: "Reducir Movimientos de Interfaz",
+    reduce_motion_desc: "Desactiva las animaciones de fondo, los efectos de zoom y las transiciones.",
+    dyslexia: "Tipografía Adaptada a Dislexia",
+    dyslexia_desc: "Cambia la fuente a una letra de alta legibilidad con mayor espaciado entre palabras.",
+    visual_ctrl: "Controles de Lectura Finos",
+    visual_ctrl_desc: "Agranda el tamaño del texto para una comodidad visual óptima."
+  },
+  DE: {
+    section_title: "Aktive Barrierefreiheit-Konfiguration",
+    reduce_motion: "Schnittstellenbewegungen reduzieren",
+    reduce_motion_desc: "Deaktiviert alle Hintergrundanimationen, Zoom-Effekte und Übergänge.",
+    dyslexia: "Dyslexie-freundliches Layout",
+    dyslexia_desc: "Ersetzt Leseschriften durch gut lesbare Comic-Buchstaben und vergrößert den Wortabstand.",
+    visual_ctrl: "Feine Leseeinstellungen",
+    visual_ctrl_desc: "Vergrößert die Basistextgröße der Lernmodule für optimalen Komfort."
+  },
+  ZH: {
+    section_title: "无障碍功能主动配置",
+    reduce_motion: "减少界面动态效果",
+    reduce_motion_desc: "关闭所有的渐变背景位移、按钮缩放以及卡片滑入等动态特效。",
+    dyslexia: "专属防读障排版系统",
+    dyslexia_desc: "将全局阅读字体替换为高可读性字符集，并大幅度增加字间距与单词间距。",
+    visual_ctrl: "视力辅助微调控制",
+    visual_ctrl_desc: "智能放大课程主体文本的字号，提供更加柔和、轻松的视觉追踪区间。"
+  }
+};
 
 export default function ProfileSettingsPage() {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const guide = ACCESSIBILITY_GUIDE[lang as keyof typeof ACCESSIBILITY_GUIDE] || ACCESSIBILITY_GUIDE.EN;
 
   const [user, setUser] = useState({
     firstName: "Silvere",
@@ -20,17 +158,26 @@ export default function ProfileSettingsPage() {
   const [showToast, setShowToast] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [dyslexiaFriendly, setDyslexiaFriendly] = useState(false);
+  const [fineVisualControls, setFineVisualControls] = useState(false);
+
   useEffect(() => {
     // Load dynamic profile
     const savedProfile = localStorage.getItem('op_user_profile');
     if (savedProfile) {
-      const p = JSON.parse(savedProfile);
-      setUser({
-        firstName: p.firstName || "Silvere",
-        lastName: p.lastName || "Martin",
-        email: p.email || "silvere@openprimer.org",
-        lang: (p.preferredLang || lang).toUpperCase()
-      });
+      try {
+        const p = JSON.parse(savedProfile);
+        setUser({
+          firstName: p.firstName || "Silvere",
+          lastName: p.lastName || "Martin",
+          email: p.email || "silvere@openprimer.org",
+          lang: (p.preferredLang || lang).toUpperCase()
+        });
+        setReduceMotion(!!p.reduceMotion);
+        setDyslexiaFriendly(!!p.dyslexiaFriendly);
+        setFineVisualControls(!!p.fineVisualControls);
+      } catch (err) {}
     }
 
     // Load default reading mode
@@ -60,9 +207,15 @@ export default function ProfileSettingsPage() {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      reduceMotion: reduceMotion,
+      dyslexiaFriendly: dyslexiaFriendly,
+      fineVisualControls: fineVisualControls,
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
+    
+    // Dispatch global event for instant reactivity!
+    window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
 
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -137,6 +290,164 @@ export default function ProfileSettingsPage() {
               </form>
            </section>
 
+           {/* ACTIVE ACCESSIBILITY CONFIGURATION */}
+            <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl mb-8">
+               <div className="space-y-2 mb-8">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-3">
+                     <BrainIcon className="w-4 h-4 text-emerald-500" /> 
+                     {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.section_title || ACC_TRANSLATIONS.EN.section_title}
+                  </h3>
+               </div>
+
+               <div className="space-y-6">
+                  {/* Reduce Motion */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.reduce_motion || ACC_TRANSLATIONS.EN.reduce_motion}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.reduce_motion_desc || ACC_TRANSLATIONS.EN.reduce_motion_desc}
+                        </p>
+                     </div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           const val = !reduceMotion;
+                           setReduceMotion(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.reduceMotion = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                           }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${reduceMotion ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={reduceMotion}
+                        role="switch"
+                     >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${reduceMotion ? 'translate-x-6' : 'translate-x-0'}`} />
+                     </button>
+                  </div>
+
+                  {/* Dyslexia Layout */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.dyslexia || ACC_TRANSLATIONS.EN.dyslexia}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.dyslexia_desc || ACC_TRANSLATIONS.EN.dyslexia_desc}
+                        </p>
+                     </div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           const val = !dyslexiaFriendly;
+                           setDyslexiaFriendly(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.dyslexiaFriendly = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                           }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${dyslexiaFriendly ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={dyslexiaFriendly}
+                        role="switch"
+                     >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${dyslexiaFriendly ? 'translate-x-6' : 'translate-x-0'}`} />
+                     </button>
+                  </div>
+
+                  {/* Fine Visual Controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.visual_ctrl || ACC_TRANSLATIONS.EN.visual_ctrl}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.visual_ctrl_desc || ACC_TRANSLATIONS.EN.visual_ctrl_desc}
+                        </p>
+                     </div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           const val = !fineVisualControls;
+                           setFineVisualControls(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.fineVisualControls = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                           }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${fineVisualControls ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={fineVisualControls}
+                        role="switch"
+                     >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${fineVisualControls ? 'translate-x-6' : 'translate-x-0'}`} />
+                     </button>
+                  </div>
+               </div>
+            </section>
+
+            {/* ACCESSIBILITY EXPLANATORY PANEL */}
+           <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl">
+              <div className="space-y-2 mb-8">
+                 <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-3">
+                    <Globe className="w-4 h-4 text-blue-500" /> {guide.title}
+                 </h3>
+                 <p className="text-xs text-slate-400 italic ml-7">{guide.subtitle}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                 {/* Visual & Auditory */}
+                 <div className="space-y-6">
+                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-3">
+                       <h4 className="text-xs font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-violet-500" /> {guide.visual}
+                       </h4>
+                       <p className="text-xs text-slate-500 leading-relaxed">{guide.visual_desc}</p>
+                    </div>
+
+                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-3">
+                       <h4 className="text-xs font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                          <Volume2 className="w-4 h-4 text-emerald-500" /> {guide.auditory}
+                       </h4>
+                       <p className="text-xs text-slate-500 leading-relaxed">{guide.auditory_desc}</p>
+                    </div>
+                 </div>
+
+                 {/* Keyboard & Cognitive */}
+                 <div className="space-y-6">
+                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-3">
+                       <h4 className="text-xs font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                          <Keyboard className="w-4 h-4 text-blue-500" /> {guide.keyboard}
+                       </h4>
+                       <p className="text-xs text-slate-500 leading-relaxed mb-3">{guide.keyboard_desc}</p>
+                       <ul className="text-[10px] font-bold text-slate-400 space-y-1.5 list-none pl-1">
+                          <li className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_home}</li>
+                          <li className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_catalog}</li>
+                          <li className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_settings}</li>
+                          <li className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_admin}</li>
+                          <li className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-900"><span className="text-amber-500 font-mono">⌘</span> {guide.key_theme}</li>
+                       </ul>
+                    </div>
+
+                    <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl space-y-3">
+                       <h4 className="text-xs font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                          <BrainIcon className="w-4 h-4 text-amber-500" /> {guide.cognitive}
+                       </h4>
+                       <p className="text-xs text-slate-500 leading-relaxed">{guide.cognitive_desc}</p>
+                    </div>
+                 </div>
+              </div>
+           </section>
+
            {/* DANGER ZONE */}
            <section className="p-10 bg-red-500/5 border border-red-500/20 rounded-[48px] backdrop-blur-3xl">
               <h3 className="text-sm font-black uppercase tracking-widest text-red-500 mb-8 flex items-center gap-3">
@@ -172,7 +483,7 @@ export default function ProfileSettingsPage() {
                initial={{ opacity: 0, scale: 0.95, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-               className="w-full max-w-lg bg-gradient-to-br from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-red-500/30 rounded-[40px] shadow-2xl p-10 relative overflow-hidden"
+               className="w-full max-w-lg bg-gradient-to-br from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-red-500/30 rounded-[40px] shadow-2xl p-10 relative overflow-hidden text-slate-200"
              >
                <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
                

@@ -40,8 +40,9 @@ Requirements:
 > Detailed academic contextualization.
 3. Ensure there is a robust introduction, conceptual framework, historical perspective, and concrete real-world application.
 4. Include some math formulas in LaTeX (using $ or $$ wrappers).
-5. Write the response in "${targetLang.toUpperCase()}".
-6. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
+5. Radical Accessibility: Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility.
+6. Write the response in "${targetLang.toUpperCase()}".
+7. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
       const contentRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',

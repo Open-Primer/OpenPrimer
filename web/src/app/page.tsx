@@ -340,7 +340,8 @@ export default function Home() {
       lastName,
       email,
       preferredLang: lang,
-      isVerified: true
+      isVerified: true,
+      password: password // Enforce match during login!
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
     localStorage.setItem('op_session', 'false'); // Not logged in yet!
@@ -357,37 +358,81 @@ export default function Home() {
       return;
     }
 
-    const isVerified = localStorage.getItem('op_registration_verified') === 'true';
-    const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
+    const emailLower = email.toLowerCase().trim();
 
-    if (isVerified && !hasLoggedInBefore) {
-      localStorage.setItem('op_show_welcome_catalog_popup', 'true');
-      localStorage.setItem('op_logged_in_before', 'true');
+    // 1. Check Demo Accounts fallback (Vanguard, student1, student2, student3, silvere)
+    const DEMO_ACCOUNTS: Record<string, { name: string; role: string }> = {
+      'vanguard.mysterious@gmail.com': { name: 'Vanguard Admin', role: 'admin' },
+      'student1@openprimer.org':       { name: 'Student One',    role: 'student' },
+      'student2@openprimer.org':       { name: 'Student Two',    role: 'student' },
+      'student3@openprimer.org':       { name: 'Student Three',  role: 'student' },
+      'silvere@openprimer.org':        { name: 'Silvere Martin', role: 'admin' },
+    };
+
+    const demoAccount = DEMO_ACCOUNTS[emailLower];
+
+    if (demoAccount) {
+      const isVerified = localStorage.getItem('op_registration_verified') === 'true';
+      const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
+
+      if (isVerified && !hasLoggedInBefore) {
+        localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+        localStorage.setItem('op_logged_in_before', 'true');
+      }
+
+      const profile = {
+        firstName: demoAccount.name.split(' ')[0],
+        lastName: demoAccount.name.split(' ').slice(1).join(' '),
+        email: emailLower,
+        preferredLang: lang,
+        role: demoAccount.role,
+        isVerified: true
+      };
+
+      localStorage.setItem('op_user_profile', JSON.stringify(profile));
+      localStorage.setItem('op_session', 'true');
+      setIsLoggedIn(true);
+      setAuthModal(null);
+
+      const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+      if (redirectUrl) {
+        sessionStorage.removeItem('op_auth_redirect');
+        window.location.href = redirectUrl;
+      } else {
+        router.push(demoAccount.role === 'admin' ? '/admin' : '/catalog');
+      }
+      return;
     }
 
-    const testProfile = {
-      firstName: isVerified ? firstName : 'Silvere',
-      lastName: isVerified ? lastName : 'Martin',
-      email: email,
-      preferredLang: lang,
-      isVerified: true
-    };
-    localStorage.setItem('op_user_profile', JSON.stringify(testProfile));
-    localStorage.setItem('op_session', 'true');
-    setIsLoggedIn(true);
-    setAuthModal(null);
-    
-    const redirectUrl = sessionStorage.getItem('op_auth_redirect');
-    if (redirectUrl) {
-      sessionStorage.removeItem('op_auth_redirect');
-      window.location.href = redirectUrl;
-    } else {
-      if (hasLoggedInBefore) {
-        router.push('/profile/curriculum');
-      } else {
-        router.push('/catalog');
+    // 2. Check if this is a dynamically registered account in local storage
+    const storedProfileStr = localStorage.getItem('op_user_profile');
+    if (storedProfileStr) {
+      try {
+        const storedProfile = JSON.parse(storedProfileStr);
+        if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
+          // If the profile matches the email, check the password
+          if (storedProfile.password === password) {
+            localStorage.setItem('op_session', 'true');
+            setIsLoggedIn(true);
+            setAuthModal(null);
+
+            const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+            if (redirectUrl) {
+              sessionStorage.removeItem('op_auth_redirect');
+              window.location.href = redirectUrl;
+            } else {
+              router.push('/catalog');
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error parsing stored user profile", err);
       }
     }
+
+    // 3. Otherwise, reject access
+    setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
   };
 
   if (!mounted) {
@@ -489,7 +534,7 @@ export default function Home() {
         {/* Popular Curricula */}
         <div className="w-full max-w-2xl mb-20 text-center relative z-50">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">
-            {lang === 'FR' ? "CURRICULUMS POPULAIRES" : "POPULAR CURRICULA"}
+            {s.popular_curricula}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {popularCourses.map(course => (

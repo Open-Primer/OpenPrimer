@@ -18,8 +18,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("🚨 Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in web/.env.local");
-  process.exit(1);
+  console.warn("⚠️ Warning: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY are not defined.");
+  console.warn("⚠️ Database export will be skipped, and a placeholder seed file will be written to prevent build crashes.");
+  
+  const outputPath = path.join(__dirname, 'src', 'lib', 'supabase_seed.sql');
+  const placeholderSql = `-- =========================================================\n`
+    + `-- OPENPRIMER DATABASE SEED FILE (PLACEHOLDER)\n`
+    + `-- Skipped due to missing environment variables during build\n`
+    + `-- =========================================================\n`;
+  
+  fs.writeFileSync(outputPath, placeholderSql, 'utf-8');
+  console.log(`🎉 Placeholder seed written to ${outputPath}`);
+  process.exit(0);
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2, Lock
+  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2, Lock, Mic, MicOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
@@ -16,6 +16,7 @@ import { dbService, TutorPersonality } from '@/lib/db';
 const STATIC_UI_STRINGS = {
   EN: { 
     my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
+    popular_curricula: "Popular Curricula",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
     copyright: "© 2026 OpenPrimer Project • Global AI Academic Repository",
     all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", search: "Search modules...",
@@ -79,10 +80,18 @@ const STATIC_UI_STRINGS = {
     return_to_form: "Return to Form", course_select_optional: "Select Initial Courses (Optional)",
     password_placeholder: "••••••••••••", validation_in_progress: "Validation in progress",
     validation_verifying_desc: "We are verifying your secure validation code...", resend_email_dispatched: "An email verification link has been sent.",
-    mailbox_sim_title: "MAILBOX SIMULATOR", forgot_question: "Forgot?", email_required_error: "Please enter your email and password."
+    mailbox_sim_title: "MAILBOX SIMULATOR", forgot_question: "Forgot?", email_required_error: "Please enter your email and password.",
+    study_streak: "Study Streak", mastery_points: "Mastery Points", courses_mastered: "Courses Mastered",
+    empty_curriculum_title: "Your curriculum is empty",
+    empty_curriculum_desc: "Explore our premium catalog and kick off your first self-directed learning quest today.",
+    empty_curriculum_btn: "Explore Catalog",
+    active_language: "Active Language: English",
+    catalog_translation_guide: "CATALOG TRANSLATION GUIDE",
+    translation_guide_text: "💡 Change the language in the top navigation bar to discover courses in other languages."
   },
   FR: { 
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
+    popular_curricula: "Curriculums Populaires",
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
     copyright: "© 2026 Projet OpenPrimer • Répertoire Académique Mondial d'IA",
     all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", search: "Rechercher des modules...",
@@ -146,10 +155,18 @@ const STATIC_UI_STRINGS = {
     return_to_form: "Retourner au formulaire", course_select_optional: "Sélectionner des Cours Initiaux (Optionnel)",
     password_placeholder: "••••••••••••", validation_in_progress: "Validation en cours",
     validation_verifying_desc: "Nous vérifions votre code de validation sécurisé...", resend_email_dispatched: "Un lien de vérification par e-mail a été envoyé.",
-    mailbox_sim_title: "SIMULATEUR DE BOÎTE MAIL", forgot_question: "Oublié ?", email_required_error: "Veuillez renseigner votre email et votre mot de passe."
+    mailbox_sim_title: "SIMULATEUR DE BOÎTE MAIL", forgot_question: "Oublié ?", email_required_error: "Veuillez renseigner votre email et votre mot de passe.",
+    study_streak: "Série d'étude", mastery_points: "Points de Maîtrise", courses_mastered: "Cours Terminés",
+    empty_curriculum_title: "Votre curriculum est vide",
+    empty_curriculum_desc: "Parcourez notre catalogue premium et commencez votre premier parcours de formation auto-dirigé dès aujourd'hui.",
+    empty_curriculum_btn: "Parcourir le catalogue",
+    active_language: "Langue active : Français",
+    catalog_translation_guide: "GUIDE DE TRADUCTION DU CATALOGUE",
+    translation_guide_text: "💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d'autres langues."
   },
   ES: { 
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
+    popular_curricula: "Planes de Estudio Populares",
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
     copyright: "© 2026 Fundación OpenPrimer • Consorcio Académico Europeo",
     all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos...",
@@ -213,10 +230,18 @@ const STATIC_UI_STRINGS = {
     return_to_form: "Volver al formulario", course_select_optional: "Seleccionar cursos iniciales (opcional)",
     password_placeholder: "••••••••••••", validation_in_progress: "Validación en curso",
     validation_verifying_desc: "Estamos verificando su código de validación seguro...", resend_email_dispatched: "Se ha enviado un enlace de verificación de correo electrónico.",
-    mailbox_sim_title: "SIMULADOR DE BANDEJA DE ENTRADA", forgot_question: "¿Olvidó?", email_required_error: "Por favor, introduzca su correo electrónico y contraseña."
+    mailbox_sim_title: "SIMULADOR DE BANDEJA DE ENTRADA", forgot_question: "¿Olvidó?", email_required_error: "Por favor, introduzca su correo electrónico y contraseña.",
+    study_streak: "Racha de estudio", mastery_points: "Puntos de Maestría", courses_mastered: "Cursos Dominados",
+    empty_curriculum_title: "Tu plan de estudios está vacío",
+    empty_curriculum_desc: "Explora nuestro catálogo premium y comienza hoy mismo tu primera búsqueda de aprendizaje autodirigido.",
+    empty_curriculum_btn: "Explorar catálogo",
+    active_language: "Idioma activo : Español",
+    catalog_translation_guide: "GUÍA DE TRADUCCIÓN DEL CATÁLOGO",
+    translation_guide_text: "💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas."
   },
   DE: { 
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
+    popular_curricula: "Beliebte Lehrpläne",
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
     copyright: "© 2026 OpenPrimer Stiftung • Europäisches Akademisches Konsortium",
     all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen...",
@@ -280,10 +305,18 @@ const STATIC_UI_STRINGS = {
     return_to_form: "Zurück zum Formular", course_select_optional: "Erstkurse auswählen (Optional)",
     password_placeholder: "••••••••••••", validation_in_progress: "Validierung läuft",
     validation_verifying_desc: "Wir überprüfen Ihren sicheren Validierungscode...", resend_email_dispatched: "Ein Link zur E-Mail-Verifizierung wurde gesendet.",
-    mailbox_sim_title: "POSTEINGANGS-SIMULATOR", forgot_question: "Vergessen?", email_required_error: "Bitte geben Sie Ihre E-Mail und Ihr Passwort ein."
+    mailbox_sim_title: "POSTEINGANGS-SIMULATOR", forgot_question: "Vergessen?", email_required_error: "Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.",
+    study_streak: "Lernserie", mastery_points: "Meisterpunkte", courses_mastered: "Gemeisterte Kurse",
+    empty_curriculum_title: "Ihr Lehrplan ist leer",
+    empty_curriculum_desc: "Erkunden Sie unseren Premium-Katalog und starten Sie noch heute Ihre erste selbstgesteuerte Lernreise.",
+    empty_curriculum_btn: "Katalog erkunden",
+    active_language: "Aktive Sprache : Deutsch",
+    catalog_translation_guide: "KATALOG-ÜBERSETZUNGSLEITFADEN",
+    translation_guide_text: "💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken."
   },
   ZH: { 
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
+    popular_curricula: "热门课程计划",
     terms: "服务条款", privacy: "隐私主权",
     copyright: "© 2026 OpenPrimer 基金会 • 欧洲学术联盟",
     all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块...",
@@ -347,20 +380,31 @@ const STATIC_UI_STRINGS = {
     return_to_form: "返回表单", course_select_optional: "选择初始课程（可选）",
     password_placeholder: "••••••••••••", validation_in_progress: "正在验证中",
     validation_verifying_desc: "我们正在核对您的安全验证码...", resend_email_dispatched: "电子邮件验证链接已发送。",
-    mailbox_sim_title: "邮箱模拟器", forgot_question: "忘记？", email_required_error: "请输入您的电子邮件和密码。"
+    mailbox_sim_title: "邮箱模拟器", forgot_question: "忘记？", email_required_error: "请输入您的电子邮件和密码。",
+    study_streak: "学习连续天数", mastery_points: "掌控点数", courses_mastered: "已完成的课程",
+    empty_curriculum_title: "您的学习体系是空的",
+    empty_curriculum_desc: "探索我们的优质课程目录，今天就开启您的首个自主学习之旅。",
+    empty_curriculum_btn: "探索课程目录",
+    active_language: "当前语言：中文",
+    catalog_translation_guide: "课程目录语言切换指南",
+    translation_guide_text: "💡 在顶部导航栏中切换语言，即可探索其他语言的课程目录。"
   }
 };
 
-export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
-  get(target, prop: string) {
-    if (typeof window !== 'undefined') {
-      const cached = window.localStorage.getItem(`openprimer_ui_strings_${prop.toUpperCase()}`);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch (e) {}
+// Clear legacy local storage translation caches to prevent stale overrides
+if (typeof window !== 'undefined') {
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith('openprimer_ui_strings_')) {
+        window.localStorage.removeItem(key);
       }
     }
+  } catch (e) {}
+}
+
+export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
+  get(target, prop: string) {
     return target[prop.toUpperCase() as keyof typeof target] || target.EN;
   }
 }) as any;
@@ -390,7 +434,8 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
         gamified: 'Gamified Companion',
         historical: 'Historical Storyteller',
         feynman: 'Feynman Simplifier',
-        proof: 'Rigorous Proof Master'
+        proof: 'Rigorous Proof Master',
+        diamond_age: 'Illustrated Primer Coach'
       };
       return names[storedId] || 'Socratic Coach';
     }
@@ -403,6 +448,55 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
 
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const rec = new SpeechRecognition();
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.lang = lang.toLowerCase() === 'fr' ? 'fr-FR' : 'en-US';
+
+        rec.onstart = () => {
+          setIsListening(true);
+        };
+
+        rec.onend = () => {
+          setIsListening(false);
+        };
+
+        rec.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            setInput(prev => prev ? prev + " " + transcript : transcript);
+          }
+        };
+
+        rec.onerror = (e: any) => {
+          console.error("Speech Recognition error:", e);
+          setIsListening(false);
+        };
+
+        recognitionRef.current = rec;
+      }
+    }
+  }, [lang]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert(lang === 'FR' ? "L'entrée vocale n'est pas supportée sur ce navigateur. Veuillez utiliser Chrome." : "Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
 
   const getPersonaName = (pName: string) => {
     const selected = personalities.find(p => p.name === pName || p.id === pName);
@@ -737,9 +831,33 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
 
                 <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
-                  <div className="relative">
-                    <input type="text" disabled={isOffline} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" />
-                    <button disabled={isOffline} onClick={() => handleSend()} className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"><Send className="w-4 h-4" /></button>
+                  <div className="relative flex items-center">
+                    <input 
+                      type="text" 
+                      disabled={isOffline} 
+                      value={input} 
+                      onChange={(e) => setInput(e.target.value)} 
+                      onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                      placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} 
+                      className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
+                    />
+                    <button 
+                      type="button"
+                      disabled={isOffline} 
+                      onClick={toggleListening} 
+                      className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${isListening ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed`}
+                      title={lang === 'FR' ? "Activer l'entrée vocale" : "Active voice coaching input"}
+                      aria-label="Active voice coaching input"
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+                    <button 
+                      disabled={isOffline} 
+                      onClick={() => handleSend()} 
+                      className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </>
@@ -1004,7 +1122,9 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         <div className="relative" onMouseEnter={() => setActiveDropdown('lang')} onMouseLeave={() => setActiveDropdown(null)}>
           <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all">
             <span className="text-lg">{languages.find(l => l.code.toUpperCase() === lang.toUpperCase())?.flag}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{lang.toUpperCase()}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {languages.find(l => l.code.toUpperCase() === lang.toUpperCase())?.label || lang.toUpperCase()}
+            </span>
             <ChevronDown className={`w-3 h-3 text-slate-600 transition-transform ${activeDropdown === 'lang' ? 'rotate-180' : ''}`} />
           </button>
           <AnimatePresence>

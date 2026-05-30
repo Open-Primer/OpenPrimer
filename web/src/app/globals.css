@@ -644,3 +644,66 @@ body:not(.theme-paper):not(.theme-focus) footer {
   border-top: 1px solid rgba(30, 41, 59, 0.5) !important;
 }
 
+/* Premium Keyboard Focus States Overlay */
+*:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.6) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+}
+
+.theme-paper *:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.7) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.2) !important;
+}
+
+.theme-focus *:focus-visible {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 4px !important;
+}
+
+/* ==========================================
+   RADICAL ACCESSIBILITY STYLE OVERRIDES
+   ========================================== */
+
+/* 1. Reduce Motion Mode */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-delay: -1ms !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  background-attachment: initial !important;
+  scroll-behavior: auto !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition: none !important;
+}
+
+/* 2. Dyslexia-Friendly Mode */
+.dyslexia-friendly p,
+.dyslexia-friendly article,
+.dyslexia-friendly li,
+.dyslexia-friendly span,
+.dyslexia-friendly a,
+.dyslexia-friendly h1,
+.dyslexia-friendly h2,
+.dyslexia-friendly h3,
+.dyslexia-friendly h4 {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', 'Arial', sans-serif !important;
+  word-spacing: 0.16em !important;
+  letter-spacing: 0.12em !important;
+  line-height: 1.8 !important;
+}
+
+/* 3. Fine Visual Controls (High Readability Text Enlargement) */
+.fine-visual-controls p,
+.fine-visual-controls article,
+.fine-visual-controls li,
+.fine-visual-controls span,
+.fine-visual-controls a {
+  font-size: 1.25rem !important;
+  line-height: 1.95 !important;
+  letter-spacing: 0.06em !important;
+}
+

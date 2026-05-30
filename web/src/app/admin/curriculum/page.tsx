@@ -38,7 +38,7 @@ export const CURRICULUM_STRINGS = {
     add_personality: "Add New Personality",
     personality_name: "Personality Name",
     system_prompt: "System Prompt",
-    set_default: "Set as Default",
+    set_default: "Set as Default Personality",
     is_default: "Default",
     delete: "Delete",
     actions: "Actions",
@@ -490,7 +490,11 @@ export const COCKPIT_DICTIONARY = {
     "Gamified Companion": "Gamified Companion",
     "Direct Synthesizer": "Direct Synthesizer",
     "System Prompt": "System Prompt",
-    "Default": "Default"
+    "Default": "Default",
+    "Archival Level:": "Archival Level:",
+    "Archival Level Control": "Archival Level Control",
+    "Set as Default": "Set as Default",
+    "set_default": "Set as Default Personality"
   },
   FR: {
     "Dynamic Autonomy & Retention Engine": "Moteur d'Autonomie Dynamique & Rétention",
@@ -624,7 +628,11 @@ export const COCKPIT_DICTIONARY = {
     "Gamified Companion": "Compagnon Ludique",
     "Direct Synthesizer": "Synthétiseur Direct",
     "System Prompt": "Prompt Système",
-    "Default": "Par Défaut"
+    "Default": "Par Défaut",
+    "Archival Level:": "Niveau d'archivage :",
+    "Archival Level Control": "Contrôle du niveau d'archivage",
+    "Set as Default": "Définir par défaut",
+    "set_default": "Définir par défaut"
   },
   ES: {
     "Dynamic Autonomy & Retention Engine": "Motor de Autonomía Dinámica y Retención",
@@ -758,7 +766,11 @@ export const COCKPIT_DICTIONARY = {
     "Gamified Companion": "Compañero Lúdico",
     "Direct Synthesizer": "Sintetizador Directo",
     "System Prompt": "Prompt del Sistema",
-    "Default": "Por Defecto"
+    "Default": "Por Defecto",
+    "Archival Level:": "Nivel de archivo:",
+    "Archival Level Control": "Control de nivel de archivo",
+    "Set as Default": "Establecer por defecto",
+    "set_default": "Establecer por defecto"
   },
   DE: {
     "Dynamic Autonomy & Retention Engine": "Dynamische Autonomie- & Retentions-Engine",
@@ -892,7 +904,11 @@ export const COCKPIT_DICTIONARY = {
     "Gamified Companion": "Spielerischer Begleiter",
     "Direct Synthesizer": "Direkter Synthesizer",
     "System Prompt": "System-Prompt",
-    "Default": "Standard"
+    "Default": "Standard",
+    "Archival Level:": "Archivierungsebene:",
+    "Archival Level Control": "Steuerung der Archivierungsebene",
+    "Set as Default": "Als Standard festlegen",
+    "set_default": "Als Standard festlegen"
   },
   ZH: {
     "Dynamic Autonomy & Retention Engine": "动态学术自主与存留引擎",
@@ -1026,7 +1042,11 @@ export const COCKPIT_DICTIONARY = {
     "Gamified Companion": "趣味化学习伙伴",
     "Direct Synthesizer": "直截了当的总结者",
     "System Prompt": "系统提示词（System Prompt）",
-    "Default": "默认属性"
+    "Default": "默认属性",
+    "Archival Level:": "归档级别:",
+    "Archival Level Control": "归档级别控制",
+    "Set as Default": "设为默认",
+    "set_default": "设为默认"
   }
 };
 
@@ -4333,10 +4353,10 @@ export default function AdminCurriculumPage() {
                   <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6">
                     <div className="space-y-2">
                       <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-500" /> Pedagogical Revision Engine Overview
+                        <Sparkles className="w-5 h-5 text-yellow-500" /> {tr("Pedagogical Revision Engine Overview")}
                       </h2>
                       <p className="text-xs text-slate-400 leading-relaxed">
-                        The Revision Engine dynamically groups feedback reports and triggers proposed fixes at the course-chapter level. Two primary conditions are monitored in real-time by a dedicated AI Agent:
+                        {tr("The Revision Engine dynamically groups feedback reports and triggers proposed fixes at the course-chapter level. Two primary conditions are monitored in real-time by a dedicated AI Agent:")}
                       </p>
                       <div className="grid md:grid-cols-2 gap-4 mt-4">
                         <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
@@ -4559,7 +4579,7 @@ export default function AdminCurriculumPage() {
                       ))}
                       {activeRevisionProposals.length === 0 && (
                         <p className="col-span-2 text-sm text-slate-600 italic py-8 text-center bg-slate-950/20 border border-slate-900 rounded-[32px] w-full">
-                          No pending pedagogical revision proposals. Courses meeting threshold goals.
+                          {tr("No pending pedagogical revision proposals. Core curriculum stable.")}
                         </p>
                       )}
                     </div>
@@ -4649,14 +4669,14 @@ export default function AdminCurriculumPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="space-y-1">
                         <h3 className="text-xl font-black text-slate-200">
-                          Curriculum Registry and Archival Control
+                          {tr("Curriculum Registry and Archival Control")}
                           {allFilteredCourses.length > 30 && (
                             <span className="text-xs font-semibold text-amber-500 ml-3 normal-case tracking-normal">
                               ({allFilteredCourses.length} results, displaying only 30)
                             </span>
                           )}
                         </h3>
-                        <p className="text-xs text-slate-400">Search courses and archive/unarchive specific languages or entire courses instantly.</p>
+                        <p className="text-xs text-slate-400">{tr("Search courses and archive/unarchive specific languages or entire courses instantly.")}</p>
                       </div>
                       {/* Search Bar */}
                       <div className="relative w-full md:w-80">
@@ -4753,7 +4773,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Archival Level Control {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
+                              {tr("Archival Level Control")} {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'is_active') {
@@ -5169,12 +5189,12 @@ export default function AdminCurriculumPage() {
              {view === 'achievements' && (
                <div className="space-y-8">
                  <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-black text-slate-200">Seeded Achievements badges ({achievements.filter(ach => ach.status !== 'inactive').length})</h3>
+                   <h3 className="text-xl font-black text-slate-200">{tr("Seeded Achievements badges")} ({achievements.filter(ach => ach.status !== 'inactive').length})</h3>
                    <button 
                      onClick={() => setShowAddAchievement(true)}
                      className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-violet-600/10 flex items-center gap-2"
                    >
-                     + Create New Achievement Badge
+                     + {tr("Register Achievement")}
                    </button>
                  </div>
 
@@ -5211,7 +5231,7 @@ export default function AdminCurriculumPage() {
                                 </div>
                                 {isArchived && (
                                   <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-black rounded-full uppercase tracking-wider font-mono">
-                                    Level {ach.archivingLevel}
+                                    {lang === 'FR' ? 'Niveau' : lang === 'ES' ? 'Nivel' : lang === 'DE' ? 'Stufe' : lang === 'ZH' ? '级别' : 'Level'} {ach.archivingLevel}
                                   </span>
                                 )}
                               </div>
@@ -5224,19 +5244,19 @@ export default function AdminCurriculumPage() {
                             <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
                               <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                                 <div>
-                                  <p>Parameter: <span className="text-violet-400">{ach.threshold}</span></p>
-                                  <p className="mt-1">{ach.count} Earned</p>
+                                  <p>{tr("Trigger Parameter")}: <span className="text-violet-400">{ach.threshold}</span></p>
+                                  <p className="mt-1">{ach.count} {lang === 'FR' ? 'Obtenus' : lang === 'ES' ? 'Obtenidos' : lang === 'DE' ? 'Verdient' : lang === 'ZH' ? '次已获得' : 'Earned'}</p>
                                 </div>
                                 <div>
-                                  {ach.startDate && <p>From: <span className="text-slate-400">{ach.startDate}</span></p>}
-                                  {ach.endDate && <p className="mt-0.5">To: <span className="text-slate-400">{ach.endDate}</span></p>}
+                                  {ach.startDate && <p>{lang === 'FR' ? 'Du :' : lang === 'ES' ? 'Desde:' : lang === 'DE' ? 'Von:' : lang === 'ZH' ? '从：' : 'From:'} <span className="text-slate-400">{ach.startDate}</span></p>}
+                                  {ach.endDate && <p className="mt-0.5">{lang === 'FR' ? 'Au :' : lang === 'ES' ? 'Hasta:' : lang === 'DE' ? 'Bis:' : lang === 'ZH' ? '至：' : 'To:'} <span className="text-slate-400">{ach.endDate}</span></p>}
                                 </div>
                               </div>
                               
                               <div className="h-px bg-slate-850" />
                               
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Archival Level:</span>
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{tr("Archival Level:")}</span>
                                 <ArchivingLevelButtons 
                                   currentLevel={ach.archivingLevel || 0}
                                   onChange={async (nextLvl) => {
@@ -5255,11 +5275,11 @@ export default function AdminCurriculumPage() {
                               </div>
                               
                               <button 
-                                title="Edit"
+                                title={lang === 'FR' ? 'Modifier' : 'Edit'}
                                 onClick={() => handleOpenEditAchievement(ach)}
                                 className="w-full py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
                               >
-                                <Edit3 className="w-3.5 h-3.5" /> Edit Details
+                                <Edit3 className="w-3.5 h-3.5" /> {lang === 'FR' ? 'Modifier les détails' : lang === 'ES' ? 'Editar detalles' : lang === 'DE' ? 'Details bearbeiten' : lang === 'ZH' ? '编辑详情' : 'Edit Details'}
                               </button>
                             </div>
                           </div>
@@ -5274,12 +5294,12 @@ export default function AdminCurriculumPage() {
              {view === 'personalities' && (
                <div className="space-y-8">
                  <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-black text-slate-200">AI Tutor Personalities</h3>
+                   <h3 className="text-xl font-black text-slate-200">{tr("AI Tutor Personalities")}</h3>
                    <button 
                      onClick={() => setShowAddPersonality(true)}
                      className="px-6 py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-fuchsia-600/10 flex items-center gap-2"
                    >
-                     + Add New Personality
+                     + {tr("Create Custom Persona")}
                    </button>
                  </div>
 
@@ -5306,12 +5326,12 @@ export default function AdminCurriculumPage() {
                                 <div className="flex gap-1.5 items-center">
                                   {p.isDefault && (
                                     <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[8px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
-                                      <Crown className="w-3 h-3 fill-yellow-500/20" /> Default
+                                      <Crown className="w-3 h-3 fill-yellow-500/20" /> {tr("Default")}
                                     </span>
                                   )}
                                   {isArchived && (
                                     <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-black rounded-full uppercase tracking-wider font-mono">
-                                      Level {p.archivingLevel}
+                                      {lang === 'FR' ? 'Niveau' : lang === 'ES' ? 'Nivel' : lang === 'DE' ? 'Stufe' : lang === 'ZH' ? '级别' : 'Level'} {p.archivingLevel}
                                     </span>
                                   )}
                                 </div>
@@ -5371,7 +5391,7 @@ export default function AdminCurriculumPage() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-                     <Award className="w-6 h-6 text-violet-500" /> Create Achievement Badge
+                     <Award className="w-6 h-6 text-violet-500" /> {tr("Create Achievement Badge")}
                   </h3>
                   <button onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
@@ -5388,11 +5408,11 @@ export default function AdminCurriculumPage() {
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                          Achievement Name <span className="text-red-500 font-bold">*</span>
+                          {tr("Achievement Name")} <span className="text-red-500 font-bold">*</span>
                         </label>
                         <input 
                           type="text" 
-                          placeholder="Fast Learner" 
+                          placeholder={lang === 'FR' ? 'Apprenti Rapide' : lang === 'ES' ? 'Aprendiz Rápido' : lang === 'DE' ? 'Schneller Lerner' : lang === 'ZH' ? '快速学习者' : 'Fast Learner'} 
                           value={newAch.name} 
                           onChange={(e) => setNewAch({...newAch, name: e.target.value})}
                           className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
@@ -5401,11 +5421,11 @@ export default function AdminCurriculumPage() {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                          Description <span className="text-red-500 font-bold">*</span>
+                          {tr("Description")} <span className="text-red-500 font-bold">*</span>
                         </label>
                         <input 
                           type="text" 
-                          placeholder="record time" 
+                          placeholder={lang === 'FR' ? 'temps record' : lang === 'ES' ? 'tiempo récord' : lang === 'DE' ? 'Rekordzeit' : lang === 'ZH' ? '创纪录的时间' : 'record time'} 
                           value={newAch.description} 
                           onChange={(e) => setNewAch({...newAch, description: e.target.value})}
                           className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
@@ -5414,11 +5434,11 @@ export default function AdminCurriculumPage() {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                          Trigger Parameter <span className="text-red-500 font-bold">*</span>
+                          {tr("Trigger Parameter")} <span className="text-red-500 font-bold">*</span>
                         </label>
                         <input 
                           type="text" 
-                          placeholder="3 days" 
+                          placeholder={lang === 'FR' ? '3 jours' : lang === 'ES' ? '3 días' : lang === 'DE' ? '3 Tage' : lang === 'ZH' ? '3 天' : '3 days'} 
                           value={newAch.threshold} 
                           onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
                           className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
@@ -5429,7 +5449,7 @@ export default function AdminCurriculumPage() {
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                            Start Date (Optional)
+                            {lang === 'FR' ? 'Date de Début (Optionnel)' : lang === 'ES' ? 'Fecha de Inicio (Opcional)' : lang === 'DE' ? 'Startdatum (Optional)' : lang === 'ZH' ? '开始日期（可选）' : 'Start Date (Optional)'}
                           </label>
                           <input 
                             type="date"
@@ -5440,7 +5460,7 @@ export default function AdminCurriculumPage() {
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                            End Date (Optional)
+                            {lang === 'FR' ? 'Date de Fin (Optionnel)' : lang === 'ES' ? 'Fecha de Fin (Opcional)' : lang === 'DE' ? 'Enddatum (Optional)' : lang === 'ZH' ? '结束日期（可选）' : 'End Date (Optional)'}
                           </label>
                           <input 
                             type="date"
@@ -5452,11 +5472,11 @@ export default function AdminCurriculumPage() {
                       </div>
 
                       <button type="submit" className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-violet-600/10">
-                         Create Achievement Badge
+                         {tr("Create Achievement Badge")}
                       </button>
                     </div>
 
-                    {/* Right Column: Paginated Badge Library Catalog */}
+                    {/* Right Column: Paginated {lang === 'FR' ? 'Catalogue de la Bibliothèque de Badges' : lang === 'ES' ? 'Catálogo de la Biblioteca de Insignias' : lang === 'DE' ? 'Abzeichen-Bibliothekskatalog' : lang === 'ZH' ? '徽章库目录' : 'Badge Library Catalog'} */}
                     <div className="space-y-4">
                       {/* AI GENERATED BADGES SECTION */}
                       {((newAch.name && newAch.description) || isGeneratingBadges) && (
@@ -5464,11 +5484,11 @@ export default function AdminCurriculumPage() {
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 flex items-center gap-1.5 font-mono">
                               <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-                              AI Generated Badge Designs
+                              {lang === 'FR' ? 'Designs de Badges Générés par IA' : lang === 'ES' ? 'Diseños de Insignias Generados por IA' : lang === 'DE' ? 'KI-generierte Abzeichen-Designs' : lang === 'ZH' ? 'AI 生成的徽章设计' : 'AI Generated Badge Designs'}
                             </span>
                             {isGeneratingBadges && (
                               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest animate-pulse font-mono">
-                                Generating...
+                                {lang === 'FR' ? 'Génération...' : lang === 'ES' ? 'Generando...' : lang === 'DE' ? 'Generieren...' : lang === 'ZH' ? '正在生成...' : 'Generating...'}
                               </span>
                             )}
                           </div>
@@ -5487,14 +5507,14 @@ export default function AdminCurriculumPage() {
                                     <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
                                   </div>
                                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider font-mono">
-                                    Option {idx + 1}
+                                    {lang === 'FR' ? 'Option' : lang === 'ES' ? 'Opción' : lang === 'DE' ? 'Option' : lang === 'ZH' ? '选项' : 'Option'} {idx + 1}
                                   </span>
                                 </button>
                               );
                             })}
                             {!isGeneratingBadges && generatedBadges.length === 0 && (
                               <div className="col-span-3 text-center py-4 text-[9px] font-black uppercase tracking-widest text-slate-600 font-mono">
-                                Type a Name & Description to trigger generator
+                                {lang === 'FR' ? 'Saisissez un Nom et une Description pour déclencher le générateur' : lang === 'ES' ? 'Escriba un Nombre y una Descripción para activar el generador' : lang === 'DE' ? 'Geben Sie einen Namen und eine Beschreibung ein, um den Generator zu starten' : lang === 'ZH' ? '输入名称和描述以触发生成器' : 'Type a Name & Description to trigger generator'}
                               </div>
                             )}
                           </div>
@@ -5517,7 +5537,7 @@ export default function AdminCurriculumPage() {
                                 onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
                                 className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               >
-                                &larr; Prev
+                                &larr; {lang === 'FR' ? 'Préc.' : lang === 'ES' ? 'Ant.' : lang === 'DE' ? 'Zurück' : lang === 'ZH' ? '上一页' : 'Prev'}
                               </button>
                               <span className="text-[10px] font-mono text-slate-400 font-bold">
                                 {creationGalleryPage} / {totalPages}
@@ -5528,7 +5548,7 @@ export default function AdminCurriculumPage() {
                                 onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
                                 className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               >
-                                Next &rarr;
+                                {lang === 'FR' ? 'Suiv.' : lang === 'ES' ? 'Siguiente' : lang === 'DE' ? 'Weiter' : lang === 'ZH' ? '下一页' : 'Next'} &rarr;
                               </button>
                             </div>
                           );
@@ -5555,7 +5575,7 @@ export default function AdminCurriculumPage() {
                         if (currentPageBadges.length === 0 && !showUpload) {
                           return (
                             <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
-                              All 50 library badges are currently active in our curriculum!
+                              {lang === 'FR' ? 'Les 50 badges de la bibliothèque sont actuellement actifs dans notre cursus !' : lang === 'ES' ? '¡Las 50 insignias de la biblioteca están activas actualmente en nuestro plan de estudios!' : lang === 'DE' ? 'Alle 50 Bibliotheksabzeichen sind derzeit in unserem Lehrplan aktiv!' : lang === 'ZH' ? '所有 50 个库徽章目前都在我们的课程中激活！' : 'All 50 library badges are currently active in our curriculum!'}
                             </div>
                           );
                         }
@@ -5950,7 +5970,7 @@ export default function AdminCurriculumPage() {
                <form onSubmit={handleAddLanguage} className="p-10 space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Language Code (e.g. IT, JA, PT) <span className="text-red-500 font-bold">*</span>
+                      {lang === 'FR' ? 'Code de Langue (ex. IT, JA, PT)' : lang === 'ES' ? 'Código de Idioma (ej. IT, JA, PT)' : lang === 'DE' ? 'Sprachcode (z. B. IT, JA, PT)' : lang === 'ZH' ? '语言代码（例如 IT, JA, PT）' : 'Language Code (e.g. IT, JA, PT)'} <span className="text-red-500 font-bold">*</span>
                     </label>
                     <input 
                       type="text" 
@@ -5964,7 +5984,7 @@ export default function AdminCurriculumPage() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Language Label <span className="text-red-500 font-bold">*</span>
+                      {lang === 'FR' ? 'Libellé de la Langue' : lang === 'ES' ? 'Etiqueta del Idioma' : lang === 'DE' ? 'Sprachbezeichnung' : lang === 'ZH' ? '语言标签' : 'Language Label'} <span className="text-red-500 font-bold">*</span>
                     </label>
                     <input 
                       type="text" 
@@ -5978,7 +5998,7 @@ export default function AdminCurriculumPage() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Flag / Symbol (Optional)
+                      {lang === 'FR' ? 'Drapeau / Symbole (Optionnel)' : lang === 'ES' ? 'Bandera / Símbolo (Opcional)' : lang === 'DE' ? 'Flagge / Symbol (Optional)' : lang === 'ZH' ? '国旗 / 符号（可选）' : 'Flag / Symbol (Optional)'}
                     </label>
                     <input 
                       type="text" 
@@ -5990,7 +6010,7 @@ export default function AdminCurriculumPage() {
                   </div>
 
                   <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-emerald-600/10">
-                     Register Language
+                     {tr("Register Language")}
                   </button>
                </form>
             </motion.div>
@@ -6012,7 +6032,7 @@ export default function AdminCurriculumPage() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-                     <Sparkles className="w-6 h-6 text-fuchsia-500" /> Create Custom Tutor Persona
+                     <Sparkles className="w-6 h-6 text-fuchsia-500" /> {tr("Create Custom Persona")}
                   </h3>
                   <button onClick={() => setShowAddPersonality(false)} className="text-slate-550 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
@@ -6020,11 +6040,11 @@ export default function AdminCurriculumPage() {
                <div className="p-10 space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      Personality Name <span className="text-red-500 font-bold">*</span>
+                      {lang === 'FR' ? 'Nom de la Personnalité' : lang === 'ES' ? 'Nombre de la Personalidad' : lang === 'DE' ? 'Persönlichkeitsname' : lang === 'ZH' ? '个性化角色名称' : 'Personality Name'} <span className="text-red-500 font-bold">*</span>
                     </label>
                     <input 
                       type="text" 
-                      placeholder="Stoic Advisor" 
+                      placeholder={lang === 'FR' ? 'Conseiller Stoïcien' : lang === 'ES' ? 'Asesor Estoico' : lang === 'DE' ? 'Stoischer Berater' : lang === 'ZH' ? '斯多葛导师' : 'Stoic Advisor'} 
                       value={newPers.name}
                       onChange={(e) => setNewPers({...newPers, name: e.target.value})}
                       className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-fuchsia-550/50 text-white" 
@@ -6033,10 +6053,10 @@ export default function AdminCurriculumPage() {
                   
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                      System Prompt <span className="text-red-500 font-bold">*</span>
+                      {lang === 'FR' ? 'Prompt Système' : lang === 'ES' ? 'Prompt del Sistema' : lang === 'DE' ? 'System-Prompt' : lang === 'ZH' ? '系统提示词' : 'System Prompt'} <span className="text-red-500 font-bold">*</span>
                     </label>
                     <textarea 
-                      placeholder="You are a Stoic advisor, answer concisely using Seneca or Marcus Aurelius philosophy principles..." 
+                      placeholder={lang === 'FR' ? 'Vous êtes un conseiller stoïcien, répondez de manière concise en utilisant les principes philosophiques de Sénèque ou de Marc Aurèle...' : lang === 'ES' ? 'Eres un asesor estoico, responde concisamente usando principios filosóficos de Séneca o Marco Aurelio...' : lang === 'DE' ? 'Sie sind ein stoischer Berater, antworten Sie prägnant unter Verwendung philosophischer Prinzipien von Seneca oder Marc Aurel...' : lang === 'ZH' ? '你是一位斯多葛导师，用塞涅卡或马可·奥勒留的哲学原则简洁地回答...' : 'You are a Stoic advisor, answer concisely using Seneca or Marcus Aurelius philosophy principles...'} 
                       rows={4}
                       value={newPers.prompt}
                       onChange={(e) => setNewPers({...newPers, prompt: e.target.value})}
@@ -6052,11 +6072,11 @@ export default function AdminCurriculumPage() {
                        onChange={(e) => setNewPers({...newPers, isDefault: e.target.checked})}
                        className="rounded bg-slate-950 border-slate-800 text-fuchsia-500 focus:ring-fuchsia-500 w-4 h-4 cursor-pointer" 
                      />
-                     <label htmlFor="default-persona-chk" className="text-xs text-slate-400 font-bold uppercase tracking-wider cursor-pointer">Set as Default Personality</label>
+                     <label htmlFor="default-persona-chk" className="text-xs text-slate-400 font-bold uppercase tracking-wider cursor-pointer">{t.set_default}</label>
                   </div>
 
                   <button onClick={handleSavePersonality} className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black uppercase tracking-widest text-[10px] py-5 rounded-2xl transition-all shadow-xl shadow-fuchsia-600/10">
-                     Create Custom Persona
+                     {t.add_personality}
                   </button>
                </div>
             </motion.div>

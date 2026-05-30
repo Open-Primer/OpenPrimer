@@ -333,7 +333,7 @@ export default function CurriculumPage() {
                   >
                     <Brain className="w-3.5 h-3.5" />
                     <span>
-                      {lang === 'FR' ? `Tuteur : ${getActiveTutorName()}` : `Tutor: ${getActiveTutorName()}`}
+                      {t.tutor}: {getActiveTutorName()}
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 ml-1" />
                   </button>
@@ -353,20 +353,20 @@ export default function CurriculumPage() {
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-orange-500/30 transition-all">
               <div className="text-3xl mb-4">🔥</div>
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-                {lang === 'FR' ? 'Série d\'étude' : 'Study Streak'}
+                {t.study_streak}
               </p>
               <p className="text-3xl font-black text-white">
                 {progress.studyStreakDays ?? 0}
                 <span className="text-base text-slate-500 font-bold ml-2">
-                  {lang === 'FR' ? 'jour' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 ? 's' : ''}
+                  {lang === 'FR' ? 'jour' : lang === 'ES' ? 'día' : lang === 'DE' ? 'Tag' : lang === 'ZH' ? '天' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 && lang !== 'ZH' ? (lang === 'DE' ? 'e' : 's') : ''}
                 </span>
               </p>
               <p className="text-[9px] text-slate-600 mt-2 font-medium">
                 {(progress.studyStreakDays ?? 0) >= 7
-                  ? (lang === 'FR' ? '🏆 Série impressionnante !' : '🏆 Impressive streak!')
+                  ? (lang === 'FR' ? '🏆 Série impressionnante !' : lang === 'ES' ? '🏆 ¡Racha impresionante!' : lang === 'DE' ? '🏆 Beeindruckende Serie!' : lang === 'ZH' ? '🏆 令人惊叹的连续学习天数！' : '🏆 Impressive streak!')
                   : (progress.studyStreakDays ?? 0) >= 3
-                  ? (lang === 'FR' ? '⚡ Continue comme ça !' : '⚡ Keep it up!')
-                  : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : 'Come back daily to build a streak!')}
+                  ? (lang === 'FR' ? '⚡ Continue comme ça !' : lang === 'ES' ? '⚡ ¡Sigue así!' : lang === 'DE' ? '⚡ Weiter so!' : lang === 'ZH' ? '⚡ 继续保持！' : '⚡ Keep it up!')
+                  : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : lang === 'ES' ? '¡Vuelve a diario para crear una racha!' : lang === 'DE' ? 'Kommen Sie täglich wieder, um eine Serie aufzubauen!' : lang === 'ZH' ? '每天回来学习以保持连续天数！' : 'Come back daily to build a streak!')}
               </p>
             </div>
 
@@ -374,17 +374,17 @@ export default function CurriculumPage() {
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-violet-500/30 transition-all">
               <Sparkles className="w-8 h-8 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-                {lang === 'FR' ? 'Points de Maîtrise' : 'Mastery Points'}
+                {t.mastery_points}
               </p>
               <p className="text-3xl font-black text-white">
                 {progress.masteryPoints ?? 0}
                 <span className="text-base text-slate-500 font-bold ml-2">pt{(progress.masteryPoints ?? 0) !== 1 ? 's' : ''}</span>
               </p>
               <p className="text-[9px] font-black uppercase tracking-wider mt-2 text-violet-400">
-                {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : '🏆 Master')
-                  : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : '⭐ Expert')
-                  : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : '📚 Scholar')
-                  : (lang === 'FR' ? '🌱 Apprenti' : '🌱 Apprentice')}
+                {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : lang === 'ES' ? '🏆 Maestro' : lang === 'DE' ? '🏆 Meister' : lang === 'ZH' ? '🏆 大师' : '🏆 Master')
+                  : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : lang === 'ES' ? '⭐ Experto' : lang === 'DE' ? '⭐ Experte' : lang === 'ZH' ? '⭐ 专家' : '⭐ Expert')
+                  : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : lang === 'ES' ? '📚 Erudito' : lang === 'DE' ? '📚 Gelehrter' : lang === 'ZH' ? '📚 学者' : '📚 Scholar')
+                  : (lang === 'FR' ? '🌱 Apprenti' : lang === 'ES' ? '🌱 Aprendiz' : lang === 'DE' ? '🌱 Lehrling' : lang === 'ZH' ? '🌱 学徒' : '🌱 Apprentice')}
               </p>
             </div>
 
@@ -395,10 +395,10 @@ export default function CurriculumPage() {
               <p className="text-3xl font-black text-white">{progress.learningTime || "0h 0m"}</p>
               <p className="text-[9px] text-slate-600 mt-2 font-medium">
                 {(progress.totalMinutes ?? 0) >= 600
-                  ? (lang === 'FR' ? '📖 Lecteur assidu' : '📖 Dedicated reader')
+                  ? (lang === 'FR' ? '📖 Lecteur assidu' : lang === 'ES' ? '📖 Lector dedicado' : lang === 'DE' ? '📖 Engagierter Leser' : lang === 'ZH' ? '📖 专心致志的读者' : '📖 Dedicated reader')
                   : (progress.totalMinutes ?? 0) >= 120
-                  ? (lang === 'FR' ? '✨ Belle progression' : '✨ Great progress')
-                  : (lang === 'FR' ? 'Chaque minute compte !' : 'Every minute counts!')}
+                  ? (lang === 'FR' ? '✨ Belle progression' : lang === 'ES' ? '✨ Gran progreso' : lang === 'DE' ? '✨ Toller Fortschritt' : lang === 'ZH' ? '✨ 极大进步' : '✨ Great progress')
+                  : (lang === 'FR' ? 'Chaque minute compte !' : lang === 'ES' ? '¡Cada minute cuenta!' : lang === 'DE' ? 'Jede Minute zählt!' : lang === 'ZH' ? '每一分钟都至关重要！' : 'Every minute counts!')}
               </p>
             </div>
 
@@ -406,14 +406,14 @@ export default function CurriculumPage() {
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] backdrop-blur-3xl shadow-2xl group hover:border-blue-500/30 transition-all">
               <GraduationCap className="w-8 h-8 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
-                {lang === 'FR' ? 'Cours Terminés' : 'Courses Mastered'}
+                {t.courses_mastered}
               </p>
               <p className="text-3xl font-black text-white">{progress.completedCount ?? 0}</p>
               <p className="text-[9px] text-slate-555 mt-2 font-medium flex items-center gap-1">
                 <span className="text-blue-400 font-black">{progress.inProgressCount ?? 0}</span>
-                &nbsp;{lang === 'FR' ? 'en cours • sur' : 'in progress • of'}
+                &nbsp;{lang === 'FR' ? 'en cours • sur' : lang === 'ES' ? 'en curso • de' : lang === 'DE' ? 'in Bearbeitung • von' : lang === 'ZH' ? '进行中 • 共' : 'in progress • of'}
                 &nbsp;<span className="text-slate-400 font-black">{progress.activeModules?.length ?? 0}</span>
-                &nbsp;{lang === 'FR' ? 'inscrits' : 'enrolled'}
+                &nbsp;{lang === 'FR' ? 'inscrits' : lang === 'ES' ? 'inscritos' : lang === 'DE' ? 'eingeschrieben' : lang === 'ZH' ? '门' : 'enrolled'}
               </p>
             </div>
           </div>
@@ -426,11 +426,11 @@ export default function CurriculumPage() {
           return (
             <>
               {activeCourses.length > 0 && (
-                <section>
+                <section aria-label={t.active_modules}>
                    <h2 className="text-2xl font-black mb-8 flex items-center gap-4">
                       <Book className="w-6 h-6 text-blue-500" /> {t.active_modules}
                    </h2>
-                   <div className="grid md:grid-cols-2 gap-8">
+                   <div className="grid md:grid-cols-2 gap-8" role="list">
                      {activeCourses.map((course: any) => {
                        const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
                        const ratingCount = courseDetails?.ratingCount || 0;
@@ -438,7 +438,11 @@ export default function CurriculumPage() {
                        const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
                        
                        const cardContent = (
-                          <div className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}>
+                          <div 
+                            role="listitem" 
+                            aria-label={`${course.title}, ${course.subject}, ${course.progress}% ${lang === 'FR' ? 'complété' : 'completed'}`}
+                            className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}
+                          >
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
                                  <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 flex-shrink-0">
                                     {isCurr ? <GraduationCap className="w-6 h-6 text-violet-400" /> : <Book className="w-6 h-6" />}
@@ -463,6 +467,7 @@ export default function CurriculumPage() {
                                     )}
                                     <button
                                       onClick={(e) => toggleBookmark(course.id, e)}
+                                      aria-pressed={bookmarks.includes(course.id)}
                                       title={bookmarks.includes(course.id) 
                                         ? (lang === 'FR' ? 'Supprimer des favoris' 
                                            : lang === 'ES' ? 'Quitar de favoritos' 
@@ -706,15 +711,13 @@ export default function CurriculumPage() {
                 <div className="p-16 border border-slate-850 rounded-[48px] bg-slate-900/10 text-center max-w-2xl mx-auto my-12 backdrop-blur-3xl shadow-xl">
                   <Book className="w-16 h-16 text-slate-650 mx-auto mb-6" />
                   <h3 className="text-2xl font-black text-white mb-3">
-                    {lang === 'FR' ? 'Votre curriculum est vide' : 'Your curriculum is empty'}
+                    {t.empty_curriculum_title}
                   </h3>
                   <p className="text-slate-500 mb-8 max-w-md mx-auto text-sm leading-relaxed">
-                    {lang === 'FR' 
-                      ? 'Parcourez notre catalogue premium et commencez votre premier parcours de formation auto-dirigé dès aujourd\'hui.'
-                      : 'Explore our premium catalog and kick off your first self-directed learning quest today.'}
+                    {t.empty_curriculum_desc}
                   </p>
                   <Link href="/catalog" className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg transition-all inline-block hover:scale-105 active:scale-95">
-                    {lang === 'FR' ? 'Parcourir le catalogue' : 'Explore Catalog'}
+                    {t.empty_curriculum_btn}
                   </Link>
                 </div>
               )}

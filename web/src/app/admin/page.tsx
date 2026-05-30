@@ -42,7 +42,30 @@ export const DASHBOARD_STRINGS = {
     efficiency_metrics: "Sovereign Pedagogical Loop Efficiency",
     loop_success: "Recursive Loop Success Rate",
     check_passes: "Avg Validation Passes",
-    ects_average: "Avg ECTS Credit Load"
+    ects_average: "Avg ECTS Credit Load",
+    passes_suffix: "passes",
+    ects_suffix: "ECTS",
+    translation_tracker: "Translation Metrics Tracker",
+    certified: "Certified",
+    in_queue: "In Queue",
+    cohort_heatmap: "Cohort Daily Active Learning Heatmap",
+    heatmap_desc: "Aggregated student study daily active density recorded over the last 28 days:",
+    less_active: "Less Active",
+    highly_active: "Highly Active",
+    elite_leaderboard: "Elite Student Leaderboard",
+    no_profiles: "No student profiles loaded in DB.",
+    notification_queue: "Pending Notifications & Email Confirmation Queue",
+    total_waiting: "Total Waiting Students",
+    waiting_desc: "Students waiting for auto-generation or JIT translation confirmation emails.",
+    avg_queuing: "Average Queuing Time",
+    days_suffix: "Days",
+    queue_by_lang: "Queue Casing by Target Language",
+    no_pending_notifications: "No pending notifications in queue.",
+    pending_backlog: "Pending Queue Backlog",
+    no_queued_notifications: "No queued notifications.",
+    unique_subscribers: "{jobs} unique jobs · {subs} total subscribers",
+    oldest_request: "Oldest request",
+    modules: "Modules"
   },
   FR: {
     welcome: "Aperçu du Projet",
@@ -80,7 +103,30 @@ export const DASHBOARD_STRINGS = {
     efficiency_metrics: "Efficacité des Boucles Pédagogiques",
     loop_success: "Taux de Réussite des Boucles Récursives",
     check_passes: "Passes de Validation Moyennes",
-    ects_average: "Charge ECTS Moyenne"
+    ects_average: "Charge ECTS Moyenne",
+    passes_suffix: "passes",
+    ects_suffix: "ECTS",
+    translation_tracker: "Suivi des Métriques de Traduction",
+    certified: "Certifié",
+    in_queue: "En File d'Attente",
+    cohort_heatmap: "Activité Quotidienne du Cohorte",
+    heatmap_desc: "Densité d'activité d'étude quotidienne agrégée enregistrée sur les 28 derniers jours :",
+    less_active: "Moins Actif",
+    highly_active: "Très Actif",
+    elite_leaderboard: "Classement Élite des Étudiants",
+    no_profiles: "Aucun profil d'étudiant chargé dans la base de données.",
+    notification_queue: "File d'Attente des Notifications & Email de Confirmation",
+    total_waiting: "Total des Étudiants en Attente",
+    waiting_desc: "Étudiants en attente d'e-mails de confirmation de génération automatique ou de traduction JIT.",
+    avg_queuing: "Temps d'Attente Moyen",
+    days_suffix: "Jours",
+    queue_by_lang: "File d'Attente par Langue Cible",
+    no_pending_notifications: "Aucune notification en attente dans la file.",
+    pending_backlog: "File d'Attente des Tâches en Retard",
+    no_queued_notifications: "Aucune notification mise en file d'attente.",
+    unique_subscribers: "{jobs} tâches uniques · {subs} abonnés au total",
+    oldest_request: "Requête la plus ancienne",
+    modules: "Modules"
   },
   ES: {
     welcome: "Descripción del Proyecto",
@@ -118,7 +164,30 @@ export const DASHBOARD_STRINGS = {
     efficiency_metrics: "Eficiencia de Bucles Pedagógicos",
     loop_success: "Tasa de Éxito del Bucle Recursivo",
     check_passes: "Pases de Validación Promedio",
-    ects_average: "Carga de Créditos ECTS Promedio"
+    ects_average: "Carga de Créditos ECTS Promedio",
+    passes_suffix: "pases",
+    ects_suffix: "ECTS",
+    translation_tracker: "Rastreador de Métricas de Traducción",
+    certified: "Certificado",
+    in_queue: "En Cola",
+    cohort_heatmap: "Mapa de Calor de Aprendizaje Diario del Cohorte",
+    heatmap_desc: "Densidad de actividad de estudio diaria agregada registrada en los últimos 28 días:",
+    less_active: "Menos Activo",
+    highly_active: "Muy Activo",
+    elite_leaderboard: "Tabla de Clasificación de Estudiantes Élite",
+    no_profiles: "No se cargaron perfiles de estudiantes en la base de datos.",
+    notification_queue: "Cola de Confirmación de Correo Electrónico y Notificaciones Pendientes",
+    total_waiting: "Total de Estudiantes en Espera",
+    waiting_desc: "Estudiantes en espera de correos de confirmación de generación automática o traducción JIT.",
+    avg_queuing: "Tiempo Promedio de Espera",
+    days_suffix: "Días",
+    queue_by_lang: "Cola de Distribución por Idioma Destino",
+    no_pending_notifications: "No hay notificaciones pendientes en la cola.",
+    pending_backlog: "Cola de Tareas Pendientes",
+    no_queued_notifications: "No hay notificaciones en cola.",
+    unique_subscribers: "{jobs} tareas únicas · {subs} suscriptores totales",
+    oldest_request: "Solicitud más antigua",
+    modules: "Módulos"
   },
   DE: {
     welcome: "Projektübersicht",
@@ -156,7 +225,30 @@ export const DASHBOARD_STRINGS = {
     efficiency_metrics: "Effizienz der pädagogischen Schleifen",
     loop_success: "Erfolgsrate der rekursiven Schleife",
     check_passes: "Durchschn. Validierungsdurchläufe",
-    ects_average: "Durchschn. ECTS-Kreditbelastung"
+    ects_average: "Durchschn. ECTS-Kreditbelastung",
+    passes_suffix: "Durchläufe",
+    ects_suffix: "ECTS",
+    translation_tracker: "Übersetzungs-Metriken-Tracker",
+    certified: "Zertifiziert",
+    in_queue: "In Warteschlange",
+    cohort_heatmap: "Tägliche Cohort-Lernaktivitäts-Heatmap",
+    heatmap_desc: "Aggregierte tägliche Lernaktivitätsdichte der letzten 28 Tage:",
+    less_active: "Weniger Aktiv",
+    highly_active: "Sehr Aktiv",
+    elite_leaderboard: "Elite-Studenten-Bestenliste",
+    no_profiles: "Keine Studentenprofile in der Datenbank geladen.",
+    notification_queue: "Warteschlange für ausstehende Benachrichtigungen & E-Mail-Bestätigungen",
+    total_waiting: "Wartende Studenten Gesamt",
+    waiting_desc: "Studenten, die auf automatische Generierung oder JIT-Übersetzungsbestätigungs-E-Mails warten.",
+    avg_queuing: "Durchschnittliche Wartezeit",
+    days_suffix: "Tage",
+    queue_by_lang: "Warteschlange nach Zielsprache",
+    no_pending_notifications: "Keine ausstehenden Benachrichtigungen in der Warteschlange.",
+    pending_backlog: "Ausstehender Warteschlangen-Backlog",
+    no_queued_notifications: "Keine Benachrichtigungen in der Warteschlange.",
+    unique_subscribers: "{jobs} eindeutige Aufgaben · {subs} Abonnenten insgesamt",
+    oldest_request: "Älteste Anfrage",
+    modules: "Module"
   },
   ZH: {
     welcome: "项目概览",
@@ -179,7 +271,7 @@ export const DASHBOARD_STRINGS = {
     accuracy_rate: "96%",
     generation_rate: "每小时 42 个模块",
     accuracy_label: "AI 内容准确率",
-    agent_analytics: "AI 智能体财务与运营分析",
+    agent_analytics: "AI 智能体财务与运营 analysis",
     agent_analytics_sub: "自主智能体的实时费用分布、响应延迟和质量基准。",
     agent_name: "智能体 / 角色",
     cost_launch: "总费用 (启动以来)",
@@ -194,8 +286,31 @@ export const DASHBOARD_STRINGS = {
     efficiency_metrics: "主权教学循环效率",
     loop_success: "递归循环成功率",
     check_passes: "平均验证通过次数",
-    ects_average: "平均 ECTS 学分负荷"
-  }
+    ects_average: "平均 ECTS 学分负荷",
+    passes_suffix: "次通过",
+    ects_suffix: "ECTS 学分",
+    translation_tracker: "翻译指标追踪器",
+    certified: "已认证",
+    in_queue: "排队中",
+    cohort_heatmap: "群组每日活跃学习热力图",
+    heatmap_desc: "过去 28 天记录的累计学生每日活跃学习密度：",
+    less_active: "低活跃度",
+    highly_active: "高活跃度",
+    elite_leaderboard: "精英学生排行榜",
+    no_profiles: "数据库中未加载学生个人资料。",
+    notification_queue: "待处理通知与邮件确认队列",
+    total_waiting: "等待中的学生总数",
+    waiting_desc: "等待自动生成或即时翻译确认邮件的学生。",
+    avg_queuing: "平均排队时间",
+    days_suffix: "天",
+    queue_by_lang: "按目标语言排序的队列",
+    no_pending_notifications: "队列中无待处理通知。",
+    pending_backlog: "待处理队列积压",
+    no_queued_notifications: "无排队通知。",
+    unique_subscribers: "{jobs} 个唯一任务 · 共 {subs} 位订阅者",
+    oldest_request: "最早的请求",
+    modules: "模块"
+  },
 };
 
 const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
@@ -289,8 +404,8 @@ export default function AdminDashboard() {
 
   const sortedMetrics = [...agentMetrics].sort((a, b) => {
     if (metricsSortField === 'name') {
-      const valA = (lang === 'FR' ? a.nameFR : a.nameEN || '').toLowerCase();
-      const valB = (lang === 'FR' ? b.nameFR : b.nameEN || '').toLowerCase();
+      const valA = (a[`name${lang}` as keyof typeof a] || a.nameEN || '').toLowerCase();
+      const valB = (b[`name${lang}` as keyof typeof b] || b.nameEN || '').toLowerCase();
       if (valA < valB) return metricsSortDir === 'asc' ? -1 : 1;
       if (valA > valB) return metricsSortDir === 'asc' ? 1 : -1;
       return 0;
@@ -422,7 +537,7 @@ export default function AdminDashboard() {
                 {sortedMetrics.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-900/20 transition-all">
                     <td className="px-6 py-4 font-bold text-slate-200">
-                      {lang === 'FR' ? item.nameFR : item.nameEN}
+                      {item[`name${lang}` as keyof typeof item] || item.nameEN}
                     </td>
                     <td className="px-6 py-4 font-black text-violet-400">
                       ${item.totalCost.toFixed(2)} USD
@@ -451,9 +566,9 @@ export default function AdminDashboard() {
               </span>
               <div className="space-y-3">
                 {[
-                  { name: lang === 'FR' ? "Tuteur Socratique" : "Socratic Coach", pct: 62, color: "bg-violet-500" },
-                  { name: lang === 'FR' ? "Compagnon Ludique" : "Gamified Companion", pct: 26, color: "bg-emerald-500" },
-                  { name: lang === 'FR' ? "Synthétiseur Direct" : "Direct Synthesizer", pct: 12, color: "bg-blue-500" }
+                  { name: lang === 'FR' ? "Tuteur Socratique" : lang === 'ES' ? "Coach Socrático" : lang === 'DE' ? "Sokratischer Coach" : lang === 'ZH' ? "苏格拉底导师" : "Socratic Coach", pct: 62, color: "bg-violet-500" },
+                  { name: lang === 'FR' ? "Compagnon Ludique" : lang === 'ES' ? "Compañero Gamificado" : lang === 'DE' ? "Gamifizierter Begleiter" : lang === 'ZH' ? "游戏化学习伴侣" : "Gamified Companion", pct: 26, color: "bg-emerald-500" },
+                  { name: lang === 'FR' ? "Synthétiseur Direct" : lang === 'ES' ? "Sintetizador Directo" : lang === 'DE' ? "Direkter Synthesizer" : lang === 'ZH' ? "高密度学术直译器" : "Direct Synthesizer", pct: 12, color: "bg-blue-500" }
                 ].map(p => (
                   <div key={p.name} className="space-y-1">
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
@@ -509,11 +624,11 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.check_passes}</span>
-                  <span className="text-[10px] font-black text-violet-400">4.2 passes</span>
+                  <span className="text-[10px] font-black text-violet-400">4.2 {t.passes_suffix}</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.ects_average}</span>
-                  <span className="text-[10px] font-black text-blue-400">5.0 ECTS</span>
+                  <span className="text-[10px] font-black text-blue-400">5.0 {t.ects_suffix}</span>
                 </div>
               </div>
             </div>
@@ -553,15 +668,15 @@ export default function AdminDashboard() {
         {/* Row 1, Col 2: Translation Metrics */}
         <section className="space-y-6">
           <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
-             <RefreshCw className="w-4 h-4 text-emerald-500" /> {lang === 'FR' ? "Statistiques des Traductions" : "Translation Metrics Tracker"}
+             <RefreshCw className="w-4 h-4 text-emerald-500" /> {t.translation_tracker}
           </h2>
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6">
              {[
-               { code: "EN", name: "English (US/UK)", count: 30, progress: 100, status: lang === 'FR' ? "Certifié" : "Certified", color: "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" },
-               { code: "FR", name: "Français (FR)", count: 30, progress: 100, status: lang === 'FR' ? "Certifié" : "Certified", color: "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" },
-               { code: "ES", name: "Español (ES)", count: 0, progress: 0, status: lang === 'FR' ? "File d'attente" : "In Queue", color: "bg-slate-800" },
-               { code: "DE", name: "Deutsch (DE)", count: 0, progress: 0, status: lang === 'FR' ? "File d'attente" : "In Queue", color: "bg-slate-800" },
-               { code: "ZH", name: "中文 (ZH)", count: 0, progress: 0, status: lang === 'FR' ? "File d'attente" : "In Queue", color: "bg-slate-800" }
+               { code: "EN", name: "English (US/UK)", count: 30, progress: 100, status: t.certified, color: "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" },
+               { code: "FR", name: "Français (FR)", count: 30, progress: 100, status: t.certified, color: "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" },
+               { code: "ES", name: "Español (ES)", count: 0, progress: 0, status: t.in_queue, color: "bg-slate-800" },
+               { code: "DE", name: "Deutsch (DE)", count: 0, progress: 0, status: t.in_queue, color: "bg-slate-800" },
+               { code: "ZH", name: "中文 (ZH)", count: 0, progress: 0, status: t.in_queue, color: "bg-slate-800" }
              ].map((l) => (
                <div key={l.code} className="space-y-2">
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -569,7 +684,7 @@ export default function AdminDashboard() {
                        <span className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-[8px] font-extrabold">{l.code}</span>
                        <span className="text-slate-200">{l.name}</span>
                      </span>
-                     <span className="text-[9px] text-slate-500 font-semibold">{l.count} / 30 {lang === 'FR' ? "Modules" : "Modules"} ({l.progress}%)</span>
+                     <span className="text-[9px] text-slate-500 font-semibold">{l.count} / 30 {t.modules} ({l.progress}%)</span>
                   </div>
                   <div className="relative">
                      <div className="h-2 w-full bg-slate-950 border border-slate-900 rounded-full overflow-hidden">
@@ -585,12 +700,12 @@ export default function AdminDashboard() {
         {/* Row 2, Col 1: Integrated Feature 5 - Cohort Daily Engagement Heatmap */}
         <section className="space-y-6">
           <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
-             <Activity className="w-4 h-4 text-emerald-500" /> {lang === 'FR' ? "Activité Quotidienne du Cohort" : "Cohort Daily Active Learning Heatmap"}
+             <Activity className="w-4 h-4 text-emerald-500" /> {t.cohort_heatmap}
           </h2>
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6">
              <div>
                 <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                   {lang === 'FR' ? "Intensité d'engagement d'études quotidiennes cumulées sur les 28 derniers jours :" : "Aggregated student study daily active density recorded over the last 28 days:"}
+                   {t.heatmap_desc}
                 </p>
              </div>
              
@@ -608,7 +723,7 @@ export default function AdminDashboard() {
              </div>
 
              <div className="flex justify-between items-center text-[8px] font-black text-slate-600 uppercase tracking-widest pt-2">
-                <span>{lang === 'FR' ? "Moins Actif" : "Less Active"}</span>
+                <span>{t.less_active}</span>
                 <div className="flex gap-1.5">
                    <div className="w-3.5 h-3.5 rounded bg-slate-900 border border-slate-850" />
                    <div className="w-3.5 h-3.5 rounded bg-emerald-950 border border-emerald-900" />
@@ -616,7 +731,7 @@ export default function AdminDashboard() {
                    <div className="w-3.5 h-3.5 rounded bg-emerald-600 border border-emerald-500" />
                    <div className="w-3.5 h-3.5 rounded bg-emerald-400 border border-emerald-300" />
                 </div>
-                <span>{lang === 'FR' ? "Très Actif" : "Highly Active"}</span>
+                <span>{t.highly_active}</span>
              </div>
           </div>
         </section>
@@ -624,7 +739,7 @@ export default function AdminDashboard() {
         {/* Row 2, Col 2: Dynamic DB Leaderboard of Top Students */}
         <section className="space-y-6">
           <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
-             <Trophy className="w-4 h-4 text-yellow-500" /> {lang === 'FR' ? "Classement Élite du Cursus" : "Elite Student Leaderboard"}
+             <Trophy className="w-4 h-4 text-yellow-500" /> {t.elite_leaderboard}
           </h2>
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-4">
              {topStudents.map((student, index) => (
@@ -647,7 +762,7 @@ export default function AdminDashboard() {
                </div>
              ))}
               {topStudents.length === 0 && (
-                <p className="text-xs text-slate-600 italic text-center py-8">No student profiles loaded in DB.</p>
+                <p className="text-xs text-slate-600 italic text-center py-8">{t.no_profiles}</p>
               )}
           </div>
         </section>
@@ -656,25 +771,25 @@ export default function AdminDashboard() {
       {/* SECTION: PENDING NOTIFICATIONS QUEUE */}
       <section className="space-y-6 pt-4">
         <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
-          <Mail className="w-4 h-4 text-emerald-500" /> {lang === 'FR' ? "File d'Attente des Notifications & Email de Confirmation" : "Pending Notifications & Email Confirmation Queue"}
+          <Mail className="w-4 h-4 text-emerald-500" /> {t.notification_queue}
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
            {/* Stat card */}
            <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
               <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Total Waiting Students</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">{t.total_waiting}</span>
                 <p className="text-4xl font-black text-white mt-4">{pendingEmails.length}</p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Students waiting for auto-generation or JIT translation confirmation emails.</p>
+                <p className="text-xs text-slate-400 mt-2 font-medium">{t.waiting_desc}</p>
               </div>
               <div className="pt-4 border-t border-slate-850/80 mt-6">
-                 <span className="text-[8px] font-black uppercase tracking-wider text-slate-500">Average Queuing Time</span>
-                 <p className="text-xs font-mono font-bold text-emerald-400 mt-1">2.4 Days</p>
+                 <span className="text-[8px] font-black uppercase tracking-wider text-slate-500">{t.avg_queuing}</span>
+                 <p className="text-xs font-mono font-bold text-emerald-400 mt-1">2.4 {t.days_suffix}</p>
               </div>
            </div>
 
            {/* Language distribution list */}
            <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Queue Casing by Target Language</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">{t.queue_by_lang}</span>
               <div className="space-y-4">
                  {(() => {
                    const langCounts: Record<string, number> = {};
@@ -684,14 +799,14 @@ export default function AdminDashboard() {
                    });
                    const items = Object.entries(langCounts);
                    if (items.length === 0) {
-                     return <p className="text-xs text-slate-650 italic">No pending notifications in queue.</p>;
+                     return <p className="text-xs text-slate-650 italic">{t.no_pending_notifications}</p>;
                    }
                    return items.map(([l, count]) => {
                      const pct = Math.round((count / pendingEmails.length) * 100);
                      return (
                        <div key={l} className="space-y-2">
                          <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
-                           <span>{l} - {l === 'ES' ? 'Spanish (ES)' : l === 'DE' ? 'German (DE)' : l === 'FR' ? 'French (FR)' : l === 'EN' ? 'English (EN)' : 'Other'}</span>
+                           <span>{l} - {l === 'ES' ? (lang === 'FR' ? 'Espagnol (ES)' : lang === 'ES' ? 'Español (ES)' : lang === 'DE' ? 'Spanisch (ES)' : lang === 'ZH' ? '西班牙语 (ES)' : 'Spanish (ES)') : l === 'DE' ? (lang === 'FR' ? 'Allemand (DE)' : lang === 'ES' ? 'Alemán (DE)' : lang === 'DE' ? 'Deutsch (DE)' : lang === 'ZH' ? '德语 (DE)' : 'German (DE)') : l === 'FR' ? (lang === 'FR' ? 'Français (FR)' : lang === 'ES' ? 'Francés (FR)' : lang === 'DE' ? 'Französisch (FR)' : lang === 'ZH' ? '法语 (FR)' : 'French (FR)') : l === 'EN' ? (lang === 'FR' ? 'Anglais (EN)' : lang === 'ES' ? 'Inglés (EN)' : lang === 'DE' ? 'Englisch (EN)' : lang === 'ZH' ? '英语 (EN)' : 'English (EN)') : 'Other'}</span>
                            <span className="text-slate-350">{count} ({pct}%)</span>
                          </div>
                          <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
@@ -707,7 +822,7 @@ export default function AdminDashboard() {
            {/* Pending items — AGGREGATED by course + language */}
            <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending Queue Backlog</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t.pending_backlog}</span>
                 {pendingEmails.length > 0 && (
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">
                     {(() => {
@@ -716,7 +831,7 @@ export default function AdminDashboard() {
                         const key = `${item.courseTitle}|${item.targetLang}`;
                         uniqueJobs.set(key, (uniqueJobs.get(key) || 0) + 1);
                       });
-                      return `${uniqueJobs.size} unique jobs · ${pendingEmails.length} total subscribers`;
+                      return t.unique_subscribers.replace('{jobs}', uniqueJobs.size.toString()).replace('{subs}', pendingEmails.length.toString());
                     })()}
                   </span>
                 )}
@@ -725,7 +840,7 @@ export default function AdminDashboard() {
                 {(() => {
                   if (pendingEmails.length === 0) {
                     return (
-                      <p className="text-xs text-slate-650 italic text-center py-6">No queued notifications.</p>
+                      <p className="text-xs text-slate-650 italic text-center py-6">{t.no_queued_notifications}</p>
                     );
                   }
                   // Aggregate: group by courseTitle + targetLang
@@ -753,7 +868,7 @@ export default function AdminDashboard() {
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-slate-200 truncate">{job.courseTitle}</p>
                             <p className="text-[8px] text-slate-550 font-bold mt-1 uppercase tracking-wider">
-                              Oldest request: {new Date(job.oldest).toLocaleDateString()}
+                              {t.oldest_request}: {new Date(job.oldest).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
@@ -769,7 +884,7 @@ export default function AdminDashboard() {
                       {overflow > 0 && (
                         <div className="p-3 rounded-2xl border border-dashed border-slate-850 text-center">
                           <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
-                            + {overflow} more unique job{overflow > 1 ? 's' : ''} not shown
+                            + {overflow} {lang === 'FR' ? "autres tâches uniques non affichées" : lang === 'ES' ? "más tareas únicas no mostradas" : lang === 'DE' ? "weitere eindeutige Aufgaben nicht angezeigt" : lang === 'ZH' ? "个未显示的唯一任务" : "more unique jobs not shown"}
                           </p>
                         </div>
                       )}

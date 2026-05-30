@@ -119,9 +119,10 @@ interface SmartEmptyStateProps {
   searchQuery: string;
   onClear: () => void;
   lang: string;
+  onSelectSubject?: (subject: string) => void;
 }
 
-const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) => {
+const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartEmptyStateProps) => {
   const es = EMPTY_STATE_STRINGS[lang as keyof typeof EMPTY_STATE_STRINGS] || EMPTY_STATE_STRINGS.EN;
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -264,16 +265,17 @@ const SmartEmptyState = ({ searchQuery, onClear, lang }: SmartEmptyStateProps) =
               cyan: 'border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-600/5 text-cyan-400',
             };
             return (
-              <Link
+              <button
                 key={s.label}
-                href={s.href}
-                className={`p-4 bg-slate-900/40 border rounded-2xl flex items-center gap-3 transition-all group ${colorMap[s.color]}`}
+                type="button"
+                onClick={() => onSelectSubject?.(s.label)}
+                className={`p-4 bg-slate-900/40 border rounded-2xl flex items-center gap-3 transition-all group text-left cursor-pointer ${colorMap[s.color]}`}
               >
                 <IconComp className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 group-hover:text-white transition-colors">
                   {SUGGESTIONS_TRANSLATIONS[s.label]?.[lang] || s.label}
                 </span>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -421,6 +423,56 @@ export const CatalogPage = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Synchronize searchQuery to URL search parameters in real-time
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (searchQuery) {
+        url.searchParams.set('search', searchQuery);
+      } else {
+        url.searchParams.delete('search');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchQuery]);
+
+  // Synchronize searchQuery with back/forward history events (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setSearchQuery(params.get('search') || '');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Dynamically translate active search queries when language changes
+  useEffect(() => {
+    if (!searchQuery) return;
+    
+    let foundKey: string | null = null;
+    let foundLang: string | null = null;
+    
+    for (const [key, langMap] of Object.entries(SUGGESTIONS_TRANSLATIONS)) {
+      for (const [l, val] of Object.entries(langMap)) {
+        if (searchQuery.toLowerCase() === val.toLowerCase() || searchQuery.toLowerCase() === key.toLowerCase()) {
+          foundKey = key;
+          foundLang = l;
+          break;
+        }
+      }
+      if (foundKey) break;
+    }
+    
+    if (foundKey) {
+      const translated = SUGGESTIONS_TRANSLATIONS[foundKey]?.[lang.toUpperCase()] || foundKey;
+      if (translated && translated.toLowerCase() !== searchQuery.toLowerCase()) {
+        setSearchQuery(translated);
+      }
+    }
+  }, [lang]);
+
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -535,6 +587,50 @@ export const CatalogPage = () => {
     if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
   }, [lang]);
 
+  // Debounce search logging to database search history
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+
+    const timer = setTimeout(async () => {
+      const cleanSearch = searchQuery.trim().toLowerCase();
+      // Calculate if the search matches any active courses in the database
+      const matchingCount = courses.filter(c => {
+        const currentLevel = typeof c.archivingLevel === 'number' ? c.archivingLevel : 0;
+        if (currentLevel >= 2) return false;
+        
+        // Strip accents for robust comparison
+        const stripAccents = (str: string) =>
+          str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const localizedTitle = dbService.getLocalizedCourseTitle(c, lang) || c.title;
+        const cleanTitle = stripAccents(localizedTitle).toLowerCase();
+        const cleanOrigTitle = stripAccents(c.title).toLowerCase();
+        const cleanSubject = stripAccents(c.subject || '').toLowerCase();
+        const cleanDesc = stripAccents(c.description || '').toLowerCase();
+        const queryClean = stripAccents(cleanSearch);
+
+        return cleanTitle.includes(queryClean) || 
+               cleanOrigTitle.includes(queryClean) || 
+               cleanSubject.includes(queryClean) || 
+               cleanDesc.includes(queryClean);
+      }).length;
+
+      const wasSuccessful = matchingCount > 0;
+      try {
+        await dbService.addSearchHistoryEntry({
+          query: searchQuery.trim(),
+          wasSuccessful,
+          userId: 'u1',
+          userLanguage: lang
+        });
+      } catch (err) {
+        console.error("Failed to record search history entry", err);
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, lang, courses]);
+
   const toggleBookmark = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -603,7 +699,7 @@ export const CatalogPage = () => {
     }
     if (c.is_active === false) return false;
     
-    const matchesLang = c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
+    const matchesLang = (c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase())) || searchQuery.trim().length > 0;
     const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
     
@@ -655,7 +751,7 @@ export const CatalogPage = () => {
                <div className="flex items-center gap-2 text-slate-500">
                   <Globe className="w-4 h-4" />
                   <p className="font-semibold text-xs uppercase tracking-wider">
-                    {lang.toUpperCase() === 'FR' ? 'Langue active :' : lang.toUpperCase() === 'ES' ? 'Idioma activo :' : lang.toUpperCase() === 'DE' ? 'Aktive Sprache :' : lang.toUpperCase() === 'ZH' ? '当前语言：' : lang.toUpperCase() === 'IT' ? 'Lingua attiva :' : 'Active Language:'} {lang.toUpperCase() === 'FR' ? 'Français' : lang.toUpperCase() === 'ES' ? 'Español' : lang.toUpperCase() === 'DE' ? 'Deutsch' : lang.toUpperCase() === 'ZH' ? '中文' : lang.toUpperCase() === 'IT' ? 'Italiano' : 'English'}
+                    {t.active_language}
                   </p>
                </div>
                {!isLoggedIn && (
@@ -663,19 +759,9 @@ export const CatalogPage = () => {
                     <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
                     <div>
                       <span className="font-bold text-white uppercase text-[8px] tracking-wider block mb-1">
-                        {lang.toUpperCase() === 'FR' ? 'GUIDE DE TRADUCTION DU CATALOGUE' : 
-                         lang.toUpperCase() === 'ES' ? 'GUÍA DE TRADUCCIÓN DEL CATÁLOGO' : 
-                         lang.toUpperCase() === 'DE' ? 'KATALOG-ÜBERSETZUNGSLEITFADEN' : 
-                         lang.toUpperCase() === 'ZH' ? '课程目录语言切换指南' : 
-                         lang.toUpperCase() === 'IT' ? 'GUIDA ALLA TRADUZIONE DEL CATALOGO' : 
-                         'CATALOG TRANSLATION GUIDE'}
+                        {t.catalog_translation_guide}
                       </span>
-                      {lang.toUpperCase() === 'FR' ? 'ðŸ’¡ Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d\'autres langues.' : 
-                       lang.toUpperCase() === 'ES' ? 'ðŸ’¡ Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.' : 
-                       lang.toUpperCase() === 'DE' ? 'ðŸ’¡ Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.' : 
-                       lang.toUpperCase() === 'ZH' ? 'ðŸ’¡ 在顶部导航栏中切换语言，即可探索其他语言 of 课程目录。' : 
-                       lang.toUpperCase() === 'IT' ? 'ðŸ’¡ Cambia la lingua nella barra di navigazione superiore per scoprire i corsi in altre lingue.' : 
-                       'ðŸ’¡ Change the language in the top navigation bar to discover courses in other languages.'}
+                      {t.translation_guide_text}
                     </div>
                   </div>
                )}
@@ -925,6 +1011,10 @@ export const CatalogPage = () => {
               searchQuery={searchQuery}
               onClear={() => setSearchQuery('')}
               lang={lang}
+              onSelectSubject={(subject) => {
+                const translated = SUGGESTIONS_TRANSLATIONS[subject]?.[lang.toUpperCase()] || subject;
+                setSearchQuery(translated);
+              }}
             />
           )}
         </div>
