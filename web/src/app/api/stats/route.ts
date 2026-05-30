@@ -38,11 +38,11 @@ export async function GET() {
     activeCourses.forEach(c => {
       c.languages?.forEach((l: string) => uniqueLangs.add(l.toLowerCase()));
     });
-    // Default to 2 languages only if we had an error and no courses array was fetched
-    const totalLanguages = courses !== null ? uniqueLangs.size : 2;
+    // Default to 0 languages if no courses fetched
+    const totalLanguages = courses !== null ? uniqueLangs.size : 0;
     
     // 2. Curricula Count (Only count active curricula)
-    const totalCurricula = courses !== null ? activeCourses.filter((c: any) => c.is_active).length : 10;
+    const totalCurricula = courses !== null ? activeCourses.filter((c: any) => c.is_active).length : 0;
     
     // 3. Total Courses/Lessons Count
     const mdxCount = countUniqueMdxLessons();
@@ -51,20 +51,30 @@ export async function GET() {
     // 4. Fetch dynamic student stats
     const { data: dbUsers } = await dbService.getUsers();
     const activeUsers = dbUsers || [];
-    const totalStudents = dbUsers !== null ? activeUsers.length : 11;
+    const totalStudents = dbUsers !== null ? activeUsers.length : 0;
  
     // 5. Dynamic Validation Rate based on user levels
     const avgLevel = activeUsers.length > 0
       ? activeUsers.reduce((acc: number, u: any) => acc + (u.level || 0), 0) / activeUsers.length
       : 0;
-    const validationRate = dbUsers !== null ? (activeUsers.length > 0 ? Math.min(100, Math.round(avgLevel * 7.5)) : 0) : 84;
+    const validationRate = dbUsers !== null ? (activeUsers.length > 0 ? Math.min(100, Math.round(avgLevel * 7.5)) : 0) : 0;
+
+    // 6. Dynamic Platform Rating
+    const { data: feedbacks } = await dbService.getCourseFeedbacks();
+    const activeFeedbacks = feedbacks || [];
+    const ratingCount = activeFeedbacks.length;
+    const averageRating = ratingCount > 0
+      ? activeFeedbacks.reduce((acc: number, f: any) => acc + f.rating, 0) / ratingCount
+      : 0;
+    const platformRating = ratingCount > 0 ? `${averageRating.toFixed(1)}/5` : "0.0/5";
     
     return NextResponse.json({
       total_languages: totalLanguages,
       total_curricula: totalCurricula,
       total_courses: totalCourses,
       total_students: totalStudents,
-      validation_rate: validationRate
+      validation_rate: validationRate,
+      platform_rating: platformRating
     });
   } catch (error) {
     console.error("Error generating dynamic stats:", error);

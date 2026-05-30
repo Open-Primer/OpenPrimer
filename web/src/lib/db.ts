@@ -2822,7 +2822,7 @@ export const dbService = {
               total_languages: statsData.total_languages,
               total_courses: statsData.total_courses,
               validation_rate: statsData.validation_rate,
-              platform_rating: "4.8/5"
+              platform_rating: statsData.platform_rating ?? "0.0/5"
             },
             error: null
           };
@@ -2836,23 +2836,30 @@ export const dbService = {
     const total_students = users.length;
     const active_curricula = mockCourses.filter(c => c.is_active).length;
     const total_course_visits = mockCourses.reduce((acc, c) => acc + (c.popularity || 0), 0);
-    const avg_level = users.reduce((acc, u) => acc + u.level, 0) / users.length;
-    const validation_rate = Math.round(avg_level * 7.5);
+    const avg_level = users.length > 0 ? users.reduce((acc, u) => acc + u.level, 0) / users.length : 0;
+    const validation_rate = users.length > 0 ? Math.round(avg_level * 7.5) : 0;
     
     // Fallback counts:
     const uniqueLangs = new Set<string>();
     mockCourses.forEach(c => c.languages?.forEach(l => uniqueLangs.add(l.toLowerCase())));
-    const total_languages = uniqueLangs.size || 2;
+    const total_languages = uniqueLangs.size;
     const total_courses = mockCourses.length;
 
-    if (isOffline) {
+    if (isOffline || !isDatabaseConfigured) {
+      const feedbacks = courseFeedbacks;
+      const ratingCount = feedbacks.length;
+      const averageRating = ratingCount > 0
+        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
+        : 0;
+      const platform_rating = ratingCount > 0 ? `${averageRating.toFixed(1)}/5` : "0.0/5";
+
       return { 
         data: { 
           total_students, 
           active_curricula, 
           validation_rate, 
           total_course_visits, 
-          platform_rating: "4.8/5",
+          platform_rating,
           total_languages,
           total_courses
         }, 
@@ -2862,12 +2869,21 @@ export const dbService = {
     try {
       const { data, error } = await supabase.from('site_stats').select('*').single();
       if (error) throw error;
+      
+      const { data: dbCourses } = await supabase.from('courses').select('is_active, languages');
+      const activeCourses = dbCourses || [];
+      const dbCurricula = activeCourses.filter(c => c.is_active).length;
+      const dbLangs = new Set<string>();
+      activeCourses.forEach(c => c.languages?.forEach((l: string) => dbLangs.add(l.toLowerCase())));
+      const dbCoursesCount = activeCourses.length;
+
       return { 
         data: {
           ...data,
-          active_curricula: 0,
-          total_languages: 0,
-          total_courses: 0
+          active_curricula: dbCurricula,
+          total_languages: dbLangs.size,
+          total_courses: dbCoursesCount,
+          platform_rating: data.platform_rating || "0.0/5"
         }, 
         error: null 
       };
@@ -3786,7 +3802,28 @@ export const dbService = {
 
   // AGENT METRICS
   getAgentMetrics: async () => {
-    return { data: agentMetricsList, error: null };
+    if (isOffline || !isDatabaseConfigured) {
+      return { data: agentMetricsList, error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('agent_metrics').select('*');
+      if (error) throw error;
+      const mapped: AgentMetric[] = data?.map((m: any) => ({
+        id: m.id,
+        nameEN: m.name_en || m.nameEN || '',
+        nameFR: m.name_fr || m.nameFR || '',
+        nameES: m.name_es || m.nameES || '',
+        nameDE: m.name_de || m.nameDE || '',
+        nameZH: m.name_zh || m.nameZH || '',
+        totalCost: m.total_cost || m.totalCost || 0,
+        rolling30DaysCost: m.rolling_30_days_cost || m.rolling30DaysCost || 0,
+        requests: m.requests || 0,
+        avgResponseTime: m.avg_response_time || m.avgResponseTime || '0ms'
+      })) || [];
+      return { data: mapped.length > 0 ? mapped : initialAgentMetrics, error: null };
+    } catch (e: any) {
+      return { data: initialAgentMetrics, error: e };
+    }
   },
 
   // COURSE DELETION (LEVEL 3)
@@ -4174,39 +4211,8 @@ export const progressService = {
     return new Date(Math.max(...courseDates)).toISOString();
   },
 
-  /**
-   * Generates a stable, realistic SLA uptime history for all external services over the last 365 days.
-   */
   getSlaHistory: (): { date: string; db: number; email: number; ai: number; images: number; }[] => {
-    const history = [];
-    const now = new Date();
-    for (let i = 364; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(now.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      let db = 100;
-      let email = 100;
-      let ai = 100;
-      let images = 100;
-
-      const dayIndex = 364 - i;
-      if (dayIndex === 45) {
-        db = 99.2;
-      } else if (dayIndex === 120) {
-        email = 99.5;
-      } else if (dayIndex === 210) {
-        ai = 98.8;
-      } else if (dayIndex === 300) {
-        images = 97.4;
-      } else if (dayIndex === 340) {
-        db = 99.9;
-        ai = 99.9;
-      }
-
-      history.push({ date: dateStr, db, email, ai, images });
-    }
-    return history;
+    return [];
   }
 };
 

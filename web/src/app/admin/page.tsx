@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy, Mail, LayoutDashboard } from 'lucide-react';
-import { dbService } from '@/lib/db';
+import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 
 export const DASHBOARD_STRINGS = {
@@ -338,10 +338,10 @@ export default function AdminDashboard() {
   const t = DASHBOARD_STRINGS[lang as keyof typeof DASHBOARD_STRINGS] || DASHBOARD_STRINGS.EN;
 
   const [dbStats, setDbStats] = useState({
-    total_students: 11,
-    active_curricula: 10,
-    validation_rate: 84,
-    platform_rating: "4.8/5"
+    total_students: 0,
+    active_curricula: 0,
+    validation_rate: 0,
+    platform_rating: "0.0/5"
   });
 
   const [topStudents, setTopStudents] = useState<any[]>([]);
@@ -349,42 +349,74 @@ export default function AdminDashboard() {
   const [pendingEmails, setPendingEmails] = useState<any[]>([]);
   const [metricsSortField, setMetricsSortField] = useState<string>('name');
   const [metricsSortDir, setMetricsSortDir] = useState<'asc' | 'desc'>('asc');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function loadStats() {
+  const loadStats = async () => {
+    try {
       const { data } = await dbService.getSiteStats();
       if (data) {
         setDbStats({
-          total_students: data.total_students ?? 11,
-          active_curricula: data.active_curricula ?? 10,
-          validation_rate: data.validation_rate ?? 84,
-          platform_rating: data.platform_rating ?? "4.8/5"
+          total_students: data.total_students ?? 0,
+          active_curricula: data.active_curricula ?? 0,
+          validation_rate: data.validation_rate ?? 0,
+          platform_rating: data.platform_rating ?? "0.0/5"
         });
       }
       
       const { data: usersData } = await dbService.getUsers();
       if (usersData) {
-        // Query top student accounts sorted by KP
         const sorted = [...usersData]
           .sort((a, b) => b.kp - a.kp)
           .slice(0, 3);
         setTopStudents(sorted);
+      } else {
+        setTopStudents([]);
       }
 
       const { data: metrics } = await dbService.getAgentMetrics();
       if (metrics) {
         setAgentMetrics(metrics);
+      } else {
+        setAgentMetrics([]);
       }
 
       const { data: emails } = await dbService.getTranslationEmails();
       if (emails) {
         setPendingEmails(emails);
+      } else {
+        setPendingEmails([]);
       }
+    } catch (e) {
+      console.error("Error loading stats", e);
     }
+  };
+
+  useEffect(() => {
     loadStats();
     const interval = setInterval(loadStats, 10_000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      if (typeof window !== 'undefined') {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('openprimer_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      await loadStats();
+      if (!isDatabaseConfigured) {
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error("Error refreshing stats", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Integrated Feature 5: Cohort Activity Heatmap (Simulating last 28 days of engagement)
   const heatmapDays = [
@@ -437,6 +469,19 @@ export default function AdminDashboard() {
             {t.welcome}
           </h1>
           <p className="text-xs text-slate-400 font-medium">{t.subwelcome}</p>
+        </div>
+        <div className="flex flex-row justify-end w-full md:w-auto">
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-5 py-3 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-blue-500/50 hover:bg-slate-950 transition-all font-black text-[10px] uppercase tracking-wider group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500 ${isRefreshing ? 'animate-spin text-blue-500' : ''}`} />
+            {isRefreshing 
+              ? (lang === 'FR' ? 'Chargement...' : lang === 'ES' ? 'Cargando...' : lang === 'DE' ? 'Laden...' : lang === 'ZH' ? '加载中...' : 'Loading...')
+              : (lang === 'FR' ? 'Rafraîchir' : lang === 'ES' ? 'Actualizar' : lang === 'DE' ? 'Aktualisieren' : lang === 'ZH' ? '刷新数据' : 'Refresh')
+            }
+          </button>
         </div>
       </div>
 

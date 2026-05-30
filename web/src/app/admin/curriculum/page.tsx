@@ -624,7 +624,29 @@ export const COCKPIT_DICTIONARY = {
     "Strict Parameter Error: All fields are required!": "Strict Parameter Error: All fields are required!",
     "Strict Validation Reject: Threshold must be positive!": "Strict Validation Reject: Threshold must be positive!",
     "Level 1 tooltip": "Level 1 (Soft Archive): Hidden from the general catalog, but accessible in read-only mode to students already enrolled or who have validated the course.",
-    "Language cancel tooltip": "New language creation cannot be cancelled due to site instability risk."
+    "Language cancel tooltip": "New language creation cannot be cancelled due to site instability risk.",
+    "50 questions": "50 questions",
+    "3 languages": "3 languages",
+    "7 day streak": "7 day streak",
+    "100% score": "100% score",
+    "5 night sessions": "5 night sessions",
+    "5 morning sessions": "5 morning sessions",
+    "L1 graduate": "L1 graduate",
+    "5 courses": "5 courses",
+    "10 corrections": "10 corrections",
+    "100 questions": "100 questions",
+    "1 curriculum": "1 curriculum",
+    "10 ratings": "10 ratings",
+    "100 perfect scores": "100 perfect scores",
+    "1 feedback": "1 feedback",
+    "3 advanced courses": "3 advanced courses",
+    "10 loop prompts": "10 loop prompts",
+    "3 subject fields": "3 subject fields",
+    "1 custom query override": "1 custom query override",
+    "2 sub-modules expanded": "2 sub-modules expanded",
+    "4 disciplines": "4 disciplines",
+    "20 perfect quizzes": "20 perfect quizzes",
+    "10 AI generations": "10 AI generations"
   },
   FR: {
     "AI Tutor Personalities": "Personnalités des tuteurs IA",
@@ -891,7 +913,29 @@ export const COCKPIT_DICTIONARY = {
     "Strict Parameter Error: All fields are required!": "Erreur Paramètre Strict : Tous les champs sont requis !",
     "Strict Validation Reject: Threshold must be positive!": "Rejet de Validation Stricte : Le seuil doit être positif !",
     "Level 1 tooltip": "Niveau 1 (Archive Douce) : Masqué du catalogue général, mais accessible en lecture seule aux étudiants déjà inscrits ou ayant validé le cours.",
-    "Language cancel tooltip": "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site."
+    "Language cancel tooltip": "La création d'une nouvelle langue ne peut pas être annulée en raison d'un risque d'instabilité du site.",
+    "50 questions": "50 questions",
+    "3 languages": "3 langues",
+    "7 day streak": "Série de 7 jours",
+    "100% score": "Score de 100%",
+    "5 night sessions": "5 sessions nocturnes",
+    "5 morning sessions": "5 sessions matinales",
+    "L1 graduate": "Diplômé L1",
+    "5 courses": "5 cours",
+    "10 corrections": "10 corrections",
+    "100 questions": "100 questions",
+    "1 curriculum": "1 cursus",
+    "10 ratings": "10 évaluations",
+    "100 perfect scores": "100 scores parfaits",
+    "1 feedback": "1 retour",
+    "3 advanced courses": "3 cours avancés",
+    "10 loop prompts": "10 invites en boucle",
+    "3 subject fields": "3 domaines d'études",
+    "1 custom query override": "1 forçage de requête",
+    "2 sub-modules expanded": "2 sous-modules étendus",
+    "4 disciplines": "4 disciplines",
+    "20 perfect quizzes": "20 quiz parfaits",
+    "10 AI generations": "10 générations IA"
   },
   ES: {
     "AI Tutor Personalities": "Personalidades de tutores de IA",
@@ -1158,7 +1202,29 @@ export const COCKPIT_DICTIONARY = {
     "Strict Parameter Error: All fields are required!": "Error de Parámetro Estricto: ¡Todos los campos son obligatorios!",
     "Strict Validation Reject: Threshold must be positive!": "Rechazo de Validación Estricta: ¡El umbral debe ser positivo!",
     "Level 1 tooltip": "Nivel 1 (Archivo Suave): Oculto del catálogo general, pero accesible en modo de solo lectura para los estudiantes ya inscritos o que hayan validado el curso.",
-    "Language cancel tooltip": "La creación de un nuevo idioma no se puede cancelar debido al riesgo de inestabilidad del sitio."
+    "Language cancel tooltip": "La creación de un nuevo idioma no se puede cancelar debido al riesgo de inestabilidad del sitio.",
+    "50 questions": "50 preguntas",
+    "3 languages": "3 idiomas",
+    "7 day streak": "Racha de 7 días",
+    "100% score": "Puntuación 100%",
+    "5 night sessions": "5 sesiones nocturnas",
+    "5 morning sessions": "5 sesiones matutinas",
+    "L1 graduate": "Graduado L1",
+    "5 courses": "5 cursos",
+    "10 corrections": "10 correcciones",
+    "100 questions": "100 preguntas",
+    "1 curriculum": "1 plan de estudios",
+    "10 ratings": "10 calificaciones",
+    "100 perfect scores": "100 puntuaciones perfectas",
+    "1 feedback": "1 comentario",
+    "3 advanced courses": "3 cursos avanzados",
+    "10 loop prompts": "10 solicitudes en bucle",
+    "3 subject fields": "3 áreas de asignaturas",
+    "1 custom query override": "1 anulación personalizada",
+    "2 sub-modules expanded": "2 submódulos expandidos",
+    "4 disciplines": "4 disciplinas",
+    "20 perfect quizzes": "20 cuestionarios perfectos",
+    "10 AI generations": "10 generaciones de IA"
   },
   DE: {
     "AI Tutor Personalities": "KI-Tutor-Persönlichkeiten",
@@ -1427,7 +1493,29 @@ export const COCKPIT_DICTIONARY = {
     "Strict Parameter Error: All fields are required!": "Strenger Parameterfehler: Alle Felder sind erforderlich!",
     "Strict Validation Reject: Threshold must be positive!": "Strenger Validierungsfehler: Schwellenwert muss positiv sein!",
     "Level 1 tooltip": "Stufe 1 (Soft-Archiv): Aus dem allgemeinen Katalog ausgeblendet, aber im schreibgeschützten Modus für bereits eingeschriebene Studenten oder Studenten, die den Kurs validiert haben, zugänglich.",
-    "Language cancel tooltip": "Die Erstellung einer neuen Sprache kann wegen des Risikos von Instabilitäten nicht abgebrochen werden."
+    "Language cancel tooltip": "Die Erstellung einer neuen Sprache kann wegen des Risikos von Instabilitäten nicht abgebrochen werden.",
+    "50 questions": "50 Fragen",
+    "3 languages": "3 Sprachen",
+    "7 day streak": "7-Tage-Serie",
+    "100% score": "100 % Punktzahl",
+    "5 night sessions": "5 Nachtsitzungen",
+    "5 morning sessions": "5 Morgensitzungen",
+    "L1 graduate": "L1-Absolvent",
+    "5 courses": "5 Kurse",
+    "10 corrections": "10 Korrekturen",
+    "100 questions": "100 Fragen",
+    "1 curriculum": "1 Lehrplan",
+    "10 ratings": "10 Bewertungen",
+    "100 perfect scores": "100 perfekte Punktzahlen",
+    "1 feedback": "1 Feedback",
+    "3 advanced courses": "3 fortgeschrittene Kurse",
+    "10 loop prompts": "10 Schleifenaufforderungen",
+    "3 subject fields": "3 Fachbereiche",
+    "1 custom query override": "1 benutzerdefinierte Überschreibung",
+    "2 sub-modules expanded": "2 Untermodule erweitert",
+    "4 disciplines": "4 Disziplinen",
+    "20 perfect quizzes": "20 perfekte Quizze",
+    "10 AI generations": "10 KI-Generierungen"
   },
   ZH: {
     "AI Tutor Personalities": "AI 导师个性配置",
@@ -1689,7 +1777,29 @@ export const COCKPIT_DICTIONARY = {
     "Strict Parameter Error: All fields are required!": "严格参数错误：所有字段均为必填项！",
     "Strict Validation Reject: Threshold must be positive!": "严格验证拒绝：阈值必须为正数！",
     "Level 1 tooltip": "级别 1（软归档）：从通用目录中隐藏，但已选课或已验证该课程的学生可以以只读模式访问。",
-    "Language cancel tooltip": "由于网站不稳定性风险，无法取消新语言的创建任务。"
+    "Language cancel tooltip": "由于网站不稳定性风险，无法取消新语言的创建任务。",
+    "50 questions": "50 个问题",
+    "3 languages": "3 种语言",
+    "7 day streak": "7 天连击",
+    "100% score": "100% 满分",
+    "5 night sessions": "5 次夜间学习",
+    "5 morning sessions": "5 次晨间学习",
+    "L1 graduate": "L1 毕业生",
+    "5 courses": "5 门课程",
+    "10 corrections": "10 次修正",
+    "100 questions": "100 个问题",
+    "1 curriculum": "1 个课程体系",
+    "10 ratings": "10 次评分",
+    "100 perfect scores": "100 次满分",
+    "1 feedback": "1 次反馈",
+    "3 advanced courses": "3 门高级课程",
+    "10 loop prompts": "10 次循环触发",
+    "3 subject fields": "3 个学科领域",
+    "1 custom query override": "1 次自定义覆盖",
+    "2 sub-modules expanded": "2 个动态子模块扩展",
+    "4 disciplines": "4 个专业",
+    "20 perfect quizzes": "20 次满分测验",
+    "10 AI generations": "10 次人工智能生成"
   }
 };
 
@@ -5977,7 +6087,7 @@ export default function AdminCurriculumPage() {
                             <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
                               <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                                 <div>
-                                  <p>{tr("Trigger Parameter")}: <span className="text-violet-400">{ach.threshold}</span></p>
+                                  <p>{tr("Trigger Parameter")}: <span className="text-violet-400">{tr(ach.threshold)}</span></p>
                                   <p className="mt-1">{ach.count} {tr("Earned")}</p>
                                 </div>
                                 <div>
@@ -5992,6 +6102,7 @@ export default function AdminCurriculumPage() {
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{tr("Archival Level:")}</span>
                                 <ArchivingLevelButtons 
                                   currentLevel={ach.archivingLevel || 0}
+                                  lang={lang}
                                   onChange={async (nextLvl) => {
                                     if (nextLvl === 3) {
                                       handleOpenPurge(ach);
@@ -6081,6 +6192,7 @@ export default function AdminCurriculumPage() {
                                 <ArchivingLevelButtons 
                                   currentLevel={p.archivingLevel || 0}
                                   disableLevel3={p.isDefault}
+                                  lang={lang}
                                   onChange={async (nextLvl) => {
                                     if (nextLvl === 3) {
                                       await handleDeletePersona(p.id);
@@ -6465,11 +6577,11 @@ export default function AdminCurriculumPage() {
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 flex items-center gap-1.5 font-mono">
                               <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-                              AI Generated Badge Designs
+                              {tr("AI Generated Badge Designs")}
                             </span>
                             {isEditGeneratingBadges && (
                               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest animate-pulse font-mono">
-                                Generating...
+                                {tr("Generating...")}
                               </span>
                             )}
                           </div>
@@ -6488,14 +6600,14 @@ export default function AdminCurriculumPage() {
                                     <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
                                   </div>
                                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider font-mono">
-                                    Option {idx + 1}
+                                    {tr("Badge Option")} {idx + 1}
                                   </span>
                                 </button>
                               );
                             })}
                             {!isEditGeneratingBadges && editGeneratedBadges.length === 0 && (
                               <div className="col-span-3 text-center py-4 text-[9px] font-black uppercase tracking-widest text-slate-600 font-mono">
-                                Type a Name & Description to trigger generator
+                                {tr("Type a Name & Description to trigger generator")}
                               </div>
                             )}
                           </div>
@@ -6518,7 +6630,7 @@ export default function AdminCurriculumPage() {
                                 onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
                                 className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               >
-                                &larr; Prev
+                                {tr("◀ Prev (gallery)")}
                               </button>
                               <span className="text-[10px] font-mono text-slate-400 font-bold">
                                 {editionGalleryPage} / {totalPages}
@@ -6529,7 +6641,7 @@ export default function AdminCurriculumPage() {
                                 onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
                                 className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               >
-                                Next &rarr;
+                                {tr("Next (gallery) →")}
                               </button>
                             </div>
                           );
@@ -6558,7 +6670,7 @@ export default function AdminCurriculumPage() {
                         if (currentPageBadges.length === 0 && !showUpload) {
                           return (
                             <div className="p-8 bg-slate-950/20 border border-dashed border-slate-850 rounded-3xl text-center text-xs text-slate-500 italic">
-                              All 50 library badges are currently active in our curriculum!
+                              {tr("All 50 library badges are currently active in our curriculum!")}
                             </div>
                           );
                         }

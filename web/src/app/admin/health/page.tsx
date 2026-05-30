@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity, Database, Mail, Cpu, Image, RefreshCw,
@@ -367,9 +367,19 @@ export default function ServerHealthPage() {
   const t = HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN;
   const { health, isChecking, refresh } = useServiceStatus(10_000);
 
-  const slaHistory = progressService.getSlaHistory();
+  const [slaHistory, setSlaHistory] = useState<any[]>(() => []);
+  const [slaSource, setSlaSource] = useState<'prng' | 'database'>('database');
+  const [hoveredDay, setHoveredDay] = useState<{ date: string; db: number; email: number; ai: number; images: number; status: string } | null>(null);
+
 
   const getServiceStats = (id: 'db' | 'email' | 'ai' | 'images') => {
+    if (!slaHistory || slaHistory.length === 0) {
+      return {
+        avg: '0.00%',
+        downtime: lang === 'FR' ? 'Aucune donnée' : 'No data',
+        incident: lang === 'FR' ? 'Connexion base de données requise' : 'Database connection required'
+      };
+    }
     const sum = slaHistory.reduce((acc, entry) => acc + entry[id], 0);
     const avg = sum / slaHistory.length;
 
@@ -402,6 +412,7 @@ export default function ServerHealthPage() {
   };
 
   const overallAvg = (() => {
+    if (!slaHistory || slaHistory.length === 0) return 0;
     let total = 0;
     slaHistory.forEach(day => {
       total += (day.db + day.email + day.ai + day.images) / 4;
@@ -426,13 +437,36 @@ export default function ServerHealthPage() {
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [notif, setNotif] = useState<string | null>(null);
 
-  // Load hot-swap keys on mount
+  // Load hot-swap keys and SLA history on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setSupabaseUrl(localStorage.getItem('op_supabase_url') || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.io');
       setSupabaseAnonKey(localStorage.getItem('op_supabase_anon_key') || '');
       setResendApiKey(localStorage.getItem('op_resend_api_key') || '');
       setGeminiApiKey(localStorage.getItem('op_gemini_api_key') || '');
+
+      // Fetch dynamic database SLA History
+      const fetchSla = async () => {
+        try {
+          const adminSession = localStorage.getItem('op_session') || '';
+          const headers: Record<string, string> = {};
+          if (localStorage.getItem('op_supabase_url')) headers['x-supabase-url'] = localStorage.getItem('op_supabase_url') || '';
+          if (localStorage.getItem('op_supabase_anon_key')) headers['x-supabase-anon-key'] = localStorage.getItem('op_supabase_anon_key') || '';
+          if (adminSession === 'true') headers['x-admin-session'] = 'true';
+
+          const res = await fetch('/api/health/sla', { headers });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              setSlaHistory(json.data);
+              setSlaSource(json.source);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to fetch database SLA history", err);
+        }
+      };
+      fetchSla();
     }
   }, []);
 
@@ -612,49 +646,107 @@ export default function ServerHealthPage() {
 
         {/* Dynamic Year-long SLA grid timeline */}
         <div className="p-6 bg-slate-950/40 rounded-3xl border border-slate-850 space-y-4">
-           <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400">
-             <span>{lang === 'FR' ? "Calendrier Annuel de Disponibilité (365 Jours)" : "Rolling Service Availability Grid (Last 365 Days Timeline)"}</span>
-             <span className="text-emerald-400">{overallAvg.toFixed(3)}% {lang === 'FR' ? "Moyenne Globale" : "Overall Average"}</span>
-           </div>
-           
-           <div className="grid grid-rows-7 grid-flow-col gap-[3.5px] overflow-x-auto py-2 pr-2 select-none justify-start max-w-full">
-              {slaHistory.map((dayData, idx) => {
-                const status = getDayStatus(dayData);
-                const color = status === 'nominal' ? 'bg-emerald-500 border-emerald-400/20 shadow-[0_0_4px_rgba(16,185,129,0.1)] hover:bg-emerald-400'
-                  : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400 animate-pulse'
-                  : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400 animate-pulse';
-
-                return (
-                  <div 
-                    key={idx}
-                    className={`w-3.5 h-3.5 rounded-sm border cursor-help transition-all ${color} group/dot relative`}
-                  >
-                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-3 bg-slate-950/95 border border-slate-850 rounded-xl shadow-2xl opacity-0 scale-95 group-hover/dot:opacity-100 group-hover/dot:scale-100 transition-all pointer-events-none z-50 text-[10px] leading-snug font-bold">
-                        <p className="text-slate-200">{new Date(dayData.date).toLocaleDateString(lang === 'FR' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
-                        <p className="text-slate-500 font-extrabold uppercase mt-1 tracking-wider">
-                          Status: <span className={status === 'nominal' ? 'text-emerald-400' : status === 'degraded' ? 'text-amber-400' : 'text-red-400'}>{status.toUpperCase()}</span>
-                        </p>
-                        <div className="mt-2 space-y-1 border-t border-slate-900 pt-1.5 font-mono text-[9px] text-slate-400">
-                          <div className="flex justify-between"><span>Supabase DB:</span><span className={dayData.db < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.db}%</span></div>
-                          <div className="flex justify-between"><span>Resend API:</span><span className={dayData.email < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.email}%</span></div>
-                          <div className="flex justify-between"><span>Gemini AI:</span><span className={dayData.ai < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.ai}%</span></div>
-                          <div className="flex justify-between"><span>Image Engine:</span><span className={dayData.images < 100 ? 'text-amber-400' : 'text-slate-300'}>{dayData.images}%</span></div>
-                        </div>
-                     </div>
+            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400 min-h-8">
+              {hoveredDay ? (
+                <div className="flex items-center justify-between w-full text-[10px] text-slate-200 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-400 font-extrabold font-mono">
+                      {new Date(hoveredDay.date).toLocaleDateString(lang === 'FR' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                      hoveredDay.status === 'nominal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      : hoveredDay.status === 'degraded' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' 
+                      : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
+                    }`}>
+                      {hoveredDay.status === 'nominal' ? (lang === 'FR' ? 'Nominal' : 'Nominal')
+                        : hoveredDay.status === 'degraded' ? (lang === 'FR' ? 'Dégradé' : 'Degraded')
+                        : (lang === 'FR' ? 'Interruption' : 'Outage')}
+                    </span>
                   </div>
-                );
-              })}
-           </div>
-           <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-650 tracking-widest pt-2">
-              <span>{lang === 'FR' ? "Il y a 365 Jours" : "365 Days Ago"}</span>
-              <div className="flex gap-4">
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {lang === 'FR' ? "Nominal" : "Nominal"}</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {lang === 'FR' ? "Dégradé" : "Degraded"}</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {lang === 'FR' ? "Interruption" : "Outage"}</span>
+                  <div className="flex items-center gap-4 text-[9px] font-mono text-slate-300">
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">DB:</span> 
+                      <span className={hoveredDay.db < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.db}%</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">Email:</span> 
+                      <span className={hoveredDay.email < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.email}%</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">AI:</span> 
+                      <span className={hoveredDay.ai < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.ai}%</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">Images:</span> 
+                      <span className={hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.images}%</span>
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center w-full animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <span>{lang === 'FR' ? "Calendrier Annuel de Disponibilité (365 Jours)" : "Rolling Service Availability Grid (Last 365 Days Timeline)"}</span>
+                    <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
+                      slaSource === 'database' 
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
+                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    }`}>
+                      {slaSource === 'database' ? 'Live DB' : 'Sandbox'}
+                    </span>
+                  </div>
+                  <span className="text-emerald-400 font-mono font-bold">
+                    {overallAvg.toFixed(3)}% {lang === 'FR' ? "Moyenne Globale" : "Overall Average"}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {slaHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-slate-500 text-[10px] font-semibold gap-2 border border-dashed border-slate-800/80 rounded-2xl bg-slate-950/20">
+                <WifiOff className="w-6 h-6 text-slate-650 animate-pulse" />
+                <span>
+                  {lang === 'FR' 
+                    ? "Aucune donnée de disponibilité — Connexion base de données active requise" 
+                    : "No availability data — Active database connection required"}
+                </span>
               </div>
-              <span>{lang === 'FR' ? "Aujourd'hui" : "Today"}</span>
-           </div>
-        </div>
+            ) : (
+              <>
+                <div className="grid grid-rows-7 grid-flow-col gap-[3.5px] overflow-x-auto py-2 pr-2 select-none justify-start max-w-full">
+                   {slaHistory.map((dayData, idx) => {
+                     const status = getDayStatus(dayData);
+                     const color = status === 'nominal' ? 'bg-emerald-500 border-emerald-400/20 shadow-[0_0_4px_rgba(16,185,129,0.1)] hover:bg-emerald-400'
+                       : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400'
+                       : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400';
+
+                     const isHovered = hoveredDay?.date === dayData.date;
+
+                     return (
+                       <div 
+                         key={idx}
+                         className={`w-3.5 h-3.5 rounded-sm border cursor-help transition-all duration-100 ${color} ${
+                           isHovered 
+                             ? 'scale-125 border-slate-100 shadow-[0_0_8px_rgba(255,255,255,0.4)] z-10' 
+                             : ''
+                         }`}
+                         onMouseEnter={() => setHoveredDay({ ...dayData, status })}
+                         onMouseLeave={() => setHoveredDay(null)}
+                       />
+                     );
+                   })}
+                </div>
+                <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-650 tracking-widest pt-2">
+                   <span>{lang === 'FR' ? "Il y a 365 Jours" : "365 Days Ago"}</span>
+                   <div className="flex gap-4">
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {lang === 'FR' ? "Nominal" : "Nominal"}</span>
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {lang === 'FR' ? "Dégradé" : "Degraded"}</span>
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {lang === 'FR' ? "Interruption" : "Outage"}</span>
+                   </div>
+                   <span>{lang === 'FR' ? "Aujourd'hui" : "Today"}</span>
+                </div>
+              </>
+            )}
+         </div>
       </motion.div>
 
         {/* Hot-Swap API Keys Configurator Form */}

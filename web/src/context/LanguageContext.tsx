@@ -101,6 +101,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (typeof document !== 'undefined') {
       document.cookie = `openprimer_lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('op_language_changed', { detail: lang }));
+    }
   };
 
   return (

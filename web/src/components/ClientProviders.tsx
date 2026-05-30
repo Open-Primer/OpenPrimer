@@ -91,6 +91,36 @@ const HUD_TRANSLATIONS = {
   }
 };
 
+const TOAST_TRANSLATIONS = {
+  EN: {
+    badge: "⚠️ Connection Offline",
+    name: "Connection Offline",
+    desc: "Database connection is offline. No data retrieved."
+  },
+  FR: {
+    badge: "⚠️ Connexion Hors Ligne",
+    name: "Connexion Hors Ligne",
+    desc: "La connexion à la base de données est hors ligne. Aucune donnée récupérée."
+  },
+  ES: {
+    badge: "⚠️ Conexión Fuera de Línea",
+    name: "Conexión Fuera de Línea",
+    desc: "La conexión a la base de datos está fuera de línea. No se han recuperado datos."
+  },
+  DE: {
+    badge: "⚠️ Verbindung Offline",
+    name: "Verbindung Offline",
+    desc: "Die Datenbankverbindung ist offline. Keine Daten abgerufen."
+  },
+  ZH: {
+    badge: "⚠️ 连接已离线",
+    name: "连接已离线",
+    desc: "数据库连接已断开。未获取到任何数据。"
+  }
+};
+
+let lastDbFailureToastTime = 0;
+
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<any[]>([]);
   const [dbFailed, setDbFailed] = useState(false);
@@ -207,17 +237,28 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     };
 
     const handleDbFailure = (e: Event) => {
+      const now = Date.now();
+      if (now - lastDbFailureToastTime < 60000) {
+        // Debounce connection offline alerts to avoid spamming the UI
+        return;
+      }
+      lastDbFailureToastTime = now;
+
       const customEvent = e as CustomEvent;
       const message = customEvent.detail?.message || "Database query failed";
       console.warn("[ClientProviders] Database failure event caught:", message);
+
+      const langKey = (localStorage.getItem("openprimer_lang") || "EN").toUpperCase();
+      const t = TOAST_TRANSLATIONS[langKey as keyof typeof TOAST_TRANSLATIONS] || TOAST_TRANSLATIONS.EN;
 
       const toastId = Date.now() + Math.random();
       setToasts((prev) => [
         ...prev,
         {
           toastId,
-          name: "Connection Degraded",
-          description: "Database connection glitch: using secure offline sandbox fallback.",
+          badge: t.badge,
+          name: t.name,
+          description: t.desc,
           icon: "database_glitch",
           isGlitch: true
         }
@@ -283,11 +324,19 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const handleLanguageChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setActiveLang(String(customEvent.detail).toUpperCase());
+      }
+    };
+
     window.addEventListener("keydown", handleGlobalShortcuts);
     window.addEventListener("op_reading_mode_changed", handleThemeChange);
     window.addEventListener("op_accessibility_preferences_changed", applyAccessibility);
     window.addEventListener("op_achievement_unlocked", handleAchievement);
     window.addEventListener("op_database_connection_failure", handleDbFailure);
+    window.addEventListener("op_language_changed", handleLanguageChange);
 
     return () => {
       window.removeEventListener("keydown", handleGlobalShortcuts);
@@ -295,6 +344,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       window.removeEventListener("op_accessibility_preferences_changed", applyAccessibility);
       window.removeEventListener("op_achievement_unlocked", handleAchievement);
       window.removeEventListener("op_database_connection_failure", handleDbFailure);
+      window.removeEventListener("op_language_changed", handleLanguageChange);
     };
   }, []);
 
@@ -329,7 +379,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
                 <div className="flex-1 min-w-0">
                   <span className={`text-[8px] font-black uppercase tracking-[0.2em] block mb-1 ${isGlitch ? 'text-amber-400' : 'text-amber-500'}`}>
-                    {isGlitch ? "⚠️ Connection degraded" : "🎉 Achievement Unlocked!"}
+                    {isGlitch ? (toast.badge || "⚠️ Connection Offline") : (activeLang === "FR" ? "🎉 Succès Déverrouillé !" : activeLang === "ES" ? "🎉 ¡Logro Desbloqueado!" : activeLang === "DE" ? "🎉 Erfolg freigeschaltet!" : activeLang === "ZH" ? "🎉 获得成就！" : "🎉 Achievement Unlocked!")}
                   </span>
                   <h4 className="text-sm font-black text-white mb-0.5 truncate">{toast.name}</h4>
                   <p className="text-[10px] text-slate-400 leading-tight">{toast.description}</p>
