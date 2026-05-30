@@ -190,11 +190,13 @@ export interface MockCourse {
   ects: number;
   popularity: number;
   is_active: boolean;
+  isActive?: boolean;
   archivingLevel?: number; // 0: Active, 1: Level 1, 2: Level 2, 3: Level 3
   archivedLanguages?: string[];
   ratingCount?: number;
   averageRating?: number;
   validations?: number; // Configurable validations threshold metric
+  validationsThreshold?: number;
   created_at?: string; // Creation timestamp for new tracking (NEW badge < 90 days)
   last_revision_date?: string; // Last content revision — displayed on cards
   version?: string; // Course version number for dynamic revision and governance tracking
@@ -236,11 +238,11 @@ export const getCanonicalCourseId = (slugOrId: string | number): number => {
 let users: UserProfile[] = [
   { 
     id: 'u1', 
-    name: 'Silvere Martin', 
-    email: 'silvere@openprimer.org', 
+    name: 'Vanguard Mysterious', 
+    email: 'vanguard.mysterious@gmail.com', 
     role: 'admin', 
-    level: 12, 
-    kp: 12450, 
+    level: 1, 
+    kp: 0, 
     isEmailVerified: true, 
     isBlocked: false, 
     joinedAt: '2026-01-10',
@@ -1920,78 +1922,93 @@ export const isDatabaseConfigured =
 if (isBrowser) {
   users = getLocalStorageItem('openprimer_users', users);
   
-  // Clean Database-First Start: bypass mock seeding when Supabase is configured
-  const defaultCourses = isDatabaseConfigured ? [] : mockCourses;
-  const defaultSearchHistory = isDatabaseConfigured ? [] : generatePreseededSearchHistory();
-  const defaultTranslationRequests = isDatabaseConfigured ? [] : initialTranslationRequests;
-  const defaultRefusedCourses = isDatabaseConfigured ? [] : initialRefusedCourses;
-  const defaultRefusedTranslations = isDatabaseConfigured ? [] : initialRefusedTranslations;
-  const defaultRefusedRevisions = isDatabaseConfigured ? [] : initialRefusedRevisions;
-  const defaultCourseFeedbacks = isDatabaseConfigured ? [] : initialCourseFeedbacks;
-  const defaultCourseCompletions = isDatabaseConfigured ? [] : generatePreseededCourseCompletions();
-  const defaultContactFeedbacks = isDatabaseConfigured ? [] : initialContactFeedbacks;
+  if (isDatabaseConfigured) {
+    // 100% Direct Database Mode: No cached mocks or preseeded local storages
+    mockCourses = [];
+    achievementsList = [];
+    tutorPersonalitiesList = [];
+    translationRequestsList = [];
+    refusedCoursesList = [];
+    refusedTranslationsList = [];
+    refusedRevisionsList = [];
+    agentMetricsList = [];
+    courseFeedbacks = [];
+    courseCompletionsList = [];
+    contactFeedbacksList = [];
+    searchHistoryList = [];
+    reportClusters = [];
+    availableLanguagesList = [];
+  } else {
+    // Hybrid local sandbox mode with full mock preseeding
+    const defaultCourses = mockCourses;
+    const defaultSearchHistory = generatePreseededSearchHistory();
+    const defaultTranslationRequests = initialTranslationRequests;
+    const defaultRefusedCourses = initialRefusedCourses;
+    const defaultRefusedTranslations = initialRefusedTranslations;
+    const defaultRefusedRevisions = initialRefusedRevisions;
+    const defaultCourseFeedbacks = initialCourseFeedbacks;
+    const defaultCourseCompletions = generatePreseededCourseCompletions();
+    const defaultContactFeedbacks = initialContactFeedbacks;
 
-  const storedCourses = getLocalStorageItem('openprimer_courses', defaultCourses);
-  const mergedCourses = [...storedCourses];
-  if (!isDatabaseConfigured) {
+    const storedCourses = getLocalStorageItem('openprimer_courses', defaultCourses);
+    const mergedCourses = [...storedCourses];
     mockCourses.forEach(initialC => {
       if (!mergedCourses.some(c => c.id === initialC.id)) {
         mergedCourses.push(initialC);
       }
     });
+    mockCourses = mergedCourses;
+    setLocalStorageItem('openprimer_courses', mockCourses);
+    
+    reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
+    uvs = getLocalStorageItem('openprimer_uvs', uvs);
+    achievementsList = getLocalStorageItem('openprimer_achievements', initialAchievements);
+    
+    searchHistoryList = getLocalStorageItem('openprimer_search_history', defaultSearchHistory);
+    translationRequestsList = getLocalStorageItem('openprimer_translation_requests', defaultTranslationRequests);
+    refusedCoursesList = getLocalStorageItem('openprimer_refused_courses', defaultRefusedCourses);
+    refusedTranslationsList = getLocalStorageItem('openprimer_refused_translations', defaultRefusedTranslations);
+    refusedRevisionsList = getLocalStorageItem('openprimer_refused_revisions', defaultRefusedRevisions);
+    courseFeedbacks = getLocalStorageItem('openprimer_course_feedbacks', defaultCourseFeedbacks);
+    
+    tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
+    agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
+    availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
+    // Self-healing check for master language English
+    const hasEN = availableLanguagesList.some(l => l.code.toUpperCase() === 'EN');
+    if (!hasEN) {
+      availableLanguagesList.push({ code: 'EN', flag: '🇺🇸', label: 'English', archivingLevel: 0 });
+    } else {
+      availableLanguagesList = availableLanguagesList.map(l => 
+        l.code.toUpperCase() === 'EN' ? { ...l, archivingLevel: 0 } : l
+      );
+    }
+    
+    courseCompletionsList = getLocalStorageItem('openprimer_course_completions', defaultCourseCompletions);
+    setLocalStorageItem('openprimer_course_completions', courseCompletionsList);
+    
+    translationEmailsList = getLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
+    
+    contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', defaultContactFeedbacks);
+    
+    // Save initially to sync
+    setLocalStorageItem('openprimer_users', users);
+    setLocalStorageItem('openprimer_courses', mockCourses);
+    setLocalStorageItem('openprimer_reports', reportClusters);
+    setLocalStorageItem('openprimer_uvs', uvs);
+    setLocalStorageItem('openprimer_achievements', achievementsList);
+    setLocalStorageItem('openprimer_search_history', searchHistoryList);
+    setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
+    setLocalStorageItem('openprimer_refused_courses', refusedCoursesList);
+    setLocalStorageItem('openprimer_refused_translations', refusedTranslationsList);
+    setLocalStorageItem('openprimer_refused_revisions', refusedRevisionsList);
+    setLocalStorageItem('openprimer_course_feedbacks', courseFeedbacks);
+    setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
+    setLocalStorageItem('openprimer_agent_metrics', agentMetricsList);
+    setLocalStorageItem('openprimer_languages', availableLanguagesList);
+    setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
   }
-  mockCourses = mergedCourses;
-  setLocalStorageItem('openprimer_courses', mockCourses);
-  
-  reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
-  uvs = getLocalStorageItem('openprimer_uvs', uvs);
-  achievementsList = getLocalStorageItem('openprimer_achievements', initialAchievements);
-  
-  searchHistoryList = getLocalStorageItem('openprimer_search_history', defaultSearchHistory);
-  translationRequestsList = getLocalStorageItem('openprimer_translation_requests', defaultTranslationRequests);
-  refusedCoursesList = getLocalStorageItem('openprimer_refused_courses', defaultRefusedCourses);
-  refusedTranslationsList = getLocalStorageItem('openprimer_refused_translations', defaultRefusedTranslations);
-  refusedRevisionsList = getLocalStorageItem('openprimer_refused_revisions', defaultRefusedRevisions);
-  courseFeedbacks = getLocalStorageItem('openprimer_course_feedbacks', defaultCourseFeedbacks);
-  
-  tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
-  agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
-  availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
-  
-  // Self-healing check for master language English
-  const hasEN = availableLanguagesList.some(l => l.code.toUpperCase() === 'EN');
-  if (!hasEN) {
-    availableLanguagesList.push({ code: 'EN', flag: '🇺🇸', label: 'English', archivingLevel: 0 });
-  } else {
-    availableLanguagesList = availableLanguagesList.map(l => 
-      l.code.toUpperCase() === 'EN' ? { ...l, archivingLevel: 0 } : l
-    );
-  }
-  
-  courseCompletionsList = getLocalStorageItem('openprimer_course_completions', defaultCourseCompletions);
-  setLocalStorageItem('openprimer_course_completions', courseCompletionsList);
-  
-  translationEmailsList = getLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-  setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-  
-  contactFeedbacksList = getLocalStorageItem('openprimer_contact_feedbacks', defaultContactFeedbacks);
-  
-  // Save initially to sync
-  setLocalStorageItem('openprimer_users', users);
-  setLocalStorageItem('openprimer_courses', mockCourses);
-  setLocalStorageItem('openprimer_reports', reportClusters);
-  setLocalStorageItem('openprimer_uvs', uvs);
-  setLocalStorageItem('openprimer_achievements', achievementsList);
-  setLocalStorageItem('openprimer_search_history', searchHistoryList);
-  setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
-  setLocalStorageItem('openprimer_refused_courses', refusedCoursesList);
-  setLocalStorageItem('openprimer_refused_translations', refusedTranslationsList);
-  setLocalStorageItem('openprimer_refused_revisions', refusedRevisionsList);
-  setLocalStorageItem('openprimer_course_feedbacks', courseFeedbacks);
-  setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
-  setLocalStorageItem('openprimer_agent_metrics', agentMetricsList);
-  setLocalStorageItem('openprimer_languages', availableLanguagesList);
-  setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
 }
 
 export const authService = {
@@ -2330,8 +2347,94 @@ const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
     }
   }
 };
+export interface SystemParameter {
+  key: string;
+  value: string;
+}
+
+let systemParametersList: SystemParameter[] = [
+  { key: 'autoApprove', value: 'false' },
+  { key: 'threshold', value: '5' },
+  { key: 'autoApproveDelayHours', value: '24' },
+  { key: 'reevaluationDays', value: '15' },
+  { key: 'validationsThreshold', value: '5' },
+  { key: 'backlogRetention', value: '30' },
+  { key: 'autoTranslate', value: 'false' },
+  { key: 'transThreshold', value: '3' },
+  { key: 'autoTranslateDelayHours', value: '24' },
+  { key: 'transValidationsThreshold', value: '5' },
+  { key: 'transReevaluationDays', value: '15' },
+  { key: 'transBacklogRetention', value: '30' },
+  { key: 'autoRevision', value: 'false' },
+  { key: 'revThreshold', value: '2.5' },
+  { key: 'revMinVotes', value: '5' },
+  { key: 'revMinReports', value: '3' },
+  { key: 'revRetentionDays', value: '30' },
+  { key: 'autoRevisionDelayHours', value: '24' }
+];
+
+if (typeof window !== 'undefined') {
+  const cachedParams = window.localStorage.getItem('openprimer_system_parameters');
+  if (cachedParams) {
+    try {
+      systemParametersList = JSON.parse(cachedParams);
+    } catch (e) {
+      console.error("Failed to parse cached system parameters", e);
+    }
+  }
+}
 
 export const dbService = {
+  // SYSTEM CONFIGURATION
+  getSystemParameters: async () => {
+    if (isOffline) {
+      if (!isSandboxFallbackAllowed()) {
+        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
+        handleDatabaseError(err);
+        return { data: null, error: err };
+      }
+      return { data: systemParametersList, error: null };
+    }
+    const res = await withFallback(
+      () => supabase.from('system_parameters').select('*'),
+      systemParametersList
+    );
+    return res;
+  },
+
+  saveSystemParameter: async (param: { key: string; value: string }) => {
+    systemParametersList = [
+      param,
+      ...systemParametersList.filter(p => p.key !== param.key)
+    ];
+    setLocalStorageItem('openprimer_system_parameters', systemParametersList);
+
+    if (isOffline) {
+      if (!isSandboxFallbackAllowed()) {
+        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
+        handleDatabaseError(err);
+        return { data: null, error: err };
+      }
+      return { data: param, error: null };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('system_parameters')
+        .upsert({
+          key: param.key,
+          value: param.value,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return { data, error: null };
+    } catch (e) {
+      return { data: null, error: e as any };
+    }
+  },
+
   // TRANSLATIONS UTILITY
   getLocalizedCourseTitle: (course: any, lang: string) => {
     return getLocalizedCourseTitleInternal(course, lang);
@@ -2409,10 +2512,38 @@ export const dbService = {
       const course = mockCourses.find(c => c.slug === id);
       return { data: course || null, error: null };
     }
-    return withFallback(
+    const res = await withFallback(
       () => supabase.from('courses').select('*').eq('slug', id).single(),
       mockCourses.find(c => c.slug === id) || null
     );
+    if (res.data) {
+      const c = res.data as any;
+      const mapped: MockCourse = {
+        id: c.id,
+        title: c.title,
+        slug: c.slug,
+        level: c.level,
+        subject: c.subject,
+        description: c.description,
+        languages: c.languages || [],
+        langs: c.languages || [],
+        ects: c.ects || 0,
+        popularity: c.popularity || 0,
+        is_active: c.is_active,
+        isActive: c.is_active,
+        archivingLevel: c.archiving_level || 0,
+        archivedLanguages: c.archived_languages || [],
+        ratingCount: c.rating_count || 0,
+        averageRating: Number(c.average_rating) || 0,
+        validationsThreshold: c.validations_threshold || 5,
+        created_at: c.created_at,
+        isCurriculum: c.is_curriculum || false,
+        childCourses: c.child_courses || [],
+        translations: c.translations || {}
+      };
+      return { data: mapped, error: null };
+    }
+    return res;
   },
   
   getAllCourses: async () => {
@@ -2464,13 +2595,37 @@ export const dbService = {
       computedCourses
     );
     if (res.data) {
-      const dbCourses = res.data;
+      const dbCourses: MockCourse[] = res.data.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        slug: c.slug,
+        level: c.level,
+        subject: c.subject,
+        description: c.description,
+        languages: c.languages || [],
+        langs: c.languages || [],
+        ects: c.ects || 0,
+        popularity: c.popularity || 0,
+        is_active: c.is_active,
+        isActive: c.is_active,
+        archivingLevel: c.archiving_level || 0,
+        archivedLanguages: c.archived_languages || [],
+        ratingCount: c.rating_count || 0,
+        averageRating: Number(c.average_rating) || 0,
+        validationsThreshold: c.validations_threshold || 5,
+        created_at: c.created_at,
+        isCurriculum: c.is_curriculum || false,
+        childCourses: c.child_courses || [],
+        translations: c.translations || {}
+      }));
       const merged = [...dbCourses];
-      computedCourses.forEach(c => {
-        if (!merged.some(dbc => dbc.slug === c.slug || String(dbc.id) === String(c.id))) {
-          merged.push(c);
-        }
-      });
+      if (!isDatabaseConfigured) {
+        computedCourses.forEach(c => {
+          if (!merged.some(dbc => dbc.slug === c.slug || String(dbc.id) === String(c.id))) {
+            merged.push(c);
+          }
+        });
+      }
       return { data: merged, error: null };
     }
     return res;
@@ -3444,6 +3599,8 @@ export const dbService = {
           popularity: finalCourse.popularity,
           is_active: finalCourse.is_active,
           archiving_level: finalCourse.archivingLevel,
+          is_curriculum: finalCourse.isCurriculum || false,
+          child_courses: finalCourse.childCourses || [],
           translations: finalCourse.translations
         });
       } catch (e) {
@@ -3549,7 +3706,24 @@ export const dbService = {
 
   // TUTOR PERSONALITIES
   getTutorPersonalities: async () => {
-    return { data: tutorPersonalitiesList, error: null };
+    if (isOffline || !isDatabaseConfigured) {
+      return { data: tutorPersonalitiesList, error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('tutor_personalities').select('*');
+      if (error) throw error;
+      const mapped: TutorPersonality[] = data?.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        prompt: p.prompt,
+        isDefault: p.is_default,
+        archivingLevel: p.archiving_level || 0,
+        translations: {}
+      })) || [];
+      return { data: mapped, error: null };
+    } catch (e: any) {
+      return { data: tutorPersonalitiesList, error: e };
+    }
   },
 
   saveTutorPersonality: async (pers: TutorPersonality) => {
@@ -3564,7 +3738,27 @@ export const dbService = {
       tutorPersonalitiesList = tutorPersonalitiesList.map(p => p.id !== pers.id ? { ...p, isDefault: false } : p);
     }
     setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
-    return { data: pers, error: null };
+
+    if (isOffline || !isDatabaseConfigured) {
+      return { data: pers, error: null };
+    }
+    try {
+      if (pers.isDefault) {
+        // Unset default flag on all other personalities
+        await supabase.from('tutor_personalities').update({ is_default: false }).neq('id', pers.id);
+      }
+      const { error } = await supabase.from('tutor_personalities').upsert({
+        id: pers.id,
+        name: pers.name,
+        prompt: pers.prompt,
+        is_default: pers.isDefault,
+        archiving_level: pers.archivingLevel || 0
+      });
+      if (error) throw error;
+      return { data: pers, error: null };
+    } catch (e: any) {
+      return { data: pers, error: e };
+    }
   },
 
   deleteTutorPersonality: async (id: string) => {
@@ -3574,7 +3768,17 @@ export const dbService = {
     }
     tutorPersonalitiesList = tutorPersonalitiesList.filter(p => p.id !== id);
     setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
-    return { data: null, error: null };
+
+    if (isOffline || !isDatabaseConfigured) {
+      return { data: null, error: null };
+    }
+    try {
+      const { error } = await supabase.from('tutor_personalities').delete().eq('id', id);
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e: any) {
+      return { data: null, error: e };
+    }
   },
 
   // AGENT METRICS
