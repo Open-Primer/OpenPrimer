@@ -181,51 +181,44 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [stats, setStats] = useState<any>(null);
 
-  const allSearchableModules = [
-    { title: dbService.getLocalizedCourseTitle({ id: 1, slug: "Classical_Mechanics", title: "Classical Mechanics" }, lang), category: s.physics || 'Physics' },
-    { title: dbService.getLocalizedCourseTitle({ id: 2, slug: "Physique_Test_L2", title: "Quantum Physics" }, lang), category: s.physics || 'Physics' },
-    { title: dbService.getLocalizedCourseTitle({ id: 3, slug: "Biologie_Test", title: "Cell Biology" }, lang), category: s.biology || 'Biology' },
-    { title: dbService.getLocalizedCourseTitle({ id: 4, slug: "Biologie_Test_L1", title: "Molecular Genetics" }, lang), category: s.biology || 'Biology' },
-    { title: dbService.getLocalizedCourseTitle({ id: 5, slug: "Droit_Test", title: "Constitutional Law" }, lang), category: s.law || 'Law' },
-    { title: dbService.getLocalizedCourseTitle({ id: 6, slug: "Droit_Test_L2", title: "Criminal Law" }, lang), category: s.law || 'Law' },
-    { title: dbService.getLocalizedCourseTitle({ id: 7, slug: "Maths_Test", title: "Linear Algebra" }, lang), category: s.math || 'Mathematics' },
-    { title: dbService.getLocalizedCourseTitle({ id: 8, slug: "Maths_Test_L1", title: "Calculus I" }, lang), category: s.math || 'Mathematics' },
-  ];
-
-  const popularCourses = [
-    {
-      id: 1,
-      title: dbService.getLocalizedCourseTitle({ id: 1, slug: "Classical_Mechanics", title: "Classical Mechanics" }, lang),
-      searchQuery: lang === 'FR' ? "Mécanique Classique"
-                 : lang === 'ES' ? "Mecánica Clásica"
-                 : lang === 'DE' ? "Klassische Mechanik"
-                 : lang === 'ZH' ? "经典力学"
-                 : "Classical Mechanics",
-      color: "from-blue-500/20 to-blue-600/5 hover:border-blue-500/50 text-blue-400"
-    },
-    {
-      id: 2,
-      title: dbService.getLocalizedCourseTitle({ id: 2, slug: "Physique_Test_L2", title: "Quantum Physics" }, lang),
-      searchQuery: lang === 'FR' ? "Physique Quantique"
-                 : lang === 'ES' ? "Física Cuántica"
-                 : lang === 'DE' ? "Quantenphysik"
-                 : lang === 'ZH' ? "量子物理"
-                 : "Quantum Physics",
-      color: "from-violet-500/20 to-violet-600/5 hover:border-violet-500/50 text-violet-400"
-    },
-    {
-      id: 3,
-      title: dbService.getLocalizedCourseTitle({ id: 3, slug: "Biologie_Test", title: "Cell Biology" }, lang),
-      searchQuery: lang === 'FR' ? "Biologie Cellulaire"
-                 : lang === 'ES' ? "Biología Celular"
-                 : lang === 'DE' ? "Zellbiologie"
-                 : lang === 'ZH' ? "细胞生物学"
-                 : "Cell Biology",
-      color: "from-emerald-500/20 to-emerald-600/5 hover:border-emerald-500/50 text-emerald-400"
-    }
-  ];
-
+  const [allSearchableModules, setAllSearchableModules] = useState<any[]>([]);
+  const [popularCourses, setPopularCourses] = useState<any[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      const { data } = await dbService.getAllCourses();
+      if (data && data.length > 0) {
+        // 1. Set searchable modules
+        const mappedModules = data.map(c => ({
+          title: dbService.getLocalizedCourseTitle(c, lang),
+          category: c.subject || 'General'
+        }));
+        setAllSearchableModules(mappedModules);
+
+        // 2. Sort by popularity descending and take top 3
+        const sorted = [...data]
+          .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+          .slice(0, 3)
+          .map(c => {
+            const title = dbService.getLocalizedCourseTitle(c, lang);
+            return {
+              id: c.id,
+              title,
+              searchQuery: title,
+              color: c.id % 3 === 0 ? "from-emerald-500/20 to-emerald-600/5 hover:border-emerald-500/50 text-emerald-400"
+                   : c.id % 3 === 1 ? "from-blue-500/20 to-blue-600/5 hover:border-blue-500/50 text-blue-400"
+                   : "from-violet-500/20 to-violet-600/5 hover:border-violet-500/50 text-violet-400"
+            };
+          });
+        setPopularCourses(sorted);
+      } else {
+        setAllSearchableModules([]);
+        setPopularCourses([]);
+      }
+    }
+    loadData();
+  }, [lang]);
 
   useEffect(() => {
     if (!search.trim()) {
@@ -237,7 +230,7 @@ export default function Home() {
       m.category.toLowerCase().includes(search.toLowerCase())
     );
     setSuggestions(filtered);
-  }, [search, lang]);
+  }, [search, allSearchableModules]);
 
   // Guest Registration State
   const [authModal, setAuthModal] = useState<'signup' | 'login' | 'verify' | null>(null);
@@ -532,23 +525,25 @@ export default function Home() {
         </div>
 
         {/* Popular Curricula */}
-        <div className="w-full max-w-2xl mb-20 text-center relative z-50">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">
-            {s.popular_curricula}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {popularCourses.map(course => (
-              <button 
-                key={course.id}
-                onClick={() => router.push(`/catalog?search=${encodeURIComponent(course.searchQuery)}`)}
-                className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group cursor-pointer`}
-              >
-                <GraduationCap className="w-5 h-5 mb-3 text-slate-500 group-hover:text-current transition-colors" />
-                <h4 className="text-xs font-black tracking-tight leading-tight group-hover:text-white transition-colors">{course.title}</h4>
-              </button>
-            ))}
+        {popularCourses.length > 0 && (
+          <div className="w-full max-w-2xl mb-20 text-center relative z-50">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">
+              {s.popular_curricula}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {popularCourses.map(course => (
+                <button 
+                  key={course.id}
+                  onClick={() => router.push(`/catalog?search=${encodeURIComponent(course.searchQuery)}`)}
+                  className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group cursor-pointer`}
+                >
+                  <GraduationCap className="w-5 h-5 mb-3 text-slate-500 group-hover:text-current transition-colors" />
+                  <h4 className="text-xs font-black tracking-tight leading-tight group-hover:text-white transition-colors">{course.title}</h4>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mt-12">

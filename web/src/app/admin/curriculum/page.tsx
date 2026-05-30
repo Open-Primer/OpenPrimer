@@ -3745,41 +3745,7 @@ export default function AdminCurriculumPage() {
     await loadData();
   };
 
-  // Seed Sample Tasks Handler
-  const handleSeedSampleTasks = async () => {
-    const samples = [
-      {
-        id: `task_trans_${Date.now()}`,
-        title: "Spanish Language Package Creation (ES)",
-        type: "translation",
-        status: "running",
-        priority: "High",
-        targetLang: "ES",
-        level: "L1"
-      },
-      {
-        id: `task_gen_${Date.now() + 1}`,
-        title: "Quantum Computing 101",
-        type: "generation",
-        status: "queued",
-        priority: "Medium",
-        level: "L1"
-      },
-      {
-        id: `task_rev_${Date.now() + 2}`,
-        title: "Biochemistry Syllabus Update",
-        type: "revision",
-        status: "paused",
-        priority: "Low",
-        level: "L2"
-      }
-    ];
-    setQueue(samples);
-    dbService.savePipelineQueue(samples);
-    await loadData();
-  };
-
-  // Tutor Personalities Handlers
+    // Tutor Personalities Handlers
   const handleSavePersonality = async () => {
     if (!newPers.name || !newPers.prompt) return;
     const id = newPers.name.toLowerCase().replace(/ /g, '_');
@@ -5935,15 +5901,7 @@ export default function AdminCurriculumPage() {
                           <tr>
                             <td colSpan={7} className="px-6 py-16 text-center text-slate-655 italic">
                               <p className="mb-4 text-xs font-medium text-slate-500">{queueSearch ? 'No tasks match your search.' : 'No tasks currently executing in the sovereign loop queue.'}</p>
-                              {!queueSearch && (
-                                <button
-                                  type="button"
-                                  onClick={handleSeedSampleTasks}
-                                  className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/10 transition-all"
-                                >
-                                  {tr("Seed Sample Pipeline Tasks")}
-                                </button>
-                              )}
+                              
                             </td>
                           </tr>
                         )}
