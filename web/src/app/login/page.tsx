@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
@@ -30,6 +30,19 @@ function purgeStaleLocalCache() {
   STALE_CACHE_KEYS.forEach(key => localStorage.removeItem(key));
 }
 
+// Max 5 attempts per 60-second window (client-side guard, mirrors server-side)
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+// Demo accounts: email → { name, role, password }
+// Passwords are intentionally weak only for offline dev demo mode; Supabase auth is the prod path.
+const DEMO_ACCOUNTS: Record<string, { name: string; role: string; password: string }> = {
+  'vanguard.mysterious@gmail.com': { name: 'Vanguard Admin',  role: 'admin',   password: 'Admin@OpenPrimer2026!' },
+  'student1@openprimer.org':       { name: 'Student One',    role: 'student', password: 'Student1@Demo2026!'  },
+  'student2@openprimer.org':       { name: 'Student Two',    role: 'student', password: 'Student2@Demo2026!'  },
+  'student3@openprimer.org':       { name: 'Student Three',  role: 'student', password: 'Student3@Demo2026!'  },
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const { language: lang } = useLanguage();
@@ -41,6 +54,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [authMode, setAuthMode] = useState<'live' | 'demo' | null>(null);
+  // Client-side rate-limit tracking
+  const attemptTimestamps = useRef<number[]>([]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +63,22 @@ export default function LoginPage() {
       setErrorMsg(t.email_required_error || 'Please enter your email and password.');
       return;
     }
+
+    // ── Client-side rate-limit check ────────────────────────────────────────
+    const now = Date.now();
+    attemptTimestamps.current = attemptTimestamps.current.filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+    if (attemptTimestamps.current.length >= RATE_LIMIT_MAX) {
+      const waitSec = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - attemptTimestamps.current[0])) / 1000);
+      setErrorMsg(
+        lang === 'FR' ? `Trop de tentatives. Réessayez dans ${waitSec} secondes.` :
+        lang === 'ES' ? `Demasiados intentos. Inténtelo de nuevo en ${waitSec} segundos.` :
+        lang === 'DE' ? `Zu viele Versuche. Bitte warten Sie ${waitSec} Sekunden.` :
+        lang === 'ZH' ? `尝试次数过多，请在 ${waitSec} 秒后重试。` :
+        `Too many attempts. Please wait ${waitSec} seconds.`
+      );
+      return;
+    }
+    attemptTimestamps.current.push(now);
 
     setIsLoading(true);
     setErrorMsg('');
@@ -88,16 +119,9 @@ export default function LoginPage() {
       console.warn('[Auth] Supabase unavailable, trying demo fallback:', supabaseErr);
     }
 
-    // ── STEP 2: Demo/offline fallback (graceful degradation) ─────────────────
-    const DEMO_ACCOUNTS: Record<string, { name: string; role: string }> = {
-      'vanguard.mysterious@gmail.com': { name: 'Vanguard Admin', role: 'admin' },
-      'student1@openprimer.org':       { name: 'Student One',    role: 'student' },
-      'student2@openprimer.org':       { name: 'Student Two',    role: 'student' },
-      'student3@openprimer.org':       { name: 'Student Three',  role: 'student' },
-    };
-
+    // ── STEP 2: Demo/offline fallback — REQUIRES correct password ────────────
     const demoAccount = DEMO_ACCOUNTS[email.toLowerCase()];
-    if (demoAccount) {
+    if (demoAccount && password === demoAccount.password) {
       purgeStaleLocalCache();
       localStorage.setItem('op_session', 'true');
       localStorage.setItem('op_user_profile', JSON.stringify({
@@ -187,14 +211,15 @@ export default function LoginPage() {
 
                 <form onSubmit={handleSignIn} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">Adresse Email</label>
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">{t.email_addr}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                       <input 
                         type="email"
                         required
+                        maxLength={60}
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value.slice(0, 60))}
                         placeholder="jean.dupont@email.com" 
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                       />
@@ -203,13 +228,13 @@ export default function LoginPage() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center px-3">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Mot de Passe</label>
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t.password}</label>
                       <button 
                         type="button" 
                         onClick={() => setShowForgot(true)}
                         className="text-[9px] font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest"
                       >
-                        Oublié ?
+                        {t.forgot_question}
                       </button>
                     </div>
                     <div className="relative">
@@ -217,8 +242,9 @@ export default function LoginPage() {
                       <input 
                         type="password"
                         required
+                        maxLength={60}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => setPassword(e.target.value.slice(0, 60))}
                         placeholder="••••••••••••" 
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                       />
@@ -311,7 +337,7 @@ export default function LoginPage() {
                     type="submit"
                     className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20"
                   >
-                    Envoyer le lien de réinitialisation
+                    {t.send_reset_link}
                   </button>
 
                   <div className="text-center">
@@ -320,7 +346,7 @@ export default function LoginPage() {
                       onClick={() => setShowForgot(false)}
                       className="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
                     >
-                      Retourner à la connexion
+                      {t.back_to_login}
                     </button>
                   </div>
                 </form>

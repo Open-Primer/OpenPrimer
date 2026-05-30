@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
@@ -10,6 +10,12 @@ import { Footer, UI_STRINGS } from '@/components/RefinedUI';
 import { useLanguage } from '@/context/LanguageContext';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
+const MAX_NAME_LENGTH = 60;
+const MAX_EMAIL_LENGTH = 60;
+const MAX_PASSWORD_LENGTH = 60;
+// Rate-limit: max 3 submit attempts per 120 seconds
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 120_000;;
 
 export default function SignupPage() {
   const router = useRouter();
@@ -29,6 +35,8 @@ export default function SignupPage() {
   const [simulatedVerificationUrl, setSimulatedVerificationUrl] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  // Rate-limit: track submit timestamps client-side
+  const submitTimestamps = useRef<number[]>([]);
 
   // Sync preferred lang with global lang context
   useEffect(() => { setPreferredLang(lang || 'EN'); }, [lang]);
@@ -85,6 +93,23 @@ export default function SignupPage() {
     if (!PASSWORD_REGEX.test(password)) {
       setErrorMsg(t.password_complexity_error); return;
     }
+
+    // Client-side rate-limit guard
+    const now = Date.now();
+    submitTimestamps.current = submitTimestamps.current.filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+    if (submitTimestamps.current.length >= RATE_LIMIT_MAX) {
+      const waitSec = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - submitTimestamps.current[0])) / 1000);
+      setErrorMsg(
+        lang === 'FR' ? `Trop de tentatives. Réessayez dans ${waitSec} secondes.` :
+        lang === 'ES' ? `Demasiados intentos. Inténtelo de nuevo en ${waitSec} segundos.` :
+        lang === 'DE' ? `Zu viele Versuche. Bitte warten Sie ${waitSec} Sekunden.` :
+        lang === 'ZH' ? `尝试次数过多，请在 ${waitSec} 秒后重试。` :
+        `Too many attempts. Please wait ${waitSec} seconds.`
+      );
+      return;
+    }
+    submitTimestamps.current.push(now);
+
     setErrorMsg('');
     setIsSubmitting(true);
     try {
@@ -106,18 +131,6 @@ export default function SignupPage() {
       setIsSubmitting(false);
       setErrorMsg(t.all_fields_required);
     }
-  };
-
-  const handleVerifyAndLoginSimulated = () => {
-    const simulatedProfile = {
-      id: `u_${Date.now()}`, name: `${firstName} ${lastName}`,
-      email, role: 'student', preferredLang, isEmailVerified: true
-    };
-    setVerificationStatus('success');
-    localStorage.setItem('op_user_profile', JSON.stringify(simulatedProfile));
-    localStorage.setItem('op_session', 'true');
-    localStorage.setItem('op_bookmarks', JSON.stringify(selectedCourses));
-    setTimeout(() => router.push('/catalog'), 1000);
   };
 
   const handleSimulateResetPassword = (e: React.FormEvent) => {
@@ -159,13 +172,14 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleFormSubmit} className="space-y-5">
+                <form onSubmit={handleFormSubmit} noValidate className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">{t.first_name}</label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
-                        <input required value={firstName} onChange={e => setFirstName(e.target.value)}
+                        <input required value={firstName} onChange={e => setFirstName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+                          maxLength={MAX_NAME_LENGTH}
                           placeholder={t.first_name_placeholder || 'John'}
                           className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                       </div>
@@ -174,7 +188,8 @@ export default function SignupPage() {
                       <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">{t.last_name}</label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
-                        <input required value={lastName} onChange={e => setLastName(e.target.value)}
+                        <input required value={lastName} onChange={e => setLastName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+                          maxLength={MAX_NAME_LENGTH}
                           placeholder={t.last_name_placeholder || 'Doe'}
                           className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                       </div>
@@ -185,7 +200,8 @@ export default function SignupPage() {
                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">{t.email_addr}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
-                      <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                      <input type="email" required value={email} onChange={e => setEmail(e.target.value.slice(0, MAX_EMAIL_LENGTH))}
+                        maxLength={MAX_EMAIL_LENGTH}
                         placeholder="jean.dupont@email.com"
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                     </div>
@@ -196,9 +212,10 @@ export default function SignupPage() {
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                       <input type={showPassword ? 'text' : 'password'} required value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value.slice(0, MAX_PASSWORD_LENGTH))}
                         placeholder={t.password_placeholder || '••••••••••••'}
                         minLength={12}
+                        maxLength={MAX_PASSWORD_LENGTH}
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-12 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors">
@@ -317,37 +334,26 @@ export default function SignupPage() {
                       </div>
                     )}
 
-                    {isRealEmailSent ? (
-                      <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto mb-10 border border-blue-500/30 bg-blue-500/5 p-4 rounded-2xl font-bold">
-                        {t.real_email_sent} <span className="text-white font-black">{email}</span>
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 text-left max-w-md mx-auto mb-8">
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        {t.verify_sent} <span className="text-white font-bold">{email}</span>. {t.verify_confirm}
                       </p>
-                    ) : (
-                      <>
-                        <p className="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto mb-10">
-                          {t.verify_sent} <span className="text-slate-200 font-bold">{email}</span>. {t.verify_confirm}
-                        </p>
-                        <div className="bg-slate-950/60 border border-slate-800 rounded-3xl p-6 text-left max-w-md mx-auto mb-8 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 p-3 text-[7px] font-black uppercase bg-blue-600/10 text-blue-400 border-l border-b border-slate-800 rounded-bl-xl tracking-wider flex items-center gap-1.5">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            <span>{t.mailbox_sim_title}</span>
-                          </div>
-                          <div className="space-y-4 border-l-2 border-blue-500 pl-4 py-1">
-                            <p className="text-xs font-bold text-white leading-tight">{t.welcome_to_op}</p>
-                            <p className="text-[10px] text-slate-400 leading-relaxed">
-                              {t.hello} <span className="text-white font-bold">{firstName || 'Étudiant'}</span>,<br />
-                              {t.verify_confirm}
-                            </p>
-                            <button onClick={handleVerifyAndLoginSimulated}
-                              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 inline-flex items-center gap-2">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> {t.verify_and_login}
-                            </button>
-                            <div className="text-[8px] text-slate-600 mt-2 break-all">
-                              {t.real_url_generated} <a href={simulatedVerificationUrl} className="text-blue-500 underline">{simulatedVerificationUrl}</a>
-                            </div>
+                      
+                      {!isRealEmailSent && (
+                        <div className="mt-6 pt-6 border-t border-slate-800/80">
+                          <span className="text-[9px] font-black uppercase text-violet-400 tracking-wider flex items-center gap-1.5 mb-2 font-mono">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            {lang === 'FR' ? "Lien d'activation sandbox" : "Sandbox activation link"}
+                          </span>
+                          <p className="text-[10px] text-slate-500 leading-normal mb-3">
+                            {lang === 'FR' ? "L'envoi d'emails SMTP est désactivé sur cet environnement de test. Copiez ce lien de validation pour activer le compte :" : "SMTP email dispatch is disabled in this test environment. Copy this validation link to activate the account:"}
+                          </p>
+                          <div className="font-mono text-[9px] text-blue-400 break-all select-all p-3.5 bg-slate-950 rounded-2xl border border-slate-850 shadow-inner">
+                            {simulatedVerificationUrl}
                           </div>
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </>
                 )}
 

@@ -6497,7 +6497,7 @@ export default function AdminCurriculumPage() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-885 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
                <div className="p-8 border-b border-slate-850 flex items-center justify-between">
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-                     <Award className="w-6 h-6 text-violet-500" /> Edit Achievement Badge
+                     <Award className="w-6 h-6 text-violet-500" /> {tr("Edit Achievement Badge")}
                   </h3>
                   <button onClick={() => setSelectedAchievement(null)} className="text-slate-650 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
