@@ -103,7 +103,14 @@ const ACC_TRANSLATIONS = {
     dyslexia: "Dyslexia-Friendly Layout",
     dyslexia_desc: "Replaces reading typefaces with highly readable Comic-style lettering and increases word spacing.",
     visual_ctrl: "Fine Reading Controls",
-    visual_ctrl_desc: "Enlarges academic text baseline size and optimizes readability baseline width."
+    visual_ctrl_desc: "Enlarges academic text baseline size and optimizes readability baseline width.",
+    colorblind: "Colorblind Theme Filters",
+    colorblind_desc: "Select a scientifically-calibrated color correction filter to optimize contrast and visual clarity.",
+    cb_none: "None (Default Theme Colors)",
+    cb_protanopia: "Protanopia (Red-Green Deficient)",
+    cb_deuteranopia: "Deuteranopia (Green-Red Deficient)",
+    cb_tritanopia: "Tritanopia (Blue-Yellow Deficient)",
+    cb_achromatopsia: "Achromatopsia (Total Monochrome)"
   },
   FR: {
     section_title: "Configuration Active de l'Accessibilité",
@@ -113,6 +120,13 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "Bascule vers une police à haute lisibilité avec un espacement des mots et lettres accru.",
     visual_ctrl: "Contrôles Fins de l'Affichage",
     visual_ctrl_desc: "Agrandit la taille de base des textes d'apprentissage pour un confort visuel optimal.",
+    colorblind: "Filtres pour Thèmes Daltoniens",
+    colorblind_desc: "Sélectionnez un filtre de correction des couleurs calibré scientifiquement pour optimiser le contraste et la clarté visuelle.",
+    cb_none: "Aucun (Couleurs par Défaut)",
+    cb_protanopia: "Protanopie (Déficience Rouge-Vert)",
+    cb_deuteranopia: "Deutéranopie (Déficience Vert-Rouge)",
+    cb_tritanopia: "Tritanopie (Déficience Bleu-Jaune)",
+    cb_achromatopsia: "Achromatopsie (Monochrome Total)"
   },
   ES: {
     section_title: "Configuración Activa de Accesibilidad",
@@ -121,7 +135,14 @@ const ACC_TRANSLATIONS = {
     dyslexia: "Tipografía Adaptada a Dislexia",
     dyslexia_desc: "Cambia la fuente a una letra de alta legibilidad con mayor espaciado entre palabras.",
     visual_ctrl: "Controles de Lectura Finos",
-    visual_ctrl_desc: "Agranda el tamaño del texto para una comodidad visual óptima."
+    visual_ctrl_desc: "Agranda el tamaño del texto para una comodidad visual óptima.",
+    colorblind: "Filtros para Daltonismo",
+    colorblind_desc: "Seleccione un filtro de corrección de color calibrado científicamente para optimizar el contraste y la claridad visual.",
+    cb_none: "Ninguno (Colores por defecto)",
+    cb_protanopia: "Protanopía (Deficiencia Rojo-Verde)",
+    cb_deuteranopia: "Deuteranopía (Deficiencia Verde-Rojo)",
+    cb_tritanopia: "Tritanopía (Deficiencia Azul-Amarillo)",
+    cb_achromatopsia: "Acromatopsia (Monocromo Total)"
   },
   DE: {
     section_title: "Aktive Barrierefreiheit-Konfiguration",
@@ -130,7 +151,14 @@ const ACC_TRANSLATIONS = {
     dyslexia: "Dyslexie-freundliches Layout",
     dyslexia_desc: "Ersetzt Leseschriften durch gut lesbare Comic-Buchstaben und vergrößert den Wortabstand.",
     visual_ctrl: "Feine Leseeinstellungen",
-    visual_ctrl_desc: "Vergrößert die Basistextgröße der Lernmodule für optimalen Komfort."
+    visual_ctrl_desc: "Vergrößert die Basistextgröße der Lernmodule für optimalen Komfort.",
+    colorblind: "Farbenblindheits-Filter",
+    colorblind_desc: "Wählen Sie einen wissenschaftlich kalibrierten Farbkorrekturfilter, um den Kontrast und die visuelle Klarheit zu optimieren.",
+    cb_none: "Keiner (Standardfarben)",
+    cb_protanopia: "Protanopie (Rot-Grün-Schwäche)",
+    cb_deuteranopia: "Deuteranopie (Grün-Rot-Schwäche)",
+    cb_tritanopia: "Tritanopie (Blau-Gelb-Schwäche)",
+    cb_achromatopsia: "Achromatopsie (Vollständige Monochromie)"
   },
   ZH: {
     section_title: "无障碍功能主动配置",
@@ -139,7 +167,14 @@ const ACC_TRANSLATIONS = {
     dyslexia: "专属防读障排版系统",
     dyslexia_desc: "将全局阅读字体替换为高可读性字符集，并大幅度增加字间距与单词间距。",
     visual_ctrl: "视力辅助微调控制",
-    visual_ctrl_desc: "智能放大课程主体文本的字号，提供更加柔和、轻松的视觉追踪区间。"
+    visual_ctrl_desc: "智能放大课程主体文本的字号，提供更加柔和、轻松的视觉追踪区间。",
+    colorblind: "色盲辅助色彩主题",
+    colorblind_desc: "选择经过科学校准的颜色校正滤镜，以最大化提升学术图标与文字的高对比度清晰度。",
+    cb_none: "无（默认主题色彩）",
+    cb_protanopia: "红色盲 (红色弱/绿色弱偏斜)",
+    cb_deuteranopia: "绿色盲 (绿色弱/红色弱偏斜)",
+    cb_tritanopia: "蓝色盲 (蓝色/黄色偏斜)",
+    cb_achromatopsia: "全色盲 (极致黑白单色)"
   }
 };
 
@@ -161,6 +196,47 @@ export default function ProfileSettingsPage() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [dyslexiaFriendly, setDyslexiaFriendly] = useState(false);
   const [fineVisualControls, setFineVisualControls] = useState(false);
+  const [colorblindTheme, setColorblindTheme] = useState('none');
+
+  // Helper for real-time accessibility sync to Supabase (table profiles)
+  const syncAccessibilityToCloud = async (updates: {
+    reduceMotion?: boolean;
+    dyslexiaFriendly?: boolean;
+    fineVisualControls?: boolean;
+    colorblindTheme?: string;
+  }) => {
+    if (typeof window === 'undefined') return;
+    const loggedIn = localStorage.getItem('op_session');
+    const savedProfile = localStorage.getItem('op_user_profile');
+    
+    if (loggedIn && savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        const userId = profile.id;
+        if (userId) {
+          const { supabase } = await import('@/lib/supabase');
+          const dbUpdates = {} as any;
+          if (updates.reduceMotion !== undefined) dbUpdates.reduce_motion = updates.reduceMotion;
+          if (updates.dyslexiaFriendly !== undefined) dbUpdates.dyslexia_friendly = updates.dyslexiaFriendly;
+          if (updates.fineVisualControls !== undefined) dbUpdates.fine_visual_controls = updates.fineVisualControls;
+          if (updates.colorblindTheme !== undefined) dbUpdates.colorblind_theme = updates.colorblindTheme;
+
+          const { error } = await supabase
+            .from('profiles')
+            .update(dbUpdates)
+            .eq('id', userId);
+          
+          if (error) {
+            console.warn("[Cloud Sync] Failed to update accessibility settings in profiles table:", error.message);
+          } else {
+            console.log("[Cloud Sync] Successfully updated profiles in Supabase:", dbUpdates);
+          }
+        }
+      } catch (e) {
+        console.error("[Cloud Sync] Error synchronizing preferences:", e);
+      }
+    }
+  };
 
   useEffect(() => {
     // Load dynamic profile
@@ -177,6 +253,42 @@ export default function ProfileSettingsPage() {
         setReduceMotion(!!p.reduceMotion);
         setDyslexiaFriendly(!!p.dyslexiaFriendly);
         setFineVisualControls(!!p.fineVisualControls);
+        setColorblindTheme(p.colorblindTheme || 'none');
+      } catch (err) {}
+    }
+
+    // Try loading latest profile preferences from Supabase if connected
+    const loggedIn = localStorage.getItem('op_session');
+    if (loggedIn && savedProfile) {
+      try {
+        const p = JSON.parse(savedProfile);
+        const userId = p.id;
+        if (userId) {
+          import('@/lib/supabase').then(async ({ supabase }) => {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('reduce_motion, dyslexia_friendly, fine_visual_controls, colorblind_theme')
+              .eq('id', userId)
+              .single();
+            if (data && !error) {
+              setReduceMotion(!!data.reduce_motion);
+              setDyslexiaFriendly(!!data.dyslexia_friendly);
+              setFineVisualControls(!!data.fine_visual_controls);
+              setColorblindTheme(data.colorblind_theme || 'none');
+
+              // Keep local storage perfectly updated
+              const updatedProfile = {
+                ...p,
+                reduceMotion: !!data.reduce_motion,
+                dyslexiaFriendly: !!data.dyslexia_friendly,
+                fineVisualControls: !!data.fine_visual_controls,
+                colorblindTheme: data.colorblind_theme || 'none'
+              };
+              localStorage.setItem('op_user_profile', JSON.stringify(updatedProfile));
+              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+            }
+          }).catch(e => console.warn("[Supabase Load] Offline fallback mode enabled:", e));
+        }
       } catch (err) {}
     }
 
@@ -190,7 +302,7 @@ export default function ProfileSettingsPage() {
     };
   }, [lang]);
 
-  const saveProfile = (e: React.FormEvent) => {
+  const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const savedProfile = localStorage.getItem('op_user_profile');
@@ -210,10 +322,19 @@ export default function ProfileSettingsPage() {
       reduceMotion: reduceMotion,
       dyslexiaFriendly: dyslexiaFriendly,
       fineVisualControls: fineVisualControls,
+      colorblindTheme: colorblindTheme,
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
     
+    // Sync all options to Supabase profiles table
+    await syncAccessibilityToCloud({
+      reduceMotion,
+      dyslexiaFriendly,
+      fineVisualControls,
+      colorblindTheme
+    });
+
     // Dispatch global event for instant reactivity!
     window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
 
@@ -321,6 +442,7 @@ export default function ProfileSettingsPage() {
                               p.reduceMotion = val;
                               localStorage.setItem('op_user_profile', JSON.stringify(p));
                               window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ reduceMotion: val });
                            }
                         }}
                         className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${reduceMotion ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
@@ -352,6 +474,7 @@ export default function ProfileSettingsPage() {
                               p.dyslexiaFriendly = val;
                               localStorage.setItem('op_user_profile', JSON.stringify(p));
                               window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ dyslexiaFriendly: val });
                            }
                         }}
                         className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${dyslexiaFriendly ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
@@ -383,6 +506,7 @@ export default function ProfileSettingsPage() {
                               p.fineVisualControls = val;
                               localStorage.setItem('op_user_profile', JSON.stringify(p));
                               window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ fineVisualControls: val });
                            }
                         }}
                         className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${fineVisualControls ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
@@ -391,6 +515,40 @@ export default function ProfileSettingsPage() {
                      >
                         <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${fineVisualControls ? 'translate-x-6' : 'translate-x-0'}`} />
                      </button>
+                  </div>
+
+                  {/* Colorblind Filtering Themes */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.colorblind || ACC_TRANSLATIONS.EN.colorblind}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.colorblind_desc || ACC_TRANSLATIONS.EN.colorblind_desc}
+                        </p>
+                     </div>
+                     <select
+                        value={colorblindTheme}
+                        onChange={(e) => {
+                           const val = e.target.value;
+                           setColorblindTheme(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.colorblindTheme = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ colorblindTheme: val });
+                           }
+                        }}
+                        className="bg-slate-900 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none min-w-[200px]"
+                     >
+                        <option value="none">{ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.cb_none || ACC_TRANSLATIONS.EN.cb_none}</option>
+                        <option value="protanopia">{ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.cb_protanopia || ACC_TRANSLATIONS.EN.cb_protanopia}</option>
+                        <option value="deuteranopia">{ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.cb_deuteranopia || ACC_TRANSLATIONS.EN.cb_deuteranopia}</option>
+                        <option value="tritanopia">{ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.cb_tritanopia || ACC_TRANSLATIONS.EN.cb_tritanopia}</option>
+                        <option value="achromatopsia">{ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.cb_achromatopsia || ACC_TRANSLATIONS.EN.cb_achromatopsia}</option>
+                     </select>
                   </div>
                </div>
             </section>

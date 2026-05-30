@@ -707,3 +707,18 @@ body:not(.theme-paper):not(.theme-focus) footer {
   letter-spacing: 0.06em !important;
 }
 
+/* 4. Colorblind Filtering Themes (WCAG AAA Compliance) */
+.cb-protanopia {
+  filter: url(#protanopia) !important;
+}
+.cb-deuteranopia {
+  filter: url(#deuteranopia) !important;
+}
+.cb-tritanopia {
+  filter: url(#tritanopia) !important;
+}
+.cb-achromatopsia {
+  filter: grayscale(100%) !important;
+}
+
+

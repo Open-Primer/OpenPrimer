@@ -213,9 +213,27 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       {/* Visual sentence highlight box for accessibility */}
       {isPlaying && currentSentenceIndex >= 0 && currentSentenceIndex < sentences.length && (
         <div className="mb-4 max-w-lg p-5 rounded-[28px] bg-blue-600/10 border border-blue-500/20 text-blue-100 backdrop-blur-xl shadow-2xl animate-fade-in text-sm leading-relaxed">
-          <div className="flex items-center gap-2 mb-2 text-[9px] font-black uppercase tracking-wider text-blue-400">
-            <Volume2 className="w-3.5 h-3.5 animate-pulse" />
-            <span>Auditory Reading Track ({currentSentenceIndex + 1} / {sentences.length})</span>
+          <div className="flex items-center justify-between gap-4 mb-3 text-[9px] font-black uppercase tracking-wider text-blue-400">
+            <div className="flex items-center gap-2">
+              <Volume2 className={`w-3.5 h-3.5 ${!isPaused ? 'animate-pulse text-blue-400' : 'text-slate-400'}`} />
+              <span>Auditory Reading Track ({currentSentenceIndex + 1} / {sentences.length})</span>
+            </div>
+            
+            {/* Real-time SVG Audio Wave Visualizer */}
+            {isPlaying && !isPaused && (
+              <div className="flex items-center gap-1 h-3 pr-1">
+                <style>{`
+                  @keyframes tts-wave-1 { 0%, 100% { height: 3px; } 50% { height: 11px; } }
+                  @keyframes tts-wave-2 { 0%, 100% { height: 4px; } 50% { height: 9px; } }
+                  @keyframes tts-wave-3 { 0%, 100% { height: 2px; } 50% { height: 12px; } }
+                  @keyframes tts-wave-4 { 0%, 100% { height: 5px; } 50% { height: 7px; } }
+                `}</style>
+                <div className="w-[2px] bg-blue-400 rounded-full" style={{ animation: 'tts-wave-1 0.6s infinite ease-in-out' }} />
+                <div className="w-[2px] bg-indigo-400 rounded-full" style={{ animation: 'tts-wave-2 0.8s infinite ease-in-out' }} />
+                <div className="w-[2px] bg-violet-400 rounded-full" style={{ animation: 'tts-wave-3 0.5s infinite ease-in-out' }} />
+                <div className="w-[2px] bg-fuchsia-400 rounded-full" style={{ animation: 'tts-wave-4 0.7s infinite ease-in-out' }} />
+              </div>
+            )}
           </div>
           <p className="font-medium text-slate-100">{sentences[currentSentenceIndex]}</p>
         </div>

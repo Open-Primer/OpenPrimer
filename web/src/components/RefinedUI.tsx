@@ -841,6 +841,47 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} 
                       className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
                     />
+                    
+                    {isListening && (
+                      <div className="absolute inset-0 bg-slate-900/95 border border-blue-500/40 rounded-2xl flex items-center justify-between px-6 backdrop-blur-xl animate-fade-in z-20">
+                        <style>{`
+                          @keyframes wave-oscillate {
+                            0%, 100% { transform: scaleY(0.2); }
+                            50% { transform: scaleY(1.0); }
+                          }
+                          .osc-bar {
+                            transform-origin: center;
+                            animation: wave-oscillate var(--d, 1s) ease-in-out infinite;
+                          }
+                        `}</style>
+                        <div className="flex items-center gap-3">
+                          <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                            {lang === 'FR' ? "ÉCOUTE ACTIVE..." : "VOICE CAPTURE ACTIVE..."}
+                          </span>
+                        </div>
+                        
+                        {/* Premium SVG Oscilloscope */}
+                        <div className="flex items-center gap-1.5 h-6">
+                          <div className="w-[3px] bg-blue-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
+                          <div className="w-[3px] bg-indigo-500 rounded-full h-5 osc-bar" style={{ '--d': '0.5s' } as any} />
+                          <div className="w-[3px] bg-violet-500 rounded-full h-5 osc-bar" style={{ '--d': '0.9s' } as any} />
+                          <div className="w-[3px] bg-fuchsia-500 rounded-full h-5 osc-bar" style={{ '--d': '0.6s' } as any} />
+                          <div className="w-[3px] bg-pink-500 rounded-full h-5 osc-bar" style={{ '--d': '0.8s' } as any} />
+                          <div className="w-[3px] bg-rose-500 rounded-full h-5 osc-bar" style={{ '--d': '0.4s' } as any} />
+                          <div className="w-[3px] bg-red-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
+                        </div>
+
+                        <button 
+                          type="button"
+                          onClick={toggleListening}
+                          className="px-4 py-2 bg-red-650 hover:bg-red-600 border border-red-500/40 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] text-white transition-all shadow-md cursor-pointer"
+                        >
+                          {lang === 'FR' ? "Arrêter" : "Stop"}
+                        </button>
+                      </div>
+                    )}
+
                     <button 
                       type="button"
                       disabled={isOffline} 
