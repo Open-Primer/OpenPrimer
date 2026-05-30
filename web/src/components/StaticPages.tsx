@@ -801,6 +801,7 @@ export const CatalogPage = () => {
                 return (
                   <button 
                     key={opt.key}
+                    type="button"
                     onClick={() => setFilterType(opt.key as any)}
                     className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
                   >
@@ -827,8 +828,9 @@ export const CatalogPage = () => {
             {/* Standalone Premium Star Bookmark Toggle (only visible if logged in) */}
             {isLoggedIn && (
               <button 
+                type="button"
                 onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
+                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
               >
                 <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
                 <span className="hidden sm:inline">{t.saved}</span>
