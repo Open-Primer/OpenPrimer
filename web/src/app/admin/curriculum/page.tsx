@@ -5537,7 +5537,7 @@ export default function AdminCurriculumPage() {
                         <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
                         <input 
                           type="text"
-                          placeholder="Search courses..."
+                          placeholder={tr("Search courses...")}
                           value={archiveSearch}
                           onChange={(e) => setArchiveSearch(e.target.value)}
                           className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
@@ -5557,7 +5557,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Title {renderSortIndicator('title', courseSortField, courseSortDir)}
+                              {tr("Title")} {renderSortIndicator('title', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'isCurriculum') {
@@ -5567,7 +5567,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Classification {renderSortIndicator('isCurriculum', courseSortField, courseSortDir)}
+                              {tr("Classification")} {renderSortIndicator('isCurriculum', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'averageRating') {
@@ -5577,7 +5577,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Note (Rating) {renderSortIndicator('averageRating', courseSortField, courseSortDir)}
+                              {tr("Note (Rating)")} {renderSortIndicator('averageRating', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'completions') {
@@ -5587,7 +5587,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Validations (Completions) {renderSortIndicator('completions', courseSortField, courseSortDir)}
+                              {tr("Validations (Completions)")} {renderSortIndicator('completions', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'versions') {
@@ -5597,7 +5597,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Versions (Revisions) {renderSortIndicator('versions', courseSortField, courseSortDir)}
+                              {tr("Versions (Revisions)")} {renderSortIndicator('versions', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'languages') {
@@ -5607,7 +5607,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Languages {renderSortIndicator('languages', courseSortField, courseSortDir)}
+                              {tr("Languages")} {renderSortIndicator('languages', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'level') {
@@ -5617,7 +5617,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Level {renderSortIndicator('level', courseSortField, courseSortDir)}
+                              {tr("Level")} {renderSortIndicator('level', courseSortField, courseSortDir)}
                             </th>
                             <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                               if (courseSortField === 'archivingLevel') {
@@ -5637,7 +5637,7 @@ export default function AdminCurriculumPage() {
                                 setCourseSortDir('asc');
                               }
                             }}>
-                              Status {renderSortIndicator('is_active', courseSortField, courseSortDir)}
+                              {tr("Status")} {renderSortIndicator('is_active', courseSortField, courseSortDir)}
                             </th>
                           </tr>
                         </thead>
@@ -5962,9 +5962,30 @@ export default function AdminCurriculumPage() {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
-                                  {task.status === 'complete' || task.status === 'completed' || task.status === 'failed' ? (
-                                    <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
-                                      {tr("Locked (Done)")}
+                                  {task.status === 'complete' || task.status === 'completed' ? (
+                                    (() => {
+                                      const matched = courses.find(c => c.title.toLowerCase() === task.title.toLowerCase());
+                                      if (matched && task.type === 'generation') {
+                                        return (
+                                          <a 
+                                            href={`/${matched.level}/${matched.subject}/${matched.slug}/introduction`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
+                                          >
+                                            🚀 {lang === 'FR' ? 'Accéder au Cours' : 'Go to Course'}
+                                          </a>
+                                        );
+                                      }
+                                      return (
+                                        <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
+                                          {tr("Locked (Done)")}
+                                        </span>
+                                      );
+                                    })()
+                                  ) : task.status === 'failed' ? (
+                                    <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none">
+                                      {lang === 'FR' ? 'Échoué' : 'Failed'}
                                     </span>
                                   ) : (
                                     <>
@@ -7348,15 +7369,15 @@ export default function AdminCurriculumPage() {
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Type (label)")}</span>
-                      <span className="text-white font-bold capitalize">{manualType}</span>
+                      <span className="text-white font-bold">{manualType === 'course' ? tr("Standalone Course") : tr("Full Curriculum")}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Level (label)")}</span>
-                      <span className="text-white font-bold">{manualLevel}</span>
+                      <span className="text-white font-bold">{getLevelLabel(manualLevel, lang)}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Subject (label)")}</span>
-                      <span className="text-white font-bold">{manualSubject}</span>
+                      <span className="text-white font-bold">{manualSubject === 'NEW_CUSTOM' ? customDisciplineName : getDisciplineLabel(manualSubject, lang)}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Initial Language (label)")}</span>

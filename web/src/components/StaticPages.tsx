@@ -742,7 +742,7 @@ export const CatalogPage = () => {
       <TopNav onLangChange={(l) => setActiveLang(l as any)} />
       
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-16">
           <div>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight pb-2 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {t.catalog}
@@ -768,95 +768,106 @@ export const CatalogPage = () => {
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-            {/* Search Input */}
-            <div className="relative group w-full md:w-80">
-              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
-              <input 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.search} 
-                className="bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-12 pr-10 text-sm focus:outline-none focus:border-blue-500/50 transition-all w-full text-white" 
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-                  title="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Catalog Filter Mode (All / Courses / Curricula) */}
-            <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
-              {[
-                { key: 'All', label: { EN: 'All', FR: 'Tout', ES: 'Todo', DE: 'Alle', ZH: '全部', IT: 'Tutti' } },
-                { key: 'Course', label: { EN: 'Courses', FR: 'Cours', ES: 'Cursos', DE: 'Kurse', ZH: '课程', IT: 'Corsi' } },
-                { key: 'Curriculum', label: { EN: 'Curricula', FR: 'Curriculums', ES: 'Planes', DE: 'Lehrpläne', ZH: '课程体系', IT: 'Curriculum' } }
-              ].map(opt => {
-                const active = filterType === opt.key;
-                const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
-                return (
-                  <button 
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setFilterType(opt.key as any)}
-                    className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-                  >
-                    {labelText}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Controls Column: Stack Row 1 & Row 2 vertically, aligned to the right */}
+          <div className="flex flex-col gap-4 items-stretch md:items-end w-full md:w-auto mt-2">
             
-            {/* Standalone Premium New Courses Filter Toggle */}
-            <button 
-              onClick={() => setShowNewOnly(!showNewOnly)}
-              className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${showNewOnly ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
-            >
-              <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
-              <span className="hidden sm:inline">
-                {lang.toUpperCase() === 'FR' ? 'Nouveautés' : 
-                 lang.toUpperCase() === 'ES' ? 'Nuevos' : 
-                 lang.toUpperCase() === 'DE' ? 'Neuheiten' : 
-                 lang.toUpperCase() === 'ZH' ? '最新课程' : 'New Only'}
-              </span>
-            </button>
+            {/* ── Row 1: Search + Type filters + New Only ─────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end w-full">
+              {/* Search Input */}
+              <div className="relative group w-full md:w-80">
+                <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                <input 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t.search} 
+                  className="bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-12 pr-10 text-sm focus:outline-none focus:border-blue-500/50 transition-all w-full text-white" 
+                />
+                {searchQuery && (
+                  <button 
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-            {/* Standalone Premium Star Bookmark Toggle (only visible if logged in) */}
-            {isLoggedIn && (
+              {/* Catalog Filter Mode (All / Courses / Curricula) */}
+              <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
+                {[
+                  { key: 'All',        label: { EN: 'All',      FR: 'Tout',         ES: 'Todo',    DE: 'Alle',       ZH: '全部',   IT: 'Tutti' } },
+                  { key: 'Course',     label: { EN: 'Courses',  FR: 'Cours',        ES: 'Cursos',  DE: 'Kurse',      ZH: '课程',   IT: 'Corsi' } },
+                  { key: 'Curriculum', label: { EN: 'Curricula',FR: 'Curriculums',  ES: 'Planes',  DE: 'Lehrpläne',  ZH: '课程体系', IT: 'Curriculum' } }
+                ].map(opt => {
+                  const active = filterType === opt.key;
+                  const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
+                  return (
+                    <button 
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setFilterType(opt.key as any)}
+                      className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                    >
+                      {labelText}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* New Only toggle */}
               <button 
                 type="button"
-                onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
+                onClick={() => setShowNewOnly(!showNewOnly)}
+                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${showNewOnly ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
               >
-                <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
-                <span className="hidden sm:inline">{t.saved}</span>
+                <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
+                <span className="hidden sm:inline">
+                  {lang.toUpperCase() === 'FR' ? 'Nouveautés' : 
+                   lang.toUpperCase() === 'ES' ? 'Nuevos' : 
+                   lang.toUpperCase() === 'DE' ? 'Neuheiten' : 
+                   lang.toUpperCase() === 'ZH' ? '最新课程' : 'New Only'}
+                </span>
               </button>
-            )}
-
-            {/* Catalog Sorting Options */}
-            <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
-              {[
-                { key: 'popularity', label: { EN: 'Popularity', FR: 'Popularité', ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热', IT: 'Popolarità' } },
-                { key: 'validations', label: { EN: 'Graduates', FR: 'Diplômés', ES: 'Graduados', DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati' } }
-              ].map(opt => {
-                const active = sortBy === opt.key;
-                const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
-                return (
-                  <button 
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setSortBy(opt.key as any)}
-                    className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-                  >
-                    {labelText}
-                  </button>
-                );
-              })}
             </div>
+
+            {/* ── Row 2: Sort + Saved — right-aligned under Row 1 ─────────── */}
+            <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end w-full">
+              {/* Saved bookmark — only when logged in */}
+              {isLoggedIn && (
+                <button 
+                  type="button"
+                  onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
+                  className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
+                >
+                  <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
+                  <span className="hidden sm:inline">{t.saved}</span>
+                </button>
+              )}
+
+              {/* Sort — Popularity / Graduates */}
+              <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
+                {[
+                  { key: 'popularity',  label: { EN: 'Popularity', FR: 'Popularité',  ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热',  IT: 'Popolarità' } },
+                  { key: 'validations', label: { EN: 'Graduates',  FR: 'Diplômés',    ES: 'Graduados',   DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati' } }
+                ].map(opt => {
+                  const active = sortBy === opt.key;
+                  const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
+                  return (
+                    <button 
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setSortBy(opt.key as any)}
+                      className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                    >
+                      {labelText}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
 
