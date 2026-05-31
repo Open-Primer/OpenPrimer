@@ -192,6 +192,7 @@ export default function ProfileSettingsPage() {
   const [readingMode, setReadingMode] = useState('dark');
   const [showToast, setShowToast] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [reduceMotion, setReduceMotion] = useState(false);
   const [dyslexiaFriendly, setDyslexiaFriendly] = useState(false);
@@ -304,6 +305,13 @@ export default function ProfileSettingsPage() {
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
+    if (!nameRegex.test(user.firstName.trim()) || !nameRegex.test(user.lastName.trim())) {
+      setError(t.invalid_name);
+      return;
+    }
 
     const savedProfile = localStorage.getItem('op_user_profile');
     let existingProfile = {} as any;
@@ -369,6 +377,12 @@ export default function ProfileSettingsPage() {
               </h3>
               
               <form onSubmit={saveProfile} className="space-y-6">
+                 {error && (
+                   <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-semibold tracking-wide flex items-center gap-3">
+                     <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
+                     <span>{error}</span>
+                   </div>
+                 )}
                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">{t.first_name}</label>

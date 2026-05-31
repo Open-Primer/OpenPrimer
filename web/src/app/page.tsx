@@ -243,6 +243,7 @@ export default function Home() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const submitTimestamps = useRef<number[]>([]);
 
   const coursesList = [
     { id: 1, title: 'Physique: Classical Mechanics (L1)', desc: 'Feynman-optimized physics' },
@@ -300,29 +301,56 @@ export default function Home() {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setErrorMsg(lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.');
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
+      setErrorMsg(s.all_fields_required || (lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.'));
+      return;
+    }
+
+    if (firstName.length > 60 || lastName.length > 60 || email.length > 60 || password.length > 60) {
+      setErrorMsg(lang === 'FR' ? 'La longueur maximale autorisée est de 60 caractères.' : 'Maximum allowed length is 60 characters.');
+      return;
+    }
+
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
+    if (!nameRegex.test(firstName.trim()) || !nameRegex.test(lastName.trim())) {
+      setErrorMsg(s.invalid_name || (lang === 'FR' ? 'Veuillez entrer un nom valide (2 à 60 caractères, lettres/espaces/tirets uniquement).' : 'Please enter a valid name (2-60 characters, letters/spaces/hyphens only).'));
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg(s.invalid_email || (lang === 'FR' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.'));
       return;
     }
 
     // Advanced Password Complexity Validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
     if (!passwordRegex.test(password)) {
-      const msgs: Record<string, string> = {
-        FR: 'Le mot de passe doit contenir au moins 12 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.',
-        ES: 'La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.',
-        DE: 'Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
-        ZH: '密码必须至少包含 12 个字符，且必须包含一个大写字母、一个小写字母、一个数字和一个特殊字符。',
-        IT: 'La password deve contenere almeno 12 caratteri, inclusa una lettera maiuscola, una lettera minuscola, un numero e un carattere speciale.'
-      };
-      setErrorMsg(msgs[lang] || 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.');
+      setErrorMsg(s.password_complexity_error || (lang === 'FR' ? 'Le mot de passe doit contenir au moins 12 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.' : 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg(lang === 'FR' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.');
+      setErrorMsg(s.passwords_dont_match || (lang === 'FR' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.'));
       return;
     }
+
+    // Client-side rate-limit guard (max 3 submit attempts per 120 seconds)
+    const now = Date.now();
+    submitTimestamps.current = submitTimestamps.current.filter(ts => now - ts < 120000);
+    if (submitTimestamps.current.length >= 3) {
+      const waitSec = Math.ceil((120000 - (now - submitTimestamps.current[0])) / 1000);
+      setErrorMsg(
+        lang === 'FR' ? `Trop de tentatives. Réessayez dans ${waitSec} secondes.` :
+        lang === 'ES' ? `Demasiados intentos. Inténtelo de nuevo en ${waitSec} segundos.` :
+        lang === 'DE' ? `Zu viele Versuche. Bitte warten Sie ${waitSec} Sekunden.` :
+        lang === 'ZH' ? `尝试次数过多，请在 ${waitSec} 秒后重试。` :
+        `Too many attempts. Please wait ${waitSec} seconds.`
+      );
+      return;
+    }
+    submitTimestamps.current.push(now);
+
     setErrorMsg('');
     setAuthModal('verify');
   };
@@ -682,7 +710,8 @@ export default function Home() {
                             <input 
                               required
                               value={firstName}
-                              onChange={(e) => setFirstName(e.target.value)}
+                              onChange={(e) => setFirstName(e.target.value.slice(0, 60))}
+                              maxLength={60}
                               placeholder={a.first_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                             />
@@ -698,7 +727,8 @@ export default function Home() {
                             <input 
                               required
                               value={lastName}
-                              onChange={(e) => setLastName(e.target.value)}
+                              onChange={(e) => setLastName(e.target.value.slice(0, 60))}
+                              maxLength={60}
                               placeholder={a.last_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                             />
@@ -716,8 +746,9 @@ export default function Home() {
                             type="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="name@email.com"
+                            onChange={(e) => setEmail(e.target.value.slice(0, 60))}
+                            maxLength={60}
+                            placeholder={s.email_placeholder || "john.doe@email.com"}
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
                         </div>
@@ -733,7 +764,8 @@ export default function Home() {
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => setPassword(e.target.value.slice(0, 60))}
+                            maxLength={60}
                             placeholder="••••••••••••"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
@@ -757,7 +789,8 @@ export default function Home() {
                             type={showConfirmPassword ? 'text' : 'password'}
                             required
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onChange={(e) => setConfirmPassword(e.target.value.slice(0, 60))}
+                            maxLength={60}
                             placeholder="••••••••••••"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />

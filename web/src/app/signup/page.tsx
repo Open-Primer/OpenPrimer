@@ -87,9 +87,20 @@ export default function SignupPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
       setErrorMsg(t.all_fields_required); return;
     }
+
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
+    if (!nameRegex.test(firstName.trim()) || !nameRegex.test(lastName.trim())) {
+      setErrorMsg(t.invalid_name); return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg(t.invalid_email); return;
+    }
+
     if (!PASSWORD_REGEX.test(password)) {
       setErrorMsg(t.password_complexity_error); return;
     }
@@ -202,7 +213,7 @@ export default function SignupPage() {
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                       <input type="email" required value={email} onChange={e => setEmail(e.target.value.slice(0, MAX_EMAIL_LENGTH))}
                         maxLength={MAX_EMAIL_LENGTH}
-                        placeholder="jean.dupont@email.com"
+                        placeholder={t.email_placeholder || "john.doe@email.com"}
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                     </div>
                   </div>
@@ -385,7 +396,7 @@ export default function SignupPage() {
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                       <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                        placeholder="jean.dupont@email.com"
+                        placeholder={t.email_placeholder || "john.doe@email.com"}
                         className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" />
                     </div>
                   </div>
