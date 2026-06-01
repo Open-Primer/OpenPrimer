@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
+import { dbService } from '@/lib/db';
 import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
@@ -205,6 +206,7 @@ export default function ProfileSettingsPage() {
     dyslexiaFriendly?: boolean;
     fineVisualControls?: boolean;
     colorblindTheme?: string;
+    name?: string;
   }) => {
     if (typeof window === 'undefined') return;
     const loggedIn = localStorage.getItem('op_session');
@@ -221,6 +223,7 @@ export default function ProfileSettingsPage() {
           if (updates.dyslexiaFriendly !== undefined) dbUpdates.dyslexia_friendly = updates.dyslexiaFriendly;
           if (updates.fineVisualControls !== undefined) dbUpdates.fine_visual_controls = updates.fineVisualControls;
           if (updates.colorblindTheme !== undefined) dbUpdates.colorblind_theme = updates.colorblindTheme;
+          if (updates.name !== undefined) dbUpdates.name = updates.name;
 
           const { error } = await supabase
             .from('profiles')
@@ -268,7 +271,7 @@ export default function ProfileSettingsPage() {
           import('@/lib/supabase').then(async ({ supabase }) => {
             const { data, error } = await supabase
               .from('profiles')
-              .select('reduce_motion, dyslexia_friendly, fine_visual_controls, colorblind_theme')
+              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, colorblind_theme')
               .eq('id', userId)
               .single();
             if (data && !error) {
@@ -277,9 +280,26 @@ export default function ProfileSettingsPage() {
               setFineVisualControls(!!data.fine_visual_controls);
               setColorblindTheme(data.colorblind_theme || 'none');
 
+              let firstName = p.firstName || "Silvere";
+              let lastName = p.lastName || "Martin";
+              if (data.name) {
+                const parts = data.name.split(' ');
+                firstName = parts[0] || "";
+                lastName = parts.slice(1).join(' ') || "";
+              }
+
+              setUser({
+                firstName,
+                lastName,
+                email: p.email || "silvere@openprimer.org",
+                lang: (p.preferredLang || lang).toUpperCase()
+              });
+
               // Keep local storage perfectly updated
               const updatedProfile = {
                 ...p,
+                firstName,
+                lastName,
                 reduceMotion: !!data.reduce_motion,
                 dyslexiaFriendly: !!data.dyslexia_friendly,
                 fineVisualControls: !!data.fine_visual_controls,
@@ -340,7 +360,8 @@ export default function ProfileSettingsPage() {
       reduceMotion,
       dyslexiaFriendly,
       fineVisualControls,
-      colorblindTheme
+      colorblindTheme,
+      name: `${user.firstName.trim()} ${user.lastName.trim()}`
     });
 
     // Dispatch global event for instant reactivity!

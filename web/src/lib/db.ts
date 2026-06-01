@@ -2793,6 +2793,8 @@ export const dbService = {
       return { data: null, error: null };
     }
     try {
+      // Also delete related course progress rows for complete clean slate
+      await supabase.from('progress').delete().eq('user_id', id);
       const { data, error } = await supabase.from('profiles').delete().eq('id', id);
       if (error) throw error;
       return { data, error };
