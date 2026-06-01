@@ -423,7 +423,9 @@ export default function AdminUsers() {
                     }}
                     className="flex items-center gap-2 outline-none cursor-pointer block-user-toggle"
                     data-testid={`block-btn-${user.id}`}
-                    title={user.isBlocked ? "Click to Activate" : "Click to Block"}
+                    title={user.isBlocked 
+                      ? (lang === 'FR' ? "Cliquer pour activer" : lang === 'ES' ? "Haga clic para activar" : lang === 'DE' ? "Klicken Sie zum Aktivieren" : lang === 'ZH' ? "点击启用账号" : "Click to Activate") 
+                      : (lang === 'FR' ? "Cliquer pour bloquer" : lang === 'ES' ? "Haga clic para bloquear" : lang === 'DE' ? "Klicken Sie zum Blockieren" : lang === 'ZH' ? "点击封禁账号" : "Click to Block")}
                    >
                      {user.isBlocked ? (
                         <span className="px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-red-500/20 transition-colors" data-testid={`status-label-${user.id}`}>
@@ -442,7 +444,7 @@ export default function AdminUsers() {
                       onClick={() => setConfirmingAction({ type: 'delete', userId: user.id })}
                       className="p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-white hover:bg-red-650 transition-all delete-user-btn cursor-pointer"
                       data-testid={`delete-btn-${user.id}`}
-                      title="Delete User"
+                      title={lang === 'FR' ? "Supprimer l'utilisateur" : lang === 'ES' ? "Eliminar usuario" : lang === 'DE' ? "Benutzer löschen" : lang === 'ZH' ? "删除用户账号" : "Delete User"}
                      >
                        <Trash2 className="w-4 h-4" />
                      </button>

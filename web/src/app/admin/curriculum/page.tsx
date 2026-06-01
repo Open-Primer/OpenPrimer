@@ -2210,6 +2210,54 @@ const POTENTIAL_CURRICULA = [
   }
 ];
 
+const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
+  EN: {
+    "Approve & Promote": "Approve & Promote",
+    "Refuse & Backlog": "Refuse & Backlog",
+    "Approve to Pipeline Queue": "Approve to Pipeline Queue",
+    "Refuse / Archive": "Refuse / Archive",
+    "Approve & Revise": "Approve & Revise",
+    "Increase Priority": "Increase Priority",
+    "Decrease Priority": "Decrease Priority"
+  },
+  FR: {
+    "Approve & Promote": "Approuver & Promouvoir",
+    "Refuse & Backlog": "Refuse & Mettre en attente",
+    "Approve to Pipeline Queue": "Approuver vers la file d'attente",
+    "Refuse / Archive": "Refuser / Archiver",
+    "Approve & Revise": "Approuver & Réviser",
+    "Increase Priority": "Augmenter la priorité",
+    "Decrease Priority": "Diminuer la priorité"
+  },
+  ES: {
+    "Approve & Promote": "Aprobar y Promover",
+    "Refuse & Backlog": "Rechazar y Archivar en Backlog",
+    "Approve to Pipeline Queue": "Aprobar para cola de pipeline",
+    "Refuse / Archive": "Rechazar / Archivar",
+    "Approve & Revise": "Aprobar y Revisar",
+    "Increase Priority": "Aumentar prioridad",
+    "Decrease Priority": "Disminuir prioridad"
+  },
+  DE: {
+    "Approve & Promote": "Genehmigen & Fördern",
+    "Refuse & Backlog": "Ablehnen & Backlog",
+    "Approve to Pipeline Queue": "In die Pipeline-Warteschlange aufnehmen",
+    "Refuse / Archive": "Ablehnen / Archivieren",
+    "Approve & Revise": "Genehmigen & Überarbeiten",
+    "Increase Priority": "Priorität erhöhen",
+    "Decrease Priority": "Priorität verringern"
+  },
+  ZH: {
+    "Approve & Promote": "批准并晋升",
+    "Refuse & Backlog": "拒绝并退回待办",
+    "Approve to Pipeline Queue": "批准至流水线队列",
+    "Refuse / Archive": "拒绝/归档",
+    "Approve & Revise": "批准并修改",
+    "Increase Priority": "提高优先级",
+    "Decrease Priority": "降低优先级"
+  }
+};
+
 // --- COMPONENT: ARCHIVING LEVEL BUTTONS (0, 1, 2, 3) ---
 const ArchivingLevelButtons = ({
   currentLevel,
@@ -2224,7 +2272,8 @@ const ArchivingLevelButtons = ({
 }) => {
   const tr = (key: string): string => {
     const dict = (COCKPIT_DICTIONARY[lang as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH'] || COCKPIT_DICTIONARY.EN) as Record<string, string>;
-    return dict[key] || key;
+    const extraDict = (EXTRA_TOOLTIP_STRINGS[lang] || EXTRA_TOOLTIP_STRINGS.EN) as Record<string, string>;
+    return extraDict[key] || dict[key] || key;
   };
 
   return (
@@ -2279,7 +2328,8 @@ export default function AdminCurriculumPage() {
   const t = CURRICULUM_STRINGS[lang] || CURRICULUM_STRINGS.EN;
   const tr = (key: string): string => {
     const dict = (COCKPIT_DICTIONARY[lang] || COCKPIT_DICTIONARY.EN) as Record<string, string>;
-    return dict[key] || key;
+    const extraDict = (EXTRA_TOOLTIP_STRINGS[lang] || EXTRA_TOOLTIP_STRINGS.EN) as Record<string, string>;
+    return extraDict[key] || dict[key] || key;
   };
 
   const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities'>('generation');
@@ -4680,14 +4730,14 @@ export default function AdminCurriculumPage() {
                          </div>
                          <div className="flex gap-2 shrink-0 z-10">
                            <button 
-                             title="Approve & Promote" 
+                             title={tr("Approve & Promote")} 
                              onClick={() => handleApproveGen(item.query, item.count, item.level)}
                              className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-md shadow-blue-600/10"
                            >
                              <Check className="w-4 h-4" />
                            </button>
                            <button 
-                             title="Refuse & Backlog" 
+                             title={tr("Refuse & Backlog")} 
                              onClick={() => handleRefuseGen(item.query)}
                              className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all shadow-md"
                            >
@@ -4961,14 +5011,14 @@ export default function AdminCurriculumPage() {
                           <button 
                             onClick={() => handleApproveTrans(item.courseTitle, item.targetLang)} 
                             className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/10"
-                            title="Approve to Pipeline Queue"
+                            title={tr("Approve to Pipeline Queue")}
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleRefuseTrans(item.courseTitle, item.targetLang)} 
                             className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all"
-                            title="Refuse / Archive"
+                            title={tr("Refuse / Archive")}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -5414,7 +5464,7 @@ export default function AdminCurriculumPage() {
                           <div className="flex gap-2 shrink-0 z-10">
                             <button 
                               type="button" 
-                              title="Approve & Revise"
+                              title={tr("Approve & Revise")}
                               onClick={() => handleApproveRevision(item.courseTitle, item.chapter, item.issueSummary)} 
                               className="p-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-500 transition-all shadow-md shadow-yellow-600/10"
                             >
@@ -5422,7 +5472,7 @@ export default function AdminCurriculumPage() {
                             </button>
                             <button 
                               type="button" 
-                              title="Refuse & Backlog"
+                              title={tr("Refuse & Backlog")}
                               onClick={() => handleRefuseRevision(item.courseTitle, item.chapter, item.issueSummary)} 
                               className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all shadow-md"
                             >
@@ -5945,7 +5995,7 @@ export default function AdminCurriculumPage() {
                                       type="button"
                                       onClick={() => handleChangePriority(task.id, 'up')}
                                       className="text-[9px] hover:text-white text-slate-600 transition-colors px-1"
-                                      title="Increase Priority"
+                                      title={tr("Increase Priority")}
                                     >
                                       ▲
                                     </button>
@@ -5953,7 +6003,7 @@ export default function AdminCurriculumPage() {
                                       type="button"
                                       onClick={() => handleChangePriority(task.id, 'down')}
                                       className="text-[9px] hover:text-white text-slate-600 transition-colors px-1"
-                                      title="Decrease Priority"
+                                      title={tr("Decrease Priority")}
                                     >
                                       ▼
                                     </button>
