@@ -461,60 +461,6 @@ export default function Home() {
 
     const emailLower = email.toLowerCase().trim();
 
-    // 1. Check Demo Accounts fallback (Vanguard, student1, student2, student3, silvere)
-    const DEMO_ACCOUNTS: Record<string, { name: string; role: string }> = {
-      'vanguard.mysterious@gmail.com': { name: 'Vanguard Admin', role: 'admin' },
-      'student1@openprimer.org':       { name: 'Student One',    role: 'student' },
-      'student2@openprimer.org':       { name: 'Student Two',    role: 'student' },
-      'student3@openprimer.org':       { name: 'Student Three',  role: 'student' },
-      'silvere@openprimer.org':        { name: 'Silvere Martin', role: 'admin' },
-    };
-
-    const demoAccount = DEMO_ACCOUNTS[emailLower];
-
-    if (demoAccount) {
-      // Enforce strict password validation for demo accounts (must be 'OpenPrimer2026!')
-      if (password !== 'OpenPrimer2026!') {
-        setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
-        return;
-      }
-
-      const isVerified = localStorage.getItem('op_registration_verified') === 'true';
-      const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
-
-      if (isVerified && !hasLoggedInBefore) {
-        localStorage.setItem('op_show_welcome_catalog_popup', 'true');
-        localStorage.setItem('op_logged_in_before', 'true');
-      }
-
-      const profile = {
-        firstName: demoAccount.name.split(' ')[0],
-        lastName: demoAccount.name.split(' ').slice(1).join(' '),
-        email: emailLower,
-        preferredLang: lang,
-        role: demoAccount.role,
-        isVerified: true
-      };
-
-      localStorage.setItem('op_user_profile', JSON.stringify(profile));
-      localStorage.setItem('op_session', 'true');
-      
-      // Dispatch reactive auth state event
-      window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
-
-      setIsLoggedIn(true);
-      setAuthModal(null);
-
-      const redirectUrl = sessionStorage.getItem('op_auth_redirect');
-      if (redirectUrl) {
-        sessionStorage.removeItem('op_auth_redirect');
-        window.location.href = redirectUrl;
-      } else {
-        router.push(demoAccount.role === 'admin' ? '/admin' : '/catalog');
-      }
-      return;
-    }
-
     // 2. Query dbService asynchronously to retrieve the user list and find a match
     try {
       const { data: userList } = await dbService.getUsers();
@@ -530,6 +476,14 @@ export default function Home() {
         const isPasswordCorrect = (expectedPassword === inputHash) || (expectedPassword === password);
 
         if (isPasswordCorrect) {
+          const isVerified = localStorage.getItem('op_registration_verified') === 'true';
+          const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
+
+          if (isVerified && !hasLoggedInBefore) {
+            localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+            localStorage.setItem('op_logged_in_before', 'true');
+          }
+
           const profile = {
             firstName: matchedUser.name.split(' ')[0],
             lastName: matchedUser.name.split(' ').slice(1).join(' '),

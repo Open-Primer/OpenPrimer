@@ -254,7 +254,8 @@ let users: UserProfile[] = [
       title: "Newton's Laws of Motion"
     },
     favorites: ['/L1/Biology/Cell_Biology/mitochondria_and_energy'],
-    aiCoachMessage: "Welcome back, Silvere! You're doing great on Classical Mechanics. I recommend reviewing Vectors before jumping into the final Newton quiz."
+    aiCoachMessage: "Welcome back, Silvere! You're doing great on Classical Mechanics. I recommend reviewing Vectors before jumping into the final Newton quiz.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u2', 
@@ -267,7 +268,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-03-15', 
     favorites: [], 
-    aiCoachMessage: "Hello Alice! Ready to continue your journey?" 
+    aiCoachMessage: "Hello Alice! Ready to continue your journey?",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u3', 
@@ -280,7 +282,8 @@ let users: UserProfile[] = [
     isBlocked: true, 
     joinedAt: '2026-04-20', 
     favorites: [], 
-    aiCoachMessage: "Account blocked. Contact admin." 
+    aiCoachMessage: "Account blocked. Contact admin.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u4', 
@@ -293,7 +296,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-05-01', 
     favorites: [], 
-    aiCoachMessage: "Hi Charlie! Focus on Algebra to reach L2." 
+    aiCoachMessage: "Hi Charlie! Focus on Algebra to reach L2.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u5', 
@@ -306,7 +310,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-02-14', 
     favorites: [], 
-    aiCoachMessage: "Excellent progress in Law, Diana. Keep going!" 
+    aiCoachMessage: "Excellent progress in Law, Diana. Keep going!",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u6', 
@@ -319,7 +324,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-05-10', 
     favorites: [], 
-    aiCoachMessage: "Welcome agent. Your mission is to master physics." 
+    aiCoachMessage: "Welcome agent. Your mission is to master physics.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u7', 
@@ -332,7 +338,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-03-29', 
     favorites: [], 
-    aiCoachMessage: "Fiona, let's get back to organic chemistry today." 
+    aiCoachMessage: "Fiona, let's get back to organic chemistry today.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u8', 
@@ -345,7 +352,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-01-20', 
     favorites: [], 
-    aiCoachMessage: "George, your quantum mechanics test is coming up." 
+    aiCoachMessage: "George, your quantum mechanics test is coming up.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u9', 
@@ -358,7 +366,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-04-05', 
     favorites: [], 
-    aiCoachMessage: "Take your time with linear algebra concepts, Hannah." 
+    aiCoachMessage: "Take your time with linear algebra concepts, Hannah.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u10', 
@@ -371,7 +380,8 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-02-02', 
     favorites: [], 
-    aiCoachMessage: "Life finds a way, and so does learning calculus!" 
+    aiCoachMessage: "Life finds a way, and so does learning calculus!",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   },
   { 
     id: 'u11', 
@@ -384,7 +394,64 @@ let users: UserProfile[] = [
     isBlocked: false, 
     joinedAt: '2026-01-15', 
     favorites: [], 
-    aiCoachMessage: "Amazing! You are close to graduating from L1 Biology." 
+    aiCoachMessage: "Amazing! You are close to graduating from L1 Biology.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+  },
+  {
+    id: 'u12',
+    name: 'Student One',
+    email: 'student1@openprimer.org',
+    role: 'student',
+    level: 1,
+    kp: 150,
+    isEmailVerified: true,
+    isBlocked: false,
+    joinedAt: '2026-05-15',
+    favorites: [],
+    aiCoachMessage: "Welcome Student One! Ready to begin your course?",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+  },
+  {
+    id: 'u13',
+    name: 'Student Two',
+    email: 'student2@openprimer.org',
+    role: 'student',
+    level: 2,
+    kp: 450,
+    isEmailVerified: true,
+    isBlocked: false,
+    joinedAt: '2026-05-18',
+    favorites: [],
+    aiCoachMessage: "Hi Student Two! Let's resume classical mechanics today.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+  },
+  {
+    id: 'u14',
+    name: 'Student Three',
+    email: 'student3@openprimer.org',
+    role: 'student',
+    level: 3,
+    kp: 950,
+    isEmailVerified: true,
+    isBlocked: false,
+    joinedAt: '2026-05-20',
+    favorites: [],
+    aiCoachMessage: "Welcome back Student Three! You are close to L4.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+  },
+  {
+    id: 'u15',
+    name: 'Silvere Martin',
+    email: 'silvere@openprimer.org',
+    role: 'admin',
+    level: 1,
+    kp: 0,
+    isEmailVerified: true,
+    isBlocked: false,
+    joinedAt: '2026-05-01',
+    favorites: [],
+    aiCoachMessage: "Hello Administrator Silvere! Database connection is fully operational.",
+    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
   }
 ];
 
