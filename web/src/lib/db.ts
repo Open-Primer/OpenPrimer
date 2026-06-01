@@ -2778,7 +2778,8 @@ export const dbService = {
         favorites: u.favorites ?? [],
         aiCoachMessage: u.ai_coach_message ?? u.aiCoachMessage ?? '',
         preferredLang: u.preferred_lang ?? u.preferredLang ?? 'EN',
-        readingMode: u.reading_mode ?? u.readingMode ?? 'default'
+        readingMode: u.reading_mode ?? u.readingMode ?? 'default',
+        password: u.password
       }));
       return { data: mapped, error: null };
     } catch (e) {

@@ -708,9 +708,23 @@ export default function ProfileSettingsPage() {
                  </button>
                  <button
                    type="button"
-                   onClick={() => {
+                   onClick={async () => {
                      if (typeof window !== 'undefined') {
+                       const savedProfile = localStorage.getItem('op_user_profile');
+                       if (savedProfile) {
+                         try {
+                           const p = JSON.parse(savedProfile);
+                           const userId = p.id;
+                           if (userId) {
+                             await dbService.deleteUser(userId);
+                             console.log("[Account Deletion] Successfully deleted account from Supabase:", userId);
+                           }
+                         } catch (err) {
+                           console.error("[Account Deletion] Error during database profile deletion:", err);
+                         }
+                       }
                        localStorage.clear();
+                       sessionStorage.clear();
                        window.location.href = '/';
                      }
                      setShowDeleteConfirm(false);

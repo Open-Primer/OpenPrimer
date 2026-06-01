@@ -473,6 +473,12 @@ export default function Home() {
     const demoAccount = DEMO_ACCOUNTS[emailLower];
 
     if (demoAccount) {
+      // Enforce strict password validation for demo accounts (must be 'OpenPrimer2026!')
+      if (password !== 'OpenPrimer2026!') {
+        setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+        return;
+      }
+
       const isVerified = localStorage.getItem('op_registration_verified') === 'true';
       const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 
@@ -515,8 +521,13 @@ export default function Home() {
       const matchedUser = userList?.find((u: any) => u.email.toLowerCase() === emailLower) as any;
 
       if (matchedUser) {
-        // No password control per developer requirement - allow login with any password
-        const isPasswordCorrect = true;
+        // Enforce strict password validation
+        const inputHash = dbService.hashPassword(password);
+        
+        // If a password is set, compare hashes or plaintext. Otherwise fall back to a default standard password to prevent password-less logins.
+        const expectedPassword = matchedUser.password || dbService.hashPassword('OpenPrimer2026!');
+        
+        const isPasswordCorrect = (expectedPassword === inputHash) || (expectedPassword === password);
 
         if (isPasswordCorrect) {
           const profile = {
