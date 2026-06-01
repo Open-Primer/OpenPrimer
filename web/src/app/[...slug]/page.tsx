@@ -10,6 +10,7 @@ import { MdxContent } from '@/components/mdx/MdxContent';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
+import { UI_STRINGS } from '@/components/RefinedUI';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
@@ -239,17 +240,15 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       throw err;
     }
     console.error("CRITICAL ERROR IN CoursePage:", err);
-    const isFr = lang.toLowerCase() === 'fr';
+    const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8">
         <div className="max-w-2xl bg-red-950/20 border border-red-500/30 p-8 rounded-[32px] text-center backdrop-blur-2xl">
           <h2 className="text-2xl font-black text-red-400 mb-4 uppercase tracking-wider">
-            {isFr ? "Erreur de Rendu Académique" : "Academic Rendering Error"}
+            {t.academic_rendering_error}
           </h2>
           <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-            {isFr 
-              ? "Une erreur s'est produite lors de la compilation ou du rendu MDX de ce module de cours." 
-              : "An error occurred during the compilation or MDX rendering of this course module."}
+            {t.academic_rendering_error_desc}
           </p>
           <pre className="text-left text-xs bg-black/60 border border-slate-900 p-6 rounded-2xl overflow-auto text-emerald-400 max-h-[300px] custom-scrollbar">
             {err ? (err.stack || err.message || String(err)) : "Unknown Error"}

@@ -1588,7 +1588,7 @@ export const ContactPage = () => {
                <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500"><Globe className="w-5 h-5" /></div>
                <div>
                  <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{c.support}</p>
-                 <p className="font-bold text-slate-200 uppercase tracking-tight">support@openprimer.org</p>
+                 <p className="font-bold text-slate-200 uppercase tracking-tight">support@openprimer.app</p>
                </div>
             </div>
           </div>
