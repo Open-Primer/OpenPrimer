@@ -123,4 +123,50 @@ To manually trigger the content validation and pipeline updates:
 
 ---
 
+## 🔐 4. Unified Authentication Architecture & Database Mapping Standard
+
+To reduce the platform's attack surface and eliminate boilerplate code, OpenPrimer utilizes a single centralized entry point for all authentication logic.
+
+### Centralized Authentication Modal
+- **Homepage Modal**: All login, signup, and account verification UI is centralized inside the premium modal on the home page (`web/src/app/page.tsx`).
+- **Boilerplate Deprecation**: The standalone routes `/login` and `/signup` have been deprecated and replaced with lightweight, server-side redirect handlers.
+- **Unified Entry Parameters**:
+  - `/login` redirects to `/?auth=login`.
+  - `/signup` redirects to `/?auth=signup`.
+- **Dynamic Token Verification**: Real-time account verification email tokens are processed directly within the home page mount `useEffect` hook, checking for `?token=...&email=...` query parameters and dispatching local success toasts upon successful integration.
+
+```mermaid
+sequenceDiagram
+    participant User as User / Email Link
+    participant Route as Standalone Route (/login)
+    participant Home as Central Home Page
+    participant API as Verification API (/api/auth/verify)
+
+    User->>Route: Access Standalone Page
+    Route->>Home: Server Redirect with Query (?auth=login)
+    Home->>Home: Mount central authentication modal
+    User->>Home: Clicks email verification link (?token=XYZ&email=user@email.com)
+    Home->>API: Calls verify endpoint (token, email)
+    API->>Home: Returns successful status
+    Home->>User: Displays success toast and authenticates
+```
+
+### Database Object Mapping Standards
+To bridge the gap between PostgreSQL snake_case conventions and React/TypeScript camelCase conventions, the database service (`web/src/lib/db.ts`) automatically translates database responses and insert payloads:
+
+| TypeScript Attribute (camelCase) | Database Column (snake_case) | Type |
+| :--- | :--- | :--- |
+| `isEmailVerified` | `is_email_verified` | BOOLEAN |
+| `isBlocked` | `is_blocked` | BOOLEAN |
+| `joinedAt` | `joined_at` | TIMESTAMP |
+| `preferredLang` | `preferred_lang` | VARCHAR |
+| `readingMode` | `reading_mode` | VARCHAR |
+| `aiCoachMessage` | `ai_coach_message` | TEXT |
+| `tutorChoice` | `tutor_choice` | VARCHAR |
+
+> [!IMPORTANT]
+> When implementing new table schemas or updating profile objects, developers must register their properties in the mapping matrices of `dbService` to prevent `PostgresError: column does not exist` exceptions and ensure continuous compatibility with both local mocks and real Supabase deployments.
+
+---
+
 *This handbook is maintained by the Core Systems Administration team. All modifications to localization frameworks or security policies must align with the parameters described herein.*

@@ -87,7 +87,69 @@ const STATIC_UI_STRINGS = {
     empty_curriculum_btn: "Explore Catalog",
     active_language: "Active Language: English",
     catalog_translation_guide: "CATALOG TRANSLATION GUIDE",
-    translation_guide_text: "💡 Change the language in the top navigation bar to discover courses in other languages."
+    translation_guide_text: "💡 Change the language in the top navigation bar to discover courses in other languages.",
+    voice_not_supported: "Speech recognition is not supported in this browser. Please use Chrome.",
+    tutor_unlock_title_prefix: "", tutor_unlock_title_suffix: " AI Tutor",
+    tutor_unlock_desc: "A free account is available to let you follow the full curriculum, save your progress permanently, and benefit from the features of an exceptional personal AI tutor!",
+    signup_free: "Sign Up to Unlock", connect: "Log In",
+    connection_difficulties: "Connection difficulties detected... retrying automatically",
+    please_wait: "Please Wait",
+    voice_active: "VOICE CAPTURE ACTIVE...", voice_stop: "Stop",
+    voice_enable: "Active voice coaching input",
+    offline_placeholder: "Connection unavailable...",
+    course_sheet_title: "Display Presentation Sheet", course_sheet: "Course Sheet",
+    report_issue: "Report an issue",
+    report_desc: "Help our AI refine the curriculum. Describe the mathematical, lexical, or pedagogical issue on this page.",
+    report_comment: "Comment (Optional)",
+    report_placeholder: "e.g., The derivation in line 12 is missing a minus sign...",
+    cancel: "Cancel", report_submit: "Submit Report", report_sending: "Sending...",
+    report_success: "Report submitted successfully",
+    prerequisites: "Academic Prerequisites",
+    prerequisite_view_prefix: "View details for: ",
+    prerequisite_unlocked: "✓ Unlocked", prerequisite_required: "⚠️ Required",
+    confirm: "Confirm",
+    achievements_gallery: "Achievements Gallery",
+    unlocked: "Unlocked",
+    active_multi_course_curriculum: "ACTIVE MULTI-COURSE CURRICULUM",
+    global_curriculum_progression: "Global Curriculum Progression",
+    curriculum_integration_desc: "This roadmap integrates {count} academic courses. You complete the curriculum by mastering each milestone.",
+    milestones_and_modules: "Milestones & Course Modules",
+    milestone_step: "Milestone {step}",
+    jump_in: "Jump In",
+    disenroll_confirm_title_sub: "DISENROLLMENT CONFIRMATION",
+    disenroll_confirm_title: "Abandon Module?",
+    disenroll_confirm_desc: "Are you absolutely sure you want to abandon \"{title}\"? Your local progress on this module will be reset, but your global mastery points and achievements remain fully secure.",
+    select_ai_tutor: "Select an AI Tutor",
+    tutor_modal_desc: "Choose the pedagogical voice that matches your style",
+    tutor_modal_footer: "💡 Come back here at any time to change your tutor and adapt your learning support.",
+    day: "day",
+    days: "days",
+    streak_impressive: "🏆 Impressive streak!",
+    streak_keep_up: "⚡ Keep it up!",
+    streak_empty: "Come back daily to build a streak!",
+    mastery_master: "🏆 Master",
+    mastery_expert: "⭐ Expert",
+    mastery_scholar: "📚 Scholar",
+    mastery_apprentice: "🌱 Apprentice",
+    badge_reader: "📖 Dedicated reader",
+    badge_progress: "✨ Great progress",
+    badge_counts: "Every minute counts!",
+    in_progress_of: "in progress • of",
+    enrolled: "enrolled",
+    completed: "completed",
+    remove_favorites: "Remove from favorites",
+    save_course: "Save this course",
+    presentation_sheet: "Presentation sheet",
+    abandon: "Abandon",
+    time_spent: "Time spent:",
+    expected_time: "Expected:",
+    manage_curriculum: "Manage Curriculum",
+    continue_course: "Continue Course",
+    recommended_next_steps: "Recommended Next Steps",
+    recommended_next_steps_desc: "Based on your academic progression and recent completions",
+    recommended_by_tutor: "Recommended by {tutor}",
+    add_to_curriculum: "Add to Curriculum",
+    active: "Active"
   },
   FR: { 
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
@@ -162,7 +224,69 @@ const STATIC_UI_STRINGS = {
     empty_curriculum_btn: "Parcourir le catalogue",
     active_language: "Langue active : Français",
     catalog_translation_guide: "GUIDE DE TRADUCTION DU CATALOGUE",
-    translation_guide_text: "💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d'autres langues."
+    translation_guide_text: "💡 Changez la langue dans la barre de navigation supérieure pour découvrir des cours dans d'autres langues.",
+    voice_not_supported: "L'entrée vocale n'est pas supportée sur ce navigateur. Veuillez utiliser Chrome.",
+    tutor_unlock_title_prefix: "Tuteur ", tutor_unlock_title_suffix: " IA",
+    tutor_unlock_desc: "Un compte gratuit est disponible pour vous permettre de suivre l'intégralité du cursus, enregistrer durablement votre progression et bénéficier des fonctionnalités d'un tuteur IA personnel d'exception !",
+    signup_free: "S'inscrire Gratuitement", connect: "Se Connecter",
+    connection_difficulties: "Difficultés de connexion détectées... reconnexion automatique",
+    please_wait: "Patienter",
+    voice_active: "ÉCOUTE ACTIVE...", voice_stop: "Arrêter",
+    voice_enable: "Activer l'entrée vocale",
+    offline_placeholder: "Connexion indisponible...",
+    course_sheet_title: "Afficher la fiche de présentation", course_sheet: "Fiche du cours",
+    report_issue: "Signaler une erreur",
+    report_desc: "Aidez notre IA à affiner le cursus. Décrivez l'erreur pédagogique, de traduction ou scientifique sur cette page.",
+    report_comment: "Commentaire (Optionnel)",
+    report_placeholder: "ex: Le calcul de la force de frottement à la ligne 12 est erroné...",
+    cancel: "Annuler", report_submit: "Soumettre le Rapport", report_sending: "Envoi...",
+    report_success: "Rapport soumis avec succès",
+    prerequisites: "Prérequis Académiques",
+    prerequisite_view_prefix: "Voir la fiche de : ",
+    prerequisite_unlocked: "✓ Débloqué", prerequisite_required: "⚠️ Requis",
+    confirm: "Confirmer",
+    achievements_gallery: "Galerie des Succès",
+    unlocked: "Déverrouillé",
+    active_multi_course_curriculum: "CURRICULUM MULTI-COURS EN COURS",
+    global_curriculum_progression: "Progression Globale du Curriculum",
+    curriculum_integration_desc: "Ce parcours intègre {count} cours complémentaires. Vous validez l'ensemble du curriculum en terminant chaque étape.",
+    milestones_and_modules: "Modules et Étapes",
+    milestone_step: "Étape {step}",
+    jump_in: "Accéder",
+    disenroll_confirm_title_sub: "CONFIRMATION DE DÉSINSCRIPTION",
+    disenroll_confirm_title: "Abandonner le module ?",
+    disenroll_confirm_desc: "Êtes-vous absolument sûr de vouloir abandonner \"{title}\" ? Votre progression locale sur ce module sera réinitialisée, mais vos points de maîtrise globaux et succès restent pleinement préservés.",
+    select_ai_tutor: "Sélectionner un Tuteur IA",
+    tutor_modal_desc: "Choisissez le style pédagogique adapté à vos besoins",
+    tutor_modal_footer: "💡 Revenez ici à tout moment pour changer de tuteur et adapter votre accompagnement.",
+    day: "jour",
+    days: "jours",
+    streak_impressive: "🏆 Série impressionnante !",
+    streak_keep_up: "⚡ Continue comme ça !",
+    streak_empty: "Reviens chaque jour pour une série !",
+    mastery_master: "🏆 Maître",
+    mastery_expert: "⭐ Expert",
+    mastery_scholar: "📚 Érudit",
+    mastery_apprentice: "🌱 Apprenti",
+    badge_reader: "📖 Lecteur assidu",
+    badge_progress: "✨ Belle progression",
+    badge_counts: "Chaque minute compte !",
+    in_progress_of: "en cours • sur",
+    enrolled: "inscrits",
+    completed: "complété",
+    remove_favorites: "Supprimer des favoris",
+    save_course: "Sauvegarder ce cours",
+    presentation_sheet: "Fiche de présentation",
+    abandon: "Abandonner",
+    time_spent: "Temps passé :",
+    expected_time: "Attendu :",
+    manage_curriculum: "Gérer le Curriculum",
+    continue_course: "Continuer le cours",
+    recommended_next_steps: "Poursuites Possibles",
+    recommended_next_steps_desc: "Basé sur votre progression académique et vos succès récents",
+    recommended_by_tutor: "Recommandé par {tutor}",
+    add_to_curriculum: "Ajouter au Curriculum",
+    active: "Actif"
   },
   ES: { 
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
@@ -237,7 +361,69 @@ const STATIC_UI_STRINGS = {
     empty_curriculum_btn: "Explorar catálogo",
     active_language: "Idioma activo : Español",
     catalog_translation_guide: "GUÍA DE TRADUCCIÓN DEL CATÁLOGO",
-    translation_guide_text: "💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas."
+    translation_guide_text: "💡 Cambie el idioma en la barra de navegación superior para descubrir cursos en otros idiomas.",
+    voice_not_supported: "El reconocimiento de voz no está disponible en este navegador. Utilice Chrome.",
+    tutor_unlock_title_prefix: "Tutor IA ", tutor_unlock_title_suffix: "",
+    tutor_unlock_desc: "Una cuenta gratuita está disponible para seguir el currículo completo, guardar tu progreso de forma permanente y beneficiarte de un tutor IA personal excepcional.",
+    signup_free: "Registrarse Gratis", connect: "Iniciar Sesión",
+    connection_difficulties: "Dificultades de conexión detectadas... reintentando automáticamente",
+    please_wait: "Espere",
+    voice_active: "CAPTURA DE VOZ ACTIVA...", voice_stop: "Detener",
+    voice_enable: "Activar entrada de voz",
+    offline_placeholder: "Conexión no disponible...",
+    course_sheet_title: "Mostrar ficha de presentación", course_sheet: "Ficha del curso",
+    report_issue: "Reportar un problema",
+    report_desc: "Ayuda a nuestra IA a mejorar el currículo. Describe el problema matemático, léxico o pedagógico en esta página.",
+    report_comment: "Comentario (Opcional)",
+    report_placeholder: "ej: La derivación en la línea 12 le falta un signo menos...",
+    cancel: "Cancelar", report_submit: "Enviar Informe", report_sending: "Enviando...",
+    report_success: "Informe enviado correctamente",
+    prerequisites: "Prerrequisitos Académicos",
+    prerequisite_view_prefix: "Ver detalles de: ",
+    prerequisite_unlocked: "✓ Desbloqueado", prerequisite_required: "⚠️ Requerido",
+    confirm: "Confirmar",
+    achievements_gallery: "Galería de Logros",
+    unlocked: "Desbloqueado",
+    active_multi_course_curriculum: "PLAN DE ESTUDIO MULTI-CURSO ACTIVO",
+    global_curriculum_progression: "Progresión Global del Plan de Estudios",
+    curriculum_integration_desc: "Este plan de estudios integra {count} cursos complementarios. Completa el currículo al dominar cada hito.",
+    milestones_and_modules: "Hitos y Módulos de Curso",
+    milestone_step: "Hito {step}",
+    jump_in: "Acceder",
+    disenroll_confirm_title_sub: "CONFIRMACIÓN DE DESINSCRIPCIÓN",
+    disenroll_confirm_title: "¿Abandonar el módulo?",
+    disenroll_confirm_desc: "¿Está absolutamente seguro de que desea abandonar \"{title}\"? Su progreso local en este hito se restablecerá, pero sus puntos de maestría globales y logros se conservarán.",
+    select_ai_tutor: "Seleccionar un Tutor IA",
+    tutor_modal_desc: "Elija el estilo pedagógico adaptado a sus necesidades",
+    tutor_modal_footer: "💡 Regrese aquí en cualquier momento para cambiar de tutor y adaptar su acompañamiento.",
+    day: "día",
+    days: "días",
+    streak_impressive: "🏆 ¡Racha impresionante!",
+    streak_keep_up: "⚡ ¡Sigue así!",
+    streak_empty: "¡Vuelve a diario para crear una racha!",
+    mastery_master: "🏆 Maestro",
+    mastery_expert: "⭐ Experto",
+    mastery_scholar: "📚 Erudito",
+    mastery_apprentice: "🌱 Aprendiz",
+    badge_reader: "📖 Lector dedicado",
+    badge_progress: "✨ Gran progreso",
+    badge_counts: "¡Cada minuto cuenta!",
+    in_progress_of: "en curso • de",
+    enrolled: "inscritos",
+    completed: "completado",
+    remove_favorites: "Quitar de favoritos",
+    save_course: "Guardar este curso",
+    presentation_sheet: "Ficha de presentación",
+    abandon: "Abandonar",
+    time_spent: "Tiempo transcurrido:",
+    expected_time: "Esperado:",
+    manage_curriculum: "Gestionar Currículum",
+    continue_course: "Continuar Curso",
+    recommended_next_steps: "Próximos Pasos Recomendados",
+    recommended_next_steps_desc: "Basado en tu progresión académica y finalizaciones recientes",
+    recommended_by_tutor: "Recomendado por {tutor}",
+    add_to_curriculum: "Añadir al Currículum",
+    active: "Activo"
   },
   DE: { 
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
@@ -312,7 +498,50 @@ const STATIC_UI_STRINGS = {
     empty_curriculum_btn: "Katalog erkunden",
     active_language: "Aktive Sprache : Deutsch",
     catalog_translation_guide: "KATALOG-ÜBERSETZUNGSLEITFADEN",
-    translation_guide_text: "💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken."
+    translation_guide_text: "💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.",
+    confirm: "Bestätigen",
+    achievements_gallery: "Errungenschaften-Galerie",
+    unlocked: "Freigeschaltet",
+    active_multi_course_curriculum: "AKTIVER MEHRKURS-LEHRPLAN",
+    global_curriculum_progression: "Lehrplan-Gesamtfortschritt",
+    curriculum_integration_desc: "Dieser Lehrplan integriert {count} akademische Kurse. Sie schließen den Lehrplan ab, indem Sie jeden Meilenstein meistern.",
+    milestones_and_modules: "Meilensteine & Kursmodule",
+    milestone_step: "Schritt {step}",
+    jump_in: "Eintreten",
+    disenroll_confirm_title_sub: "BESTÄTIGUNG DER ABMELDUNG",
+    disenroll_confirm_title: "Modul abbrechen?",
+    disenroll_confirm_desc: "Sind Sie absolut sicher, dass Sie \"{title}\" abbrechen möchten? Ihr lokaler Fortschritt in diesem Modul wird zurückgesetzt, aber Ihre globalen Meisterpunkte und Errungenschaften bleiben vollständig erhalten.",
+    select_ai_tutor: "KI-Tutor auswählen",
+    tutor_modal_desc: "Wählen Sie den pädagogischen Stil, der zu Ihnen passt",
+    tutor_modal_footer: "💡 Sie können jederzeit hierher zurückkehren, um den Tutor zu wechseln und Ihre Unterstützung anzupassen.",
+    day: "Tag",
+    days: "Tage",
+    streak_impressive: "🏆 Beeindruckende Serie!",
+    streak_keep_up: "⚡ Weiter so!",
+    streak_empty: "Kommen Sie täglich wieder, um eine Serie aufzubauen!",
+    mastery_master: "🏆 Meister",
+    mastery_expert: "⭐ Experte",
+    mastery_scholar: "📚 Gelehrter",
+    mastery_apprentice: "🌱 Lehrling",
+    badge_reader: "📖 Engagierter Leser",
+    badge_progress: "✨ Toller Fortschritt",
+    badge_counts: "Jede Minute zählt!",
+    in_progress_of: "in Bearbeitung • von",
+    enrolled: "eingeschrieben",
+    completed: "abgeschlossen",
+    remove_favorites: "Aus Lesezeichen entfernen",
+    save_course: "Diesen Kurs speichern",
+    presentation_sheet: "Präsentationsblatt",
+    abandon: "Abbrechen",
+    time_spent: "Zeitaufwand:",
+    expected_time: "Erwartet:",
+    manage_curriculum: "Lehrplan verwalten",
+    continue_course: "Kurs fortsetzen",
+    recommended_next_steps: "Empfohlene nächste Schritte",
+    recommended_next_steps_desc: "Basierend auf Ihrem akademischen Fortschritt und den letzten Abschlüssen",
+    recommended_by_tutor: "Empfohlen von {tutor}",
+    add_to_curriculum: "Zum Lehrplan hinzufügen",
+    active: "Aktiv"
   },
   ZH: { 
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
@@ -387,7 +616,69 @@ const STATIC_UI_STRINGS = {
     empty_curriculum_btn: "探索课程目录",
     active_language: "当前语言：中文",
     catalog_translation_guide: "课程目录语言切换指南",
-    translation_guide_text: "💡 在顶部导航栏中切换语言，即可探索其他语言的课程目录。"
+    translation_guide_text: "💡 在顶部导航栏中切换语言，即可探索其他语言的课程目录。",
+    voice_not_supported: "此浏览器不支持语音识别。请使用 Chrome。",
+    tutor_unlock_title_prefix: "", tutor_unlock_title_suffix: " AI 导师",
+    tutor_unlock_desc: "免费账户可让您跟随完整课程课表、永久保存学习进度，并享受卓越个人 AI 导师的所有功能！",
+    signup_free: "免费注册解锁", connect: "登录",
+    connection_difficulties: "检测到连接问题，正在自动重连...",
+    please_wait: "请稍候",
+    voice_active: "语音捕捉激活中...", voice_stop: "停止",
+    voice_enable: "激活语音辅导输入",
+    offline_placeholder: "连接不可用...",
+    course_sheet_title: "显示课程介绍单", course_sheet: "课程单",
+    report_issue: "报告错误",
+    report_desc: "帮助我们的 AI 优化课程内容。请描述本页的教学、翻译或科学错误。",
+    report_comment: "评论（可选）",
+    report_placeholder: "例：第12行摩擦力计算错误...",
+    cancel: "取消", report_submit: "提交报告", report_sending: "提交中...",
+    report_success: "报告成功提交",
+    prerequisites: "学术先决条件",
+    prerequisite_view_prefix: "查看详情：",
+    prerequisite_unlocked: "✓ 已解锁", prerequisite_required: "⚠️ 必需",
+    confirm: "确认",
+    achievements_gallery: "成就荣誉展厅",
+    unlocked: "已解锁",
+    active_multi_course_curriculum: "当前多课程学习计划",
+    global_curriculum_progression: "学习计划总体进度",
+    curriculum_integration_desc: "本学习计划整合了 {count} 门学术课程。您需要通过掌握每个里程碑来完成全部课程。",
+    milestones_and_modules: "里程碑与课程模块",
+    milestone_step: "里程碑 {step}",
+    jump_in: "进入学习",
+    disenroll_confirm_title_sub: "取消注册确认",
+    disenroll_confirm_title: "放弃模块学习？",
+    disenroll_confirm_desc: "您确定要放弃学习 \"{title}\" 吗？您在该模块的本地进度将被重置，但您的全局掌握点数和成就荣誉仍将被完整保留。",
+    select_ai_tutor: "选择 AI 导师",
+    tutor_modal_desc: "选择最契合您学习风格的辅导声音",
+    tutor_modal_footer: "💡 随时可以回到此处更换导师，以调整您的学习辅导模式。",
+    day: "天",
+    days: "天",
+    streak_impressive: "🏆 令人惊叹的连续学习天数！",
+    streak_keep_up: "⚡ 继续保持！",
+    streak_empty: "每天回来学习以保持连续天数！",
+    mastery_master: "🏆 大师",
+    mastery_expert: "⭐ 专家",
+    mastery_scholar: "📚 学者",
+    mastery_apprentice: "🌱 学徒",
+    badge_reader: "📖 专心致志的读者",
+    badge_progress: "✨ 极大进步",
+    badge_counts: "每一分钟都至关重要！",
+    in_progress_of: "进行中 • 共",
+    enrolled: "门",
+    completed: "已完成",
+    remove_favorites: "从收藏夹中移除",
+    save_course: "收藏此课程",
+    presentation_sheet: "展示单",
+    abandon: "放弃",
+    time_spent: "已学时长:",
+    expected_time: "预计时长:",
+    manage_curriculum: "管理课程表",
+    continue_course: "继续学习",
+    recommended_next_steps: "推荐的下一步课程",
+    recommended_next_steps_desc: "基于您的学术进展和最近完成的课程",
+    recommended_by_tutor: "导师 {tutor} 推荐",
+    add_to_curriculum: "添加到课程表",
+    active: "生效"
   }
 };
 
@@ -447,7 +738,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const pathname = usePathname();
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
@@ -487,7 +778,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert(lang === 'FR' ? "L'entrée vocale n'est pas supportée sur ce navigateur. Veuillez utiliser Chrome." : "Speech recognition is not supported in this browser. Please use Chrome.");
+      alert(t.voice_not_supported);
       return;
     }
 
@@ -509,14 +800,16 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   useEffect(() => {
     const updateAuth = () => {
       const session = localStorage.getItem('op_session');
-      setIsLoggedIn(session !== 'false');
+      setIsLoggedIn(session === 'true');
     };
     updateAuth();
     window.addEventListener('storage', updateAuth);
     window.addEventListener('op_auth_state_changed', updateAuth);
+    window.addEventListener('op_auth_state_change', updateAuth);
     return () => {
       window.removeEventListener('storage', updateAuth);
       window.removeEventListener('op_auth_state_changed', updateAuth);
+      window.removeEventListener('op_auth_state_change', updateAuth);
     };
   }, []);
 
@@ -704,9 +997,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
         if (updated.length > 0) {
           updated[updated.length - 1] = { 
             role: 'assistant', 
-            content: lang === 'FR' 
-              ? "Désolé, une erreur est survenue lors de la communication avec le tuteur. Veuillez réessayer." 
-              : "Sorry, an error occurred while communicating with the tutor. Please try again."
+            content: t.tutor_error
           };
          }
          return updated;
@@ -761,7 +1052,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-black tracking-tight text-white">
-                    {lang === 'FR' ? `Tuteur ${getPersonaName(persona)} IA` : `${getPersonaName(persona)} AI Tutor`}
+                    {t.tutor_unlock_title_prefix}{getPersonaName(persona)}{t.tutor_unlock_title_suffix}
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed max-w-[320px]">
                     {lang === 'FR' 
@@ -774,13 +1065,13 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                     onClick={() => handleAuthClick('signup')}
                     className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
                   >
-                    {lang === 'FR' ? "S'inscrire Gratuitement" : "Sign Up to Unlock"}
+                    {t.signup_free}
                   </button>
                   <button 
                     onClick={() => handleAuthClick('login')}
                     className="w-full py-3.5 bg-slate-800 border border-slate-750 text-slate-300 font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:text-white hover:border-slate-700 cursor-pointer"
                   >
-                    {lang === 'FR' ? "Se Connecter" : "Log In"}
+                    {t.connect}
                   </button>
                 </div>
               </div>
@@ -806,7 +1097,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                         </span>
                       </div>
                       <div className="bg-amber-500/20 px-2.5 py-1 rounded-lg text-[7px] font-black uppercase animate-pulse shrink-0 text-amber-400 border border-amber-500/30">
-                        {lang === 'FR' ? 'Patienter' : 'Please Wait'}
+                        {t.please_wait}
                       </div>
                     </motion.div>
                   )}
@@ -838,7 +1129,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       value={input} 
                       onChange={(e) => setInput(e.target.value)} 
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                      placeholder={isOffline ? (lang === 'FR' ? "Connexion indisponible..." : "Connection unavailable...") : t.placeholder} 
+                      placeholder={isOffline ? t.offline_placeholder : t.placeholder} 
                       className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
                     />
                     
@@ -857,7 +1148,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                         <div className="flex items-center gap-3">
                           <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-                            {lang === 'FR' ? "ÉCOUTE ACTIVE..." : "VOICE CAPTURE ACTIVE..."}
+                            {t.voice_active}
                           </span>
                         </div>
                         
@@ -877,7 +1168,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                           onClick={toggleListening}
                           className="px-4 py-2 bg-red-650 hover:bg-red-600 border border-red-500/40 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] text-white transition-all shadow-md cursor-pointer"
                         >
-                          {lang === 'FR' ? "Arrêter" : "Stop"}
+                          {t.voice_stop}
                         </button>
                       </div>
                     )}
@@ -887,7 +1178,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       disabled={isOffline} 
                       onClick={toggleListening} 
                       className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${isListening ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed`}
-                      title={lang === 'FR' ? "Activer l'entrée vocale" : "Active voice coaching input"}
+                      title={t.voice_enable}
                       aria-label="Active voice coaching input"
                     >
                       <Mic className="w-4 h-4" />
@@ -922,7 +1213,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 // --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSelector = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, showReadingModeSelector?: boolean, onLangChange?: (lang: string) => void }) => {
   const { language: lang, setLanguage: setLang } = useLanguage();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeCourseData, setActiveCourseData] = useState<any | null>(null);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
@@ -1028,6 +1319,19 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     };
     window.addEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
 
+    const handleAuthStateChange = () => {
+      const session = localStorage.getItem('op_session');
+      setIsLoggedIn(session === 'true');
+      const profile = localStorage.getItem('op_user_profile');
+      if (profile) {
+        setUserProfile(JSON.parse(profile));
+      } else {
+        setUserProfile(null);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthStateChange);
+    window.addEventListener('op_auth_state_changed', handleAuthStateChange);
+
     const fetchLanguages = () => {
       dbService.getAvailableLanguages().then(({ data }) => {
         if (data && data.length > 0) {
@@ -1046,6 +1350,8 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     return () => {
       window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
       window.removeEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
+      window.removeEventListener('op_auth_state_change', handleAuthStateChange);
+      window.removeEventListener('op_auth_state_changed', handleAuthStateChange);
       window.removeEventListener('op_languages_changed', fetchLanguages);
     };
   }, []);
@@ -1203,10 +1509,10 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           <button 
             onClick={() => setSelectedEnrollCourse(activeCourseData)}
             className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-450 hover:border-blue-500/50 transition-all flex items-center gap-2 group cursor-pointer"
-            title={lang === 'FR' ? "Afficher la fiche de présentation" : "Display Presentation Sheet"}
+            title={t.course_sheet_title}
           >
             <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{lang === 'FR' ? "Fiche du cours" : "Course Sheet"}</span>
+            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{t.course_sheet}</span>
           </button>
         )}
 
@@ -1311,7 +1617,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500" /> {lang === 'FR' ? "Signaler une erreur" : "Report an issue"}
+                  <AlertTriangle className="w-5 h-5 text-red-500" /> {t.report_issue}
                 </h3>
                 <button 
                   onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
@@ -1323,20 +1629,18 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               
               <div className="p-10 space-y-6">
                 <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                  {lang === 'FR' 
-                    ? "Aidez notre IA à affiner le cursus. Décrivez l'erreur pédagogique, de traduction ou scientifique sur cette page." 
-                    : "Help our AI refine the curriculum. Describe the mathematical, lexical, or pedagogical issue on this page."}
+                  {t.report_desc}
                 </p>
                 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
-                    {lang === 'FR' ? "Commentaire (Optionnel)" : "Comment (Optional)"}
+                    {t.report_comment}
                   </label>
                   <textarea 
                     value={reportComment}
                     onChange={(e) => setReportComment(e.target.value)}
                     rows={4}
-                    placeholder={lang === 'FR' ? "ex: Le calcul de la force de frottement à la ligne 12 est erroné..." : "e.g., The derivation in line 12 is missing a minus sign..."}
+                    placeholder={t.report_placeholder}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500/50 transition-all resize-none text-white placeholder:text-slate-700" 
                   />
                 </div>
@@ -1346,7 +1650,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
                     className="flex-1 py-4 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400"
                   >
-                    {lang === 'FR' ? "Annuler" : "Cancel"}
+                    {t.cancel}
                   </button>
                   <button 
                     onClick={async () => {
@@ -1357,14 +1661,14 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       setSubmittingReport(false);
                       setIsReportModalOpen(false);
                       setReportComment('');
-                      triggerToast(lang === 'FR' ? "Rapport soumis avec succès" : "Report submitted successfully");
+                      triggerToast(t.report_success);
                     }}
                     disabled={submittingReport}
                     className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/20 disabled:bg-slate-800"
                   >
                     {submittingReport 
-                      ? (lang === 'FR' ? "Envoi..." : "Sending...") 
-                      : (lang === 'FR' ? "Soumettre le Rapport" : "Submit Report")}
+                      ? t.report_sending
+                      : t.report_submit}
                   </button>
                 </div>
               </div>
@@ -1451,7 +1755,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
                 <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
                   <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                    {t.prerequisites}
                   </p>
                   <div className="flex flex-col gap-2 text-left">
                     {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
@@ -1469,7 +1773,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                         <div 
                           key={idx} 
                           onClick={clickable ? handleClick : undefined}
-                          title={clickable ? (lang === 'FR' ? `Voir la fiche de : ${matchedCourse.title}` : `View details for: ${matchedCourse.title}`) : undefined}
+                          title={clickable ? `${t.prerequisite_view_prefix}${matchedCourse.title}` : undefined}
                           className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
                             clickable 
                               ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
@@ -1486,8 +1790,8 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                               : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}>
                             {isSatisfied 
-                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
-                              : (lang === 'FR' ? "⚠️ Requis" : "⚠️ Required")}
+                              ? t.prerequisite_unlocked
+                              : t.prerequisite_required}
                           </span>
                         </div>
                       );
@@ -1526,8 +1830,65 @@ export const Footer = () => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  const [readingMode, setReadingMode] = React.useState('dark');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('op_reading_mode') || 'dark';
+      setReadingMode(savedMode);
+    }
+
+    const handleGlobalModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setReadingMode(customEvent.detail);
+    };
+    window.addEventListener('op_reading_mode_changed', handleGlobalModeChange);
+    return () => {
+      window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
+    };
+  }, []);
+
+  const isPaper = readingMode === 'paper';
+  const isFocus = readingMode === 'focus';
+  
+  const bgClass = isPaper 
+    ? "bg-[#fcfaf2] border-t border-[#eae0cb]" 
+    : isFocus 
+      ? "bg-black border-t border-[#111111]" 
+      : "bg-slate-950 border-t border-slate-900";
+      
+  const textTitleClass = isPaper 
+    ? "text-[#8a7664]" 
+    : isFocus 
+      ? "text-[#555555]" 
+      : "text-slate-400";
+      
+  const textDescClass = isPaper 
+    ? "text-[#6c5c4e]" 
+    : isFocus 
+      ? "text-[#666666]" 
+      : "text-slate-500";
+      
+  const textLinkClass = isPaper 
+    ? "text-[#8a7664] hover:text-[#2d241e]" 
+    : isFocus 
+      ? "text-[#555555] hover:text-white" 
+      : "text-slate-600 hover:text-white";
+      
+  const borderBottomClass = isPaper 
+    ? "border-[#eae0cb]" 
+    : isFocus 
+      ? "border-[#111111]" 
+      : "border-slate-900/50";
+      
+  const textCopyrightClass = isPaper 
+    ? "text-[#8a7664]" 
+    : isFocus 
+      ? "text-[#444444]" 
+      : "text-slate-800";
+
   return (
-    <footer className="bg-slate-950 border-t border-slate-900 pt-24 pb-12 px-8 overflow-hidden">
+    <footer className={`${bgClass} pt-24 pb-12 px-8 overflow-hidden`}>
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-16 mb-20">
           <div className="md:col-span-1">
@@ -1535,37 +1896,37 @@ export const Footer = () => {
               <OpenPrimerIcon className="w-10 h-10" />
               <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">OPEN<span className="text-blue-500 italic">PRIMER</span></span>
             </Link>
-            <p className="text-sm text-slate-500 leading-relaxed italic">
+            <p className={`text-sm ${textDescClass} leading-relaxed italic`}>
               {t.footer_desc}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.foundation}</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${textTitleClass} mb-8`}>{t.foundation}</p>
             <ul className="space-y-4">
-              <li><Link href="/philosophy" className="text-sm text-slate-600 hover:text-white transition-colors">{t.philosophy}</Link></li>
-              <li><Link href="/contact" className="text-sm text-slate-600 hover:text-white transition-colors">{t.contact}</Link></li>
+              <li><Link href="/philosophy" className={`text-sm ${textLinkClass} transition-colors`}>{t.philosophy}</Link></li>
+              <li><Link href="/contact" className={`text-sm ${textLinkClass} transition-colors`}>{t.contact}</Link></li>
             </ul>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.curriculum}</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${textTitleClass} mb-8`}>{t.curriculum}</p>
             <ul className="space-y-4">
-              <li><Link href="/catalog" className="text-sm text-slate-600 hover:text-blue-400 transition-colors">{t.catalog}</Link></li>
+              <li><Link href="/catalog" className={`text-sm ${textLinkClass} transition-colors`}>{t.catalog}</Link></li>
             </ul>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">{t.legal}</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${textTitleClass} mb-8`}>{t.legal}</p>
             <ul className="space-y-4">
-              <li><Link href="/terms" className="text-sm text-slate-800 hover:text-slate-400 transition-colors">{t.terms}</Link></li>
-              <li><Link href="/privacy" className="text-sm text-slate-800 hover:text-slate-400 transition-colors">{t.privacy}</Link></li>
+              <li><Link href="/terms" className={`text-sm ${textLinkClass} transition-colors`}>{t.terms}</Link></li>
+              <li><Link href="/privacy" className={`text-sm ${textLinkClass} transition-colors`}>{t.privacy}</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-12 border-t border-slate-900/50 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-[9px] font-black text-slate-800 uppercase tracking-[0.4em]">
+        <div className={`pt-12 border-t ${borderBottomClass} flex flex-col md:flex-row justify-between items-center gap-8`}>
+          <div className={`text-[9px] font-black ${textCopyrightClass} uppercase tracking-[0.4em]`}>
             {t.copyright}
           </div>
           <div className="flex gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">

@@ -3,28 +3,48 @@ import { dbService } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 
+let cachedMdxCount: number | null = null;
+let lastScanTime = 0;
+const CACHE_TTL = 300000; // 5 minutes
+
 function countUniqueMdxLessons(): number {
+  const now = Date.now();
+  if (cachedMdxCount !== null && now - lastScanTime < CACHE_TTL) {
+    return cachedMdxCount;
+  }
+
   const contentPath = path.join(process.cwd(), '../content');
   if (!fs.existsSync(contentPath)) return 0;
   
   const uniqueLessons = new Set<string>();
   
   function scan(dir: string) {
-    const items = fs.readdirSync(dir, { withFileTypes: true });
-    for (const item of items) {
-      const fullPath = path.join(dir, item.name);
-      if (item.isDirectory()) {
-        scan(fullPath);
-      } else if (item.name.endsWith('.mdx')) {
-        const normalized = item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '');
-        const relativePath = path.relative(contentPath, path.join(dir, normalized));
-        uniqueLessons.add(relativePath.split(path.sep).join('/'));
+    try {
+      const items = fs.readdirSync(dir, { withFileTypes: true });
+      for (const item of items) {
+        const fullPath = path.join(dir, item.name);
+        if (item.isDirectory()) {
+          scan(fullPath);
+        } else if (item.name.endsWith('.mdx')) {
+          const normalized = item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '');
+          const relativePath = path.relative(contentPath, path.join(dir, normalized));
+          uniqueLessons.add(relativePath.split(path.sep).join('/'));
+        }
       }
+    } catch (e) {
+      console.warn("Scan warning for content directory:", e);
     }
   }
   
-  scan(contentPath);
-  return uniqueLessons.size;
+  try {
+    scan(contentPath);
+    cachedMdxCount = uniqueLessons.size;
+    lastScanTime = now;
+    return cachedMdxCount;
+  } catch (err) {
+    console.error("Error scanning MDX content:", err);
+    return cachedMdxCount ?? 0;
+  }
 }
 
 export async function GET() {
@@ -53,11 +73,9 @@ export async function GET() {
     const activeUsers = dbUsers || [];
     const totalStudents = dbUsers !== null ? activeUsers.length : 0;
  
-    // 5. Dynamic Validation Rate based on user levels
-    const avgLevel = activeUsers.length > 0
-      ? activeUsers.reduce((acc: number, u: any) => acc + (u.level || 0), 0) / activeUsers.length
-      : 0;
-    const validationRate = dbUsers !== null ? (activeUsers.length > 0 ? Math.min(100, Math.round(avgLevel * 7.5)) : 0) : 0;
+    // 5. Dynamic Validation Rate based on user validations
+    const usersWithValidations = activeUsers.filter((u: any) => (u.level && u.level > 1) || (u.kp && u.kp > 0)).length;
+    const validationRate = dbUsers !== null ? (totalStudents > 0 ? Math.round((usersWithValidations / totalStudents) * 100) : 0) : 0;
 
     // 6. Dynamic Platform Rating
     const { data: feedbacks } = await dbService.getCourseFeedbacks();

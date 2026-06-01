@@ -25,12 +25,21 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false';
+    const loggedIn = session === 'true' || session !== 'false' && session !== null;
     setIsLoggedIn(loggedIn);
+
+    const savedProfile = localStorage.getItem('op_user_profile');
+    let userId = 'u1';
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.id) userId = profile.id;
+      } catch (e) {}
+    }
 
     if (loggedIn) {
       // Check user curriculum progress
-      dbService.getUserProgress('u1').then((res) => {
+      dbService.getUserProgress(userId).then((res) => {
         const matchingModule = res.activeModules?.find(
           (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
         );
@@ -103,7 +112,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       // If not in a curriculum or last course, and logged in, find any other active incomplete course
       if (loggedIn) {
         try {
-          const progress = await dbService.getUserProgress('u1');
+          const progress = await dbService.getUserProgress(userId);
           if (progress && progress.activeModules) {
             const nextActiveModule = progress.activeModules.find(
               (m: any) => !m.isCurriculum && m.id !== currentCourseId && m.progress < 100

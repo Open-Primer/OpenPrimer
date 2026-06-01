@@ -201,13 +201,22 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
   const { language } = useLanguage();
   const t = ADVANCED_STRINGS[language as keyof typeof ADVANCED_STRINGS] || ADVANCED_STRINGS.EN;
   const [selected, setSelected] = React.useState<number | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(true);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isReadOnly, setIsReadOnly] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isLoggedIn === 'boolean') {
+        setIsLoggedIn(customEvent.detail.isLoggedIn);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthChange);
+
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
     const storage = getProgressionStorage();
@@ -226,6 +235,10 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
         }
       }
     }
+
+    return () => {
+      window.removeEventListener('op_auth_state_change', handleAuthChange);
+    };
   }, [type]);
 
   const handleRate = (lvl: number) => {

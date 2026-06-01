@@ -28,12 +28,14 @@ export const USERS_STRINGS = {
     add_title: "Add New Student",
     full_name: "Full Name",
     email_address: "Email Address",
+    password: "Password",
     system_role: "System Role",
     lang_pref: "Language Preference",
     visual_theme: "Visual Theme",
     create_profile: "Create Student Profile",
     error_required: "Name and Email are strictly required fields.",
     error_email: "Please supply a valid corporate or academic email address.",
+    error_password: "Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.",
     student_opt: "🎓 Student Profile (Default)",
     admin_opt: "🛡️ Administrator privileges",
     theme_default: "✨ Default (Dark)",
@@ -42,7 +44,7 @@ export const USERS_STRINGS = {
   },
   FR: {
     title: "Contrôle d'Identité",
-    subtitle: "Gérez la sécurité de la plateforme et les rôles administratifs.",
+    subtitle: "Gerez la sécurité de la plateforme et les rôles administratifs.",
     add_student: "Ajouter un Étudiant",
     search_placeholder: "Rechercher des étudiants...",
     col_identity: "Identité",
@@ -61,12 +63,14 @@ export const USERS_STRINGS = {
     add_title: "Ajouter un Nouvel Étudiant",
     full_name: "Nom Complet",
     email_address: "Adresse Email",
+    password: "Mot de passe",
     system_role: "Rôle Système",
     lang_pref: "Préférence de Langue",
     visual_theme: "Thème Visuel",
     create_profile: "Créer le Profil Étudiant",
     error_required: "Le nom et l'email sont strictement requis.",
     error_email: "Veuillez fournir une adresse email valide.",
+    error_password: "Le mot de passe doit contenir au moins 12 caractères, incluant une lettre majuscule, une lettre minuscule, un nombre et un caractère spécial.",
     student_opt: "🎓 Profil Étudiant (Par défaut)",
     admin_opt: "🛡️ Privilèges Administrateur",
     theme_default: "✨ Par défaut (Sombre)",
@@ -94,12 +98,14 @@ export const USERS_STRINGS = {
     add_title: "Añadir Nuevo Estudiante",
     full_name: "Nombre Completo",
     email_address: "Dirección de Correo",
+    password: "Contraseña",
     system_role: "Rol del Sistema",
     lang_pref: "Preferencia de Idioma",
     visual_theme: "Tema Visual",
     create_profile: "Crear Perfil de Estudiante",
     error_required: "El nombre y el correo electrónico son campos estrictamente requeridos.",
     error_email: "Por favor proporcione una dirección de correo válida.",
+    error_password: "La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
     student_opt: "🎓 Perfil de Estudiante (Predeterminado)",
     admin_opt: "🛡️ Privilegios de Administrador",
     theme_default: "✨ Predeterminado (Oscuro)",
@@ -127,12 +133,14 @@ export const USERS_STRINGS = {
     add_title: "Neuen Studenten hinzufügen",
     full_name: "Vollständiger Name",
     email_address: "E-Mail-Adresse",
+    password: "Passwort",
     system_role: "Systemrolle",
     lang_pref: "Bevorzugte Sprache",
     visual_theme: "Visuelles Thema",
     create_profile: "Studentenprofil erstellen",
     error_required: "Name und E-Mail-Adresse sind Pflichtfelder.",
     error_email: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    error_password: "Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
     student_opt: "🎓 Studentenprofil (Standard)",
     admin_opt: "🛡️ Administratorrechte",
     theme_default: "✨ Standard (Dunkel)",
@@ -160,12 +168,14 @@ export const USERS_STRINGS = {
     add_title: "注册新学生账号",
     full_name: "姓名",
     email_address: "电子邮箱地址",
+    password: "密码",
     system_role: "系统角色",
     lang_pref: "首选语言偏好",
     visual_theme: "界面视觉主题",
     create_profile: "创建学生档案",
     error_required: "姓名和邮箱是必填项！",
     error_email: "请输入有效的公司或学校电子邮箱地址。",
+    error_password: "密码长度必须至少为 12 个字符，且必须包含大小写字母、数字及特殊字符。",
     student_opt: "🎓 普通学生账号 (默认)",
     admin_opt: "🛡️ 平台系统管理员权限",
     theme_default: "✨ 默认极黑 (深色)",
@@ -198,6 +208,8 @@ export default function AdminUsers() {
   const [newLang, setNewLang] = useState('EN');
   const [newReadingMode, setNewReadingMode] = useState('default');
   const [newUserError, setNewUserError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
  
   useEffect(() => {
     loadUsers();
@@ -233,6 +245,12 @@ export default function AdminUsers() {
       setNewUserError(t.error_email);
       return;
     }
+
+    const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
+    if (!newPassword || !PASSWORD_REGEX.test(newPassword)) {
+      setNewUserError(t.error_password);
+      return;
+    }
  
     const generatedId = 'u_' + Date.now() + Math.random().toString(36).substr(2, 5);
     await dbService.createUser({
@@ -241,12 +259,15 @@ export default function AdminUsers() {
       email: newEmail,
       role: newRole,
       preferredLang: newLang,
-      readingMode: newReadingMode
+      readingMode: newReadingMode,
+      password: newPassword
     });
  
     setIsAddUserOpen(false);
     setNewName('');
     setNewEmail('');
+    setNewPassword('');
+    setShowNewPassword(false);
     setNewRole('student');
     setNewLang('EN');
     setNewReadingMode('default');
@@ -504,6 +525,28 @@ export default function AdminUsers() {
                     placeholder="e.g. jean.dupont@openprimer.org"
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
                   />
+                </div>
+ 
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.password} <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <input 
+                      required
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="student-password-input"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-16 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-widest outline-none focus:outline-none cursor-pointer"
+                    >
+                      {showNewPassword ? "HIDE" : "SHOW"}
+                    </button>
+                  </div>
                 </div>
  
                 <div className="space-y-2">

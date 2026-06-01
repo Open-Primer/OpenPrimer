@@ -52,7 +52,8 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await page.fill('#student-name-input', 'Test Student E2E');
 
-    await page.fill('#student-email-input', 'e2e.test.student@openprimer.org');
+    await page.fill('#student-email-input', 'e2e.test.student@openprimer.org');
+    await page.fill('#student-password-input', 'SecureP@ssw0rd!');
 
     
 
@@ -297,7 +298,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // 4. Assert it moves to the Refused Backlog section at the bottom of Tab 1
 
-    const backlogHeader = page.locator('h3:has-text("Refused Backlog"), h3:has-text("Backlog des Refusés")');
+    const backlogHeader = page.locator('h3:has-text("Refused Backlog"), h3:has-text("Backlog des Refusés"), h4:has-text("Refused Backlog"), h4:has-text("Backlog des Refusés")');
 
     await expect(backlogHeader).toBeVisible();
 
@@ -325,7 +326,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // 2. Click Create Badge trigger button
 
-    await page.click('button:has-text("Create New Achievement Badge"), button:has-text("Créer un Badge")');
+    await page.click('button:has-text("Create New Achievement Badge"), button:has-text("Créer un Badge"), button:has-text("Register Achievement"), button:has-text("Enregistrer l\'Accomplissement")');
 
  
 

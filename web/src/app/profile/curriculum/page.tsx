@@ -68,25 +68,30 @@ export default function CurriculumPage() {
     return candidates.filter((c: any) => c.slug === 'Classical_Mechanics' || c.slug === 'classical-mechanics' || c.slug === 'Biologie_Test' || c.slug === 'cell-biology' || c.slug === 'Droit_Test' || c.slug === 'constitutional-law').slice(0, 2);
   };
 
-  const enrollInRecommended = (course: any) => {
-    const newEnrolled = [...enrolledIds, course.id];
-    setEnrolledIds(newEnrolled);
-    localStorage.setItem('op_enrolled_courses', JSON.stringify(newEnrolled));
+  const enrollInRecommended = async (course: any) => {
+    const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('op_user_profile') : null;
+    const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('op_session') === 'true' : false;
+    let userId = 'u1';
     
-    const activeModules = progress?.activeModules ? [...progress.activeModules] : [];
-    if (!activeModules.find((m: any) => m.id === course.id)) {
-      activeModules.push({
-        id: course.id,
-        slug: course.slug,
-        title: course.title,
-        subject: course.subject,
-        level: course.level,
-        progress: 0
-      });
-      const updatedProgress = { ...progress, activeModules };
-      setProgress(updatedProgress);
-      localStorage.setItem('op_user_progress', JSON.stringify(updatedProgress));
+    if (loggedIn && savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.id) userId = profile.id;
+      } catch (e) {}
     }
+
+    await dbService.enrollInCourse(userId, course.id);
+    
+    // Reload user progress from database/cache
+    const data = await dbService.getUserProgress(userId, lang);
+    setProgress(data);
+
+    // Update locally enrolledIds
+    const newEnrolled = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
+    setEnrolledIds(newEnrolled);
+    
+    // Dispatch progress updated event
+    window.dispatchEvent(new Event('op_progress_updated'));
   };
 
   const [showTutorModal, setShowTutorModal] = useState(false);
@@ -196,13 +201,20 @@ export default function CurriculumPage() {
     
     // Sync with database if connected
     const savedProfile = localStorage.getItem('op_user_profile');
-    const loggedIn = localStorage.getItem('op_session');
-    if (savedProfile && loggedIn) {
+    const loggedIn = localStorage.getItem('op_session') === 'true';
+    let userId = 'u1';
+    
+    if (loggedIn && savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.id) userId = profile.id;
+      } catch (e) {}
+    }
+
+    if (loggedIn && savedProfile) {
       try {
         const { supabase } = await import('@/lib/supabase');
-        const profile = JSON.parse(savedProfile);
-        const userId = profile.id;
-        if (userId) {
+        if (userId && userId !== 'u1') {
           await supabase
             .from('profiles')
             .update({ tutor_choice: id })
@@ -218,13 +230,26 @@ export default function CurriculumPage() {
     window.dispatchEvent(new Event('op_active_tutor_changed'));
     
     // Reload user progress immediately to update the pedagogical summary card in real-time!
-    const data = await dbService.getUserProgress('u1', lang);
+    const data = await dbService.getUserProgress(userId, lang);
     setProgress(data);
   };
 
   useEffect(() => {
     async function loadProgress() {
-      const data = await dbService.getUserProgress('u1', lang); // Mock user
+      const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('op_user_profile') : null;
+      const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('op_session') === 'true' : false;
+      let userId = 'u1';
+      
+      if (loggedIn && savedProfile) {
+        try {
+          const profile = JSON.parse(savedProfile);
+          if (profile.id) userId = profile.id;
+        } catch (e) {
+          console.error("Failed to parse user profile for curriculum dashboard:", e);
+        }
+      }
+
+      const data = await dbService.getUserProgress(userId, lang);
       setProgress(data);
       const { data: coursesData } = await dbService.getAllCourses();
       if (coursesData) setCourses(coursesData);
@@ -235,8 +260,8 @@ export default function CurriculumPage() {
       const earned = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_earned_achievements') || '[]') : [];
       setEarnedIds(earned);
 
-      // Compute enrolled IDs + curriculum revision date
-      const ids: number[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_enrolled_courses') || '[]') : [];
+      // Compute enrolled IDs + curriculum revision date from Supabase fetched activeModules
+      const ids: number[] = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
       setEnrolledIds(ids);
       const revDate = progressService.getCurriculumLastRevision(ids);
       setCurriculumRevision(revDate);
@@ -273,19 +298,30 @@ export default function CurriculumPage() {
     localStorage.setItem('op_bookmarks', JSON.stringify(newBookmarks));
   };
 
-  const handleOptOut = (id: number) => {
-    const updatedIds = enrolledIds.filter(cid => cid !== id);
-    setEnrolledIds(updatedIds);
-    localStorage.setItem('op_enrolled_courses', JSON.stringify(updatedIds));
-    if (progress) {
-      const updatedModules = progress.activeModules ? progress.activeModules.filter((m: any) => m.id !== id) : [];
-      setProgress({
-        ...progress,
-        activeModules: updatedModules,
-        inProgressCount: updatedModules.filter((m: any) => m.progress < 100).length,
-        completedCount: updatedModules.filter((m: any) => m.progress === 100).length
-      });
+  const handleOptOut = async (id: number) => {
+    const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('op_user_profile') : null;
+    const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('op_session') === 'true' : false;
+    let userId = 'u1';
+    
+    if (loggedIn && savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.id) userId = profile.id;
+      } catch (e) {}
     }
+
+    await dbService.abandonCourse(userId, id);
+
+    // Reload user progress from database/cache
+    const data = await dbService.getUserProgress(userId, lang);
+    setProgress(data);
+
+    // Update locally enrolledIds
+    const newEnrolled = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
+    setEnrolledIds(newEnrolled);
+
+    // Dispatch progress updated event
+    window.dispatchEvent(new Event('op_progress_updated'));
   };
 
   if (loading || !progress) {
@@ -358,7 +394,7 @@ export default function CurriculumPage() {
               <p className="text-3xl font-black text-white">
                 {progress.studyStreakDays ?? 0}
                 <span className="text-base text-slate-500 font-bold ml-2">
-                  {lang === 'FR' ? 'jour' : lang === 'ES' ? 'día' : lang === 'DE' ? 'Tag' : lang === 'ZH' ? '天' : 'day'}{(progress.studyStreakDays ?? 0) !== 1 && lang !== 'ZH' ? (lang === 'DE' ? 'e' : 's') : ''}
+                  {(progress.studyStreakDays ?? 0) === 1 ? t.day : t.days}
                 </span>
               </p>
               <p className="text-[9px] text-slate-600 mt-2 font-medium">
@@ -381,10 +417,7 @@ export default function CurriculumPage() {
                 <span className="text-base text-slate-500 font-bold ml-2">pt{(progress.masteryPoints ?? 0) !== 1 ? 's' : ''}</span>
               </p>
               <p className="text-[9px] font-black uppercase tracking-wider mt-2 text-violet-400">
-                {(progress.masteryPoints ?? 0) >= 50 ? (lang === 'FR' ? '🏆 Maître' : lang === 'ES' ? '🏆 Maestro' : lang === 'DE' ? '🏆 Meister' : lang === 'ZH' ? '🏆 大师' : '🏆 Master')
-                  : (progress.masteryPoints ?? 0) >= 25 ? (lang === 'FR' ? '⭐ Expert' : lang === 'ES' ? '⭐ Experto' : lang === 'DE' ? '⭐ Experte' : lang === 'ZH' ? '⭐ 专家' : '⭐ Expert')
-                  : (progress.masteryPoints ?? 0) >= 10 ? (lang === 'FR' ? '📚 Érudit' : lang === 'ES' ? '📚 Erudito' : lang === 'DE' ? '📚 Gelehrter' : lang === 'ZH' ? '📚 学者' : '📚 Scholar')
-                  : (lang === 'FR' ? '🌱 Apprenti' : lang === 'ES' ? '🌱 Aprendiz' : lang === 'DE' ? '🌱 Lehrling' : lang === 'ZH' ? '🌱 学徒' : '🌱 Apprentice')}
+                {(progress.masteryPoints ?? 0) >= 50 ? t.mastery_master : (progress.masteryPoints ?? 0) >= 25 ? t.mastery_expert : (progress.masteryPoints ?? 0) >= 10 ? t.mastery_scholar : t.mastery_apprentice}
               </p>
             </div>
 
@@ -411,9 +444,9 @@ export default function CurriculumPage() {
               <p className="text-3xl font-black text-white">{progress.completedCount ?? 0}</p>
               <p className="text-[9px] text-slate-555 mt-2 font-medium flex items-center gap-1">
                 <span className="text-blue-400 font-black">{progress.inProgressCount ?? 0}</span>
-                &nbsp;{lang === 'FR' ? 'en cours • sur' : lang === 'ES' ? 'en curso • de' : lang === 'DE' ? 'in Bearbeitung • von' : lang === 'ZH' ? '进行中 • 共' : 'in progress • of'}
+                &nbsp;{t.in_progress_of}
                 &nbsp;<span className="text-slate-400 font-black">{progress.activeModules?.length ?? 0}</span>
-                &nbsp;{lang === 'FR' ? 'inscrits' : lang === 'ES' ? 'inscritos' : lang === 'DE' ? 'eingeschrieben' : lang === 'ZH' ? '门' : 'enrolled'}
+                &nbsp;{t.enrolled}
               </p>
             </div>
           </div>
@@ -440,7 +473,7 @@ export default function CurriculumPage() {
                        const cardContent = (
                           <div 
                             role="listitem" 
-                            aria-label={`${course.title}, ${course.subject}, ${course.progress}% ${lang === 'FR' ? 'complété' : 'completed'}`}
+                            aria-label={`${course.title}, ${course.subject}, ${course.progress}% ${t.completed}`}
                             className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}
                           >
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
@@ -491,7 +524,7 @@ export default function CurriculumPage() {
                                           e.stopPropagation();
                                           setSelectedEnrollCourse(courseDetails || course);
                                         }}
-                                        title={lang === 'FR' ? 'Fiche de présentation' : 'Presentation sheet'}
+                                        title={t.presentation_sheet}
                                         className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center"
                                       >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -505,7 +538,7 @@ export default function CurriculumPage() {
                                         e.stopPropagation();
                                         setAbandonTarget(courseDetails || course);
                                       }}
-                                      title={lang === 'FR' ? 'Abandonner' : 'Abandon'}
+                                      title={t.abandon}
                                       className="p-2 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-950/30 transition-all cursor-pointer flex items-center justify-center"
                                     >
                                       <Icons.Trash2 className="w-4 h-4" />
@@ -535,16 +568,16 @@ export default function CurriculumPage() {
                               <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                  {lang === 'FR' ? 'Temps passé :' : 'Time spent:'} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
+                                  {t.time_spent} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
                                 </span>
                                 <span>
-                                  {lang === 'FR' ? 'Attendu :' : 'Expected:'} <strong className="text-slate-400">{(courseDetails?.hours ?? (isCurr ? 300 : 150))}h</strong>
+                                  {t.expected_time} <strong className="text-slate-400">{(courseDetails?.hours ?? (isCurr ? 300 : 150))}h</strong>
                                 </span>
                               </div>
 
                               <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center mt-auto">
                                  <span className={`text-[9px] font-black uppercase tracking-widest ${isCurr ? 'text-violet-400' : 'text-slate-500 group-hover:text-blue-400'} transition-colors`}>
-                                    {isCurr ? (lang === 'FR' ? 'Gérer le Curriculum' : 'Manage Curriculum') : (lang.toUpperCase() === 'FR' ? 'Continuer le cours' : 'Continue Course')}
+                                    {isCurr ? t.manage_curriculum : t.continue_course}
                                  </span>
                                  <ChevronRight className={`w-4 h-4 ${isCurr ? 'text-violet-400' : 'text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1'} transition-all`} />
                               </div>
@@ -655,7 +688,7 @@ export default function CurriculumPage() {
                                          e.stopPropagation();
                                          setSelectedEnrollCourse(courseDetails || course);
                                        }}
-                                       title={lang === 'FR' ? 'Fiche de présentation' : 'Presentation sheet'}
+                                       title={t.presentation_sheet}
                                        className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center mr-1"
                                      >
                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -684,10 +717,10 @@ export default function CurriculumPage() {
                                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
                                    <span className="flex items-center gap-1">
                                      <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                     {lang === 'FR' ? 'Temps passé :' : 'Time spent:'} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
+                                     {t.time_spent} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
                                    </span>
                                    <span>
-                                     {lang === 'FR' ? 'Prévu :' : 'Expected:'} <strong className="text-slate-400">{(courseDetails?.hours ?? 150)}h</strong>
+                                     {t.expected_time} <strong className="text-slate-400">{(courseDetails?.hours ?? 150)}h</strong>
                                    </span>
                                  </div>
                                  
@@ -740,10 +773,10 @@ export default function CurriculumPage() {
                     <div>
                       <h2 className="text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
                         <svg className="w-6 h-6 text-blue-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                        {lang === 'FR' ? "Poursuites Possibles" : lang === 'ES' ? "Próximos Pasos Recomendados" : lang === 'DE' ? "Empfohlene nächste Schritte" : lang === 'ZH' ? "推荐的下一步课程" : "Recommended Next Steps"}
+                        {t.recommended_next_steps}
                       </h2>
                       <p className="text-xs text-slate-500 font-medium mt-1">
-                        {lang === 'FR' ? "Basé sur votre progression académique et vos succès récents" : lang === 'ES' ? "Basado en tu progresión académica y finalizaciones recientes" : lang === 'DE' ? "Basierend auf Ihrem akademischen Fortschritt und den letzten Abschlüssen" : lang === 'ZH' ? "基于您的学术进展和最近完成的课程" : "Based on your academic progression and recent completions"}
+                        {t.recommended_next_steps_desc}
                       </p>
                     </div>
                   </div>
@@ -790,13 +823,13 @@ export default function CurriculumPage() {
                               onClick={() => setSelectedEnrollCourse(recCourse)}
                               className="flex-1 py-3 bg-slate-950 border border-slate-850 hover:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer text-center"
                             >
-                              {lang === 'FR' ? "Fiche de présentation" : lang === 'ES' ? "Ficha de Presentación" : lang === 'DE' ? "Präsentationsblatt" : lang === 'ZH' ? "演示单" : "Presentation Sheet"}
+                              {t.presentation_sheet}
                             </button>
                             <button
                               onClick={() => enrollInRecommended(recCourse)}
                               className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/15 cursor-pointer text-center"
                             >
-                              {lang === 'FR' ? "Ajouter au Curriculum" : lang === 'ES' ? "Añadir al Currículum" : lang === 'DE' ? "Zum Lehrplan hinzufügen" : lang === 'ZH' ? "添加到课程表" : "Add to Curriculum"}
+                              {t.add_to_curriculum}
                             </button>
                           </div>
                         </div>
@@ -812,7 +845,7 @@ export default function CurriculumPage() {
         {achievements.filter(ach => earnedIds.includes(ach.id)).length > 0 && (
           <section className="mt-20">
              <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
-                <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {lang === 'FR' ? "Galerie des Succès" : lang === 'ES' ? "Galería de Logros" : lang === 'DE' ? "Errungenschaften-Galerie" : lang === 'ZH' ? "成就荣誉展厅" : "Achievements Gallery"}
+                <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {t.achievements_gallery}
              </h2>
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                {achievements.filter(ach => earnedIds.includes(ach.id)).map((ach) => {
@@ -830,7 +863,7 @@ export default function CurriculumPage() {
                      <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
                      <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
                      <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
-                       {lang === 'FR' ? 'Déverrouillé' : 'Unlocked'}
+                       {t.unlocked}
                      </span>
                    </div>
                  );
@@ -906,7 +939,7 @@ export default function CurriculumPage() {
                     <Icons.GraduationCap className="w-8 h-8 text-violet-400" />
                     <div>
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-violet-400 block mb-1">
-                        {lang === 'FR' ? 'CURRICULUM MULTI-COURS EN COURS' : 'ACTIVE MULTI-COURSE CURRICULUM'}
+                        {t.active_multi_course_curriculum}
                       </span>
                       <h3 className="text-2xl font-black text-white leading-tight">
                         {selectedCurriculumForDrillDown.title}
@@ -950,13 +983,10 @@ export default function CurriculumPage() {
 
                     <div className="space-y-2 flex-1">
                       <h4 className="text-sm font-black text-slate-200">
-                        {lang === 'FR' ? 'Progression Globale du Curriculum' : 'Global Curriculum Progression'}
+                        {t.global_curriculum_progression}
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        {lang === 'FR'
-                          ? `Ce parcours intègre ${childDetails.length} cours complémentaires. Vous validez l'ensemble du curriculum en terminant chaque étape.`
-                          : `This roadmap integrates ${childDetails.length} academic courses. You complete the curriculum by mastering each milestone.`
-                        }
+                        {t.curriculum_integration_desc.replace('{count}', String(childDetails.length))}
                       </p>
                     </div>
                   </div>
@@ -964,7 +994,7 @@ export default function CurriculumPage() {
                   {/* Child Course List */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      {lang === 'FR' ? 'Modules et Étapes' : 'Milestones & Course Modules'}
+                      {t.milestones_and_modules}
                     </h4>
 
                     <div className="space-y-3">
@@ -980,7 +1010,7 @@ export default function CurriculumPage() {
                                   {cc.level}
                                 </span>
                                 <span className="px-2 py-0.5 bg-violet-955/30 border border-violet-500/10 text-[8px] font-black text-violet-400 rounded">
-                                  {lang === 'FR' ? `Étape ${idx + 1}` : `Milestone ${idx + 1}`}
+                                  {t.milestone_step.replace('{step}', String(idx + 1))}
                                 </span>
                               </div>
                               <h5 className="text-sm font-black text-white">{cc.title}</h5>
@@ -1003,7 +1033,7 @@ export default function CurriculumPage() {
                                 onClick={() => setSelectedCurriculumForDrillDown(null)}
                                 className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105"
                               >
-                                {lang === 'FR' ? 'Accéder' : 'Jump In'}
+                                {t.jump_in}
                                 <Icons.ChevronRight className="w-3.5 h-3.5" />
                               </Link>
                             </div>
@@ -1037,32 +1067,16 @@ export default function CurriculumPage() {
                 </div>
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 block mb-1">
-                    {lang === 'FR' ? 'CONFIRMATION DE DÉSINSCRIPTION'
-                     : lang === 'ES' ? 'CONFIRMACIÓN DE DESINSCRIPCIÓN'
-                     : lang === 'DE' ? 'BESTÄTIGUNG DER ABMELDUNG'
-                     : lang === 'ZH' ? '取消注册确认'
-                     : 'DISENROLLMENT CONFIRMATION'}
+                    {t.disenroll_confirm_title_sub}
                   </span>
                   <h3 className="text-xl font-black text-white">
-                    {lang === 'FR' ? 'Abandonner le module ?'
-                     : lang === 'ES' ? '¿Abandonar el módulo?'
-                     : lang === 'DE' ? 'Modul abbrechen?'
-                     : lang === 'ZH' ? '放弃模块学习？'
-                     : 'Abandon Module?'}
+                    {t.disenroll_confirm_title}
                   </h3>
                 </div>
               </div>
 
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                {lang === 'FR' 
-                  ? `Êtes-vous absolument sûr de vouloir abandonner "${abandonTarget.title || 'ce cours'}" ? Votre progression locale sur ce module sera réinitialisée, mais vos points de maîtrise globaux et succès restent pleinement préservés.`
-                  : lang === 'ES'
-                  ? `¿Está absolutamente seguro de que desea abandonar "${abandonTarget.title || 'este curso'}"? Su progreso local en este módulo se restablecerá, pero sus puntos globales de maestría e insignias se conservarán.`
-                  : lang === 'DE'
-                  ? `Sind Sie absolut sicher, dass Sie "${abandonTarget.title || 'diesen Kurs'}" abbrechen möchten? Ihr lokaler Fortschritt in diesem Modul wird zurückgesetzt, aber Ihre globalen Meisterpunkte und Errungenschaften bleiben vollständig erhalten.`
-                  : lang === 'ZH'
-                  ? `您确定要放弃学习 "${abandonTarget.title || '该课程'}" 吗？您在该模块的本地进度将被重置，但您的全局掌握点数和成就荣誉仍将被完整保留。`
-                  : `Are you absolutely sure you want to abandon "${abandonTarget.title || 'this course'}"? Your local progress on this module will be reset, but your global mastery points and achievements remain fully secure.`}
+                {t.disenroll_confirm_desc.replace('{title}', abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course'))}
               </p>
 
               <div className="flex gap-4">
@@ -1071,11 +1085,7 @@ export default function CurriculumPage() {
                   onClick={() => setAbandonTarget(null)}
                   className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
                 >
-                  {lang === 'FR' ? 'Annuler'
-                   : lang === 'ES' ? 'Cancelar'
-                   : lang === 'DE' ? 'Abbrechen'
-                   : lang === 'ZH' ? '取消'
-                   : 'Cancel'}
+                  {t.cancel}
                 </button>
                 <button
                   type="button"
@@ -1085,11 +1095,7 @@ export default function CurriculumPage() {
                   }}
                   className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
                 >
-                  {lang === 'FR' ? 'Confirmer'
-                   : lang === 'ES' ? 'Confirmar'
-                   : lang === 'DE' ? 'Bestätigen'
-                   : lang === 'ZH' ? '确认'
-                   : 'Confirm'}
+                  {t.confirm}
                 </button>
               </div>
             </motion.div>
@@ -1114,10 +1120,10 @@ export default function CurriculumPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                      {lang === 'FR' ? "Sélectionner un Tuteur IA" : "Select an AI Tutor"}
+                      {t.select_ai_tutor}
                     </h3>
                     <p className="text-xs text-slate-500 font-semibold">
-                      {lang === 'FR' ? "Choisissez le style pédagogique adapté à vos besoins" : "Choose the pedagogical voice that matches your style"}
+                      {t.tutor_modal_desc}
                     </p>
                   </div>
                 </div>
@@ -1150,27 +1156,15 @@ export default function CurriculumPage() {
                         </div>
                         <div>
                           <h4 className="font-black text-sm text-white tracking-wide flex items-center gap-2">
-                            {lang === 'FR' ? tOption.nameFR
-                             : lang === 'ES' ? tOption.nameES
-                             : lang === 'DE' ? tOption.nameDE
-                             : lang === 'ZH' ? tOption.nameZH
-                             : tOption.nameEN}
+                            {tOption[`name${lang.toUpperCase()}` as keyof typeof tOption] || tOption.nameEN}
                             {isSelected && (
                               <span className="px-2.5 py-0.5 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-wider">
-                                {lang === 'FR' ? 'Actif'
-                                 : lang === 'ES' ? 'Activo'
-                                 : lang === 'DE' ? 'Aktiv'
-                                 : lang === 'ZH' ? '生效'
-                                 : 'Active'}
+                                {t.active}
                               </span>
                             )}
                           </h4>
                           <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed max-w-md">
-                            {lang === 'FR' ? tOption.descFR
-                             : lang === 'ES' ? tOption.descES
-                             : lang === 'DE' ? tOption.descDE
-                             : lang === 'ZH' ? tOption.descZH
-                             : tOption.descEN}
+                            {tOption[`desc${lang.toUpperCase()}` as keyof typeof tOption] || tOption.descEN}
                           </p>
                         </div>
                       </div>
@@ -1189,9 +1183,7 @@ export default function CurriculumPage() {
 
               <div className="p-8 border-t border-slate-800 bg-slate-950/40 text-center">
                 <p className="text-xs text-slate-500 font-semibold italic">
-                  {lang === 'FR' 
-                    ? "💡 Revenez ici à tout moment pour changer de tuteur et adapter votre accompagnement."
-                    : "💡 Come back here at any time to change your tutor and adapt your learning support."}
+                  {t.tutor_modal_footer}
                 </p>
               </div>
             </motion.div>
@@ -1278,7 +1270,7 @@ export default function CurriculumPage() {
               {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
                 <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
                   <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {lang === 'FR' ? "Prérequis Académiques" : "Academic Prerequisites"}
+                    {t.prerequisites}
                   </p>
                   <div className="flex flex-col gap-2 text-left">
                     {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
@@ -1296,7 +1288,7 @@ export default function CurriculumPage() {
                         <div 
                           key={idx} 
                           onClick={clickable ? handleClick : undefined}
-                          title={clickable ? (lang === 'FR' ? `Voir la fiche de : ${matchedCourse.title}` : `View details for: ${matchedCourse.title}`) : undefined}
+                          title={clickable ? `${t.prerequisite_view_prefix}${matchedCourse.title}` : undefined}
                           className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
                             clickable 
                               ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
@@ -1313,8 +1305,7 @@ export default function CurriculumPage() {
                               : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}>
                             {isSatisfied 
-                              ? (lang === 'FR' ? "✓ Débloqué" : "✓ Unlocked") 
-                              : (lang === 'FR' ? "⚠️ Requis" : "⚠️ Required")}
+                              ? t.prerequisite_unlocked : t.prerequisite_required}
                           </span>
                         </div>
                       );

@@ -27,12 +27,12 @@ test.describe('OpenPrimer Production Readiness', () => {
     await expect(page.locator('h1')).toContainText('Universal Knowledge');
     
     // Switch to French
-    await page.locator('button').filter({ hasText: /EN/ }).first().hover();
+    await page.locator('button').filter({ hasText: /English|EN/i }).first().hover();
     await page.click('button:has-text("Français")');
     await expect(page.locator('h1')).toContainText('Le Savoir Universel.');
     
     // Switch to Spanish
-    await page.locator('button').filter({ hasText: /FR/ }).first().hover();
+    await page.locator('button').filter({ hasText: /Français|FR/i }).first().hover();
     await page.click('button:has-text("Español")');
     await expect(page.locator('h1')).toContainText('El Conocimiento Universal.');
   });

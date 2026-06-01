@@ -562,8 +562,23 @@ export const CatalogPage = () => {
       const { data } = await dbService.getAllCourses();
       if (data) setCourses(data);
       try {
-        const progressData = await dbService.getUserProgress('u1');
-        if (progressData) setUserProgress(progressData);
+        let userId = 'u1';
+        if (typeof window !== 'undefined') {
+          const savedProfile = window.localStorage.getItem('op_user_profile');
+          if (savedProfile) {
+            try {
+              const p = JSON.parse(savedProfile);
+              if (p.id) userId = p.id;
+            } catch (e) {}
+          }
+        }
+        const progressData = await dbService.getUserProgress(userId);
+        if (progressData) {
+          setUserProgress(progressData);
+          if (progressData.activeModules) {
+            setEnrolledIds(progressData.activeModules.map((m: any) => m.id));
+          }
+        }
       } catch (err) {
         console.error("Failed to load user progress", err);
       }
@@ -616,11 +631,21 @@ export const CatalogPage = () => {
       }).length;
 
       const wasSuccessful = matchingCount > 0;
+      let userId = 'u1';
+      if (typeof window !== 'undefined') {
+        const savedProfile = window.localStorage.getItem('op_user_profile');
+        if (savedProfile) {
+          try {
+            const p = JSON.parse(savedProfile);
+            if (p.id) userId = p.id;
+          } catch (e) {}
+        }
+      }
       try {
         await dbService.addSearchHistoryEntry({
           query: searchQuery.trim(),
           wasSuccessful,
-          userId: 'u1',
+          userId,
           userLanguage: lang
         });
       } catch (err) {
@@ -881,14 +906,24 @@ export const CatalogPage = () => {
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
                 <Link 
                   href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     if (isLoggedIn && !isEnrolled) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      let userId = 'u1';
+                      const savedProfile = localStorage.getItem('op_user_profile');
+                      if (savedProfile) {
+                        try {
+                          const p = JSON.parse(savedProfile);
+                          if (p.id) userId = p.id;
+                        } catch (err) {}
+                      }
                       if (!course.isCurriculum) {
-                        const updated = [...enrolledIds, course.id];
-                        setEnrolledIds(updated);
-                        localStorage.setItem("op_enrolled_courses", JSON.stringify(updated));
+                        await dbService.enrollInCourse(userId, course.id);
+                        setEnrolledIds(prev => [...prev, course.id]);
+                        window.dispatchEvent(new Event('op_progress_updated'));
+                        window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
                       } else {
-                        e.preventDefault();
                         setSelectedEnrollCourse(course);
                       }
                     }
@@ -1260,12 +1295,20 @@ export const CatalogPage = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       // Enroll course
-                      const updated = [...enrolledIds, selectedEnrollCourse.id];
-                      setEnrolledIds(updated);
-                      localStorage.setItem('op_enrolled_courses', JSON.stringify(updated));
+                      let userId = 'u1';
+                      const savedProfile = localStorage.getItem('op_user_profile');
+                      if (savedProfile) {
+                        try {
+                          const p = JSON.parse(savedProfile);
+                          if (p.id) userId = p.id;
+                        } catch (err) {}
+                      }
+                      await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
+                      setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
                       setSelectedEnrollCourse(null);
+                      window.dispatchEvent(new Event('op_progress_updated'));
                       // Redirect to course
                       window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
                     }}

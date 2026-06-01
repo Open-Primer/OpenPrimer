@@ -26,7 +26,7 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'OpenPrimer Feedback <onboarding@resend.dev>',
+          from: 'OpenPrimer Feedback <feedback@openprimer.app>',
           to: redirectionEmail,
           subject: `OpenPrimer: Nouveau Message de ${name}`,
           html: `

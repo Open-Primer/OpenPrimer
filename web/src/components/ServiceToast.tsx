@@ -5,6 +5,7 @@ import { AlertTriangle, WifiOff, RefreshCw, CheckCircle, ShieldAlert, Cpu, X } f
 import { useServiceStatus, ServiceHealth, SERVICES_CONFIG } from '../lib/serviceStatus';
 
 const SERVICE_LABELS: Record<string, Record<string, string>> = {
+  system_health: { EN: 'System Health', FR: 'Santé Système', ES: 'Salud del Sistema', DE: 'Systemgesundheit', ZH: '系统健康' },
   health_db:     { EN: 'Database', FR: 'Base de données', ES: 'Base de datos', DE: 'Datenbank', ZH: '数据库' },
   health_email:  { EN: 'Email', FR: 'Email', ES: 'Email', DE: 'E-Mail', ZH: '邮件' },
   health_ai:     { EN: 'AI Agent', FR: 'Agent IA', ES: 'Agente IA', DE: 'KI-Agent', ZH: 'AI代理' },
@@ -80,7 +81,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
               <div className="flex items-center gap-2">
                 <Cpu className={`w-3.5 h-3.5 ${offlineCount > 0 ? 'text-red-400 animate-pulse' : degradedCount > 0 ? 'text-amber-400' : 'text-blue-400'}`} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-200">
-                  {L === 'FR' ? 'Santé Système' : 'System Health'}
+                  {SERVICE_LABELS.system_health[L] || SERVICE_LABELS.system_health.EN}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -120,7 +121,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
       {/* Minimized dot trigger */}
       <button
         onClick={() => setExpanded(e => !e)}
-        title={L === 'FR' ? 'Santé du système' : 'System health'}
+        title={SERVICE_LABELS.system_health[L] || SERVICE_LABELS.system_health.EN}
         className={`w-7 h-7 rounded-full flex items-center justify-center bg-slate-900/80 border border-white/10 backdrop-blur-xl shadow-lg hover:scale-110 transition-transform`}
       >
         <span className={`w-2.5 h-2.5 rounded-full shadow-md ${dotColor} ${!allOk && offlineCount === 0 && degradedCount === 0 ? 'animate-pulse' : ''}`} />

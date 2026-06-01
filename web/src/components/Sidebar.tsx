@@ -17,19 +17,19 @@ interface SidebarProps {
 export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
   const [progress, setProgress] = useState<number>(12); // Default fallback
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session !== 'false');
+    setIsLoggedIn(session === 'true');
   }, []);
 
   const getProgressionStorage = (): Storage | null => {
     if (typeof window === 'undefined') return null;
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     return loggedIn ? localStorage : sessionStorage;
   };
 

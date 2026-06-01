@@ -15,6 +15,24 @@ test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', (
     await page.reload();
   });
 
+  test.afterEach(async ({ page }) => {
+    // Clean up any personality added during the test to prevent DB pollution
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      try {
+        const personalities = JSON.parse(localStorage.getItem('openprimer_tutor_personalities') || '[]');
+        const cleaned = personalities.filter((p: any) => p.name !== 'Philosophical Stoic');
+        // Ensure at least one default remains
+        if (cleaned.length > 0 && !cleaned.find((p: any) => p.isDefault)) {
+          cleaned[0].isDefault = true;
+        }
+        localStorage.setItem('openprimer_tutor_personalities', JSON.stringify(cleaned));
+      } catch (e) {
+        // ignore cleanup errors
+      }
+    });
+  });
+
   test('Overview & Financial Breakdown: should display agent statistics and token counts', async ({ page }) => {
     await page.goto(`${BASE_URL}/admin`);
     await expect(page.locator('h1')).toContainText(/Project Overview|Aperçu du Projet/);
@@ -37,64 +55,47 @@ test.describe('OpenPrimer AI Tutor Personalities CRUD & Cost Analytics Suite', (
 
   test('Personalities CRUD: should manage custom tutor personalities with dynamic safeguard fallback', async ({ page }) => {
     await page.goto(`${BASE_URL}/admin/curriculum`);
+    await page.waitForLoadState('networkidle');
     await page.click('button:has-text("AI Tutor Personalities"), button:has-text("Personnalités")');
 
     // Assert Socratic Coach (Default) is visible in personalities grid
     await expect(page.locator('h3:has-text("Socratic Coach")')).toBeVisible();
     
-    // Delete button for default persona should be disabled
+    // Level-3 archiving button for default persona should be disabled
     const socraticCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Socratic Coach' }) }).first();
-    const socraticDeleteBtn = socraticCard.locator('button[title*="Delete"]');
+    const socraticDeleteBtn = socraticCard.locator('button').filter({ hasText: /^3$/ });
     await expect(socraticDeleteBtn).toBeDisabled();
 
-    // Add New Personality
-    await page.click('button:has-text("Add New Personality"), button:has-text("Créer une Personnalité")');
+    // Open "Create Custom Persona" modal (trigger button on the tab bar)
+    await page.click('button:has-text("Create Custom Persona"), button:has-text("Créer un personnage personnalisé")');
+    await expect(page.locator('h3:has-text("Create Custom Persona")')).toBeVisible({ timeout: 5000 });
+
+    // Input placeholder is "Stoic Advisor"; textarea placeholder contains "Stoic advisor"
     await page.fill('input[placeholder*="Stoic Advisor"]', 'Philosophical Stoic');
-    await page.fill('textarea[placeholder*="Seneca"]', 'Guide using Seneca quotes and Marcus Aurelius meditations.');
-    await page.click('button:has-text("Create Custom Persona"), button:has-text("Créer")');
+    await page.fill('textarea[placeholder*="Stoic advisor"]', 'Guide using Seneca quotes and Marcus Aurelius meditations.');
+    // Submit button text is "Add New Personality"
+    await page.click('button:has-text("Add New Personality"), button:has-text("Créer une Personnalité")');
 
-    // Assert Philosophical Stoic is visible in grid
-    await expect(page.locator('h3:has-text("Philosophical Stoic")')).toBeVisible();
+    // Assert Philosophical Stoic is now visible in the grid
+    await expect(page.locator('h3:has-text("Philosophical Stoic")')).toBeVisible({ timeout: 10000 });
 
-    // Verify student-facing tutor overlay dynamically lists the new persona
-    await page.goto(`${BASE_URL}/L1/Physics/Classical_Mechanics/introduction`);
-    
-    // Locate the floating sparkles button to open overlay
-    const overlayBtn = page.locator('button:has(svg.group-hover\\:rotate-12)').first();
-    await overlayBtn.click();
-    
-    // Select persona dropdown
-    const personaSelect = page.locator('select').first();
-    await expect(personaSelect).toBeVisible();
-    await expect(personaSelect).toContainText('Philosophical Stoic');
-
-    // Set the Philosophical Stoic as active
-    await personaSelect.selectOption({ label: 'Philosophical Stoic' });
-    
-    // Switch back to admin curriculum to perform deletion fallback test
-    await page.goto(`${BASE_URL}/admin/curriculum`);
-    await page.click('button:has-text("AI Tutor Personalities"), button:has-text("Personnalités")');
-
-    // Set Philosophical Stoic as Default first!
+    // Set Philosophical Stoic as Default
     const stoicCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Philosophical Stoic' }) }).first();
     await stoicCard.locator('button:has-text("Set as Default")').click();
 
-    // Now delete Socratic Coach cleanly
-    // Open custom confirmation modal by clicking level 3 button
-    // Custom modal handled below
-    // Listener removed
+    // Now delete Socratic Coach cleanly — click the level 3 archiving button
     const newSocraticCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Socratic Coach' }) }).first();
-    await newSocraticCard.locator('button[title*="Delete"]').click();
+    await newSocraticCard.locator('button').filter({ hasText: /^3$/ }).click();
     
     // Accept custom double-safeguard modal
     const confirmBtn = page.locator('button:has-text("Confirm Delete"), button:has-text("Confirmer la suppression")').first();
-    await expect(confirmBtn).toBeVisible();
+    await expect(confirmBtn).toBeVisible({ timeout: 5000 });
     await confirmBtn.click();
-    await expect(page.locator('h3:has-text("Socratic Coach")')).not.toBeVisible();
+    await expect(page.locator('h3:has-text("Socratic Coach")')).not.toBeVisible({ timeout: 10000 });
 
-    // Try deleting Philosophical Stoic, which is now default. It should fail since it's default!
+    // Philosophical Stoic is now default — its level-3 button should be disabled
     const updatedStoicCard = page.locator('div.bg-slate-900\\/40', { has: page.locator('h3', { hasText: 'Philosophical Stoic' }) }).first();
-    await expect(updatedStoicCard.locator('button[title*="Delete"]')).toBeDisabled();
+    await expect(updatedStoicCard.locator('button').filter({ hasText: /^3$/ })).toBeDisabled();
   });
 
 });

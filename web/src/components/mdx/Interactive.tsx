@@ -183,12 +183,20 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [input, setInput] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isLoggedIn === 'boolean') {
+        setIsLoggedIn(customEvent.detail.isLoggedIn);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthChange);
+
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
     const storage = getProgressionStorage();
@@ -201,6 +209,10 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
         setIsCorrect(true);
       }
     }
+
+    return () => {
+      window.removeEventListener('op_auth_state_change', handleAuthChange);
+    };
   }, [answer]);
 
   const check = () => {
@@ -282,12 +294,20 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
   const [text, setText] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isLoggedIn === 'boolean') {
+        setIsLoggedIn(customEvent.detail.isLoggedIn);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthChange);
+
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
     const storage = getProgressionStorage();
@@ -299,6 +319,10 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
         setFeedback(language === 'FR' ? "Technique de Feynman : validée." : "Feynman Technique: validated.");
       }
     }
+
+    return () => {
+      window.removeEventListener('op_auth_state_change', handleAuthChange);
+    };
   }, [language]);
 
   const analyze = async () => {
@@ -395,12 +419,20 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const safeOptions = Array.isArray(options) ? options : [];
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isLoggedIn === 'boolean') {
+        setIsLoggedIn(customEvent.detail.isLoggedIn);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthChange);
+
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
     const storage = getProgressionStorage();
@@ -412,6 +444,10 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
         setRevealed(true);
       }
     }
+
+    return () => {
+      window.removeEventListener('op_auth_state_change', handleAuthChange);
+    };
   }, []);
 
   const handleSelect = (idx: number) => {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
+import { supabase } from '../../../../lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -46,7 +47,8 @@ export async function POST(request: Request) {
       name: newUserProfile.name,
       email: newUserProfile.email,
       role: newUserProfile.role,
-      preferredLang: newUserProfile.preferredLang
+      preferredLang: newUserProfile.preferredLang,
+      password
     });
 
     // Save token in memory/DB for state tracking
@@ -54,6 +56,23 @@ export async function POST(request: Request) {
       const g = global as any;
       if (!g.verificationStore) g.verificationStore = new Map();
       g.verificationStore.set(email, { token: verificationToken, profile: newUserProfile });
+    }
+
+    // Save token in Supabase auth_verification table if available
+    try {
+      const { error: dbVerError } = await supabase.from('auth_verification').upsert({
+        email: email,
+        token: verificationToken,
+        profile: newUserProfile,
+        created_at: new Date().toISOString()
+      });
+      if (dbVerError) {
+        console.warn('[SIGNUP WARNING] Failed to persist verification token to Supabase auth_verification:', dbVerError);
+      } else {
+        console.log(`[SIGNUP SUCCESS] Persisted verification token for ${email} in Supabase storage.`);
+      }
+    } catch (dbErr) {
+      console.warn('[SIGNUP WARNING] Supabase connection error in persisting verification token:', dbErr);
     }
 
     const verificationUrl = `${proto}://${host}/signup?token=${verificationToken}&email=${encodeURIComponent(email)}`;
@@ -68,7 +87,7 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'OpenPrimer <onboarding@resend.dev>',
+          from: 'OpenPrimer <onboarding@openprimer.app>',
           to: email,
           subject: 'Activer votre compte OpenPrimer',
           html: `

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
+import { supabase } from '../../../../lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -11,8 +12,31 @@ export async function POST(request: Request) {
 
     let profile: any = null;
 
-    // Check in global cache store
-    if (typeof global !== 'undefined') {
+    // Check in secure database-backed Supabase table first
+    try {
+      const { data, error } = await supabase
+        .from('auth_verification')
+        .select('*')
+        .eq('email', email)
+        .eq('token', token)
+        .single();
+      
+      if (data && !error) {
+        profile = data.profile;
+        console.log(`[VERIFY] Verification token found in Supabase storage for ${email}`);
+        // Clean up asynchronously
+        Promise.resolve(supabase.from('auth_verification').delete().eq('email', email)).then(() => {
+          console.log(`[VERIFY DB CLEANUP] Successfully cleaned up verification token for ${email}`);
+        }).catch((err: any) => {
+          console.error('[VERIFY DB CLEANUP ERROR]', err);
+        });
+      }
+    } catch (dbErr) {
+      console.warn('[VERIFICATION] Supabase auth_verification fetch failed/offline:', dbErr);
+    }
+
+    // Check in global cache store as a robust fallback
+    if (!profile && typeof global !== 'undefined') {
       const g = global as any;
       if (g.verificationStore && g.verificationStore.has(email)) {
         const stored = g.verificationStore.get(email);

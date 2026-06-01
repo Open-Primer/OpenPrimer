@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, ArrowRight, BookOpen, Globe, Sparkles, Cpu, ChevronRight, Zap, Star, ShieldCheck, Clock, CheckCircle2, GraduationCap, Mail, Lock, User, Sparkle, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
@@ -36,7 +36,9 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "Verify Account & Log In",
     back: "Back",
     first_name_placeholder: "John",
-    last_name_placeholder: "Doe"
+    last_name_placeholder: "Doe",
+    sign_in_google: "Continue with Google",
+    rate_limit: "Too many attempts. Please wait {waitSec} seconds."
   },
   FR: {
     create_account: "Créer un Compte",
@@ -62,7 +64,9 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "Valider mon compte & Se Connecter",
     back: "Retour",
     first_name_placeholder: "Jean",
-    last_name_placeholder: "Dupont"
+    last_name_placeholder: "Dupont",
+    sign_in_google: "Continuer avec Google",
+    rate_limit: "Trop de tentatives. Réessayez dans {waitSec} secondes."
   },
   ES: {
     create_account: "Crear una Cuenta",
@@ -88,7 +92,9 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "Validar cuenta e Iniciar sesión",
     back: "Volver",
     first_name_placeholder: "Juan",
-    last_name_placeholder: "Pérez"
+    last_name_placeholder: "Pérez",
+    sign_in_google: "Continuar con Google",
+    rate_limit: "Demasiados intentos. Inténtelo de nuevo en {waitSec} segundos."
   },
   DE: {
     create_account: "Konto erstellen",
@@ -114,7 +120,9 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "Konto verifizieren & Einloggen",
     back: "Zurück",
     first_name_placeholder: "Hans",
-    last_name_placeholder: "Müller"
+    last_name_placeholder: "Müller",
+    sign_in_google: "Mit Google fortfahren",
+    rate_limit: "Zu viele Versuche. Bitte warten Sie {waitSec} Sekunden."
   },
   IT: {
     create_account: "Crea un Account",
@@ -140,7 +148,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "Convalida Account & Accedi",
     back: "Indietro",
     first_name_placeholder: "Mario",
-    last_name_placeholder: "Rossi"
+    last_name_placeholder: "Rossi",
+    sign_in_google: "Continua con Google"
   },
   ZH: {
     create_account: "创建账户",
@@ -166,9 +175,12 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     verify_and_login: "验证账户并登录",
     back: "返回",
     first_name_placeholder: "三",
-    last_name_placeholder: "张"
+    last_name_placeholder: "张",
+    sign_in_google: "使用 Google 登录",
+    rate_limit: "尝试次数过多，请在 {waitSec} 秒后重试。"
   }
 };
+
 
 export default function Home() {
   const router = useRouter();
@@ -233,7 +245,7 @@ export default function Home() {
   }, [search, allSearchableModules]);
 
   // Guest Registration State
-  const [authModal, setAuthModal] = useState<'signup' | 'login' | 'verify' | null>(null);
+  const [authModal, setAuthModal] = useState<'signup' | 'login' | 'verify' | 'forgot' | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -243,6 +255,7 @@ export default function Home() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const submitTimestamps = useRef<number[]>([]);
 
   const coursesList = [
@@ -281,6 +294,33 @@ export default function Home() {
       } else if (authParam === 'signup') {
         setAuthModal('signup');
       }
+
+      const tokenParam = params.get('token');
+      const emailParam = params.get('email');
+      if (tokenParam && emailParam) {
+        setAuthModal('login');
+        setErrorMsg('');
+        setJustVerified(false);
+        fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tokenParam, email: emailParam })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              localStorage.setItem('op_user_profile', JSON.stringify(data.profile));
+              localStorage.setItem('op_session', 'false');
+              localStorage.setItem('op_registration_verified', 'true');
+              setJustVerified(true);
+            } else {
+              setErrorMsg(data.error || (lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed."));
+            }
+          })
+          .catch(() => {
+            setErrorMsg(lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed.");
+          });
+      }
     }
 
     return () => {
@@ -299,7 +339,7 @@ export default function Home() {
     }
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
       setErrorMsg(s.all_fields_required || (lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.'));
@@ -323,6 +363,30 @@ export default function Home() {
       return;
     }
 
+    const emailLower = email.trim().toLowerCase();
+    const DEMO_EMAILS = [
+      'vanguard.mysterious@gmail.com',
+      'student1@openprimer.org',
+      'student2@openprimer.org',
+      'student3@openprimer.org',
+      'silvere@openprimer.org'
+    ];
+    if (DEMO_EMAILS.includes(emailLower)) {
+      setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est déjà enregistrée.' : 'This email address is already registered.');
+      return;
+    }
+
+    const storedProfileStr = localStorage.getItem('op_user_profile');
+    if (storedProfileStr) {
+      try {
+        const storedProfile = JSON.parse(storedProfileStr);
+        if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
+          setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est déjà enregistrée.' : 'This email address is already registered.');
+          return;
+        }
+      } catch (err) {}
+    }
+
     // Advanced Password Complexity Validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
     if (!passwordRegex.test(password)) {
@@ -340,19 +404,35 @@ export default function Home() {
     submitTimestamps.current = submitTimestamps.current.filter(ts => now - ts < 120000);
     if (submitTimestamps.current.length >= 3) {
       const waitSec = Math.ceil((120000 - (now - submitTimestamps.current[0])) / 1000);
-      setErrorMsg(
-        lang === 'FR' ? `Trop de tentatives. Réessayez dans ${waitSec} secondes.` :
-        lang === 'ES' ? `Demasiados intentos. Inténtelo de nuevo en ${waitSec} segundos.` :
-        lang === 'DE' ? `Zu viele Versuche. Bitte warten Sie ${waitSec} Sekunden.` :
-        lang === 'ZH' ? `尝试次数过多，请在 ${waitSec} 秒后重试。` :
-        `Too many attempts. Please wait ${waitSec} seconds.`
-      );
+      const at = AUTH_STRINGS[lang as keyof typeof AUTH_STRINGS] || AUTH_STRINGS.EN;
+      setErrorMsg((at.rate_limit as string).replace('{waitSec}', String(waitSec)));
       return;
     }
     submitTimestamps.current.push(now);
 
     setErrorMsg('');
-    setAuthModal('verify');
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: emailLower,
+          password,
+          preferredLang: lang
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setErrorMsg(data.error || (lang === 'FR' ? "Échec de l'inscription." : "Registration failed."));
+        return;
+      }
+      setAuthModal('verify');
+    } catch (err: any) {
+      setErrorMsg(lang === 'FR' ? "Erreur de connexion au serveur." : "Server connection error.");
+    }
   };
 
   const handleSimulateValidation = () => {
@@ -372,7 +452,7 @@ export default function Home() {
     setAuthModal('login'); // Switch to login form!
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMsg(lang === 'FR' ? 'Veuillez entrer vos identifiants.' : 'Please enter your credentials.');
@@ -393,6 +473,12 @@ export default function Home() {
     const demoAccount = DEMO_ACCOUNTS[emailLower];
 
     if (demoAccount) {
+      // Enforce password validation for demo accounts (must be 'OpenPrimer2026!')
+      if (password !== 'OpenPrimer2026!') {
+        setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+        return;
+      }
+
       const isVerified = localStorage.getItem('op_registration_verified') === 'true';
       const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 
@@ -412,6 +498,10 @@ export default function Home() {
 
       localStorage.setItem('op_user_profile', JSON.stringify(profile));
       localStorage.setItem('op_session', 'true');
+      
+      // Dispatch reactive auth state event
+      window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
+
       setIsLoggedIn(true);
       setAuthModal(null);
 
@@ -425,35 +515,123 @@ export default function Home() {
       return;
     }
 
-    // 2. Check if this is a dynamically registered account in local storage
-    const storedProfileStr = localStorage.getItem('op_user_profile');
-    if (storedProfileStr) {
-      try {
-        const storedProfile = JSON.parse(storedProfileStr);
-        if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
-          // If the profile matches the email, check the password
-          if (storedProfile.password === password) {
-            localStorage.setItem('op_session', 'true');
-            setIsLoggedIn(true);
-            setAuthModal(null);
+    // 2. Query dbService asynchronously to retrieve the user list and find a match
+    try {
+      const { data: userList } = await dbService.getUsers();
+      const matchedUser = userList?.find((u: any) => u.email.toLowerCase() === emailLower) as any;
 
-            const redirectUrl = sessionStorage.getItem('op_auth_redirect');
-            if (redirectUrl) {
-              sessionStorage.removeItem('op_auth_redirect');
-              window.location.href = redirectUrl;
-            } else {
-              router.push('/catalog');
-            }
-            return;
+      if (matchedUser) {
+        // Compute input password hash using dbService.hashPassword
+        const inputHash = dbService.hashPassword(password);
+        
+        // If user profile has a password, compare hashes. Otherwise fallback to plaintext check for backward compatibility.
+        const isPasswordCorrect = matchedUser.password 
+          ? matchedUser.password === inputHash 
+          : matchedUser.password === password;
+
+        if (isPasswordCorrect) {
+          const profile = {
+            firstName: matchedUser.name.split(' ')[0],
+            lastName: matchedUser.name.split(' ').slice(1).join(' '),
+            email: matchedUser.email,
+            preferredLang: matchedUser.preferredLang || lang,
+            role: matchedUser.role,
+            isVerified: matchedUser.isEmailVerified
+          };
+
+          localStorage.setItem('op_user_profile', JSON.stringify(profile));
+          localStorage.setItem('op_session', 'true');
+
+          // Dispatch reactive auth state event
+          window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
+
+          setIsLoggedIn(true);
+          setAuthModal(null);
+
+          const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+          if (redirectUrl) {
+            sessionStorage.removeItem('op_auth_redirect');
+            window.location.href = redirectUrl;
+          } else {
+            router.push(matchedUser.role === 'admin' ? '/admin' : '/catalog');
           }
+          return;
         }
-      } catch (err) {
-        console.error("Error parsing stored user profile", err);
       }
+    } catch (err) {
+      console.error("Authentication check exception", err);
     }
 
     // 3. Otherwise, reject access
     setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error("Google Sign-In Error:", err);
+      setErrorMsg(err?.message || (lang === 'FR' ? "Échec de la connexion avec Google." : "Failed to sign in with Google."));
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setErrorMsg(lang === 'FR' ? 'Veuillez entrer votre adresse email.' : 'Please enter your email address.');
+      return;
+    }
+
+    const emailLower = email.trim().toLowerCase();
+
+    // Verify if identifier is registered
+    const DEMO_EMAILS = [
+      'vanguard.mysterious@gmail.com',
+      'student1@openprimer.org',
+      'student2@openprimer.org',
+      'student3@openprimer.org',
+      'silvere@openprimer.org'
+    ];
+    let emailFound = DEMO_EMAILS.includes(emailLower);
+
+    if (!emailFound) {
+      const storedProfileStr = localStorage.getItem('op_user_profile');
+      if (storedProfileStr) {
+        try {
+          const storedProfile = JSON.parse(storedProfileStr);
+          if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
+            emailFound = true;
+          }
+        } catch (err) {}
+      }
+    }
+
+    if (!emailFound) {
+      setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est inconnue.' : 'This email address is not registered.');
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      const { supabase } = await import("@/lib/supabase");
+      const { error } = await supabase.auth.resetPasswordForEmail(emailLower, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+      });
+      if (error) {
+        console.warn("Supabase resetPasswordForEmail error, using simulator:", error);
+      }
+      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Un lien de réinitialisation de mot de passe a été envoyé à votre adresse email.' : 'A password reset link has been sent to your email address.'));
+    } catch (err: any) {
+      console.warn("Password reset exception, falling back to simulator:", err);
+      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Un lien de réinitialisation de mot de passe a été envoyé à votre adresse email.' : 'A password reset link has been sent to your email address.'));
+    }
   };
 
   if (!mounted) {
@@ -812,6 +990,28 @@ export default function Home() {
                       </button>
                     </form>
 
+                    <div className="relative flex py-4 items-center">
+                      <div className="flex-grow border-t border-slate-800/80"></div>
+                      <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-slate-600">
+                        {lang === 'FR' ? 'OU CONTINUER AVEC' : 'OR CONTINUE WITH'}
+                      </span>
+                      <div className="flex-grow border-t border-slate-800/80"></div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.1.13-1.14 2.19l3.07 2.38c1.8-1.66 2.83-4.1 2.83-6.42z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.07-2.38c-.9.6-2.05.96-3.26.96-2.5 0-4.61-1.69-5.36-3.97L5.13 18.06C7.15 21.6 10.83 24 12 24z"/>
+                        <path fill="#FBBC05" d="M6.64 15.7c-.2-.6-.31-1.23-.31-1.9s.11-1.3.31-1.9L3.5 9.56C2.69 11.19 2.23 13.01 2.23 15s.46 3.81 1.27 5.44l3.14-2.74z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.83 0 4.15 2.4 2.23 5.94l3.14 2.74c.75-2.28 2.86-3.93 5.36-3.93z"/>
+                      </svg>
+                      <span>{a.sign_in_google}</span>
+                    </button>
+
                     <p className="mt-6 text-center text-xs text-slate-600">
                       {a.already_registered} <button onClick={() => { setErrorMsg(''); setAuthModal('login'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{a.login}</button>
                     </p>
@@ -896,6 +1096,15 @@ export default function Home() {
                             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                           </button>
                         </div>
+                        <div className="flex justify-end px-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => { setErrorMsg(''); setSuccessMsg(''); setAuthModal('forgot'); }}
+                            className="text-[10px] font-semibold text-slate-400 hover:text-blue-400 transition-colors cursor-pointer focus:outline-none"
+                          >
+                            {s.forgot_password || (lang === 'FR' ? 'Mot de passe oublié ?' : 'Forgot Password?')}
+                          </button>
+                        </div>
                       </div>
 
                       <button 
@@ -905,6 +1114,28 @@ export default function Home() {
                         {a.login}
                       </button>
                     </form>
+
+                    <div className="relative flex py-4 items-center">
+                      <div className="flex-grow border-t border-slate-800/80"></div>
+                      <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-slate-600">
+                        {lang === 'FR' ? 'OU CONTINUER AVEC' : 'OR CONTINUE WITH'}
+                      </span>
+                      <div className="flex-grow border-t border-slate-800/80"></div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.1.13-1.14 2.19l3.07 2.38c1.8-1.66 2.83-4.1 2.83-6.42z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.07-2.38c-.9.6-2.05.96-3.26.96-2.5 0-4.61-1.69-5.36-3.97L5.13 18.06C7.15 21.6 10.83 24 12 24z"/>
+                        <path fill="#FBBC05" d="M6.64 15.7c-.2-.6-.31-1.23-.31-1.9s.11-1.3.31-1.9L3.5 9.56C2.69 11.19 2.23 13.01 2.23 15s.46 3.81 1.27 5.44l3.14-2.74z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.83 0 4.15 2.4 2.23 5.94l3.14 2.74c.75-2.28 2.86-3.93 5.36-3.93z"/>
+                      </svg>
+                      <span>{a.sign_in_google}</span>
+                    </button>
 
                     <p className="mt-6 text-center text-xs text-slate-600">
                       {a.new_to_op} <button onClick={() => { setErrorMsg(''); setAuthModal('signup'); }} className="text-blue-500 font-bold hover:underline cursor-pointer">{a.create_an_account}</button>
@@ -947,6 +1178,85 @@ export default function Home() {
                     <button onClick={() => setAuthModal('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
                       {a.back}
                     </button>
+                  </motion.div>
+                )}
+
+                {authModal === 'forgot' && (
+                  <motion.div 
+                    key="forgot"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <div className="text-center mb-6">
+                      <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto mb-4 border border-blue-500/20">
+                        <Lock className="w-8 h-8" />
+                      </div>
+                      <h2 className="text-2xl font-black tracking-tight text-white uppercase">
+                        {s.forgot_password || (lang === 'FR' ? 'Mot de passe oublié' : 'Forgot Password')}
+                      </h2>
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-2 leading-relaxed">
+                        {s.enter_email || (lang === 'FR' ? "Entrez votre adresse e-mail" : "Enter your email address")}
+                      </p>
+                    </div>
+
+                    {errorMsg && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    {successMsg && (
+                      <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold flex items-start gap-3 shadow-lg shadow-emerald-500/5">
+                        <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-bold text-white uppercase text-[8px] tracking-wider">
+                            {lang === 'FR' ? 'E-mail Envoyé' : 'Email Sent'}
+                          </p>
+                          <p className="text-slate-400 leading-normal text-[10px] font-medium">
+                            {successMsg}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {!successMsg ? (
+                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
+                            {a.email_address}
+                          </label>
+                          <div className="relative">
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <input 
+                              type="email"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="name@email.com"
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            />
+                          </div>
+                        </div>
+
+                        <button 
+                          type="submit"
+                          className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+                        >
+                          {s.send_reset_link || (lang === 'FR' ? 'Envoyer le lien' : 'Send Reset Link')}
+                        </button>
+                      </form>
+                    ) : null}
+
+                    <div className="text-center mt-6">
+                      <button 
+                        onClick={() => { setErrorMsg(''); setSuccessMsg(''); setAuthModal('login'); }}
+                        className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer"
+                      >
+                        {s.back_to_login || (lang === 'FR' ? 'Retour à la connexion' : 'Back to Login')}
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

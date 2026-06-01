@@ -665,18 +665,16 @@ export default function ProfileSettingsPage() {
                  </div>
                  <div>
                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 block mb-1">
-                     {lang === 'FR' ? 'CONFIRMATION DE SUPPRESSION' : 'ACCOUNT DELETION CONFIRMATION'}
+                     {t.delete_confirm_title_sub}
                    </span>
                    <h3 className="text-xl font-black text-white">
-                     {lang === 'FR' ? 'Supprimer définitivement ?' : 'Delete permanently?'}
+                     {t.delete_confirm_title}
                    </h3>
                  </div>
                </div>
 
                <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                 {lang === 'FR' 
-                   ? "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible et effacera toute votre progression locale, vos certificats et vos cours créés."
-                   : "Are you absolutely sure you want to permanently delete your account? This action is irreversible and will erase all your local progress, certificates, and custom courses."}
+                 {t.delete_confirm_desc}
                </p>
 
                <div className="flex gap-4">
@@ -685,7 +683,7 @@ export default function ProfileSettingsPage() {
                    onClick={() => setShowDeleteConfirm(false)}
                    className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
                  >
-                   {lang === 'FR' ? 'Annuler' : 'Cancel'}
+                   {t.cancel}
                  </button>
                  <button
                    type="button"
@@ -698,7 +696,7 @@ export default function ProfileSettingsPage() {
                    }}
                    className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
                  >
-                   {lang === 'FR' ? 'Confirmer' : 'Confirm'}
+                   {t.confirm}
                  </button>
                </div>
              </motion.div>

@@ -39,7 +39,7 @@ test.describe('OpenPrimer Smoke Tests', () => {
 
   test('should switch language in the TopNav', async ({ page }) => {
     await page.goto(BASE_URL);
-    await page.locator('button').filter({ hasText: /EN/ }).first().click();
+    await page.locator('button').filter({ hasText: /English|EN/i }).first().click();
     const frOption = page.locator('button:has-text("Français")');
     await expect(frOption).toBeVisible();
     await frOption.click();

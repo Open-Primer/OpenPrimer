@@ -126,14 +126,22 @@ export const Question = ({ q, children }: QuestionProps) => {
   const { language } = useLanguage();
   const [selected, setSelected] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   const options = React.Children.toArray(children) as React.ReactElement[];
 
   useEffect(() => {
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isLoggedIn === 'boolean') {
+        setIsLoggedIn(customEvent.detail.isLoggedIn);
+      }
+    };
+    window.addEventListener('op_auth_state_change', handleAuthChange);
+
     const session = localStorage.getItem('op_session');
-    const loggedIn = session !== 'false' && session !== null;
+    const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
     const storage = getProgressionStorage();
@@ -149,6 +157,10 @@ export const Question = ({ q, children }: QuestionProps) => {
         }
       }
     }
+
+    return () => {
+      window.removeEventListener('op_auth_state_change', handleAuthChange);
+    };
   }, [options]);
 
   const handleSelect = (index: number, correct: boolean) => {
