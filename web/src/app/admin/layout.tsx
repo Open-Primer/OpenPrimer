@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, AlertTriangle, Users, BookOpen, ChevronDown, CheckCircle, LogOut, ArrowLeft, Menu, X, User, GraduationCap, Brain, Settings, ShieldAlert, MessageSquare, Activity } from 'lucide-react';
 import ServiceToast from '@/components/ServiceToast';
-import { Footer } from '@/components/RefinedUI';
+import { AdminFooter } from '@/components/RefinedUI';
 import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { useLanguage } from '@/context/LanguageContext';
 import { authService } from '@/lib/db';
@@ -373,7 +373,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <main className="p-12 flex-1">
             {children}
           </main>
-          <Footer />
+          <AdminFooter />
         </div>
       </div>
       {/* Global service degradation toast — discrete bottom-left banners */}

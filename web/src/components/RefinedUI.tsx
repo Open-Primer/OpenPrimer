@@ -1954,11 +1954,19 @@ export const Footer = () => {
 
 // --- COMPONENT: ADMIN CONSOLE FOOTER ---
 export const AdminFooter = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
   return (
-    <footer className="bg-slate-950 border-t border-slate-900 py-6 px-12 mt-auto">
-      <div className="max-w-7xl mx-auto flex justify-center items-center">
-        <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest">
-          © 2026 OpenPrimer Foundation
+    <footer className="bg-slate-950 border-t border-slate-900 py-12 px-12 mt-auto">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="text-[9px] font-black text-slate-800 uppercase tracking-[0.4em]">
+          {t.copyright}
+        </div>
+        <div className="flex gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">
+           <span className="text-xs font-bold text-white">🇪🇺</span>
+           <span className="text-xs font-bold text-white">🇨🇳</span>
+           <span className="text-xs font-bold text-white">🇺🇸</span>
         </div>
       </div>
     </footer>

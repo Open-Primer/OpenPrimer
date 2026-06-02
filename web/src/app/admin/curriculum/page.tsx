@@ -4823,26 +4823,26 @@ export default function AdminCurriculumPage() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <Globe className="w-6 h-6 text-emerald-500" />
-                        <h2 className="text-xl font-extrabold text-white">Dynamic Translation & Retention Engine</h2>
+                        <h2 className="text-xl font-extrabold text-white">{tr("Dynamic Translation & Retention Engine")}</h2>
                       </div>
                       <p className="text-sm text-slate-400 leading-relaxed">
-                        Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:
+                        {tr("Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:")}
                       </p>
                       <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Condition 1: Unresolved Foreign Search Spikes
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {tr("Condition 1: Unresolved Foreign Search Spikes")}
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
-                            Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least <strong className="text-emerald-300">{transThreshold} searches</strong>.
+                            {tr("Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.").replace('{searches}', String(transThreshold))}
                           </p>
                         </div>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Condition 2: High-Volume ECTS Completions
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {tr("Condition 2: High-Volume ECTS Completions")}
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
-                            Suggests translating popular courses into other registered languages when historical validations reach <strong className="text-amber-400">{transValidationsThreshold} completions</strong>.
+                            {tr("Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.").replace('{completions}', String(transValidationsThreshold))}
                           </p>
                         </div>
                       </div>
@@ -4852,7 +4852,7 @@ export default function AdminCurriculumPage() {
 
                     {/* Translation Autonomy Parameters Grid */}
                     <div className="space-y-3">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Engine Control Variables</h3>
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Engine Control Variables")}</h3>
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* 1. Auto-Approve Toggle */}
                         <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
@@ -4996,14 +4996,14 @@ export default function AdminCurriculumPage() {
                         <div>
                           <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
                           <p className="text-[8px] font-black text-slate-500 uppercase mt-1">
-                            Target Language: <span className="text-emerald-400 font-extrabold">{item.targetLang.toUpperCase()}</span>
+                            {tr("Target Language:")} <span className="text-emerald-400 font-extrabold">{item.targetLang.toUpperCase()}</span>
                           </p>
                           <div className="flex gap-4 mt-2">
                             <span className="px-2 py-0.5 bg-slate-950 border border-slate-850 rounded-lg text-[9px] text-slate-400 font-semibold">
-                              Score: <strong className="text-white">{item.count}</strong>
+                              {tr("Score:")} <strong className="text-white">{item.count}</strong>
                             </span>
                             <span className="px-2 py-0.5 bg-emerald-950/40 border border-emerald-900/30 rounded-lg text-[9px] text-emerald-400 font-semibold uppercase">
-                              Priority: {item.priority}
+                              {tr("Priority:")} {tr(item.priority || "Medium")}
                             </span>
                           </div>
                         </div>
@@ -5048,7 +5048,7 @@ export default function AdminCurriculumPage() {
                           <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex flex-col justify-between gap-4">
                             <div>
                               <p className="text-xs font-bold text-slate-200">{item.name}</p>
-                              <p className="text-[8px] text-slate-500 font-black uppercase mt-1">Refused to {item.targetLang.toUpperCase()}</p>
+                              <p className="text-[8px] text-slate-500 font-black uppercase mt-1">{tr("Refused to {lang}").replace('{lang}', item.targetLang.toUpperCase())}</p>
                               <p className="text-[9px] font-bold text-red-500/70 mt-2">
                                 {tr("Re-evaluation in:")} <span className="text-red-400">{remainingDays}d</span>
                               </p>
@@ -5264,15 +5264,15 @@ export default function AdminCurriculumPage() {
                       </p>
                       <div className="grid md:grid-cols-2 gap-4 mt-4">
                         <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
-                          <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block mb-1">Trigger 1: Low Global Rating</span>
+                          <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block mb-1">{tr("Trigger 1: Low Global Rating")}</span>
                           <p className="text-[10px] text-slate-500 leading-normal">
-                            Triggers a general course revision if the average student rating drops below the <strong>Rating Threshold</strong> (≤ Stars) and has gathered a significant sample size (≥ Min Votes).
+                            {tr("Triggers a general course revision if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).")}
                           </p>
                         </div>
                         <div className="bg-slate-950/80 p-4 border border-slate-850 rounded-2xl">
-                          <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">Trigger 2: Concordant Error Reports</span>
+                          <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">{tr("Trigger 2: Concordant Error Reports")}</span>
                           <p className="text-[10px] text-slate-500 leading-normal">
-                            Triggers a target-chapter revision when multiple users (≥ Min Reports) submit matching complaints. The AI Agent synthesizes these concordant reports into a single, structured fix.
+                            {tr("Triggers a target-chapter revision when multiple users (≥ Min Reports) submit matching complaints. The AI Agent synthesizes these concordant reports into a single, structured fix.")}
                           </p>
                         </div>
                       </div>
@@ -5803,7 +5803,7 @@ export default function AdminCurriculumPage() {
                           })}
                           {allFilteredCourses.length === 0 && (
                             <tr>
-                              <td colSpan={9} className="px-6 py-12 text-center text-slate-655 italic">No courses found matching your query.</td>
+                              <td colSpan={9} className="px-6 py-12 text-center text-slate-655 italic">{tr("No courses found matching your query.")}</td>
                             </tr>
                           )}
                         </tbody>
@@ -5817,7 +5817,7 @@ export default function AdminCurriculumPage() {
               {view === 'queue' && (
                 <div className="space-y-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                     <h3 className="text-xl font-black text-slate-200">Active Task Pipeline Queue</h3>
+                     <h3 className="text-xl font-black text-slate-200">{tr("Active Task Pipeline Queue")}</h3>
                      <div className="flex items-center gap-3">
                        <input
                          type="text"
@@ -5845,7 +5845,7 @@ export default function AdminCurriculumPage() {
                                setQueueSortDir('asc');
                              }
                            }}>
-                             Task ID {renderSortIndicator('id', queueSortField, queueSortDir)}
+                             {tr("Task ID")} {renderSortIndicator('id', queueSortField, queueSortDir)}
                            </th>
                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                              if (queueSortField === 'title') {
@@ -5855,7 +5855,7 @@ export default function AdminCurriculumPage() {
                                setQueueSortDir('asc');
                              }
                            }}>
-                             Course/Topic {renderSortIndicator('title', queueSortField, queueSortDir)}
+                             {tr("Course/Topic")} {renderSortIndicator('title', queueSortField, queueSortDir)}
                            </th>
                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                              if (queueSortField === 'level') {
@@ -5865,7 +5865,7 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('asc');
                             }
                           }}>
-                            Level {renderSortIndicator('level', queueSortField, queueSortDir)}
+                            {tr("Level")} {renderSortIndicator('level', queueSortField, queueSortDir)}
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'targetLang') {
@@ -5875,7 +5875,7 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('asc');
                             }
                           }}>
-                            Language {renderSortIndicator('targetLang', queueSortField, queueSortDir)}
+                            {tr("Language")} {renderSortIndicator('targetLang', queueSortField, queueSortDir)}
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'completedAt') {
@@ -5885,7 +5885,7 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('asc');
                             }
                           }}>
-                            Completed {renderSortIndicator('completedAt', queueSortField, queueSortDir)}
+                            {tr("Completed")} {renderSortIndicator('completedAt', queueSortField, queueSortDir)}
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'type') {
@@ -5895,7 +5895,7 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('asc');
                             }
                           }}>
-                            Task Type {renderSortIndicator('type', queueSortField, queueSortDir)}
+                            {tr("Task Type")} {renderSortIndicator('type', queueSortField, queueSortDir)}
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'status') {
@@ -5905,7 +5905,7 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('asc');
                             }
                           }}>
-                            Status {renderSortIndicator('status', queueSortField, queueSortDir)}
+                            {tr("Status")} {renderSortIndicator('status', queueSortField, queueSortDir)}
                           </th>
                           <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                             if (queueSortField === 'priority') {
@@ -5915,9 +5915,9 @@ export default function AdminCurriculumPage() {
                               setQueueSortDir('desc');
                             }
                           }}>
-                            Priority {renderSortIndicator('priority', queueSortField, queueSortDir)}
+                            {tr("Priority")} {renderSortIndicator('priority', queueSortField, queueSortDir)}
                           </th>
-                          <th className="px-6 py-4">Actions</th>
+                          <th className="px-6 py-4">{tr("Actions")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/50">
