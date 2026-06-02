@@ -12,6 +12,7 @@ import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService } from '@/lib/db';
+import { CourseKiosk } from './CourseKiosk';
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
 const SUBJECT_SUGGESTIONS = [
@@ -253,31 +254,14 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
         </div>
 
         {/* Alternative subject suggestions */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {SUBJECT_SUGGESTIONS.map((s) => {
-            const IconComp = s.icon;
-            const colorMap: Record<string, string> = {
-              blue: 'border-blue-500/20 hover:border-blue-500/50 hover:bg-blue-600/5 text-blue-400',
-              violet: 'border-violet-500/20 hover:border-violet-500/50 hover:bg-violet-600/5 text-violet-400',
-              emerald: 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-600/5 text-emerald-400',
-              amber: 'border-amber-500/20 hover:border-amber-500/50 hover:bg-amber-600/5 text-amber-400',
-              pink: 'border-pink-500/20 hover:border-pink-500/50 hover:bg-pink-600/5 text-pink-400',
-              cyan: 'border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-600/5 text-cyan-400',
-            };
-            return (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => onSelectSubject?.(s.label)}
-                className={`p-4 bg-slate-900/40 border rounded-2xl flex items-center gap-3 transition-all group text-left cursor-pointer ${colorMap[s.color]}`}
-              >
-                <IconComp className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 group-hover:text-white transition-colors">
-                  {SUGGESTIONS_TRANSLATIONS[s.label]?.[lang] || s.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="w-full max-w-4xl mx-auto relative z-50">
+          <CourseKiosk 
+            lang={lang} 
+            mode="disciplines"
+            title={lang.toUpperCase() === 'FR' ? "Découvrez nos disciplines d'élite" : "Explore Our Elite Disciplines"}
+            subtitle={lang.toUpperCase() === 'FR' ? "Sélectionnez une discipline pour relancer votre recherche" : "Select a discipline to restart your search"}
+            onDisciplineClick={(subject) => onSelectSubject?.(subject)}
+          />
         </div>
 
         {/* Clear search */}

@@ -55,6 +55,35 @@ const HEALTH_STRINGS = {
     audit_desc: 'Rather than auditing all courses daily, a rolling 1/15th fraction is analyzed each day based on their ID hashes.',
     audit_stat: 'Today\'s Rolling Batch: 1/15th (1 course audited out of 11 total)',
     pipeline_active: 'Active Pipeline Load Balancing: Enforced (Max 2 concurrent high-intensity tasks)',
+    sla_title: "Dependency SLA & Downtime Over Last 365 Days",
+    sla_desc: "Rolling annual service level agreement (SLA) status, aggregated incident tracking, and average latency offsets.",
+    lbl_database: "Database",
+    lbl_email: "Email Relay",
+    lbl_ai: "AI LLM Backend",
+    lbl_images: "Image Engine",
+    no_data: "No data",
+    db_conn_req: "Database connection required",
+    no_downtime: "No downtime",
+    downtime_min: "Downtime: {min}m",
+    downtime_hour: "Downtime: {hour}h",
+    no_major_incidents: "No major incidents",
+    inc_db_upgrade: "Incident: Replica DB upgrade",
+    inc_rate_limit: "Incident: Rate-limit tuning",
+    inc_quota_scaling: "Incident: LLM quota scaling",
+    inc_oom: "Incident: Batch out-of-memory",
+    status_nominal: "Nominal",
+    status_outage: "Outage",
+    sla_grid_title: "Rolling Service Availability Grid (Last 365 Days Timeline)",
+    overall_avg: "Overall Average",
+    no_avail_data: "No availability data — Active database connection required",
+    days_ago: "365 Days Ago",
+    today: "Today",
+    keys_applied: "API Keys successfully hot-swapped!",
+    keys_reset: "Returned to default server keys.",
+    live_db: "Live DB",
+    sandbox: "Sandbox",
+    sys_all_nominal: "All systems nominal",
+    sys_unreachable: "One or more services are unreachable"
   },
   FR: {
     title: 'Santé des Serveurs',
@@ -100,6 +129,35 @@ const HEALTH_STRINGS = {
     audit_desc: 'Au lieu d\'analyser tous les cours quotidiennement, une fraction tournante de 1/15ème est auditée chaque jour selon l\'empreinte des IDs.',
     audit_stat: 'Lot tournant du jour : 1/15ème (1 cours audité sur 11 au total)',
     pipeline_active: 'Équilibrage actif de la file : Activé (Max 2 tâches intensives en simultané)',
+    sla_title: "SLA de Disponibilité sur les 365 Derniers Jours",
+    sla_desc: "Indicateurs de performance réseau et taux de disponibilité cumulés du catalogue de services.",
+    lbl_database: "Base de données",
+    lbl_email: "Relais Email",
+    lbl_ai: "Backend IA (LLM)",
+    lbl_images: "Moteur d'Images",
+    no_data: "Aucune donnée",
+    db_conn_req: "Connexion base de données requise",
+    no_downtime: "Aucune interruption",
+    downtime_min: "Indisponibilité : {min} min",
+    downtime_hour: "Indisponibilité : {hour} h",
+    no_major_incidents: "Aucun incident majeur",
+    inc_db_upgrade: "Incident : Mise à jour réplique",
+    inc_rate_limit: "Incident : Ajustement quota",
+    inc_quota_scaling: "Incident : Échelle de quota",
+    inc_oom: "Incident : Dépassement mémoire",
+    status_nominal: "Nominal",
+    status_outage: "Interruption",
+    sla_grid_title: "Calendrier Annuel de Disponibilité (365 Jours)",
+    overall_avg: "Moyenne Globale",
+    no_avail_data: "Aucune donnée de disponibilité — Connexion base de données active requise",
+    days_ago: "Il y a 365 Jours",
+    today: "Aujourd'hui",
+    keys_applied: "Clés API appliquées avec succès à chaud !",
+    keys_reset: "Retour aux clés serveurs par défaut.",
+    live_db: "BDD en Direct",
+    sandbox: "Bac à Sable",
+    sys_all_nominal: "Tous les systèmes sont opérationnels",
+    sys_unreachable: "Un ou plusieurs services sont inaccessibles"
   },
   ES: {
     title: 'Estado del Servidor',
@@ -145,6 +203,35 @@ const HEALTH_STRINGS = {
     audit_desc: 'En lugar de auditar todos los cursos diariamente, se analiza una fracción rotativa de 1/15 cada día según los hashes de ID.',
     audit_stat: 'Lote rotativo de hoy: 1/15 (1 curso auditado de 11 en total)',
     pipeline_active: 'Equilibrio de carga en cola activo: Forzado (Máx. 2 tareas concurrentes)',
+    sla_title: "SLA de Dependencia y Tiempo de Inactividad en los Últimos 365 Días",
+    sla_desc: "Estado de SLA anual, seguimiento de incidentes acumulados y compensaciones de latencia promedio.",
+    lbl_database: "Base de datos",
+    lbl_email: "Relé de Correo",
+    lbl_ai: "Backend de IA (LLM)",
+    lbl_images: "Motor de Imágenes",
+    no_data: "Sin datos",
+    db_conn_req: "Se requiere conexión a la base de datos",
+    no_downtime: "Sin tiempo de inactividad",
+    downtime_min: "Inactividad: {min}m",
+    downtime_hour: "Inactividad: {hour}h",
+    no_major_incidents: "Sin incidentes mayores",
+    inc_db_upgrade: "Incidente: Actualización de réplica",
+    inc_rate_limit: "Incidente: Ajuste de límite de tasa",
+    inc_quota_scaling: "Incidente: Escalamiento de cuota de LLM",
+    inc_oom: "Incidente: Memoria agotada en lote",
+    status_nominal: "Nominal",
+    status_outage: "Interrupción",
+    sla_grid_title: "Cuadrícula de Disponibilidad de Servicio (Línea de Tiempo de 365 Días)",
+    overall_avg: "Promedio General",
+    no_avail_data: "Sin datos de disponibilidad — Se requiere conexión activa a la base de datos",
+    days_ago: "Hace 365 Días",
+    today: "Hoy",
+    keys_applied: "¡Claves API aplicadas con éxito en caliente!",
+    keys_reset: "Se restablecieron las claves del servidor predeterminadas.",
+    live_db: "BD en Vivo",
+    sandbox: "Entorno de Pruebas",
+    sys_all_nominal: "Todos los sistemas están operativos",
+    sys_unreachable: "Uno o más servicios no están disponibles"
   },
   DE: {
     title: 'Server-Gesundheit',
@@ -190,6 +277,35 @@ const HEALTH_STRINGS = {
     audit_desc: 'Anstatt alle Kurse täglich zu prüfen, wird jeden Tag ein rollierender Anteil von 1/15 basierend auf ID-Hashes analysiert.',
     audit_stat: 'Heutige rollierende Charge: 1/15 (1 Kurs geprüft von 11 insgesamt)',
     pipeline_active: 'Aktive Warteschlangen-Lastverteilung: Erzwungen (Max. 2 gleichzeitige Aufgaben)',
+    sla_title: "Abhängigkeits-SLA & Ausfallzeiten der letzten 365 Tage",
+    sla_desc: "Fortlaufender SLA-Status für das Gesamtjahr, aggregierte Incident-Verfolgung und durchschnittliche Latenzzeit.",
+    lbl_database: "Datenbank",
+    lbl_email: "E-Mail-Relay",
+    lbl_ai: "KI-LLM-Backend",
+    lbl_images: "Bild-Engine",
+    no_data: "Keine Daten",
+    db_conn_req: "Datenbankverbindung erforderlich",
+    no_downtime: "Keine Ausfallzeit",
+    downtime_min: "Ausfallzeit: {min} Min.",
+    downtime_hour: "Ausfallzeit: {hour} Std.",
+    no_major_incidents: "Keine größeren Incidents",
+    inc_db_upgrade: "Incident: Replik-Datenbank-Upgrade",
+    inc_rate_limit: "Incident: Ratenlimit-Anpassung",
+    inc_quota_scaling: "Incident: LLM-Kontingentskalierung",
+    inc_oom: "Incident: Stapel-Speicherüberlauf",
+    status_nominal: "Nominal",
+    status_outage: "Ausfall",
+    sla_grid_title: "Fortlaufendes Service-Verfügbarkeitsraster (Zeitachse der letzten 365 Tage)",
+    overall_avg: "Gesamtdurchschnitt",
+    no_avail_data: "Keine Verfügbarkeitsdaten — Aktive Datenbankverbindung erforderlich",
+    days_ago: "Vor 365 Tagen",
+    today: "Heute",
+    keys_applied: "API-Schlüssel erfolgreich im laufenden Betrieb getauscht!",
+    keys_reset: "Auf Standard-Serverschlüssel zurückgesetzt.",
+    live_db: "Live-Datenbank",
+    sandbox: "Sandbox",
+    sys_all_nominal: "Alle Systeme laufen normal",
+    sys_unreachable: "Ein oder mehrere Dienste sind nicht erreichbar"
   },
   ZH: {
     title: '服务器健康状态',
@@ -235,6 +351,35 @@ const HEALTH_STRINGS = {
     audit_desc: '为避免系统负载饱和，系统不进行每日全量课程审计，而是根据课程 ID 的哈希特征，每日轮循审计 1/15 的课程。',
     audit_stat: '今日审计批次：1/15 (已审计 11 门课程中的 1 门)',
     pipeline_active: '定时任务管道流控：已启用 (限制最大 2 个高吞吐任务并发执行)',
+    sla_title: "最近 365 天服务可用性 (SLA) 与停机时间",
+    sla_desc: "年度滚动服务等级协议 (SLA) 可用率、聚合故障事件追踪和平均延迟偏移量。",
+    lbl_database: "数据库",
+    lbl_email: "邮件中继",
+    lbl_ai: "AI 大语言模型后台",
+    lbl_images: "图像生成引擎",
+    no_data: "暂无数据",
+    db_conn_req: "需要活跃数据库连接",
+    no_downtime: "未发生停机",
+    downtime_min: "停机时长：{min} 分钟",
+    downtime_hour: "停机时长：{hour} 小时",
+    no_major_incidents: "未发生重大故障",
+    inc_db_upgrade: "故障事件：只读副本数据库升级",
+    inc_rate_limit: "故障事件：频率限制参数调整",
+    inc_quota_scaling: "故障事件：大模型 API 配额大版面调优",
+    inc_oom: "故障事件：批量生成任务内存溢出",
+    status_nominal: "正常",
+    status_outage: "停机中断",
+    sla_grid_title: "滚动服务可用率网格 (最近 365 天时间线)",
+    overall_avg: "全局平均可用率",
+    no_avail_data: "暂无可用性数据 — 需要建立活跃的数据库连接",
+    days_ago: "365 天前",
+    today: "今天",
+    keys_applied: "API 密钥已成功热插拔应用！",
+    keys_reset: "已成功恢复为默认服务器端密钥环境。",
+    live_db: "活跃数据库",
+    sandbox: "沙盒测试",
+    sys_all_nominal: "所有系统运行正常",
+    sys_unreachable: "一个或多个服务无法访问"
   }
 };
 
@@ -376,8 +521,8 @@ export default function ServerHealthPage() {
     if (!slaHistory || slaHistory.length === 0) {
       return {
         avg: '0.00%',
-        downtime: lang === 'FR' ? 'Aucune donnée' : 'No data',
-        incident: lang === 'FR' ? 'Connexion base de données requise' : 'Database connection required'
+        downtime: t.no_data || 'No data',
+        incident: t.db_conn_req || 'Database connection required'
       };
     }
     const sum = slaHistory.reduce((acc, entry) => acc + entry[id], 0);
@@ -387,22 +532,20 @@ export default function ServerHealthPage() {
 
     let downtimeStr = '';
     if (downtimeHours === 0) {
-      downtimeStr = lang === 'FR' ? 'Aucune interruption' : 'No downtime';
+      downtimeStr = t.no_downtime || 'No downtime';
     } else if (downtimeHours < 1) {
-      downtimeStr = lang === 'FR' 
-        ? `Indisponibilité : ${Math.round(downtimeHours * 60)} min` 
-        : `Downtime: ${Math.round(downtimeHours * 60)}m`;
+      const mins = Math.round(downtimeHours * 60);
+      downtimeStr = (t.downtime_min || 'Downtime: {min}m').replace('{min}', String(mins));
     } else {
-      downtimeStr = lang === 'FR'
-        ? `Indisponibilité : ${downtimeHours.toFixed(1)} h`
-        : `Downtime: ${downtimeHours.toFixed(1)}h`;
+      const hrs = downtimeHours.toFixed(1);
+      downtimeStr = (t.downtime_hour || 'Downtime: {hour}h').replace('{hour}', String(hrs));
     }
 
-    let incident = lang === 'FR' ? 'Aucun incident majeur' : 'No major incidents';
-    if (id === 'db') incident = lang === 'FR' ? 'Incident : Mise à jour réplique' : 'Incident: Replica DB upgrade';
-    if (id === 'email') incident = lang === 'FR' ? 'Incident : Ajustement quota' : 'Incident: Rate-limit tuning';
-    if (id === 'ai') incident = lang === 'FR' ? 'Incident : Échelle de quota' : 'Incident: LLM quota scaling';
-    if (id === 'images') incident = lang === 'FR' ? 'Incident : Dépassement mémoire' : 'Incident: Batch out-of-memory';
+    let incident = t.no_major_incidents || 'No major incidents';
+    if (id === 'db') incident = t.inc_db_upgrade || 'Incident: Replica DB upgrade';
+    if (id === 'email') incident = t.inc_rate_limit || 'Incident: Rate-limit tuning';
+    if (id === 'ai') incident = t.inc_quota_scaling || 'Incident: LLM quota scaling';
+    if (id === 'images') incident = t.inc_oom || 'Incident: Batch out-of-memory';
 
     return {
       avg: `${avg.toFixed(2)}%`,
@@ -484,7 +627,7 @@ export default function ServerHealthPage() {
     if (geminiApiKey) localStorage.setItem('op_gemini_api_key', geminiApiKey);
     else localStorage.removeItem('op_gemini_api_key');
 
-    setNotif(lang === 'FR' ? 'Clés API appliquées avec succès à chaud !' : 'API Keys successfully hot-swapped!');
+    setNotif(t.keys_applied || 'API Keys successfully hot-swapped!');
     setTimeout(() => setNotif(null), 4000);
     refresh();
   };
@@ -498,7 +641,7 @@ export default function ServerHealthPage() {
     setSupabaseAnonKey('');
     setResendApiKey('');
     setGeminiApiKey('');
-    setNotif(lang === 'FR' ? 'Retour aux clés serveurs par défaut.' : 'Returned to default server keys.');
+    setNotif(t.keys_reset || 'Returned to default server keys.');
     setTimeout(() => setNotif(null), 4000);
     refresh();
   };
@@ -593,13 +736,13 @@ export default function ServerHealthPage() {
       {allOk && (
         <div className="flex items-center gap-3 px-6 py-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
           <CheckCircle className="w-5 h-5 text-emerald-400" />
-          <p className="text-sm font-semibold text-emerald-300">{t.status_ok} — All systems nominal</p>
+          <p className="text-sm font-semibold text-emerald-300">{t.status_ok} — {(t as any).sys_all_nominal || 'All systems nominal'}</p>
         </div>
       )}
       {anyOffline && (
         <div className="flex items-center gap-3 px-6 py-4 bg-red-500/5 border border-red-500/20 rounded-2xl">
           <WifiOff className="w-5 h-5 text-red-400" />
-          <p className="text-sm font-semibold text-red-300">{t.status_offline} — One or more services are unreachable</p>
+          <p className="text-sm font-semibold text-red-300">{t.status_offline} — {(t as any).sys_unreachable || 'One or more services are unreachable'}</p>
         </div>
       )}
 
@@ -612,19 +755,19 @@ export default function ServerHealthPage() {
         <div>
           <h2 className="text-lg font-black text-white flex items-center gap-3">
             <Clock className="w-5 h-5 text-emerald-400" />
-            {lang === 'FR' ? "SLA de Disponibilité sur les 365 Derniers Jours" : "Dependency SLA & Downtime Over Last 365 Days"}
+            {t.sla_title}
           </h2>
           <p className="text-xs text-slate-500 mt-1 leading-snug">
-            {lang === 'FR' ? "Indicateurs de performance réseau et taux de disponibilité cumulés du catalogue de services." : "Rolling annual service level agreement (SLA) status, aggregated incident tracking, and average latency offsets."}
+            {t.sla_desc}
           </p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-6">
           {[
-            { id: 'db' as const, name: 'Supabase DB', label: 'Database', color: 'text-emerald-400' },
-            { id: 'email' as const, name: 'Resend API', label: 'Email Relay', color: 'text-blue-400' },
-            { id: 'ai' as const, name: 'Gemini AI', label: 'AI LLM Backend', color: 'text-violet-400' },
-            { id: 'images' as const, name: 'Pollinations.ai', label: 'Image Engine', color: 'text-orange-400' },
+            { id: 'db' as const, name: 'Supabase DB', label: t.lbl_database, color: 'text-emerald-400' },
+            { id: 'email' as const, name: 'Resend API', label: t.lbl_email, color: 'text-blue-400' },
+            { id: 'ai' as const, name: 'Gemini AI', label: t.lbl_ai, color: 'text-violet-400' },
+            { id: 'images' as const, name: 'Pollinations.ai', label: t.lbl_images, color: 'text-orange-400' },
           ].map(s => {
             const stats = getServiceStats(s.id);
             return (
@@ -651,33 +794,33 @@ export default function ServerHealthPage() {
                 <div className="flex items-center justify-between w-full text-[10px] text-slate-200 animate-in fade-in duration-200">
                   <div className="flex items-center gap-3">
                     <span className="text-slate-400 font-extrabold font-mono">
-                      {new Date(hoveredDay.date).toLocaleDateString(lang === 'FR' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(hoveredDay.date).toLocaleDateString({ EN: 'en-US', FR: 'fr-FR', ES: 'es-ES', DE: 'de-DE', ZH: 'zh-CN' }[lang] || 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </span>
                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
                       hoveredDay.status === 'nominal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                       : hoveredDay.status === 'degraded' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' 
                       : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
                     }`}>
-                      {hoveredDay.status === 'nominal' ? (lang === 'FR' ? 'Nominal' : 'Nominal')
-                        : hoveredDay.status === 'degraded' ? (lang === 'FR' ? 'Dégradé' : 'Degraded')
-                        : (lang === 'FR' ? 'Interruption' : 'Outage')}
+                      {hoveredDay.status === 'nominal' ? (t.status_nominal || 'Nominal')
+                        : hoveredDay.status === 'degraded' ? (t.status_degraded || 'Degraded')
+                        : (t.status_outage || 'Outage')}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 text-[9px] font-mono text-slate-300">
                     <span className="flex items-center gap-1">
-                      <span className="text-slate-500 font-bold">DB:</span> 
+                      <span className="text-slate-500 font-bold">{t.lbl_database || 'DB'}:</span> 
                       <span className={hoveredDay.db < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.db}%</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="text-slate-500 font-bold">Email:</span> 
+                      <span className="text-slate-500 font-bold">{t.lbl_email || 'Email'}:</span> 
                       <span className={hoveredDay.email < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.email}%</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="text-slate-500 font-bold">AI:</span> 
+                      <span className="text-slate-500 font-bold">{t.lbl_ai || 'AI'}:</span> 
                       <span className={hoveredDay.ai < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.ai}%</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="text-slate-500 font-bold">Images:</span> 
+                      <span className="text-slate-500 font-bold">{t.lbl_images || 'Images'}:</span> 
                       <span className={hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.images}%</span>
                     </span>
                   </div>
@@ -685,17 +828,17 @@ export default function ServerHealthPage() {
               ) : (
                 <div className="flex justify-between items-center w-full animate-in fade-in duration-200">
                   <div className="flex items-center gap-2">
-                    <span>{lang === 'FR' ? "Calendrier Annuel de Disponibilité (365 Jours)" : "Rolling Service Availability Grid (Last 365 Days Timeline)"}</span>
+                    <span>{t.sla_grid_title}</span>
                     <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
                       slaSource === 'database' 
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
                         : 'bg-slate-800 text-slate-400 border border-slate-700'
                     }`}>
-                      {slaSource === 'database' ? 'Live DB' : 'Sandbox'}
+                      {slaSource === 'database' ? ((t as any).live_db || 'Live DB') : ((t as any).sandbox || 'Sandbox')}
                     </span>
                   </div>
                   <span className="text-emerald-400 font-mono font-bold">
-                    {overallAvg.toFixed(3)}% {lang === 'FR' ? "Moyenne Globale" : "Overall Average"}
+                    {overallAvg.toFixed(3)}% {t.overall_avg}
                   </span>
                 </div>
               )}
@@ -705,9 +848,7 @@ export default function ServerHealthPage() {
               <div className="flex flex-col items-center justify-center py-10 text-slate-500 text-[10px] font-semibold gap-2 border border-dashed border-slate-800/80 rounded-2xl bg-slate-950/20">
                 <WifiOff className="w-6 h-6 text-slate-650 animate-pulse" />
                 <span>
-                  {lang === 'FR' 
-                    ? "Aucune donnée de disponibilité — Connexion base de données active requise" 
-                    : "No availability data — Active database connection required"}
+                  {t.no_avail_data}
                 </span>
               </div>
             ) : (
@@ -736,13 +877,13 @@ export default function ServerHealthPage() {
                    })}
                 </div>
                 <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-650 tracking-widest pt-2">
-                   <span>{lang === 'FR' ? "Il y a 365 Jours" : "365 Days Ago"}</span>
+                   <span>{t.days_ago}</span>
                    <div className="flex gap-4">
-                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {lang === 'FR' ? "Nominal" : "Nominal"}</span>
-                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {lang === 'FR' ? "Dégradé" : "Degraded"}</span>
-                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {lang === 'FR' ? "Interruption" : "Outage"}</span>
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {t.status_nominal}</span>
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {t.status_degraded}</span>
+                     <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {t.status_outage}</span>
                    </div>
-                   <span>{lang === 'FR' ? "Aujourd'hui" : "Today"}</span>
+                   <span>{t.today}</span>
                 </div>
               </>
             )}

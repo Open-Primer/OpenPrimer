@@ -247,6 +247,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       const customEvent = e as CustomEvent;
       const message = customEvent.detail?.message || "Database query failed";
       console.warn("[ClientProviders] Database failure event caught:", message);
+      setDbFailed(true);
 
       const langKey = (localStorage.getItem("openprimer_lang") || "EN").toUpperCase();
       const t = TOAST_TRANSLATIONS[langKey as keyof typeof TOAST_TRANSLATIONS] || TOAST_TRANSLATIONS.EN;
@@ -350,7 +351,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <LanguageProvider>
-      {children}
+      {dbFailed ? <DatabaseOfflineGame /> : children}
 
       {/* Floating Achievement Toast Manager */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 max-w-sm w-full pointer-events-none px-4 sm:px-0">

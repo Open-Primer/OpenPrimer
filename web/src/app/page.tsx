@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
+import { CourseKiosk } from '@/components/CourseKiosk';
 
 const AUTH_STRINGS: Record<string, Record<string, string>> = {
   EN: {
@@ -689,26 +690,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Popular Curricula */}
-        {popularCourses.length > 0 && (
-          <div className="w-full max-w-2xl mb-20 text-center relative z-50">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">
-              {s.popular_curricula}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {popularCourses.map(course => (
-                <button 
-                  key={course.id}
-                  onClick={() => router.push(`/catalog?search=${encodeURIComponent(course.searchQuery)}`)}
-                  className={`p-6 rounded-[28px] border border-slate-900/60 bg-gradient-to-b ${course.color} backdrop-blur-xl shadow-xl flex flex-col items-center justify-center text-center transition-all hover:scale-105 active:scale-95 hover:border-slate-800 group cursor-pointer`}
-                >
-                  <GraduationCap className="w-5 h-5 mb-3 text-slate-500 group-hover:text-current transition-colors" />
-                  <h4 className="text-xs font-black tracking-tight leading-tight group-hover:text-white transition-colors">{course.title}</h4>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Popular Curricula Kiosk */}
+        <div className="w-full max-w-4xl mb-20 relative z-50">
+          <CourseKiosk 
+            lang={lang} 
+            title={s.popular_curricula}
+            subtitle={lang.toUpperCase() === 'FR' ? "Découvrez nos cursus universitaires et cours interactifs d'élite" : "Explore our elite university curricula and interactive courses"}
+            onCourseClick={(course) => router.push(`/catalog?search=${encodeURIComponent(course.title)}`)}
+          />
+        </div>
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mt-12">

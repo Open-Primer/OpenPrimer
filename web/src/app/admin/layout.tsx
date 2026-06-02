@@ -26,7 +26,11 @@ export const ADMIN_STRINGS = {
     my_curriculum: "My Curriculum",
     catalog: "Browse Catalog",
     settings: "Account Settings",
-    admin: "Admin Console"
+    admin: "Admin Console",
+    theme_default: "Default",
+    theme_paper: "Paper",
+    theme_focus: "Focus",
+    verifying_access: "Verifying Administrative Access..."
   },
   FR: {
     dashboard: "Tableau de Bord",
@@ -42,7 +46,11 @@ export const ADMIN_STRINGS = {
     my_curriculum: "Mon Curriculum",
     catalog: "Parcourir le Catalogue",
     settings: "Paramètres du Compte",
-    admin: "Console Admin"
+    admin: "Console Admin",
+    theme_default: "Défaut",
+    theme_paper: "Papier",
+    theme_focus: "Focus",
+    verifying_access: "Vérification de l'accès administratif..."
   },
   ES: {
     dashboard: "Panel de Control",
@@ -58,7 +66,11 @@ export const ADMIN_STRINGS = {
     my_curriculum: "Mi Currículo",
     catalog: "Explorar Catálogo",
     settings: "Ajustes de Cuenta",
-    admin: "Consola Admin"
+    admin: "Consola Admin",
+    theme_default: "Predeterminado",
+    theme_paper: "Papel",
+    theme_focus: "Enfoque",
+    verifying_access: "Verificando acceso administrativo..."
   },
   DE: {
     dashboard: "Dashboard",
@@ -74,7 +86,11 @@ export const ADMIN_STRINGS = {
     my_curriculum: "Mein Lehrplan",
     catalog: "Katalog durchsuchen",
     settings: "Kontoeinstellungen",
-    admin: "Admin-Konsole"
+    admin: "Admin-Konsole",
+    theme_default: "Standard",
+    theme_paper: "Papier",
+    theme_focus: "Fokus",
+    verifying_access: "Administrative Zugriffsberechtigung wird überprüft..."
   },
   ZH: {
     dashboard: "仪表板",
@@ -90,7 +106,11 @@ export const ADMIN_STRINGS = {
     my_curriculum: "我的课程",
     catalog: "浏览课程目录",
     settings: "账户设置",
-    admin: "管理控制台"
+    admin: "管理控制台",
+    theme_default: "默认",
+    theme_paper: "纸张",
+    theme_focus: "专注",
+    verifying_access: "正在验证管理员访问权限..."
   }
 };
 
@@ -201,7 +221,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isAuthorized === null) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 text-[10px] tracking-[0.3em] font-black uppercase">
-        Verifying Administrative Access...
+        {t.verifying_access || 'Verifying Administrative Access...'}
       </div>
     );
   }
@@ -319,7 +339,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {['Default', 'Paper', 'Focus'].map(mode => {
                   const modeKey = mode === 'Default' ? 'dark' : mode.toLowerCase();
                   const active = readingMode === modeKey;
-                  const modeLabel = mode === 'Default' ? (lang === 'FR' ? 'Défaut' : 'Default') : mode === 'Paper' ? (lang === 'FR' ? 'Papier' : 'Paper') : 'Focus';
+                  const modeLabel = mode === 'Default' ? (t as any).theme_default || 'Default'
+                    : mode === 'Paper' ? (t as any).theme_paper || 'Paper'
+                    : (t as any).theme_focus || 'Focus';
                   return (
                     <button 
                       key={mode}
