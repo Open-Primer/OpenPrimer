@@ -311,9 +311,15 @@ export default function Home() {
           .then(data => {
             if (data.success) {
               localStorage.setItem('op_user_profile', JSON.stringify(data.profile));
-              localStorage.setItem('op_session', 'false');
+              localStorage.setItem('op_session', 'true');
               localStorage.setItem('op_registration_verified', 'true');
-              setJustVerified(true);
+              localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+              localStorage.setItem('op_logged_in_before', 'true');
+              
+              setIsLoggedIn(true);
+              setAuthModal(null);
+              window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
+              router.push('/catalog');
             } else {
               setErrorMsg(data.error || (lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed."));
             }
@@ -1107,20 +1113,22 @@ export default function Home() {
                       {a.verify_sent} <span className="text-slate-300 font-bold">{email}</span>. {a.verify_confirm}
                     </p>
 
-                    <div className="bg-slate-950/60 border border-slate-855 rounded-2xl p-4 text-left mb-6 text-xs relative overflow-hidden">
-                      <div className="absolute top-0 right-0 px-2 py-1 bg-blue-600/10 text-blue-400 border-l border-b border-slate-855 rounded-bl-lg text-[6px] font-black uppercase tracking-wider">
-                        {a.simulated_email}
+                    {process.env.NODE_ENV !== 'production' && (
+                      <div className="bg-slate-950/40 border border-slate-850/50 rounded-2xl p-4 text-left mb-6 text-xs text-slate-400">
+                        <div className="text-[8px] font-black uppercase tracking-wider text-amber-500 mb-1">
+                          [DEV MODE] Local Verification Fallback
+                        </div>
+                        <p className="mb-2 text-[10px]">
+                          Resend is not configured locally. Click below to verify instantly in your browser:
+                        </p>
+                        <button 
+                          onClick={handleSimulateValidation}
+                          className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold text-[9px] uppercase tracking-widest cursor-pointer"
+                        >
+                          Verify Instantly (Dev Only)
+                        </button>
                       </div>
-                      <p className="font-bold text-white mb-2">
-                        {a.welcome_to_op}
-                      </p>
-                      <button 
-                        onClick={handleSimulateValidation}
-                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-blue-600/10 cursor-pointer"
-                      >
-                        {a.verify_and_login}
-                      </button>
-                    </div>
+                    )}
 
                     <button onClick={() => setAuthModal('signup')} className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer">
                       {a.back}

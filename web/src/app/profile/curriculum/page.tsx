@@ -842,33 +842,44 @@ export default function CurriculumPage() {
           })()}
 
         {/* ACHIEVEMENTS GALLERY */}
-        {achievements.filter(ach => earnedIds.includes(ach.id)).length > 0 && (
+        {achievements.length > 0 && (
           <section className="mt-20">
              <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
                 <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {t.achievements_gallery}
              </h2>
-             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-               {achievements.filter(ach => earnedIds.includes(ach.id)).map((ach) => {
-                 const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
-                 const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
+             {achievements.filter(ach => earnedIds.includes(ach.id)).length > 0 ? (
+               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                 {achievements.filter(ach => earnedIds.includes(ach.id)).map((ach) => {
+                   const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
+                   const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
 
-                 return (
-                   <div 
-                     key={ach.id}
-                     className="p-6 border rounded-[32px] flex flex-col items-center text-center transition-all bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5"
-                   >
-                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
-                       <IconComponent className="w-6 h-6" />
+                   return (
+                     <div 
+                       key={ach.id}
+                       className="p-6 border rounded-[32px] flex flex-col items-center text-center transition-all bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5"
+                     >
+                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                         <IconComponent className="w-6 h-6" />
+                       </div>
+                       <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
+                       <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
+                       <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
+                         {t.unlocked}
+                       </span>
                      </div>
-                     <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
-                     <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
-                     <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
-                       {t.unlocked}
-                     </span>
-                   </div>
-                 );
-               })}
-             </div>
+                   );
+                 })}
+               </div>
+             ) : (
+               <div className="p-10 border rounded-[32px] flex flex-col items-center text-center bg-slate-900/25 border-blue-500/15 shadow-xl shadow-blue-500/5">
+                 <div className="w-16 h-16 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-400 mb-4 shadow-inner">
+                   <Trophy className="w-8 h-8 opacity-30" />
+                 </div>
+                 <p className="text-xs font-semibold text-slate-400 max-w-md leading-relaxed">
+                   {(t as any).no_achievements_earned}
+                 </p>
+               </div>
+             )}
           </section>
         )}
       </div>
