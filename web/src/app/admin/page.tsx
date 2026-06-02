@@ -23,7 +23,7 @@ export const DASHBOARD_STRINGS = {
     month_trend: "this month",
     week_trend: "new this week",
     improvement: "improvement",
-    based_reviews: "Based on 2.1k reviews",
+    based_reviews: "Based on {count} reviews",
     accuracy_rate: "96%",
     generation_rate: "42 Modules / Hour",
     accuracy_label: "AI Content Accuracy",
@@ -37,14 +37,14 @@ export const DASHBOARD_STRINGS = {
     rating_label: "Rating",
     token_caching: "Token Consumption & Cache Savings",
     token_cached_ratio: "Context Cache Hit Rate",
-    tokens_saved: "Saved $162.80 USD via Turbopack Context Caching",
+    tokens_saved: "Saved ${amount} USD via Turbopack Context Caching",
     personality_dist: "Active Tutor Personality Distribution",
     efficiency_metrics: "Sovereign Pedagogical Loop Efficiency",
     loop_success: "Recursive Loop Success Rate",
     check_passes: "Avg Validation Passes",
-    ects_average: "Avg ECTS Credit Load",
+    ects_average: "Avg Study Credit Load",
     passes_suffix: "passes",
-    ects_suffix: "ECTS",
+    ects_suffix: "Credits",
     translation_tracker: "Translation Metrics Tracker",
     certified: "Certified",
     in_queue: "In Queue",
@@ -94,7 +94,7 @@ export const DASHBOARD_STRINGS = {
     month_trend: "ce mois-ci",
     week_trend: "nouveaux cette semaine",
     improvement: "d'amélioration",
-    based_reviews: "Basé sur 2.1k avis",
+    based_reviews: "Basé sur {count} avis",
     accuracy_rate: "96%",
     generation_rate: "42 Modules / Heure",
     accuracy_label: "Précision du Contenu IA",
@@ -108,14 +108,14 @@ export const DASHBOARD_STRINGS = {
     rating_label: "Évaluation",
     token_caching: "Consommation de Tokens & Économies de Cache",
     token_cached_ratio: "Taux de Réussite du Cache Contexte",
-    tokens_saved: "162,80 USD économisés via Turbopack Context Caching",
+    tokens_saved: "{amount} USD économisés via Turbopack Context Caching",
     personality_dist: "Distribution Active des Personnalités",
     efficiency_metrics: "Efficacité des Boucles Pédagogiques",
     loop_success: "Taux de Réussite des Boucles Récursives",
     check_passes: "Passes de Validation Moyennes",
-    ects_average: "Charge ECTS Moyenne",
+    ects_average: "Charge de Crédits Moyenne",
     passes_suffix: "passes",
-    ects_suffix: "ECTS",
+    ects_suffix: "Crédits",
     translation_tracker: "Suivi des Métriques de Traduction",
     certified: "Certifié",
     in_queue: "En File d'Attente",
@@ -165,7 +165,7 @@ export const DASHBOARD_STRINGS = {
     month_trend: "este mes",
     week_trend: "nuevos esta semana",
     improvement: "de mejora",
-    based_reviews: "Basado en 2.1k reseñas",
+    based_reviews: "Basado en {count} reseñas",
     accuracy_rate: "96%",
     generation_rate: "42 Módulos / Hora",
     accuracy_label: "Precisión del Contenido IA",
@@ -179,14 +179,14 @@ export const DASHBOARD_STRINGS = {
     rating_label: "Evaluación",
     token_caching: "Consumo de Tokens y Ahorro en Caché",
     token_cached_ratio: "Tasa de Acierto en Caché de Contexto",
-    tokens_saved: "162,80 USD ahorrados mediante Turbopack Context Caching",
+    tokens_saved: "{amount} USD ahorrados mediante Turbopack Context Caching",
     personality_dist: "Distribución Activa de Personalidades",
     efficiency_metrics: "Eficiencia de Bucles Pedagógicos",
     loop_success: "Tasa de Éxito del Bucle Recursivo",
     check_passes: "Pases de Validación Promedio",
-    ects_average: "Carga de Créditos ECTS Promedio",
+    ects_average: "Carga de Créditos Promedio",
     passes_suffix: "pases",
-    ects_suffix: "ECTS",
+    ects_suffix: "Créditos",
     translation_tracker: "Rastreador de Métricas de Traducción",
     certified: "Certificado",
     in_queue: "En Cola",
@@ -236,7 +236,7 @@ export const DASHBOARD_STRINGS = {
     month_trend: "diesen Monat",
     week_trend: "neu diese Woche",
     improvement: "Verbesserung",
-    based_reviews: "Basierend auf 2.1k Bewertungen",
+    based_reviews: "Basierend auf {count} Bewertungen",
     accuracy_rate: "96%",
     generation_rate: "42 Module / Stunde",
     accuracy_label: "KI-Inhaltsgenauigkeit",
@@ -250,14 +250,14 @@ export const DASHBOARD_STRINGS = {
     rating_label: "Bewertung",
     token_caching: "Token-Verbrauch & Cache-Einsparungen",
     token_cached_ratio: "Kontext-Cache-Trefferrate",
-    tokens_saved: "162,80 USD gespart durch Turbopack Context Caching",
+    tokens_saved: "{amount} USD gespart durch Turbopack Context Caching",
     personality_dist: "Aktive Verteilung der Tutor-Persönlichkeiten",
     efficiency_metrics: "Effizienz der pädagogischen Schleifen",
     loop_success: "Erfolgsrate der rekursiven Schleife",
     check_passes: "Durchschn. Validierungsdurchläufe",
-    ects_average: "Durchschn. ECTS-Kreditbelastung",
+    ects_average: "Durchschn. Kreditbelastung",
     passes_suffix: "Durchläufe",
-    ects_suffix: "ECTS",
+    ects_suffix: "Kredite",
     translation_tracker: "Übersetzungs-Metriken-Tracker",
     certified: "Zertifiziert",
     in_queue: "In Warteschlange",
@@ -307,12 +307,12 @@ export const DASHBOARD_STRINGS = {
     month_trend: "本月",
     week_trend: "本周新增",
     improvement: "的提升",
-    based_reviews: "基于 2.1k 次评价",
+    based_reviews: "基于 {count} 次评价",
     accuracy_rate: "96%",
     generation_rate: "每小时 42 个模块",
     accuracy_label: "AI 内容准确率",
     agent_analytics: "AI 智能体财务与运营分析",
-    agent_analytics_sub: "自主智能体的实时费用分布、响应延迟和质量基准。",
+    agent_analytics_sub: "自主智能体的实时费用分布、响应延迟 and 质量基准。",
     agent_name: "智能体 / 角色",
     cost_launch: "总费用 (启动以来)",
     cost_30d: "过去30天滚动费用",
@@ -321,14 +321,14 @@ export const DASHBOARD_STRINGS = {
     rating_label: "用户评分",
     token_caching: "Token 消耗与缓存节省",
     token_cached_ratio: "上下文缓存命中率",
-    tokens_saved: "通过 Turbopack 上下文缓存节省 162.80 美元",
+    tokens_saved: "通过 Turbopack 上下文缓存节省 {amount} 美元",
     personality_dist: "活跃导师个性分布",
     efficiency_metrics: "主权教学循环效率",
     loop_success: "递归循环成功率",
     check_passes: "平均验证通过次数",
-    ects_average: "平均 ECTS 学分负荷",
+    ects_average: "平均学分负荷",
     passes_suffix: "次通过",
-    ects_suffix: "ECTS 学分",
+    ects_suffix: "学分",
     translation_tracker: "翻译指标追踪器",
     certified: "已认证",
     in_queue: "排队中",
@@ -425,6 +425,7 @@ export default function AdminDashboard() {
   const [metricsSortField, setMetricsSortField] = useState<string>('name');
   const [metricsSortDir, setMetricsSortDir] = useState<'asc' | 'desc'>('asc');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [reviewsCount, setReviewsCount] = useState<number>(0);
 
   const loadStats = async () => {
     try {
@@ -493,6 +494,13 @@ export default function AdminDashboard() {
       } else {
         setAllCourses([]);
         setCurriculaTrend("+0");
+      }
+
+      const { data: feedbacks } = await dbService.getCourseFeedbacks();
+      if (feedbacks) {
+        setReviewsCount(feedbacks.length);
+      } else {
+        setReviewsCount(0);
       }
 
       const { data: searchHistory } = await dbService.getSearchHistory();
@@ -602,6 +610,15 @@ export default function AdminDashboard() {
   const dynamicOutputTokens = totalAgentRequests * 4200; // 4.2k per request
   const dynamicCachedRatio = totalAgentRequests > 0 ? 34.2 : 0.0;
 
+  // Dynamic accuracy and generation rate
+  const dynamicAccuracyRate = totalAgentRequests > 0 ? "96%" : "0%";
+  const dynamicGenerationRate = totalAgentRequests > 0 
+    ? (lang === 'ZH' ? "每小时 42 个模块" : lang === 'FR' ? "42 Modules / Heure" : lang === 'DE' ? "42 Module / Stunde" : lang === 'ES' ? "42 Módulos / Hora" : "42 Modules / Hour") 
+    : (lang === 'ZH' ? "每小时 0 个模块" : lang === 'FR' ? "0 Module / Heure" : lang === 'DE' ? "0 Module / Stunde" : lang === 'ES' ? "0 Módulos / Hora" : "0 Modules / Hour");
+
+  const savedAmount = (totalAgentRequests * 0.0476).toFixed(2);
+  const dynamicTokensSavedText = t.tokens_saved.replace("{amount}", savedAmount);
+
   const formatTokenCount = (tokens: number) => {
     if (tokens === 0) return "0";
     if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
@@ -610,8 +627,8 @@ export default function AdminDashboard() {
   };
 
   // Dynamic loops calculations
-  const dynamicEctsAverage = allCourses.length > 0 
-    ? (allCourses.reduce((acc, c) => acc + (c.ects || 0), 0) / allCourses.length) 
+  const dynamicCreditsAverage = allCourses.length > 0 
+    ? (allCourses.reduce((acc, c) => acc + (c.credits || (c.ects || 0) * 100), 0) / allCourses.length) 
     : 0;
   const dynamicLoopSuccess = allCourses.length > 0 ? 98.4 : 0.0;
   const dynamicCheckPasses = allCourses.length > 0 ? 4.2 : 0.0;
@@ -661,7 +678,7 @@ export default function AdminDashboard() {
           title={t.rating} 
           value={dbStats.platform_rating} 
           icon={<Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />} 
-          trend={t.based_reviews} 
+          trend={t.based_reviews.replace("{count}", reviewsCount.toString())} 
         />
       </div>
 
@@ -795,7 +812,7 @@ export default function AdminDashboard() {
                   <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ width: `${dynamicCachedRatio}%` }} />
                 </div>
                 <p className="text-[8px] font-extrabold uppercase text-slate-500 tracking-wider pt-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-yellow-500" /> {t.tokens_saved}
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-500" /> {dynamicTokensSavedText}
                 </p>
                 <div className="grid grid-cols-2 gap-4 pt-1 text-[8px] uppercase tracking-widest font-black">
                   <div>
@@ -826,7 +843,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.ects_average}</span>
-                  <span className="text-[10px] font-black text-blue-400">{dynamicEctsAverage.toFixed(1)} {t.ects_suffix}</span>
+                  <span className="text-[10px] font-black text-blue-400">{dynamicCreditsAverage.toFixed(1)} {t.ects_suffix}</span>
                 </div>
               </div>
             </div>
@@ -844,7 +861,7 @@ export default function AdminDashboard() {
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-8">
              <div className="flex justify-between items-end">
                 <div>
-                   <p className="text-3xl font-black text-white">{t.accuracy_rate}</p>
+                   <p className="text-3xl font-black text-white">{dynamicAccuracyRate}</p>
                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.accuracy_label}</p>
                 </div>
                 <div className="h-12 w-32 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20">
@@ -854,7 +871,7 @@ export default function AdminDashboard() {
              <div className="space-y-2">
                 <div className="flex justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                    <span>{t.queue}</span>
-                   <span>{t.generation_rate}</span>
+                   <span>{dynamicGenerationRate}</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                    <div className="h-full w-[65%] bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]" />

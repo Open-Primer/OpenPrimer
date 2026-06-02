@@ -704,18 +704,18 @@ async function main() {
     console.log("✅ Administrative RLS policies successfully applied.");
 
     // H. SEED SITE STATS AND AGENT METRICS
-    console.log("\n🌱 Seeding Site Stats and Agent Metrics...");
+    console.log("\n🌱 Seeding Site Stats and Agent Metrics (Zeroed for Pristine Launch)...");
     await pgClient.query(`
       INSERT INTO public.site_stats (id, total_students, validation_rate, total_course_visits, platform_rating)
-      VALUES (1, 10, 80.00, 150, '4.8/5')
+      VALUES (1, 0, 0.00, 0, '0.0/5')
       ON CONFLICT (id) DO NOTHING;
 
       INSERT INTO public.agent_metrics (id, name_en, name_fr, name_es, name_de, name_zh, total_cost, rolling_30_days_cost, requests, avg_response_time)
       VALUES 
-        ('generation', 'Course Generation Agent', 'Agent de Génération de Cursus', 'Agente de Generación de Cursos', 'Kursgenerierungs-Agent', '课程生成智能体', 245.80, 48.50, 820, '1420ms'),
-        ('translation', 'Translation Agent', 'Agent de Traduction Multi-Langues', 'Agente de Traducción Multilingüe', 'Übersetzungs-Agent', '翻译智能体', 188.40, 32.10, 1240, '890ms'),
-        ('revision', 'Pedagogical Revision Agent', 'Agent de Révision Pédagogique', 'Agente de Revisión Pedagógica', 'Pädagogischer Revisions-Agent', '教学修订智能体', 98.20, 15.60, 450, '1120ms'),
-        ('tutor', 'AI Tutor Agent & Personalities', 'Agent de Tutorat IA & Personnalités', 'Agente de Tutoría IA y Personalidades', 'KI-Tutor-Agent & Persönlichkeiten', 'AI 智能体 with Personality', 312.50, 64.20, 3420, '580ms')
+        ('generation', 'Course Generation Agent', 'Agent de Génération de Cursus', 'Agente de Generación de Cursos', 'Kursgenerierungs-Agent', '课程生成智能体', 0.00, 0.00, 0, '0ms'),
+        ('translation', 'Translation Agent', 'Agent de Traduction Multi-Langues', 'Agente de Traducción Multilingüe', 'Übersetzungs-Agent', '翻译智能体', 0.00, 0.00, 0, '0ms'),
+        ('revision', 'Pedagogical Revision Agent', 'Agent de Révision Pédagogique', 'Agente de Revisión Pedagógica', 'Pädagogischer Revisions-Agent', '教学修订智能体', 0.00, 0.00, 0, '0ms'),
+        ('tutor', 'AI Tutor Agent & Personalities', 'Agent de Tutorat IA & Personnalités', 'Agente de Tutoría IA y Personalidades', 'KI-Tutor-Agent & Persönlichkeiten', 'AI 智能体 with Personality', 0.00, 0.00, 0, '0ms')
       ON CONFLICT (id) DO NOTHING;
 
       -- Apply RLS and permissions
