@@ -533,8 +533,8 @@ async function main() {
     await pgClient.connect();
     console.log("🔌 Connected to PostgreSQL Database owner successfully.");
 
-    // 0. ENSURE SITE STATS AND AGENT METRICS TABLES EXIST
-    console.log("🛠️ Guaranteeing 'site_stats' and 'agent_metrics' tables exist...");
+    // 0. ENSURE SITE STATS, AGENT METRICS, PROGRESS, SYSTEM PARAMETERS AND SERVICE UPTIME LOGS EXIST
+    console.log("🛠️ Guaranteeing all system, stats, uptime logs, and progress tables exist...");
     await pgClient.query(`
       CREATE TABLE IF NOT EXISTS public.site_stats (
         id SERIAL PRIMARY KEY,
@@ -556,6 +556,55 @@ async function main() {
         requests INTEGER DEFAULT 0,
         avg_response_time VARCHAR(50) DEFAULT '0ms'
       );
+
+      CREATE TABLE IF NOT EXISTS public.system_parameters (
+        key VARCHAR(255) PRIMARY KEY,
+        value TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.service_uptime_logs (
+        date DATE PRIMARY KEY,
+        db NUMERIC(5, 2) NOT NULL,
+        email NUMERIC(5, 2) NOT NULL,
+        ai NUMERIC(5, 2) NOT NULL,
+        images NUMERIC(5, 2) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS public.progress (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR(255) NOT NULL,
+        course_id INTEGER NOT NULL,
+        progress INTEGER DEFAULT 0,
+        lesson_progress JSONB DEFAULT '{}'::jsonb,
+        quiz_results JSONB DEFAULT '{}'::jsonb,
+        total_minutes INTEGER DEFAULT 0,
+        last_visited TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_course UNIQUE (user_id, course_id)
+      );
+
+      -- Apply RLS policies & permissions
+      ALTER TABLE public.system_parameters ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to system_parameters" ON public.system_parameters;
+      CREATE POLICY "Allow all access to system_parameters" ON public.system_parameters FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.system_parameters TO public, anon, authenticated;
+
+      ALTER TABLE public.service_uptime_logs ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to service_uptime_logs" ON public.service_uptime_logs;
+      CREATE POLICY "Allow all access to service_uptime_logs" ON public.service_uptime_logs FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.service_uptime_logs TO public, anon, authenticated;
+
+      ALTER TABLE public.progress ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Users can read own progress" ON public.progress;
+      CREATE POLICY "Users can read own progress" ON public.progress FOR SELECT USING (true);
+      DROP POLICY IF EXISTS "Users can update own progress" ON public.progress;
+      CREATE POLICY "Users can update own progress" ON public.progress FOR UPDATE USING (auth.uid()::text = user_id OR user_id = 'u1');
+      DROP POLICY IF EXISTS "Users can insert own progress" ON public.progress;
+      CREATE POLICY "Users can insert own progress" ON public.progress FOR INSERT WITH CHECK (auth.uid()::text = user_id OR user_id = 'u1');
+      DROP POLICY IF EXISTS "Users can delete own progress" ON public.progress;
+      CREATE POLICY "Users can delete own progress" ON public.progress FOR DELETE USING (auth.uid()::text = user_id OR user_id = 'u1');
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.progress TO public, anon, authenticated;
     `);
 
     // A. PURGE ALL TRANSACTIONAL AND PROGRESS DATA (Clean canvas, 0 courses completed)
@@ -569,7 +618,8 @@ async function main() {
         public.search_logs, 
         public.contact_feedbacks,
         public.site_stats,
-        public.agent_metrics
+        public.agent_metrics,
+        public.progress
       CASCADE;
     `);
     console.log("✅ Student progress, stats, and operational logs fully truncated.");

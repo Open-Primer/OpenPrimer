@@ -39,7 +39,7 @@ async function checkSupabase(customUrl?: string, customKey?: string): Promise<Se
 
   const start = Date.now();
   try {
-    const res = await fetch(`${url}/rest/v1/`, {
+    const res = await fetch(`${url}/rest/v1/languages?select=code&limit=1`, {
       headers: { apikey: key || '', Authorization: `Bearer ${key || ''}` },
       signal: AbortSignal.timeout(5000),
       cache: 'no-store'
