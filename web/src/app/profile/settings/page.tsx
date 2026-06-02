@@ -731,26 +731,34 @@ export default function ProfileSettingsPage() {
                  <button
                    type="button"
                    onClick={async () => {
-                     if (typeof window !== 'undefined') {
-                       const savedProfile = localStorage.getItem('op_user_profile');
-                       if (savedProfile) {
-                         try {
-                           const p = JSON.parse(savedProfile);
-                           const userId = p.id;
-                           if (userId) {
-                             await dbService.deleteUser(userId);
-                             console.log("[Account Deletion] Successfully deleted account from Supabase:", userId);
-                           }
-                         } catch (err) {
-                           console.error("[Account Deletion] Error during database profile deletion:", err);
-                         }
-                       }
-                       localStorage.clear();
-                       sessionStorage.clear();
-                       window.location.href = '/';
-                     }
-                     setShowDeleteConfirm(false);
-                   }}
+                      if (typeof window !== 'undefined') {
+                        const savedProfile = localStorage.getItem('op_user_profile');
+                        if (savedProfile) {
+                          try {
+                            const p = JSON.parse(savedProfile);
+                            const userId = p.id;
+                            if (userId) {
+                              await dbService.deleteUser(userId);
+                              console.log("[Account Deletion] Successfully deleted account from Supabase database:", userId);
+                            }
+                          } catch (err) {
+                            console.error("[Account Deletion] Error during database profile deletion:", err);
+                          }
+                        }
+                        
+                        try {
+                          const { supabase } = await import('@/lib/supabase');
+                          await supabase.auth.signOut();
+                        } catch (signOutErr) {
+                          console.error("[Account Deletion] Error during Supabase signOut:", signOutErr);
+                        }
+
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.href = '/';
+                      }
+                      setShowDeleteConfirm(false);
+                    }}
                    className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
                  >
                    {t.confirm}

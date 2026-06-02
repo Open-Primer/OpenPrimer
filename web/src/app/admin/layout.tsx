@@ -190,8 +190,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
           setDynamicEmail(user.email);
-          setDynamicRole(user.email === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
-          return;
+          
+          // Query the user's role from the public profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+          if (profile && profile.role === 'admin') {
+            setDynamicRole(user.email === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
+            setIsAuthorized(true);
+            return;
+          } else {
+            setIsAuthorized(false);
+            router.push('/catalog');
+            return;
+          }
         }
       } catch {
         // Supabase unavailable — fall through to localStorage
@@ -202,18 +217,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         try {
           const profile = JSON.parse(profileStr);
           if (profile.email) {
-            setDynamicEmail(profile.email);
-            setDynamicRole(profile.role === 'admin' ? 'Administrator' : 'User');
+            if (profile.role === 'admin') {
+              setDynamicEmail(profile.email);
+              setDynamicRole('Administrator');
+              setIsAuthorized(true);
+              return;
+            }
           }
         } catch {}
       }
+      setIsAuthorized(false);
+      router.push('/catalog');
     };
 
     const session = localStorage.getItem('op_session');
     if (session !== 'true') {
       router.push('/login');
     } else {
-      setIsAuthorized(true);
       loadUserIdentity();
     }
   }, [router]);
