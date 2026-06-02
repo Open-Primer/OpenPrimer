@@ -189,6 +189,7 @@ export interface MockCourse {
   languages: string[];
   langs: string[]; // Duplicate helper for flexibility
   ects: number;
+  credits?: number; // Study credits (calibrated to 10x estimated course hours)
   popularity: number;
   is_active: boolean;
   isActive?: boolean;

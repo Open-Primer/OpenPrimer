@@ -23,11 +23,11 @@ The **AI Tutor Agent** operates as an interactive Socratic Guide. Unlike standar
 
 ---
 
-## 2. ECTS & Curriculum Metrics Structure
+## 2. Academic Credits & Calibration Metrics
 
-To align with official university curricula, each course inside OpenPrimer maps to strict academic metrics:
+To align with professional academic paths and represent study workloads without government-regulated misrepresentation, each course inside OpenPrimer maps to strict workload metrics:
 
-*   **ECTS (European Credit Transfer System):** Each course yields a dynamic ECTS score (typically 2 to 6 credits) representing a standard study load.
+*   **Academic Credits:** Instead of regulated ECTS terminology, OpenPrimer uses **Academic Credits** (crédits). These credits are calibrated to exactly **10 times the number of estimated course hours** (e.g., a course requiring 60 hours of active study yields exactly 600 credits, representing the equivalent academic weight).
 *   **Archiving Level / Status:**
     *   `0`: Active course (fully available in browse catalog).
     *   `1`: Archived Level 1.

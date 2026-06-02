@@ -149,6 +149,7 @@ export const mockDatabaseProvider: DatabaseService = {
 
       return {
         ...c,
+        credits: (c.ects || 6) * 100,
         validations: totalValidations > 0 ? totalValidations : (c.validations || 0),
         ratingCount,
         averageRating
@@ -310,7 +311,7 @@ export const mockDatabaseProvider: DatabaseService = {
     activeModules.forEach((m: any) => {
       if (m.progress === 100) {
         const course = getMockCourses().find(c => c.id === m.id);
-        credits += course?.ects || 6;
+        credits += (course?.ects || 6) * 100;
       }
     });
 
@@ -746,7 +747,7 @@ export const mockDatabaseProvider: DatabaseService = {
         description: course.description || '',
         languages: course.languages || ['en'],
         langs: course.langs || course.languages || ['en'],
-        ects: course.ects || 6,
+        ects: course.ects || (course.credits ? Math.round(course.credits / 100) : 6),
         popularity: course.popularity || 0,
         is_active: course.is_active !== undefined ? course.is_active : true,
         archivingLevel: course.archivingLevel !== undefined ? course.archivingLevel : 0,

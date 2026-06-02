@@ -31,7 +31,7 @@ const STATIC_UI_STRINGS = {
     mission: "Universal Academic Sovereignty", mission_sub: "Project Manifesto",
     mission_desc: "OpenPrimer is built on the belief that elite education is a fundamental human right, not a localized privilege.",
     accessibility: "Radical Accessibility", accessibility_desc: "We eliminate linguistic barriers by providing all certified academic content in the 5 most spoken global languages.",
-    quality: "Institutional Quality", quality_desc: "Every module on OpenPrimer is aligned with international standards (ECTS, US Credits).",
+    quality: "Institutional Quality", quality_desc: "Every module on OpenPrimer is designed according to rigorous academic workload standards.",
     methodology: "Methodology", methodology_desc: "The Feynman Methodology",
     transparency: "Radical Transparency", transparency_desc: "The logic of education should never be a black box. OpenPrimer is 100% Open Source.",
     universal_knowledge: "Universal Knowledge.", finally_free: "Finally Free.",
@@ -170,7 +170,7 @@ const STATIC_UI_STRINGS = {
     mission: "Souveraineté Académique Universelle", mission_sub: "Manifeste du Projet",
     mission_desc: "OpenPrimer repose sur la conviction que l'éducation d'élite est un droit humain fondamental, pas un privilège localisé.",
     accessibility: "Accessibilité Radicale", accessibility_desc: "Nous éliminons les barrières linguistiques en fournissant tout le contenu académique certifié dans les 5 langues les plus parlées au monde.",
-    quality: "Qualité Institutionnelle", quality_desc: "Chaque module sur OpenPrimer est aligné sur les normes internationales (ECTS, US Credits).",
+    quality: "Qualité Institutionnelle", quality_desc: "Chaque module sur OpenPrimer est conçu selon des normes rigoureuses de volume d'étude.",
     methodology: "Méthodologie", methodology_desc: "La Méthodologie Feynman",
     transparency: "Transparence Radicale", transparency_desc: "L'éducation ne devrait jamais être une boîte noire. OpenPrimer est 100% Open Source.",
     universal_knowledge: "Le Savoir Universel.", finally_free: "Enfin Libre.",
@@ -309,7 +309,7 @@ const STATIC_UI_STRINGS = {
     mission: "Soberanía Académica Universal", mission_sub: "Manifiesto del Proyecto",
     mission_desc: "OpenPrimer se basa en la creencia que la educación de élite es un derecho humano fundamental, no un privilegio localizado.",
     accessibility: "Accesibilidad Radical", accessibility_desc: "Eliminamos las barreras lingüísticas al proporcionar todo el contenido académico certificado en los 5 idiomas más hablados del mundo.",
-    quality: "Calidad Institucional", quality_desc: "Cada módulo en OpenPrimer está alineado con los estándares internacionales (ECTS, créditos estadounidenses).",
+    quality: "Calidad Institucional", quality_desc: "Cada módulo en OpenPrimer está diseñado de acuerdo con rigurosos estándares de volumen de estudio.",
     methodology: "Metodología", methodology_desc: "La Metodología Feynman",
     transparency: "Transparencia Radical", transparency_desc: "La lógica de la educación nunca debe ser una caja negra. OpenPrimer es 100% código abierto.",
     universal_knowledge: "El Conocimiento Universal.", finally_free: "Finalmente Libre.",
@@ -448,7 +448,7 @@ const STATIC_UI_STRINGS = {
     mission: "Universelle akademische Souveränität", mission_sub: "Projekt-Manifest",
     mission_desc: "OpenPrimer basiert auf der Überzeugung, dass Elitebildung ein grundlegendes Menschenrecht ist, kein lokales Privileg.",
     accessibility: "Radikale Barrierefreiheit", accessibility_desc: "Wir beseitigen Sprachbarrieren, indem wir alle zertifizierten akademischen Inhalte in den 5 meistgesprochenen Weltsprachen bereitstellen.",
-    quality: "Institutionelle Qualität", quality_desc: "Jedes Modul auf OpenPrimer ist auf internationale Standards (ECTS, US-Credits) ausgerichtet.",
+    quality: "Institutionelle Qualität", quality_desc: "Jedes Modul auf OpenPrimer ist nach strengen Studienvolumenstandards konzipiert.",
     methodology: "Methodik", methodology_desc: "Die Feynman-Methodik",
     transparency: "Radikale Transparenz", transparency_desc: "Die Logik der Bildung sollte niemals eine Blackbox sein. OpenPrimer ist 100 % Open Source.",
     universal_knowledge: "Universelles Wissen.", finally_free: "Endlich Frei.",
@@ -568,7 +568,7 @@ const STATIC_UI_STRINGS = {
     mission: "全民学术主权", mission_sub: "项目宣言",
     mission_desc: "OpenPrimer 建立在这样一种信念之上：精英教育是一项基本人权，而不是一种局部特权。",
     accessibility: "彻底的无障碍", accessibility_desc: "我们通过提供全球 5 种最常用语言的所有认证学术内容来消除语言障碍。",
-    quality: "机构质量", quality_desc: "OpenPrimer 上的每个模块都符合国际标准（ECTS、美国学分）。",
+    quality: "机构质量", quality_desc: "OpenPrimer 上的每个模块都按照严格的学习量标准设计。",
     methodology: "教学法", methodology_desc: "费曼教学法",
     transparency: "彻底的透明度", transparency_desc: "教育的逻辑绝不应该是一个黑匣子。OpenPrimer 是 100% 开源的。",
     universal_knowledge: "普及全球知识。", finally_free: "最终实现自由。",
@@ -1749,7 +1749,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
                   <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
+                  <p className="text-xs font-black text-white">{(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6) * 100} {lang.toUpperCase() === 'FR' ? 'crédits' : 'credits'}</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
                   <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>

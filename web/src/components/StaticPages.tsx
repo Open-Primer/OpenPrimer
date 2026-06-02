@@ -1141,7 +1141,7 @@ export const CatalogPage = () => {
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
                   <Sparkles className="w-5 h-5 text-violet-400 mx-auto mb-1" />
                   <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects ? COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].ects * 100 : 600} {lang === 'FR' ? 'crédits' : 'credits'}</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
                   <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
@@ -1231,8 +1231,8 @@ export const CatalogPage = () => {
                     </h5>
                     <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                       {lang === 'FR' 
-                        ? "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'obtenir vos ECTS, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes." 
-                        : "A free account allows you to save your progress permanently, earn your academic ECTS validations, unlock certifications, and interact with your personal AI Tutor."}
+                        ? "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'accumuler vos crédits de formation, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes." 
+                        : "A free account allows you to save your progress permanently, accumulate your study credits, unlock certifications, and interact with your personal AI Tutor."}
                     </p>
                   </div>
                   
@@ -1752,7 +1752,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const course = {
     title,
-    ects: 6,
+    ects: 600,
     hours: 150,
     prerequisites: ["Mathematics L1 (Calculus)", "General Physics (Introduction)"],
     content: [
@@ -1777,7 +1777,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Mastery Weight</p>
-              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">pts</span></p>
+              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">{lang === 'FR' ? 'crédits' : 'credits'}</span></p>
            </div>
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Clock className="w-8 h-8 text-blue-500 mx-auto mb-3" />

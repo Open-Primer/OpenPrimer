@@ -102,7 +102,7 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     popular_title: "Curated Course Kiosk",
     popular_subtitle: "Swipe or rotate through our elite recommended courses",
     view_details: "View Details",
-    ects: "ECTS",
+    credits: "Credits",
     hours: "hours",
     courses_count: "courses",
     course_count: "course",
@@ -112,7 +112,7 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     popular_title: "Kiosque de Cours",
     popular_subtitle: "Faites défiler nos cours recommandés d'élite",
     view_details: "En savoir plus",
-    ects: "ECTS",
+    credits: "Crédits",
     hours: "heures",
     courses_count: "cours",
     course_count: "cours",
@@ -122,7 +122,7 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     popular_title: "Kiosco de Cursos",
     popular_subtitle: "Deslice o navegue por nuestros cursos recomendados de élite",
     view_details: "Ver detalles",
-    ects: "ECTS",
+    credits: "Créditos",
     hours: "horas",
     courses_count: "cursos",
     course_count: "curso",
@@ -132,7 +132,7 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     popular_title: "Kurs-Kiosk",
     popular_subtitle: "Blättern Sie durch unsere empfohlenen Elite-Kurse",
     view_details: "Details anzeigen",
-    ects: "ECTS",
+    credits: "Credits",
     hours: "Stunden",
     courses_count: "Kurse",
     course_count: "Kurs",
@@ -142,7 +142,7 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     popular_title: "精品课程旋转木马",
     popular_subtitle: "滑动或旋转浏览我们的推荐精英课程",
     view_details: "查看详情",
-    ects: "学分",
+    credits: "学分",
     hours: "课时",
     courses_count: "门课程",
     course_count: "门课程",
@@ -365,7 +365,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                         <div className="flex gap-3">
                           <span className="flex items-center gap-1">
                             <Zap className="w-2.5 h-2.5 text-violet-400" />
-                            {item.ects || 6} {texts.ects}
+                            {item.credits || (item.ects ? item.ects * 100 : 600)} {texts.credits}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-2.5 h-2.5 text-blue-400" />

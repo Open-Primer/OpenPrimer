@@ -75,7 +75,7 @@ Voici les termes recherchés par les étudiants qui n'ont renvoyé **aucun résu
 
 #### 3. 🎯 Suggestions d'Amélioration du Cursus
 Pour maximiser l'engagement des étudiants, il est fortement recommandé de générer les modules suivants :
-* **Physique Quantique L2** : Module de 4 ECTS couvrant l'équation de Schrödinger, les puits de potentiel et l'intrication.
+* **Physique Quantique L2** : Cursus de 400 crédits couvrant l'équation de Schrödinger, les puits de potentiel et l'intrication.
 * **Topologie Mathématique L3** : Module rigoureux sur les espaces topologiques et métriques.
 * **Microéconomie Théorique L1** : Cursus axé sur le consommateur et la théorie des jeux élémentaire.
 
