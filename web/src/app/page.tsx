@@ -341,20 +341,25 @@ export default function Home() {
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
+    if (!email.trim() || !password || !confirmPassword) {
       setErrorMsg(s.all_fields_required || (lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.'));
       return;
     }
 
-    if (firstName.length > 60 || lastName.length > 60 || email.length > 60 || password.length > 60) {
+    const fName = firstName.trim();
+    const lName = lastName.trim();
+
+    if (fName.length > 60 || lName.length > 60 || email.length > 60 || password.length > 60) {
       setErrorMsg(lang === 'FR' ? 'La longueur maximale autorisée est de 60 caractères.' : 'Maximum allowed length is 60 characters.');
       return;
     }
 
-    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
-    if (!nameRegex.test(firstName.trim()) || !nameRegex.test(lastName.trim())) {
-      setErrorMsg(s.invalid_name || (lang === 'FR' ? 'Veuillez entrer un nom valide (2 à 60 caractères, lettres/espaces/tirets uniquement).' : 'Please enter a valid name (2-60 characters, letters/spaces/hyphens only).'));
-      return;
+    if (fName !== "" || lName !== "") {
+      const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
+      if ((fName !== "" && !nameRegex.test(fName)) || (lName !== "" && !nameRegex.test(lName))) {
+        setErrorMsg(s.invalid_name || (lang === 'FR' ? 'Veuillez entrer un nom valide (2 à 60 caractères, lettres/espaces/tirets uniquement).' : 'Please enter a valid name (2-60 characters, letters/spaces/hyphens only).'));
+        return;
+      }
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -467,13 +472,13 @@ export default function Home() {
       const matchedUser = userList?.find((u: any) => u.email.toLowerCase() === emailLower) as any;
 
       if (matchedUser) {
-        // Enforce strict password validation
+        // Enforce strict password validation via SHA-256 hash comparison
         const inputHash = dbService.hashPassword(password);
         
-        // If a password is set, compare hashes or plaintext. Otherwise fall back to a default standard password to prevent password-less logins.
-        const expectedPassword = matchedUser.password || dbService.hashPassword('OpenPrimer2026!');
+        // If a password is set, retrieve it. Otherwise, fall back to the default hash of 'OpenPrimer2026!' (832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80)
+        const expectedPassword = matchedUser.password || '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80';
         
-        const isPasswordCorrect = (expectedPassword === inputHash) || (expectedPassword === password);
+        const isPasswordCorrect = expectedPassword === inputHash || expectedPassword === password;
 
         if (isPasswordCorrect) {
           const isVerified = localStorage.getItem('op_registration_verified') === 'true';
@@ -835,12 +840,11 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {a.first_name}
+                            {a.first_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                             <input 
-                              required
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value.slice(0, 60))}
                               maxLength={60}
@@ -852,12 +856,11 @@ export default function Home() {
 
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {a.last_name}
+                            {a.last_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                             <input 
-                              required
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value.slice(0, 60))}
                               maxLength={60}

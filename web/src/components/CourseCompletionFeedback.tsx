@@ -40,7 +40,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     if (loggedIn) {
       // Check user curriculum progress
       dbService.getUserProgress(userId).then((res) => {
-        const matchingModule = res.activeModules?.find(
+        const matchingModule = res.data?.activeModules?.find(
           (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
         );
         if (matchingModule && matchingModule.progress === 100) {
@@ -112,9 +112,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       // If not in a curriculum or last course, and logged in, find any other active incomplete course
       if (loggedIn) {
         try {
-          const progress = await dbService.getUserProgress(userId);
-          if (progress && progress.activeModules) {
-            const nextActiveModule = progress.activeModules.find(
+          const { data: progressData } = await dbService.getUserProgress(userId);
+          if (progressData && progressData.activeModules) {
+            const nextActiveModule = progressData.activeModules.find(
               (m: any) => !m.isCurriculum && m.id !== currentCourseId && m.progress < 100
             );
             if (nextActiveModule) {

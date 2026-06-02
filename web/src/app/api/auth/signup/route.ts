@@ -28,7 +28,9 @@ export async function POST(request: Request) {
     const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
     // 2. Create the user profile in local/Supabase database (unverified)
-    const fullName = `${firstName} ${lastName}`;
+    const fName = (firstName || '').trim();
+    const lName = (lastName || '').trim();
+    const fullName = fName || lName ? `${fName} ${lName}`.trim() : "";
     const newUserProfile = {
       id: `u_${Date.now()}`,
       name: fullName,
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
               </div>
               
               <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px;">
-                Bienvenue à bord, ${firstName} !
+                ${fName ? `Bienvenue à bord, ${fName} !` : 'Bienvenue à bord !'}
               </h2>
               
               <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px;">

@@ -83,11 +83,11 @@ export default function CurriculumPage() {
     await dbService.enrollInCourse(userId, course.id);
     
     // Reload user progress from database/cache
-    const data = await dbService.getUserProgress(userId, lang);
-    setProgress(data);
+    const { data: progressData } = await dbService.getUserProgress(userId, lang);
+    setProgress(progressData);
 
     // Update locally enrolledIds
-    const newEnrolled = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
+    const newEnrolled = progressData?.activeModules ? progressData.activeModules.map((m: any) => m.id) : [];
     setEnrolledIds(newEnrolled);
     
     // Dispatch progress updated event
@@ -230,8 +230,8 @@ export default function CurriculumPage() {
     window.dispatchEvent(new Event('op_active_tutor_changed'));
     
     // Reload user progress immediately to update the pedagogical summary card in real-time!
-    const data = await dbService.getUserProgress(userId, lang);
-    setProgress(data);
+    const { data: progressData } = await dbService.getUserProgress(userId, lang);
+    setProgress(progressData);
   };
 
   useEffect(() => {
@@ -249,8 +249,8 @@ export default function CurriculumPage() {
         }
       }
 
-      const data = await dbService.getUserProgress(userId, lang);
-      setProgress(data);
+      const { data: progressData } = await dbService.getUserProgress(userId, lang);
+      setProgress(progressData);
       const { data: coursesData } = await dbService.getAllCourses();
       if (coursesData) setCourses(coursesData);
       
@@ -261,7 +261,7 @@ export default function CurriculumPage() {
       setEarnedIds(earned);
 
       // Compute enrolled IDs + curriculum revision date from Supabase fetched activeModules
-      const ids: number[] = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
+      const ids: number[] = progressData?.activeModules ? progressData.activeModules.map((m: any) => m.id) : [];
       setEnrolledIds(ids);
       const revDate = progressService.getCurriculumLastRevision(ids);
       setCurriculumRevision(revDate);
@@ -313,11 +313,11 @@ export default function CurriculumPage() {
     await dbService.abandonCourse(userId, id);
 
     // Reload user progress from database/cache
-    const data = await dbService.getUserProgress(userId, lang);
-    setProgress(data);
+    const { data: progressData } = await dbService.getUserProgress(userId, lang);
+    setProgress(progressData);
 
     // Update locally enrolledIds
-    const newEnrolled = data.activeModules ? data.activeModules.map((m: any) => m.id) : [];
+    const newEnrolled = progressData?.activeModules ? progressData.activeModules.map((m: any) => m.id) : [];
     setEnrolledIds(newEnrolled);
 
     // Dispatch progress updated event

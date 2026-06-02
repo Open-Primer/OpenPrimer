@@ -572,7 +572,7 @@ export const CatalogPage = () => {
             } catch (e) {}
           }
         }
-        const progressData = await dbService.getUserProgress(userId);
+        const { data: progressData } = await dbService.getUserProgress(userId);
         if (progressData) {
           setUserProgress(progressData);
           if (progressData.activeModules) {

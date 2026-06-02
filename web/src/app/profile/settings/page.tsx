@@ -185,8 +185,8 @@ export default function ProfileSettingsPage() {
   const guide = ACCESSIBILITY_GUIDE[lang as keyof typeof ACCESSIBILITY_GUIDE] || ACCESSIBILITY_GUIDE.EN;
 
   const [user, setUser] = useState({
-    firstName: "Silvere",
-    lastName: "Martin",
+    firstName: "",
+    lastName: "",
     email: "silvere@openprimer.org",
     lang: lang.toUpperCase()
   });
@@ -249,8 +249,8 @@ export default function ProfileSettingsPage() {
       try {
         const p = JSON.parse(savedProfile);
         setUser({
-          firstName: p.firstName || "Silvere",
-          lastName: p.lastName || "Martin",
+          firstName: p.firstName || "",
+          lastName: p.lastName || "",
           email: p.email || "silvere@openprimer.org",
           lang: (p.preferredLang || lang).toUpperCase()
         });
@@ -280,8 +280,8 @@ export default function ProfileSettingsPage() {
               setFineVisualControls(!!data.fine_visual_controls);
               setColorblindTheme(data.colorblind_theme || 'none');
 
-              let firstName = p.firstName || "Silvere";
-              let lastName = p.lastName || "Martin";
+              let firstName = p.firstName || "";
+              let lastName = p.lastName || "";
               if (data.name) {
                 const parts = data.name.split(' ');
                 firstName = parts[0] || "";
@@ -327,10 +327,16 @@ export default function ProfileSettingsPage() {
     e.preventDefault();
     setError(null);
 
-    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
-    if (!nameRegex.test(user.firstName.trim()) || !nameRegex.test(user.lastName.trim())) {
-      setError(t.invalid_name);
-      return;
+    const fName = user.firstName.trim();
+    const lName = user.lastName.trim();
+
+    // Validate only if at least one field has text
+    if (fName !== "" || lName !== "") {
+      const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
+      if ((fName !== "" && !nameRegex.test(fName)) || (lName !== "" && !nameRegex.test(lName))) {
+        setError(t.invalid_name);
+        return;
+      }
     }
 
     const savedProfile = localStorage.getItem('op_user_profile');
@@ -344,8 +350,8 @@ export default function ProfileSettingsPage() {
     // Persist profile keeping preferences intact!
     const profile = {
       ...existingProfile,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: fName,
+      lastName: lName,
       email: user.email,
       reduceMotion: reduceMotion,
       dyslexiaFriendly: dyslexiaFriendly,
@@ -361,7 +367,7 @@ export default function ProfileSettingsPage() {
       dyslexiaFriendly,
       fineVisualControls,
       colorblindTheme,
-      name: `${user.firstName.trim()} ${user.lastName.trim()}`
+      name: fName || lName ? `${fName} ${lName}`.trim() : ""
     });
 
     // Dispatch global event for instant reactivity!
@@ -406,22 +412,38 @@ export default function ProfileSettingsPage() {
                  )}
                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">{t.first_name}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">
+                          {t.first_name} <span className="text-[8px] text-slate-500 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                       </label>
                        <input 
                          type="text" 
                          value={user.firstName}
                          onChange={(e) => setUser({...user, firstName: e.target.value})}
-                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" 
+                         placeholder={lang.toUpperCase() === 'FR' ? "Non renseigné" : "Not provided"}
+                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-600" 
                        />
+                        {user.firstName.trim() === "" && (
+                          <span className="text-[9px] font-black uppercase text-amber-500/85 tracking-wider mt-1 block ml-4">
+                            ⚠️ {lang.toUpperCase() === 'FR' ? "Non renseigné (cliquez pour renseigner)" : "Not provided (click to fill)"}
+                          </span>
+                        )}
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">{t.last_name}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">
+                          {t.last_name} <span className="text-[8px] text-slate-500 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                       </label>
                        <input 
                          type="text" 
                          value={user.lastName}
                          onChange={(e) => setUser({...user, lastName: e.target.value})}
-                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" 
+                         placeholder={lang.toUpperCase() === 'FR' ? "Non renseigné" : "Not provided"}
+                         className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-600" 
                        />
+                        {user.lastName.trim() === "" && (
+                          <span className="text-[9px] font-black uppercase text-amber-500/85 tracking-wider mt-1 block ml-4">
+                            ⚠️ {lang.toUpperCase() === 'FR' ? "Non renseigné (cliquez pour renseigner)" : "Not provided (click to fill)"}
+                          </span>
+                        )}
                     </div>
                  </div>
                  

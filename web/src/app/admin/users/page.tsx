@@ -217,7 +217,7 @@ export default function AdminUsers() {
  
   const loadUsers = async () => {
     const { data } = await dbService.getUsers();
-    setUsers(data);
+    setUsers(data || []);
   };
  
   const handleAction = async () => {

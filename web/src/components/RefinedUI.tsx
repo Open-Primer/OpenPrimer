@@ -1341,6 +1341,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     };
     window.addEventListener('op_auth_state_change', handleAuthStateChange);
     window.addEventListener('op_auth_state_changed', handleAuthStateChange);
+    window.addEventListener('op_accessibility_preferences_changed', handleAuthStateChange);
 
     const fetchLanguages = () => {
       dbService.getAvailableLanguages().then(({ data }) => {
@@ -1362,6 +1363,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
       window.removeEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
       window.removeEventListener('op_auth_state_change', handleAuthStateChange);
       window.removeEventListener('op_auth_state_changed', handleAuthStateChange);
+      window.removeEventListener('op_accessibility_preferences_changed', handleAuthStateChange);
       window.removeEventListener('op_languages_changed', fetchLanguages);
     };
   }, []);
@@ -1554,7 +1556,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                    <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_in_as}</p>
                      <p className="text-xs font-bold text-white truncate">
-                       {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Silvere Martin'}
+                        {userProfile && (userProfile.firstName.trim() || userProfile.lastName.trim()) ? `${userProfile.firstName} ${userProfile.lastName}`.trim() : (lang.toUpperCase() === 'FR' ? 'Non renseigné' : 'Not provided')}
                      </p>
                      <p className="text-[10px] text-slate-500 truncate">
                        {userProfile ? userProfile.email : 'silvere@openprimer.org'}

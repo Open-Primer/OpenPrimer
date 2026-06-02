@@ -860,7 +860,7 @@ const getLocalStorageItem = <T>(key: string, defaultValue: T): T => {
   }
 };
 
-const setLocalStorageItem = <T>(key: string, value: T): void => {
+export const setLocalStorageItem = <T>(key: string, value: T): void => {
   if (!isBrowser) return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
@@ -2009,6 +2009,21 @@ if (isDatabaseConfigured && !isSandboxModeActive) {
 
 if (isBrowser) {
   users = getLocalStorageItem('openprimer_users', users);
+  // Auto-heal any stale user profiles that lack a password field
+  let updatedUsers = false;
+  users = users.map(u => {
+    if (!u.password) {
+      updatedUsers = true;
+      return {
+        ...u,
+        password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+      };
+    }
+    return u;
+  });
+  if (updatedUsers) {
+    setLocalStorageItem('openprimer_users', users);
+  }
   
   if (!isDatabaseConfigured || isSandboxModeActive) {
     // Hybrid local sandbox mode with full mock preseeding
@@ -2225,7 +2240,7 @@ export function getLocalizedCourseTitleInternal(course: any, lang: string) {
   return course.title;
 }
 
-function generatePedagogicalSummary(
+export function generatePedagogicalSummary(
   activeModules: any[], 
   masteryPoints: number, 
   studyStreakDays: number, 
@@ -2354,7 +2369,7 @@ function generatePedagogicalSummary(
   return `💬 You have shown exceptional rigor in ${moduleName} (progress: ${progVal}%). With ${streakVal} days of consistent activity and ${masteryPoints} mastery points, how does your current reading location connect to the fundamental axioms? Inquire deeper.`;
 }
 
-const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
+export const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
   const course = mockCourses.find(c => c.id === courseId);
   if (!course) return;
 
@@ -2462,1841 +2477,219 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export const dbService = {
-  // SYSTEM CONFIGURATION
-  getSystemParameters: async () => {
-    if (isOffline) {
-      if (!isSandboxFallbackAllowed()) {
-        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
-        handleDatabaseError(err);
-        return { data: null, error: err };
-      }
-      return { data: systemParametersList, error: null };
-    }
-    const res = await withFallback(
-      () => supabase.from('system_parameters').select('*'),
-      systemParametersList
-    );
-    return res;
-  },
-
-  saveSystemParameter: async (param: { key: string; value: string }) => {
-    systemParametersList = [
-      param,
-      ...systemParametersList.filter(p => p.key !== param.key)
-    ];
-    setLocalStorageItem('openprimer_system_parameters', systemParametersList);
-
-    if (isOffline) {
-      if (!isSandboxFallbackAllowed()) {
-        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
-        handleDatabaseError(err);
-        return { data: null, error: err };
-      }
-      return { data: param, error: null };
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('system_parameters')
-        .upsert({
-          key: param.key,
-          value: param.value,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return { data, error: null };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  // TRANSLATIONS UTILITY
-  getLocalizedCourseTitle: (course: any, lang: string) => {
-    return getLocalizedCourseTitleInternal(course, lang);
-  },
-
-  // SYLLABUS & CURRICULUM
-  getAllCourseCompletions: async () => {
-    return { data: isOffline ? courseCompletionsList : [], error: null };
-  },
-  getTranslationEmails: async () => {
-    return { data: isOffline ? translationEmailsList : [], error: null };
-  },
-  saveTranslationEmail: async (email: TranslationEmailNotification) => {
-    translationEmailsList = [email, ...translationEmailsList.filter(e => e.id !== email.id)];
-    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-    return { data: email, error: null };
-  },
-  deleteTranslationEmail: async (id: string) => {
-    translationEmailsList = translationEmailsList.filter(e => e.id !== id);
-    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-    return { data: null, error: null };
-  },
-  cleanupTranslationEmails: async (retentionDays: number) => {
-    const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
-    translationEmailsList = translationEmailsList.filter(e => new Date(e.timestamp).getTime() >= cutoff);
-    setLocalStorageItem('openprimer_translation_emails', translationEmailsList);
-    return { data: null, error: null };
-  },
-  getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('course_slug', courseSlug)
-        .eq('lesson_slug', lessonSlug)
-        .eq('lang', lang.toLowerCase())
-        .single();
-      if (error) throw error;
-      return { data, error: null };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }) => {
-    try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .upsert(
-          {
-            course_slug: lesson.course_slug,
-            lesson_slug: lesson.lesson_slug,
-            lang: lesson.lang.toLowerCase(),
-            title: lesson.title,
-            content: lesson.content
-          },
-          { onConflict: 'course_slug,lesson_slug,lang' }
-        )
-        .select()
-        .single();
-      if (error) throw error;
-      return { data, error: null };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  getSyllabus: async (id: string) => {
-    if (isOffline) {
-      if (!isSandboxFallbackAllowed()) {
-        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
-        handleDatabaseError(err);
-        return { data: null, error: err };
-      }
-      const course = mockCourses.find(c => c.slug === id);
-      return { data: course || null, error: null };
-    }
-    const res = await withFallback(
-      () => supabase.from('courses').select('*').eq('slug', id).single(),
-      mockCourses.find(c => c.slug === id) || null
-    );
-    if (res.data) {
-      const c = res.data as any;
-      const mapped: MockCourse = {
-        id: c.id,
-        title: c.title,
-        slug: c.slug,
-        level: c.level,
-        subject: c.subject,
-        description: c.description,
-        languages: c.languages || [],
-        langs: c.languages || [],
-        ects: c.ects || 0,
-        popularity: c.popularity || 0,
-        is_active: c.is_active,
-        isActive: c.is_active,
-        archivingLevel: c.archiving_level || 0,
-        archivedLanguages: c.archived_languages || [],
-        ratingCount: c.rating_count || 0,
-        averageRating: Number(c.average_rating) || 0,
-        validationsThreshold: c.validations_threshold || 5,
-        created_at: c.created_at,
-        isCurriculum: c.is_curriculum || false,
-        childCourses: c.child_courses || [],
-        translations: c.translations || {}
-      };
-      return { data: mapped, error: null };
-    }
-    return res;
-  },
-  
-  getAllCourses: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const stored = window.localStorage.getItem('openprimer_courses');
-        if (stored) {
-          try {
-            mockCourses = JSON.parse(stored);
-          } catch (e) {}
-        }
-      }
-    }
-
-    const computedCourses = mockCourses.map(c => {
-      // Aggregate feedbacks across all revisions/versions of this course (matching canonical slug)
-      const feedbacks = courseFeedbacks.filter(f => {
-        const fId = String(f.courseId).toLowerCase();
-        const currentSlug = c.slug.toLowerCase();
-        // Match direct slug or versioned slugs like 'maths_test_v1', 'maths_test_version2'
-        return fId === currentSlug || fId.replace(/_(v\d+|version\d+)/g, '') === currentSlug;
-      });
-      
-      const ratingCount = feedbacks.length;
-      const averageRating = ratingCount > 0
-        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
-        : 0;
-
-      // Aggregate dynamic completions/validations across all revisions/versions of this course
-      const courseCompletions = courseCompletionsList.filter(comp => {
-        const compId = comp.courseId.toLowerCase();
-        const currentSlug = c.slug.toLowerCase();
-        const currentId = String(c.id).toLowerCase();
-        const currentTitle = c.title.toLowerCase();
-        return compId === currentId || compId === currentSlug || compId === currentTitle || compId.replace(/_(v\d+|version\d+)/g, '') === currentSlug;
-      });
-      const totalValidations = courseCompletions.length;
-
-      return {
-        ...c,
-        validations: totalValidations > 0 ? totalValidations : (c.validations || 0),
-        ratingCount,
-        averageRating
-      };
-    });
-
-    if (isOffline) {
-      if (!isSandboxFallbackAllowed()) {
-        const err = new Error("Database offline/not configured, and sandbox fallback is disallowed.");
-        handleDatabaseError(err);
-        return { data: null, error: err };
-      }
-      return { data: computedCourses, error: null };
-    }
-    const res = await withFallback(
-      async () => {
-        const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
-        return { data, error };
-      },
-      computedCourses
-    );
-    if (res.data) {
-      const dbCourses: MockCourse[] = res.data.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        slug: c.slug,
-        level: c.level,
-        subject: c.subject,
-        description: c.description,
-        languages: c.languages || [],
-        langs: c.languages || [],
-        ects: c.ects || 0,
-        popularity: c.popularity || 0,
-        is_active: c.is_active,
-        isActive: c.is_active,
-        archivingLevel: c.archiving_level || 0,
-        archivedLanguages: c.archived_languages || [],
-        ratingCount: c.rating_count || 0,
-        averageRating: Number(c.average_rating) || 0,
-        validationsThreshold: c.validations_threshold || 5,
-        created_at: c.created_at,
-        isCurriculum: c.is_curriculum || false,
-        childCourses: c.child_courses || [],
-        translations: c.translations || {}
-      }));
-      const merged = [...dbCourses];
-      if (!isDatabaseConfigured) {
-        computedCourses.forEach(c => {
-          if (!merged.some(dbc => dbc.slug === c.slug || String(dbc.id) === String(c.id))) {
-            merged.push(c);
-          }
-        });
-      }
-      return { data: merged, error: null };
-    }
-    return res;
-  },
-
-  getPipelineQueue: async () => {
-    if (isOffline || !isDatabaseConfigured) {
-      if (typeof window !== 'undefined') {
-        const q = window.localStorage.getItem('openprimer_pipeline_queue');
-        return { data: q ? JSON.parse(q) : [], error: null };
-      }
-      return { data: [], error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('task_queue').select('*').order('created_at', { ascending: true });
-      if (error) throw error;
-      const queue = (data || []).map(row => {
-        try {
-          const extra = JSON.parse(row.description || '{}');
-          return {
-            id: String(row.id),
-            title: row.name,
-            type: row.target,
-            status: row.status,
-            priority: row.priority,
-            progress: row.progress,
-            logs: row.logs || [],
-            created_at: row.created_at,
-            ...extra
-          };
-        } catch (e) {
-          return {
-            id: String(row.id),
-            title: row.name,
-            type: row.target,
-            status: row.status,
-            priority: row.priority,
-            progress: row.progress,
-            logs: row.logs || [],
-            created_at: row.created_at
-          };
-        }
-      });
-      return { data: queue, error: null };
-    } catch (e) {
-      console.error("Failed to fetch pipeline queue from Supabase:", e);
-      if (typeof window !== 'undefined') {
-        const q = window.localStorage.getItem('openprimer_pipeline_queue');
-        return { data: q ? JSON.parse(q) : [], error: null };
-      }
-      return { data: [], error: e as any };
-    }
-  },
-
-  savePipelineQueue: async (queue: any[]) => {
-    if (isOffline || !isDatabaseConfigured) {
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
-      }
-      return { data: queue, error: null };
-    }
-    try {
-      const { error: deleteError } = await supabase.from('task_queue').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (deleteError) throw deleteError;
-
-      if (queue.length > 0) {
-        const rows = queue.map(t => {
-          const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.id);
-          const rowId = isValidUUID ? t.id : undefined;
-          const extra = {
-            level: t.level || 'L1',
-            targetLang: t.targetLang || ''
-          };
-          return {
-            ...(rowId ? { id: rowId } : {}),
-            name: t.title || '',
-            description: JSON.stringify(extra),
-            priority: t.priority || 'Medium',
-            status: t.status || 'queued',
-            progress: t.progress || 0,
-            target: t.type || 'generation',
-            logs: t.logs || []
-          };
-        });
-        const { error: insertError } = await supabase.from('task_queue').insert(rows);
-        if (insertError) throw insertError;
-      }
-
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
-      }
-      return { data: queue, error: null };
-    } catch (e) {
-      console.error("Failed to save pipeline queue to Supabase:", e);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('openprimer_pipeline_queue', JSON.stringify(queue));
-      }
-      return { data: queue, error: e as any };
-    }
-  },
-
-  // USER MGMT
-  getUsers: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const stored = window.localStorage.getItem('openprimer_users');
-        if (stored) {
-          try {
-            users = JSON.parse(stored);
-          } catch (e) {}
-        }
-      }
-      return { data: users, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (error) throw error;
-      const mapped = (data || []).map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role || 'student',
-        level: u.level ?? 1,
-        kp: u.kp ?? 0,
-        isEmailVerified: u.is_email_verified ?? u.isEmailVerified ?? false,
-        isBlocked: u.is_blocked ?? u.isBlocked ?? false,
-        joinedAt: u.joined_at ?? u.joinedAt ?? new Date().toISOString().split('T')[0],
-        favorites: u.favorites ?? [],
-        aiCoachMessage: u.ai_coach_message ?? u.aiCoachMessage ?? '',
-        preferredLang: u.preferred_lang ?? u.preferredLang ?? 'EN',
-        readingMode: u.reading_mode ?? u.readingMode ?? 'default',
-        password: u.password
-      }));
-      return { data: mapped, error: null };
-    } catch (e) {
-      return { data: [], error: e as any };
-    }
-  },
-
-  deleteUser: async (id: string) => {
-    if (isOffline) {
-      users = users.filter(u => u.id !== id);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
-    }
-    try {
-      // Also delete related course progress rows for complete clean slate
-      await supabase.from('progress').delete().eq('user_id', id);
-      const { data, error } = await supabase.from('profiles').delete().eq('id', id);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  toggleBlockUser: async (id: string) => {
-    if (isOffline) {
-      users = users.map(u => u.id === id ? { ...u, isBlocked: !u.isBlocked } : u);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
-    }
-    try {
-      const { data: user, error: selectError } = await supabase.from('profiles').select('is_blocked').eq('id', id).single();
-      if (selectError || !user) throw selectError || new Error("User not found");
-      const { data, error } = await supabase.from('profiles').update({ is_blocked: !user?.is_blocked }).eq('id', id);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  updateUserRole: async (id: string, role: string) => {
-    if (isOffline) {
-      users = users.map(u => u.id === id ? { ...u, role: role as UserRole } : u);
-      setLocalStorageItem('openprimer_users', users);
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      return { data: null, error: e as any };
-    }
-  },
-
-  hashPassword: (password: string): string => {
-    if (!password) return '';
-    const ch = (x: number, y: number, z: number) => (x & y) ^ (~x & z);
-    const maj = (x: number, y: number, z: number) => (x & y) ^ (x & z) ^ (y & z);
-    const sigma0 = (x: number) => ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));
-    const sigma1 = (x: number) => ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));
-    const gamma0 = (x: number) => ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
-    const gamma1 = (x: number) => ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);
-
-    const k = [
-      0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-      0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-      0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2ec16707, 0x36f577ee, 0x5a0f5275, 0x3070dd17,
-      0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
-      0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb,
-      0xbef9a3f7, 0xc67178f2, 0xca675699, 0xf1abb162, 0x85845dd1, 0xcf178267, 0xa3a948e3, 0xbfe33190,
-      0x0472507e, 0x08c7e2b2, 0x2f896e4b, 0x3070dd17, 0x4506ceb8, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-    ];
-
-    let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
-    let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
-
-    const words: number[] = [];
-    const ascii = password;
-    const asciiLength = ascii.length;
-    for (let i = 0; i < asciiLength; i++) {
-      words[i >>> 2] |= (ascii.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
-    }
-    
-    const bitLength = asciiLength * 8;
-    words[bitLength >>> 5] |= 0x80 << (24 - (bitLength % 32));
-    
-    const totalBlocks = ((bitLength + 64 + 9) >>> 9) + 1;
-    const blockWordsCount = totalBlocks * 16;
-    while (words.length < blockWordsCount - 2) {
-      words.push(0);
-    }
-    words.push(0);
-    words.push(bitLength);
-
-    for (let i = 0; i < blockWordsCount; i += 16) {
-      const w = new Array(64);
-      for (let j = 0; j < 16; j++) {
-        w[j] = words[i + j] || 0;
-      }
-      for (let j = 16; j < 64; j++) {
-        w[j] = (gamma1(w[j - 2]) + w[j - 7] + gamma0(w[j - 15]) + w[j - 16]) | 0;
-      }
-
-      let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
-
-      for (let j = 0; j < 64; j++) {
-        const t1 = (h + sigma1(e) + ch(e, f, g) + k[j] + w[j]) | 0;
-        const t2 = (sigma0(a) + maj(a, b, c)) | 0;
-        h = g;
-        g = f;
-        f = e;
-        e = (d + t1) | 0;
-        d = c;
-        c = b;
-        b = a;
-        a = (t1 + t2) | 0;
-      }
-
-      h0 = (h0 + a) | 0;
-      h1 = (h1 + b) | 0;
-      h2 = (h2 + c) | 0;
-      h3 = (h3 + d) | 0;
-      h4 = (h4 + e) | 0;
-      h5 = (h5 + f) | 0;
-      h6 = (h6 + g) | 0;
-      h7 = (h7 + h) | 0;
-    }
-
-    const toHex = (n: number) => {
-      const s = (n >>> 0).toString(16);
-      return "00000000".substring(s.length) + s;
-    };
-
-    return toHex(h0) + toHex(h1) + toHex(h2) + toHex(h3) + toHex(h4) + toHex(h5) + toHex(h6) + toHex(h7);
-  },
-
-  createUser: async (user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>) => {
-    const hashedPassword = user.password ? dbService.hashPassword(user.password) : undefined;
-    const newUser: UserProfile = {
-      ...user,
-      password: hashedPassword,
-      joinedAt: new Date().toISOString().split('T')[0],
-      kp: 0,
-      level: 1,
-      isEmailVerified: true,
-      isBlocked: false,
-      favorites: [],
-      aiCoachMessage: `Welcome ${user.name}!`
-    };
-    users = [newUser, ...users];
-    setLocalStorageItem('openprimer_users', users);
-
-    if (!isOffline) {
-      try {
-        await supabase.from('profiles').insert({
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          level: newUser.level,
-          kp: newUser.kp,
-          is_email_verified: newUser.isEmailVerified,
-          is_blocked: newUser.isBlocked,
-          joined_at: newUser.joinedAt,
-          favorites: newUser.favorites,
-          tutor_choice: 'socratic',
-          password: hashedPassword
-        });
-      } catch (err) {
-        console.warn("[DB SERVICE] Supabase connection error in createUser:", err);
-      }
-    }
-
-    return { data: newUser, error: null };
-  },
-
-  // STATS
-  getSiteStats: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const storedUsers = window.localStorage.getItem('openprimer_users');
-        if (storedUsers) {
-          try {
-            users = JSON.parse(storedUsers);
-          } catch (e) {}
-        }
-        const storedCourses = window.localStorage.getItem('openprimer_courses');
-        if (storedCourses) {
-          try {
-            mockCourses = JSON.parse(storedCourses);
-          } catch (e) {}
-        }
-      }
-      
-      const total_students = users.length;
-      const active_curricula = mockCourses.filter(c => c.is_active || c.isActive).length;
-      const total_course_visits = mockCourses.reduce((acc, c) => acc + (c.popularity || 0), 0);
-      const usersWithValidations = users.filter(u => u.level > 1 || u.kp > 0).length;
-      const validation_rate = users.length > 0 ? Math.round((usersWithValidations / users.length) * 100) : 0;
-      
-      const uniqueLangs = new Set<string>();
-      mockCourses.forEach(c => c.languages?.forEach(l => uniqueLangs.add(l.toLowerCase())));
-      const total_languages = uniqueLangs.size;
-      const total_courses = mockCourses.length;
-
-      const feedbacks = courseFeedbacks;
-      const ratingCount = feedbacks.length;
-      const averageRating = ratingCount > 0
-        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
-        : 0;
-      const platform_rating = ratingCount > 0 ? `${averageRating.toFixed(1)}/5` : "0.0/5";
-
-      return { 
-        data: { 
-          total_students, 
-          active_curricula, 
-          validation_rate, 
-          total_course_visits, 
-          platform_rating,
-          total_languages,
-          total_courses
-        }, 
-        error: null 
-      };
-    }
-
-    // Client-side fetch of dynamic stats
-    if (typeof window !== 'undefined') {
-      try {
-        const res = await fetch('/api/stats');
-        if (res.ok) {
-          const statsData = await res.json();
-          return {
-            data: {
-              total_students: statsData.total_students,
-              active_curricula: statsData.total_curricula,
-              total_languages: statsData.total_languages,
-              total_courses: statsData.total_courses,
-              validation_rate: statsData.validation_rate,
-              platform_rating: statsData.platform_rating ?? "0.0/5"
-            },
-            error: null
-          };
-        }
-      } catch (e) {
-        console.error("Failed to fetch stats from API", e);
-      }
-    }
-
-    // Server-side fallback or client-side fetch failure fallback
-    const total_students = users.length;
-    const active_curricula = mockCourses.filter(c => c.is_active).length;
-    const total_course_visits = mockCourses.reduce((acc, c) => acc + (c.popularity || 0), 0);
-    const usersWithValidations = users.filter(u => u.level > 1 || u.kp > 0).length;
-    const validation_rate = users.length > 0 ? Math.round((usersWithValidations / users.length) * 100) : 0;
-    
-    // Fallback counts:
-    const uniqueLangs = new Set<string>();
-    mockCourses.forEach(c => c.languages?.forEach(l => uniqueLangs.add(l.toLowerCase())));
-    const total_languages = uniqueLangs.size;
-    const total_courses = mockCourses.length;
-
-    if (isOffline || !isDatabaseConfigured) {
-      const feedbacks = courseFeedbacks;
-      const ratingCount = feedbacks.length;
-      const averageRating = ratingCount > 0
-        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / ratingCount
-        : 0;
-      const platform_rating = ratingCount > 0 ? `${averageRating.toFixed(1)}/5` : "0.0/5";
-
-      return { 
-        data: { 
-          total_students, 
-          active_curricula, 
-          validation_rate, 
-          total_course_visits, 
-          platform_rating,
-          total_languages,
-          total_courses
-        }, 
-        error: null 
-      };
-    }
-    try {
-      const { data, error } = await supabase.from('site_stats').select('*').single();
-      if (error) throw error;
-      
-      const { data: dbCourses } = await supabase.from('courses').select('is_active, languages');
-      const activeCourses = dbCourses || [];
-      const dbCurricula = activeCourses.filter(c => c.is_active).length;
-      const dbLangs = new Set<string>();
-      activeCourses.forEach(c => c.languages?.forEach((l: string) => dbLangs.add(l.toLowerCase())));
-      const dbCoursesCount = activeCourses.length;
-
-      return { 
-        data: {
-          ...data,
-          active_curricula: dbCurricula,
-          total_languages: dbLangs.size,
-          total_courses: dbCoursesCount,
-          platform_rating: data.platform_rating || "0.0/5"
-        }, 
-        error: null 
-      };
-    } catch (e) {
-      return { 
-        data: { 
-          total_students: 0, 
-          active_curricula: 0, 
-          validation_rate: 0, 
-          total_course_visits: 0, 
-          platform_rating: "0.0/5",
-          total_languages: 0,
-          total_courses: 0
-        }, 
-        error: e as any
-      };
-    }
-  },
-
-  // PROGRESS TRACKING SERVICE
-  getUserProgress: async (userId: string, lang?: string) => {
-    const isBrowser = typeof window !== 'undefined';
-    let enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]') : [];
-    let progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
-    
-    // Server-side query fetching directly from the Supabase progress table
-    if (isBrowser && userId && userId !== 'u1') {
-      try {
-        const { data, error } = await supabase
-          .from('progress')
-          .select('*')
-          .eq('user_id', userId);
-        
-        if (data) {
-          const enrolledFromDb = data.map(r => r.course_id);
-          const progressMapFromDb: Record<string, number> = {};
-          const lessonProgressFromDb = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
-          const quizResultsFromDb = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
-          
-          data.forEach(r => {
-            const course = mockCourses.find(c => c.id === r.course_id);
-            if (course) {
-              progressMapFromDb[course.slug] = r.progress;
-              progressMapFromDb[course.id.toString()] = r.progress;
-            }
-            if (r.lesson_progress) {
-              Object.assign(lessonProgressFromDb, r.lesson_progress);
-            }
-            if (r.quiz_results) {
-              Object.assign(quizResultsFromDb, r.quiz_results);
-            }
-          });
-
-          // Sync back to local storage
-          window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolledFromDb));
-          window.localStorage.setItem('op_course_progress', JSON.stringify(progressMapFromDb));
-          window.localStorage.setItem('openprimer_lesson_progress', JSON.stringify(lessonProgressFromDb));
-          window.localStorage.setItem('op_quiz_results', JSON.stringify(quizResultsFromDb));
-
-          enrolled = enrolledFromDb;
-          progressMap = progressMapFromDb;
-        }
-      } catch (err) {
-        console.error("Failed to query user progress from database:", err);
-      }
-    }
-    
-    const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
-    
-    // Map enrolled IDs to mockCourses, excluding archived courses
-    const activeModules = enrolled.map((id: number) => {
-      const course = mockCourses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
-      if (!course) return null;
-      const prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0; // Fallback to 0
-      return {
-        id: course.id,
-        title: getLocalizedCourseTitleInternal(course, activeLang),
-        subject: course.subject,
-        level: course.level,
-        slug: course.slug,
-        progress: prog,
-        created_at: course.created_at || null,
-        last_revision_date: course.last_revision_date || null,
-        isCurriculum: course.isCurriculum || false,
-        childCourses: course.childCourses || []
-      };
-    }).filter(Boolean) as any[];
-
-    const totalMinutes = progressService.getTotalLearningMinutes();
-    const hours = Math.floor(totalMinutes / 60);
-    const mins = totalMinutes % 60;
-    const learningTime = `${hours}h ${mins}m`;
-
-    // Compute credits based on completed courses (100% progress)
-    let credits = 0;
-    activeModules.forEach((m: any) => {
-      if (m.progress === 100) {
-        const course = mockCourses.find(c => c.id === m.id);
-        credits += course?.ects || 6;
-      }
-    });
-
-    const earnedAchievements = progressService.evaluateAchievements(achievementsList);
-
-    // ── Mastery Points — cumulative, additive, NEVER decreases ──
-    const quizResults = progressService.getQuizResults();
-    const quizEntries = Object.values(quizResults) as any[];
-    const rawMasteryPoints = quizEntries.reduce(
-      (sum: number, q: any) => sum + (q.correctAnswers || 0),
-      0
-    );
-    const storedFloor = isBrowser
-      ? parseInt(window.localStorage.getItem('op_mastery_floor') || '0', 10)
-      : 0;
-    const masteryPoints = Math.max(rawMasteryPoints, storedFloor);
-    if (isBrowser && masteryPoints > storedFloor) {
-      window.localStorage.setItem('op_mastery_floor', String(masteryPoints));
-    }
-
-    // ── Study Streak: unique active days from lesson progress log ──
-    const studyStreakDays = isBrowser ? (() => {
-      const times = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
-      const activeDates = new Set<string>();
-      for (const key in times) {
-        if (times[key].lastVisited) {
-          activeDates.add(times[key].lastVisited.split('T')[0]);
-        }
-      }
-      return activeDates.size;
-    })() : 0;
-
-    // ── Course completion counts ──
-    const completedCount = activeModules.filter((m: any) => m.progress === 100).length;
-    const inProgressCount = activeModules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
-
-    // Fetch tutor preference and dynamically generate pedagogical summary!
-    let tutorId = isBrowser ? (window.localStorage.getItem('op_active_tutor_personality') || 'socratic') : 'socratic';
-    
-    // Sync with database if connected
-    if (isBrowser) {
-      const savedProfile = window.localStorage.getItem('op_user_profile');
-      const loggedIn = window.localStorage.getItem('op_session');
-      if (savedProfile && loggedIn) {
-        try {
-          const profile = JSON.parse(savedProfile);
-          const userId = profile.id;
-          if (userId) {
-            // Fetch live tutor choice from Supabase profiles
-            const { data } = await supabase
-              .from('profiles')
-              .select('tutor_choice')
-              .eq('id', userId)
-              .single();
-            if (data?.tutor_choice) {
-              tutorId = data.tutor_choice;
-              window.localStorage.setItem('op_active_tutor_personality', tutorId);
-            }
-          }
-        } catch (e) {
-          console.error("Error reading tutor choice from database:", e);
-        }
-      }
-
-      // Revert to Socratic if tutor is archived
-      const activeTutor = tutorPersonalitiesList.find(p => p.id === tutorId);
-      if (!activeTutor || (activeTutor.archivingLevel && activeTutor.archivingLevel > 0)) {
-        tutorId = 'socratic';
-        window.localStorage.setItem('op_active_tutor_personality', 'socratic');
-        
-        // Update database as well
-        const savedProfile = window.localStorage.getItem('op_user_profile');
-        const loggedIn = window.localStorage.getItem('op_session');
-        if (savedProfile && loggedIn) {
-          try {
-            const profile = JSON.parse(savedProfile);
-            if (profile.id) {
-              supabase
-                .from('profiles')
-                .update({ tutor_choice: 'socratic' })
-                .eq('id', profile.id)
-                .then(() => console.log('Successfully reverted archived tutor choice to Socratic in Supabase'));
-            }
-          } catch (e) {}
-        }
-      }
-    }
-
-    const aiSummary = generatePedagogicalSummary(
-      activeModules,
-      masteryPoints,
-      studyStreakDays,
-      totalMinutes,
-      activeLang,
-      tutorId
-    );
-
-    return {
-      masteryPoints,
-      studyStreakDays,
-      completedCount,
-      inProgressCount,
-      learningTime,
-      totalMinutes,
-      activeModules,
-      earnedAchievementsCount: earnedAchievements.length,
-      aiSummary: aiSummary
-    };
-  },
-
-  enrollInCourse: async (userId: string, courseId: number) => {
-    if (typeof window === 'undefined') return;
-    const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
-    if (!enrolled.includes(courseId)) {
-      enrolled.push(courseId);
-      window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
-    }
-
-    if (userId && userId !== 'u1') {
-      try {
-        const { error } = await supabase
-          .from('progress')
-          .upsert({
-            user_id: userId,
-            course_id: courseId,
-            progress: 0,
-            last_visited: new Date().toISOString()
-          }, { onConflict: 'user_id,course_id' });
-        if (error) {
-          console.error("Error syncing enrollment to Supabase:", error);
-        } else {
-          console.log(`Successfully enrolled in course ${courseId} in Supabase`);
-        }
-      } catch (err) {
-        console.error("Error during enrollment sync:", err);
-      }
-    }
-  },
-
-  abandonCourse: async (userId: string, courseId: number) => {
-    if (typeof window === 'undefined') return;
-    let enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
-    enrolled = enrolled.filter((id: number) => id !== courseId);
-    window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
-
-    const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}');
-    const course = mockCourses.find(c => c.id === courseId);
-    if (course) {
-      delete progressMap[course.slug];
-      delete progressMap[courseId.toString()];
-      window.localStorage.setItem('op_course_progress', JSON.stringify(progressMap));
-    }
-
-    if (userId && userId !== 'u1') {
-      try {
-        const { error } = await supabase
-          .from('progress')
-          .delete()
-          .eq('user_id', userId)
-          .eq('course_id', courseId);
-        if (error) {
-          console.error("Error deleting enrollment from Supabase:", error);
-        } else {
-          console.log(`Successfully abandoned course ${courseId} in Supabase`);
-        }
-      } catch (err) {
-        console.error("Error during abandonment sync:", err);
-      }
-    }
-  },
-
-
-  // CLUSTERED REPORT MGMT
-  getReportClusters: async () => {
-    let activeReports = [...reportClusters];
-
-    // Group feedbacks by canonical course ID
-    const feedbackByCourse: Record<number, CourseFeedback[]> = {};
-    courseFeedbacks.forEach(f => {
-      const canonicalId = getCanonicalCourseId(f.courseId);
-      if (!feedbackByCourse[canonicalId]) {
-        feedbackByCourse[canonicalId] = [];
-      }
-      feedbackByCourse[canonicalId].push(f);
-    });
-
-    // Check each course
-    mockCourses.forEach(course => {
-      const feedbacks = feedbackByCourse[getCanonicalCourseId(course.id)] || [];
-      const totalReviews = feedbacks.length;
-      
-      if (totalReviews > 0) {
-        const avgRating = feedbacks.reduce((acc, f) => acc + f.rating, 0) / totalReviews;
-        const untreated = feedbacks.filter(f => !f.isTreated);
-        
-        const isLowRatingTrigger = totalReviews >= 10 && avgRating < 3.0;
-        
-        if (isLowRatingTrigger || untreated.length > 0) {
-          const untreatedComments = untreated.map(u => `"${u.comment}"`).join('; ');
-          const issueSummary = isLowRatingTrigger
-            ? `Low average rating (${avgRating.toFixed(1)} ★ based on ${totalReviews} reviews). Issues reported: ${untreatedComments || 'No comments left.'}`
-            : `New user comments received: ${untreatedComments}`;
-
-          const aiProposal = isLowRatingTrigger
-            ? `Analyze all ${totalReviews} feedback entries, restructure Lagrangian concepts, and add 5 comprehensive practice problems.`
-            : `Pedagogical optimization suggested: review explanations and clarify course content.`;
-
-          activeReports.push({
-            id: `rev_feed_${course.slug}`,
-            course: course.title,
-            issueSummary: issueSummary,
-            count: untreated.length || totalReviews,
-            status: 'Pending',
-            aiProposal: aiProposal,
-            priority: isLowRatingTrigger ? 'High' : 'Medium'
-          });
-        }
-      }
-    });
-
-    if (isOffline) {
-      return { data: activeReports, error: null };
-    }
-    try {
-       const { data, error } = await supabase.from('report_clusters').select('*');
-       if (error) throw error;
-       return { data: data || [], error: null };
-    } catch (e) {
-      return { data: [], error: e as any };
-    }
-  },
-
-  approveClusterFix: async (id: string) => {
-    if (id.startsWith('rev_feed_')) {
-      const slug = id.replace('rev_feed_', '');
-      courseFeedbacks = courseFeedbacks.map(f => f.courseId === slug ? { ...f, isTreated: true } : f);
-      setLocalStorageItem('openprimer_course_feedbacks', courseFeedbacks);
-    }
-
-    if (isOffline) {
-      reportClusters = reportClusters.map(c => c.id === id ? { ...c, status: 'Fixed' } : c);
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('id', id);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      reportClusters = reportClusters.map(c => c.id === id ? { ...c, status: 'Fixed' } : c);
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-  },
-
-  autoApproveAll: async () => {
-    if (isOffline) {
-      reportClusters = reportClusters.map(c => c.status === 'Pending' ? { ...c, status: 'Fixed' } : c);
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('status', 'Pending');
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      reportClusters = reportClusters.map(c => c.status === 'Pending' ? { ...c, status: 'Fixed' } : c);
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-  },
-
-  toggleCourseActiveStatus: async (courseId: number) => {
-    if (isOffline) {
-      mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, is_active: !c.is_active } : c);
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-    try {
-      const { data: course } = await supabase.from('courses').select('is_active').eq('id', courseId).single();
-      const { data, error } = await supabase.from('courses').update({ is_active: !course?.is_active }).eq('id', courseId);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, is_active: !c.is_active } : c);
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-  },
-
-  setCourseArchivingLevel: async (courseId: number, level: number) => {
-    if (level > 0) {
-      purgePipelineAndRequestsForCourseOrCurriculum(courseId);
-    }
-    if (isOffline) {
-      if (level === 3) {
-        mockCourses = mockCourses.filter(c => c.id !== courseId);
-      } else {
-        mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
-      }
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-    try {
-      if (level === 3) {
-        const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
-        if (error) throw error;
-        return { data, error };
-      }
-      const { data, error } = await supabase.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      if (level === 3) {
-        mockCourses = mockCourses.filter(c => c.id !== courseId);
-      } else {
-        mockCourses = mockCourses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
-      }
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-  },
-
-  toggleCourseLanguageArchived: async (courseId: number, lang: string) => {
-    if (isOffline) {
-      mockCourses = mockCourses.map(c => {
-        if (c.id === courseId) {
-          const archived = c.archivedLanguages || [];
-          const updated = archived.includes(lang)
-            ? archived.filter((l: string) => l !== lang)
-            : [...archived, lang];
-          
-          // If all languages are archived, set archiving level to 3 (fully archived), else 0/active
-          const allArchived = c.languages.every((l: string) => updated.includes(l));
-          if (allArchived) {
-            purgePipelineAndRequestsForCourseOrCurriculum(courseId);
-          }
-          return { 
-            ...c, 
-            archivedLanguages: updated,
-            archivingLevel: allArchived ? 3 : 0,
-            is_active: !allArchived
-          };
-        }
-        return c;
-      });
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-    return { data: null, error: null };
-  },
-
-  archiveAllCourseLanguages: async (courseId: number, archive: boolean) => {
-    if (archive) {
-      purgePipelineAndRequestsForCourseOrCurriculum(courseId);
-    }
-    if (isOffline) {
-      mockCourses = mockCourses.map(c => {
-        if (c.id === courseId) {
-          return { 
-            ...c, 
-            archivedLanguages: archive ? [...c.languages] : [],
-            archivingLevel: archive ? 3 : 0,
-            is_active: !archive 
-          };
-        }
-        return c;
-      });
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-    return { data: null, error: null };
-  },
-
-  purgeCourse: async (courseId: number) => {
-    if (isOffline) {
-      mockCourses = mockCourses.filter(c => c.id !== courseId);
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      mockCourses = mockCourses.filter(c => c.id !== courseId);
-      setLocalStorageItem('openprimer_courses', mockCourses);
-      return { data: null, error: null };
-    }
-  },
-
-  submitReport: async (course: string, page: string, comment: string) => {
-    const issueSummary = comment ? `Page: ${page}. Comment: ${comment}` : `Page: ${page}. General report.`;
-    if (isOffline) {
-      const existing = reportClusters.find(c => c.course === course && c.issueSummary === issueSummary);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        const id = 'cl_' + (reportClusters.length + 1);
-        reportClusters.push({
-          id,
-          course,
-          issueSummary,
-          count: 1,
-          status: 'Pending',
-          aiProposal: `Address issue reported on page "${page}" with feedback: "${comment || 'None'}"`,
-          priority: 'Medium'
-        });
-      }
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('report_clusters').insert({
-        course,
-        issue_summary: issueSummary,
-        count: 1,
-        status: 'Pending',
-        ai_proposal: `Address issue reported on page "${page}"`,
-        priority: 'Medium'
-      });
-      return { data, error };
-    } catch (e) {
-      const id = 'cl_' + (reportClusters.length + 1);
-      reportClusters.push({
-        id,
-        course,
-        issueSummary,
-        count: 1,
-        status: 'Pending',
-        aiProposal: `Address issue reported on page "${page}" with feedback: "${comment || 'None'}"`,
-        priority: 'Medium'
-      });
-      setLocalStorageItem('openprimer_reports', reportClusters);
-      return { data: null, error: null };
-    }
-  },
-
-  // DYNAMIC LANGUAGES
-  getAvailableLanguages: async () => {
-    const filtered = availableLanguagesList.filter(l => (l.archivingLevel ?? 0) !== 2);
-    return { data: filtered, error: null };
-  },
-
-  getLanguagesAdmin: async () => {
-    return { data: availableLanguagesList, error: null };
-  },
-
-  registerLanguage: async (lang: LanguageInfo) => {
-    const existing = availableLanguagesList.find(l => l.code.toUpperCase() === lang.code.toUpperCase());
-    if (existing) {
-      availableLanguagesList = availableLanguagesList.map(l => l.code.toUpperCase() === lang.code.toUpperCase() ? { ...existing, ...lang } : l);
-    } else {
-      availableLanguagesList = [...availableLanguagesList, { ...lang, archivingLevel: 0 }];
-    }
-    setLocalStorageItem('openprimer_languages', availableLanguagesList);
-    return { data: lang, error: null };
-  },
-
-  setLanguageArchivingLevel: async (code: string, level: number) => {
-    if (code.toUpperCase() === 'EN') {
-      return { data: null, error: new Error('Cannot archive master language English') };
-    }
-    if (level === 3) {
-      availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
-    } else {
-      availableLanguagesList = availableLanguagesList.map(l => l.code.toUpperCase() === code.toUpperCase() ? { ...l, archivingLevel: level } : l);
-    }
-    setLocalStorageItem('openprimer_languages', availableLanguagesList);
-    return { data: null, error: null };
-  },
-
-  deleteLanguage: async (code: string) => {
-    if (code.toUpperCase() === 'EN') {
-      return { data: null, error: new Error('Cannot delete master language English') };
-    }
-    availableLanguagesList = availableLanguagesList.filter(l => l.code.toUpperCase() !== code.toUpperCase());
-    setLocalStorageItem('openprimer_languages', availableLanguagesList);
-    return { data: null, error: null };
-  },
-
-  // ACHIEVEMENTS / BADGES
-  getAchievements: async () => {
-    if (isOffline) {
-      return { data: achievementsList, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('achievements').select('*');
-      if (error) throw error;
-      
-      const mapped = data?.map((a: any) => ({
-        id: a.id,
-        name: a.name,
-        description: a.description,
-        threshold: a.threshold,
-        count: a.count,
-        status: a.status,
-        startDate: a.start_date,
-        endDate: a.end_date,
-        icon: a.icon,
-        translations: a.translations,
-        archivingLevel: a.archiving_level
-      }));
-      return { data: mapped || achievementsList, error: null };
-    } catch (e) {
-      return { data: achievementsList, error: null };
-    }
-  },
-
-  saveAchievement: async (ach: Achievement) => {
-    const existing = achievementsList.find(a => a.id === ach.id);
-    if (existing) {
-      achievementsList = achievementsList.map(a => a.id === ach.id ? ach : a);
-    } else {
-      achievementsList = [...achievementsList, ach];
-    }
-    setLocalStorageItem('openprimer_achievements', achievementsList);
-
-    if (isOffline) {
-      return { data: ach, error: null };
-    }
-    try {
-      const dbAch = {
-        name: ach.name,
-        description: ach.description,
-        threshold: ach.threshold,
-        count: ach.count,
-        status: ach.status,
-        start_date: ach.startDate,
-        end_date: ach.endDate,
-        icon: ach.icon,
-        translations: ach.translations,
-        archiving_level: ach.archivingLevel || 0
-      };
-
-      if (ach.id && ach.id > 0 && typeof ach.id === 'number') {
-        const { error } = await supabase
-          .from('achievements')
-          .update(dbAch)
-          .eq('id', ach.id);
-        if (error) throw error;
-        return { data: ach, error: null };
-      } else {
-        const { data, error } = await supabase
-          .from('achievements')
-          .insert([dbAch])
-          .select()
-          .single();
-        if (error) throw error;
-        return { data: { ...ach, id: data.id }, error: null };
-      }
-    } catch (e) {
-      return { data: ach, error: null };
-    }
-  },
-
-  deleteAchievement: async (id: number) => {
-    achievementsList = achievementsList.filter(a => a.id !== id);
-    setLocalStorageItem('openprimer_achievements', achievementsList);
-    if (isOffline) {
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('achievements').delete().eq('id', id);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      return { data: null, error: null };
-    }
-  },
-
-  // SEARCH HISTORY
-  getSearchHistory: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const stored = window.localStorage.getItem('openprimer_search_history');
-        if (stored) {
-          try {
-            searchHistoryList = JSON.parse(stored);
-          } catch (e) {}
-        }
-      }
-      return { data: searchHistoryList, error: null };
-    }
-    try {
-      const { data, error } = await supabase
-        .from('search_logs')
-        .select('*')
-        .order('timestamp', { ascending: false });
-      if (error) throw error;
-      const mapped = data?.map((s: any) => ({
-        id: s.id,
-        query: s.query,
-        timestamp: s.timestamp,
-        wasSuccessful: s.was_successful,
-        userId: s.user_id
-      }));
-      return { data: mapped || searchHistoryList, error: null };
-    } catch (e) {
-      return { data: searchHistoryList, error: null };
-    }
-  },
-
-  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }) => {
-    const newEntry: SearchHistoryEntry = {
-      id: entry.id || `sh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      query: entry.query,
-      timestamp: entry.timestamp || new Date().toISOString(),
-      wasSuccessful: entry.wasSuccessful,
-      userId: entry.userId || undefined
-    };
-    
-    searchHistoryList = [newEntry, ...searchHistoryList];
-    setLocalStorageItem('openprimer_search_history', searchHistoryList);
-
-    if (!isOffline) {
-      try {
-        await supabase.from('search_logs').insert({
-          query: newEntry.query,
-          was_successful: newEntry.wasSuccessful,
-          user_id: newEntry.userId || null,
-          timestamp: newEntry.timestamp
-        });
-      } catch (e) {
-        console.warn("[DB] Failed to insert search log to Supabase, fallback to localStorage", e);
-      }
-    }
-    return { data: newEntry, error: null };
-  },
-
-  cleanupSearchHistory: async (retentionDays: number) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - retentionDays);
-    const originalCount = searchHistoryList.length;
-    searchHistoryList = searchHistoryList.filter(entry => new Date(entry.timestamp) >= cutoff);
-    setLocalStorageItem('openprimer_search_history', searchHistoryList);
-
-    if (!isOffline) {
-      try {
-        await supabase
-          .from('search_logs')
-          .delete()
-          .lt('timestamp', cutoff.toISOString());
-      } catch (e) {
-        console.warn("[DB] Failed to cleanup search logs in Supabase", e);
-      }
-    }
-    return { data: { purged: originalCount - searchHistoryList.length }, error: null };
-  },
-
-  getCourseFeedbacks: async (courseId?: string) => {
-    if (courseId) {
-      const canonicalId = getCanonicalCourseId(courseId);
-      return { data: courseFeedbacks.filter(f => getCanonicalCourseId(f.courseId) === canonicalId), error: null };
-    }
-    return { data: courseFeedbacks, error: null };
-  },
-
-  addCourseFeedback: async (feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>) => {
-    const newFeedback: CourseFeedback = {
-      ...feedback,
-      id: `cf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      isTreated: false
-    };
-    courseFeedbacks = [newFeedback, ...courseFeedbacks];
-    setLocalStorageItem('openprimer_course_feedbacks', courseFeedbacks);
-    return { data: newFeedback, error: null };
-  },
-
-  cleanupCourseFeedbacks: async (retentionDays: number) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - retentionDays);
-    const originalCount = courseFeedbacks.length;
-    courseFeedbacks = courseFeedbacks.filter(f => new Date(f.timestamp) >= cutoff);
-    setLocalStorageItem('openprimer_course_feedbacks', courseFeedbacks);
-    return { data: { purged: originalCount - courseFeedbacks.length }, error: null };
-  },
-
-  addCourse: async (course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>) => {
-    const newCourse: MockCourse = {
-      ...course,
-      id: mockCourses.length > 0 ? Math.max(...mockCourses.map(c => c.id)) + 1 : 1,
-      popularity: 0,
-      is_active: true,
-      archivingLevel: 0,
-      created_at: new Date().toISOString()
-    };
-    mockCourses = [newCourse, ...mockCourses];
-    setLocalStorageItem('openprimer_courses', mockCourses);
-    return { data: newCourse, error: null };
-  },
-
-  saveCourse: async (course: any) => {
-    // Determine the numeric ID to search for
-    const searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
-    const existing = mockCourses.find(c => c.id === searchId);
-    let finalCourse: MockCourse;
-    if (existing) {
-      finalCourse = { ...existing, ...course, id: searchId };
-      mockCourses = mockCourses.map(c => c.id === searchId ? finalCourse : c);
-    } else {
-      finalCourse = {
-        id: searchId || (mockCourses.length > 0 ? Math.max(...mockCourses.map(c => c.id)) + 1 : 1),
-        title: course.title,
-        slug: course.slug || (() => {
-          const asciiClean = course.title
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9\s_-]/g, '')
-            .trim()
-            .replace(/\s+/g, '_');
-          return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
-            ? asciiClean
-            : course.title.toLowerCase().trim().replace(/\s+/g, '_');
-        })(),
-        level: course.level || 'L1',
-        subject: course.subject || 'General',
-        description: course.description || '',
-        languages: course.languages || ['en'],
-        langs: course.langs || course.languages || ['en'],
-        ects: course.ects || 6,
-        popularity: course.popularity || 0,
-        is_active: course.is_active !== undefined ? course.is_active : true,
-        archivingLevel: course.archivingLevel !== undefined ? course.archivingLevel : 0,
-        translations: course.translations || {},
-        created_at: course.created_at || new Date().toISOString()
-      };
-      mockCourses = [...mockCourses, finalCourse];
-    }
-    setLocalStorageItem('openprimer_courses', mockCourses);
-    if (!isOffline) {
-      try {
-        await supabase.from('courses').upsert({
-          id: finalCourse.id,
-          title: finalCourse.title,
-          slug: finalCourse.slug,
-          level: finalCourse.level,
-          subject: finalCourse.subject,
-          description: finalCourse.description,
-          languages: finalCourse.languages,
-          ects: finalCourse.ects,
-          popularity: finalCourse.popularity,
-          is_active: finalCourse.is_active,
-          archiving_level: finalCourse.archivingLevel,
-          is_curriculum: finalCourse.isCurriculum || false,
-          child_courses: finalCourse.childCourses || [],
-          translations: finalCourse.translations
-        });
-      } catch (e) {
-        console.error("Failed to upsert course to Supabase:", e);
-      }
-    }
-    return { data: finalCourse, error: null };
-  },
-
-  // TRANSLATION REQUESTS APIS
-  getTranslationRequests: async () => {
-    return { data: isOffline ? translationRequestsList : [], error: null };
-  },
-
-  addTranslationRequest: async (entry: Omit<TranslationRequestEntry, 'id' | 'timestamp'>) => {
-    const newEntry: TranslationRequestEntry = {
-      ...entry,
-      id: `tr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString()
-    };
-    translationRequestsList = [newEntry, ...translationRequestsList];
-    setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
-    return { data: newEntry, error: null };
-  },
-
-  purgeTranslationRequest: async (id: string) => {
-    translationRequestsList = translationRequestsList.filter(t => t.id !== id);
-    setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
-    return { data: null, error: null };
-  },
-
-  cleanupTranslationRequests: async (retentionDays: number) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - retentionDays);
-    const originalCount = translationRequestsList.length;
-    translationRequestsList = translationRequestsList.filter(t => new Date(t.timestamp) >= cutoff);
-    setLocalStorageItem('openprimer_translation_requests', translationRequestsList);
-    return { data: { purged: originalCount - translationRequestsList.length }, error: null };
-  },
-
-  getRefusedCourses: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const stored = window.localStorage.getItem('openprimer_refused_courses');
-        if (stored) {
-          try {
-            refusedCoursesList = JSON.parse(stored);
-          } catch (e) {}
-        }
-      }
-      return { data: refusedCoursesList, error: null };
-    }
-    return { data: [], error: null };
-  },
-
-  addRefusedCourse: async (course: RefusedCourseEntry) => {
-    const existing = refusedCoursesList.find(c => c.name.toLowerCase() === course.name.toLowerCase());
-    if (existing) {
-      refusedCoursesList = refusedCoursesList.map(c => c.name.toLowerCase() === course.name.toLowerCase() ? course : c);
-    } else {
-      refusedCoursesList = [...refusedCoursesList, course];
-    }
-    setLocalStorageItem('openprimer_refused_courses', refusedCoursesList);
-    return { data: course, error: null };
-  },
-
-  deleteRefusedCourse: async (id: string) => {
-    refusedCoursesList = refusedCoursesList.filter(c => c.id !== id);
-    setLocalStorageItem('openprimer_refused_courses', refusedCoursesList);
-    return { data: null, error: null };
-  },
-
-  getRefusedTranslations: async () => {
-    if (isOffline) {
-      if (typeof window !== 'undefined') {
-        const stored = window.localStorage.getItem('openprimer_refused_translations');
-        if (stored) {
-          try {
-            refusedTranslationsList = JSON.parse(stored);
-          } catch (e) {}
-        }
-      }
-      return { data: refusedTranslationsList, error: null };
-    }
-    return { data: [], error: null };
-  },
-
-  addRefusedTranslation: async (trans: RefusedTranslationEntry) => {
-    const existing = refusedTranslationsList.find(t => t.name.toLowerCase() === trans.name.toLowerCase() && t.targetLang === trans.targetLang);
-    if (existing) {
-      refusedTranslationsList = refusedTranslationsList.map(t => (t.name.toLowerCase() === trans.name.toLowerCase() && t.targetLang === trans.targetLang) ? trans : t);
-    } else {
-      refusedTranslationsList = [...refusedTranslationsList, trans];
-    }
-    setLocalStorageItem('openprimer_refused_translations', refusedTranslationsList);
-    return { data: trans, error: null };
-  },
-
-  deleteRefusedTranslation: async (id: string) => {
-    refusedTranslationsList = refusedTranslationsList.filter(t => t.id !== id);
-    setLocalStorageItem('openprimer_refused_translations', refusedTranslationsList);
-    return { data: null, error: null };
-  },
-
-  getRefusedRevisions: async () => {
-    return { data: isOffline ? refusedRevisionsList : [], error: null };
-  },
-
-  addRefusedRevision: async (rev: RefusedRevisionEntry) => {
-    const existing = refusedRevisionsList.find(r => r.course.toLowerCase() === rev.course.toLowerCase() && r.issueSummary === rev.issueSummary);
-    if (existing) {
-      refusedRevisionsList = refusedRevisionsList.map(r => (r.course.toLowerCase() === rev.course.toLowerCase() && r.issueSummary === rev.issueSummary) ? rev : r);
-    } else {
-      refusedRevisionsList = [...refusedRevisionsList, rev];
-    }
-    setLocalStorageItem('openprimer_refused_revisions', refusedRevisionsList);
-    return { data: rev, error: null };
-  },
-
-  deleteRefusedRevision: async (id: string) => {
-    refusedRevisionsList = refusedRevisionsList.filter(r => r.id !== id);
-    setLocalStorageItem('openprimer_refused_revisions', refusedRevisionsList);
-    return { data: null, error: null };
-  },
-
-  // TUTOR PERSONALITIES
-  getTutorPersonalities: async () => {
-    if (isOffline || !isDatabaseConfigured) {
-      return { data: tutorPersonalitiesList, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('tutor_personalities').select('*');
-      if (error) throw error;
-      const mapped: TutorPersonality[] = data?.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        prompt: p.prompt,
-        isDefault: p.is_default,
-        archivingLevel: p.archiving_level || 0,
-        translations: {}
-      })) || [];
-      return { data: mapped, error: null };
-    } catch (e: any) {
-      return { data: tutorPersonalitiesList, error: e };
-    }
-  },
-
-  saveTutorPersonality: async (pers: TutorPersonality) => {
-    const existing = tutorPersonalitiesList.find(p => p.id === pers.id);
-    if (existing) {
-      tutorPersonalitiesList = tutorPersonalitiesList.map(p => p.id === pers.id ? pers : p);
-    } else {
-      tutorPersonalitiesList = [...tutorPersonalitiesList, pers];
-    }
-    // If setting as default, make all other personalities non-default
-    if (pers.isDefault) {
-      tutorPersonalitiesList = tutorPersonalitiesList.map(p => p.id !== pers.id ? { ...p, isDefault: false } : p);
-    }
-    setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
-
-    if (isOffline || !isDatabaseConfigured) {
-      return { data: pers, error: null };
-    }
-    try {
-      if (pers.isDefault) {
-        // Unset default flag on all other personalities
-        await supabase.from('tutor_personalities').update({ is_default: false }).neq('id', pers.id);
-      }
-      const { error } = await supabase.from('tutor_personalities').upsert({
-        id: pers.id,
-        name: pers.name,
-        prompt: pers.prompt,
-        is_default: pers.isDefault,
-        archiving_level: pers.archivingLevel || 0
-      });
-      if (error) throw error;
-      return { data: pers, error: null };
-    } catch (e: any) {
-      return { data: pers, error: e };
-    }
-  },
-
-  deleteTutorPersonality: async (id: string) => {
-    const target = tutorPersonalitiesList.find(p => p.id === id);
-    if (target?.isDefault) {
-      return { data: null, error: new Error('Cannot delete default personality') };
-    }
-    tutorPersonalitiesList = tutorPersonalitiesList.filter(p => p.id !== id);
-    setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
-
-    if (isOffline || !isDatabaseConfigured) {
-      return { data: null, error: null };
-    }
-    try {
-      const { error } = await supabase.from('tutor_personalities').delete().eq('id', id);
-      if (error) throw error;
-      return { data: null, error: null };
-    } catch (e: any) {
-      return { data: null, error: e };
-    }
-  },
-
-  // AGENT METRICS
-  getAgentMetrics: async () => {
-    if (isOffline || !isDatabaseConfigured) {
-      return { data: agentMetricsList, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('agent_metrics').select('*');
-      if (error) throw error;
-      const mapped: AgentMetric[] = data?.map((m: any) => ({
-        id: m.id,
-        nameEN: m.name_en || m.nameEN || '',
-        nameFR: m.name_fr || m.nameFR || '',
-        nameES: m.name_es || m.nameES || '',
-        nameDE: m.name_de || m.nameDE || '',
-        nameZH: m.name_zh || m.nameZH || '',
-        totalCost: m.total_cost || m.totalCost || 0,
-        rolling30DaysCost: m.rolling_30_days_cost || m.rolling30DaysCost || 0,
-        requests: m.requests || 0,
-        avgResponseTime: m.avg_response_time || m.avgResponseTime || '0ms'
-      })) || [];
-      return { data: mapped.length > 0 ? mapped : initialAgentMetrics, error: null };
-    } catch (e: any) {
-      return { data: initialAgentMetrics, error: e };
-    }
-  },
-
-  // COURSE DELETION (LEVEL 3)
-  deleteCourse: async (courseId: number) => {
-    mockCourses = mockCourses.filter(c => c.id !== courseId);
-    setLocalStorageItem('openprimer_courses', mockCourses);
-    if (isOffline) {
-      return { data: null, error: null };
-    }
-    try {
-      const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
-      if (error) throw error;
-      return { data, error };
-    } catch (e) {
-      return { data: null, error: null };
-    }
-  },
-
-  // CONTACT FEEDBACK INBOX (90-DAY RETENTION)
-  getContactFeedbacks: async () => {
-    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    
-    // Auto-prune items older than 90 days from the local state
-    const beforeCount = contactFeedbacksList.length;
-    contactFeedbacksList = contactFeedbacksList.filter(fb => new Date(fb.timestamp).getTime() >= ninetyDaysAgo);
-    if (contactFeedbacksList.length !== beforeCount) {
-      setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
-    }
-    
-    if (isOffline) {
-      return { data: contactFeedbacksList, error: null };
-    }
-    try {
-      const ninetyDaysAgoIso = new Date(ninetyDaysAgo).toISOString();
-      const { data, error } = await supabase
-        .from('contact_feedbacks')
-        .select('*')
-        .gte('created_at', ninetyDaysAgoIso)
-        .order('created_at', { ascending: false });
-      return { data: data || [], error };
-    } catch (e) {
-      return { data: [], error: e as any };
-    }
-  },
-
-  saveContactFeedback: async (feedback: Omit<ContactFeedback, 'id' | 'timestamp'>) => {
-    const newFb: ContactFeedback = {
-      ...feedback,
-      id: `fb_${Date.now()}`,
-      timestamp: new Date().toISOString()
-    };
-    contactFeedbacksList = [newFb, ...contactFeedbacksList];
-    setLocalStorageItem('openprimer_contact_feedbacks', contactFeedbacksList);
-    if (isOffline) {
-      return { data: newFb, error: null };
-    }
-    try {
-      const { data, error } = await supabase
-        .from('contact_feedbacks')
-        .insert([{
-          name: feedback.name,
-          email: feedback.email,
-          message: feedback.message,
-          created_at: newFb.timestamp
-        }])
-        .select()
-        .single();
-      return { data, error };
-    } catch (e) {
-      return { data: newFb, error: null };
-    }
+export const getMockCourses = () => mockCourses;
+export const setMockCourses = (val: MockCourse[]) => { mockCourses = val; };
+
+export const getUsers = () => users;
+export const setUsersList = (val: UserProfile[]) => { users = val; };
+
+export const getAchievementsList = () => achievementsList;
+export const setAchievementsList = (val: Achievement[]) => { achievementsList = val; };
+
+export const getTutorPersonalitiesList = () => tutorPersonalitiesList;
+export const setTutorPersonalitiesList = (val: TutorPersonality[]) => { tutorPersonalitiesList = val; };
+
+export const getTranslationRequestsList = () => translationRequestsList;
+export const setTranslationRequestsList = (val: TranslationRequestEntry[]) => { translationRequestsList = val; };
+
+export const getRefusedCoursesList = () => refusedCoursesList;
+export const setRefusedCoursesList = (val: RefusedCourseEntry[]) => { refusedCoursesList = val; };
+
+export const getRefusedTranslationsList = () => refusedTranslationsList;
+export const setRefusedTranslationsList = (val: RefusedTranslationEntry[]) => { refusedTranslationsList = val; };
+
+export const getRefusedRevisionsList = () => refusedRevisionsList;
+export const setRefusedRevisionsList = (val: RefusedRevisionEntry[]) => { refusedRevisionsList = val; };
+
+export const getAgentMetricsList = () => agentMetricsList;
+export const setAgentMetricsList = (val: AgentMetric[]) => { agentMetricsList = val; };
+
+export const getCourseFeedbacks = () => courseFeedbacks;
+export const setCourseFeedbacks = (val: CourseFeedback[]) => { courseFeedbacks = val; };
+
+export const getCourseCompletionsList = () => courseCompletionsList;
+export const setCourseCompletionsList = (val: any[]) => { courseCompletionsList = val; };
+
+export const getContactFeedbacksList = () => contactFeedbacksList;
+export const setContactFeedbacksList = (val: ContactFeedback[]) => { contactFeedbacksList = val; };
+
+export const getSearchHistoryList = () => searchHistoryList;
+export const setSearchHistoryList = (val: SearchHistoryEntry[]) => { searchHistoryList = val; };
+
+export const getReportClusters = () => reportClusters;
+export const setReportClusters = (val: any[]) => { reportClusters = val; };
+
+export const getAvailableLanguagesList = () => availableLanguagesList;
+export const setAvailableLanguagesList = (val: LanguageInfo[]) => { availableLanguagesList = val; };
+
+export const getTranslationEmailsList = () => translationEmailsList;
+export const setTranslationEmailsList = (val: TranslationEmailNotification[]) => { translationEmailsList = val; };
+
+export const getSystemParametersList = () => systemParametersList;
+export const setSystemParametersList = (val: SystemParameter[]) => { systemParametersList = val; };
+
+
+export interface DatabaseService {
+  getSystemParameters(): Promise<{ data: SystemParameter[] | null; error: any }>;
+  saveSystemParameter(param: { key: string; value: string }): Promise<{ data: any; error: any }>;
+  getLocalizedCourseTitle(course: any, lang: string): string;
+  getAllCourseCompletions(): Promise<{ data: any[]; error: any }>;
+  getTranslationEmails(): Promise<{ data: TranslationEmailNotification[]; error: any }>;
+  saveTranslationEmail(email: TranslationEmailNotification): Promise<{ data: TranslationEmailNotification; error: any }>;
+  deleteTranslationEmail(id: string): Promise<{ data: null; error: any }>;
+  cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: any }>;
+  getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: any }>;
+  saveLesson(lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }): Promise<{ data: any; error: any }>;
+  getSyllabus(id: string): Promise<{ data: MockCourse | null; error: any }>;
+  getAllCourses(): Promise<{ data: MockCourse[] | null; error: any }>;
+  getPipelineQueue(): Promise<{ data: any[]; error: any }>;
+  savePipelineQueue(queue: any[]): Promise<{ data: any[]; error: any }>;
+  getUsers(): Promise<{ data: UserProfile[] | null; error: any }>;
+  deleteUser(id: string): Promise<{ data: any; error: any }>;
+  toggleBlockUser(id: string): Promise<{ data: any; error: any }>;
+  updateUserRole(id: string, role: string): Promise<{ data: any; error: any }>;
+  hashPassword(password: string): string;
+  createUser(user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>): Promise<{ data: UserProfile | null; error: any }>;
+  getSiteStats(): Promise<{ data: any; error: any }>;
+  getUserProgress(userId: string, lang?: string): Promise<{ data: any; error: any }>;
+  enrollInCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
+  abandonCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
+  getReportClusters(): Promise<{ data: any[]; error: any }>;
+  approveClusterFix(id: string): Promise<{ data: any; error: any }>;
+  autoApproveAll(): Promise<{ data: any; error: any }>;
+  toggleCourseActiveStatus(courseId: number): Promise<{ data: any; error: any }>;
+  setCourseArchivingLevel(courseId: number, level: number): Promise<{ data: any; error: any }>;
+  toggleCourseLanguageArchived(courseId: number, lang: string): Promise<{ data: any; error: any }>;
+  archiveAllCourseLanguages(courseId: number, archive: boolean): Promise<{ data: any; error: any }>;
+  purgeCourse(courseId: number): Promise<{ data: any; error: any }>;
+  submitReport(course: string, page: string, comment: string): Promise<{ data: any; error: any }>;
+  getAvailableLanguages(): Promise<{ data: LanguageInfo[]; error: any }>;
+  getLanguagesAdmin(): Promise<{ data: LanguageInfo[]; error: any }>;
+  registerLanguage(lang: LanguageInfo): Promise<{ data: LanguageInfo; error: any }>;
+  setLanguageArchivingLevel(code: string, level: number): Promise<{ data: null; error: any }>;
+  deleteLanguage(code: string): Promise<{ data: null; error: any }>;
+  getAchievements(): Promise<{ data: Achievement[] | null; error: any }>;
+  saveAchievement(ach: Achievement): Promise<{ data: Achievement; error: any }>;
+  deleteAchievement(id: number): Promise<{ data: null; error: any }>;
+  getSearchHistory(): Promise<{ data: SearchHistoryEntry[] | null; error: any }>;
+  addSearchHistoryEntry(entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }): Promise<{ data: SearchHistoryEntry | null; error: any }>;
+  cleanupSearchHistory(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
+  getCourseFeedbacks(courseId?: string): Promise<{ data: CourseFeedback[]; error: any }>;
+  addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>): Promise<{ data: CourseFeedback | null; error: any }>;
+  cleanupCourseFeedbacks(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
+  addCourse(course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>): Promise<{ data: MockCourse; error: any }>;
+  saveCourse(course: any): Promise<{ data: MockCourse; error: any }>;
+  getTranslationRequests(): Promise<{ data: TranslationRequestEntry[]; error: any }>;
+  addTranslationRequest(entry: Omit<TranslationRequestEntry, 'id' | 'timestamp'>): Promise<{ data: TranslationRequestEntry; error: any }>;
+  purgeTranslationRequest(id: string): Promise<{ data: null; error: any }>;
+  cleanupTranslationRequests(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
+  getRefusedCourses(): Promise<{ data: RefusedCourseEntry[]; error: any }>;
+  addRefusedCourse(course: RefusedCourseEntry): Promise<{ data: RefusedCourseEntry; error: any }>;
+  deleteRefusedCourse(id: string): Promise<{ data: null; error: any }>;
+  getRefusedTranslations(): Promise<{ data: RefusedTranslationEntry[]; error: any }>;
+  addRefusedTranslation(trans: RefusedTranslationEntry): Promise<{ data: RefusedTranslationEntry; error: any }>;
+  deleteRefusedTranslation(id: string): Promise<{ data: null; error: any }>;
+  getRefusedRevisions(): Promise<{ data: RefusedRevisionEntry[]; error: any }>;
+  addRefusedRevision(rev: RefusedRevisionEntry): Promise<{ data: RefusedRevisionEntry; error: any }>;
+  deleteRefusedRevision(id: string): Promise<{ data: null; error: any }>;
+  getTutorPersonalities(): Promise<{ data: TutorPersonality[]; error: any }>;
+  saveTutorPersonality(pers: TutorPersonality): Promise<{ data: TutorPersonality; error: any }>;
+  deleteTutorPersonality(id: string): Promise<{ data: null; error: any }>;
+  getAgentMetrics(): Promise<{ data: AgentMetric[]; error: any }>;
+  deleteCourse(courseId: number): Promise<{ data: any; error: any }>;
+  getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
+  saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;
+}
+
+export function mockDatabaseProviderHash(password: string): string {
+  if (!password) return '';
+  const ch = (x: number, y: number, z: number): number => (x & y) ^ (~x & z);
+  const maj = (x: number, y: number, z: number): number => (x & y) ^ (x & z) ^ (y & z);
+  const sigma0 = (x: number): number => ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));
+  const sigma1 = (x: number): number => ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));
+  const gamma0 = (x: number): number => ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+  const gamma1 = (x: number): number => ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);
+
+  const k = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2ec16707, 0x36f577ee, 0x5a0f5275, 0x3070dd17,
+    0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
+    0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb,
+    0xbef9a3f7, 0xc67178f2, 0xca675699, 0xf1abb162, 0x85845dd1, 0xcf178267, 0xa3a948e3, 0xbfe33190,
+    0x0472507e, 0x08c7e2b2, 0x2f896e4b, 0x3070dd17, 0x4506ceb8, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+
+  const words: number[] = [];
+  const ascii = password;
+  const asciiLength = ascii.length;
+  for (let i = 0; i < asciiLength; i++) {
+    words[i >>> 2] |= (ascii.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
   }
-};
+  
+  const bitLength = asciiLength * 8;
+  words[bitLength >>> 5] |= 0x80 << (24 - (bitLength % 32));
+  
+  const totalBlocks = ((bitLength + 64 + 9) >>> 9) + 1;
+  const blockWordsCount = totalBlocks * 16;
+  while (words.length < blockWordsCount - 2) {
+    words.push(0);
+  }
+  words.push(0);
+  words.push(bitLength);
+
+  for (let i = 0; i < blockWordsCount; i += 16) {
+    const w = new Array(64);
+    for (let j = 0; j < 16; j++) {
+      w[j] = words[i + j] || 0;
+    }
+    for (let j = 16; j < 64; j++) {
+      w[j] = (gamma1(w[j - 2]) + w[j - 7] + gamma0(w[j - 15]) + w[j - 16]) | 0;
+    }
+
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+
+    for (let j = 0; j < 64; j++) {
+      const t1 = (h + sigma1(e) + ch(e, f, g) + k[j] + w[j]) | 0;
+      const t2 = (sigma0(a) + maj(a, b, c)) | 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + t1) | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (t1 + t2) | 0;
+    }
+
+    h0 = (h0 + a) | 0;
+    h1 = (h1 + b) | 0;
+    h2 = (h2 + c) | 0;
+    h3 = (h3 + d) | 0;
+    h4 = (h4 + e) | 0;
+    h5 = (h5 + f) | 0;
+    h6 = (h6 + g) | 0;
+    h7 = (h7 + h) | 0;
+  }
+
+  const toHex = (n: number): string => {
+    const s = (n >>> 0).toString(16);
+    return "00000000".substring(s.length) + s;
+  };
+
+  return toHex(h0) + toHex(h1) + toHex(h2) + toHex(h3) + toHex(h4) + toHex(h5) + toHex(h6) + toHex(h7);
+}
+
+import { mockDatabaseProvider } from './db/mock-provider';
+import { supabaseDatabaseProvider } from './db/supabase-provider';
+
+export const dbService: DatabaseService = (isDatabaseConfigured && !isOffline)
+  ? supabaseDatabaseProvider
+  : mockDatabaseProvider;
 
 export const progressService = {
   // Page visits
