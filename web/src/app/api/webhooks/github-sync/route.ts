@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import matter from 'gray-matter';
+import { pushToGitHub, deleteFromGitHub } from '../../../../lib/github';
 
 // Initialize Supabase admin client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -52,6 +53,48 @@ function incrementVersion(currentVersion: string | null | undefined): string {
   }
 
   return currentVersion + '-rev';
+}
+
+/**
+ * AI Pedagogical Guardrail & Security Validation
+ * Validates lesson file content for structural and academic integrity.
+ */
+function validatePedagogicalContent(content: string, fileName: string): { valid: boolean; reason?: string } {
+  // 1. Size Validation (prevent truncated files or single-word vandalism)
+  if (!content || content.trim().length < 150) {
+    return { valid: false, reason: 'Lesson content is too short (under 150 characters), likely truncated or empty.' };
+  }
+
+  // 2. MDX Frontmatter Integrity
+  try {
+    const parsed = matter(content);
+    if (!parsed.data || Object.keys(parsed.data).length === 0) {
+      return { valid: false, reason: 'Missing or malformed MDX frontmatter configuration blocks.' };
+    }
+  } catch (err: any) {
+    return { valid: false, reason: `Invalid YAML frontmatter block: ${err.message}` };
+  }
+
+  // 3. Security & Anti-Sabotage heuristics
+  const lowerContent = content.toLowerCase();
+  const forbiddenPatterns = [
+    '<script',
+    'javascript:',
+    'eval(',
+    'onclick=',
+    'onload=',
+    'dummypage',
+    'lorem ipsum',
+    'test test test'
+  ];
+
+  for (const pattern of forbiddenPatterns) {
+    if (lowerContent.includes(pattern)) {
+      return { valid: false, reason: `Suspicious code injection or low-quality placeholder pattern detected: "${pattern}".` };
+    }
+  }
+
+  return { valid: true };
 }
 
 export async function POST(req: NextRequest) {
@@ -124,7 +167,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Process File Modifications & Additions (Fetch & Upsert)
+    // 5. Process File Modifications & Additions (Fetch, Validate, Upsert / Self-Heal)
     const activeChanges = Array.from(new Set([...Array.from(addedFiles), ...Array.from(modifiedFiles)]));
     for (const file of activeChanges) {
       const parts = file.replace('content/', '').split('/');
@@ -154,7 +197,49 @@ export async function POST(req: NextRequest) {
 
           const fileContent = await response.text();
 
-          // Parse MDX frontmatter
+          // --- AI GOVERNANCE & SECURITY GUARDRAIL ---
+          const validation = validatePedagogicalContent(fileContent, fileName);
+          if (!validation.valid) {
+            const reason = validation.reason || 'Failed pedagogical guardrail rules.';
+            console.error(`🚨 AI Agent REJECTED revision for "${file}": ${reason}`);
+
+            // A. Log this rejected revision in Supabase for admin review
+            await supabase.from('refused_revisions').insert({
+              course: courseSlug,
+              issue_summary: reason,
+              ai_proposal: 'Clean validation rules failed. Reverting to database-validated version.',
+              status: 'Refused',
+              priority: 'High',
+              timestamp: new Date().toISOString()
+            });
+
+            // B. SECURITY SELF-HEALING: Query if we have previous clean content in Supabase
+            const { data: previousLesson } = await supabase
+              .from('lessons')
+              .select('content')
+              .match({ course_slug: courseSlug, lesson_slug: lessonSlug, lang: lang })
+              .single();
+
+            if (previousLesson && previousLesson.content) {
+              console.log(`🛡️ [Self-Healing] Restoring database-validated content for "${file}" on GitHub...`);
+              await pushToGitHub(
+                file,
+                previousLesson.content,
+                `revert(content): AI Agent restored last valid lesson contents [anti-sabotage self-healing]`
+              );
+            } else {
+              console.log(`🛡️ [Self-Healing] Deleting unverified malicious file "${file}" from GitHub...`);
+              await deleteFromGitHub(
+                file,
+                `revert(content): AI Agent removed unverified new lesson [anti-sabotage self-healing]`
+              );
+            }
+
+            // Skip updating Supabase database with this bad revision
+            continue;
+          }
+
+          // Parse MDX frontmatter (verified valid)
           const { data: frontmatter } = matter(fileContent);
           const title = frontmatter.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
 
