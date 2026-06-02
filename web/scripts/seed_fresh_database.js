@@ -584,6 +584,36 @@ async function main() {
         CONSTRAINT unique_user_course UNIQUE (user_id, course_id)
       );
 
+      CREATE TABLE IF NOT EXISTS public.translation_requests (
+        id SERIAL PRIMARY KEY,
+        course_name VARCHAR(255) NOT NULL,
+        source_lang VARCHAR(10) DEFAULT 'EN',
+        target_lang VARCHAR(10) NOT NULL,
+        requests_count INTEGER DEFAULT 1,
+        priority VARCHAR(50) DEFAULT 'Medium',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.course_feedbacks (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        is_treated BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.report_clusters (
+        id SERIAL PRIMARY KEY,
+        course VARCHAR(255) NOT NULL,
+        issue_summary TEXT,
+        count INTEGER DEFAULT 1,
+        status VARCHAR(50) DEFAULT 'Pending',
+        ai_proposal TEXT,
+        priority VARCHAR(50) DEFAULT 'Medium',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Apply RLS policies & permissions
       ALTER TABLE public.system_parameters ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to system_parameters" ON public.system_parameters;
@@ -605,6 +635,21 @@ async function main() {
       DROP POLICY IF EXISTS "Users can delete own progress" ON public.progress;
       CREATE POLICY "Users can delete own progress" ON public.progress FOR DELETE USING (auth.uid()::text = user_id OR user_id = 'u1');
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.progress TO public, anon, authenticated;
+
+      ALTER TABLE public.translation_requests ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to translation_requests" ON public.translation_requests;
+      CREATE POLICY "Allow all access to translation_requests" ON public.translation_requests FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.translation_requests TO public, anon, authenticated;
+
+      ALTER TABLE public.course_feedbacks ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to course_feedbacks" ON public.course_feedbacks;
+      CREATE POLICY "Allow all access to course_feedbacks" ON public.course_feedbacks FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.course_feedbacks TO public, anon, authenticated;
+
+      ALTER TABLE public.report_clusters ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to report_clusters" ON public.report_clusters;
+      CREATE POLICY "Allow all access to report_clusters" ON public.report_clusters FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.report_clusters TO public, anon, authenticated;
     `);
 
     // A. PURGE ALL TRANSACTIONAL AND PROGRESS DATA (Clean canvas, 0 courses completed)
@@ -619,7 +664,10 @@ async function main() {
         public.contact_feedbacks,
         public.site_stats,
         public.agent_metrics,
-        public.progress
+        public.progress,
+        public.translation_requests,
+        public.course_feedbacks,
+        public.report_clusters
       CASCADE;
     `);
     console.log("✅ Student progress, stats, and operational logs fully truncated.");

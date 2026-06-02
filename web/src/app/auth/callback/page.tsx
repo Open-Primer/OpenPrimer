@@ -77,9 +77,18 @@ export default function AuthCallbackPage() {
         localStorage.setItem("op_user_profile", JSON.stringify(activeProfile));
         localStorage.setItem("op_session", "true");
 
-        // Clear any old local storage state and redirect to catalog
+        // Clear any old local storage state and redirect to target path or catalog
         localStorage.removeItem("op_curriculum_enrolled");
-        router.push("/catalog");
+        
+        let targetPath = "/catalog";
+        if (typeof window !== "undefined") {
+          const sessionRedirect = sessionStorage.getItem("op_auth_redirect");
+          if (sessionRedirect) {
+            targetPath = sessionRedirect;
+            sessionStorage.removeItem("op_auth_redirect");
+          }
+        }
+        router.push(targetPath);
       } catch (err: any) {
         console.error("OAuth Authentication callback error:", err);
         setStatus("error");
