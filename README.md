@@ -100,11 +100,13 @@ OpenPrimer includes dedicated maintenance scripts in `web/scripts/` to ensure ro
 
 ---
 
-## 🤝 Contributing & Community
+## 🤝 Contributing & Documentation
 
-OpenPrimer is a **common good** built for the future of humanity.
-*   Interested in adding a curriculum or module? Check our [Contribution Guide](docs/CONTRIBUTING.md).
-*   Need to customize tutors or themes? Review the [Pedagogical Directives](docs/PEDAGOGY.md).
+OpenPrimer is a **common good** built for the future of humanity. Explore our master technical manuals for integration:
+*   **[Core Architecture & AI Ecosystem](docs/ARCHITECTURE.md)**: Deep dive into the multi-agent system, GitOps synchronization pipelines, and AI self-healing security.
+*   **[Infrastructure & Setup Guide](docs/SETUP_GUIDE.md)**: Step-by-step credentials configuration (OAuth, Supabase, Resend, Cloudflare R2) and mobile client building.
+*   **[Pedagogical Philosophy](docs/PEDAGOGY.md)**: Syllabus structure, ECTS mechanics, Bloom's 2-Sigma research, and Socratic/Feynman active coaching guides.
+*   **[Operational Handbook & Contributing](docs/OPERATIONS.md)**: Administrative Cockpit controls, token cost tracker limits, and open-source contribution code-styles.
 
 ## 📝 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Generated educational content is copyleft and intended to remain free, gratis, and accessible to every human being forever.

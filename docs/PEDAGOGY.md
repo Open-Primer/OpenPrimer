@@ -1,31 +1,52 @@
-# 🎓 OpenPrimer Pedagogical Manifesto
+# 🎓 OpenPrimer Pedagogical Philosophy & Curriculum Metrics
+## The Socratic AI Tutor, Feynman Analogies & Dynamic Syllabus Design
 
-OpenPrimer aims to provide world-class, autonomous, and deep education to anyone with a smartphone and a quiet place to study.
-
-## 🏛️ The 10 Pillars of Learning
-Every module must incorporate these elements to ensure active engagement:
-1. **Active Recall**: Integrated "Fill-In-The-Blanks" for text and figures.
-2. **Contextual Examples**: Real-world applications and industrial case studies.
-3. **Synthesis**: Structured summaries at the end of every section.
-4. **Reflective Thinking**: Open-ended questions and guided essays.
-5. **Practical Mastery**: Solved problems and step-by-step demonstrations.
-6. **Validation**: Comprehensive quizzes (10+ questions) per unit.
-7. **Multimedia Integration**: Curated and verified audio/video resources.
-8. **AI-Human Collaboration**: Interactive tutoring sessions for complex queries.
-9. **Experimental Exploration**: Virtual lab protocols and data manipulation.
-10. **Global Assessment**: Pre- and post-course self-evaluations.
-
-## 🧠 The Feynman Method
-Instruction must follow the Feynman principle:
-- **Simplify to Understand**: Use analogies and clear metaphors.
-- **Identify Gaps**: AI Curator must find weak logical links.
-- **Review and Refine**: Continuous iteration on content clarity.
-
-## ✍️ Instructional Tone & Style
-- **Persona**: A passionate university professor. Serious but engaging.
-- **Format**: Bold concepts, clear paragraphs, no academic "monologues".
-- **Zero AI Noise**: Content must feel written by a human expert. No "As an AI..." phrases.
-- **Language**: English-First (Scientific standard), then localized.
+This document details the pedagogical framework of OpenPrimer, including the Socratic method of our interactive tutor, learning heuristics, research notes, and syllabus metrics.
 
 ---
-*OpenPrimer Industrial Grade • Education for All*
+
+## 1. Core Pedagogical Heuristics
+
+OpenPrimer rejects simple slide-reading formats. The platform leverages two primary educational principles to achieve high student retention:
+
+### A. The Feynman Technique (Analogical Learning)
+Our **Synthesis Agent** drafts all course contents based on Richard Feynman's simplification technique:
+1.  **Deconstruction:** Demystifying highly abstract technical concepts (e.g. *Quantum Superposition*) using standard real-world analogies.
+2.  **Linguistic Clarity:** Removing complex terminology in introductory chapters, introducing concepts sequentially.
+3.  **Active Simulation:** Injecting React components directly into reading panes so students can manipulate vectors or examine code outputs dynamically as they read.
+
+### B. The Socratic Method (Guided Dialogue)
+The **AI Tutor Agent** operates as an interactive Socratic Guide. Unlike standard LLM assistants that immediately output direct solutions, our tutor:
+1.  **Never gives the direct answer:** When a student asks "What is the answer to question 3?", the tutor breaks the problem down.
+2.  **Asks guiding questions:** Encourages critical thinking by prompting: *"What would happen to the balance if we doubled the gravity?"* or *"Let's look at line 4 of the code snippet together. What is the value of variable `x` at that step?"*
+3.  **Adapts instructions dynamically:** If the student fails an assessment MCQ, the tutor analyzes the selected wrong choice and suggests tailored analogies to fill the specific knowledge gap.
+
+---
+
+## 2. ECTS & Curriculum Metrics Structure
+
+To align with official university curricula, each course inside OpenPrimer maps to strict academic metrics:
+
+*   **ECTS (European Credit Transfer System):** Each course yields a dynamic ECTS score (typically 2 to 6 credits) representing a standard study load.
+*   **Archiving Level / Status:**
+    *   `0`: Active course (fully available in browse catalog).
+    *   `1`: Archived Level 1.
+    *   `2`: Archived Level 2 (available only for enrolled students).
+    *   `3`: Archived Level 3 (deleted/suppressed).
+*   **Validation Threshold Metric:** Configurable passing metrics (default: 80% correct answers across module quizzes) required to unlock the canonical Course Badge.
+*   **Translations dictionary:** Courses contain a nested translations map (`translations?: Record<string, { title: string; description: string }>`) supporting localized browse cards in **EN**, **FR**, **ES**, **DE**, and **ZH**.
+
+---
+
+## 3. Academic Research Notes & Historical Context
+
+OpenPrimer draws heavily from modern cognitive science research regarding self-paced learning and LLM-assisted coaching:
+
+### A. The 2-Sigma Problem (Benjamin Bloom, 1984)
+*   **Context:** Bloom's research proved that an average student tutored one-on-one using mastery learning techniques performs **two standard deviations (2-Sigma)** better than students taught in standard classrooms.
+*   **OpenPrimer Implementation:** Our interactive Socratic sidebar is designed to approximate this private tutoring level at zero cost, scaling personalized master-level guidance to millions of global students.
+
+### B. Active Recalling & Spaced Repetition (Ebbinghaus Forgetting Curve)
+*   **Context:** Cognitive retention drops exponentially unless students actively recall concepts.
+*   **OpenPrimer Implementation:** We place assessments (MCQs and self-reflection prompts) directly inside course reading streams rather than consolidating them at the very end, forcing active retrieval cycles.
+*   **Milestones Telemetry:** When a student unlocks achievements (Badges), the Supabase database logs dynamic study logs, tracking student retention metrics to fine-tune active recall thresholds.

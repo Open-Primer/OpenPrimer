@@ -1,64 +1,154 @@
-# Technical Architecture of OpenPrimer
+# 🏛️ OpenPrimer Master Technical Architecture
+## Deep-Dive System Design, Multi-Agent AI Ecosystem & Self-Healing GitOps
 
-This document details the software infrastructure enabling the massive generation and distribution of knowledge.
+This document details the software infrastructure, database-decoupled local-first synchronization pipelines, multi-agent AI framework, and cryptographic self-healing governance systems that power the **OpenPrimer** academic repository.
 
-## 1. Content Factory (Python / Vertex AI)
-The generation pipeline follows an agentic flow powered by **LangChain**:
-1.  **Ingestion Agent**: Researches official syllabi and open-courseware resources.
-2.  **Synthesis Agent**: Drafts structured `.mdx` files by chapters.
-3.  **Quiz Agent**: Creates mini-quizzes and global tests based on content.
-4.  **Translation Agent**: Localizes the corpus into multiple languages.
+---
 
-## 2. Front-end (Next.js / Tailwind CSS)
-The user interface is optimized for reading and interaction:
-- **Dynamic Rendering**: `next-mdx-remote` to inject interactive React components into markdown.
-- **Context Engine**: Asynchronous delivery of active page content to the AI Tutor (Side Pane).
-- **Gamification**: Management of user state (KP, Levels, UVs) via LocalStorage or Supabase.
+## 1. Global Architectural Blueprint
 
-## 3. Vector Intelligence
-- **Embeddings**: Each module is transformed into vectors via Vertex AI Embeddings.
-- **Vector Search**: Semantic search and interactive "Knowledge Map" to link concepts across disciplines.
+OpenPrimer utilizes a hybrid decoupled system. The public GitHub repository serves as a permanent version-controlled source of truth for course syllabi (in MDX formats), while the Supabase PostgreSQL database acts as the high-availability state machine for active student sessions, analytics, and metadata.
 
-## 4. Revision Loop (Auto-Wiki)
-- **Feedback API**: Collection of user reports.
-- **Correction Agent**: Analyzes reports on the GCP VM and automatically updates MDX files on GitHub.
+```
+   ┌────────────────────────────────────────────────────────┐
+   │                PUBLIC GITHUB REPOSITORY                │
+   │            (/content folder, .mdx format)             │
+   └───────────────▲────────────────────────▲───────────────┘
+                   │                        │
+       [Step A: REST API (PUT/DEL)]         │ [Step B: Webhook PUSH]
+                   │                        │
+   ┌───────────────┴────────────────────────┴───────────────┐
+   │               NEXT.JS WEB APPLICATION                  │
+   │           (Hosted on Vercel, Free Tier)                │
+   └───────────────┬────────────────────────────────────────┘
+                   │
+                   ▼
+   ┌────────────────────────────────────────────────────────┐
+   │            SUPABASE & CLOUDFLARE R2 BUCKET             │
+   │      (Relational metadata & Object R2 Storage)         │
+   └────────────────────────────────────────────────────────┘
+```
 
-## 5. Curriculum Autonomy Engine & Governance Cockpit
-The OpenPrimer Curriculum Autonomy Engine represents a 100% query-driven governance console designed to recursively monitor search behaviors, localizations, and revisions without mock mockups:
-1. **Search History Autonomy (Tab 1)**: Computes course proposals dynamically from raw `dbService.getSearchHistory()` entries representing failed queries (`wasSuccessful: false`). If counts exceed the configured `courseThreshold` (or the distinct resuggested threshold for previously rejected items), the agent auto-promotes the course request into the pipeline queue.
-2. **Side-by-Side Translation Workspace (Tab 2)**: Triggers an elegant slide-over drawer showing original English content alongside translated AI drafts for dual-comparison.
-3. **AI Tutor Personality Controls (Tab 3)**: Integrates global tutor system instructions (Socratic Coach, Direct Synthesizer, Gamified Companion) and tracks real-time Vertex AI token usage and cost metrics.
-4. **Topology syllabus analysis (Tab 4)**: Includes a collapsible interactive topology viewer showing prerequisite dependencies.
-5. **AI Badge Icon Agent (Tab 6)**: Employs real-time keyword analysis (e.g. "streak" triggers Zap/Flame icons) and auto-compiles multi-language JSON translation dictionaries instantly. Enforces strict input validation to block zero or negative metrics thresholds.
-6. **Project Overview Metrics & Leaderboard**: Main `/admin` screen integrates a 28-day active study cohort heatmap and elite student leaderboard directly calculated from active local databases.
-7. **Granular Retention Sliders**: Retention settings are placed directly inside the tabs they affect (Tab 1 for search logs, Tab 2 for translations, Tab 3 for reports) to vacuum expired history.
+---
 
-## 6. Playwright E2E Validation Matrix
-E2E tests in `web/tests/admin_governance.spec.ts` execute real user simulation scenarios to guarantee database integrity:
-- **Identity CRUD**: Assures student profile creation, block toggles, and secure modal deletion.
-- **Autonomy Promotion**: Seeds failed search logs to force-trigger the agent's threshold evaluator, verifying reactive queue additions and cancel operations.
-- **Badge Bounds Safeguard**: Asserts input sanitization, dynamic Lucide selection, and force purging.
-- **Overview Mathematics**: Validates that calculated dashboard overview values match actual database counts.
+## 2. Dynamic Content Factory & Multi-Agent AI Ecosystem
 
-## 🧱 Folder Structure
+OpenPrimer deploys a coordinated team of autonomous AI agents designed to handle course generation, translation, correction, and student tutoring under LangChain-orchestrated pipelines.
+
+```mermaid
+graph TD
+    %% Nodes
+    A[Student / Admin Console] -->|1. Request / Failed Search| B[Autonomy Engine]
+    B -->|2. Automatic Promotion| C[Ingestion Agent]
+    C -->|3. Sources and Bibliography| D[Synthesis Agent]
+    D -->|4. Authored MDX Structure| E[Quiz Agent]
+    E -->|5. Complete Course + Assessments| F[Translation Agent]
+    F -->|6. Multi-language Versions| G[(Database / GitHub Repo)]
+    
+    G -->|7. Read & Interaction| H[AI Tutor Agent]
+    H -->|8. Selected Personality| I[Student]
+    
+    I -->|9. Feedback / Bug Report| J[Pedagogical Revision Agent]
+    J -->|10. Analysis & Proposed Patch| B
+    J -->|11. Approved Correction| G
+    
+    %% Styling
+    classDef default fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc;
+    classDef agent fill:#1e1b4b,stroke:#4f46e5,stroke-width:2px,color:#e0e7ff;
+    classDef user fill:#064e3b,stroke:#059669,stroke-width:2px,color:#ecfdf5;
+    
+    class B,C,D,E,F,H,J agent;
+    class A,I user;
+```
+
+### Precise Roles of AI Agents
+1.  **🗂️ Ingestion Agent:** Performs semantic search across verified scientific libraries (arXiv, bioRxiv, PubMed) to gather credible bibliographies and syllabus structures once a course is requested.
+2.  **📝 Synthesis Agent:** Computes structured course modules in `.mdx` formats. Employs Feynman analogy rules to simplify complex concepts and integrates interactive React JSX elements dynamically (plots, simulation windows).
+3.  **🎯 Quiz & Assessment Agent:** Analyzes raw course text and designs mini-quizzes and final exams with customized constructive feedback loops for wrong choices.
+4.  **🌐 Multi-Language Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, and **ZH** without altering mathematical LaTeX markup or React code blocks.
+5.  **🛠️ Pedagogical Revision Agent:** Monitors student feedback APIs, processes content error reports, and drafts automated corrective content updates.
+6.  **💬 Interactive Tutoring & Personalities Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode.
+7.  **⚖️ Curriculum Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
+
+---
+
+## 3. Sovereign Hybrid Authoring & Sync Scripts
+
+Developers and content creators can work offline locally in their favorite editor using file-based markdown. We provide synchronization scripts inside the `web/` workspace to bridge the local directory with Supabase:
+
+### A. Publishing Local MDX Files to Supabase
+```bash
+cd web
+npm run db:import-mdx
+```
+Traverses `/content`, extracts metadata using `gray-matter`, and upserts each file into the PostgreSQL `lessons` table (`ON CONFLICT DO UPDATE`).
+
+### B. Exporting Production Lessons to Local MDX Files
+```bash
+cd web
+npm run db:export-mdx
+```
+Queries the `lessons` table and reconstructs the correct nested hierarchy in `/content/[level]/[subject]/[courseSlug]/[lessonSlug].[lang].mdx`.
+
+### C. Large Seed Files Security (Git LFS)
+To prevent repository bloating from raw PostgreSQL backup scripts, the repository's `.gitattributes` tracks database seeds via **Git LFS (Large File Storage)**:
+```ini
+web/src/lib/supabase_seed.sql filter=lfs diff=lfs merge=lfs -text
+*.sql filter=lfs diff=lfs merge=lfs -text
+```
+
+---
+
+## 4. Webhook Sync, Cryptographic Guardrails & Self-Healing
+
+When files are committed directly to GitHub, a real-time webhook pipeline processes the change, runs AI validation checks, and automatically heals the repository if malicious or broken code is detected.
+
+```
+[Push Event on GitHub]
+          │
+          ▼
+[POST /api/webhooks/github-sync] (Validates HMAC SHA-256 Signature)
+          │
+          ▼
+[validatePedagogicalContent (Guardrail Checks)]
+          │
+      ┌───┴───────────────────────┐
+      ▼ (Non-Conforming)          ▼ (Approved Content)
+[AI Refusal & Self-Healing]    [Sync Database & Bump Course Version]
+      │                                   │
+      ├─> Log to refused_revisions        └─> Upsert Lesson to Supabase
+      │                                       Increment course version (+1)
+      └─> Revert Commit to GitHub
+          (Restaure last valid file)
+```
+
+### A. HMAC SHA-256 Webhook Verification
+The Next.js API route `/api/webhooks/github-sync` enforces strict signature matching using a secret shared key (`GITHUB_WEBHOOK_SECRET`). Unauthorized attempts receive a `401 Unauthorized` response immediately.
+
+### B. The Anti-Sabotage Validation Guardrail
+The pedagogical validation engine performs the following heuristic checks:
+*   **Truncation Guard:** Rejects files containing under 150 characters to prevent content erasure.
+*   **Structure Guard:** Parses frontmatter metadata to block corrupted files.
+*   **Malicious Injections:** Scans for forbidden patterns (`<script`, `eval(`, etc.) or dummy placeholders ("Lorem Ipsum").
+
+### C. Self-Healing Active Protection
+If a push contains malicious revisions, the engine **cancels database updates**, logs a high-priority report in `refused_revisions`, and triggers an immediate **Corrective Counter-Commit** on GitHub:
+*   *For existing files:* Overwrites the corrupted commit on GitHub with the clean validated content stored in Supabase.
+*   *For unverified new files:* Commits a deletion to instantly purge the file from the main branch.
+
+---
+
+## 🧱 Project Directory Tree
+
 ```
 OpenPrimer/
-├── content/          # MDX Knowledge Database
-├── generator/        # Generation Factory (Python)
-├── web/              # User Interface (Next.js)
-## 7. Cybersecurity, Session Safeguards & Global Theming
-* **API Gating & Prevent Footprinting**: The server health endpoint `/api/health` requires session verification (`x-admin-session` or `x-admin-token` headers) to prevent unauthorized footprinting of latency parameters and connection status. Safe bypasses are granted strictly in local development environments.
-* **Cockpit Authorization Redirects**: A layout-level session hook (`AdminLayout`) inspects student credentials. Unauthenticated requests targeting `/admin/*` are automatically blocked and redirected to `/login`.
-* **Hot-Swap Credentials persistence**: Sensitive keys (Supabase, Resend, Gemini) can be dynamic, browser-swapped dynamically without redeployments. Custom keys are transmitted via headers and preserved locally in client sandboxes.
-* **Global CSS Variables Theming**: A central, event-driven theme manager is loaded at the root. Swapping theme modes (Default Dark, Sepia Paper, Focus Black) dynamically adjusts CSS variables (`--background`, `--foreground`) on `:root` and updates the entire DOM tree (including the Admin Cockpit layouts) in real-time.
-
-## 🧱 Folder Structure
-```
-OpenPrimer/
-├── content/          # MDX Knowledge Database
-├── docs/             # Project Documentation
-├── generator/        # Generation Factory (Python)
-├── mobile/           # Mobile App Codebase
-├── tmp/              # Temporarily Ignored Files (Ignored via .gitignore)
-└── web/              # User Interface (Next.js)
+├── docs/             # Consolidated master technical manuals
+│   ├── ARCHITECTURE.md  # Core Architecture, Agents, & GitOps Sync
+│   ├── SETUP_GUIDE.md   # Deployment, Environment, R2 & Mobile config
+│   ├── PEDAGOGY.md      # Syllabus Metrics, Socratic & Feynman design
+│   └── OPERATIONS.md    # Operations, Cost management & Contributing
+├── content/          # Local MDX template files for authors
+├── generator/        # Ingestion & Synthesis core generators (Python)
+├── mobile/           # Mobile app client (React Native / Flutter)
+└── web/              # Primary Next.js Application Core
 ```
