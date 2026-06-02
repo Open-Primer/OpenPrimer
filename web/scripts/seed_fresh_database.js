@@ -786,20 +786,35 @@ async function main() {
       DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
       DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
 
-      -- Allow Vanguard Admin email access (vanguard.mysterious@gmail.com) via JWT claims
-      CREATE POLICY "Admins can read all profiles" ON public.profiles 
-        FOR SELECT 
-        USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+       -- Allow Vanguard Admin email access (vanguard.mysterious@gmail.com) via JWT claims
+       CREATE POLICY "Admins can read all profiles" ON public.profiles 
+         FOR SELECT 
+         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+ 
+       CREATE POLICY "Admins can update all profiles" ON public.profiles 
+         FOR UPDATE 
+         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+ 
+       CREATE POLICY "Admins can delete profiles" ON public.profiles 
+         FOR DELETE 
+         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
 
-      CREATE POLICY "Admins can update all profiles" ON public.profiles 
-        FOR UPDATE 
-        USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+       -- Allow users to read, update, insert, delete their own profiles
+       DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+       CREATE POLICY "Users can read own profile" ON public.profiles FOR SELECT USING (true);
 
-      CREATE POLICY "Admins can delete profiles" ON public.profiles 
-        FOR DELETE 
-        USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
-    `);
-    console.log("✅ Administrative RLS policies successfully applied.");
+       DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+       CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid()::text = id);
+
+       DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+       CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid()::text = id);
+
+       DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
+       CREATE POLICY "Users can delete own profile" ON public.profiles FOR DELETE USING (auth.uid()::text = id);
+
+       GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO public, anon, authenticated;
+     `);
+     console.log("✅ Administrative and user RLS policies successfully applied.");
 
     // H. SEED SITE STATS AND AGENT METRICS
     console.log("\n🌱 Seeding Site Stats and Agent Metrics (Zeroed for Pristine Launch)...");

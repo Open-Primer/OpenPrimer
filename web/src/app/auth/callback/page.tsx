@@ -74,9 +74,14 @@ export default function AuthCallbackPage() {
         }
 
         // Save session locally to hydrate user experience instantly
+        if (activeProfile && activeProfile.name) {
+          const parts = activeProfile.name.split(' ');
+          activeProfile.firstName = parts[0] || "";
+          activeProfile.lastName = parts.slice(1).join(' ') || "";
+        }
         localStorage.setItem("op_user_profile", JSON.stringify(activeProfile));
         localStorage.setItem("op_session", "true");
-
+ 
         // Clear any old local storage state and redirect to target path or catalog
         localStorage.removeItem("op_curriculum_enrolled");
         

@@ -1446,6 +1446,29 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     }, 100);
   };
 
+  const handleLogout = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("SignOut error:", e);
+    }
+    localStorage.removeItem('op_session');
+    localStorage.removeItem('op_user_profile');
+    setIsLoggedIn(false);
+    triggerToast(t.signout);
+    
+    if (typeof window !== 'undefined') {
+      const privilegedPaths = ['/profile', '/admin'];
+      const isPrivileged = privilegedPaths.some(p => window.location.pathname.startsWith(p));
+      if (isPrivileged) {
+        window.location.href = '/';
+      } else {
+        window.location.reload();
+      }
+    }
+  };
+
   const triggerToast = (msg: string) => {
     setShowToast(msg);
     setTimeout(() => setShowToast(null), 3000);
@@ -1597,7 +1620,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     
                     <div className="h-px bg-slate-800/50 my-1" />
                     
-                    <button onClick={() => { localStorage.setItem('op_session', 'false'); setIsLoggedIn(false); triggerToast(t.signout); window.location.reload(); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                       <LogOut className="w-4 h-4" /> {t.signout}
                     </button>
                 </motion.div>
