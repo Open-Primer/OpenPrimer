@@ -533,6 +533,31 @@ async function main() {
     await pgClient.connect();
     console.log("🔌 Connected to PostgreSQL Database owner successfully.");
 
+    // 0. ENSURE SITE STATS AND AGENT METRICS TABLES EXIST
+    console.log("🛠️ Guaranteeing 'site_stats' and 'agent_metrics' tables exist...");
+    await pgClient.query(`
+      CREATE TABLE IF NOT EXISTS public.site_stats (
+        id SERIAL PRIMARY KEY,
+        total_students INTEGER DEFAULT 0,
+        validation_rate NUMERIC(5, 2) DEFAULT 0.00,
+        total_course_visits INTEGER DEFAULT 0,
+        platform_rating VARCHAR(50) DEFAULT '0.0/5'
+      );
+
+      CREATE TABLE IF NOT EXISTS public.agent_metrics (
+        id VARCHAR(100) PRIMARY KEY,
+        name_en VARCHAR(255) NOT NULL,
+        name_fr VARCHAR(255) NOT NULL,
+        name_es VARCHAR(255) DEFAULT '',
+        name_de VARCHAR(255) DEFAULT '',
+        name_zh VARCHAR(255) DEFAULT '',
+        total_cost NUMERIC(10, 2) DEFAULT 0.00,
+        rolling_30_days_cost NUMERIC(10, 2) DEFAULT 0.00,
+        requests INTEGER DEFAULT 0,
+        avg_response_time VARCHAR(50) DEFAULT '0ms'
+      );
+    `);
+
     // A. PURGE ALL TRANSACTIONAL AND PROGRESS DATA (Clean canvas, 0 courses completed)
     console.log("🗑️ Truncating active student and course data (completions, courses, queues, logs, feedbacks)...");
     await pgClient.query(`
@@ -542,10 +567,12 @@ async function main() {
         public.achievements,
         public.task_queue, 
         public.search_logs, 
-        public.contact_feedbacks 
+        public.contact_feedbacks,
+        public.site_stats,
+        public.agent_metrics
       CASCADE;
     `);
-    console.log("✅ Student progress and operational logs fully truncated.");
+    console.log("✅ Student progress, stats, and operational logs fully truncated.");
 
     // B. PURGE ALL AUTH ACCOUNTS
     console.log("🗑️ Purging Supabase Auth accounts...");
@@ -676,9 +703,43 @@ async function main() {
     `);
     console.log("✅ Administrative RLS policies successfully applied.");
 
+    // H. SEED SITE STATS AND AGENT METRICS
+    console.log("\n🌱 Seeding Site Stats and Agent Metrics...");
+    await pgClient.query(`
+      INSERT INTO public.site_stats (id, total_students, validation_rate, total_course_visits, platform_rating)
+      VALUES (1, 10, 80.00, 150, '4.8/5')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO public.agent_metrics (id, name_en, name_fr, name_es, name_de, name_zh, total_cost, rolling_30_days_cost, requests, avg_response_time)
+      VALUES 
+        ('generation', 'Course Generation Agent', 'Agent de Génération de Cursus', 'Agente de Generación de Cursos', 'Kursgenerierungs-Agent', '课程生成智能体', 245.80, 48.50, 820, '1420ms'),
+        ('translation', 'Translation Agent', 'Agent de Traduction Multi-Langues', 'Agente de Traducción Multilingüe', 'Übersetzungs-Agent', '翻译智能体', 188.40, 32.10, 1240, '890ms'),
+        ('revision', 'Pedagogical Revision Agent', 'Agent de Révision Pédagogique', 'Agente de Revisión Pedagógica', 'Pädagogischer Revisions-Agent', '教学修订智能体', 98.20, 15.60, 450, '1120ms'),
+        ('tutor', 'AI Tutor Agent & Personalities', 'Agent de Tutorat IA & Personnalités', 'Agente de Tutoría IA y Personalidades', 'KI-Tutor-Agent & Persönlichkeiten', 'AI 智能体 with Personality', 312.50, 64.20, 3420, '580ms')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Apply RLS and permissions
+      ALTER TABLE public.site_stats ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow public read access to site_stats" ON public.site_stats;
+      CREATE POLICY "Allow public read access to site_stats" ON public.site_stats FOR SELECT USING (true);
+      DROP POLICY IF EXISTS "Allow all access to site_stats" ON public.site_stats;
+      CREATE POLICY "Allow all access to site_stats" ON public.site_stats FOR ALL USING (true) WITH CHECK (true);
+
+      ALTER TABLE public.agent_metrics ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow public read access to agent_metrics" ON public.agent_metrics;
+      CREATE POLICY "Allow public read access to agent_metrics" ON public.agent_metrics FOR SELECT USING (true);
+      DROP POLICY IF EXISTS "Allow all access to agent_metrics" ON public.agent_metrics;
+      CREATE POLICY "Allow all access to agent_metrics" ON public.agent_metrics FOR ALL USING (true) WITH CHECK (true);
+
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.site_stats TO public, anon, authenticated;
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.agent_metrics TO public, anon, authenticated;
+      GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO public, anon, authenticated;
+    `);
+    console.log("✅ Site stats and agent metrics seeded and secured.");
+
     console.log("\n=============================================");
     console.log("   🎉 Clean Seed Operation Completed!        ");
-    console.log("=============================================\n");
+    console.log("\n=============================================");
 
   } catch (error) {
     console.error("Fatal Error during setup & seed process:", error.message);
