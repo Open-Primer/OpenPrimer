@@ -482,7 +482,13 @@ export const CatalogPage = () => {
     return labels[key]?.[l] || labels[key]?.EN || '';
   };
   const [subjectFilter, setSubjectFilter] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Initialize from URL immediately so ?search= params work on first render
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('search') || '';
+    }
+    return '';
+  });
 
   // Synchronize searchQuery to URL search parameters in real-time
   useEffect(() => {
@@ -1017,7 +1023,7 @@ export const CatalogPage = () => {
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading ? (
+          {isLoading || (courses.length > 0 && filteredCourses.length === 0 && !searchQuery.trim() && subjectFilter === 'All' && !showNewOnly && filterType === 'All') ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">

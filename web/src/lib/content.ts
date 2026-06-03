@@ -175,12 +175,37 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
     const lessonSlug = slug[3] || 'introduction';
     try {
       const { dbService } = require('./db');
+      // 1. Try exact language match
       const { data: dbLesson } = await dbService.getLesson(courseSlug, lessonSlug, lang);
       if (dbLesson) {
         const { data: meta, content: bodyContent } = matter(dbLesson.content);
         return {
           meta: {
             title: dbLesson.title || meta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            subject: meta.subject || slug[1],
+            level: meta.level || slug[0],
+            module: meta.module || "Core Module"
+          },
+          content: bodyContent
+        };
+      }
+
+      // 2. Fallback: lesson exists in DB but in a different language — fetch any available lang
+      const { supabase } = require('./supabase');
+      const { data: fallbackLesson } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('course_slug', courseSlug)
+        .eq('lesson_slug', lessonSlug)
+        .limit(1)
+        .single();
+
+      if (fallbackLesson) {
+        console.log(`[Page Content DB] Falling back to lang '${fallbackLesson.lang}' for ${courseSlug}/${lessonSlug} (requested: ${lang})`);
+        const { data: meta, content: bodyContent } = matter(fallbackLesson.content);
+        return {
+          meta: {
+            title: fallbackLesson.title || meta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
             subject: meta.subject || slug[1],
             level: meta.level || slug[0],
             module: meta.module || "Core Module"
@@ -336,6 +361,40 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
 }
 
 export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
+  // 1. Check the DB lessons table first (handles DB-only courses like 'revolution')
+  if (slug.length >= 3) {
+    const courseSlug = slug[2];
+    const lessonSlug = slug[3] || 'introduction';
+    try {
+      const { supabase } = require('./supabase');
+      const { data: dbLesson } = await supabase
+        .from('lessons')
+        .select('lang')
+        .eq('course_slug', courseSlug)
+        .eq('lesson_slug', lessonSlug)
+        .limit(1)
+        .single();
+      if (dbLesson?.lang) {
+        console.log(`[getFirstAvailableLanguage] Found lang '${dbLesson.lang}' in DB for ${courseSlug}/${lessonSlug}`);
+        return dbLesson.lang;
+      }
+      // Also try any lesson for this course if lesson-specific slug not found
+      const { data: anyLesson } = await supabase
+        .from('lessons')
+        .select('lang')
+        .eq('course_slug', courseSlug)
+        .limit(1)
+        .single();
+      if (anyLesson?.lang) {
+        console.log(`[getFirstAvailableLanguage] Found lang '${anyLesson.lang}' in DB for course ${courseSlug}`);
+        return anyLesson.lang;
+      }
+    } catch (err) {
+      // DB lookup failed — fall through to filesystem
+    }
+  }
+
+  // 2. Filesystem fallback (for MDX-based courses)
   let baseFilePath = path.join(CONTENT_PATH, ...slug);
   let dirPath = path.dirname(baseFilePath);
   let baseName = path.basename(baseFilePath);

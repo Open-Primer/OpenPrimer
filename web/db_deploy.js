@@ -80,6 +80,9 @@ async function run() {
       "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
       "ALTER TABLE public.languages ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password VARCHAR(255)",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_volume NUMERIC(3, 2) DEFAULT 1.00",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_rate NUMERIC(3, 2) DEFAULT 1.00",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_voice VARCHAR(255) DEFAULT ''",
       "UPDATE public.profiles SET password = '3ba484af8a5fe572560ac841e91b77c9ddb8d6a2f6d9cd203975b8dc16e7fabc' WHERE email = 'vanguard.mysterious@gmail.com'"
     ];
 
