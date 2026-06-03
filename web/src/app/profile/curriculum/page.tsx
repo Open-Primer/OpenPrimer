@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
 import * as Icons from 'lucide-react';
-import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy } from 'lucide-react';
+import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
@@ -335,6 +335,12 @@ export default function CurriculumPage() {
     focus: "bg-black text-slate-400 font-sans"
   };
 
+  const hasCoursesInOtherLangs = progress?.activeModules ? progress.activeModules.some((course: any) => {
+    const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
+    if (!courseDetails || !courseDetails.languages || courseDetails.languages.length === 0) return false;
+    return !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
+  }) : false;
+
   return (
     <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>
       <TopNav showReadingModeSelector={true} />
@@ -347,6 +353,31 @@ export default function CurriculumPage() {
           <h1 className="text-5xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{t.my_curriculum}</h1>
           <p className="text-slate-500 mt-4 font-medium">{t.curriculum_overview}</p>
         </header>
+
+        {hasCoursesInOtherLangs && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-6 bg-gradient-to-br from-amber-600/10 via-slate-900/40 to-slate-955 border border-amber-500/20 rounded-[32px] relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <Globe className="w-24 h-24 text-amber-400" />
+            </div>
+            <div className="flex gap-4 items-start relative z-10">
+              <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center text-amber-500 shrink-0">
+                <Globe className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">
+                  {t.curriculum_lang_warning_title}
+                </h4>
+                <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                  {t.curriculum_lang_warning_desc.replace('{lang}', lang.toUpperCase())}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* AI PEDAGOGICAL SUMMARY */}
         {progress.activeModules && progress.activeModules.length > 0 && (
@@ -453,8 +484,18 @@ export default function CurriculumPage() {
         )}
 
         {(() => {
-          const activeCourses = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
-          const completedCourses = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
+          const activeCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
+          const completedCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
+
+          const activeCourses = activeCoursesAll.filter((course: any) => {
+            const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
+            return !courseDetails || !courseDetails.languages || courseDetails.languages.length === 0 || courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
+          });
+
+          const completedCourses = completedCoursesAll.filter((course: any) => {
+            const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
+            return !courseDetails || !courseDetails.languages || courseDetails.languages.length === 0 || courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
+          });
 
           return (
             <>
@@ -842,46 +883,56 @@ export default function CurriculumPage() {
           })()}
 
         {/* ACHIEVEMENTS GALLERY */}
-        {achievements.length > 0 && (
-          <section className="mt-20">
-             <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
-                <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {t.achievements_gallery}
-             </h2>
-             {achievements.filter(ach => earnedIds.includes(ach.id)).length > 0 ? (
-               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                 {achievements.filter(ach => earnedIds.includes(ach.id)).map((ach) => {
-                   const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
-                   const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
+        {(() => {
+          const earnedAchievements = achievements.filter(ach => earnedIds.includes(ach.id));
+          const filteredAchievements = earnedAchievements.filter(ach => {
+            if (lang.toUpperCase() === 'EN') return true;
+            return !!ach.translations?.[lang.toUpperCase()]?.name || !!ach.translations?.[lang.toUpperCase()]?.description;
+          });
 
-                   return (
-                     <div 
-                       key={ach.id}
-                       className="p-6 border rounded-[32px] flex flex-col items-center text-center transition-all bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5"
-                     >
-                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
-                         <IconComponent className="w-6 h-6" />
+          if (earnedAchievements.length === 0) return null;
+
+          return (
+            <section className="mt-20">
+               <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-amber-500">
+                  <Trophy className="w-6 h-6 text-amber-500 animate-bounce" /> {t.achievements_gallery}
+               </h2>
+               {filteredAchievements.length > 0 ? (
+                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                   {filteredAchievements.map((ach) => {
+                     const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
+                     const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
+
+                     return (
+                       <div 
+                         key={ach.id}
+                         className="p-6 border rounded-[32px] flex flex-col items-center text-center transition-all bg-slate-900/50 border-blue-500/30 shadow-xl shadow-blue-500/5"
+                       >
+                         <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                           <IconComponent className="w-6 h-6" />
+                         </div>
+                         <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
+                         <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
+                         <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
+                           {t.unlocked}
+                         </span>
                        </div>
-                       <h4 className="text-sm font-black text-slate-200 mb-1 line-clamp-1">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h4>
-                       <p className="text-[10px] text-slate-500 mb-3 leading-tight line-clamp-2">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
-                       <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400">
-                         {t.unlocked}
-                       </span>
-                     </div>
-                   );
-                 })}
-               </div>
-             ) : (
-               <div className="p-10 border rounded-[32px] flex flex-col items-center text-center bg-slate-900/25 border-blue-500/15 shadow-xl shadow-blue-500/5">
-                 <div className="w-16 h-16 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-400 mb-4 shadow-inner">
-                   <Trophy className="w-8 h-8 opacity-30" />
+                     );
+                   })}
                  </div>
-                 <p className="text-xs font-semibold text-slate-400 max-w-md leading-relaxed">
-                   {(t as any).no_achievements_earned}
-                 </p>
-               </div>
-             )}
-          </section>
-        )}
+               ) : (
+                 <div className="p-10 border rounded-[32px] flex flex-col items-center text-center bg-slate-900/25 border-blue-500/15 shadow-xl shadow-blue-500/5">
+                   <div className="w-16 h-16 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-400 mb-4 shadow-inner">
+                     <Trophy className="w-8 h-8 opacity-30" />
+                   </div>
+                   <p className="text-xs font-semibold text-slate-400 max-w-md leading-relaxed">
+                     {(t as any).no_achievements_earned}
+                   </p>
+                 </div>
+               )}
+            </section>
+          );
+        })()}
       </div>
 
       {/* INTERMEDIATE CURRICULUM DRILL-DOWN MODAL */}

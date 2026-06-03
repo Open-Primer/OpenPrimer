@@ -68,7 +68,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         });
       });
 
-      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_sandbox_mode') !== 'true';
+      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_allow_sandbox') !== 'true';
       let dbProgress = 12;
       let dbVisited: string[] = [];
 
@@ -155,6 +155,11 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         <input
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && searchQuery.trim()) {
+              window.location.href = `/catalog?search=${encodeURIComponent(searchQuery.trim())}`;
+            }
+          }}
           placeholder={t.search_course || 'Search this course...'}
           className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-4 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
         />
@@ -165,6 +170,14 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
+        )}
+        {searchQuery.trim() && (
+          <p className="mt-1.5 text-[9px] text-slate-700 font-bold uppercase tracking-widest px-1">
+            {lang.toUpperCase() === 'FR' ? '↵ Entrée pour chercher dans le catalogue' :
+             lang.toUpperCase() === 'ES' ? '↵ Enter para buscar en el catálogo' :
+             lang.toUpperCase() === 'DE' ? '↵ Enter um im Katalog zu suchen' :
+             '↵ Enter to search catalog'}
+          </p>
         )}
       </div>
 

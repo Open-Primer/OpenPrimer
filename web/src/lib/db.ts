@@ -104,7 +104,7 @@ export interface UserProfile {
   password?: string;
   audioVolume?: number;
   audioRate?: number;
-  audioVoice?: string;
+  audioVoiceId?: string;
 }
 
 export interface TutorPersonality {
@@ -2187,7 +2187,7 @@ export interface DatabaseService {
   deleteCourse(courseId: number): Promise<{ data: any; error: any }>;
   getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
   saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;
-  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoice?: string }): Promise<{ data: any; error: any }>;
+  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string }): Promise<{ data: any; error: any }>;
 }
 
 export function mockDatabaseProviderHash(password: string): string {
@@ -2784,4 +2784,10 @@ export const progressService = {
   }
 };
 
-// EXPOSE TO WINDOW FOR PLAYWRIGHT E2E TE
+// EXPOSE TO WINDOW FOR PLAYWRIGHT E2E TESTING
+if (typeof window !== 'undefined') {
+  (window as any).dbService = dbService;
+  (window as any).progressService = progressService;
+}
+
+

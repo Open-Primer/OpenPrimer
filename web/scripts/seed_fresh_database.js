@@ -543,8 +543,8 @@ async function main() {
       const userId = authData.user.id;
       console.log(`Seeding DB profile for: ${userId} (${acc.role})`);
       await pgClient.query(`
-        INSERT INTO public.profiles (id, name, email, role, level, kp, is_email_verified, is_blocked, favorites, tutor_choice)
-        VALUES ($1, $2, $3, $4, 1, 0, true, false, '{}', 'socratic')
+        INSERT INTO public.profiles (id, name, email, role, level, kp, is_email_verified, is_blocked, favorites, tutor_choice, audio_volume, audio_rate, audio_voice_id)
+        VALUES ($1, $2, $3, $4, 1, 0, true, false, '{}', 'socratic', 1.00, 1.00, '')
       `, [userId, acc.name, acc.email, acc.role]);
 
       console.log(`âœ… Seeded account: ${acc.email}`);

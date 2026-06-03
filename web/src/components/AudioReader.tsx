@@ -52,23 +52,148 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     selectedVoiceRef.current = selectedVoice;
   }, [isPlaying, isPaused, rate, volume, selectedVoice]);
 
-  // 1. Check support and load voices
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string }) => {
+    if (typeof window === 'undefined') return;
+    const loggedIn = localStorage.getItem('op_session');
+    const savedProfile = localStorage.getItem('op_user_profile');
+    
+    // Always update local storage first so offline/anonymous users still have preferences saved
+    if (savedProfile) {
+      try {
+        const p = JSON.parse(savedProfile);
+        if (updates.volume !== undefined) p.audioVolume = updates.volume;
+        if (updates.rate !== undefined) p.audioRate = updates.rate;
+        if (updates.voiceId !== undefined) p.audioVoiceId = updates.voiceId;
+        localStorage.setItem('op_user_profile', JSON.stringify(p));
+      } catch (e) {}
+    }
+
+    if (!loggedIn || !savedProfile) return;
+
+    try {
+      const p = JSON.parse(savedProfile);
+      const userId = p.id;
+      if (!userId) return;
+
+      // Debounce database sync
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      syncTimeoutRef.current = setTimeout(async () => {
+        const { dbService } = await import('@/lib/db');
+        const dbUpdates = {} as any;
+        if (updates.volume !== undefined) dbUpdates.audioVolume = updates.volume;
+        if (updates.rate !== undefined) dbUpdates.audioRate = updates.rate;
+        if (updates.voiceId !== undefined) dbUpdates.audioVoiceId = updates.voiceId;
+
+        const { error } = await dbService.updateUserSettings(userId, dbUpdates);
+        if (error) {
+          console.warn("[Cloud Sync] Failed to update audio settings:", error.message);
+        } else {
+          console.log("[Cloud Sync] Audio settings synchronized:", dbUpdates);
+        }
+      }, 1000);
+    } catch (e) {
+      console.error("[Cloud Sync] Error updating audio settings:", e);
+    }
+  };
+
+  // 1. Check support, load preferences and load voices
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window === 'undefined') return;
+
+    // Load initial state from local storage first (prevent layout flash)
+    const savedProfile = localStorage.getItem('op_user_profile');
+    let loadedVolume = 1.0;
+    let loadedRate = 1.0;
+    let savedVoiceId: string | null = null;
+    if (savedProfile) {
+      try {
+        const p = JSON.parse(savedProfile);
+        if (p.audioVolume !== undefined) {
+          loadedVolume = Number(p.audioVolume);
+          setVolume(loadedVolume);
+          setLastVolume(loadedVolume || 1.0);
+        }
+        if (p.audioRate !== undefined) {
+          loadedRate = Number(p.audioRate);
+          setRate(loadedRate);
+        }
+        if (p.audioVoiceId) {
+          savedVoiceId = p.audioVoiceId;
+        }
+      } catch (err) {}
+    }
+
+    // Try loading latest profile preferences from Supabase if connected
+    const loggedIn = localStorage.getItem('op_session');
+    if (loggedIn && savedProfile) {
+      try {
+        const p = JSON.parse(savedProfile);
+        const userId = p.id;
+        if (userId) {
+          import('@/lib/db').then(async ({ dbService }) => {
+            const { data, error } = await dbService.getUsers();
+            if (data && !error) {
+              const currentUser = data.find((u: any) => u.id === userId);
+              if (currentUser) {
+                let updated = false;
+                if (currentUser.audioVolume !== undefined && currentUser.audioVolume !== null) {
+                  const vol = Number(currentUser.audioVolume);
+                  setVolume(vol);
+                  setLastVolume(vol || 1.0);
+                  p.audioVolume = vol;
+                  loadedVolume = vol;
+                  updated = true;
+                }
+                if (currentUser.audioRate !== undefined && currentUser.audioRate !== null) {
+                  const r = Number(currentUser.audioRate);
+                  setRate(r);
+                  p.audioRate = r;
+                  loadedRate = r;
+                  updated = true;
+                }
+                if (currentUser.audioVoiceId) {
+                  p.audioVoiceId = currentUser.audioVoiceId;
+                  savedVoiceId = currentUser.audioVoiceId;
+                  updated = true;
+                }
+                if (updated) {
+                  localStorage.setItem('op_user_profile', JSON.stringify(p));
+                  // Try to match the voice now that it is resolved
+                  if (synthRef.current) {
+                    const availableVoices = window.speechSynthesis.getVoices();
+                    const matched = availableVoices.find(v => v.name === savedVoiceId);
+                    if (matched) {
+                      setSelectedVoice(matched);
+                    }
+                  }
+                }
+              }
+            }
+          }).catch(e => console.warn("[AudioReader] Offline fallback mode enabled for preferences:", e));
+        }
+      } catch (err) {}
+    }
+
+    if ('speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
       
       const loadVoices = () => {
         const availableVoices = window.speechSynthesis.getVoices();
         setVoices(availableVoices);
         
-        // Find a default voice matching the active language
-        const targetLang = (lang || 'EN').toLowerCase();
-        const matchingVoice = availableVoices.find(v => 
-          v.lang.toLowerCase().startsWith(targetLang) || 
-          (targetLang === 'en' && v.lang.toLowerCase().startsWith('en'))
-        ) || availableVoices[0];
-        
-        setSelectedVoice(matchingVoice || null);
+        let matchedVoice = availableVoices.find(v => v.name === savedVoiceId);
+        if (!matchedVoice) {
+          const targetLang = (lang || 'EN').toLowerCase();
+          matchedVoice = availableVoices.find(v => 
+            v.lang.toLowerCase().startsWith(targetLang) || 
+            (targetLang === 'en' && v.lang.toLowerCase().startsWith('en'))
+          ) || availableVoices[0];
+        }
+        setSelectedVoice(matchedVoice || null);
       };
 
       loadVoices();
@@ -82,6 +207,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     return () => {
       if (synthRef.current) {
         synthRef.current.cancel();
+      }
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
       }
     };
   }, [lang]);
@@ -508,6 +636,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                       if (isPlaying && !isPaused && utteranceRef.current) {
                         utteranceRef.current.volume = v;
                       }
+                      saveSettingsToCloud({ volume: v });
                     }}
                     className="accent-blue-500 cursor-pointer focus:outline-none"
                     style={{
@@ -524,12 +653,17 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                 </div>
                 <button
                   onClick={() => {
+                    let nextVolume = 0;
                     if (volume > 0) {
                       setLastVolume(volume);
                       setVolume(0);
+                      nextVolume = 0;
                     } else {
-                      setVolume(lastVolume || 1.0);
+                      const vol = lastVolume || 1.0;
+                      setVolume(vol);
+                      nextVolume = vol;
                     }
+                    saveSettingsToCloud({ volume: nextVolume });
                   }}
                   className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors"
                   title="Mute"
@@ -549,6 +683,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
               if (isPlaying && !isPaused && currentSentenceIndex >= 0) {
                 speakSentence(currentSentenceIndex);
               }
+              saveSettingsToCloud({ rate: r });
             }}
             className="bg-transparent text-[10px] font-bold text-slate-300 hover:text-white border-none focus:outline-none focus:ring-0 cursor-pointer p-0 pr-3"
             aria-label="Reading speed"
@@ -592,6 +727,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                           if (isPlaying && !isPaused && currentSentenceIndex >= 0) {
                             speakSentence(currentSentenceIndex, match);
                           }
+                          saveSettingsToCloud({ voiceId: match.name });
                         }
                       }}
                       className="w-full bg-slate-950 border border-slate-800 text-slate-200 p-1.5 rounded-lg text-[9px] focus:ring-1 focus:ring-blue-500 focus:outline-none"

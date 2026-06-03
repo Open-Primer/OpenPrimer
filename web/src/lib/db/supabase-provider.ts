@@ -287,7 +287,10 @@ export const supabaseDatabaseProvider: DatabaseService = {
         aiCoachMessage: u.ai_coach_message ?? u.aiCoachMessage ?? '',
         preferredLang: u.preferred_lang ?? u.preferredLang ?? 'EN',
         readingMode: u.reading_mode ?? u.readingMode ?? 'default',
-        password: u.password
+        password: u.password,
+        audioVolume: u.audio_volume != null ? Number(u.audio_volume) : undefined,
+        audioRate: u.audio_rate != null ? Number(u.audio_rate) : undefined,
+        audioVoiceId: u.audio_voice_id ?? undefined
       }));
       return { data: mapped, error: null };
     } catch (e) {
@@ -1274,6 +1277,27 @@ export const supabaseDatabaseProvider: DatabaseService = {
         message: data.message,
         timestamp: data.created_at
       }, error };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
+  },
+
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string }) => {
+    try {
+      const updates = {} as any;
+      if (settings.audioVolume !== undefined) updates.audio_volume = settings.audioVolume;
+      if (settings.audioRate !== undefined) updates.audio_rate = settings.audioRate;
+      if (settings.audioVoiceId !== undefined) updates.audio_voice_id = settings.audioVoiceId;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return { data, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: null, error: e as any };

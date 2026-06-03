@@ -563,7 +563,7 @@ export const CatalogPage = () => {
   // only falls back to localStorage when explicitly in sandbox mode.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const isSandbox = localStorage.getItem('op_sandbox_mode') === 'true';
+    const isSandbox = localStorage.getItem('op_allow_sandbox') === 'true';
     if (isSandbox) {
       const saved = localStorage.getItem('op_enrolled_courses');
       try {
@@ -639,7 +639,7 @@ export const CatalogPage = () => {
           setCourses(data);
         }
         // Only fetch progress in production (Supabase configured) and not sandbox
-        const isSandbox = typeof window !== 'undefined' && localStorage.getItem('op_sandbox_mode') === 'true';
+        const isSandbox = typeof window !== 'undefined' && localStorage.getItem('op_allow_sandbox') === 'true';
         if (isDatabaseConfigured && !isSandbox) {
           let userId = 'u1';
           if (typeof window !== 'undefined') {
@@ -849,7 +849,8 @@ export const CatalogPage = () => {
     }
     if (c.is_active === false) return false;
     
-    const matchesLang = !!(c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()));
+    // If languages is empty/null, the course is treated as language-agnostic (visible in all languages)
+    const matchesLang = !c.languages || c.languages.length === 0 || !!(c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()));
     const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
     

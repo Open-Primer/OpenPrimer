@@ -963,5 +963,21 @@ export const mockDatabaseProvider: DatabaseService = {
     setContactFeedbacksList(list);
     setLocalStorageItem('openprimer_contact_feedbacks', list);
     return { data: newFb, error: null };
+  },
+
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string }) => {
+    const list = getUsers().map(u => {
+      if (u.id === id) {
+        const updated = { ...u };
+        if (settings.audioVolume !== undefined) updated.audioVolume = settings.audioVolume;
+        if (settings.audioRate !== undefined) updated.audioRate = settings.audioRate;
+        if (settings.audioVoiceId !== undefined) updated.audioVoiceId = settings.audioVoiceId;
+        return updated;
+      }
+      return u;
+    });
+    setUsersList(list);
+    setLocalStorageItem('openprimer_users', list);
+    return { data: null, error: null };
   }
 };
