@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { 
   History, MessageSquare, ShieldCheck, Zap, ChevronRight, CheckCircle, 
@@ -2881,6 +2881,8 @@ export default function AdminCurriculumPage() {
 
   // Double-Safeguard Target Modals
   const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
+  const triggeredTaskIds = useRef<Set<string>>(new Set());
+  const [errorDetailsTarget, setErrorDetailsTarget] = useState<any | null>(null);
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
   const [courseArchiveTarget, setCourseArchiveTarget] = useState<any | null>(null);
   const [curriculumArchivalPending, setCurriculumArchivalPending] = useState<{ course: any; nextLevel: number; parentCurricula: any[] } | null>(null);
@@ -3358,145 +3360,186 @@ export default function AdminCurriculumPage() {
       const runningTask = queue.find(t => t.status === 'running');
       
       if (runningTask) {
-        // Increment progress of currently running task
-        const nextProgress = Math.min(100, (runningTask.progress || 0) + 20);
-        const updated = queue.map(t => {
-          if (t.id === runningTask.id) {
-            return {
-              ...t,
-              progress: nextProgress,
-              status: nextProgress >= 100 ? 'complete' : 'running',
-              ...(nextProgress >= 100 ? { completedAt: new Date().toISOString() } : {})
-            };
-          }
-          return t;
-        });
+        // Increment progress of currently running task up to 90% while waiting for API response
+        const nextProgress = Math.min(90, (runningTask.progress || 0) + 10);
+        if (nextProgress !== runningTask.progress) {
+          const updated = queue.map(t => {
+            if (t.id === runningTask.id) {
+              return { ...t, progress: nextProgress };
+            }
+            return t;
+          });
+          setQueue(updated);
+          dbService.savePipelineQueue(updated);
+        }
 
-        // If task completed, perform actions!
-        if (nextProgress >= 100) {
-          if (runningTask.type === 'generation') {
+        // Trigger API Call only once per running task
+        if (!triggeredTaskIds.current.has(runningTask.id)) {
+          triggeredTaskIds.current.add(runningTask.id);
+
+          (async () => {
             const taskLang = (runningTask.targetLang || lang || 'EN').toUpperCase();
-            // Call real generation API
-            fetch('/api/content/generate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'generation',
-                name: runningTask.title,
-                level: runningTask.level || 'L1',
-                targetLang: taskLang.toLowerCase()
-              })
-            }).catch(e => console.error("Generation API call failed:", e));
-
-            const newId = `crs_${Date.now()}`;
-            await dbService.saveCourse({
-              id: newId,
-              title: runningTask.title,
-              slug: (() => {
-                const asciiClean = runningTask.title
-                  .normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "")
-                  .toLowerCase()
-                  .replace(/[^a-z0-9\s_-]/g, '')
-                  .trim()
-                  .replace(/\s+/g, '_');
-                return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
-                  ? asciiClean
-                  : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
-              })(),
-              subject: runningTask.subject || 'General',
-              description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
-              level: runningTask.level || 'L1',
-              archivingLevel: 0,
-              badge: 'badge_1',
-              modulesCount: 5,
-              lessonsCount: 20,
-              is_active: true,
-              languages: [taskLang.toLowerCase()],
-              langs: [taskLang],
-              translations: {
-                [taskLang]: {
-                  title: runningTask.title,
-                  description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`
-                }
-              }
-            });
-          } else if (runningTask.type === 'translation') {
-            // Find target language from format "Course Title (LANG)"
-            const matches = runningTask.title.match(/(.*)\s*\(([^)]+)\)$/);
-            if (matches && matches[1] && matches[2]) {
-              const cTitle = matches[1].trim();
-              const langCode = matches[2].trim().toUpperCase();
-              
-              // Seed translation for this course title
-              const allCrs = await dbService.getAllCourses();
-              const foundCourse = allCrs.data?.find(c => c.title.toLowerCase() === cTitle.toLowerCase());
-              if (foundCourse) {
-                // Call real translation API
-                fetch('/api/content/generate', {
+            try {
+              if (runningTask.type === 'generation') {
+                const res = await fetch('/api/content/generate', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    type: 'translation',
-                    courseSlug: foundCourse.slug,
-                    targetLang: langCode.toLowerCase()
+                    type: 'generation',
+                    name: runningTask.title,
+                    level: runningTask.level || 'L1',
+                    targetLang: taskLang.toLowerCase()
                   })
-                }).catch(e => console.error("Translation API call failed:", e));
-
-                const updatedTranslations = { ...(foundCourse.translations || {}) };
-                updatedTranslations[langCode] = {
-                  title: `${foundCourse.title} [${langCode}]`,
-                  description: `${foundCourse.description} (Translated to ${langCode})`
-                };
-
-                // Add target language to course languages/langs lists without duplicates
-                const originalLanguages = foundCourse.languages || [];
-                const updatedLanguages = originalLanguages.includes(langCode.toLowerCase())
-                  ? originalLanguages
-                  : [...originalLanguages, langCode.toLowerCase()];
-
-                const originalLangsUpper = foundCourse.langs || [];
-                const updatedLangsUpper = originalLangsUpper.includes(langCode.toUpperCase())
-                  ? originalLangsUpper
-                  : [...originalLangsUpper, langCode.toUpperCase()];
-
-                await dbService.saveCourse({
-                  ...foundCourse,
-                  languages: updatedLanguages,
-                  langs: updatedLangsUpper,
-                  translations: updatedTranslations
                 });
+                
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                  throw new Error(data.error || 'Generation failed');
+                }
 
-                // Auto-Trigger Student Notification Emails upon dynamic deployment
-                // User requirement: send email to people who asked for it, retain logs for 90 days.
-                const studentEmails = [
-                  'student.gen@openprimer.org',
-                  'researcher.transl@openprimer.org',
-                  'learner.active@openprimer.edu'
-                ];
-                for (const email of studentEmails) {
-                  await dbService.saveTranslationEmail({
-                    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                    courseTitle: foundCourse.title,
-                    targetLang: langCode,
-                    email,
-                    timestamp: new Date().toISOString()
-                  });
+                const newId = `crs_${Date.now()}`;
+                await dbService.saveCourse({
+                  id: newId,
+                  title: runningTask.title,
+                  slug: (() => {
+                    const asciiClean = runningTask.title
+                      .normalize("NFD")
+                      .replace(/[\u0300-\u036f]/g, "")
+                      .toLowerCase()
+                      .replace(/[^a-z0-9\s_-]/g, '')
+                      .trim()
+                      .replace(/\s+/g, '_');
+                    return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
+                      ? asciiClean
+                      : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
+                  })(),
+                  subject: runningTask.subject || 'General',
+                  description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+                  level: runningTask.level || 'L1',
+                  archivingLevel: 0,
+                  badge: 'badge_1',
+                  modulesCount: 5,
+                  lessonsCount: 20,
+                  is_active: true,
+                  languages: [taskLang.toLowerCase()],
+                  langs: [taskLang],
+                  translations: {
+                    [taskLang]: {
+                      title: runningTask.title,
+                      description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`
+                    }
+                  }
+                });
+              } else if (runningTask.type === 'translation') {
+                const matches = runningTask.title.match(/(.*)\s*\(([^)]+)\)$/);
+                if (matches && matches[1] && matches[2]) {
+                  const cTitle = matches[1].trim();
+                  const langCode = matches[2].trim().toUpperCase();
+                  
+                  const allCrs = await dbService.getAllCourses();
+                  const foundCourse = allCrs.data?.find(c => c.title.toLowerCase() === cTitle.toLowerCase());
+                  if (foundCourse) {
+                    const res = await fetch('/api/content/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        type: 'translation',
+                        courseSlug: foundCourse.slug,
+                        targetLang: langCode.toLowerCase()
+                      })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                      throw new Error(data.error || 'Translation failed');
+                    }
+
+                    const updatedTranslations = { ...(foundCourse.translations || {}) };
+                    updatedTranslations[langCode] = {
+                      title: `${foundCourse.title} [${langCode}]`,
+                      description: `${foundCourse.description} (Translated to ${langCode})`
+                    };
+
+                    const originalLanguages = foundCourse.languages || [];
+                    const updatedLanguages = originalLanguages.includes(langCode.toLowerCase())
+                      ? originalLanguages
+                      : [...originalLanguages, langCode.toLowerCase()];
+
+                    const originalLangsUpper = foundCourse.langs || [];
+                    const updatedLangsUpper = originalLangsUpper.includes(langCode.toUpperCase())
+                      ? originalLangsUpper
+                      : [...originalLangsUpper, langCode.toUpperCase()];
+
+                    await dbService.saveCourse({
+                      ...foundCourse,
+                      languages: updatedLanguages,
+                      langs: updatedLangsUpper,
+                      translations: updatedTranslations
+                    });
+
+                    const studentEmails = [
+                      'student.gen@openprimer.org',
+                      'researcher.transl@openprimer.org',
+                      'learner.active@openprimer.edu'
+                    ];
+                    for (const email of studentEmails) {
+                      await dbService.saveTranslationEmail({
+                        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        courseTitle: foundCourse.title,
+                        targetLang: langCode,
+                        email,
+                        timestamp: new Date().toISOString()
+                      });
+                    }
+                  }
                 }
               }
-            }
-          }
-        }
 
-        setQueue(updated);
-        dbService.savePipelineQueue(updated).then(() => loadData());
+              // Update state to completed
+              setQueue(prevQueue => {
+                const updated = prevQueue.map(t => {
+                  if (t.id === runningTask.id) {
+                    return {
+                      ...t,
+                      status: 'complete',
+                      progress: 100,
+                      completedAt: new Date().toISOString(),
+                      logs: [...(t.logs || []), 'Successfully completed generation.']
+                    };
+                  }
+                  return t;
+                });
+                dbService.savePipelineQueue(updated).then(() => loadData());
+                return updated;
+              });
+              showToast(tr("Course generated successfully!"), "success");
+            } catch (err: any) {
+              console.error("Task failed:", err);
+              setQueue(prevQueue => {
+                const updated = prevQueue.map(t => {
+                  if (t.id === runningTask.id) {
+                    return {
+                      ...t,
+                      status: 'failed',
+                      progress: 0,
+                      logs: [...(t.logs || []), `Error: ${err.message || String(err)}`]
+                    };
+                  }
+                  return t;
+                });
+                dbService.savePipelineQueue(updated).then(() => loadData());
+                return updated;
+              });
+              showToast(`Task execution failed: ${err.message || String(err)}`, "error");
+            }
+          })();
+        }
       } else {
         // No task is currently running, select the next queued task by descending priority
         const queuedTasks = queue.filter(t => t.status === 'queued');
         if (queuedTasks.length > 0) {
           const priorityWeight = { High: 3, Medium: 2, Low: 1 };
           
-          // Sort by priority weight descending, then timestamp ascending (oldest first)
           const sortedQueued = [...queuedTasks].sort((a, b) => {
             const weightA = priorityWeight[a.priority as keyof typeof priorityWeight] || 2;
             const weightB = priorityWeight[b.priority as keyof typeof priorityWeight] || 2;
@@ -4313,6 +4356,26 @@ export default function AdminCurriculumPage() {
       });
     }
     await loadData();
+  };
+  
+  // Queue Retry Handler
+  const handleRetryTask = async (id: string) => {
+    const updated = queue.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          status: 'queued',
+          progress: 0,
+          logs: [...(t.logs || []), 'Retried task execution manually.']
+        };
+      }
+      return t;
+    });
+    setQueue(updated);
+    triggeredTaskIds.current.delete(id);
+    await dbService.savePipelineQueue(updated);
+    await loadData();
+    showToast(tr("Task queued for retry."), "success");
   };
 
   // Queue Pause/Resume Handler
@@ -6482,9 +6545,29 @@ export default function AdminCurriculumPage() {
                                       );
                                     })()
                                   ) : task.status === 'failed' ? (
-                                    <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none">
-                                      {tr('Failed')}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none">
+                                        {tr('Failed')}
+                                      </span>
+                                      <button 
+                                        onClick={() => setErrorDetailsTarget(task)}
+                                        className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                      >
+                                        {tr('Logs')}
+                                      </button>
+                                      <button 
+                                        onClick={() => handleRetryTask(task.id)}
+                                        className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-emerald-500/20 text-slate-500 hover:text-emerald-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                      >
+                                        {tr('Retry')}
+                                      </button>
+                                      <button 
+                                        onClick={() => setCancelTaskTarget(task)}
+                                        className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                      >
+                                        {tr('Cancel')}
+                                      </button>
+                                    </div>
                                   ) : (
                                     <>
                                       {isPaused ? (
@@ -7480,6 +7563,76 @@ export default function AdminCurriculumPage() {
                    </>
                  );
                })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ERROR DETAILS POPUP MODAL */}
+      <AnimatePresence>
+        {errorDetailsTarget && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setErrorDetailsTarget(null)}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.95 }} 
+              className="relative z-10 w-full max-w-2xl bg-slate-900 border border-amber-500/30 rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-850 bg-amber-955/20 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-amber-500 animate-pulse" />
+                  <h3 className="text-lg font-black text-amber-400 uppercase tracking-widest">
+                    {tr("Task Error Logs")}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setErrorDetailsTarget(null)}
+                  className="w-8 h-8 rounded-full border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-10 space-y-6">
+                <div className="space-y-2">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Task Title")}</h4>
+                  <p className="text-sm font-semibold text-slate-200">{errorDetailsTarget.title}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Error Stack & Logs")}</h4>
+                  <div className="p-6 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-red-400 max-h-60 overflow-y-auto leading-relaxed whitespace-pre-wrap">
+                    {Array.isArray(errorDetailsTarget.logs) && errorDetailsTarget.logs.length > 0 
+                      ? errorDetailsTarget.logs.join('\n') 
+                      : errorDetailsTarget.logs || tr("No log information recorded.")}
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 pt-2">
+                  <button 
+                    onClick={() => setErrorDetailsTarget(null)}
+                    className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                  >
+                    {tr("Close")}
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      const id = errorDetailsTarget.id;
+                      setErrorDetailsTarget(null);
+                      await handleRetryTask(id);
+                    }}
+                    className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/10 cursor-pointer"
+                  >
+                    {tr("Retry Task")}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

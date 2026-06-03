@@ -207,6 +207,14 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: null };
   },
 
+  updateUserPassword: async (id: string, password: string) => {
+    const hashedPassword = mockDatabaseProvider.hashPassword(password);
+    const list = getUsers().map(u => u.id === id ? { ...u, password: hashedPassword } : u);
+    setUsersList(list);
+    setLocalStorageItem('openprimer_users', list);
+    return { data: null, error: null };
+  },
+
   hashPassword: (password: string): string => {
     return mockDatabaseProviderHash(password);
   },

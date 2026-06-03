@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
-import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save } from 'lucide-react';
+import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save, EyeOff, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { Eye, Volume2, Keyboard, Brain as BrainIcon } from 'lucide-react';
+import { PasswordRequirements } from '@/components/PasswordRequirements';
 
 const ACCESSIBILITY_GUIDE = {
   EN: {
@@ -179,6 +180,74 @@ const ACC_TRANSLATIONS = {
   }
 };
 
+const PWD_TRANSLATIONS = {
+  EN: {
+    section_title: "Change Password",
+    current_password: "Current Password",
+    new_password: "New Password",
+    confirm_new_password: "Confirm New Password",
+    update_password: "Update Password",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "Password updated successfully!",
+    mismatch_error: "Current password verification failed.",
+    complexity_error: "Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.",
+    match_error: "New passwords do not match.",
+    all_fields: "Please fill in all password fields."
+  },
+  FR: {
+    section_title: "Modifier le Mot de Passe",
+    current_password: "Mot de passe actuel",
+    new_password: "Nouveau mot de passe",
+    confirm_new_password: "Confirmer le nouveau mot de passe",
+    update_password: "Mettre à jour le mot de passe",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "Mot de passe mis à jour avec succès !",
+    mismatch_error: "La vérification du mot de passe actuel a échoué.",
+    complexity_error: "Le mot de passe doit contenir au moins 12 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.",
+    match_error: "Les nouveaux mots de passe ne correspondent pas.",
+    all_fields: "Veuillez remplir tous les champs de mot de passe."
+  },
+  ES: {
+    section_title: "Cambiar Contraseña",
+    current_password: "Contraseña actual",
+    new_password: "Nueva contraseña",
+    confirm_new_password: "Confirmar nueva contraseña",
+    update_password: "Actualizar contraseña",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "¡Contraseña actualizada con éxito!",
+    mismatch_error: "Falló la verificación de la contraseña actual.",
+    complexity_error: "La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
+    match_error: "Las nuevas contraseñas no coinciden.",
+    all_fields: "Por favor, rellene todos los campos de contraseña."
+  },
+  DE: {
+    section_title: "Passwort ändern",
+    current_password: "Aktuelles Passwort",
+    new_password: "Neues Passwort",
+    confirm_new_password: "Neues Passwort bestätigen",
+    update_password: "Passwort aktualisieren",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "Passwort erfolgreich aktualisiert!",
+    mismatch_error: "Die Überprüfung des aktuellen Passworts ist fehlgeschlagen.",
+    complexity_error: "Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
+    match_error: "Die neuen Passwörter stimmen nicht überein.",
+    all_fields: "Bitte füllen Sie alle Passwortfelder aus."
+  },
+  ZH: {
+    section_title: "修改密码",
+    current_password: "当前密码",
+    new_password: "新密码",
+    confirm_new_password: "确认新密码",
+    update_password: "更新密码",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "密码更新成功！",
+    mismatch_error: "当前密码验证失败。",
+    complexity_error: "密码长度必须至少为 12 个字符，且必须包含大小写字母、数字及特殊字符。",
+    match_error: "新密码不匹配。",
+    all_fields: "请填写所有密码字段。"
+  }
+};
+
 export default function ProfileSettingsPage() {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
@@ -199,6 +268,17 @@ export default function ProfileSettingsPage() {
   const [dyslexiaFriendly, setDyslexiaFriendly] = useState(false);
   const [fineVisualControls, setFineVisualControls] = useState(false);
   const [colorblindTheme, setColorblindTheme] = useState('none');
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdSuccess, setPwdSuccess] = useState<string | null>(null);
+  const [pwdLoading, setPwdLoading] = useState(false);
 
   // Helper for real-time accessibility sync to Supabase (table profiles)
   const syncAccessibilityToCloud = async (updates: {
@@ -377,6 +457,71 @@ export default function ProfileSettingsPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(null);
+    setPwdSuccess(null);
+
+    const pt = PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS] || PWD_TRANSLATIONS.EN;
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPwdError(pt.all_fields);
+      return;
+    }
+
+    // Complexity check for new password
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setPwdError(pt.complexity_error);
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPwdError(pt.match_error);
+      return;
+    }
+
+    setPwdLoading(true);
+
+    try {
+      // Find the matched user in db to check current password
+      const { data: userList } = await dbService.getUsers();
+      const matchedUser = userList?.find((u: any) => u.email.toLowerCase() === user.email.toLowerCase()) as any;
+
+      if (!matchedUser) {
+        setPwdError(pt.mismatch_error);
+        setPwdLoading(false);
+        return;
+      }
+
+      // Check current password (hash comparison)
+      const inputHash = dbService.hashPassword(currentPassword);
+      const expectedPassword = matchedUser.password || '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80';
+      const isCorrect = expectedPassword === inputHash || expectedPassword === currentPassword;
+
+      if (!isCorrect) {
+        setPwdError(pt.mismatch_error);
+        setPwdLoading(false);
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await dbService.updateUserPassword(matchedUser.id, newPassword);
+      if (updateError) {
+        setPwdError(updateError.message || "Failed to update password.");
+      } else {
+        setPwdSuccess(pt.success_msg);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch (err: any) {
+      setPwdError(err.message || "An unexpected error occurred.");
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
   const modeStyles = {
     dark: "bg-slate-950 text-white font-sans",
     default: "bg-slate-950 text-white font-sans",
@@ -467,6 +612,126 @@ export default function ProfileSettingsPage() {
                  </div>
               </form>
            </section>
+
+           {/* CHANGE PASSWORD */}
+            <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl">
+               <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-3">
+                  <Lock className="w-4 h-4" /> {PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.section_title || PWD_TRANSLATIONS.EN.section_title}
+               </h3>
+               
+               <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                  {pwdError && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-semibold tracking-wide flex items-center gap-3">
+                      <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
+                      <span>{pwdError}</span>
+                    </div>
+                  )}
+
+                  {pwdSuccess && (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-xs font-semibold tracking-wide flex items-center gap-3">
+                      <CheckCircle className="w-4.5 h-4.5 shrink-0" />
+                      <span>{pwdSuccess}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">
+                        {PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.current_password || PWD_TRANSLATIONS.EN.current_password}
+                     </label>
+                     <div className="relative">
+                        <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
+                        <input 
+                          id="current-password-input"
+                          type={showCurrentPassword ? "text" : "password"} 
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder={PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.pwd_placeholder || PWD_TRANSLATIONS.EN.pwd_placeholder}
+                          className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 pl-12 pr-12 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-700" 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors"
+                        >
+                          {showCurrentPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                        </button>
+                     </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">
+                           {PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.new_password || PWD_TRANSLATIONS.EN.new_password}
+                        </label>
+                        <div className="relative">
+                           <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
+                           <input 
+                             id="new-password-input"
+                             type={showNewPassword ? "text" : "password"} 
+                             value={newPassword}
+                             onChange={(e) => setNewPassword(e.target.value)}
+                             onFocus={() => setIsNewPasswordFocused(true)}
+                             placeholder={PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.pwd_placeholder || PWD_TRANSLATIONS.EN.pwd_placeholder}
+                             className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 pl-12 pr-12 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-700" 
+                           />
+                           <button
+                             type="button"
+                             onClick={() => setShowNewPassword(!showNewPassword)}
+                             className="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors"
+                           >
+                             {showNewPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                           </button>
+                        </div>
+                     </div>
+
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">
+                           {PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.confirm_new_password || PWD_TRANSLATIONS.EN.confirm_new_password}
+                        </label>
+                        <div className="relative">
+                           <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
+                           <input 
+                             id="confirm-password-input"
+                             type={showConfirmNewPassword ? "text" : "password"} 
+                             value={confirmNewPassword}
+                             onChange={(e) => setConfirmNewPassword(e.target.value)}
+                             placeholder={PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.pwd_placeholder || PWD_TRANSLATIONS.EN.pwd_placeholder}
+                             className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 pl-12 pr-12 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-700" 
+                           />
+                           <button
+                             type="button"
+                             onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                             className="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors"
+                           >
+                             {showConfirmNewPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                           </button>
+                        </div>
+                     </div>
+                  </div>
+
+                  {(isNewPasswordFocused || newPassword.length > 0) && (
+                     <div className="p-6 bg-slate-950/40 border border-slate-850 rounded-3xl mt-4">
+                        <PasswordRequirements 
+                          password={newPassword} 
+                          confirmPassword={confirmNewPassword} 
+                          lang={lang}
+                        />
+                     </div>
+                  )}
+
+                  <div className="pt-4 flex justify-end">
+                     <button 
+                       id="update-password-btn"
+                       type="submit" 
+                       disabled={pwdLoading}
+                       className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20"
+                     >
+                        <Save className="w-4 h-4" /> 
+                        {pwdLoading ? "..." : (PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.update_password || PWD_TRANSLATIONS.EN.update_password)}
+                     </button>
+                  </div>
+               </form>
+            </section>
 
            {/* ACTIVE ACCESSIBILITY CONFIGURATION */}
             <section className="p-10 bg-slate-900/40 border border-slate-800 rounded-[48px] backdrop-blur-3xl shadow-2xl mb-8">

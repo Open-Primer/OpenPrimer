@@ -62,77 +62,92 @@ export async function GET(request: Request) {
       }
 
       // 3. Process task types
-      if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
-        logs.push(`[TRANSLATOR] Triggering real academic translation via Gemini 1.5 Flash JIT...`);
-        const targetLang = (nextTask.targetLang || 'fr').toLowerCase();
-        const courseSlug = nextTask.target || nextTask.description?.toLowerCase().replace(/ /g, '_') || '';
-        
-        const { translateCourseContent } = require('@/lib/ai');
-        await translateCourseContent(courseSlug, targetLang);
-        
-        const allCrs = await dbService.getAllCourses();
-        const foundCourse = allCrs.data?.find(c => c.slug === courseSlug);
-        if (foundCourse) {
-          const originalLanguages = foundCourse.languages || [];
-          const updatedLanguages = originalLanguages.includes(targetLang)
-            ? originalLanguages
-            : [...originalLanguages, targetLang];
+      try {
+        if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
+          logs.push(`[TRANSLATOR] Triggering real academic translation via Gemini 1.5 Flash JIT...`);
+          const targetLang = (nextTask.targetLang || 'fr').toLowerCase();
+          const courseSlug = nextTask.target || nextTask.description?.toLowerCase().replace(/ /g, '_') || '';
+          
+          const { translateCourseContent } = require('@/lib/ai');
+          await translateCourseContent(courseSlug, targetLang);
+          
+          const allCrs = await dbService.getAllCourses();
+          const foundCourse = allCrs.data?.find(c => c.slug === courseSlug);
+          if (foundCourse) {
+            const originalLanguages = foundCourse.languages || [];
+            const updatedLanguages = originalLanguages.includes(targetLang)
+              ? originalLanguages
+              : [...originalLanguages, targetLang];
 
-          const originalLangsUpper = foundCourse.langs || [];
-          const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
-            ? originalLangsUpper
-            : [...originalLangsUpper, targetLang.toUpperCase()];
+            const originalLangsUpper = foundCourse.langs || [];
+            const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
+              ? originalLangsUpper
+              : [...originalLangsUpper, targetLang.toUpperCase()];
 
+            await dbService.saveCourse({
+              ...foundCourse,
+              languages: updatedLanguages,
+              langs: updatedLangsUpper
+            });
+          }
+        } else {
+          logs.push(`[GENERATOR] Triggering real AI lesson generation via Gemini 1.5 Flash...`);
+          const { generateCourseContent } = require('@/lib/ai');
+          let extra: any = {};
+          try {
+            extra = JSON.parse(nextTask.description || '{}');
+          } catch (e) {
+            console.error("Failed to parse task description JSON in cron route:", e);
+          }
+          const level = extra.level || nextTask.level || 'Beginner';
+          const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
+          const subject = extra.subject || 'General';
+          
+          await generateCourseContent(nextTask.name, level, targetLang);
+          
+          const newId = `crs_${Date.now()}`;
+          const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
           await dbService.saveCourse({
-            ...foundCourse,
-            languages: updatedLanguages,
-            langs: updatedLangsUpper
+            id: newId,
+            title: nextTask.name,
+            slug: slug,
+            subject: subject,
+            description: `Dynamic sovereign course on "${nextTask.name}". Synthesized autonomously by Gemini 1.5 Pro.`,
+            level: level,
+            archivingLevel: 0,
+            is_active: true,
+            languages: [targetLang],
+            langs: [targetLang.toUpperCase()]
           });
         }
-      } else {
-        logs.push(`[GENERATOR] Triggering real AI lesson generation via Gemini 1.5 Flash...`);
-        const { generateCourseContent } = require('@/lib/ai');
-        let extra: any = {};
-        try {
-          extra = JSON.parse(nextTask.description || '{}');
-        } catch (e) {
-          console.error("Failed to parse task description JSON in cron route:", e);
-        }
-        const level = extra.level || nextTask.level || 'Beginner';
-        const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
-        const subject = extra.subject || 'General';
-        
-        await generateCourseContent(nextTask.name, level, targetLang);
-        
-        const newId = `crs_${Date.now()}`;
-        const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
-        await dbService.saveCourse({
-          id: newId,
-          title: nextTask.name,
-          slug: slug,
-          subject: subject,
-          description: `Dynamic sovereign course on "${nextTask.name}". Synthesized autonomously by Gemini 1.5 Pro.`,
-          level: level,
-          archivingLevel: 0,
-          is_active: true,
-          languages: [targetLang],
-          langs: [targetLang.toUpperCase()]
-        });
-      }
 
-      // Mark task as completed
-      if (!isOffline) {
-        await supabase
-          .from('task_queue')
-          .update({ 
-            status: 'completed', 
-            progress: 100, 
-            logs: [...(nextTask.logs || []), 'Successfully completed course content generation.'] 
-          })
-          .eq('id', nextTask.id);
+        // Mark task as completed
+        if (!isOffline) {
+          await supabase
+            .from('task_queue')
+            .update({ 
+              status: 'completed', 
+              progress: 100, 
+              logs: [...(nextTask.logs || []), 'Successfully completed course content generation.'] 
+            })
+            .eq('id', nextTask.id);
+        }
+        
+        logs.push(`[SUCCESS] Task "${nextTask.name}" processed successfully.`);
+      } catch (taskErr: any) {
+        if (!isOffline) {
+          await supabase
+            .from('task_queue')
+            .update({ 
+              status: 'failed', 
+              progress: 0, 
+              logs: [...(nextTask.logs || []), `Failed: ${taskErr.message || String(taskErr)}`] 
+            })
+            .eq('id', nextTask.id);
+        }
+        logs.push(`[ERROR] Task "${nextTask.name}" failed: ${taskErr.message || String(taskErr)}`);
+        throw taskErr;
       }
-      
-      logs.push(`[SUCCESS] Task "${nextTask.name}" processed successfully.`);
     } else {
       logs.push(`[SCHEDULER] No pending queued tasks in 'task_queue' table.`);
     }

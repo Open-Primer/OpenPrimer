@@ -2132,6 +2132,7 @@ export interface DatabaseService {
   deleteUser(id: string): Promise<{ data: any; error: any }>;
   toggleBlockUser(id: string): Promise<{ data: any; error: any }>;
   updateUserRole(id: string, role: string): Promise<{ data: any; error: any }>;
+  updateUserPassword(id: string, password: string): Promise<{ data: any; error: any }>;
   hashPassword(password: string): string;
   createUser(user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>): Promise<{ data: UserProfile | null; error: any }>;
   getSiteStats(): Promise<{ data: any; error: any }>;

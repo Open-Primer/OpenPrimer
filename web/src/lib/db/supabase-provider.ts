@@ -331,6 +331,30 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
+  updateUserPassword: async (id: string, password: string) => {
+    const hashedPassword = supabaseDatabaseProvider.hashPassword(password);
+    try {
+      // 1. Update password column in public.profiles table
+      const { data, error } = await supabase.from('profiles').update({ password: hashedPassword }).eq('id', id);
+      if (error) throw error;
+
+      // 2. Also try updating supabase auth if session is active
+      try {
+        const { data: authUser, error: authError } = await supabase.auth.updateUser({ password: password });
+        if (authError) {
+          console.warn("[updateUserPassword] Supabase auth update user warned:", authError.message);
+        }
+      } catch (authErr) {
+        console.warn("[updateUserPassword] Supabase auth update user exception:", authErr);
+      }
+
+      return { data, error: null };
+    } catch (err) {
+      handleDatabaseError(err);
+      return { data: null, error: err as any };
+    }
+  },
+
   hashPassword: (password: string): string => {
     return mockDatabaseProviderHash(password);
   },
