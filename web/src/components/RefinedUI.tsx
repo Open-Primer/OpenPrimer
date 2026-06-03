@@ -18,7 +18,7 @@ const STATIC_UI_STRINGS = {
     my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     popular_curricula: "Popular Curricula",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
-    copyright: "© 2026 OpenPrimer Project • Global AI Academic Repository",
+    copyright: "© 2026 OpenPrimer Project • Online University",
     all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", search: "Search modules...",
     tagline: "The Future of Open Academic Sovereignty",
     cta_start: "Start Learning", cta_foundation: "Explore Foundation",
@@ -158,7 +158,7 @@ const STATIC_UI_STRINGS = {
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
     popular_curricula: "Curriculums Populaires",
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
-    copyright: "© 2026 Projet OpenPrimer • Répertoire Académique Mondial d'IA",
+    copyright: "© 2026 Projet OpenPrimer • Université en ligne",
     all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", search: "Rechercher des modules...",
     tagline: "L'Avenir de la Souveraineté Académique Libre",
     cta_start: "Commencer", cta_foundation: "Explorer la Fondation",
@@ -298,7 +298,7 @@ const STATIC_UI_STRINGS = {
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
     popular_curricula: "Planes de Estudio Populares",
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
-    copyright: "© 2026 Fundación OpenPrimer • Consorcio Académico Europeo",
+    copyright: "© 2026 Fundación OpenPrimer • Universidad en línea",
     all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", search: "Buscar módulos...",
     tagline: "El Futuro de la Soberanía Académica Abierta",
     cta_start: "Empezar", cta_foundation: "Explorar Fundación",
@@ -438,7 +438,7 @@ const STATIC_UI_STRINGS = {
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
     popular_curricula: "Beliebte Lehrpläne",
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
-    copyright: "© 2026 OpenPrimer Stiftung • Europäisches Akademisches Konsortium",
+    copyright: "© 2026 OpenPrimer Stiftung • Online-Universität",
     all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", search: "Module suchen...",
     tagline: "Die Zukunft der freien akademischen Souveränität",
     cta_start: "Lernen starten", cta_foundation: "Stiftung erkunden",
@@ -559,7 +559,7 @@ const STATIC_UI_STRINGS = {
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
     popular_curricula: "热门课程计划",
     terms: "服务条款", privacy: "隐私主权",
-    copyright: "© 2026 OpenPrimer 基金会 • 欧洲学术联盟",
+    copyright: "© 2026 OpenPrimer 基金会 • 在线大学",
     all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", search: "搜索模块...",
     tagline: "开放学术主权的未来",
     cta_start: "开始学习", cta_foundation: "探索基金会",
@@ -710,8 +710,14 @@ if (typeof window !== 'undefined') {
 }
 
 export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
-  get(target, prop: string) {
-    return target[prop.toUpperCase() as keyof typeof target] || target.EN;
+  get(target, prop) {
+    if (typeof prop === 'string') {
+      const upper = prop.toUpperCase();
+      if (upper in target) {
+        return target[upper as keyof typeof target];
+      }
+    }
+    return Reflect.get(target, prop);
   }
 }) as any;
 

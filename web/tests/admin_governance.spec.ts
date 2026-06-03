@@ -50,7 +50,8 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     // 3. Fill in user details
 
-    await page.fill('#student-name-input', 'Test Student E2E');
+    await page.fill('#student-firstname-input', 'Test');
+    await page.fill('#student-lastname-input', 'Student E2E');
 
     await page.fill('#student-email-input', 'e2e.test.student@openprimer.org');
     await page.fill('#student-password-input', 'SecureP@ssw0rd!');

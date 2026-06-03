@@ -251,6 +251,26 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       console.warn("[ClientProviders] Database failure event caught:", message);
       setDbFailed(true);
 
+      // Only show connection offline toast for admin users
+      let isAdmin = false;
+      try {
+        const savedProfile = localStorage.getItem("op_user_profile");
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          if (parsed.role === "admin") {
+            isAdmin = true;
+          }
+        }
+      } catch (err) {}
+
+      if (!isAdmin && typeof window !== "undefined" && window.location.pathname.startsWith('/admin')) {
+        isAdmin = true;
+      }
+
+      if (!isAdmin) {
+        return;
+      }
+
       const langKey = (localStorage.getItem("openprimer_lang") || "EN").toUpperCase();
       const t = TOAST_TRANSLATIONS[langKey as keyof typeof TOAST_TRANSLATIONS] || TOAST_TRANSLATIONS.EN;
 

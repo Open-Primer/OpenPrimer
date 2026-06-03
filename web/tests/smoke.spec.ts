@@ -5,6 +5,17 @@ const BASE_URL = 'http://localhost:3000';
 test.describe('OpenPrimer Smoke Tests', () => {
   
   test.beforeEach(async ({ page, context }) => {
+    page.on('pageerror', (err) => {
+      console.log('🔴 BROWSER PAGE ERROR:', err.message, err.stack);
+    });
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        console.log('🔴 BROWSER CONSOLE ERROR:', msg.text());
+      } else {
+        console.log('⚪ BROWSER LOG:', msg.text());
+      }
+    });
+
     await context.addCookies([{
       name: 'openprimer_lang',
       value: 'EN',

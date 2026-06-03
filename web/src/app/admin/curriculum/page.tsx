@@ -406,7 +406,7 @@ export const COCKPIT_DICTIONARY = {
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:",
     "Condition 1: Unresolved Foreign Search Spikes": "Condition 1: Unresolved Foreign Search Spikes",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.",
-    "Condition 2: High-Volume ECTS Completions": "Condition 2: High-Volume ECTS Completions",
+    "Condition 2: High-Volume Completions": "Condition 2: High-Volume Completions",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.",
     "Auto-Approve Translation": "Auto-Approve Translation",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.",
@@ -456,9 +456,11 @@ export const COCKPIT_DICTIONARY = {
     "No active tasks in queue. Build system idle.": "No active tasks in queue. Build system idle.",
     // 6. Achievements Tab
     "Strict Parameter Check": "Strict Parameter Check",
+    "No tasks match your search.": "No tasks match your search.",
+    "No tasks currently executing in the sovereign loop queue.": "No tasks currently executing in the sovereign loop queue.",
     "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).": "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).",
     "Achievement Badge Registry": "Achievement Badge Registry",
-    "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.": "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.",
+    "Manage gamified rewards and triggers. Add new badges or modify active ones.": "Manage gamified rewards and triggers. Add new badges or modify active ones.",
     "Register Badge": "Register Badge",
     "Icon": "Icon",
     "Badge Name": "Badge Name",
@@ -783,7 +785,7 @@ export const COCKPIT_DICTIONARY = {
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Gère les demandes de localisation dynamique. Les propositions sont calculées de manière autonome selon deux déclencheurs pédagogiques :",
     "Condition 1: Unresolved Foreign Search Spikes": "Condition 1 : Pics de Recherches Étrangères non Résolus",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Déclenche une proposition de traduction lorsqu'un utilisateur recherche un cours existant dans une autre langue. Requiert au moins {searches} recherches.",
-    "Condition 2: High-Volume ECTS Completions": "Condition 2 : Fort Volume de Validations ECTS",
+    "Condition 2: High-Volume Completions": "Condition 2 : Fort Volume de Validations",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Suggère de traduire les cours populaires dans d'autres langues enregistrées lorsque les validations historiques atteignent {completions} réussites.",
     "Auto-Approve Translation": "Auto-Approbation des Traductions",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Permet aux propositions de traduction qualifiées de contourner la validation manuelle et de s'insérer directement en file d'attente.",
@@ -833,9 +835,11 @@ export const COCKPIT_DICTIONARY = {
     "No active tasks in queue. Build system idle.": "Aucune tâche active dans la file. Système en veille.",
     // 6. Achievements Tab
     "Strict Parameter Check": "Vérification Stricte des Paramètres",
+    "No tasks match your search.": "Aucune tâche ne correspond à votre recherche.",
+    "No tasks currently executing in the sovereign loop queue.": "Aucune tâche en cours d'exécution dans la file d'attente.",
     "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).": "Si activé, les badges sont validés strictement (pas d'émojis, seuil > 0).",
     "Achievement Badge Registry": "Registre des Badges de Réussite",
-    "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.": "Gérez les récompenses et déclencheurs ECTS. Ajoutez ou modifiez les badges.",
+    "Manage gamified rewards and triggers. Add new badges or modify active ones.": "Gérez les récompenses et déclencheurs. Ajoutez ou modifiez les badges.",
     "Register Badge": "Enregistrer le Badge",
     "Icon": "Icône",
     "Badge Name": "Nom du Badge",
@@ -1159,7 +1163,7 @@ export const COCKPIT_DICTIONARY = {
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Gestiona solicitudes de localización. El motor las calcula basándose en dos activadores:",
     "Condition 1: Unresolved Foreign Search Spikes": "Condición 1: Picos de Búsqueda no Resueltos",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Propone traducción cuando un usuario busca un curso que existe en otro idioma pero falta en el suyo.",
-    "Condition 2: High-Volume ECTS Completions": "Condition 2: Alto Volumen de ECTS Completados",
+    "Condition 2: High-Volume Completions": "Condition 2: Alto Volumen de Completados",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Sugiere traducir cursos populares cuando las validaciones históricas alcanzan el umbral.",
     "Auto-Approve Translation": "Auto-aprobar Traducción",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Permite que propuestas de traducción calificadas eviten validación manual e ingresen a la cola.",
@@ -1209,9 +1213,11 @@ export const COCKPIT_DICTIONARY = {
     "No active tasks in queue. Build system idle.": "No hay tareas activas. Sistema inactivo.",
     // 6. Achievements Tab
     "Strict Parameter Check": "Validación Estricta de Parámetros",
+    "No tasks match your search.": "Ninguna tarea coincide con su búsqueda.",
+    "No tasks currently executing in the sovereign loop queue.": "No hay tareas ejecutándose actualmente en la cola soberana.",
     "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).": "Si se activa, los parámetros de las medallas se validan estrictamente.",
     "Achievement Badge Registry": "Registro de Medallas de Éxito",
-    "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.": "Gobernanza de medallas y activadores ECTS. Añada o edite medallas.",
+    "Manage gamified rewards and triggers. Add new badges or modify active ones.": "Gobernanza de medallas y activadores. Añada o edite medallas.",
     "Register Badge": "Registrar Medalla",
     "Icon": "Icono",
     "Badge Name": "Nombre de la Medalla",
@@ -1536,7 +1542,7 @@ export const COCKPIT_DICTIONARY = {
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Verwaltet Übersetzungsanfragen. Die Engine berechnet sie basierend auf zwei Auslösern:",
     "Condition 1: Unresolved Foreign Search Spikes": "Bedingung 1: Spitzen erfolgloser Fremdsprachen-Suchen",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Schlägt Übersetzung vor, wenn ein Kurs in einer anderen Sprache existiert, aber in der gesuchten fehlt.",
-    "Condition 2: High-Volume ECTS Completions": "Condition 2: Hohes ECTS-Abschlussvolumen",
+    "Condition 2: High-Volume Completions": "Condition 2: Hohes Abschlussvolumen",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Schlägt Übersetzung beliebter Kurse vor, wenn die Validierungen den Schwellenwert erreichen.",
     "Auto-Approve Translation": "Übersetzung Automatisch Freigeben",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Ermöglicht es qualifizierten Übersetzungsvorschlägen, die manuelle Freigabe zu umgehen.",
@@ -1586,9 +1592,11 @@ export const COCKPIT_DICTIONARY = {
     "No active tasks in queue. Build system idle.": "Keine aktiven Aufgaben. System im Leerlauf.",
     // 6. Achievements Tab
     "Strict Parameter Check": "Strenge Parameterprüfung",
+    "No tasks match your search.": "Keine Aufgaben entsprechen Ihrer Suche.",
+    "No tasks currently executing in the sovereign loop queue.": "Derzeit werden keine Aufgaben in der Warteschlange ausgeführt.",
     "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).": "Wenn aktiviert, werden Medaillenparameter streng validiert.",
     "Achievement Badge Registry": "Errungenschaften-Register",
-    "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.": "Verwalten Sie spielerische Belohnungen und ECTS-Auslöser.",
+    "Manage gamified rewards and triggers. Add new badges or modify active ones.": "Verwalten Sie spielerische Belohnungen und Auslöser.",
     "Register Badge": "Errungenschaft Registrieren",
     "Icon": "Symbol",
     "Badge Name": "Name der Errungenschaft",
@@ -1912,7 +1920,7 @@ export const COCKPIT_DICTIONARY = {
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "管理动态课程本地化请求。引擎基于两个教学触发器自主计算提案：",
     "Condition 1: Unresolved Foreign Search Spikes": "条件 1：未解决的非本币搜索高峰",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "当用户对存在于另一种语言但缺失于输入语言的课程输入精确查询时触发翻译提案。需要至少 {searches} 次搜索。",
-    "Condition 2: High-Volume ECTS Completions": "条件 2：大容量 ECTS 完成度",
+    "Condition 2: High-Volume Completions": "条件 2：高完成度",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "当历史验证达到 {completions} 次完成时，建议将热门课程翻译成其他已注册的语言。",
     "Auto-Approve Translation": "自动批准翻译",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "允许符合条件的翻译提案绕过手动验证，并自动调度到管道队列。",
@@ -1958,9 +1966,11 @@ export const COCKPIT_DICTIONARY = {
     "Search tasks...": "搜索任务...",
     "No active tasks in queue. Build system idle.": "队列中没有活动任务。构建系统空闲。",
     "Strict Parameter Check": "严格参数检查",
+    "No tasks match your search.": "没有符合搜索条件的任务。",
+    "No tasks currently executing in the sovereign loop queue.": "当前队列中没有执行中的任务。",
     "When enabled, badges parameters are strictly validated (no emojis in name, threshold must be > 0).": "启用时，严格验证勋章参数（名称中不能有表情符号，阈值必须 > 0）。",
     "Achievement Badge Registry": "成就勋章注册表",
-    "Manage gamified rewards and ECTS triggers. Add new badges or modify active ones.": "管理游戏化奖励和 ECTS 触发器。添加新勋章或修改活跃勋章。",
+    "Manage gamified rewards and triggers. Add new badges or modify active ones.": "管理游戏化奖励和触发器。添加新勋章或修改活跃勋章。",
     "Register Badge": "注册勋章",
     "Icon": "图标",
     "Badge Name": "勋章名称",
@@ -2965,7 +2975,7 @@ export default function AdminCurriculumPage() {
     try {
       const IconComp = LUCIDE_ICONS[iconName];
       if (!IconComp) return '';
-      const element = IconComp({});
+      const element = React.createElement(IconComp, {}) as any;
       if (element && element.props && element.props.children) {
         const children = Array.isArray(element.props.children)
           ? element.props.children
@@ -5274,7 +5284,7 @@ export default function AdminCurriculumPage() {
                         </div>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {tr("Condition 2: High-Volume ECTS Completions")}
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {tr("Condition 2: High-Volume Completions")}
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
                             {tr("Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.").replace('{completions}', String(transValidationsThreshold))}
@@ -6506,7 +6516,7 @@ export default function AdminCurriculumPage() {
                         {filteredQueue.length === 0 && (
                           <tr>
                             <td colSpan={7} className="px-6 py-16 text-center text-slate-655 italic">
-                              <p className="mb-4 text-xs font-medium text-slate-500">{queueSearch ? 'No tasks match your search.' : 'No tasks currently executing in the sovereign loop queue.'}</p>
+                              <p className="mb-4 text-xs font-medium text-slate-500">{queueSearch ? tr('No tasks match your search.') : tr('No tasks currently executing in the sovereign loop queue.')}</p>
                               
                             </td>
                           </tr>
@@ -6575,8 +6585,8 @@ export default function AdminCurriculumPage() {
                                 )}
                               </div>
                               <div className="space-y-1">
-                                <h3 className="text-xl font-black">{ach.translations?.[lang]?.name || ach.name}</h3>
-                                <p className="text-xs text-slate-500 leading-relaxed">{ach.translations?.[lang]?.description || ach.description}</p>
+                                <h3 className="text-xl font-black">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
                               </div>
                             </div>
 
@@ -6677,8 +6687,8 @@ export default function AdminCurriculumPage() {
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <h3 className="text-xl font-black">{p.translations?.[lang]?.name || p.name}</h3>
-                                <p className="text-xs text-slate-500 leading-relaxed italic">"{p.translations?.[lang]?.prompt || p.prompt}"</p>
+                                <h3 className="text-xl font-black">{p.translations?.[lang.toUpperCase()]?.name || p.name}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed italic">"{p.translations?.[lang.toUpperCase()]?.prompt || p.prompt}"</p>
                               </div>
                             </div>
                             

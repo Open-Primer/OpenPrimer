@@ -256,7 +256,7 @@ let users: UserProfile[] = [
     },
     favorites: ['/L1/Biology/Cell_Biology/mitochondria_and_energy'],
     aiCoachMessage: "Welcome back, Silvere! You're doing great on Classical Mechanics. I recommend reviewing Vectors before jumping into the final Newton quiz.",
-    password: '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+    password: '3ba484af8a5fe572560ac841e91b77c9ddb8d6a2f6d9cd203975b8dc16e7fabc'
   },
   { 
     id: 'u2', 
@@ -1697,9 +1697,23 @@ export const handleDatabaseError = (error: any) => {
     console.error("🚨 [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
   }
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
-      detail: { message: error?.message || String(error) }
-    }));
+    const errMsg = (error?.message || String(error)).toLowerCase();
+    const isNetworkError = 
+      !navigator.onLine ||
+      errMsg.includes("fetch") || 
+      errMsg.includes("network") || 
+      errMsg.includes("timeout") || 
+      errMsg.includes("offline") ||
+      error?.status === 0 ||
+      error?.status === 502 ||
+      error?.status === 503 ||
+      error?.status === 504;
+
+    if (isNetworkError) {
+      window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
+        detail: { message: error?.message || String(error) }
+      }));
+    }
   }
 };
 
@@ -2305,6 +2319,10 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
     const value = Reflect.get(activeProvider, prop, receiver);
 
     if (typeof value === 'function') {
+      const syncMethods = ['getLocalizedCourseTitle', 'hashPassword'];
+      if (syncMethods.includes(String(prop))) {
+        return value.bind(activeProvider);
+      }
       return async function (...args: any[]) {
 
         try {

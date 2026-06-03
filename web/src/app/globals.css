@@ -721,4 +721,20 @@ body:not(.theme-paper):not(.theme-focus) footer {
   filter: grayscale(100%) !important;
 }
 
+/* Custom Premium Modal Overlay */
+.modal-overlay {
+  background-color: rgba(2, 6, 23, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.theme-paper .modal-overlay {
+  background-color: rgba(67, 60, 48, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.theme-focus .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: none !important;
+}
+
 

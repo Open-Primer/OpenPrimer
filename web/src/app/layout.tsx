@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -65,7 +65,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} selection:bg-blue-500/30`}>
+      <body className={`${inter.className} selection:bg-blue-500/30`} suppressHydrationWarning>
         <ClientProviders>
           <Gatekeeper>
             {children}

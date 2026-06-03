@@ -180,19 +180,17 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
   const texts = KIOSK_TEXTS[lang.toUpperCase()] || KIOSK_TEXTS.EN;
 
   useEffect(() => {
-    async function fetchCourses() {
-      try {
-        const { data } = await dbService.getAllCourses();
+    dbService.getAllCourses()
+      .then(({ data }) => {
         if (data && data.length > 0) {
           // Filter out archived level >= 2 or inactive courses
           const activeOnly = data.filter((c: any) => c.is_active !== false && (c.archivingLevel === undefined || c.archivingLevel < 2));
           setCourses(activeOnly);
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error("Error loading kiosk courses", err);
-      }
-    }
-    fetchCourses();
+      });
   }, []);
 
   // Filter and prepare kiosk items depending on the mode
