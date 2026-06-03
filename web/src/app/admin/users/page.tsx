@@ -5,6 +5,7 @@ import { dbService, UserProfile, UserRole } from '@/lib/db';
 import { Search, UserCog, Shield, ShieldCheck, Mail, Calendar, ChevronRight, Ban, Trash2, Check, X, AlertCircle, PlusCircle, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { PasswordRequirements } from '@/components/PasswordRequirements';
 
 export const USERS_STRINGS = {
   EN: {
@@ -216,6 +217,7 @@ export default function AdminUsers() {
   const [newUserError, setNewUserError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
  
   useEffect(() => {
     loadUsers();
@@ -563,6 +565,8 @@ export default function AdminUsers() {
                       id="student-password-input"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      onFocus={() => setIsNewPasswordFocused(true)}
+                      onBlur={() => setIsNewPasswordFocused(false)}
                       placeholder="••••••••••••"
                       autoComplete="new-password"
                       className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-16 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
@@ -575,6 +579,11 @@ export default function AdminUsers() {
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <PasswordRequirements 
+                    password={newPassword}
+                    lang={globalLang}
+                    isFocused={isNewPasswordFocused}
+                  />
                 </div>
                 
                 <div className="space-y-2">

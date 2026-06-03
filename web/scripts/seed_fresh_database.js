@@ -501,7 +501,7 @@ async function main() {
     const accounts = [
       {
         email: 'vanguard.mysterious@gmail.com',
-        password: ';fXXÂ£e*Y7>xB4[88*',
+        password: ';fXX£e*Y7>xB4[88*',
         name: 'Vanguard Admin',
         role: 'admin'
       },

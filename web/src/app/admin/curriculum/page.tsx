@@ -647,7 +647,94 @@ export const COCKPIT_DICTIONARY = {
     "4 disciplines": "4 disciplines",
     "20 perfect quizzes": "20 perfect quizzes",
     "10 AI generations": "10 AI generations"
-  },
+  ,
+    "Create Achievement Badge": "Create Achievement Badge",
+    "Go to Course": "Go to Course",
+    "Failed": "Failed",
+    "GENERATION": "Generation",
+    "REVISION": "Revision",
+    "TRANSLATION": "Translation",
+    "failed": "Failed",
+    "AWARD": "Award",
+    "ZAP": "Zap",
+    "STAR": "Star",
+    "FLAME": "Flame",
+    "TROPHY": "Trophy",
+    "CLOCK": "Clock",
+    "CROWN": "Crown",
+    "BOOK": "Book",
+    "SHIELDCHECK": "Shield Check",
+    "LAYERS": "Layers",
+    "ACTIVITY": "Activity",
+    "CHECKCIRCLE": "Check Circle",
+    "HEART": "Heart",
+    "COMPASS": "Compass",
+    "MAP": "Map",
+    "GRADUATIONCAP": "Graduation Cap",
+    "TARGET": "Target",
+    "CPU": "CPU",
+    "GLOBE": "Globe",
+    "KEY": "Key",
+    "LOCK": "Lock",
+    "LIGHTBULB": "Lightbulb",
+    "ROCKET": "Rocket",
+    "SEARCH": "Search",
+    "SPARKLES": "Sparkles",
+    "Purple": "Purple",
+    "Amber": "Amber",
+    "Gold": "Gold",
+    "Red": "Red",
+    "Yellow": "Yellow",
+    "Blue": "Blue",
+    "Indigo": "Indigo",
+    "Crown Gold": "Crown Gold",
+    "Emerald": "Emerald",
+    "Teal": "Teal",
+    "Green": "Green",
+    "Pink": "Pink",
+    "Cyan": "Cyan",
+    "Platinum": "Platinum",
+    "Rose": "Rose",
+    "Heart Rose": "Heart Rose",
+    "Compass Blue": "Compass Blue",
+    "Map Green": "Map Green",
+    "Graduation Blue": "Graduation Blue",
+    "Target Red": "Target Red",
+    "Cpu Obsidian": "Cpu Obsidian",
+    "Sky Blue": "Sky Blue",
+    "Bronze Key": "Bronze Key",
+    "Lock Crimson": "Lock Crimson",
+    "Bulb Yellow": "Bulb Yellow",
+    "Rocket Fire": "Rocket Fire",
+    "Search Silver": "Search Silver",
+    "Cosmic Indigo": "Cosmic Indigo",
+    "Gold Award": "Gold Award",
+    "Sunset Gold": "Sunset Gold",
+    "Electric Mint": "Electric Mint",
+    "Magenta Fire": "Magenta Fire",
+    "Ocean Book": "Ocean Book",
+    "Iron Shield": "Iron Shield",
+    "Royal Pink": "Royal Pink",
+    "Ruby Heart": "Ruby Heart",
+    "Ocean Compass": "Ocean Compass",
+    "Master Purple": "Master Purple",
+    "Neon Target": "Neon Target",
+    "Tech Green": "Tech Green",
+    "Global Teal": "Global Teal",
+    "Golden Key": "Golden Key",
+    "Lock Dark": "Lock Dark",
+    "Lime Bulb": "Lime Bulb",
+    "Star Rocket": "Star Rocket",
+    "Rose Glass": "Rose Glass",
+    "Pixie Sparkle": "Pixie Sparkle",
+    "Quantum Computing 101": "Quantum Computing 101",
+    "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.": "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.",
+    "Lagrangian Mechanics": "Lagrangian Mechanics",
+    "Spanish Language Package Creation": "Spanish Language Package Creation",
+    "Biochemistry Syllabus Update": "Biochemistry Syllabus Update",
+    "Organic Chemistry Reactions": "Organic Chemistry Reactions",
+    "Microeconomics Market Forms": "Microeconomics Market Forms",
+    "Machine Learning Fundamentals": "Machine Learning Fundamentals"},
   FR: {
     "AI Tutor Personalities": "Personnalités des tuteurs IA",
     "Seeded Achievements badges": "Badges d'exploits de départ",
@@ -936,7 +1023,94 @@ export const COCKPIT_DICTIONARY = {
     "4 disciplines": "4 disciplines",
     "20 perfect quizzes": "20 quiz parfaits",
     "10 AI generations": "10 générations IA"
-  },
+  ,
+    "Create Achievement Badge": "Créer un badge d'exploit",
+    "Go to Course": "Accéder au Cours",
+    "Failed": "Échoué",
+    "GENERATION": "Génération",
+    "REVISION": "Révision",
+    "TRANSLATION": "Traduction",
+    "failed": "Échoué",
+    "AWARD": "Récompense",
+    "ZAP": "Éclair",
+    "STAR": "Étoile",
+    "FLAME": "Flamme",
+    "TROPHY": "Trophée",
+    "CLOCK": "Horloge",
+    "CROWN": "Couronne",
+    "BOOK": "Livre",
+    "SHIELDCHECK": "Bouclier",
+    "LAYERS": "Couches",
+    "ACTIVITY": "Activité",
+    "CHECKCIRCLE": "Validation",
+    "HEART": "Cœur",
+    "COMPASS": "Boussole",
+    "MAP": "Carte",
+    "GRADUATIONCAP": "Diplôme",
+    "TARGET": "Cible",
+    "CPU": "Processeur",
+    "GLOBE": "Globe",
+    "KEY": "Clé",
+    "LOCK": "Verrou",
+    "LIGHTBULB": "Ampoule",
+    "ROCKET": "Fusée",
+    "SEARCH": "Recherche",
+    "SPARKLES": "Étincelles",
+    "Purple": "Violet",
+    "Amber": "Ambre",
+    "Gold": "Or",
+    "Red": "Rouge",
+    "Yellow": "Jaune",
+    "Blue": "Bleu",
+    "Indigo": "Indigo",
+    "Crown Gold": "Or Royal",
+    "Emerald": "Émeraude",
+    "Teal": "Bleu-Vert",
+    "Green": "Vert",
+    "Pink": "Rose",
+    "Cyan": "Cyan",
+    "Platinum": "Platine",
+    "Rose": "Rose vif",
+    "Heart Rose": "Cœur Rose",
+    "Compass Blue": "Boussole Bleue",
+    "Map Green": "Carte Verte",
+    "Graduation Blue": "Diplôme Bleu",
+    "Target Red": "Cible Rouge",
+    "Cpu Obsidian": "Processeur Noir",
+    "Sky Blue": "Bleu Ciel",
+    "Bronze Key": "Clé de Bronze",
+    "Lock Crimson": "Verrou Cramoisi",
+    "Bulb Yellow": "Ampoule Jaune",
+    "Rocket Fire": "Fusée de Feu",
+    "Search Silver": "Loupe d'Argent",
+    "Cosmic Indigo": "Indigo Cosmique",
+    "Gold Award": "Récompense d'Or",
+    "Sunset Gold": "Or Couchant",
+    "Electric Mint": "Menthe Électrique",
+    "Magenta Fire": "Feu Magenta",
+    "Ocean Book": "Livre de l'Océan",
+    "Iron Shield": "Bouclier de Fer",
+    "Royal Pink": "Rose Royal",
+    "Ruby Heart": "Cœur Rubis",
+    "Ocean Compass": "Boussole Océan",
+    "Master Purple": "Master Violet",
+    "Neon Target": "Cible Néon",
+    "Tech Green": "Vert Technique",
+    "Global Teal": "Bleu-Vert Global",
+    "Golden Key": "Clé d'Or",
+    "Lock Dark": "Verrou Sombre",
+    "Lime Bulb": "Ampoule Lime",
+    "Star Rocket": "Fusée Étoile",
+    "Rose Glass": "Verre Rose",
+    "Pixie Sparkle": "Étincelle de Fée",
+    "Quantum Computing 101": "Introduction à l'informatique quantique",
+    "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.": "Mécanique classique - Révision : la mécanique lagrangienne nécessite plus de dérivations",
+    "Lagrangian Mechanics": "Mécanique Lagrangienne",
+    "Spanish Language Package Creation": "Création du pack de langue espagnol",
+    "Biochemistry Syllabus Update": "Mise à jour du programme de biochimie",
+    "Organic Chemistry Reactions": "Réactions de chimie organique",
+    "Microeconomics Market Forms": "Formes de marché en microéconomie",
+    "Machine Learning Fundamentals": "Fondations du Machine Learning"},
   ES: {
     "AI Tutor Personalities": "Personalidades de tutores de IA",
     "Seeded Achievements badges": "Medallas de logros iniciales",
@@ -1225,7 +1399,94 @@ export const COCKPIT_DICTIONARY = {
     "4 disciplines": "4 disciplinas",
     "20 perfect quizzes": "20 cuestionarios perfectos",
     "10 AI generations": "10 generaciones de IA"
-  },
+  ,
+    "Create Achievement Badge": "Crear medalla de logro",
+    "Go to Course": "Ir al curso",
+    "Failed": "Fallido",
+    "GENERATION": "Generación",
+    "REVISION": "Revisión",
+    "TRANSLATION": "Traducción",
+    "failed": "Fallido",
+    "AWARD": "Premio",
+    "ZAP": "Rayo",
+    "STAR": "Estrella",
+    "FLAME": "Llama",
+    "TROPHY": "Trofeo",
+    "CLOCK": "Reloj",
+    "CROWN": "Corona",
+    "BOOK": "Libro",
+    "SHIELDCHECK": "Escudo",
+    "LAYERS": "Capas",
+    "ACTIVITY": "Actividad",
+    "CHECKCIRCLE": "Verificación",
+    "HEART": "Corazón",
+    "COMPASS": "Brújula",
+    "MAP": "Mapa",
+    "GRADUATIONCAP": "Birrete",
+    "TARGET": "Objetivo",
+    "CPU": "Procesador",
+    "GLOBE": "Globo",
+    "KEY": "Llave",
+    "LOCK": "Candado",
+    "LIGHTBULB": "Bombilla",
+    "ROCKET": "Cohete",
+    "SEARCH": "Búsqueda",
+    "SPARKLES": "Chispas",
+    "Purple": "Morado",
+    "Amber": "Ámbar",
+    "Gold": "Oro",
+    "Red": "Rojo",
+    "Yellow": "Amarillo",
+    "Blue": "Azul",
+    "Indigo": "Índigo",
+    "Crown Gold": "Oro Corona",
+    "Emerald": "Esmeralda",
+    "Teal": "Cian",
+    "Green": "Verde",
+    "Pink": "Rosa",
+    "Cyan": "Cian",
+    "Platinum": "Platino",
+    "Rose": "Rosado",
+    "Heart Rose": "Corazón Rosa",
+    "Compass Blue": "Brújula Azul",
+    "Map Green": "Mapa Verde",
+    "Graduation Blue": "Birrete Azul",
+    "Target Red": "Objetivo Rojo",
+    "Cpu Obsidian": "Obsidiana",
+    "Sky Blue": "Azul Cielo",
+    "Bronze Key": "Llave de Bronce",
+    "Lock Crimson": "Candado Carmesí",
+    "Bulb Yellow": "Bombilla Amarilla",
+    "Rocket Fire": "Cohete de Fuego",
+    "Search Silver": "Plata de Búsqueda",
+    "Cosmic Indigo": "Índigo Cósmico",
+    "Gold Award": "Premio de Oro",
+    "Sunset Gold": "Oro Atardecer",
+    "Electric Mint": "Menta Eléctrica",
+    "Magenta Fire": "Fuego Magenta",
+    "Ocean Book": "Libro del Océano",
+    "Iron Shield": "Escudo de Hierro",
+    "Royal Pink": "Rosa Real",
+    "Ruby Heart": "Corazón Rubí",
+    "Ocean Compass": "Brújula Océano",
+    "Master Purple": "Maestro Morado",
+    "Neon Target": "Objetivo Neón",
+    "Tech Green": "Verde Tecnológico",
+    "Global Teal": "Cian Global",
+    "Golden Key": "Llave Dorada",
+    "Lock Dark": "Candado Oscuro",
+    "Lime Bulb": "Bombilla Lima",
+    "Star Rocket": "Cohete Estrella",
+    "Rose Glass": "Vidrio Rosa",
+    "Pixie Sparkle": "Destello de Hada",
+    "Quantum Computing 101": "Computación Cuántica 101",
+    "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.": "Mecánica Clásica - Revisión: la mecánica lagrangiana necesita más derivaciones",
+    "Lagrangian Mechanics": "Mecánica Lagrangiana",
+    "Spanish Language Package Creation": "Creación del paquete de idioma español",
+    "Biochemistry Syllabus Update": "Actualización del plan de estudios de bioquímica",
+    "Organic Chemistry Reactions": "Reacciones de química orgánica",
+    "Microeconomics Market Forms": "Formas de mercado de microeconomía",
+    "Machine Learning Fundamentals": "Fundamentos de Aprendizaje Automático"},
   DE: {
     "AI Tutor Personalities": "KI-Tutor-Persönlichkeiten",
     "Seeded Achievements badges": "Standard-Errungenschaften",
@@ -1516,7 +1777,94 @@ export const COCKPIT_DICTIONARY = {
     "4 disciplines": "4 Disziplinen",
     "20 perfect quizzes": "20 perfekte Quizze",
     "10 AI generations": "10 KI-Generierungen"
-  },
+  ,
+    "Create Achievement Badge": "Errungenschafts-Badge erstellen",
+    "Go to Course": "Zum Kurs gehen",
+    "Failed": "Fehlgeschlagen",
+    "GENERATION": "Generierung",
+    "REVISION": "Revision",
+    "TRANSLATION": "Übersetzung",
+    "failed": "Fehlgeschlagen",
+    "AWARD": "Auszeichnung",
+    "ZAP": "Blitz",
+    "STAR": "Stern",
+    "FLAME": "Flamme",
+    "TROPHY": "Trophäe",
+    "CLOCK": "Uhr",
+    "CROWN": "Krone",
+    "BOOK": "Buch",
+    "SHIELDCHECK": "Schild",
+    "LAYERS": "Ebenen",
+    "ACTIVITY": "Aktivität",
+    "CHECKCIRCLE": "Häkchen",
+    "HEART": "Herz",
+    "COMPASS": "Kompass",
+    "MAP": "Karte",
+    "GRADUATIONCAP": "Doktorhut",
+    "TARGET": "Ziel",
+    "CPU": "Prozessor",
+    "GLOBE": "Globus",
+    "KEY": "Schlüssel",
+    "LOCK": "Schloss",
+    "LIGHTBULB": "Glühbirne",
+    "ROCKET": "Rakete",
+    "SEARCH": "Suche",
+    "SPARKLES": "Funken",
+    "Purple": "Lila",
+    "Amber": "Bernstein",
+    "Gold": "Gold",
+    "Red": "Rot",
+    "Yellow": "Gelb",
+    "Blue": "Blau",
+    "Indigo": "Indigo",
+    "Crown Gold": "Krone Gold",
+    "Emerald": "Smaragd",
+    "Teal": "Mint",
+    "Green": "Grün",
+    "Pink": "Rosa",
+    "Cyan": "Cyan",
+    "Platinum": "Platin",
+    "Rose": "Rose",
+    "Heart Rose": "Herz Rose",
+    "Compass Blue": "Kompass Blau",
+    "Map Green": "Landkarte Grün",
+    "Graduation Blue": "Doktorhut Blau",
+    "Target Red": "Ziel Rot",
+    "Cpu Obsidian": "Obsidian",
+    "Sky Blue": "Himmelblau",
+    "Bronze Key": "Bronze-Schlüssel",
+    "Lock Crimson": "Karmesinrotes Schloss",
+    "Bulb Yellow": "Gelbe Birne",
+    "Rocket Fire": "Feuer-Rakete",
+    "Search Silver": "Silberne Suche",
+    "Cosmic Indigo": "Kosmisches Indigo",
+    "Gold Award": "Goldene Auszeichnung",
+    "Sunset Gold": "Sonnenuntergangs-Gold",
+    "Electric Mint": "Elektrische Minze",
+    "Magenta Fire": "Magenta-Feuer",
+    "Ocean Book": "Ozean-Buch",
+    "Iron Shield": "Eisenschild",
+    "Royal Pink": "Königliches Rosa",
+    "Ruby Heart": "Rubinherz",
+    "Ocean Compass": "Ozean-Kompass",
+    "Master Purple": "Meister-Lila",
+    "Neon Target": "Neon-Ziel",
+    "Tech Green": "Technik-Grün",
+    "Global Teal": "Global-Mint",
+    "Golden Key": "Goldener Schlüssel",
+    "Lock Dark": "Dunkles Schloss",
+    "Lime Bulb": "Limetten-Birne",
+    "Star Rocket": "Sternen-Rakete",
+    "Rose Glass": "Rosenglas",
+    "Pixie Sparkle": "Elfen-Glanz",
+    "Quantum Computing 101": "Quantencomputer 101",
+    "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.": "Klassische Mechanik - Revision: Lagrangesche Mechanik benötigt mehr Ableitungen",
+    "Lagrangian Mechanics": "Lagrangesche Mechanik",
+    "Spanish Language Package Creation": "Erstellung des spanischen Sprachpakets",
+    "Biochemistry Syllabus Update": "Aktualisierung des Lehrplans für Biochemie",
+    "Organic Chemistry Reactions": "Organische Chemie Reaktionen",
+    "Microeconomics Market Forms": "Marktformen der Mikroökonomie",
+    "Machine Learning Fundamentals": "Grundlagen des maschinellen Lernens"},
   ZH: {
     "AI Tutor Personalities": "AI 导师个性配置",
     "Seeded Achievements badges": "预设成就勋章",
@@ -1800,7 +2148,94 @@ export const COCKPIT_DICTIONARY = {
     "4 disciplines": "4 个专业",
     "20 perfect quizzes": "20 次满分测验",
     "10 AI generations": "10 次人工智能生成"
-  }
+  ,
+    "Create Achievement Badge": "创建成就勋章",
+    "Go to Course": "去往课程",
+    "Failed": "失败",
+    "GENERATION": "生成",
+    "REVISION": "修订",
+    "TRANSLATION": "翻译",
+    "failed": "失败",
+    "AWARD": "奖励",
+    "ZAP": "闪电",
+    "STAR": "星星",
+    "FLAME": "火焰",
+    "TROPHY": "奖杯",
+    "CLOCK": "时钟",
+    "CROWN": "皇冠",
+    "BOOK": "书籍",
+    "SHIELDCHECK": "盾牌",
+    "LAYERS": "图层",
+    "ACTIVITY": "活动",
+    "CHECKCIRCLE": "完成",
+    "HEART": "爱心",
+    "COMPASS": "指南针",
+    "MAP": "地图",
+    "GRADUATIONCAP": "毕业帽",
+    "TARGET": "目标",
+    "CPU": "处理器",
+    "GLOBE": "地球",
+    "KEY": "钥匙",
+    "LOCK": "锁",
+    "LIGHTBULB": "灯泡",
+    "ROCKET": "火箭",
+    "SEARCH": "搜索",
+    "SPARKLES": "闪烁",
+    "Purple": "紫色",
+    "Amber": "琥珀色",
+    "Gold": "金色",
+    "Red": "红色",
+    "Yellow": "黄色",
+    "Blue": "蓝色",
+    "Indigo": "靛蓝色",
+    "Crown Gold": "皇冠金",
+    "Emerald": "祖母绿",
+    "Teal": "青色",
+    "Green": "绿色",
+    "Pink": "粉红色",
+    "Cyan": "青绿",
+    "Platinum": "铂金",
+    "Rose": "玫瑰红",
+    "Heart Rose": "爱心玫瑰",
+    "Compass Blue": "指南针蓝",
+    "Map Green": "地图绿",
+    "Graduation Blue": "毕业蓝",
+    "Target Red": "目标红",
+    "Cpu Obsidian": "黑曜石",
+    "Sky Blue": "天蓝色",
+    "Bronze Key": "青铜钥匙",
+    "Lock Crimson": "绯红之锁",
+    "Bulb Yellow": "明黄灯泡",
+    "Rocket Fire": "烈焰火箭",
+    "Search Silver": "银色搜索",
+    "Cosmic Indigo": "宇宙靛蓝",
+    "Gold Award": "金质奖章",
+    "Sunset Gold": "落日金",
+    "Electric Mint": "电光薄荷",
+    "Magenta Fire": "洋红烈焰",
+    "Ocean Book": "海洋之书",
+    "Iron Shield": "铁盾",
+    "Royal Pink": "皇家粉",
+    "Ruby Heart": "红宝石之心",
+    "Ocean Compass": "海洋指南针",
+    "Master Purple": "导师紫",
+    "Neon Target": "霓虹目标",
+    "Tech Green": "科技绿",
+    "Global Teal": "寰宇青",
+    "Golden Key": "金钥匙",
+    "Lock Dark": "暗影锁",
+    "Lime Bulb": "青柠灯泡",
+    "Star Rocket": "星际火箭",
+    "Rose Glass": "玫瑰色镜",
+    "Pixie Sparkle": "精灵闪烁",
+    "Quantum Computing 101": "量子计算 101",
+    "Classical_Mechanics - Revise: Lagrangian mechanics needs more derivations.": "经典力学 - 修订：拉格朗日力学需要更多推导",
+    "Lagrangian Mechanics": "拉格朗日力学",
+    "Spanish Language Package Creation": "西班牙语语言包创建",
+    "Biochemistry Syllabus Update": "生物化学教学大纲更新",
+    "Organic Chemistry Reactions": "有机化学反应",
+    "Microeconomics Market Forms": "微观经济学市场形式",
+    "Machine Learning Fundamentals": "机器学习基础"}
 };
 
 export const LOCALIZED_POPUPS = {
@@ -5953,25 +6388,23 @@ export default function AdminCurriculumPage() {
                           }
 
                           const formatCourseLevel = (level: string) => {
-                            if (!level) return '101'; // Default to standard introductory level
+                            if (!level) return '101';
                             const foundLvl = ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === level.toLowerCase());
                             if (foundLvl) {
-                              if (foundLvl.value === 'L1') return '101';
-                              if (foundLvl.value === 'L2') return '201';
-                              if (foundLvl.value === 'L3') return '301';
                               return getLevelLabel(foundLvl.value, lang);
                             }
                             const l = level.toUpperCase();
-                            if (l === 'L1') return '101';
-                            if (l === 'L2') return '201';
-                            if (l === 'L3') return '301';
-                            return l;
+                            const matchLvl = ACADEMIC_LEVELS.find(l => l.value.toUpperCase() === level.toUpperCase());
+                            if (matchLvl) {
+                              return getLevelLabel(matchLvl.value, lang);
+                            }
+                            return tr(l);
                           };
 
                           return (
                             <tr key={task.id} className="hover:bg-slate-900/20 transition-colors">
                               <td className="px-6 py-4 font-mono text-[9px] text-slate-500">{task.id}</td>
-                              <td className="px-6 py-4 font-bold text-slate-200">{task.title}</td>
+                              <td className="px-6 py-4 font-bold text-slate-200">{tr(task.title)}</td>
                               <td className="px-6 py-4 font-mono font-bold text-slate-400">{formatCourseLevel(task.level)}</td>
                               <td className="px-6 py-4">
                                 {task.targetLang ? (
@@ -5981,15 +6414,15 @@ export default function AdminCurriculumPage() {
                               <td className="px-6 py-4 font-mono text-[9px] text-slate-500">
                                 {task.completedAt ? new Date(task.completedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span className="text-slate-700">—</span>}
                               </td>
-                              <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{task.type}</td>
+                              <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{tr(task.type)}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-2.5 py-1 text-[8px] font-black rounded-full uppercase border ${statusColor}`}>
-                                  {task.status}
+                                  {tr(task.status)}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-400 min-w-[50px]">{task.priority}</span>
+                                  <span className="font-bold text-slate-400 min-w-[50px]">{tr(task.priority)}</span>
                                   <div className="flex flex-col gap-0.5">
                                     <button 
                                       type="button"
@@ -6023,7 +6456,7 @@ export default function AdminCurriculumPage() {
                                             rel="noopener noreferrer"
                                             className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
                                           >
-                                            🚀 {lang === 'FR' ? 'Accéder au Cours' : 'Go to Course'}
+                                            🚀 {tr('Go to Course')}
                                           </a>
                                         );
                                       }
@@ -6035,7 +6468,7 @@ export default function AdminCurriculumPage() {
                                     })()
                                   ) : task.status === 'failed' ? (
                                     <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none">
-                                      {lang === 'FR' ? 'Échoué' : 'Failed'}
+                                      {tr('Failed')}
                                     </span>
                                   ) : (
                                     <>
@@ -6043,16 +6476,12 @@ export default function AdminCurriculumPage() {
                                         <button 
                                           onClick={() => handleTogglePauseTask(task.id)}
                                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                        >
-                                          Resume
-                                        </button>
+                                        >{tr('Resume')}</button>
                                       ) : (
                                         <button 
                                           onClick={() => handleTogglePauseTask(task.id)}
                                           className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                        >
-                                          Pause
-                                        </button>
+                                        >{tr('Pause')}</button>
                                       )}
                                       
                                       {isTranslation ? (
@@ -6060,16 +6489,12 @@ export default function AdminCurriculumPage() {
                                           disabled
                                           title={tr("Language cancel tooltip")}
                                           className="px-3 py-1.5 bg-slate-950/40 border border-slate-900 text-slate-700 cursor-not-allowed rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                        >
-                                          Cancel
-                                        </button>
+                                        >{tr('Cancel')}</button>
                                       ) : (
                                         <button 
                                           onClick={() => setCancelTaskTarget(task)}
                                           className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
-                                        >
-                                          Cancel
-                                        </button>
+                                        >{tr('Cancel')}</button>
                                       )}
                                     </>
                                   )}
@@ -6535,10 +6960,10 @@ export default function AdminCurriculumPage() {
                                     <IconComp className="w-6 h-6" />
                                   </div>
                                   <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase truncate max-w-[80px] text-center">
-                                    {img.iconName.toUpperCase()}
+                                    {tr(img.iconName.toUpperCase())}
                                   </span>
                                   <span className="text-[8px] font-semibold text-slate-500 truncate max-w-[80px] text-center">
-                                    {img.colorName}
+                                    {tr(img.colorName)}
                                   </span>
                                 </button>
                               );
@@ -6787,10 +7212,10 @@ export default function AdminCurriculumPage() {
                                     <IconComp className="w-6 h-6" />
                                   </div>
                                   <span className="text-[10px] font-black text-slate-300 tracking-wider uppercase truncate max-w-[80px] text-center">
-                                    {img.iconName.toUpperCase()}
+                                    {tr(img.iconName.toUpperCase())}
                                   </span>
                                   <span className="text-[8px] font-semibold text-slate-500 truncate max-w-[80px] text-center">
-                                    {img.colorName}
+                                    {tr(img.colorName)}
                                   </span>
                                 </button>
                               );

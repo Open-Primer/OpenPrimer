@@ -351,12 +351,15 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Render offline game only for admin curriculum page and catalog search results page, other pages degrade gracefully
+  // Render offline game only for admin curriculum page, catalog search results, and course player page, other pages degrade gracefully
   let showOfflineGame = false;
   if (dbFailed && typeof window !== "undefined") {
+    const segments = window.location.pathname.split('/').filter(Boolean);
     const isCurriculum = window.location.pathname.startsWith('/admin/curriculum');
     const isCatalogSearch = window.location.pathname.startsWith('/catalog') && window.location.search.includes('search=');
-    showOfflineGame = isCurriculum || isCatalogSearch;
+    const isCoursePlayer = segments.length >= 3 && 
+      !['admin', 'profile', 'catalog', 'contact', 'privacy', 'terms', 'auth', 'api', 'signup', 'login'].includes(segments[0]);
+    showOfflineGame = isCurriculum || isCatalogSearch || isCoursePlayer;
   }
 
   return (

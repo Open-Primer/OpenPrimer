@@ -43,6 +43,26 @@ const TRANSLATED_LEVELS: Record<string, Record<string, string>> = {
   L3: { EN: 'L3 (301)', FR: 'Niveau L3', ES: 'L3 (301)', DE: 'Klasse L3', ZH: '大三 (301)' },
 };
 
+const formatCourseLevel = (level: string, lang: string) => {
+  if (!level) return '';
+  const langKey = lang.toUpperCase();
+  if (TRANSLATED_LEVELS[level]) {
+    return TRANSLATED_LEVELS[level][langKey] || TRANSLATED_LEVELS[level].EN;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`op_lang_levels_${langKey}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[level]) return parsed[level];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return level;
+};
+
 const SUGGESTIONS_TRANSLATIONS: Record<string, Record<string, string>> = {
   'Mathematics': { EN: 'Mathematics', FR: 'Mathématiques', ES: 'Matemáticas', DE: 'Mathematik', ZH: '数学' },
   'Physics': { EN: 'Physics', FR: 'Physique', ES: 'Física', DE: 'Physik', ZH: '物理' },
@@ -298,7 +318,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
             onClick={handlePrev}
             type="button"
             className="absolute left-0 z-30 w-10 h-10 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-violet-500/50 hover:bg-slate-900 transition-all shadow-lg backdrop-blur-md cursor-pointer"
-            aria-label="Previous Page"
+            aria-label={lang.toUpperCase() === 'FR' ? 'Page précédente' : 'Previous Page'}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -321,7 +341,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                   const colors = KIOSK_COLORS[(startIndex + idx) % KIOSK_COLORS.length];
                   const IconComponent = SUBJECT_ICONS[item.subject] || Book;
                   const localizedTitle = dbService.getLocalizedCourseTitle(item, lang) || item.title;
-                  const levelText = TRANSLATED_LEVELS[item.level]?.[lang.toUpperCase()] || item.level;
+                  const levelText = formatCourseLevel(item.level, lang);
                   const linkPath = `/${item.level}/${item.subject}/${item.slug}/introduction`;
 
                   const cardContent = (
@@ -461,7 +481,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
             onClick={handleNext}
             type="button"
             className="absolute right-0 z-30 w-10 h-10 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-violet-500/50 hover:bg-slate-900 transition-all shadow-lg backdrop-blur-md cursor-pointer"
-            aria-label="Next Page"
+            aria-label={lang.toUpperCase() === 'FR' ? 'Page suivante' : 'Next Page'}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -484,7 +504,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                     ? 'w-6 bg-gradient-to-r from-violet-500 to-blue-500 shadow-md shadow-violet-500/30' 
                     : 'w-2 bg-slate-800 hover:bg-slate-700'
                 }`}
-                aria-label={`Go to page ${index + 1}`}
+                aria-label={lang.toUpperCase() === 'FR' ? `Aller à la page ${index + 1}` : `Go to page ${index + 1}`}
               />
             );
           })}

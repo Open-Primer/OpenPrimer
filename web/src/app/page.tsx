@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
 import { CourseKiosk } from '@/components/CourseKiosk';
+import { PasswordRequirements } from '@/components/PasswordRequirements';
 
 const AUTH_STRINGS: Record<string, Record<string, string>> = {
   EN: {
@@ -260,10 +261,18 @@ export default function Home() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const submitTimestamps = useRef<number[]>([]);
+
+  // Reset password masking and error messages when authModal changes
+  useEffect(() => {
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setErrorMsg('');
+  }, [authModal]);
 
   const coursesList = [
     { id: 1, title: 'Physique: Classical Mechanics (L1)', desc: 'Feynman-optimized physics' },
@@ -848,7 +857,7 @@ export default function Home() {
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                             <input 
                               value={firstName}
-                              onChange={(e) => setFirstName(e.target.value.slice(0, 60))}
+                              onChange={(e) => { setFirstName(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                               maxLength={60}
                               placeholder={a.first_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
@@ -864,7 +873,7 @@ export default function Home() {
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
                             <input 
                               value={lastName}
-                              onChange={(e) => setLastName(e.target.value.slice(0, 60))}
+                              onChange={(e) => { setLastName(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                               maxLength={60}
                               placeholder={a.last_name_placeholder}
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
@@ -883,7 +892,7 @@ export default function Home() {
                             type="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value.slice(0, 60))}
+                            onChange={(e) => { setEmail(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
                             placeholder={s.email_placeholder || "john.doe@email.com"}
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
@@ -901,7 +910,9 @@ export default function Home() {
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value.slice(0, 60))}
+                            onChange={(e) => { setPassword(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
+                            onFocus={() => setIsPasswordFocused(true)}
+                            onBlur={() => setIsPasswordFocused(false)}
                             maxLength={60}
                             placeholder="••••••••••••"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
@@ -914,6 +925,11 @@ export default function Home() {
                             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                           </button>
                         </div>
+                        <PasswordRequirements 
+                          password={password}
+                          lang={lang}
+                          isFocused={isPasswordFocused}
+                        />
                       </div>
 
                       <div className="space-y-1">
@@ -926,7 +942,7 @@ export default function Home() {
                             type={showConfirmPassword ? 'text' : 'password'}
                             required
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value.slice(0, 60))}
+                            onChange={(e) => { setConfirmPassword(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
                             placeholder="••••••••••••"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
@@ -1026,7 +1042,7 @@ export default function Home() {
                             type="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => { setEmail(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="name@email.com"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
@@ -1043,7 +1059,7 @@ export default function Home() {
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => { setPassword(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="••••••••••••"
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                           />
@@ -1194,7 +1210,7 @@ export default function Home() {
                               type="email"
                               required
                               value={email}
-                              onChange={(e) => setEmail(e.target.value)}
+                              onChange={(e) => { setEmail(e.target.value); if (errorMsg) setErrorMsg(''); }}
                               placeholder="name@email.com"
                               className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
                             />
