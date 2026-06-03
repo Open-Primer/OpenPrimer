@@ -92,8 +92,15 @@ export async function GET(request: Request) {
       } else {
         logs.push(`[GENERATOR] Triggering real AI lesson generation via Gemini 1.5 Flash...`);
         const { generateCourseContent } = require('@/lib/ai');
-        const level = nextTask.level || 'Beginner';
-        const targetLang = (nextTask.targetLang || 'en').toLowerCase();
+        let extra: any = {};
+        try {
+          extra = JSON.parse(nextTask.description || '{}');
+        } catch (e) {
+          console.error("Failed to parse task description JSON in cron route:", e);
+        }
+        const level = extra.level || nextTask.level || 'Beginner';
+        const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
+        const subject = extra.subject || 'General';
         
         await generateCourseContent(nextTask.name, level, targetLang);
         
@@ -103,7 +110,8 @@ export async function GET(request: Request) {
           id: newId,
           title: nextTask.name,
           slug: slug,
-          description: `Dynamic sovereign course on "${nextTask.description}". Synthesized autonomously by Gemini 1.5 Pro.`,
+          subject: subject,
+          description: `Dynamic sovereign course on "${nextTask.name}". Synthesized autonomously by Gemini 1.5 Pro.`,
           level: level,
           archivingLevel: 0,
           is_active: true,

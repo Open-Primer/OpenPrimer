@@ -3404,6 +3404,7 @@ export default function AdminCurriculumPage() {
                   ? asciiClean
                   : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
               })(),
+              subject: runningTask.subject || 'General',
               description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
               level: runningTask.level || 'L1',
               archivingLevel: 0,
@@ -3925,7 +3926,8 @@ export default function AdminCurriculumPage() {
             priority: p.count >= 15 ? 'High' : 'Medium',
             timestamp: new Date().toISOString(),
             targetLang: lang,
-            level: p.level || 'L1'
+            level: p.level || 'L1',
+            subject: p.subject || 'General'
           });
           promoted = true;
         }
@@ -4042,7 +4044,8 @@ export default function AdminCurriculumPage() {
       timestamp: new Date().toISOString(),
       details: `Sovereign Academic Expansion: L2 Progression on subject "${subject}". Prerequisite: ${prerequisite}`,
       targetLang: lang,
-      level: level
+      level: level,
+      subject: subject || 'General'
     };
     const updated = [...queue, newTask];
     setQueue(updated);
@@ -4085,7 +4088,8 @@ export default function AdminCurriculumPage() {
       timestamp: new Date().toISOString(),
       details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
       targetLang: manualLang,
-      level: manualLevel
+      level: manualLevel,
+      subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject
     };
 
     const updated = [...queue, newTask];
@@ -4100,7 +4104,7 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
-  const handleApproveGen = (title: string, count: number, level?: string) => {
+  const handleApproveGen = (title: string, count: number, level?: string, subject?: string) => {
     const targetLvl = level || 'L1';
     const isTooSimilarCourse = courses.some(c => {
       const cLvl = c.level || 'L1';
@@ -4127,7 +4131,8 @@ export default function AdminCurriculumPage() {
       priority: count >= 15 ? 'High' : 'Medium',
       timestamp: new Date().toISOString(),
       targetLang: lang,
-      level: level || 'L1'
+      level: level || 'L1',
+      subject: subject || 'General'
     };
     const updated = [...queue, newTask];
     setQueue(updated);
@@ -5176,7 +5181,7 @@ export default function AdminCurriculumPage() {
                          <div className="flex gap-2 shrink-0 z-10">
                            <button 
                              title={tr("Approve & Promote")} 
-                             onClick={() => handleApproveGen(item.query, item.count, item.level)}
+                             onClick={() => handleApproveGen(item.query, item.count, item.level, item.subject)}
                              className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-md shadow-blue-600/10"
                            >
                              <Check className="w-4 h-4" />

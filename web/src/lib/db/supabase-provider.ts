@@ -244,7 +244,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
           const rowId = isValidUUID ? t.id : undefined;
           const extra = {
             level: t.level || 'L1',
-            targetLang: t.targetLang || ''
+            targetLang: t.targetLang || '',
+            subject: t.subject || 'General'
           };
           return {
             ...(rowId ? { id: rowId } : {}),
