@@ -10,7 +10,7 @@ import { MdxContent } from '@/components/mdx/MdxContent';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
-import { UI_STRINGS } from '@/components/RefinedUI';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
@@ -32,6 +32,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     if (!pageData) return notFound();
 
+    const normalizedLangCode = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
+    const t = STATIC_UI_STRINGS[normalizedLangCode] || STATIC_UI_STRINGS.EN;
+
     // Serialize MDX on the server — safe to pass to client components
     const mdxSource = await serialize(pageData.content, {
       mdxOptions: {
@@ -46,7 +49,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const folders = rawNav.filter(item => item.type === 'folder');
     
     const navItems = [
-      ...(files.length > 0 ? [{ name: UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS]?.overview || UI_STRINGS.EN.overview, type: 'folder', children: files }] : []),
+      ...(files.length > 0 ? [{ name: t.overview || STATIC_UI_STRINGS.EN.overview, type: 'folder', children: files }] : []),
       ...folders
     ];
 
@@ -63,7 +66,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     const title = pageData.meta.title || 'Untitled Module';
     const subject = pageData.meta.subject || 'Academic Content';
-    const moduleName = pageData.meta.module || UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS]?.overview || UI_STRINGS.EN.overview;
+    const moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
     const level = pageData.meta.level || 'L1';
 
     const getLocalizedCoreModule = (currentLang: string, lvl: string) => {
@@ -240,7 +243,8 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       throw err;
     }
     console.error("CRITICAL ERROR IN CoursePage:", err);
-    const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+    const langKey = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
+    const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8">
         <div className="max-w-2xl bg-red-950/20 border border-red-500/30 p-8 rounded-[32px] text-center backdrop-blur-2xl">

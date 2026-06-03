@@ -80,6 +80,33 @@ async function main() {
     console.log("=============================================\n");
 
     await pgClient.connect();
+    console.log("Applying schema upgrade migrations...");
+    const migrations = [
+      "ALTER TABLE public.tutor_personalities ADD COLUMN IF NOT EXISTS translations JSONB DEFAULT '{}'::jsonb",
+      "ALTER TABLE public.tutor_personalities ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS is_curriculum BOOLEAN DEFAULT false",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS child_courses INTEGER[] DEFAULT '{}'::integer[]",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS translations JSONB DEFAULT '{}'::jsonb",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS archived_languages TEXT[] DEFAULT '{}'::text[]",
+      "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS translations JSONB DEFAULT '{}'::jsonb",
+      "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
+      "ALTER TABLE public.languages ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password VARCHAR(255)",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_volume NUMERIC(3, 2) DEFAULT 1.00",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_rate NUMERIC(3, 2) DEFAULT 1.00",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_voice_id VARCHAR(255) DEFAULT ''",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS version VARCHAR(50) DEFAULT 'v1.0.0'",
+      "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS last_revision_date TIMESTAMP WITH TIME ZONE"
+    ];
+    for (const q of migrations) {
+      try {
+        await pgClient.query(q);
+      } catch (e) {
+        console.log("Migration note:", e.message);
+      }
+    }
+  
     console.log("ðŸ”Œ Connected to PostgreSQL Database owner successfully.");
 
     // 0. ENSURE SITE STATS, AGENT METRICS, PROGRESS, SYSTEM PARAMETERS AND SERVICE UPTIME LOGS EXIST

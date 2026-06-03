@@ -708,6 +708,13 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: newFeedback, error: null };
   },
 
+  markFeedbackTreated: async (id: string | number) => {
+    const list = getCourseFeedbacks().map(f => f.id === id ? { ...f, isTreated: true } : f);
+    setCourseFeedbacks(list);
+    setLocalStorageItem('openprimer_course_feedbacks', list);
+    return { data: null, error: null };
+  },
+
   cleanupCourseFeedbacks: async (retentionDays: number) => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - retentionDays);

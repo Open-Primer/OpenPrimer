@@ -1540,7 +1540,9 @@ export const isDatabaseConfigured =
   !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') &&
   process.env.NEXT_PUBLIC_SUPABASE_URL.trim() !== '';
 
-const isSandboxModeActive = typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true';
+const isSandboxModeActive = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+  window.localStorage.getItem('op_allow_sandbox') === 'true';
 
 if (isDatabaseConfigured && !isSandboxModeActive) {
   // 100% Direct Database Mode: No cached mocks or preseeded local storages
@@ -2164,6 +2166,7 @@ export interface DatabaseService {
   cleanupSearchHistory(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
   getCourseFeedbacks(courseId?: string): Promise<{ data: CourseFeedback[]; error: any }>;
   addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>): Promise<{ data: CourseFeedback | null; error: any }>;
+  markFeedbackTreated(id: string | number): Promise<{ data: any; error: any }>;
   cleanupCourseFeedbacks(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
   addCourse(course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>): Promise<{ data: MockCourse; error: any }>;
   saveCourse(course: any): Promise<{ data: MockCourse; error: any }>;

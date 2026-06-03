@@ -3402,7 +3402,7 @@ export default function AdminCurriculumPage() {
                   throw new Error(data.error || 'Generation failed');
                 }
 
-                const newId = `crs_${Date.now()}`;
+                const newId = `crs_${(Date.now() % 1000000000) + Math.floor(Math.random() * 1000)}`;
                 await dbService.saveCourse({
                   id: newId,
                   title: runningTask.title,
@@ -4278,11 +4278,11 @@ export default function AdminCurriculumPage() {
     setQueue(updatedQueue);
     dbService.savePipelineQueue(updatedQueue);
 
-    // Increment version and update last_revision_date (Version Governance)
-    const localCourses = JSON.parse(localStorage.getItem('openprimer_courses') || '[]');
-    const updatedCourses = localCourses.map((c: any) => {
-      if (c.title.toLowerCase() === courseTitle.toLowerCase()) {
-        const currentVersion = c.version || 'v1.0.0';
+    if (isDatabaseConfigured) {
+      // Find course in courses state
+      const targetCourse = courses.find((c: any) => c.title.toLowerCase() === courseTitle.toLowerCase());
+      if (targetCourse) {
+        const currentVersion = targetCourse.version || 'v1.0.0';
         let nextVersion = 'v1.0.1';
         const match = currentVersion.match(/v?(\d+)\.(\d+)\.(\d+)/);
         if (match) {
@@ -4291,27 +4291,58 @@ export default function AdminCurriculumPage() {
           const patch = parseInt(match[3], 10) + 1;
           nextVersion = `v${major}.${minor}.${patch}`;
         }
-        return {
-          ...c,
+        const updatedCourse = {
+          ...targetCourse,
           version: nextVersion,
           last_revision_date: new Date().toISOString()
         };
+        await dbService.saveCourse(updatedCourse);
+
+        // Auto-treat matching feedbacks in Database
+        const courseSlug = targetCourse.slug || '';
+        const matchingFeedbacks = feedbacks.filter((f: any) => 
+          f.courseId === courseSlug && 
+          f.comment.toLowerCase().includes(chapter.toLowerCase().replace('chapter ', '')) &&
+          !f.isTreated
+        );
+        await Promise.all(matchingFeedbacks.map(f => dbService.markFeedbackTreated(f.id)));
       }
-      return c;
-    });
-    localStorage.setItem('openprimer_courses', JSON.stringify(updatedCourses));
-    
-    // Auto-treat matching feedbacks
-    const localFeedbacks = JSON.parse(localStorage.getItem('openprimer_course_feedbacks') || '[]');
-    const targetCourse = localCourses.find((c: any) => c.title.toLowerCase() === courseTitle.toLowerCase());
-    const courseSlug = targetCourse?.slug || '';
-    const updatedFeedbacks = localFeedbacks.map((f: any) => {
-      if (f.courseId === courseSlug && f.comment.toLowerCase().includes(chapter.toLowerCase().replace('chapter ', ''))) {
-        return { ...f, isTreated: true };
-      }
-      return f;
-    });
-    localStorage.setItem('openprimer_course_feedbacks', JSON.stringify(updatedFeedbacks));
+    } else {
+      // Increment version and update last_revision_date (Version Governance)
+      const localCourses = JSON.parse(localStorage.getItem('openprimer_courses') || '[]');
+      const updatedCourses = localCourses.map((c: any) => {
+        if (c.title.toLowerCase() === courseTitle.toLowerCase()) {
+          const currentVersion = c.version || 'v1.0.0';
+          let nextVersion = 'v1.0.1';
+          const match = currentVersion.match(/v?(\d+)\.(\d+)\.(\d+)/);
+          if (match) {
+            const major = parseInt(match[1], 10);
+            const minor = parseInt(match[2], 10);
+            const patch = parseInt(match[3], 10) + 1;
+            nextVersion = `v${major}.${minor}.${patch}`;
+          }
+          return {
+            ...c,
+            version: nextVersion,
+            last_revision_date: new Date().toISOString()
+          };
+        }
+        return c;
+      });
+      localStorage.setItem('openprimer_courses', JSON.stringify(updatedCourses));
+      
+      // Auto-treat matching feedbacks
+      const localFeedbacks = JSON.parse(localStorage.getItem('openprimer_course_feedbacks') || '[]');
+      const targetCourse = localCourses.find((c: any) => c.title.toLowerCase() === courseTitle.toLowerCase());
+      const courseSlug = targetCourse?.slug || '';
+      const updatedFeedbacks = localFeedbacks.map((f: any) => {
+        if (f.courseId === courseSlug && f.comment.toLowerCase().includes(chapter.toLowerCase().replace('chapter ', ''))) {
+          return { ...f, isTreated: true };
+        }
+        return f;
+      });
+      localStorage.setItem('openprimer_course_feedbacks', JSON.stringify(updatedFeedbacks));
+    }
 
     loadData();
     const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;

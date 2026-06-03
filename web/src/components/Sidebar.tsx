@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { NavItem } from '@/lib/content';
-import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
+import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 
@@ -68,7 +68,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         });
       });
 
-      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_allow_sandbox') !== 'true';
+      const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
       let dbProgress = 12;
       let dbVisited: string[] = [];
 

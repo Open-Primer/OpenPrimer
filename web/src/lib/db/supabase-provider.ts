@@ -147,7 +147,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
           created_at: c.created_at,
           isCurriculum: c.is_curriculum || false,
           childCourses: c.child_courses || [],
-          translations: c.translations || {}
+          translations: c.translations || {},
+          version: c.version || 'v1.0.0',
+          last_revision_date: c.last_revision_date || c.created_at || null
         };
         return { data: mapped, error: null };
       }
@@ -185,8 +187,11 @@ export const supabaseDatabaseProvider: DatabaseService = {
           created_at: c.created_at,
           isCurriculum: c.is_curriculum || false,
           childCourses: c.child_courses || [],
-          translations: c.translations || {}
+          translations: c.translations || {},
+          version: c.version || 'v1.0.0',
+          last_revision_date: c.last_revision_date || c.created_at || null
         }));
+        setMockCourses(dbCourses);
         return { data: dbCourses, error: null };
       }
       return { data: [], error: null };
@@ -644,6 +649,14 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   approveClusterFix: async (id: string) => {
     try {
+      if (id.startsWith('rev_feed_')) {
+        const slug = id.replace('rev_feed_', '');
+        const { error: cfError } = await supabase
+          .from('course_feedbacks')
+          .update({ is_treated: true })
+          .eq('course_id', slug);
+        if (cfError) throw cfError;
+      }
       const { data, error } = await supabase.from('report_clusters').update({ status: 'Fixed' }).eq('id', id);
       if (error) throw error;
       return { data, error };
@@ -966,6 +979,21 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
+  markFeedbackTreated: async (id: string | number) => {
+    try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      const { data, error } = await supabase
+        .from('course_feedbacks')
+        .update({ is_treated: true })
+        .eq('id', numericId || id);
+      if (error) throw error;
+      return { data, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
+  },
+
   cleanupCourseFeedbacks: async (retentionDays: number) => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - retentionDays);
@@ -1019,7 +1047,10 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   saveCourse: async (course: any) => {
     try {
-      const searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
+      let searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
+      if (typeof searchId === 'number' && searchId > 2147483647) {
+        searchId = (searchId % 2000000000) + 1000;
+      }
       const { data, error } = await supabase.from('courses').upsert({
         id: searchId,
         title: course.title,
@@ -1034,10 +1065,13 @@ export const supabaseDatabaseProvider: DatabaseService = {
         archiving_level: course.archivingLevel !== undefined ? course.archivingLevel : 0,
         is_curriculum: course.isCurriculum || false,
         child_courses: course.childCourses || [],
-        translations: course.translations
+        translations: course.translations,
+        version: course.version || 'v1.0.0',
+        last_revision_date: course.last_revision_date || new Date().toISOString()
       }).select().single();
       if (error) throw error;
-      return { data: error ? null : {
+      
+      const savedCourse = {
         id: data.id,
         title: data.title,
         slug: data.slug,
@@ -1056,8 +1090,18 @@ export const supabaseDatabaseProvider: DatabaseService = {
         created_at: data.created_at,
         isCurriculum: data.is_curriculum,
         childCourses: data.child_courses,
-        translations: data.translations
-      }, error: null };
+        translations: data.translations,
+        version: data.version || 'v1.0.0',
+        last_revision_date: data.last_revision_date || data.created_at || null
+      };
+
+      const currentMock = getMockCourses();
+      const updatedMock = currentMock.some(c => c.id === savedCourse.id)
+        ? currentMock.map(c => c.id === savedCourse.id ? savedCourse : c)
+        : [...currentMock, savedCourse];
+      setMockCourses(updatedMock);
+
+      return { data: savedCourse, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: null as any, error: e as any };
