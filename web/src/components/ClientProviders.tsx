@@ -352,14 +352,28 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Render offline game only for admin curriculum page, catalog search results, and course player page, other pages degrade gracefully
+  // Do not redirect to the offline game if the user is a logged-in administrator (so they can fix issues)
   let showOfflineGame = false;
   if (dbFailed && typeof window !== "undefined") {
-    const segments = window.location.pathname.split('/').filter(Boolean);
-    const isCurriculum = window.location.pathname.startsWith('/admin/curriculum');
-    const isCatalogSearch = window.location.pathname.startsWith('/catalog') && window.location.search.includes('search=');
-    const isCoursePlayer = segments.length >= 3 && 
-      !['admin', 'profile', 'catalog', 'contact', 'privacy', 'terms', 'auth', 'api', 'signup', 'login'].includes(segments[0]);
-    showOfflineGame = isCurriculum || isCatalogSearch || isCoursePlayer;
+    let isAdmin = false;
+    try {
+      const savedProfile = localStorage.getItem("op_user_profile");
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed.role === "admin") {
+          isAdmin = true;
+        }
+      }
+    } catch (e) {}
+
+    if (!isAdmin) {
+      const segments = window.location.pathname.split('/').filter(Boolean);
+      const isCurriculum = window.location.pathname.startsWith('/admin/curriculum');
+      const isCatalogSearch = window.location.pathname.startsWith('/catalog') && window.location.search.includes('search=');
+      const isCoursePlayer = segments.length >= 3 && 
+        !['admin', 'profile', 'catalog', 'contact', 'privacy', 'terms', 'auth', 'api', 'signup', 'login'].includes(segments[0]);
+      showOfflineGame = isCurriculum || isCatalogSearch || isCoursePlayer;
+    }
   }
 
   return (
