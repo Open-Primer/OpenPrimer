@@ -668,15 +668,59 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   registerLanguage: async (lang: LanguageInfo) => {
-    return { data: lang, error: null };
+    try {
+      const { data, error } = await supabase
+        .from('languages')
+        .insert({
+          code: lang.code.toUpperCase(),
+          flag: lang.flag,
+          label: lang.label,
+          archiving_level: 0
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+
+      // Pre-create/translate the email templates for the new language in the background
+      const { getOrTranslateTemplate } = await import('@/lib/emailService');
+      getOrTranslateTemplate('verify_email', lang.code).catch(e => console.error("Error pre-creating verify_email template:", e));
+      getOrTranslateTemplate('lost_password', lang.code).catch(e => console.error("Error pre-creating lost_password template:", e));
+      getOrTranslateTemplate('feedback', lang.code).catch(e => console.error("Error pre-creating feedback template:", e));
+
+      return { data, error: null };
+    } catch (err: any) {
+      console.error(`[DB registerLanguage ERROR]`, err);
+      return { data: lang, error: err };
+    }
   },
 
   setLanguageArchivingLevel: async (code: string, level: number) => {
-    return { data: null, error: null };
+    try {
+      const { data, error } = await supabase
+        .from('languages')
+        .update({ archiving_level: level })
+        .eq('code', code.toUpperCase());
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (err: any) {
+      console.error(`[DB setLanguageArchivingLevel ERROR]`, err);
+      return { data: null, error: err };
+    }
   },
 
   deleteLanguage: async (code: string) => {
-    return { data: null, error: null };
+    try {
+      const { data, error } = await supabase
+        .from('languages')
+        .delete()
+        .eq('code', code.toUpperCase());
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (err: any) {
+      console.error(`[DB deleteLanguage ERROR]`, err);
+      return { data: null, error: err };
+    }
   },
 
   getAchievements: async () => {

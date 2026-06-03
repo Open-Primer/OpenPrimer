@@ -1260,7 +1260,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   }, [isCoursePage]);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
-  const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; role?: string; } | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportComment, setReportComment] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -1619,9 +1619,11 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       <Settings className="w-4 h-4" /> {t.settings}
                     </Link>
 
-                    <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
-                      <ShieldAlert className="w-4 h-4" /> {t.admin}
-                    </Link>
+                    {(userProfile?.role === 'admin' || userProfile?.email === 'vanguard.mysterious@gmail.com') && (
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                        <ShieldAlert className="w-4 h-4" /> {t.admin}
+                      </Link>
+                    )}
                     
                     <div className="h-px bg-slate-800/50 my-1" />
                     

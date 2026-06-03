@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../lib/db';
 import { isRateLimited } from '@/lib/rateLimit';
+import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emailService';
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Too many feedback requests. Please try again in a minute.' }, { status: 429 });
     }
 
-    const { name, email, message } = await request.json();
+    const { name, email, message, lang } = await request.json();
     const redirectionEmail = process.env.SUPPORT_EMAIL_REDIRECTION || 'vanguard.mysterious@gmail.com';
     const resendApiKey = process.env.RESEND_API_KEY;
 
@@ -18,8 +19,10 @@ export async function POST(request: Request) {
     await dbService.saveContactFeedback({ name, email, message });
 
     if (resendApiKey) {
-      console.log(`[RESEND] Dispatching real email from ${email} to ${redirectionEmail}...`);
-      const res = await fetch('https://api.resend.com/emails', {
+      console.log(`[RESEND] Dispatching real notification email from ${email} to ${redirectionEmail}...`);
+      
+      // Send admin notification
+      await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
@@ -43,11 +46,39 @@ export async function POST(request: Request) {
         })
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`[RESEND ERROR] Failed to send email via Resend: ${errorText}`);
+      // Send personalized receipt to the student
+      const nameParts = (name || '').trim().split(/\s+/);
+      const fName = nameParts[0] || '';
+      const lName = nameParts.slice(1).join(' ') || '';
+
+      const userLang = (lang || 'EN').toUpperCase();
+      const dbTemplate = await getOrTranslateTemplate('feedback', userLang);
+      const { subject, html: emailHtml } = personalizeAndRenderTemplate(dbTemplate, {
+        firstName: fName,
+        lastName: lName,
+        message: message
+      });
+
+      console.log(`[RESEND] Dispatching personalized feedback receipt email to ${email}...`);
+      const userRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'OpenPrimer <support@openprimer.app>',
+          to: email,
+          subject: subject,
+          html: emailHtml
+        })
+      });
+
+      if (!userRes.ok) {
+        const errorText = await userRes.text();
+        console.error(`[RESEND USER FEEDBACK ERROR]`, errorText);
       } else {
-        console.log(`[RESEND SUCCESS] Email sent successfully via Resend API.`);
+        console.log(`[RESEND USER FEEDBACK SUCCESS] Confirmation receipt sent to ${email}.`);
       }
     } else {
       console.warn('[RESEND WARNING] RESEND_API_KEY not configured. Falling back to local console mock.');

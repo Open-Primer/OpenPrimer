@@ -579,6 +579,14 @@ export const mockDatabaseProvider: DatabaseService = {
     }
     setAvailableLanguagesList(list);
     setLocalStorageItem('openprimer_languages', list);
+
+    // Pre-create/translate the email templates for the new language in the background
+    import('@/lib/emailService').then(({ getOrTranslateTemplate }) => {
+      getOrTranslateTemplate('verify_email', lang.code).catch(e => console.error("Error pre-creating verify_email template:", e));
+      getOrTranslateTemplate('lost_password', lang.code).catch(e => console.error("Error pre-creating lost_password template:", e));
+      getOrTranslateTemplate('feedback', lang.code).catch(e => console.error("Error pre-creating feedback template:", e));
+    }).catch(() => {});
+
     return { data: lang, error: null };
   },
 

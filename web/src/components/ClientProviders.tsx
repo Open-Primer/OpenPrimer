@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { BADGE_LIBRARY } from "@/lib/db";
@@ -126,6 +127,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [dbFailed, setDbFailed] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [activeLang, setActiveLang] = useState("EN");
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -349,9 +351,17 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Render offline game only for admin curriculum page and catalog search results page, other pages degrade gracefully
+  let showOfflineGame = false;
+  if (dbFailed && typeof window !== "undefined") {
+    const isCurriculum = window.location.pathname.startsWith('/admin/curriculum');
+    const isCatalogSearch = window.location.pathname.startsWith('/catalog') && window.location.search.includes('search=');
+    showOfflineGame = isCurriculum || isCatalogSearch;
+  }
+
   return (
     <LanguageProvider>
-      {dbFailed ? <DatabaseOfflineGame /> : children}
+      {showOfflineGame ? <DatabaseOfflineGame /> : children}
 
       {/* Floating Achievement Toast Manager */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 max-w-sm w-full pointer-events-none px-4 sm:px-0">

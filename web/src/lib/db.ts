@@ -1667,28 +1667,34 @@ export const authService = {
   isAdmin: () => users[0].role === 'admin'
 };
 
+export let dynamicOffline = false;
+
 export const isSandboxFallbackAllowed = (): boolean => {
   if (typeof window !== 'undefined') {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost) return false;
+
     const allowed = localStorage.getItem('op_allow_sandbox');
     if (allowed === 'true') return true;
     if (allowed === 'false') return false;
   }
   if (isDatabaseConfigured) return false;
-  if (process.env.NODE_ENV === 'production') {
-    // If Supabase credentials are not specified, or are placeholders, automatically allow sandbox
-    const hasKeys = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project');
-    if (!hasKeys) {
-      return true;
-    }
-    return false;
-  }
-  return true;
+  return false;
 }
 
 export const handleDatabaseError = (error: any) => {
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (isLocalhost) {
+    console.warn("⚠️ [DATABASE FALLBACK] Supabase query failed. Falling back to LocalStorage mock provider on localhost:", error);
+    dynamicOffline = true;
+    return;
+  }
+
   // Only log in the console when a real DB connection is expected (production/configured env)
   if (isDatabaseConfigured) {
-    console.error("ðŸš¨ [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+    console.error("🚨 [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
   }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
@@ -1714,11 +1720,13 @@ async function withFallback<T>(
 // CHECK IF OFFLINE MODE (Supports local storage sandbox fallback for E2E tests)
 let isOffline = false;
 if (typeof window !== 'undefined') {
-  isOffline = window.localStorage.getItem('op_allow_sandbox') === 'true' || 
-              !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-              process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project');
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  isOffline = isLocalhost && (
+    window.localStorage.getItem('op_allow_sandbox') === 'true' || 
+    !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+    process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')
+  );
 }
-
 export const LOCALIZED_COURSE_TITLES: Record<string, Record<string, string>> = {
   "Classical_Mechanics": {
     EN: "Physics: Classical Mechanics",
@@ -2249,9 +2257,47 @@ export function mockDatabaseProviderHash(password: string): string {
 import { mockDatabaseProvider } from './db/mock-provider';
 import { supabaseDatabaseProvider } from './db/supabase-provider';
 
-export const dbService: DatabaseService = (isDatabaseConfigured && !isOffline)
-  ? supabaseDatabaseProvider
-  : mockDatabaseProvider;
+export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
+  get(target, prop, receiver) {
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    const useSupabase = isDatabaseConfigured && !isOffline && (!isLocalhost || !dynamicOffline);
+    const activeProvider = useSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
+
+    const value = Reflect.get(activeProvider, prop, receiver);
+
+    if (typeof value === 'function') {
+      return async function (...args: any[]) {
+
+        try {
+          const res = await value.apply(activeProvider, args);
+          if (useSupabase && isLocalhost && res && res.error) {
+            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost. Falling back to Mock/LocalStorage provider.`, res.error);
+            dynamicOffline = true;
+            const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
+            if (typeof retryValue === 'function') {
+              return retryValue.apply(mockDatabaseProvider, args);
+            }
+          }
+          return res;
+        } catch (err) {
+          if (useSupabase && isLocalhost) {
+            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw an error on localhost. Falling back to Mock/LocalStorage provider.`, err);
+            dynamicOffline = true;
+            const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
+            if (typeof retryValue === 'function') {
+              return retryValue.apply(mockDatabaseProvider, args);
+            }
+          }
+          throw err;
+        }
+      };
+    }
+
+    return value;
+  }
+});
 
 export const progressService = {
   // Page visits

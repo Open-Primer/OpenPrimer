@@ -2,7 +2,7 @@
  
 import React, { useState, useEffect } from 'react';
 import { dbService, UserProfile, UserRole } from '@/lib/db';
-import { Search, UserCog, Shield, ShieldCheck, Mail, Calendar, ChevronRight, Ban, Trash2, Check, X, AlertCircle, PlusCircle } from 'lucide-react';
+import { Search, UserCog, Shield, ShieldCheck, Mail, Calendar, ChevronRight, Ban, Trash2, Check, X, AlertCircle, PlusCircle, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -26,14 +26,15 @@ export const USERS_STRINGS = {
     cancel: "Cancel",
     execute: "Execute",
     add_title: "Add New Student",
-    full_name: "Full Name",
+    first_name: "First Name",
+    last_name: "Last Name",
     email_address: "Email Address",
     password: "Password",
     system_role: "System Role",
     lang_pref: "Language Preference",
     visual_theme: "Visual Theme",
     create_profile: "Create Student Profile",
-    error_required: "Name and Email are strictly required fields.",
+    error_required: "First Name, Last Name, and Email are strictly required.",
     error_email: "Please supply a valid corporate or academic email address.",
     error_password: "Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.",
     student_opt: "🎓 Student Profile (Default)",
@@ -61,14 +62,15 @@ export const USERS_STRINGS = {
     cancel: "Annuler",
     execute: "Exécuter",
     add_title: "Ajouter un Nouvel Étudiant",
-    full_name: "Nom Complet",
+    first_name: "Prénom",
+    last_name: "Nom",
     email_address: "Adresse Email",
     password: "Mot de passe",
     system_role: "Rôle Système",
     lang_pref: "Préférence de Langue",
     visual_theme: "Thème Visuel",
     create_profile: "Créer le Profil Étudiant",
-    error_required: "Le nom et l'email sont strictement requis.",
+    error_required: "Le prénom, le nom et l'email sont strictement requis.",
     error_email: "Veuillez fournir une adresse email valide.",
     error_password: "Le mot de passe doit contenir au moins 12 caractères, incluant une lettre majuscule, une lettre minuscule, un nombre et un caractère spécial.",
     student_opt: "🎓 Profil Étudiant (Par défaut)",
@@ -96,14 +98,15 @@ export const USERS_STRINGS = {
     cancel: "Cancelar",
     execute: "Ejecutar",
     add_title: "Añadir Nuevo Estudiante",
-    full_name: "Nombre Completo",
+    first_name: "Nombre",
+    last_name: "Apellido",
     email_address: "Dirección de Correo",
     password: "Contraseña",
     system_role: "Rol del Sistema",
     lang_pref: "Preferencia de Idioma",
     visual_theme: "Tema Visual",
     create_profile: "Crear Perfil de Estudiante",
-    error_required: "El nombre y el correo electrónico son campos estrictamente requeridos.",
+    error_required: "El nombre, el apellido y el correo son estrictamente requeridos.",
     error_email: "Por favor proporcione una dirección de correo válida.",
     error_password: "La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
     student_opt: "🎓 Perfil de Estudiante (Predeterminado)",
@@ -131,14 +134,15 @@ export const USERS_STRINGS = {
     cancel: "Abbrechen",
     execute: "Ausführen",
     add_title: "Neuen Studenten hinzufügen",
-    full_name: "Vollständiger Name",
+    first_name: "Vorname",
+    last_name: "Nachname",
     email_address: "E-Mail-Adresse",
     password: "Passwort",
     system_role: "Systemrolle",
     lang_pref: "Bevorzugte Sprache",
     visual_theme: "Visuelles Thema",
     create_profile: "Studentenprofil erstellen",
-    error_required: "Name und E-Mail-Adresse sind Pflichtfelder.",
+    error_required: "Vorname, Nachname und E-Mail sind Pflichtfelder.",
     error_email: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     error_password: "Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
     student_opt: "🎓 Studentenprofil (Standard)",
@@ -166,14 +170,15 @@ export const USERS_STRINGS = {
     cancel: "取消",
     execute: "执行",
     add_title: "注册新学生账号",
-    full_name: "姓名",
+    first_name: "名",
+    last_name: "姓",
     email_address: "电子邮箱地址",
     password: "密码",
     system_role: "系统角色",
     lang_pref: "首选语言偏好",
     visual_theme: "界面视觉主题",
     create_profile: "创建学生档案",
-    error_required: "姓名和邮箱是必填项！",
+    error_required: "名、姓和邮箱是必填项！",
     error_email: "请输入有效的公司或学校电子邮箱地址。",
     error_password: "密码长度必须至少为 12 个字符，且必须包含大小写字母、数字及特殊字符。",
     student_opt: "🎓 普通学生账号 (默认)",
@@ -202,7 +207,8 @@ export default function AdminUsers() {
   
   // Visual Create User states
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newLastName, setNewLastName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('student');
   const [newLang, setNewLang] = useState('EN');
@@ -236,7 +242,7 @@ export default function AdminUsers() {
     e.preventDefault();
     setNewUserError(null);
  
-    if (!newName.trim() || !newEmail.trim()) {
+    if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim()) {
       setNewUserError(t.error_required);
       return;
     }
@@ -245,17 +251,18 @@ export default function AdminUsers() {
       setNewUserError(t.error_email);
       return;
     }
-
+ 
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
     if (!newPassword || !PASSWORD_REGEX.test(newPassword)) {
       setNewUserError(t.error_password);
       return;
     }
  
+    const fullName = `${newFirstName.trim()} ${newLastName.trim()}`;
     const generatedId = 'u_' + Date.now() + Math.random().toString(36).substr(2, 5);
     await dbService.createUser({
       id: generatedId,
-      name: newName,
+      name: fullName,
       email: newEmail,
       role: newRole,
       preferredLang: newLang,
@@ -264,7 +271,8 @@ export default function AdminUsers() {
     });
  
     setIsAddUserOpen(false);
-    setNewName('');
+    setNewFirstName('');
+    setNewLastName('');
     setNewEmail('');
     setNewPassword('');
     setShowNewPassword(false);
@@ -273,7 +281,7 @@ export default function AdminUsers() {
     setNewReadingMode('default');
     loadUsers();
   };
- 
+
   const filteredUsers = users.filter(u => 
     u.name.toLowerCase().includes(search.toLowerCase()) || 
     u.email.toLowerCase().includes(search.toLowerCase())
@@ -495,7 +503,7 @@ export default function AdminUsers() {
                 <button onClick={() => setIsAddUserOpen(false)} className="text-slate-500 hover:text-white cursor-pointer"><X className="w-5 h-5" /></button>
               </div>
  
-              <form onSubmit={handleCreateUser} className="space-y-6">
+              <form onSubmit={handleCreateUser} className="space-y-6" autoComplete="off">
                 {newUserError && (
                   <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-2.5 text-xs text-red-400">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -503,17 +511,33 @@ export default function AdminUsers() {
                   </div>
                 )}
  
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.full_name} <span className="text-red-500">*</span></label>
-                  <input 
-                    required
-                    type="text"
-                    id="student-name-input"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Jean Dupont"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-semibold"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.first_name} <span className="text-red-500">*</span></label>
+                    <input 
+                      required
+                      type="text"
+                      id="student-firstname-input"
+                      value={newFirstName}
+                      onChange={(e) => setNewFirstName(e.target.value)}
+                      placeholder="e.g. Jean"
+                      autoComplete="new-name"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-semibold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.last_name} <span className="text-red-500">*</span></label>
+                    <input 
+                      required
+                      type="text"
+                      id="student-lastname-input"
+                      value={newLastName}
+                      onChange={(e) => setNewLastName(e.target.value)}
+                      placeholder="e.g. Dupont"
+                      autoComplete="new-name"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-semibold"
+                    />
+                  </div>
                 </div>
  
                 <div className="space-y-2">
@@ -525,6 +549,7 @@ export default function AdminUsers() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="e.g. jean.dupont@openprimer.org"
+                    autoComplete="new-email"
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
                   />
                 </div>
@@ -539,18 +564,19 @@ export default function AdminUsers() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••••••"
+                      autoComplete="new-password"
                       className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-16 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-widest outline-none focus:outline-none cursor-pointer"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white outline-none focus:outline-none cursor-pointer flex items-center justify-center"
                     >
-                      {showNewPassword ? "HIDE" : "SHOW"}
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
- 
+                
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-3">{t.system_role}</label>
                   <select 

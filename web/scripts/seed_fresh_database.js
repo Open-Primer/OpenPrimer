@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OpenPrimer Reusable Setup & Disaster Recovery Seeding Script
  * 
  * Purpose: 
@@ -163,6 +163,22 @@ async function main() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS public.email_templates (
+        id VARCHAR(255) PRIMARY KEY,
+        template_type VARCHAR(100) NOT NULL,
+        lang VARCHAR(10) NOT NULL,
+        subject TEXT NOT NULL,
+        subtitle TEXT NOT NULL,
+        welcome TEXT NOT NULL,
+        body TEXT NOT NULL,
+        button TEXT NOT NULL,
+        fallback_text TEXT NOT NULL,
+        footer TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_type_lang UNIQUE (template_type, lang)
+      );
+
       -- Apply RLS policies & permissions
       ALTER TABLE public.system_parameters ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to system_parameters" ON public.system_parameters;
@@ -199,10 +215,15 @@ async function main() {
       DROP POLICY IF EXISTS "Allow all access to report_clusters" ON public.report_clusters;
       CREATE POLICY "Allow all access to report_clusters" ON public.report_clusters FOR ALL USING (true) WITH CHECK (true);
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.report_clusters TO public, anon, authenticated;
+
+      ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Allow all access to email_templates" ON public.email_templates;
+      CREATE POLICY "Allow all access to email_templates" ON public.email_templates FOR ALL USING (true) WITH CHECK (true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.email_templates TO public, anon, authenticated;
     `);
 
     // A. PURGE ALL TRANSACTIONAL AND PROGRESS DATA (Clean canvas, 0 courses completed)
-    console.log("ðŸ—‘ï¸ Truncating active student and course data (completions, courses, queues, logs, feedbacks)...");
+    console.log("🗑️ Truncating active student and course data (completions, courses, queues, logs, feedbacks)...");
     await pgClient.query(`
       TRUNCATE TABLE 
         public.profiles, 
@@ -216,13 +237,14 @@ async function main() {
         public.progress,
         public.translation_requests,
         public.course_feedbacks,
-        public.report_clusters
+        public.report_clusters,
+        public.email_templates
       CASCADE;
     `);
-    console.log("âœ… Student progress, stats, and operational logs fully truncated.");
+    console.log("✅ Student progress, stats, and operational logs fully truncated.");
 
     // B. PURGE ALL AUTH ACCOUNTS
-    console.log("ðŸ—‘ï¸ Purging Supabase Auth accounts...");
+    console.log("🗑️ Purging Supabase Auth accounts...");
     await pgClient.query('TRUNCATE TABLE auth.users CASCADE;');
     console.log("âœ… Authentication table fully purged.");
 
@@ -237,7 +259,210 @@ async function main() {
         ('ZH', 'ðŸ‡¨ðŸ‡³', 'ä¸­æ–‡', 0)
       ON CONFLICT (code) DO UPDATE SET flag = EXCLUDED.flag, label = EXCLUDED.label;
     `);
-    console.log("âœ… System languages seeded.");
+    console.log("✅ System languages seeded.");
+
+    console.log("🌱 Seeding Email Templates...");
+    const emailTemplates = [
+      // verify_email
+      {
+        id: 'verify_email_FR',
+        template_type: 'verify_email',
+        lang: 'FR',
+        subject: 'Activer votre compte OpenPrimer',
+        subtitle: 'VOTRE UNIVERSITÉ ACADÉMIQUE DE POINTE',
+        welcome: 'Bienvenue à bord !',
+        body: 'Merci de vous être inscrit sur OpenPrimer. Pour commencer votre apprentissage personnalisé allant du primaire à la L3, veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous :',
+        button: 'Activer mon compte',
+        fallback_text: 'Si le bouton ci-dessus ne fonctionne pas, copiez et collez le lien suivant dans votre navigateur :',
+        footer: '© 2026 OpenPrimer. Tous droits réservés.'
+      },
+      {
+        id: 'verify_email_EN',
+        template_type: 'verify_email',
+        lang: 'EN',
+        subject: 'Activate your OpenPrimer account',
+        subtitle: 'YOUR LEADING ACADEMIC UNIVERSITY',
+        welcome: 'Welcome aboard !',
+        body: 'Thank you for signing up on OpenPrimer. To begin your personalized learning journey from primary school to level L3, please confirm your email address by clicking the button below:',
+        button: 'Activate my account',
+        fallback_text: 'If the button above does not work, copy and paste the following link into your browser:',
+        footer: '© 2026 OpenPrimer. All rights reserved.'
+      },
+      {
+        id: 'verify_email_ES',
+        template_type: 'verify_email',
+        lang: 'ES',
+        subject: 'Activa tu cuenta de OpenPrimer',
+        subtitle: 'TU UNIVERSIDAD ACADÉMICA DE VANGUARDIA',
+        welcome: '¡Bienvenido a bordo!',
+        body: 'Gracias por registrarte en OpenPrimer. Para comenzar tu viaje de aprendizaje personalizado desde la escuela primaria hasta el nivel L3, confirma tu dirección de correo electrónico haciendo clic en el botón de abajo:',
+        button: 'Activar mi cuenta',
+        fallback_text: 'Si el botón de arriba no funciona, copia y pega el siguiente enlace en tu navegador:',
+        footer: '© 2026 OpenPrimer. Todos los derechos reservados.'
+      },
+      {
+        id: 'verify_email_DE',
+        template_type: 'verify_email',
+        lang: 'DE',
+        subject: 'Aktivieren Sie Ihr OpenPrimer-Konto',
+        subtitle: 'IHRE FÜHRENDE AKADEMISCHE UNIVERSITÄT',
+        welcome: 'Willkommen an Bord!',
+        body: 'Vielen Dank für Ihre Anmeldung bei OpenPrimer. Um Ihre personalisierte Lernreise von der Grundschule bis zur Stufe L3 zu beginnen, bestätigen Sie bitte Ihre E-Mail-Adresse, indem Sie auf die Schaltfläche unten klicken:',
+        button: 'Mein Konto aktivieren',
+        fallback_text: 'Wenn die Schaltfläche oben nicht funktioniert, kopieren Sie den folgenden Link und fügen Sie ihn in Ihren Browser ein:',
+        footer: '© 2026 OpenPrimer. Alle Rechte vorbehalten.'
+      },
+      {
+        id: 'verify_email_ZH',
+        template_type: 'verify_email',
+        lang: 'ZH',
+        subject: '激活您的 OpenPrimer 账户',
+        subtitle: '您的顶尖学术大学',
+        welcome: '欢迎加入！',
+        body: '感谢您注册 OpenPrimer。要开始您从小学到 L3 级别的个性化学习之旅，请点击下方按钮确认您的电子邮件地址：',
+        button: '激活我的账户',
+        fallback_text: '如果下方的按钮无法点击，请复制并粘贴以下链接到浏览器中：',
+        footer: '© 2026 OpenPrimer. 保留所有权利。'
+      },
+      // lost_password
+      {
+        id: 'lost_password_FR',
+        template_type: 'lost_password',
+        lang: 'FR',
+        subject: 'Réinitialiser votre mot de passe OpenPrimer',
+        subtitle: 'VOTRE UNIVERSITÉ ACADÉMIQUE DE POINTE',
+        welcome: 'Bonjour {{firstName}} !',
+        body: 'Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte OpenPrimer. Si vous n\'êtes pas à l\'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité. Pour réinitialiser votre mot de passe, veuillez cliquer sur le bouton ci-dessous :',
+        button: 'Réinitialiser le mot de passe',
+        fallback_text: 'Si le bouton ci-dessus ne fonctionne pas, copiez et collez le lien suivant dans votre navigateur :',
+        footer: '© 2026 OpenPrimer. Tous droits réservés.'
+      },
+      {
+        id: 'lost_password_EN',
+        template_type: 'lost_password',
+        lang: 'EN',
+        subject: 'Reset your OpenPrimer password',
+        subtitle: 'YOUR LEADING ACADEMIC UNIVERSITY',
+        welcome: 'Hello {{firstName}} !',
+        body: 'We received a request to reset the password for your OpenPrimer account. If you did not make this request, you can safely ignore this email. To reset your password, please click the button below:',
+        button: 'Reset password',
+        fallback_text: 'If the button above does not work, copy and paste the following link into your browser:',
+        footer: '© 2026 OpenPrimer. All rights reserved.'
+      },
+      {
+        id: 'lost_password_ES',
+        template_type: 'lost_password',
+        lang: 'ES',
+        subject: 'Restablecer su contraseña de OpenPrimer',
+        subtitle: 'TU UNIVERSIDAD ACADÉMICA DE VANGUARDIA',
+        welcome: '¡Hola {{firstName}} !',
+        body: 'Hemos recibido una solicitud para restablecer la contraseña de su cuenta de OpenPrimer. Si no realizó esta solicitud, puede ignorar este correo de forma segura. Para restablecer su contraseña, haga clic en el botón de abajo:',
+        button: 'Restablecer contraseña',
+        fallback_text: 'Si el botón de arriba no funciona, copie y pegue el siguiente enlace en su navegador:',
+        footer: '© 2026 OpenPrimer. Todos los derechos reservados.'
+      },
+      {
+        id: 'lost_password_DE',
+        template_type: 'lost_password',
+        lang: 'DE',
+        subject: 'Setzen Sie Ihr OpenPrimer-Passwort zurück',
+        subtitle: 'IHRE FÜHRENDE AKADEMISCHE UNIVERSITÄT',
+        welcome: 'Hallo {{firstName}} !',
+        body: 'Wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr OpenPrimer-Konto erhalten. Wenn Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren. Um Ihr Passwort zurückzusetzen, klicken Sie bitte auf die Schaltfläche unten:',
+        button: 'Passwort zurücksetzen',
+        fallback_text: 'Wenn die Schaltfläche oben nicht funktioniert, kopieren Sie den folgenden Link und fügen Sie ihn in Ihren Browser ein:',
+        footer: '© 2026 OpenPrimer. Alle Rechte vorbehalten.'
+      },
+      {
+        id: 'lost_password_ZH',
+        template_type: 'lost_password',
+        lang: 'ZH',
+        subject: '重置您的 OpenPrimer 密码',
+        subtitle: '您的顶尖学术大学',
+        welcome: '您好 {{firstName}} ！',
+        body: '我们收到了重置您 OpenPrimer 账户密码的请求。如果您没有提交此请求，可以安全地忽略此邮件。要重置您的密码，请点击下方按钮：',
+        button: '重置密码',
+        fallback_text: '如果下方的按钮无法点击，请复制并粘贴以下链接到浏览器中：',
+        footer: '© 2026 OpenPrimer. 保留所有权利。'
+      },
+      // feedback
+      {
+        id: 'feedback_FR',
+        template_type: 'feedback',
+        lang: 'FR',
+        subject: 'Nous avons reçu votre message - OpenPrimer',
+        subtitle: 'VOTRE UNIVERSITÉ ACADÉMIQUE DE POINTE',
+        welcome: 'Merci pour votre message {{firstName}} !',
+        body: 'Nous vous remercions d\'avoir contacté OpenPrimer. Nous avons bien reçu vos commentaires ou votre question, et notre équipe reviendra vers vous dès que possible. Voici un récapitulatif de votre message :',
+        button: 'Visiter OpenPrimer',
+        fallback_text: 'Pour toute urgence, vous pouvez répondre directement à cet e-mail.',
+        footer: '© 2026 OpenPrimer. Tous droits réservés.'
+      },
+      {
+        id: 'feedback_EN',
+        template_type: 'feedback',
+        lang: 'EN',
+        subject: 'We received your message - OpenPrimer',
+        subtitle: 'YOUR LEADING ACADEMIC UNIVERSITY',
+        welcome: 'Thank you for your message {{firstName}} !',
+        body: 'Thank you for contacting OpenPrimer. We have successfully received your feedback or inquiry, and our team will get back to you as soon as possible. Here is a copy of your message:',
+        button: 'Visit OpenPrimer',
+        fallback_text: 'If you have any urgent updates, you can reply directly to this email.',
+        footer: '© 2026 OpenPrimer. All rights reserved.'
+      },
+      {
+        id: 'feedback_ES',
+        template_type: 'feedback',
+        lang: 'ES',
+        subject: 'Hemos recibido tu mensaje - OpenPrimer',
+        subtitle: 'TU UNIVERSIDAD ACADÉMICA DE VANGUARDIA',
+        welcome: '¡Gracias por tu mensaje {{firstName}} !',
+        body: 'Gracias por contactar con OpenPrimer. Hemos recibido correctamente sus comentarios o consultas, y nuestro equipo se pondrá en contacto con usted lo antes posible. Aquí hay una copia de su mensaje:',
+        button: 'Visitar OpenPrimer',
+        fallback_text: 'Para cualquier urgencia, puede responder directamente a este correo electrónico.',
+        footer: '© 2026 OpenPrimer. Todos los derechos reservados.'
+      },
+      {
+        id: 'feedback_DE',
+        template_type: 'feedback',
+        lang: 'DE',
+        subject: 'Wir haben Ihre Nachricht erhalten - OpenPrimer',
+        subtitle: 'IHRE FÜHRENDE AKADEMISCHE UNIVERSITÄT',
+        welcome: 'Vielen Dank für Ihre Nachricht {{firstName}} !',
+        body: 'Vielen Dank, dass Sie sich an OpenPrimer gewandt haben. Wir haben Ihr Feedback oder Ihre Anfrage erfolgreich erhalten und unser Team wird sich so schnell wie möglich bei Ihnen melden. Hier ist eine Kopie Ihrer Nachricht:',
+        button: 'OpenPrimer besuchen',
+        fallback_text: 'Bei dringenden Fragen können Sie direkt auf diese E-Mail antworten.',
+        footer: '© 2026 OpenPrimer. Alle Rechte vorbehalten.'
+      },
+      {
+        id: 'feedback_ZH',
+        template_type: 'feedback',
+        lang: 'ZH',
+        subject: '我们已收到您的留言 - OpenPrimer',
+        subtitle: '您的顶尖学术大学',
+        welcome: '感谢您的留言 {{firstName}} ！',
+        body: '感谢您联系 OpenPrimer。我们已成功收到您的反馈或咨询，我们的团队会尽快与您联系。以下是您的留言备份：',
+        button: '访问 OpenPrimer',
+        fallback_text: '如有任何紧急情况，您可以直接回复此邮件。',
+        footer: '© 2026 OpenPrimer. 保留所有权利。'
+      }
+    ];
+
+    for (const t of emailTemplates) {
+      await pgClient.query(`
+        INSERT INTO public.email_templates (id, template_type, lang, subject, subtitle, welcome, body, button, fallback_text, footer)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (id) DO UPDATE SET
+          subject = EXCLUDED.subject,
+          subtitle = EXCLUDED.subtitle,
+          welcome = EXCLUDED.welcome,
+          body = EXCLUDED.body,
+          button = EXCLUDED.button,
+          fallback_text = EXCLUDED.fallback_text,
+          footer = EXCLUDED.footer;
+      `, [t.id, t.template_type, t.lang, t.subject, t.subtitle, t.welcome, t.body, t.button, t.fallback_text, t.footer]);
+    }
+    console.log("✅ Core email templates seeded successfully.");
 
     // D. SEED AI TUTOR PERSONALITIES
     console.log("ðŸŒ± Seeding Master AI Tutor Personalities...");

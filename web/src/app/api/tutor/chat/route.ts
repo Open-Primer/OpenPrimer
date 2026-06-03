@@ -79,6 +79,27 @@ export async function POST(request: Request) {
       console.warn('[TUTOR CHAT] Error dynamically retrieving language name from database:', e);
     }
 
+    // 5. Fetch the user's profile to retrieve their first name for personalized tone
+    let firstName = '';
+    try {
+      const { supabase: clientSupabase } = await import('@/lib/supabase');
+      if (user.id === 'mock-offline-user-id') {
+        firstName = 'Dev';
+      } else {
+        const { data: profile } = await clientSupabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        if (profile?.name) {
+          const parts = profile.name.trim().split(/\s+/);
+          firstName = parts[0] || '';
+        }
+      }
+    } catch (e) {
+      console.warn('[TUTOR CHAT] Error retrieving user profile for personalization:', e);
+    }
+
     const contextInstruction = pageContext 
       ? (langUpper === 'FR' ? `Contexte de la page étudiée par l'élève :\n---\n${pageContext}\n---\n` : `Context of the studied page by the student:\n---\n${pageContext}\n---\n`)
       : "";
@@ -89,7 +110,35 @@ export async function POST(request: Request) {
       directive = `Please always respond concisely and rigorously in the course language: ${langName} (Language Code: ${langUpper}). Do not use any meta-comments or polite conversational preamble. Respond strictly in ${langName}.`;
     }
 
-    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${directive}`;
+    // Personalization directive based on first name presence
+    let personalizationDirective = "";
+    if (firstName && firstName !== 'Dev') {
+      if (langUpper === 'FR') {
+        personalizationDirective = `L'élève s'appelle ${firstName}. Veuillez vous adresser à lui/elle de manière personnalisée en utilisant son prénom (${firstName}) de temps en temps, de façon naturelle et chaleureuse.`;
+      } else if (langUpper === 'ES') {
+        personalizationDirective = `El estudiante se llama ${firstName}. Dirígete a él/ella de manera personalizada usando su nombre (${firstName}) de vez en cuando, de forma natural y cálida.`;
+      } else if (langUpper === 'DE') {
+        personalizationDirective = `Der Name des Schülers ist ${firstName}. Sprechen Sie ihn/sie von Zeit zu Zeit persönlich mit dem Vornamen (${firstName}) an, auf eine natürliche und freundliche Weise.`;
+      } else if (langUpper === 'ZH') {
+        personalizationDirective = `学生的名字是 ${firstName}。请在交流中不时自然地使用其名字 (${firstName}) 称呼，保持亲切和鼓励的态度。`;
+      } else {
+        personalizationDirective = `The student's name is ${firstName}. Address them personally using their first name (${firstName}) from time to time, in a natural and warm manner.`;
+      }
+    } else {
+      if (langUpper === 'FR') {
+        personalizationDirective = `Le prénom de l'élève n'est pas renseigné. Veuillez vous adresser à lui de manière plus neutre, respectueuse et professionnelle, en utilisant impérativement le vouvoiement ("vous") en français.`;
+      } else if (langUpper === 'ES') {
+        personalizationDirective = `El nombre del estudiante no está disponible. Dirígete a él/ella de manera neutral, respetuosa y profesional (utilizando "usted" en español).`;
+      } else if (langUpper === 'DE') {
+        personalizationDirective = `Der Name des Schülers ist nicht angegeben. Sprechen Sie ihn/sie in einem professionellen, neutralen und respektvollen Ton an (unter Verwendung von "Sie" im Deutschen).`;
+      } else if (langUpper === 'ZH') {
+        personalizationDirective = `学生姓名未提供。请使用中立、专业和尊重的语气（在合适时使用“您”）。`;
+      } else {
+        personalizationDirective = `The student's name is not provided. Address them using a professional, neutral, and respectful tone.`;
+      }
+    }
+
+    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${directive}\n\n${personalizationDirective}`;
 
     // 3. Format history for Gemini API
     // Map roles: 'assistant' -> 'model', 'user' -> 'user'

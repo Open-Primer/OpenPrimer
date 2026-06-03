@@ -39,7 +39,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     first_name_placeholder: "John",
     last_name_placeholder: "Doe",
     sign_in_google: "Continue with Google",
-    rate_limit: "Too many attempts. Please wait {waitSec} seconds."
+    rate_limit: "Too many attempts. Please wait {waitSec} seconds.",
+    or: "OR"
   },
   FR: {
     create_account: "Créer un Compte",
@@ -67,7 +68,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     first_name_placeholder: "Jean",
     last_name_placeholder: "Dupont",
     sign_in_google: "Continuer avec Google",
-    rate_limit: "Trop de tentatives. Réessayez dans {waitSec} secondes."
+    rate_limit: "Trop de tentatives. Réessayez dans {waitSec} secondes.",
+    or: "OU"
   },
   ES: {
     create_account: "Crear una Cuenta",
@@ -95,7 +97,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     first_name_placeholder: "Juan",
     last_name_placeholder: "Pérez",
     sign_in_google: "Continuar con Google",
-    rate_limit: "Demasiados intentos. Inténtelo de nuevo en {waitSec} segundos."
+    rate_limit: "Demasiados intentos. Inténtelo de nuevo en {waitSec} segundos.",
+    or: "O"
   },
   DE: {
     create_account: "Konto erstellen",
@@ -123,7 +126,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     first_name_placeholder: "Hans",
     last_name_placeholder: "Müller",
     sign_in_google: "Mit Google fortfahren",
-    rate_limit: "Zu viele Versuche. Bitte warten Sie {waitSec} Sekunden."
+    rate_limit: "Zu viele Versuche. Bitte warten Sie {waitSec} Sekunden.",
+    or: "ODER"
   },
   IT: {
     create_account: "Crea un Account",
@@ -150,7 +154,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     back: "Indietro",
     first_name_placeholder: "Mario",
     last_name_placeholder: "Rossi",
-    sign_in_google: "Continua con Google"
+    sign_in_google: "Continua con Google",
+    or: "O"
   },
   ZH: {
     create_account: "创建账户",
@@ -178,7 +183,8 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
     first_name_placeholder: "三",
     last_name_placeholder: "张",
     sign_in_google: "使用 Google 登录",
-    rate_limit: "尝试次数过多，请在 {waitSec} 秒后重试。"
+    rate_limit: "尝试次数过多，请在 {waitSec} 秒后重试。",
+    or: "或"
   }
 };
 
@@ -946,7 +952,7 @@ export default function Home() {
                     <div className="relative flex py-4 items-center">
                       <div className="flex-grow border-t border-slate-800/80"></div>
                       <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-slate-600">
-                        {lang === 'FR' ? 'OU CONTINUER AVEC' : 'OR CONTINUE WITH'}
+                        {a.or || 'OR'}
                       </span>
                       <div className="flex-grow border-t border-slate-800/80"></div>
                     </div>
@@ -1071,7 +1077,7 @@ export default function Home() {
                     <div className="relative flex py-4 items-center">
                       <div className="flex-grow border-t border-slate-800/80"></div>
                       <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-slate-600">
-                        {lang === 'FR' ? 'OU CONTINUER AVEC' : 'OR CONTINUE WITH'}
+                        {a.or || 'OR'}
                       </span>
                       <div className="flex-grow border-t border-slate-800/80"></div>
                     </div>

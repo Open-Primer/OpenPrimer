@@ -1,62 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
 import { supabase } from '../../../../lib/supabase';
-
-const EMAIL_CONTENT: Record<string, {
-  subject: string;
-  subtitle: string;
-  welcome: string;
-  body: string;
-  button: string;
-  fallbackText: string;
-  footer: string;
-}> = {
-  FR: {
-    subject: 'Activer votre compte OpenPrimer',
-    subtitle: 'VOTRE UNIVERSITÉ ACADÉMIQUE DE POINTE',
-    welcome: 'Bienvenue à bord !',
-    body: 'Merci de vous être inscrit sur OpenPrimer. Pour commencer votre apprentissage personnalisé de niveau L1 à L3, veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous :',
-    button: 'Activer mon compte',
-    fallbackText: 'Si le bouton ci-dessus ne fonctionne pas, copiez et collez le lien suivant dans votre navigateur :',
-    footer: '© 2026 OpenPrimer. Tous droits réservés.'
-  },
-  EN: {
-    subject: 'Activate your OpenPrimer account',
-    subtitle: 'YOUR LEADING ACADEMIC UNIVERSITY',
-    welcome: 'Welcome aboard !',
-    body: 'Thank you for signing up on OpenPrimer. To begin your personalized learning journey from level L1 to L3, please confirm your email address by clicking the button below:',
-    button: 'Activate my account',
-    fallbackText: 'If the button above does not work, copy and paste the following link into your browser:',
-    footer: '© 2026 OpenPrimer. All rights reserved.'
-  },
-  ES: {
-    subject: 'Activa tu cuenta de OpenPrimer',
-    subtitle: 'TU UNIVERSIDAD ACADÉMICA DE VANGUARDIA',
-    welcome: '¡Bienvenido a bordo!',
-    body: 'Gracias por registrarte en OpenPrimer. Para comenzar tu viaje de aprendizaje personalizado de nivel L1 a L3, confirma tu dirección de correo electrónico haciendo clic en el botón de abajo:',
-    button: 'Activar mi cuenta',
-    fallbackText: 'Si el botón de arriba no funciona, copia y pega el siguiente enlace en tu navegador:',
-    footer: '© 2026 OpenPrimer. Todos los derechos reservados.'
-  },
-  DE: {
-    subject: 'Aktivieren Sie Ihr OpenPrimer-Konto',
-    subtitle: 'IHRE FÜHRENDE AKADEMISCHE UNIVERSITÄT',
-    welcome: 'Willkommen an Bord!',
-    body: 'Vielen Dank für Ihre Anmeldung bei OpenPrimer. Um Ihre personalisierte Lernreise von Stufe L1 bis L3 zu beginnen, bestätigen Sie bitte Ihre E-Mail-Adresse, indem Sie auf die Schaltfläche unten klicken:',
-    button: 'Mein Konto aktivieren',
-    fallbackText: 'Wenn die Schaltfläche oben nicht funktioniert, kopieren Sie den folgenden Link und fügen Sie ihn in Ihren Browser ein:',
-    footer: '© 2026 OpenPrimer. Alle Rechte vorbehalten.'
-  },
-  ZH: {
-    subject: '激活您的 OpenPrimer 账户',
-    subtitle: '您的顶尖学术大学',
-    welcome: '欢迎加入！',
-    body: '感谢您注册 OpenPrimer。要开始您从 L1 到 L3 级别的个性化学习之旅，请点击下方按钮确认您的电子邮件地址：',
-    button: '激活我的账户',
-    fallbackText: '如果下方的按钮无法点击，请复制并粘贴以下链接到浏览器中：',
-    footer: '© 2026 OpenPrimer. 保留所有权利。'
-  }
-};
+import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emailService';
 
 export async function POST(request: Request) {
   try {
@@ -66,10 +11,10 @@ export async function POST(request: Request) {
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
     if (!password || !PASSWORD_REGEX.test(password)) {
       const msgs: Record<string, string> = {
-        FR: 'Le mot de passe doit contenir au moins 12 caract\u00e8res, incluant une lettre majuscule, une lettre minuscule, un nombre et un caract\u00e8re sp\u00e9cial.',
-        ES: 'La contrase\u00f1a debe tener al menos 12 caracteres, incluyendo una letra may\u00fascula, una letra min\u00fascula, un n\u00famero y un car\u00e1cter especial.',
-        DE: 'Das Passwort muss mindestens 12 Zeichen lang sein und einen Gro\u00dfbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
-        ZH: '\u5bc6\u7801\u957f\u5ea6\u5fc5\u987b\u81f3\u5c11\u4e3a 12 \u4e2a\u5b57\u7b26\uff0c\u4e14\u5fc5\u987b\u5305\u542b\u5927\u5c0f\u5199\u5b57\u6bcd\u3001\u6570\u5b57\u53ca\u7279\u6b8a\u5b57\u7b26\u3002',
+        FR: 'Le mot de passe doit contenir au moins 12 caractères, incluant une lettre majuscule, une lettre minuscule, un nombre et un caractère spécial.',
+        ES: 'La contraseña debe tener al menos 12 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.',
+        DE: 'Das Passwort muss mindestens 12 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
+        ZH: '密码长度必须至少为 12 个字符，且必须包含大小写字母、数字及特殊字符。',
         EN: 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'
       };
       const lang = (preferredLang || 'EN').toUpperCase();
@@ -135,46 +80,13 @@ export async function POST(request: Request) {
 
     const verificationUrl = `${proto}://${host}/signup?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
-    const userLang = (preferredLang || 'EN').toUpperCase();
-    const contentText = EMAIL_CONTENT[userLang] || EMAIL_CONTENT.EN;
-    const emailWelcome = fName ? `${contentText.welcome.replace(' !', '').replace('!', '')}, ${fName} !` : contentText.welcome;
-
-    const emailHtml = `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-size: 32px; font-weight: 900; letter-spacing: -0.02em; margin: 0; color: #1e3a8a;">
-            Open<span style="color: #2563eb;">Primer</span>
-          </h1>
-          <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 700; margin-top: 5px;">
-            ${contentText.subtitle}
-          </p>
-        </div>
-        
-        <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px;">
-          ${emailWelcome}
-        </h2>
-        
-        <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px;">
-          ${contentText.body}
-        </p>
-        
-        <div style="text-align: center; margin: 35px 0;">
-          <a href="${verificationUrl}" style="display: inline-block; padding: 14px 32px; font-size: 13px; font-weight: 700; color: #ffffff; background-color: #2563eb; border-radius: 12px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: background-color 0.2s;">
-            ${contentText.button}
-          </a>
-        </div>
-        
-        <p style="font-size: 12px; line-height: 1.6; color: #64748b; margin-bottom: 0;">
-          ${contentText.fallbackText}<br/>
-          <a href="${verificationUrl}" style="color: #2563eb; text-decoration: underline; word-break: break-all;">${verificationUrl}</a>
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-        <p style="font-size: 10px; color: #94a3b8; text-align: center; margin: 0;">
-          ${contentText.footer}
-        </p>
-      </div>
-    `;
+    // Get email template from database or translate dynamically
+    const dbTemplate = await getOrTranslateTemplate('verify_email', preferredLang || 'EN');
+    const { subject, html: emailHtml } = personalizeAndRenderTemplate(dbTemplate, {
+      firstName: fName,
+      lastName: lName,
+      actionUrl: verificationUrl
+    });
 
     // 3. Dispatch validation email using Resend
     if (resendApiKey) {
@@ -188,7 +100,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           from: 'OpenPrimer <onboarding@openprimer.app>',
           to: email,
-          subject: contentText.subject,
+          subject: subject,
           html: emailHtml
         })
       });
@@ -214,3 +126,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+
