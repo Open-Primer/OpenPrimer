@@ -46,7 +46,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const folders = rawNav.filter(item => item.type === 'folder');
     
     const navItems = [
-      ...(files.length > 0 ? [{ name: 'Overview', type: 'folder', children: files }] : []),
+      ...(files.length > 0 ? [{ name: UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS]?.overview || UI_STRINGS.EN.overview, type: 'folder', children: files }] : []),
       ...folders
     ];
 
@@ -63,7 +63,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     const title = pageData.meta.title || 'Untitled Module';
     const subject = pageData.meta.subject || 'Academic Content';
-    const moduleName = pageData.meta.module || 'Overview';
+    const moduleName = pageData.meta.module || UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS]?.overview || UI_STRINGS.EN.overview;
     const level = pageData.meta.level || 'L1';
 
     const getLocalizedCoreModule = (currentLang: string, lvl: string) => {

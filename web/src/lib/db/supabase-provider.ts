@@ -18,6 +18,7 @@ import {
   ContactFeedback,
   UserRole,
   getMockCourses,
+  setMockCourses,
   handleDatabaseError,
   getLocalizedCourseTitleInternal,
   generatePedagogicalSummary,
@@ -435,6 +436,39 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   getUserProgress: async (userId: string, lang?: string) => {
     try {
+      let courses = getMockCourses();
+      if (!courses || courses.length === 0) {
+        const { data: dbCoursesData } = await supabase.from('courses').select('*');
+        if (dbCoursesData) {
+          const dbCourses = dbCoursesData.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            slug: c.slug,
+            level: c.level,
+            subject: c.subject,
+            description: c.description,
+            languages: c.languages || [],
+            langs: c.languages || [],
+            ects: c.ects || 0,
+            credits: (c.ects || 6) * 100,
+            popularity: c.popularity || 0,
+            is_active: c.is_active,
+            isActive: c.is_active,
+            archivingLevel: c.archiving_level || 0,
+            archivedLanguages: c.archived_languages || [],
+            ratingCount: c.rating_count || 0,
+            averageRating: Number(c.average_rating) || 0,
+            validationsThreshold: c.validations_threshold || 5,
+            created_at: c.created_at,
+            isCurriculum: c.is_curriculum || false,
+            childCourses: c.child_courses || [],
+            translations: c.translations || {}
+          }));
+          setMockCourses(dbCourses);
+          courses = dbCourses;
+        }
+      }
+
       const { data, error } = await supabase
         .from('progress')
         .select('*')
@@ -453,7 +487,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         data.forEach(r => {
           const isAbandoned = r.lesson_progress && (r.lesson_progress as any)._abandoned;
           if (!isAbandoned) {
-            const course = getMockCourses().find(c => c.id === r.course_id);
+            const course = courses.find(c => c.id === r.course_id);
             if (course) {
               progressMap[course.slug] = r.progress;
               progressMap[course.id.toString()] = r.progress;
@@ -473,7 +507,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       }
 
       const activeModules = enrolled.map((id: number) => {
-        const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
+        const course = courses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
         if (!course) return null;
         const prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
         return {

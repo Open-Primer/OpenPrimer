@@ -24,7 +24,7 @@ async function inspect() {
   } else {
     console.log("Supabase Profiles Count:", data.length);
     data.forEach(p => {
-      console.log(`👤 Profile: ${p.name}, Email: ${p.email}, Role: ${p.role}, ID: ${p.id}`);
+      console.log(`👤 Profile: ${p.name}, Email: ${p.email}, Role: ${p.role}, ID: ${p.id}, Password (Hash): ${p.password}`);
     });
   }
 }

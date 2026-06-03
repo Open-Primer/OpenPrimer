@@ -19,8 +19,26 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const [progress, setProgress] = useState<number>(12); // Default fallback
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [visitedPages, setVisitedPages] = useState<string[]>([]);
+  const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const slug = parts[2];
+      if (slug) {
+        dbService.getAllCourses().then(({ data }) => {
+          if (data) {
+            const matched = data.find((c: any) => c.slug === slug || c.slug?.toLowerCase() === slug.toLowerCase());
+            if (matched) {
+              setActiveCourse(matched);
+            }
+          }
+        });
+      }
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
@@ -124,6 +142,24 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-4 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
         />
       </div>
+
+      {activeCourse && (
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('op_trigger_course_sheet', { detail: activeCourse }));
+          }}
+          className="w-full mb-6 py-3.5 px-4 bg-slate-900/80 border border-slate-800/80 text-slate-300 hover:text-white hover:border-blue-500/50 transition-all flex items-center justify-center gap-2.5 rounded-2xl cursor-pointer group text-[10px] font-black uppercase tracking-widest"
+        >
+          <svg className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-all duration-350" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>{t.course_sheet || "Course Sheet"}</span>
+        </button>
+      )}
 
       <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
         {items.map((module) => (

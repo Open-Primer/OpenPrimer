@@ -242,7 +242,14 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const { data: courses } = await dbService.getAllCourses();
         const course = courses?.find((c: any) => c.slug?.toLowerCase() === courseSlug?.toLowerCase() || String(c.id) === courseSlug);
         if (course) {
-          const pageTitle = slug[3] ? slug[3].replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()) : 'Overview';
+          const overviewMap: Record<string, string> = {
+            en: "Overview",
+            fr: "Vue d'ensemble",
+            es: "Descripción general",
+            de: "Übersicht",
+            zh: "概述"
+          };
+          const pageTitle = slug[3] ? slug[3].replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()) : (overviewMap[lang.toLowerCase()] || "Overview");
           const isFr = lang.toLowerCase() === 'fr';
           
           let mdxContent = '';

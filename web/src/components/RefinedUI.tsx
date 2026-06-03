@@ -15,6 +15,7 @@ import { dbService, TutorPersonality } from '@/lib/db';
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
 const STATIC_UI_STRINGS = {
   EN: { 
+    overview: "Overview",
     my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     popular_curricula: "Popular Curricula",
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
@@ -155,6 +156,7 @@ const STATIC_UI_STRINGS = {
     active: "Active"
   },
   FR: { 
+    overview: "Vue d'ensemble",
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
     popular_curricula: "Curriculums Populaires",
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
@@ -295,6 +297,7 @@ const STATIC_UI_STRINGS = {
     active: "Actif"
   },
   ES: { 
+    overview: "Descripción general",
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
     popular_curricula: "Planes de Estudio Populares",
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
@@ -435,6 +438,7 @@ const STATIC_UI_STRINGS = {
     active: "Activo"
   },
   DE: { 
+    overview: "Übersicht",
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
     popular_curricula: "Beliebte Lehrpläne",
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
@@ -556,6 +560,7 @@ const STATIC_UI_STRINGS = {
     active: "Aktiv"
   },
   ZH: { 
+    overview: "概述",
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
     popular_curricula: "热门课程计划",
     terms: "服务条款", privacy: "隐私主权",
@@ -1261,6 +1266,162 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   );
 };
 
+const formatCourseLevel = (level: string | number, lang: string) => {
+  const lvlStr = String(level).toUpperCase();
+  const isEn = lang.toUpperCase() === 'EN';
+  const isZh = lang.toUpperCase() === 'ZH';
+  const isEs = lang.toUpperCase() === 'ES';
+  const isDe = lang.toUpperCase() === 'DE';
+  const isFr = lang.toUpperCase() === 'FR';
+
+  if (lvlStr === 'SECONDARY_1') {
+    if (isFr) return 'Secondaire 1';
+    if (isZh) return '高中一年级';
+    if (isEs) return 'Secundaria 1';
+    if (isDe) return 'Sekundarstufe 1';
+    return 'Secondary 1';
+  }
+  if (lvlStr === 'SECONDARY_2') {
+    if (isFr) return 'Secondaire 2';
+    if (isZh) return '高中二年级';
+    if (isEs) return 'Secundaria 2';
+    if (isDe) return 'Sekundarstufe 2';
+    return 'Secondary 2';
+  }
+  if (lvlStr === 'SECONDARY_3') {
+    if (isFr) return 'Secondaire 3';
+    if (isZh) return '高中三年级';
+    if (isEs) return 'Secundaria 3';
+    if (isDe) return 'Sekundarstufe 3';
+    return 'Secondary 3';
+  }
+  if (lvlStr.startsWith('SECONDARY_')) {
+    const num = lvlStr.split('_')[1];
+    if (isFr) return `Secondaire ${num}`;
+    if (isZh) return `高中${num}年级`;
+    if (isEs) return `Secundaria ${num}`;
+    if (isDe) return `Sekundarstufe ${num}`;
+    return `Secondary ${num}`;
+  }
+  if (lvlStr.startsWith('PRIMARY_')) {
+    const num = lvlStr.split('_')[1];
+    if (isFr) return `Primaire ${num}`;
+    if (isZh) return `小学${num}年级`;
+    if (isEs) return `Primaria ${num}`;
+    if (isDe) return `Primarstufe ${num}`;
+    return `Primary ${num}`;
+  }
+
+  if (lvlStr === 'L1') {
+    if (isEn) return '101';
+    if (isZh) return '大一 (101)';
+    if (isEs) return 'L1 (101)';
+    if (isDe) return 'L1 (101)';
+    return 'L1';
+  }
+  if (lvlStr === 'L2') {
+    if (isEn) return '201';
+    if (isZh) return '大二 (201)';
+    if (isEs) return 'L2 (201)';
+    if (isDe) return 'L2 (201)';
+    return 'L2';
+  }
+  if (lvlStr === 'L3') {
+    if (isEn) return '301';
+    if (isZh) return '大三 (301)';
+    if (isEs) return 'L3 (301)';
+    if (isDe) return 'L3 (301)';
+    return 'L3';
+  }
+
+  if (/^\d+$/.test(lvlStr)) {
+    const num = parseInt(lvlStr, 10);
+    if (isZh) return `${num}年级`;
+    if (isEn) return `Grade ${num}`;
+    if (lang.toUpperCase() === 'FR') return `Niveau ${num}`;
+    if (isEs) return `Grado ${num}`;
+    if (isDe) return `Klasse ${num}`;
+  }
+  return lvlStr;
+};
+
+const getLocalizedLabel = (key: string, lang: string) => {
+  const l = lang.toUpperCase();
+  const labels: Record<string, Record<string, string>> = {
+    mastery_weight: {
+      EN: "Mastery Weight",
+      FR: "Poids de maîtrise",
+      ES: "Peso de maestría",
+      DE: "Meisterungsgewicht",
+      ZH: "掌握权重"
+    },
+    duration: {
+      EN: "Duration",
+      FR: "Durée",
+      ES: "Duración",
+      DE: "Dauer",
+      ZH: "时长"
+    },
+    level: {
+      EN: "Level",
+      FR: "Niveau",
+      ES: "Nivel",
+      DE: "Stufe",
+      ZH: "级别"
+    },
+    credits: {
+      EN: "credits",
+      FR: "crédits",
+      ES: "créditos",
+      DE: "Credits",
+      ZH: "学分"
+    },
+    hours_unit: {
+      EN: "hrs",
+      FR: "h",
+      ES: "hrs",
+      DE: "Std.",
+      ZH: "小时"
+    },
+    why_create_account: {
+      EN: "Why create an account?",
+      FR: "Pourquoi créer un compte ?",
+      ES: "¿Por qué créer una cuenta?",
+      DE: "Warum ein Konto erstellen?",
+      ZH: "为什么要创建账户？"
+    },
+    account_benefits: {
+      EN: "A free account allows you to save your progress permanently, accumulate your study credits, unlock certifications, and interact with your personal AI Tutor.",
+      FR: "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'accumuler vos crédits de formation, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes.",
+      ES: "Una cuenta gratuita le permite guardar su progreso permanentemente, acumular sus créditos de estudio, desbloquear certificaciones e interactuar con su tutor de IA personal.",
+      DE: "Mit einem kostenlosen Konto können Sie Ihren Fortschritt dauerhaft speichern, Ihre Studienleistungen sammeln, Zertifikate freischalten und mit Ihrem persönlichen KI-Tutor interagieren.",
+      ZH: "免费账户可以永久保存您的进度、累积您的学习学分、解锁认证并与您的个人 AI 导师互动。"
+    },
+    create_account: {
+      EN: "Create an Account",
+      FR: "Créer un Compte",
+      ES: "Crear una Cuenta",
+      DE: "Konto Erstellen",
+      ZH: "创建账户"
+    },
+    log_in: {
+      EN: "Log In",
+      FR: "Se Connecter",
+      ES: "Iniciar Sesión",
+      DE: "Einloggen",
+      ZH: "登录"
+    },
+    start_limited: {
+      EN: "Start learning with limited features",
+      FR: "Démarrer avec des fonctions limitées",
+      ES: "Comenzar a aprender con funciones limitadas",
+      DE: "Mit eingeschränkten Funktionen lernen",
+      ZH: "以有限的功能开始学习"
+    }
+  };
+  return labels[key]?.[l] || labels[key]?.EN || '';
+};
+
 // --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSelector = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, showReadingModeSelector?: boolean, onLangChange?: (lang: string) => void }) => {
   const { language: lang, setLanguage: setLang } = useLanguage();
@@ -1294,6 +1455,19 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
       }
     });
   }, [isCoursePage]);
+
+  useEffect(() => {
+    const handleTriggerCourseSheet = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSelectedEnrollCourse(customEvent.detail);
+      }
+    };
+    window.addEventListener('op_trigger_course_sheet', handleTriggerCourseSheet);
+    return () => {
+      window.removeEventListener('op_trigger_course_sheet', handleTriggerCourseSheet);
+    };
+  }, []);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
   const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; role?: string; } | null>(null);
@@ -1581,16 +1755,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           })}
         </div>
 
-        {isCoursePage && activeCourseData && (
-          <button 
-            onClick={() => setSelectedEnrollCourse(activeCourseData)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-450 hover:border-blue-500/50 transition-all flex items-center gap-2 group cursor-pointer"
-            title={t.course_sheet_title}
-          >
-            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{t.course_sheet}</span>
-          </button>
-        )}
+
 
         {isCoursePage && (
           <button 
@@ -1776,7 +1941,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         {selectedEnrollCourse && (
           <div 
             onClick={() => setSelectedEnrollCourse(null)} 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
@@ -1831,18 +1996,18 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               <div className="grid grid-cols-3 gap-4 mb-8 text-center">
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
                   <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
-                  <p className="text-xs font-black text-white">{(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6) * 100} {lang.toUpperCase() === 'FR' ? 'crédits' : 'credits'}</p>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('mastery_weight', lang)}</p>
+                  <p className="text-xs font-black text-white">{(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6) * 100} {getLocalizedLabel('credits', lang)}</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
                   <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Duration</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} hrs</p>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('duration', lang)}</p>
+                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} {getLocalizedLabel('hours_unit', lang)}</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
                   <svg className="w-5 h-5 text-emerald-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Level</p>
-                  <p className="text-xs font-black text-white">{String(selectedEnrollCourse.level).toUpperCase()}</p>
+                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('level', lang)}</p>
+                  <p className="text-xs font-black text-white">{formatCourseLevel(selectedEnrollCourse.level, lang)}</p>
                 </div>
               </div>
 

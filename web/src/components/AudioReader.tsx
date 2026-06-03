@@ -35,6 +35,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const highlightedElementRef = useRef<HTMLElement | null>(null);
+  const isScrollInitiatedRef = useRef(false);
 
   // Sync state refs to prevent stale closure issues in SpeechSynthesis callbacks
   const isPlayingRef = useRef(false);
@@ -171,11 +172,14 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     if (bestMatch) {
       bestMatch.classList.add('reading-highlight');
       highlightedElementRef.current = bestMatch;
-      bestMatch.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+      if (!isScrollInitiatedRef.current) {
+        bestMatch.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
     }
+    isScrollInitiatedRef.current = false;
 
     return () => {
       if (highlightedElementRef.current) {
@@ -267,14 +271,22 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6')
     ) as HTMLElement[];
 
-    const navbarHeight = 80;
+    const navbarHeight = 100; // Account for top navigation bar padding
     let bestCandidate: HTMLElement | null = null;
     let minDistance = Infinity;
 
     for (const el of candidates) {
       const rect = el.getBoundingClientRect();
-      if (rect.bottom > navbarHeight) {
-        const dist = Math.abs(rect.top - navbarHeight);
+      
+      // If the element spans across the navbar line (viewport top)
+      if (rect.top <= navbarHeight && rect.bottom >= navbarHeight) {
+        bestCandidate = el;
+        break;
+      }
+      
+      // Otherwise, pick the closest element starting below the navbar line
+      if (rect.top > navbarHeight) {
+        const dist = rect.top - navbarHeight;
         if (dist < minDistance) {
           minDistance = dist;
           bestCandidate = el;
@@ -296,6 +308,42 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     return 0;
   };
+
+  // Scroll listener to update the TTS starting sentence / sync audio when scrolling
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      if (isPlaying && !isPaused) {
+        // Debounce sync while playing to avoid stuttering/interruption during active scroll
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const idx = getFirstVisibleSentenceIndex();
+          if (idx >= 0 && idx !== currentSentenceIndex) {
+            isScrollInitiatedRef.current = true;
+            speakSentence(idx);
+          }
+        }, 800); // 800ms debounce
+        return;
+      }
+
+      // If stopped or paused, update immediately
+      const idx = getFirstVisibleSentenceIndex();
+      if (idx >= 0 && idx !== currentSentenceIndex) {
+        isScrollInitiatedRef.current = true;
+        setCurrentSentenceIndex(idx);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Run once on load/sentences change to set initial sentence
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [sentences, isPlaying, isPaused, currentSentenceIndex]);
 
   const togglePlay = () => {
     if (!isSupported || sentences.length === 0) return;
