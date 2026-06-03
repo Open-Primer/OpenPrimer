@@ -761,6 +761,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [tutorEnabled, setTutorEnabled] = useState(true);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -834,6 +835,35 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     };
   }, []);
 
+  useEffect(() => {
+    const syncTutorEnabled = () => {
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.tutorEnabled !== undefined) {
+            setTutorEnabled(p.tutorEnabled);
+          } else if (p.tutor_enabled !== undefined) {
+            setTutorEnabled(p.tutor_enabled);
+          } else {
+            setTutorEnabled(true);
+          }
+        } catch (e) {
+          setTutorEnabled(true);
+        }
+      } else {
+        setTutorEnabled(true);
+      }
+    };
+    syncTutorEnabled();
+    window.addEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
+    window.addEventListener('storage', syncTutorEnabled);
+    return () => {
+      window.removeEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
+      window.removeEventListener('storage', syncTutorEnabled);
+    };
+  }, []);
+
   // Periodic health check with auto-reconnection loop
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -904,7 +934,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     }
   };
 
-  if (!isCurriculumPage) return null;
+  if (!isCurriculumPage || !tutorEnabled) return null;
 
   const QUICK_ACTIONS = [
     { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },

@@ -2,18 +2,29 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Pause, Square, Settings, ChevronRight, MessageSquare, AlertCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 interface AudioReaderProps {
   content?: string;
   lang?: string;
 }
 
+const normalizeText = (str: string) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+};
+
 export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => {
+  const pathname = usePathname();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [rate, setRate] = useState(1.0);
   const [volume, setVolume] = useState(1.0);
   const [lastVolume, setLastVolume] = useState(1.0);
+  const [showVolumePopup, setShowVolumePopup] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -103,10 +114,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setCurrentSentenceIndex(-1);
   }, [content]);
 
-  // 3. Reset audio playback state when content or language changes (preference/navigation sync)
+  // 3. Reset audio playback state when pathname, content or language changes
   useEffect(() => {
     stop();
-  }, [content, lang]);
+  }, [pathname, content, lang]);
 
   // 4. Highlight and scroll sync logic for the active sentence
   useEffect(() => {
@@ -122,8 +133,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     const sentence = sentences[currentSentenceIndex];
     if (!sentence) return;
 
-    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const normalizedSentence = normalize(sentence);
+    const normalizedSentence = normalizeText(sentence);
     if (!normalizedSentence) return;
 
     const article = document.querySelector('article');
@@ -137,7 +147,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     
     // First pass: exact content match (normalized)
     for (const el of candidates) {
-      const normalizedElText = normalize(el.innerText || el.textContent || '');
+      const normalizedElText = normalizeText(el.innerText || el.textContent || '');
       if (normalizedElText.includes(normalizedSentence)) {
         bestMatch = el;
         break;
@@ -148,7 +158,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     if (!bestMatch) {
       let maxOverlap = 0;
       for (const el of candidates) {
-        const text = normalize(el.innerText || el.textContent || '');
+        const text = normalizeText(el.innerText || el.textContent || '');
         const sentenceWords = normalizedSentence.split(/\s+/);
         const matchCount = sentenceWords.filter(w => text.includes(w)).length;
         if (matchCount > maxOverlap && matchCount > sentenceWords.length * 0.5) {
@@ -274,11 +284,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     if (bestCandidate) {
       const text = bestCandidate.innerText || bestCandidate.textContent || '';
-      const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const normalizedElText = normalize(text);
+      const normalizedElText = normalizeText(text);
 
       for (let i = 0; i < sentences.length; i++) {
-        const normalizedSentence = normalize(sentences[i]);
+        const normalizedSentence = normalizeText(sentences[i]);
         if (normalizedSentence && normalizedElText.includes(normalizedSentence)) {
           return i;
         }
@@ -342,7 +351,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   }
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 font-sans w-[272px] flex flex-col gap-3">
+    <div className="fixed bottom-6 left-6 z-50 font-sans w-[272px]">
       {/* Global CSS Style tag for highlighting the reading element */}
       <style>{`
         .reading-highlight {
@@ -354,38 +363,31 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         }
       `}</style>
 
-      {/* Visual sentence highlight box for accessibility (strictly aligned to sidebar width) */}
-      {isPlaying && currentSentenceIndex >= 0 && currentSentenceIndex < sentences.length && (
-        <div className="w-full p-4 rounded-[24px] bg-blue-600/10 border border-blue-500/20 text-blue-100 backdrop-blur-xl shadow-2xl animate-fade-in text-xs leading-relaxed">
-          <div className="flex items-center justify-between gap-2 text-[9px] font-black uppercase tracking-wider text-blue-400">
-            <div className="flex items-center gap-1.5">
-              <Volume2 className={`w-3.5 h-3.5 ${!isPaused ? 'animate-pulse text-blue-400' : 'text-slate-400'}`} />
-              <span>Auditory Reading Track ({currentSentenceIndex + 1} / {sentences.length})</span>
-            </div>
-            
-            {/* Real-time SVG Audio Wave Visualizer */}
-            {isPlaying && !isPaused && (
-              <div className="flex items-center gap-0.5 h-3 pr-1">
-                <style>{`
-                  @keyframes tts-wave-1 { 0%, 100% { height: 3px; } 50% { height: 11px; } }
-                  @keyframes tts-wave-2 { 0%, 100% { height: 4px; } 50% { height: 9px; } }
-                  @keyframes tts-wave-3 { 0%, 100% { height: 2px; } 50% { height: 12px; } }
-                  @keyframes tts-wave-4 { 0%, 100% { height: 5px; } 50% { height: 7px; } }
-                `}</style>
-                <div className="w-[2px] bg-blue-400 rounded-full" style={{ animation: 'tts-wave-1 0.6s infinite ease-in-out' }} />
-                <div className="w-[2px] bg-indigo-400 rounded-full" style={{ animation: 'tts-wave-2 0.8s infinite ease-in-out' }} />
-                <div className="w-[2px] bg-violet-400 rounded-full" style={{ animation: 'tts-wave-3 0.5s infinite ease-in-out' }} />
-                <div className="w-[2px] bg-fuchsia-400 rounded-full" style={{ animation: 'tts-wave-4 0.7s infinite ease-in-out' }} />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Main glassmorphic player pill (strictly aligned to sidebar width) */}
-      <div className="w-full flex items-center justify-between bg-slate-900/95 border border-slate-800/80 p-2.5 px-4 rounded-full shadow-2xl backdrop-blur-xl transition-all hover:border-slate-700/80">
-        {/* Playback Controls */}
-        <div className="flex items-center gap-1">
+      <div className="w-full flex items-center justify-between bg-slate-900/95 border border-slate-800/80 p-2.5 px-3 rounded-full shadow-2xl backdrop-blur-xl transition-all hover:border-slate-700/80">
+        
+        {/* Left Part: Live Visualizer or Static Icon */}
+        <div className="w-8 flex items-center justify-center">
+          {isPlaying && !isPaused ? (
+            <div className="flex items-center gap-0.5 h-3 justify-center">
+              <style>{`
+                @keyframes tts-wave-1 { 0%, 100% { height: 3px; } 50% { height: 11px; } }
+                @keyframes tts-wave-2 { 0%, 100% { height: 4px; } 50% { height: 9px; } }
+                @keyframes tts-wave-3 { 0%, 100% { height: 2px; } 50% { height: 12px; } }
+                @keyframes tts-wave-4 { 0%, 100% { height: 5px; } 50% { height: 7px; } }
+              `}</style>
+              <div className="w-[1.5px] bg-blue-400 rounded-full" style={{ animation: 'tts-wave-1 0.6s infinite ease-in-out' }} />
+              <div className="w-[1.5px] bg-indigo-400 rounded-full" style={{ animation: 'tts-wave-2 0.8s infinite ease-in-out' }} />
+              <div className="w-[1.5px] bg-violet-400 rounded-full" style={{ animation: 'tts-wave-3 0.5s infinite ease-in-out' }} />
+              <div className="w-[1.5px] bg-fuchsia-400 rounded-full" style={{ animation: 'tts-wave-4 0.7s infinite ease-in-out' }} />
+            </div>
+          ) : (
+            <Volume2 className="w-3.5 h-3.5 text-slate-500" />
+          )}
+        </div>
+
+        {/* Center Part: Playback Controls */}
+        <div className="flex items-center gap-0.5">
           <button
             onClick={prevSentence}
             disabled={currentSentenceIndex <= 0}
@@ -398,11 +400,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
           <button
             onClick={togglePlay}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center"
+            className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center animate-fade-in"
             title={isPlaying && !isPaused ? "Pause (Alt+S)" : "Play (Alt+S)"}
             aria-label={isPlaying && !isPaused ? "Pause speech" : "Play speech"}
           >
-            {isPlaying && !isPaused ? <Pause className="w-3.5 h-3.5 fill-white" /> : <Play className="w-3.5 h-3.5 fill-white ml-0.5" />}
+            {isPlaying && !isPaused ? <Pause className="w-3 h-3 fill-white" /> : <Play className="w-3 h-3 fill-white ml-0.5" />}
           </button>
 
           <button
@@ -412,7 +414,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             title="Stop (Alt+Q)"
             aria-label="Stop speech"
           >
-            <Square className="w-3 h-3 fill-current" />
+            <Square className="w-2.5 h-2.5 fill-current" />
           </button>
 
           <button
@@ -426,43 +428,68 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           </button>
         </div>
 
-        {/* Volume & settings controls */}
-        <div className="flex items-center gap-1.5 border-l border-slate-800 pl-2">
-          {/* Volume Button & Slider */}
-          <div className="flex items-center gap-1 relative group/volume">
+        {/* Right Part: Volume, Speed & Settings */}
+        <div className="flex items-center gap-1.5">
+          {/* Volume button with vertical slider pop-up */}
+          <div className="relative flex items-center">
             <button
               onClick={() => {
-                if (volume > 0) {
-                  setLastVolume(volume);
-                  setVolume(0);
-                } else {
-                  setVolume(lastVolume || 1.0);
-                }
+                setShowVolumePopup(!showVolumePopup);
+                setShowSettings(false); // Close settings if open
               }}
-              className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors"
-              title="Mute/Unmute"
+              className={`p-1 rounded-lg text-slate-400 hover:text-white transition-colors ${showVolumePopup ? 'text-blue-400' : ''}`}
+              title="Volume"
+              aria-label="Volume control"
             >
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
-            
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                setVolume(v);
-                if (isPlaying && !isPaused && utteranceRef.current) {
-                  utteranceRef.current.volume = v;
-                }
-              }}
-              className="w-12 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 focus:outline-none transition-all duration-200"
-              style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${volume * 100}%, #1e293b ${volume * 100}%, #1e293b 100%)`
-              }}
-            />
+
+            {showVolumePopup && (
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800/80 p-2.5 rounded-xl shadow-2xl backdrop-blur-xl w-8 h-32 flex flex-col items-center justify-between z-50 animate-fade-in">
+                <div className="h-20 w-full flex items-center justify-center relative">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    {...{ orient: "vertical" }}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setVolume(v);
+                      if (isPlaying && !isPaused && utteranceRef.current) {
+                        utteranceRef.current.volume = v;
+                      }
+                    }}
+                    className="accent-blue-500 cursor-pointer focus:outline-none"
+                    style={{
+                      WebkitAppearance: 'slider-vertical',
+                      width: '4px',
+                      height: '70px',
+                      background: '#1e293b',
+                      borderRadius: '2px',
+                      padding: 0,
+                      margin: 0
+                    }}
+                    aria-label="Volume slider"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    if (volume > 0) {
+                      setLastVolume(volume);
+                      setVolume(0);
+                    } else {
+                      setVolume(lastVolume || 1.0);
+                    }
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors"
+                  title="Mute"
+                >
+                  {volume === 0 ? <VolumeX className="w-3 h-3 text-red-400" /> : <Volume2 className="w-3 h-3" />}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Reading Speed Select */}
@@ -471,7 +498,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             onChange={(e) => {
               const r = parseFloat(e.target.value);
               setRate(r);
-              if (isPlaying && !isPaused && utteranceRef.current) {
+              if (isPlaying && !isPaused && currentSentenceIndex >= 0) {
                 speakSentence(currentSentenceIndex);
               }
             }}
@@ -486,9 +513,12 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           </select>
 
           {/* Cog settings button */}
-          <div className="relative">
+          <div className="relative flex items-center">
             <button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setShowVolumePopup(false); // Close volume if open
+              }}
               className={`p-1 rounded-lg text-slate-400 hover:text-white transition-colors ${showSettings ? 'text-blue-400' : ''}`}
               title="Speech Settings"
               aria-label="Speech settings"

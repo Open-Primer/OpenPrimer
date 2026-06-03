@@ -106,6 +106,8 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "Replaces reading typefaces with highly readable Comic-style lettering and increases word spacing.",
     visual_ctrl: "Fine Reading Controls",
     visual_ctrl_desc: "Enlarges academic text baseline size and optimizes readability baseline width.",
+    tutor_toggle: "Enable AI Tutor",
+    tutor_toggle_desc: "Shows the floating AI Tutor icon on curriculum pages to assist with your studies.",
     colorblind: "Colorblind Theme Filters",
     colorblind_desc: "Select a scientifically-calibrated color correction filter to optimize contrast and visual clarity.",
     cb_none: "None (Default Theme Colors)",
@@ -122,6 +124,8 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "Bascule vers une police à haute lisibilité avec un espacement des mots et lettres accru.",
     visual_ctrl: "Contrôles Fins de l'Affichage",
     visual_ctrl_desc: "Agrandit la taille de base des textes d'apprentissage pour un confort visuel optimal.",
+    tutor_toggle: "Activer le Tuteur IA",
+    tutor_toggle_desc: "Affiche l'icône flottante du Tuteur IA sur les pages de cours pour vous accompagner.",
     colorblind: "Filtres pour Thèmes Daltoniens",
     colorblind_desc: "Sélectionnez un filtre de correction des couleurs calibré scientifiquement pour optimiser le contraste et la clarté visuelle.",
     cb_none: "Aucun (Couleurs par Défaut)",
@@ -138,6 +142,8 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "Cambia la fuente a una letra de alta legibilidad con mayor espaciado entre palabras.",
     visual_ctrl: "Controles de Lectura Finos",
     visual_ctrl_desc: "Agranda el tamaño del texto para una comodidad visual óptima.",
+    tutor_toggle: "Habilitar Tutor IA",
+    tutor_toggle_desc: "Muestra el ícono flotante del Tutor IA en las páginas del currículo para ayudarte.",
     colorblind: "Filtros para Daltonismo",
     colorblind_desc: "Seleccione un filtro de corrección de color calibrado científicamente para optimizar el contraste y la claridad visual.",
     cb_none: "Ninguno (Colores por defecto)",
@@ -154,6 +160,8 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "Ersetzt Leseschriften durch gut lesbare Comic-Buchstaben und vergrößert den Wortabstand.",
     visual_ctrl: "Feine Leseeinstellungen",
     visual_ctrl_desc: "Vergrößert die Basistextgröße der Lernmodule für optimalen Komfort.",
+    tutor_toggle: "KI-Tutor aktivieren",
+    tutor_toggle_desc: "Zeigt das schwebende KI-Tutor-Symbol auf den Lehrplanseiten an, um Sie beim Lernen zu unterstützen.",
     colorblind: "Farbenblindheits-Filter",
     colorblind_desc: "Wählen Sie einen wissenschaftlich kalibrierten Farbkorrekturfilter, um den Kontrast und die visuelle Klarheit zu optimieren.",
     cb_none: "Keiner (Standardfarben)",
@@ -170,6 +178,8 @@ const ACC_TRANSLATIONS = {
     dyslexia_desc: "将全局阅读字体替换为高可读性字符集，并大幅度增加字间距与单词间距。",
     visual_ctrl: "视力辅助微调控制",
     visual_ctrl_desc: "智能放大课程主体文本的字号，提供更加柔和、轻松的视觉追踪区间。",
+    tutor_toggle: "启用 AI 导师",
+    tutor_toggle_desc: "在课程页面上显示悬浮的 AI 导师图标以协助您的学习。",
     colorblind: "色盲辅助色彩主题",
     colorblind_desc: "选择经过科学校准的颜色校正滤镜，以最大化提升学术图标与文字的高对比度清晰度。",
     cb_none: "无（默认主题色彩）",
@@ -267,6 +277,7 @@ export default function ProfileSettingsPage() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [dyslexiaFriendly, setDyslexiaFriendly] = useState(false);
   const [fineVisualControls, setFineVisualControls] = useState(false);
+  const [tutorEnabled, setTutorEnabled] = useState(true);
   const [colorblindTheme, setColorblindTheme] = useState('none');
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -285,6 +296,7 @@ export default function ProfileSettingsPage() {
     reduceMotion?: boolean;
     dyslexiaFriendly?: boolean;
     fineVisualControls?: boolean;
+    tutorEnabled?: boolean;
     colorblindTheme?: string;
     name?: string;
   }) => {
@@ -302,6 +314,7 @@ export default function ProfileSettingsPage() {
           if (updates.reduceMotion !== undefined) dbUpdates.reduce_motion = updates.reduceMotion;
           if (updates.dyslexiaFriendly !== undefined) dbUpdates.dyslexia_friendly = updates.dyslexiaFriendly;
           if (updates.fineVisualControls !== undefined) dbUpdates.fine_visual_controls = updates.fineVisualControls;
+          if (updates.tutorEnabled !== undefined) dbUpdates.tutor_enabled = updates.tutorEnabled;
           if (updates.colorblindTheme !== undefined) dbUpdates.colorblind_theme = updates.colorblindTheme;
           if (updates.name !== undefined) dbUpdates.name = updates.name;
 
@@ -337,6 +350,7 @@ export default function ProfileSettingsPage() {
         setReduceMotion(!!p.reduceMotion);
         setDyslexiaFriendly(!!p.dyslexiaFriendly);
         setFineVisualControls(!!p.fineVisualControls);
+        setTutorEnabled(p.tutorEnabled !== false);
         setColorblindTheme(p.colorblindTheme || 'none');
       } catch (err) {}
     }
@@ -351,13 +365,14 @@ export default function ProfileSettingsPage() {
           import('@/lib/supabase').then(async ({ supabase }) => {
             const { data, error } = await supabase
               .from('profiles')
-              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, colorblind_theme')
+              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, tutor_enabled, colorblind_theme')
               .eq('id', userId)
               .single();
             if (data && !error) {
               setReduceMotion(!!data.reduce_motion);
               setDyslexiaFriendly(!!data.dyslexia_friendly);
               setFineVisualControls(!!data.fine_visual_controls);
+              setTutorEnabled(data.tutor_enabled !== false);
               setColorblindTheme(data.colorblind_theme || 'none');
 
               let firstName = p.firstName || "";
@@ -383,6 +398,7 @@ export default function ProfileSettingsPage() {
                 reduceMotion: !!data.reduce_motion,
                 dyslexiaFriendly: !!data.dyslexia_friendly,
                 fineVisualControls: !!data.fine_visual_controls,
+                tutorEnabled: data.tutor_enabled !== false,
                 colorblindTheme: data.colorblind_theme || 'none'
               };
               localStorage.setItem('op_user_profile', JSON.stringify(updatedProfile));
@@ -436,6 +452,7 @@ export default function ProfileSettingsPage() {
       reduceMotion: reduceMotion,
       dyslexiaFriendly: dyslexiaFriendly,
       fineVisualControls: fineVisualControls,
+      tutorEnabled: tutorEnabled,
       colorblindTheme: colorblindTheme,
       isVerified: true
     };
@@ -446,6 +463,7 @@ export default function ProfileSettingsPage() {
       reduceMotion,
       dyslexiaFriendly,
       fineVisualControls,
+      tutorEnabled,
       colorblindTheme,
       name: fName || lName ? `${fName} ${lName}`.trim() : ""
     });
@@ -836,6 +854,38 @@ export default function ProfileSettingsPage() {
                         role="switch"
                      >
                         <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${fineVisualControls ? 'translate-x-6' : 'translate-x-0'}`} />
+                     </button>
+                  </div>
+
+                  {/* Enable AI Tutor */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.tutor_toggle || ACC_TRANSLATIONS.EN.tutor_toggle}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.tutor_toggle_desc || ACC_TRANSLATIONS.EN.tutor_toggle_desc}
+                        </p>
+                     </div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           const val = !tutorEnabled;
+                           setTutorEnabled(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.tutorEnabled = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ tutorEnabled: val });
+                           }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${tutorEnabled ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={tutorEnabled}
+                        role="switch"
+                     >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${tutorEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
                      </button>
                   </div>
 
