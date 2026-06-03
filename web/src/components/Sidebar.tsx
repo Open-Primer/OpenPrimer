@@ -20,6 +20,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [visitedPages, setVisitedPages] = useState<string[]>([]);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
@@ -133,14 +134,38 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
     });
   });
 
+  // Filter nav items based on search query
+  const normalizeSearch = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const qNorm = normalizeSearch(searchQuery);
+  const filteredItems = searchQuery.trim()
+    ? items
+        .map(module => ({
+          ...module,
+          children: (module.children || []).filter(page =>
+            normalizeSearch(page.name).includes(qNorm)
+          )
+        }))
+        .filter(module => (module.children?.length ?? 0) > 0)
+    : items;
+
   return (
     <aside className="w-80 h-full flex flex-col bg-slate-950/30 p-8 border-r border-slate-900/50">
-      <div className="relative mb-12">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
-        <input 
-          placeholder={t.search_course || "Search this course..."}
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 pointer-events-none" />
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder={t.search_course || 'Search this course...'}
           className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-4 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        )}
       </div>
 
       {activeCourse && (
@@ -162,7 +187,14 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       )}
 
       <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
-        {items.map((module) => (
+        {filteredItems.length === 0 ? (
+          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-4">
+            {lang.toUpperCase() === 'FR' ? 'Aucun résultat' :
+             lang.toUpperCase() === 'ES' ? 'Sin resultados' :
+             lang.toUpperCase() === 'DE' ? 'Keine Ergebnisse' :
+             lang.toUpperCase() === 'ZH' ? '无结果' : 'No results'}
+          </p>
+        ) : filteredItems.map((module) => (
           <div key={module.name} className="space-y-4">
             <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{module.name}</h4>
             <div className="space-y-1">
@@ -175,8 +207,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                     key={page.name}
                     href={page.path || '#'}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
-                      isActive 
-                        ? 'bg-blue-600/10 text-blue-400' 
+                      isActive
+                        ? 'bg-blue-600/10 text-blue-400'
                         : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
                     }`}
                   >

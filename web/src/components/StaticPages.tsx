@@ -535,8 +535,10 @@ export const CatalogPage = () => {
 
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  // isLoading starts true — stays true until the first DB response arrives.
+  // This prevents the 'no courses found' flash on mount.
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
   const [filterType, setFilterType] = useState<'All' | 'Course' | 'Curriculum'>('All');
@@ -551,20 +553,18 @@ export const CatalogPage = () => {
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [userProgress, setUserProgress] = useState<any>(null);
 
+  // enrolled IDs: loaded exclusively from Supabase in production;
+  // only falls back to localStorage when explicitly in sandbox mode.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_sandbox_mode') !== 'true';
-      if (!useSupabase) {
-        const saved = localStorage.getItem('op_enrolled_courses');
-        if (saved) {
-          setEnrolledIds(JSON.parse(saved));
-        } else {
-          const defaults: number[] = [];
-          localStorage.setItem('op_enrolled_courses', JSON.stringify(defaults));
-          setEnrolledIds(defaults);
-        }
-      }
+    if (typeof window === 'undefined') return;
+    const isSandbox = localStorage.getItem('op_sandbox_mode') === 'true';
+    if (isSandbox) {
+      const saved = localStorage.getItem('op_enrolled_courses');
+      try {
+        setEnrolledIds(saved ? JSON.parse(saved) : []);
+      } catch { setEnrolledIds([]); }
     }
+    // Production enrolled IDs come from loadCoursesAndProgress() via Supabase below
   }, []);
 
   const translateCourse = async (courseId: number, title: string, description: string) => {
@@ -626,47 +626,60 @@ export const CatalogPage = () => {
       setIsLoading(true);
       try {
         const { data } = await dbService.getAllCourses();
-        if (data) setCourses(data);
-        let userId = 'u1';
-        if (typeof window !== 'undefined') {
-          const savedProfile = window.localStorage.getItem('op_user_profile');
-          if (savedProfile) {
-            try {
-              const p = JSON.parse(savedProfile);
-              if (p.id) userId = p.id;
-            } catch (e) {}
-          }
+        if (data && data.length > 0) {
+          setCourses(data);
+        } else if (data) {
+          // Empty array returned — still set it so filter can run
+          setCourses(data);
         }
-        const { data: progressData } = await dbService.getUserProgress(userId);
-        if (progressData) {
-          setUserProgress(progressData);
-          if (progressData.activeModules) {
-            setEnrolledIds(progressData.activeModules.map((m: any) => m.id));
+        // Only fetch progress in production (Supabase configured) and not sandbox
+        const isSandbox = typeof window !== 'undefined' && localStorage.getItem('op_sandbox_mode') === 'true';
+        if (isDatabaseConfigured && !isSandbox) {
+          let userId = 'u1';
+          if (typeof window !== 'undefined') {
+            const savedProfile = window.localStorage.getItem('op_user_profile');
+            if (savedProfile) {
+              try {
+                const p = JSON.parse(savedProfile);
+                if (p.id) userId = p.id;
+              } catch (e) {}
+            }
+          }
+          const { data: progressData } = await dbService.getUserProgress(userId);
+          if (progressData) {
+            setUserProgress(progressData);
+            if (progressData.activeModules) {
+              // Supabase is authoritative — overwrite any sandbox enrolled IDs
+              setEnrolledIds(progressData.activeModules.map((m: any) => m.id));
+            }
           }
         }
       } catch (err) {
-        console.error("Failed to load user progress", err);
+        console.error('Failed to load courses/progress', err);
       } finally {
         setIsLoading(false);
       }
     }
     loadCoursesAndProgress();
 
+    // Read URL search param on mount
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const query = params.get('search');
-      if (query) {
-        setSearchQuery(query);
-      }
+      if (query) setSearchQuery(query);
     }
   }, []);
 
   useEffect(() => {
-    const session = localStorage.getItem('op_session');
+    // Session state — read from localStorage (session flag is legitimately local)
+    const session = typeof window !== 'undefined' ? localStorage.getItem('op_session') : null;
     setIsLoggedIn(session === 'true');
 
-    const savedBookmarks = localStorage.getItem('op_bookmarks');
-    if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+    // Bookmarks are a local preference — localStorage is appropriate here
+    const savedBookmarks = typeof window !== 'undefined' ? localStorage.getItem('op_bookmarks') : null;
+    if (savedBookmarks) {
+      try { setBookmarks(JSON.parse(savedBookmarks)); } catch {}
+    }
   }, [lang]);
 
   // Debounce search logging to database search history
