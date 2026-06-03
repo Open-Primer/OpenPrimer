@@ -1327,7 +1327,7 @@ export default function CurriculumPage() {
 
               {/* Syllabus Units */}
               <div className="space-y-6 mb-10 text-left">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
                 {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
                   <div key={uIdx} className="space-y-3">
                     <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">

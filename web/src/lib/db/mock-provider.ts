@@ -291,6 +291,7 @@ export const mockDatabaseProvider: DatabaseService = {
     let enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]') : [];
     let progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
     const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
+    const lessonProgress = isBrowser ? JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') : {};
     
     const activeModules = enrolled.map((id: number) => {
       const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
@@ -371,7 +372,8 @@ export const mockDatabaseProvider: DatabaseService = {
         totalMinutes,
         activeModules,
         earnedAchievementsCount: earnedAchievements.length,
-        aiSummary: aiSummary
+        aiSummary: aiSummary,
+        lessonProgress
       },
       error: null
     };

@@ -364,7 +364,7 @@ export default function AdminUsers() {
  
   return (
     <div className="space-y-12 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
             <UserCog className="w-8 h-8 text-blue-500" />

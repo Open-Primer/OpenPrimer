@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { NavItem } from '@/lib/content';
-import { dbService, progressService } from '@/lib/db';
+import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
 
@@ -18,6 +18,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
   const [progress, setProgress] = useState<number>(12); // Default fallback
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [visitedPages, setVisitedPages] = useState<string[]>([]);
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
@@ -34,6 +35,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   };
 
   useEffect(() => {
+    let active = true;
     async function loadProgress() {
       const parts = pathname.split('/');
       const isLPage = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
@@ -47,22 +49,62 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         });
       });
 
-      const storage = getProgressionStorage();
-      if (storage) {
-        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
-        const visitedCount = flatPages.filter(p => visited.includes(p.path)).length;
-        const totalPages = flatPages.length;
-        const calculatedProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 12;
+      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_sandbox_mode') !== 'true';
+      let dbProgress = 12;
+      let dbVisited: string[] = [];
 
-        setProgress(calculatedProgress);
+      if (useSupabase) {
+        let userId = 'u1';
+        const savedProfile = localStorage.getItem('op_user_profile');
+        if (savedProfile) {
+          try {
+            const p = JSON.parse(savedProfile);
+            if (p.id) userId = p.id;
+          } catch (e) {}
+        }
+        const { data: progressData } = await dbService.getUserProgress(userId, lang);
+        if (progressData && active) {
+          const activeModule = progressData.activeModules?.find((m: any) => m.slug === activeSlug);
+          if (activeModule) {
+            dbProgress = activeModule.progress;
+          }
+          if (progressData.lessonProgress) {
+            dbVisited = Object.keys(progressData.lessonProgress);
+          }
+        }
+      } else {
+        const storage = getProgressionStorage();
+        if (storage) {
+          const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+          dbVisited = visited;
+          const visitedCount = flatPages.filter(p => visited.includes(p.path)).length;
+          const totalPages = flatPages.length;
+          dbProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 12;
 
-        const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
-        progressMap[activeSlug] = calculatedProgress;
-        storage.setItem('op_course_progress', JSON.stringify(progressMap));
+          const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
+          progressMap[activeSlug] = dbProgress;
+          storage.setItem('op_course_progress', JSON.stringify(progressMap));
+        }
+      }
+
+      if (active) {
+        setProgress(dbProgress);
+        setVisitedPages(dbVisited);
       }
     }
+
     loadProgress();
-  }, [pathname, items]);
+
+    const handleUpdate = () => {
+      loadProgress();
+    };
+    window.addEventListener('op_progress_updated', handleUpdate);
+
+    return () => {
+      active = false;
+      window.removeEventListener('op_progress_updated', handleUpdate);
+    };
+  }, [pathname, items, lang]);
 
   if (!isOpen) return null;
 
@@ -90,9 +132,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             <div className="space-y-1">
               {module.children?.map((page) => {
                 const isActive = pathname === page.path;
-                const storage = getProgressionStorage();
-                const visited = storage ? JSON.parse(storage.getItem('op_visited_pages') || '[]') : [];
-                const isCompleted = visited.includes(page.path);
+                const isCompleted = visitedPages.includes(page.path);
 
                 return (
                   <Link

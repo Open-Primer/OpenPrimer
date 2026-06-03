@@ -11,7 +11,7 @@ import {
 import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { dbService, progressService } from '@/lib/db';
+import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from './CourseKiosk';
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
@@ -459,6 +459,7 @@ export const CatalogPage = () => {
 
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
@@ -476,13 +477,16 @@ export const CatalogPage = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('op_enrolled_courses');
-      if (saved) {
-        setEnrolledIds(JSON.parse(saved));
-      } else {
-        const defaults: number[] = [];
-        localStorage.setItem('op_enrolled_courses', JSON.stringify(defaults));
-        setEnrolledIds(defaults);
+      const useSupabase = isDatabaseConfigured && localStorage.getItem('op_sandbox_mode') !== 'true';
+      if (!useSupabase) {
+        const saved = localStorage.getItem('op_enrolled_courses');
+        if (saved) {
+          setEnrolledIds(JSON.parse(saved));
+        } else {
+          const defaults: number[] = [];
+          localStorage.setItem('op_enrolled_courses', JSON.stringify(defaults));
+          setEnrolledIds(defaults);
+        }
       }
     }
   }, []);
@@ -543,9 +547,10 @@ export const CatalogPage = () => {
 
   useEffect(() => {
     async function loadCoursesAndProgress() {
-      const { data } = await dbService.getAllCourses();
-      if (data) setCourses(data);
+      setIsLoading(true);
       try {
+        const { data } = await dbService.getAllCourses();
+        if (data) setCourses(data);
         let userId = 'u1';
         if (typeof window !== 'undefined') {
           const savedProfile = window.localStorage.getItem('op_user_profile');
@@ -565,6 +570,8 @@ export const CatalogPage = () => {
         }
       } catch (err) {
         console.error("Failed to load user progress", err);
+      } finally {
+        setIsLoading(false);
       }
     }
     loadCoursesAndProgress();
@@ -882,7 +889,14 @@ export const CatalogPage = () => {
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sortedCourses.length > 0 ? sortedCourses.map((course) => {
+          {isLoading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+                {lang === 'FR' ? 'Chargement des cours...' : 'Loading courses...'}
+              </p>
+            </div>
+          ) : sortedCourses.length > 0 ? sortedCourses.map((course) => {
             const isEnrolled = enrolledIds.includes(course.id);
             const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || m.title_key === course.title_key);
             const progressPercent = activeModule ? activeModule.progress : 12;
@@ -959,11 +973,11 @@ export const CatalogPage = () => {
                         {/* Course / Curriculum Differentiating Badge */}
                         {course.isCurriculum ? (
                           <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
-                            {lang === 'FR' ? 'ðŸŽ“ Curriculum' : 'ðŸŽ“ Curriculum'}
+                            🎓 Curriculum
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
-                            {lang === 'FR' ? 'ðŸ“– Cours' : 'ðŸ“– Course'}
+                            📖 Course
                           </span>
                         )}
                         {/* Unified gold star rating badge */}
@@ -1206,7 +1220,7 @@ export const CatalogPage = () => {
 
               {/* Syllabus Units */}
               <div className="space-y-6 mb-10">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
                 {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
                   <div key={uIdx} className="space-y-3">
                     <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">

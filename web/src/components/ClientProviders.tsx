@@ -263,10 +263,6 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {}
 
-      if (!isAdmin && typeof window !== "undefined" && window.location.pathname.startsWith('/admin')) {
-        isAdmin = true;
-      }
-
       if (!isAdmin) {
         return;
       }

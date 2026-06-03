@@ -449,21 +449,25 @@ export const supabaseDatabaseProvider: DatabaseService = {
       let lessonProgress: any = {};
 
       if (data) {
-        enrolled = data.map(r => r.course_id);
+        enrolled = data.filter(r => !(r.lesson_progress && (r.lesson_progress as any)._abandoned)).map(r => r.course_id);
         data.forEach(r => {
-          const course = getMockCourses().find(c => c.id === r.course_id);
-          if (course) {
-            progressMap[course.slug] = r.progress;
-            progressMap[course.id.toString()] = r.progress;
+          const isAbandoned = r.lesson_progress && (r.lesson_progress as any)._abandoned;
+          if (!isAbandoned) {
+            const course = getMockCourses().find(c => c.id === r.course_id);
+            if (course) {
+              progressMap[course.slug] = r.progress;
+              progressMap[course.id.toString()] = r.progress;
+            }
+            if (r.lesson_progress) {
+              Object.assign(lessonProgress, r.lesson_progress);
+            }
+            if (r.total_minutes) {
+              totalMinutes += r.total_minutes;
+            }
           }
-          if (r.lesson_progress) {
-            Object.assign(lessonProgress, r.lesson_progress);
-          }
+          // Preserve quiz results to maintain acquired points
           if (r.quiz_results) {
             Object.assign(quizResults, r.quiz_results);
-          }
-          if (r.total_minutes) {
-            totalMinutes += r.total_minutes;
           }
         });
       }
@@ -536,7 +540,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
           totalMinutes,
           activeModules,
           earnedAchievementsCount: 0,
-          aiSummary: aiSummary
+          aiSummary: aiSummary,
+          lessonProgress
         },
         error: null
       };
@@ -569,9 +574,16 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   abandonCourse: async (userId: string, courseId: number) => {
     try {
+      // Secure unenrollment preserving points: reset progress/time and flag as abandoned in JSONB lesson_progress.
+      // Do not delete the row completely so that quiz_results (and thus accumulated points) are preserved.
       const { error } = await supabase
         .from('progress')
-        .delete()
+        .update({
+          progress: 0,
+          lesson_progress: { _abandoned: true },
+          total_minutes: 0,
+          last_visited: new Date().toISOString()
+        })
         .eq('user_id', userId)
         .eq('course_id', courseId);
       if (error) throw error;

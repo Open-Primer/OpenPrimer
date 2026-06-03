@@ -447,6 +447,7 @@ export const COCKPIT_DICTIONARY = {
     "No pending pedagogical revision proposals. Core curriculum stable.": "No pending pedagogical revision proposals. Core curriculum stable.",
     "Refused Revisions Backlog": "Refused Revisions Backlog",
     "No refused revisions in backlog.": "No refused revisions in backlog.",
+    "Refused courses backlog is empty.": "Refused courses backlog is empty.",
     // 4. Course Archiving Tab
     "Curriculum Registry and Archival Control": "Curriculum Registry and Archival Control",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Search courses and archive/unarchive specific languages or entire courses instantly.",
@@ -826,6 +827,7 @@ export const COCKPIT_DICTIONARY = {
     "No pending pedagogical revision proposals. Core curriculum stable.": "Aucune proposition de révision en attente. Cursus stable.",
     "Refused Revisions Backlog": "Backlog des Révisions Refusées",
     "No refused revisions in backlog.": "Aucune révision refusée dans le backlog.",
+    "Refused courses backlog is empty.": "Le backlog des cours refusés est vide.",
     // 4. Course Archiving Tab
     "Curriculum Registry and Archival Control": "Registre du Cursus & Contrôle de l'Archivage",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Rechercher des cours et archiver/désarchiver des langues ou des cours entiers.",
@@ -1204,6 +1206,7 @@ export const COCKPIT_DICTIONARY = {
     "No pending pedagogical revision proposals. Core curriculum stable.": "No hay propuestas de revisión pendientes. Cursus estable.",
     "Refused Revisions Backlog": "Revisiones Rechazadas",
     "No refused revisions in backlog.": "No hay revisiones rechazadas.",
+    "Refused courses backlog is empty.": "El backlog de cursos rechazados está vacío.",
     // 4. Course Archiving Tab
     "Curriculum Registry and Archival Control": "Registro y Control de Archivos de Cursus",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Buscar cursos y archivar/desarchivar idiomas o cursos completos.",
@@ -1583,6 +1586,7 @@ export const COCKPIT_DICTIONARY = {
     "No pending pedagogical revision proposals. Core curriculum stable.": "Keine ausstehenden Revisionsvorschläge. Lehrplan stabil.",
     "Refused Revisions Backlog": "Abgelehnte Überarbeitungen",
     "No refused revisions in backlog.": "Keine abgelehnten Überarbeitungen im Backlog.",
+    "Refused courses backlog is empty.": "Das Backlog der abgelehnten Kurse ist leer.",
     // 4. Course Archiving Tab
     "Curriculum Registry and Archival Control": "Lehrplan-Registrierung & Archivierungssteuerung",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Suchen Sie Kurse und archivieren/reaktivieren Sie Sprachen oder ganze Kurse.",
@@ -1960,6 +1964,7 @@ export const COCKPIT_DICTIONARY = {
     "No pending pedagogical revision proposals. Core curriculum stable.": "没有挂起的教学修订提案。核心课程稳定。",
     "Refused Revisions Backlog": "已拒绝的修订积压",
     "No refused revisions in backlog.": "积压中没有已拒绝的修订。",
+    "Refused courses backlog is empty.": "已拒绝的课程积压为空。",
     "Curriculum Registry and Archival Control": "课程注册与归档控制",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "立即搜索课程并归档/取消归档特定语言或整个课程。",
     "Search courses...": "搜索课程...",
@@ -4878,7 +4883,7 @@ export default function AdminCurriculumPage() {
   return (
     <div className="space-y-12 pb-20">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-900 pb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6">
         <div className="space-y-2 w-full">
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
             <BookOpen className="w-8 h-8 text-blue-500" />

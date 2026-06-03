@@ -54,7 +54,7 @@ const STATIC_UI_STRINGS = {
     total_credits: "Total Credits", knowledge_points: "Knowledge Points", learning_time: "Learning Time",
     active_modules: "Active Modules", progress: "Progress", tutor_summary: "AI Pedagogical Summary",
     curricula: "Curricula", total_courses: "Total Courses",
-    tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview",
+    tutor_feedback: "Academic Feedback", curriculum_overview: "Your Curriculum Overview", syllabus_overview: "Syllabus Overview",
     classical_mechanics: "Classical Mechanics", cell_biology: "Cell Biology", constitutional_law: "Constitutional Law",
     search_course: "Search this course...", course_progress: "Course Progress",
     password: "Password", confirm_password: "Confirm Password", create_account: "Create an Account",
@@ -194,7 +194,7 @@ const STATIC_UI_STRINGS = {
     total_credits: "Crédits Totaux", knowledge_points: "Points de Savoir", learning_time: "Temps d'Apprentissage",
     active_modules: "Modules Actifs", progress: "Progression", tutor_summary: "Résumé Pédagogique IA",
     curricula: "Cursus", total_courses: "Cours Totaux",
-    tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum",
+    tutor_feedback: "Feedback Académique", curriculum_overview: "Aperçu de votre Curriculum", syllabus_overview: "Aperçu du Programme",
     classical_mechanics: "Mécanique Classique", cell_biology: "Biologie Cellulaire", constitutional_law: "Droit Constitutionnel",
     search_course: "Rechercher dans ce cours...", course_progress: "Progression du Cours",
     password: "Mot de passe", confirm_password: "Confirmer le mot de passe", create_account: "Créer un Compte",
@@ -334,7 +334,7 @@ const STATIC_UI_STRINGS = {
     total_credits: "Créditos Totales", knowledge_points: "Puntos de Conocimiento", learning_time: "Tiempo de Aprendizaje",
     active_modules: "Módulos Activos", progress: "Progreso", tutor_summary: "Resumen Pedagógico IA",
     curricula: "Planes de Estudio", total_courses: "Cursos Totales",
-    tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo",
+    tutor_feedback: "Feedback Académico", curriculum_overview: "Resumen de su Currículo", syllabus_overview: "Resumen del Programa",
     classical_mechanics: "Mecánica Clásica", cell_biology: "Biología Celular", constitutional_law: "Derecho Constitucional",
     search_course: "Buscar en este curso...", course_progress: "Progreso del Curso",
     password: "Contraseña", confirm_password: "Confirmar Contraseña", create_account: "Crear una Cuenta",
@@ -474,7 +474,7 @@ const STATIC_UI_STRINGS = {
     total_credits: "Gesamt-Credits", knowledge_points: "Wissenspunkte", learning_time: "Lernzeit",
     active_modules: "Aktive Module", progress: "Fortschritt", tutor_summary: "KI-Pädagogische Zusammenfassung",
     curricula: "Lehrpläne", total_courses: "Gesamte Kurse",
-    tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick",
+    tutor_feedback: "Akademisches Feedback", curriculum_overview: "Ihr Lehrplan-Überblick", syllabus_overview: "Lehrplan-Überblick",
     classical_mechanics: "Klassische Mechanik", cell_biology: "Zellbiologie", constitutional_law: "Verfassungsrecht",
     search_course: "Diesen Kurs durchsuchen...", course_progress: "Kursfortschritt",
     password: "Passwort", confirm_password: "Passwort bestätigen", create_account: "Konto erstellen",
@@ -595,7 +595,7 @@ const STATIC_UI_STRINGS = {
     total_credits: "总学分", knowledge_points: "知识点", learning_time: "学习时长",
     active_modules: "当前模块", progress: "进度", tutor_summary: "AI 教学总结",
     curricula: "学术大纲", total_courses: "全部课程",
-    tutor_feedback: "学术反馈", curriculum_overview: "课程概览",
+    tutor_feedback: "学术反馈", curriculum_overview: "课程概览", syllabus_overview: "大纲概览",
     classical_mechanics: "经典力学", cell_biology: "细胞生物学", constitutional_law: "宪法",
     search_course: "搜索此课程...", course_progress: "课程进度",
     password: "密码", confirm_password: "确认密码", create_account: "创建账户",
@@ -1867,7 +1867,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
               {/* Syllabus Units */}
               <div className="space-y-6 mb-10 text-left">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">Syllabus Overview</p>
+                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
                 {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
                   <div key={uIdx} className="space-y-3">
                     <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
