@@ -192,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           setDynamicEmail(user.email);
           
           // Query the user's role from the public profiles table
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
@@ -202,6 +202,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             setDynamicRole(user.email === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
             setIsAuthorized(true);
             return;
+          } else if (profileError) {
+            throw new Error("Database query failed, falling back to local storage profile");
           } else {
             setIsAuthorized(false);
             router.push('/catalog');

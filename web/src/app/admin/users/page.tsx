@@ -23,7 +23,7 @@ export const USERS_STRINGS = {
     status_blocked: "Blocked",
     status_active: "Active",
     confirm_title: "Confirm Action",
-    confirm_msg: "Are you sure you want to perform this action? This action may be irreversible.",
+    confirm_msg: "Are you sure you want to perform this action? This action is irreversible.",
     cancel: "Cancel",
     execute: "Execute",
     add_title: "Add New Student",
@@ -59,7 +59,7 @@ export const USERS_STRINGS = {
     status_blocked: "Bloqué",
     status_active: "Actif",
     confirm_title: "Confirmer l'Action",
-    confirm_msg: "Êtes-vous sûr de vouloir effectuer cette action ? Cette action peut être irréversible.",
+    confirm_msg: "Êtes-vous sûr de vouloir effectuer cette action ? Cette action est irréversible.",
     cancel: "Annuler",
     execute: "Exécuter",
     add_title: "Ajouter un Nouvel Étudiant",
@@ -95,7 +95,7 @@ export const USERS_STRINGS = {
     status_blocked: "Bloqueado",
     status_active: "Activo",
     confirm_title: "Confirmar Acción",
-    confirm_msg: "¿Está seguro de que desea realizar esta acción? Esta acción puede ser irreversible.",
+    confirm_msg: "¿Está seguro de que desea realizar esta acción? Esta acción es irreversible.",
     cancel: "Cancelar",
     execute: "Ejecutar",
     add_title: "Añadir Nuevo Estudiante",
@@ -131,7 +131,7 @@ export const USERS_STRINGS = {
     status_blocked: "Blockiert",
     status_active: "Aktiv",
     confirm_title: "Aktion bestätigen",
-    confirm_msg: "Sind Sie sicher, dass Sie diese Aktion ausführen möchten? Diese Aktion kann unwiderruflich sein.",
+    confirm_msg: "Sind Sie sicher, dass Sie diese Aktion ausführen möchten? Diese Aktion ist unwiderruflich.",
     cancel: "Abbrechen",
     execute: "Ausführen",
     add_title: "Neuen Studenten hinzufügen",
@@ -167,7 +167,7 @@ export const USERS_STRINGS = {
     status_blocked: "已封禁",
     status_active: "活跃",
     confirm_title: "确认执行操作",
-    confirm_msg: "您确定要执行此操作吗？该操作可能是不可逆的。",
+    confirm_msg: "您确定要执行此操作吗？该操作是不可逆的。",
     cancel: "取消",
     execute: "执行",
     add_title: "注册新学生账号",
@@ -195,6 +195,41 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
   return currentDir === 'asc' ? <span className="ml-1 text-blue-400 cursor-pointer">▲</span> : <span className="ml-1 text-blue-400 cursor-pointer">▼</span>;
 };
  
+
+const VANGUARD_LOCK_MSG: Record<string, string> = {
+  EN: "The Vanguard Mysterious super-administrator account is the platform's seed account. It cannot be deleted to prevent administrative lockout.",
+  FR: "Le compte super-administrateur Vanguard Mysterious est le compte d'amorçage de la plateforme. Il ne peut pas être supprimé afin de prévenir tout blocage administratif.",
+  ES: "La cuenta de superadministrador Vanguard Mysterious es la cuenta semilla de la plataforma. No se puede eliminar para evitar el bloqueo administrativo.",
+  DE: "Das Vanguard Mysterious Super-Administrator-Konto ist das Seed-Konto der Plattform. Es kann nicht gelöscht werden, um eine administrative Aussperrung zu verhindern.",
+  ZH: "Vanguard Mysterious 超级管理员账户是平台的系统种子账户。为了防止系统死锁，此账户无法被删除。"
+};
+
+const VANGUARD_LOCK_TITLE: Record<string, string> = {
+  EN: "Protected Account",
+  FR: "Compte Protégé",
+  ES: "Cuenta Protegida",
+  DE: "Geschütztes Konto",
+  ZH: "受保护的账户"
+};
+
+const DELETE_OWN_WARN: Record<string, string> = {
+  EN: "⚠️ You are about to delete your own admin account. You will be logged out immediately following this operation and you will lose all administrative access.",
+  FR: "⚠️ Vous êtes en train de supprimer votre propre compte admin. Vous serez déconnecté immédiatement à la suite de cette opération et vous ne pourrez plus accéder à l'administration.",
+  ES: "⚠️ Está a punto de eliminar su propia cuenta de administrador. Se cerrará su sesión inmediatamente después de esta operación y perderá todo el acceso administrativo.",
+  DE: "⚠️ Sie sind im Begriff, Ihr eigenes Administrator-Konto zu löschen. Sie werden unmittelbar nach diesem Vorgang abgemeldet und verlieren jeglichen administrativen Zugriff.",
+  ZH: "⚠️ 您正在删除您自己的管理员账户。操作完成后您将被立即登出，且将失去所有管理员访问权限。"
+};
+
+const getDeleteTitle = (name: string, langKey: string) => {
+  switch (langKey) {
+    case 'FR': return `Supprimer le compte de ${name}`;
+    case 'ES': return `Eliminar cuenta de ${name}`;
+    case 'DE': return `Konto von ${name} löschen`;
+    case 'ZH': return `删除 ${name} 的账户`;
+    default: return `Delete account of ${name}`;
+  }
+};
+
 export default function AdminUsers() {
   const { language: globalLang } = useLanguage();
   const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
@@ -204,7 +239,21 @@ export default function AdminUsers() {
   const [userSortField, setUserSortField] = useState<string>('name');
   const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');
-  const [confirmingAction, setConfirmingAction] = useState<{ type: 'delete' | 'block' | 'role', userId: string, extra?: any } | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState<{ type: 'delete' | 'block' | 'role' | 'vanguard_locked', userId: string, extra?: any } | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('op_user_profile');
+      if (stored) {
+        try {
+          setCurrentUser(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
   
   // Visual Create User states
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -232,7 +281,17 @@ export default function AdminUsers() {
     if (!confirmingAction) return;
     const { type, userId, extra } = confirmingAction;
  
-    if (type === 'delete') await dbService.deleteUser(userId);
+    if (type === 'delete') {
+      await dbService.deleteUser(userId);
+      if (currentUser && currentUser.id === userId) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('op_session');
+          localStorage.removeItem('op_user_profile');
+          window.location.href = '/';
+          return;
+        }
+      }
+    }
     if (type === 'block') await dbService.toggleBlockUser(userId);
     if (type === 'role') await dbService.updateUserRole(userId, extra);
  
@@ -450,14 +509,25 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-8 py-6 text-right">
                    <div className="flex justify-end gap-2">
-                     <button 
-                      onClick={() => setConfirmingAction({ type: 'delete', userId: user.id })}
-                      className="p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-white hover:bg-red-650 transition-all delete-user-btn cursor-pointer"
-                      data-testid={`delete-btn-${user.id}`}
-                      title={lang === 'FR' ? "Supprimer l'utilisateur" : lang === 'ES' ? "Eliminar usuario" : lang === 'DE' ? "Benutzer löschen" : lang === 'ZH' ? "删除用户账号" : "Delete User"}
-                     >
-                       <Trash2 className="w-4 h-4" />
-                     </button>
+                     {user.email === 'vanguard.mysterious@gmail.com' ? (
+                       <button 
+                        onClick={() => setConfirmingAction({ type: 'vanguard_locked', userId: user.id })}
+                        className="p-2 rounded-xl bg-slate-900 border border-red-500/20 text-red-500/40 hover:text-red-400 hover:bg-red-950/10 transition-all cursor-pointer flex items-center justify-center relative group"
+                        title={lang === 'FR' ? "Compte protégé" : "Protected Account"}
+                       >
+                         <Trash2 className="w-4 h-4 opacity-50" />
+                         <Ban className="w-2.5 h-2.5 absolute text-red-500 bg-slate-900 rounded-full" style={{ bottom: '2px', right: '2px' }} />
+                       </button>
+                     ) : (
+                       <button 
+                        onClick={() => setConfirmingAction({ type: 'delete', userId: user.id })}
+                        className="p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-white hover:bg-red-650 transition-all delete-user-btn cursor-pointer"
+                        data-testid={`delete-btn-${user.id}`}
+                        title={lang === 'FR' ? "Supprimer l'utilisateur" : lang === 'ES' ? "Eliminar usuario" : lang === 'DE' ? "Benutzer löschen" : lang === 'ZH' ? "删除用户账号" : "Delete User"}
+                       >
+                         <Trash2 className="w-4 h-4" />
+                       </button>
+                     )}
                    </div>
                 </td>
               </tr>
@@ -468,27 +538,63 @@ export default function AdminUsers() {
  
       {/* CONFIRMATION ACTION MODAL */}
       <AnimatePresence>
-        {confirmingAction && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmingAction(null)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-sm p-8 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-6 mx-auto">
-                <AlertCircle className="w-6 h-6" />
+        {confirmingAction && (() => {
+          const targetUser = users.find(u => u.id === confirmingAction.userId);
+          const isOwnAccount = currentUser && currentUser.id === confirmingAction.userId;
+          
+          if (confirmingAction.type === 'vanguard_locked') {
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmingAction(null)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+                <motion.div 
+                  initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                  className="relative w-full max-w-sm p-8 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-6 mx-auto">
+                    <Ban className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-black mb-2 text-center text-white">{VANGUARD_LOCK_TITLE[lang] || VANGUARD_LOCK_TITLE.EN}</h3>
+                  <p className="text-slate-400 text-center text-xs mb-8 leading-relaxed">
+                    {VANGUARD_LOCK_MSG[lang] || VANGUARD_LOCK_MSG.EN}
+                  </p>
+                  <div className="flex justify-center">
+                    <button onClick={() => setConfirmingAction(null)} className="w-full py-4 rounded-2xl bg-slate-800 hover:bg-slate-750 text-white font-black text-[10px] uppercase tracking-widest cursor-pointer">OK</button>
+                  </div>
+                </motion.div>
               </div>
-              <h3 className="text-xl font-black mb-2 text-center text-white">{t.confirm_title}</h3>
-              <p className="text-slate-500 text-center text-xs mb-8">
-                {t.confirm_msg}
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setConfirmingAction(null)} className="py-4 rounded-2xl bg-slate-800 text-slate-300 font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.cancel}</button>
-                <button onClick={handleAction} id="confirm-execute-btn" className="py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.execute}</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
+            );
+          }
+
+          const title = confirmingAction.type === 'delete' && targetUser 
+            ? getDeleteTitle(targetUser.name, lang) 
+            : t.confirm_title;
+
+          const message = confirmingAction.type === 'delete' && isOwnAccount
+            ? (DELETE_OWN_WARN[lang] || DELETE_OWN_WARN.EN)
+            : t.confirm_msg;
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmingAction(null)} className="absolute inset-0 bg-slate-955/60 backdrop-blur-sm" />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-sm p-8 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-6 mx-auto">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-black mb-2 text-center text-white">{title}</h3>
+                <p className="text-slate-450 text-center text-xs mb-8 leading-relaxed">
+                  {message}
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <button onClick={() => setConfirmingAction(null)} className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-750 text-slate-350 font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.cancel}</button>
+                  <button onClick={handleAction} id="confirm-execute-btn" className="py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-widest cursor-pointer">{t.execute}</button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
       </AnimatePresence>
  
       {/* ADD STUDENT MODAL */}

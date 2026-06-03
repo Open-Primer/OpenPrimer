@@ -3,11 +3,12 @@ import { Check, X } from 'lucide-react';
 
 interface PasswordRequirementsProps {
   password: string;
+  confirmPassword?: string;
   lang: string;
   isFocused?: boolean;
 }
 
-export function PasswordRequirements({ password, lang, isFocused = true }: PasswordRequirementsProps) {
+export function PasswordRequirements({ password, confirmPassword, lang, isFocused = true }: PasswordRequirementsProps) {
   // Hide if the input is not focused and password is empty
   if (!password && !isFocused) return null;
 
@@ -62,15 +63,29 @@ export function PasswordRequirements({ password, lang, isFocused = true }: Passw
       labels: {
         EN: 'At least 1 special character',
         FR: 'Au moins 1 caractère spécial',
-        ES: 'Al menos 1 carácter especial',
+        ES: 'Al menos 1 caractère spécial',
         DE: 'Mindestens 1 Sonderzeichen',
         ZH: '至少 1 个特殊字符'
       }
     }
   ];
 
+  if (confirmPassword !== undefined) {
+    requirements.push({
+      id: 'match',
+      test: (pwd: string) => pwd === confirmPassword && pwd.length > 0,
+      labels: {
+        EN: 'Passwords match',
+        FR: 'Les mots de passe correspondent',
+        ES: 'Las contraseñas coinciden',
+        DE: 'Passwörter stimmen überein',
+        ZH: '密码一致'
+      }
+    });
+  }
+
   return (
-    <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 mt-2 space-y-1.5 backdrop-blur-sm transition-all duration-300">
+    <div className="bg-slate-955/80 border border-slate-800/80 rounded-xl p-3 mt-2 space-y-1.5 backdrop-blur-sm transition-all duration-300">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
         {requirements.map((req) => {
           const isValid = req.test(password);

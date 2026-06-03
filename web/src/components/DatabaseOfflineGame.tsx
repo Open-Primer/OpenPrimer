@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Wifi, Volume2, VolumeX, Sparkles, RefreshCw, HelpCircle, Globe as GlobeIcon } from 'lucide-react';
+import { Wifi, Volume2, VolumeX, Sparkles, RefreshCw, HelpCircle, Globe as GlobeIcon, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface Quote {
   sentence: string;
@@ -61,6 +61,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "Hier j'étais intelligent je voulais changer le monde. Aujourd'hui je suis sage je me change moi-même",
       author: "Rumi (Perse)",
       initialWords: ["Hier", "le", "Aujourd'hui", "change", "voulais", "me", "monde.", "sage", "je", "suis", "intelligent", "je", "changer", "je", "moi-même"]
+    },
+    {
+      sentence: "Soyez le changement que vous désirez voir dans ce monde",
+      author: "Gandhi (Inde)",
+      initialWords: ["changement", "désirez", "vous", "le", "que", "dans", "ce", "voir", "Soyez", "monde"]
+    },
+    {
+      sentence: "Cela semble toujours impossible jusqu'à ce que ce soit fait",
+      author: "Mandela (Afrique du Sud)",
+      initialWords: ["jusqu'à", "fait", "toujours", "ce", "Cela", "semble", "impossible", "que", "ce", "soit"]
+    },
+    {
+      sentence: "Le progrès n'est pas d'améliorer le passé mais d'avancer vers le futur",
+      author: "K. Gibran (Liban)",
+      initialWords: ["progrès", "Le", "futur", "mais", "n'est", "pas", "d'améliorer", "d'avancer", "le", "passé", "vers"]
     }
   ],
   EN: [
@@ -113,6 +128,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "Yesterday I was clever so I wanted to change the world. Today I am wise so I am changing myself",
       author: "Rumi (Persia)",
       initialWords: ["Yesterday", "clever", "change", "Today", "wise", "changing", "myself", "I", "was", "so", "I", "wanted", "to", "the", "world.", "I", "am", "so", "I", "am"]
+    },
+    {
+      sentence: "Be the change you want to see in the world",
+      author: "Gandhi (India)",
+      initialWords: ["want", "the", "world", "you", "Be", "to", "see", "change", "in", "the"]
+    },
+    {
+      sentence: "It always seems impossible until it is done",
+      author: "Mandela (South Africa)",
+      initialWords: ["seems", "until", "always", "done", "It", "impossible", "it", "is"]
+    },
+    {
+      sentence: "Progress is not in improving the past but in advancing toward the future",
+      author: "K. Gibran (Lebanon)",
+      initialWords: ["improving", "Progress", "future", "is", "not", "in", "the", "past", "but", "in", "advancing", "toward", "the"]
     }
   ],
   ES: [
@@ -165,6 +195,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "Ayer era inteligente quería cambiar el mundo. Hoy soy sabio me cambio a mí mismo",
       author: "Rumi (Persia)",
       initialWords: ["mismo", "inteligente", "cambiar", "Hoy", "sabio", "cambio", "Ayer", "era", "quería", "el", "mundo.", "soy", "me", "a", "mí"]
+    },
+    {
+      sentence: "Sé el cambio que deseas ver en el mundo",
+      author: "Gandhi (India)",
+      initialWords: ["mundo", "deseas", "Sé", "el", "ver", "en", "cambio", "que"]
+    },
+    {
+      sentence: "Siempre parece imposible hasta que se hace",
+      author: "Mandela (Sudáfrica)",
+      initialWords: ["Siempre", "se", "parece", "imposible", "hace", "hasta", "que"]
+    },
+    {
+      sentence: "El progreso no consiste en mejorar el pasado sino en avanzar hacia el futuro",
+      author: "K. Gibran (Líbano)",
+      initialWords: ["consiste", "progreso", "en", "El", "no", "mejorar", "el", "pasado", "sino", "en", "avanzar", "hacia", "el", "futuro"]
     }
   ],
   DE: [
@@ -217,6 +262,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "Gestern war ich klug und wollte die Welt verändern. Heute bin ich weise und verändere mich selbst",
       author: "Rumi (Persien)",
       initialWords: ["Gestern", "Welt", "Heute", "selbst", "wollte", "mich", "verändern.", "weise", "ich", "war", "ich", "klug", "und", "die", "bin", "ich", "und", "verändere"]
+    },
+    {
+      sentence: "Sei die Veränderung, die du in der Welt sehen willst",
+      author: "Gandhi (Indien)",
+      initialWords: ["Veränderung", "die", "Sei", "du", "sehen", "in", "Welt", "willst", "die", "der"]
+    },
+    {
+      sentence: "Es scheint immer unmöglich, bis es getan ist",
+      author: "Mandela (Südafrika)",
+      initialWords: ["unmöglich", "scheint", "bis", "immer", "Es", "es", "getan", "ist"]
+    },
+    {
+      sentence: "Fortschritt liegt nicht in der Verbesserung der Vergangenheit sondern im Voranschreiten in die Zukunft",
+      author: "K. Gibran (Libanon)",
+      initialWords: ["Fortschritt", "liegt", "nicht", "in", "der", "Verbesserung", "der", "Vergangenheit", "sondern", "im", "Voranschreiten", "in", "die", "Zukunft"]
     }
   ],
   IT: [
@@ -269,6 +329,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "Ieri ero intelligente volevo cambiare il mondo. Oggi sono saggio cambio me stesso",
       author: "Rumi (Persia)",
       initialWords: ["Ieri", "mondo.", "Oggi", "stesso", "volevo", "me", "intelligente", "cambiare", "il", "sono", "saggio", "cambio", "ero"]
+    },
+    {
+      sentence: "Sii il cambiamento che vuoi vedere nel mondo",
+      author: "Gandhi (India)",
+      initialWords: ["Sii", "vedere", "il", "vuoi", "nel", "cambiamento", "che", "mondo"]
+    },
+    {
+      sentence: "Sembra sempre impossibile finché non viene fatto",
+      author: "Mandela (Sudafrica)",
+      initialWords: ["finché", "sempre", "viene", "Sembra", "impossibile", "non", "fatto"]
+    },
+    {
+      sentence: "Il progresso non consiste nel migliorare il passato ma nel camminare verso il futuro",
+      author: "K. Gibran (Libano)",
+      initialWords: ["progresso", "Il", "non", "consiste", "nel", "migliorare", "il", "passato", "ma", "nel", "camminare", "verso", "il", "futuro"]
     }
   ],
   ZH: [
@@ -321,6 +396,21 @@ const QUOTES_DB: Record<string, Quote[]> = {
       sentence: "昨日我聪明思欲变世界今日我明智反求诸己",
       author: "鲁米 (波斯)",
       initialWords: ["反求诸己", "变世界", "思欲", "聪明", "昨日我", "今日我", "明智"]
+    },
+    {
+      sentence: "成为你想在世界上看到的改变",
+      author: "甘地 (印度)",
+      initialWords: ["成为", "你想在", "世界上", "看到的", "改变"]
+    },
+    {
+      sentence: "事情在未完成之前，总看似不可能",
+      author: "曼德拉 (南非)",
+      initialWords: ["总看似", "事情在", "未完成", "之前，", "不可能"]
+    },
+    {
+      sentence: "进步不在于改善过去，而在于向未来迈进",
+      author: "纪伯伦 (黎巴嫩)",
+      initialWords: ["在于向", "改善过去，", "而在于", "向未来", "迈进", "进步", "不在于"]
     }
   ]
 };
@@ -425,20 +515,20 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     ZH: "测试中..."
   },
   reconnect_success: {
-    EN: "✅ Academic server is back online! Redirecting...",
-    FR: "✅ Liaison rétablie avec le serveur académique. Redirection...",
-    ES: "✅ ¡Servidor académico en línea! Redireccionando...",
-    DE: "✅ Akademischer Server ist wieder online! Weiterleitung...",
-    IT: "✅ Server accademico tornato in linea! Reindirizzamento...",
-    ZH: "✅ 学术服务器已恢复在线！正在跳转..."
+    EN: "Academic server is back online! Redirecting...",
+    FR: "Liaison rétablie avec le serveur académique. Redirection...",
+    ES: "¡Servidor académico en línea! Redireccionando...",
+    DE: "Akademischer Server ist wieder online! Weiterleitung...",
+    IT: "Server accademico tornato in linea! Reindirizzamento...",
+    ZH: "学术服务器已恢复在线！正在跳转..."
   },
   reconnect_failed: {
-    EN: "❌ Server is still unreachable. Take a moment to reflect.",
-    FR: "❌ Le serveur principal est toujours inaccessible. Prenez un instant pour méditer.",
-    ES: "❌ Servidor inalcanzable. Tómate un momento para reflexionar.",
-    DE: "❌ Server ist weiterhin nicht erreichbar. Nimm dir einen Moment Zeit zum Nachdenken.",
-    IT: "❌ Server non raggiungibile. Prenditi un momento per riflettere.",
-    ZH: "❌ 仍无法连接至主服务器。请静心冥想片刻。"
+    EN: "Connection failed. Please try again in a moment.",
+    FR: "Échec de la liaison. Veuillez réessayer dans quelques instants.",
+    ES: "Fallo de conexión. Por favor, inténtelo de nuevo en un momento.",
+    DE: "Verbindung fehlgeschlagen. Bitte versuchen Sie es in Kürze erneut.",
+    IT: "Connessione fallita. Si prega di riprovare tra poco.",
+    ZH: "连接失败，请稍后重试。"
   }
 };
 
@@ -453,7 +543,7 @@ export default function DatabaseOfflineGame() {
   const [solvedCount, setSolvedCount] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionMessage, setConnectionMessage] = useState<string | null>(null);
+  const [connectionMessage, setConnectionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Dynamic lists from LocalStorage or static defaults
   const [activeQuotes, setActiveQuotes] = useState<Quote[]>([]);
@@ -478,7 +568,7 @@ export default function DatabaseOfflineGame() {
     }
   }, []);
 
-  // Process dynamic translations or static base tables on change of language or quote index
+  // 1. Process dynamic translations or static base tables when language changes
   useEffect(() => {
     const localGameData = typeof window !== 'undefined' ? localStorage.getItem(`op_lang_game_${langKey}`) : null;
     let resolvedTranslations = { ...TRANSLATIONS };
@@ -504,10 +594,8 @@ export default function DatabaseOfflineGame() {
           if (Array.isArray(parsedQuotes) && parsedQuotes.length > 0) {
             resolvedQuotes = parsedQuotes.map((q: any) => {
               const cleanSentence = q.sentence || "";
-              // Parse words, ignore punctuation to build game blocks
               const words = cleanSentence.split(/\s+/).filter(Boolean);
               
-              // Fisher-Yates scramble
               const scrambled = [...words];
               for (let i = scrambled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -528,18 +616,27 @@ export default function DatabaseOfflineGame() {
       }
     }
 
-    setGameTranslations(resolvedTranslations);
-    setActiveQuotes(resolvedQuotes);
-    setIsDynamic(dynamicFlag);
+    // Shuffle the resolved quotes list so they are presented in random order
+    const shuffled = [...resolvedQuotes];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
 
-    // Initial setup of chips
-    const activeQuote = resolvedQuotes[currentQuoteIndex] || resolvedQuotes[0] || DEFAULT_POOL[0];
+    setGameTranslations(resolvedTranslations);
+    setActiveQuotes(shuffled);
+    setIsDynamic(dynamicFlag);
+  }, [language]);
+
+  // 2. Setup the current quote chips when activeQuotes or currentQuoteIndex changes
+  useEffect(() => {
+    const activeQuote = activeQuotes[currentQuoteIndex] || activeQuotes[0];
     if (activeQuote) {
       setScrambledChips([...activeQuote.initialWords]);
       setConstructedSentence([]);
       setIsResolved(false);
     }
-  }, [language, currentQuoteIndex]);
+  }, [activeQuotes, currentQuoteIndex]);
 
   const activeQuote = activeQuotes[currentQuoteIndex] || activeQuotes[0] || DEFAULT_POOL[0];
 
@@ -643,7 +740,10 @@ export default function DatabaseOfflineGame() {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('op_allow_sandbox');
         }
-        setConnectionMessage(TRANSLATIONS.reconnect_success[langKey] || TRANSLATIONS.reconnect_success.EN);
+        setConnectionMessage({
+          text: TRANSLATIONS.reconnect_success[langKey] || TRANSLATIONS.reconnect_success.EN,
+          type: 'success'
+        });
         setTimeout(() => {
           window.location.reload();
         }, 1200);
@@ -653,7 +753,14 @@ export default function DatabaseOfflineGame() {
     } catch (e) {
       setTimeout(() => {
         setIsTestingConnection(false);
-        setConnectionMessage(TRANSLATIONS.reconnect_failed[langKey] || TRANSLATIONS.reconnect_failed.EN);
+        setConnectionMessage({
+          text: TRANSLATIONS.reconnect_failed[langKey] || TRANSLATIONS.reconnect_failed.EN,
+          type: 'error'
+        });
+        // Auto-dismiss error alert after 5 seconds
+        setTimeout(() => {
+          setConnectionMessage(prev => prev?.type === 'error' ? null : prev);
+        }, 5000);
       }, 700);
     }
   };
@@ -928,20 +1035,34 @@ export default function DatabaseOfflineGame() {
 
         {/* connection report banner */}
         {connectionMessage && (
-          <div className={`text-center py-2.5 px-4 rounded-xl border text-xs font-bold animate-pulse ${
-            connectionMessage.startsWith('❌') 
+          <div className={`relative flex items-center justify-between py-2.5 pl-4 pr-10 rounded-xl border text-xs font-semibold shadow-sm transition-all duration-300 ${
+            connectionMessage.type === 'error'
               ? isPaper
-                ? 'bg-red-50 border-red-200 text-red-700'
+                ? 'bg-red-50 border-red-200 text-red-800'
                 : isFocus
-                  ? 'bg-neutral-900 border-neutral-800 text-neutral-300'
-                  : 'bg-red-950/10 border-red-500/10 text-red-400/80'
+                  ? 'bg-neutral-900 border-neutral-800 text-red-400'
+                  : 'bg-red-950/20 border-red-900/30 text-red-300'
               : isPaper
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 : isFocus
-                  ? 'bg-neutral-900 border-neutral-800 text-neutral-300'
-                  : 'bg-emerald-950/10 border-emerald-500/10 text-emerald-400/80'
+                  ? 'bg-neutral-900 border-neutral-800 text-emerald-400'
+                  : 'bg-emerald-950/20 border-emerald-900/30 text-emerald-300'
           }`}>
-            {connectionMessage}
+            <div className="flex items-center gap-2">
+              {connectionMessage.type === 'error' ? (
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-500" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+              )}
+              <span>{connectionMessage.text}</span>
+            </div>
+            <button
+              onClick={() => setConnectionMessage(null)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-500 hover:text-slate-350 focus:outline-none transition-colors cursor-pointer"
+              aria-label="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
