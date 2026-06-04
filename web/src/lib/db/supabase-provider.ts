@@ -1213,7 +1213,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         prompt: p.prompt,
         isDefault: p.is_default,
         archivingLevel: p.archiving_level || 0,
-        translations: {}
+        translations: p.translations || {}
       })) || [];
       return { data: mapped, error: null };
     } catch (e: any) {
@@ -1231,7 +1231,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
         name: pers.name,
         prompt: pers.prompt,
         is_default: pers.isDefault,
-        archiving_level: pers.archivingLevel || 0
+        archiving_level: pers.archivingLevel || 0,
+        translations: pers.translations || {}
       });
       if (error) throw error;
       return { data: pers, error: null };

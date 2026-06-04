@@ -579,7 +579,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   );
 };
 
-const formatCourseLevel = (level: string | number, lang: string) => {
+export const formatCourseLevel = (level: string | number, lang: string) => {
   const lvlStr = String(level).toUpperCase();
   const isEn = lang.toUpperCase() === 'EN';
   const isZh = lang.toUpperCase() === 'ZH';
@@ -658,7 +658,7 @@ const formatCourseLevel = (level: string | number, lang: string) => {
   return lvlStr;
 };
 
-const getLocalizedLabel = (key: string, lang: string) => {
+export const getLocalizedLabel = (key: string, lang: string) => {
   const l = lang.toUpperCase();
   const labels: Record<string, Record<string, string>> = {
     mastery_weight: {
