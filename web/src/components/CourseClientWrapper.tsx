@@ -6,6 +6,7 @@ import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { AudioReader } from '@/components/AudioReader';
 import { usePathname } from 'next/navigation';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;
@@ -14,12 +15,56 @@ interface CourseClientWrapperProps {
 }
 
 export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
+  const { language } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
   const [isEnrolled, setIsEnrolled] = useState<boolean>(true);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
+  const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
+
+  // Feynman text selection listener
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        setSelection(null);
+        return;
+      }
+      
+      const text = sel.toString().trim();
+      if (text.length < 15 || text.length > 800) {
+        setSelection(null);
+        return;
+      }
+
+      const anchorNode = sel.anchorNode;
+      if (!anchorNode || !mainRef.current?.contains(anchorNode)) {
+        setSelection(null);
+        return;
+      }
+
+      try {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          setSelection({
+            text,
+            x: rect.left + rect.width / 2,
+            y: rect.top - 45
+          });
+        }
+      } catch (e) {
+        setSelection(null);
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, []);
 
   // Expose to window for TopNav
   useEffect(() => {
@@ -406,6 +451,60 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
 
       <AITutorOverlay pageContext={pageContext} />
       <AudioReader content={pageContext} lang={typeof window !== 'undefined' ? (localStorage.getItem('openprimer_lang') || 'EN') : 'EN'} />
+
+      {selection && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            left: `${selection.x}px`, 
+            top: `${selection.y}px`, 
+            transform: 'translateX(-50%)',
+            zIndex: 9999 
+          }}
+          className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl animate-fade-in text-[10px] font-black uppercase tracking-wider text-slate-100"
+        >
+          <span className="text-slate-400 px-2 select-none">Feynman:</span>
+          <button
+            onClick={() => {
+              const prompt = language === 'FR'
+                ? `Explique-moi ce paragraphe comme si j'avais 5 ans (Primaire) :\n\n"${selection.text}"`
+                : `Explain this paragraph to me like I am 5 years old (Primary) :\n\n"${selection.text}"`;
+              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
+              setSelection(null);
+              window.getSelection()?.removeAllRanges();
+            }}
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-blue-600 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+          >
+            👶 5 ans
+          </button>
+          <button
+            onClick={() => {
+              const prompt = language === 'FR'
+                ? `Explique-moi ce paragraphe comme si j'avais 15 ans (Collège) :\n\n"${selection.text}"`
+                : `Explain this paragraph to me like I am 15 years old (Middle School) :\n\n"${selection.text}"`;
+              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
+              setSelection(null);
+              window.getSelection()?.removeAllRanges();
+            }}
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-indigo-650 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+          >
+            👦 15 ans
+          </button>
+          <button
+            onClick={() => {
+              const prompt = language === 'FR'
+                ? `Explique-moi ce paragraphe via le formalisme mathématique strict (L3) :\n\n"${selection.text}"`
+                : `Explain this paragraph using strict mathematical formalism (L3) :\n\n"${selection.text}"`;
+              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
+              setSelection(null);
+              window.getSelection()?.removeAllRanges();
+            }}
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-violet-650 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+          >
+            🎓 L3 Math
+          </button>
+        </div>
+      )}
     </div>
   );
 };

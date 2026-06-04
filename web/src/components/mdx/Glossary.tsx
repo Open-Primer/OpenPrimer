@@ -14,21 +14,56 @@ const GLOSSARY_DATA: Record<string, string> = {
   "cytosol": "The aqueous component of the cytoplasm of a cell, within which various organelles and particles are suspended."
 };
 
-export const Glossary = ({ word, children }: { word?: string; children: React.ReactNode }) => {
-  const term = word || (typeof children === 'string' ? children.toLowerCase() : '');
-  const definition = GLOSSARY_DATA[term];
+export const Glossary = ({ 
+  word, 
+  term, 
+  definition, 
+  children 
+}: { 
+  word?: string; 
+  term?: string; 
+  definition?: string; 
+  children: React.ReactNode; 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  if (!definition) return <>{children}</>;
+  const finalTerm = term || word || (typeof children === 'string' ? children.toLowerCase() : '');
+  const glossaryKey = finalTerm.toLowerCase().trim();
+  const finalDefinition = definition || GLOSSARY_DATA[glossaryKey];
+
+  if (!finalDefinition) return <>{children}</>;
+
+  const handleMouseEnter = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    const id = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+    setTimeoutId(id);
+  };
 
   return (
-    <Popover.Root>
+    <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>
-        <span className="cursor-help border-b border-dotted border-blue-400 text-blue-300 hover:text-blue-200 transition-colors">
+        <span 
+          className="cursor-help border-b border-dotted border-blue-400 text-blue-300 hover:text-blue-200 transition-colors"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           {children}
         </span>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content sideOffset={5} className="z-50">
+        <Popover.Content 
+          sideOffset={5} 
+          className="z-50"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 5 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -41,7 +76,7 @@ export const Glossary = ({ word, children }: { word?: string; children: React.Re
               <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">Glossary Definition</span>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed italic">
-              "{definition}"
+              "{finalDefinition}"
             </p>
             <Popover.Arrow className="fill-slate-700" />
           </motion.div>

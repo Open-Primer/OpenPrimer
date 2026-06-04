@@ -21,6 +21,21 @@ The **AI Tutor Agent** operates as an interactive Socratic Guide. Unlike standar
 2.  **Asks guiding questions:** Encourages critical thinking by prompting: *"What would happen to the balance if we doubled the gravity?"* or *"Let's look at line 4 of the code snippet together. What is the value of variable `x` at that step?"*
 3.  **Adapts instructions dynamically:** If the student fails an assessment MCQ, the tutor analyzes the selected wrong choice and suggests tailored analogies to fill the specific knowledge gap.
 
+### C. Dynamic Syllabus Design (Agent 1 & 2)
+Course structures are dynamically aligned with the discipline's epistemological DNA (ADN Cognitif) and the student's level:
+1. **Sciences Déductives / Formelles**: Focused on logical causations (Lemme ➔ Théorème ➔ Démonstration ➔ Corollaire).
+2. **Sciences Empiriques / Expérimentales**: Focused on observation and visual aids (Hypothèse ➔ Protocole ➔ Observation ➔ Modélisation).
+3. **Sciences Humaines et Discursives**: Focused on rhetoric and dialectics (Thèse ➔ Antithèse ➔ Synthèse).
+4. **Sciences Appliquées / Ingénierie**: Focused on engineering design patterns, sandbox simulations, and constructivism.
+
+Gradation limits adjust constraints per age group:
+* **Primaire (CP-CM2)**: Metaphor-heavy, visual, narrative structure. Max 3 lessons.
+* **Collège/Lycée**: Transitional formalization of core methodology.
+* **Supérieur (L1-L3)**: Strict academic formalism, research-grade proofs, limits of models.
+
+### D. Verification Loop & Quality Gate (Agent 4)
+All dynamically written outputs from Agent 3 are checked for "Zero-Placeholder" compliance. Skeletal text is rejected, and constructive critiques are looped back (up to 3 times) to guarantee maximum text density and pedagogical integrity.
+
 ---
 
 ## 2. Academic Credits & Calibration Metrics

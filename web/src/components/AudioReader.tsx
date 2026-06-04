@@ -535,6 +535,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     // Clean MDX frontmatter
     let cleaned = preprocessed.replace(/---[\s\S]*?---/, '');
     
+    // Clean interactive JSX components completely (so they are not read by TTS)
+    cleaned = cleaned.replace(/<Quiz>[\s\S]*?<\/Quiz>/gi, '');
+    cleaned = cleaned.replace(/<EssayEvaluation[\s\S]*?\/>/gi, '');
+    cleaned = cleaned.replace(/<SelfEval[\s\S]*?\/>/gi, '');
+    cleaned = cleaned.replace(/<SolvedProblem>[\s\S]*?<\/SolvedProblem>/gi, '');
+    cleaned = cleaned.replace(/<Prerequisites[\s\S]*?\/>/gi, '');
+    cleaned = cleaned.replace(/<Epistemology>[\s\S]*?<\/Epistemology>/gi, '');
+    cleaned = cleaned.replace(/<DiagnosticQuiz[\s\S]*?\/>/gi, '');
+
     // Clean LaTeX equations
     cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
     cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');

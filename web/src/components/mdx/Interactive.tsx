@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Info, CheckCircle2, Volume2 } from 'lucide-react';
+import { Info, CheckCircle2, Volume2, Sparkles, Loader2, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -220,6 +220,8 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [tutorComment, setTutorComment] = useState('');
+  const [isTutorLoading, setIsTutorLoading] = useState(false);
 
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
@@ -250,57 +252,154 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
     };
   }, [answer]);
 
-  const check = () => {
+  const check = async () => {
     if (isReadOnly) return;
     
     const correct = input.toLowerCase().trim() === answer.toLowerCase().trim();
-    if (correct) {
-      setIsCorrect(true);
-      
-      // Update progress locally in correct storage
-      const storage = getProgressionStorage();
-      if (storage) {
-        const pathname = window.location.pathname;
-        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
-        if (!visited.includes(pathname)) {
-          visited.push(pathname);
-          storage.setItem('op_visited_pages', JSON.stringify(visited));
-          window.dispatchEvent(new Event('op_progress_updated'));
-        }
+    setIsCorrect(correct);
+    
+    // Update progress locally in correct storage
+    const storage = getProgressionStorage();
+    if (storage) {
+      const pathname = window.location.pathname;
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (!visited.includes(pathname)) {
+        visited.push(pathname);
+        storage.setItem('op_visited_pages', JSON.stringify(visited));
+        window.dispatchEvent(new Event('op_progress_updated'));
       }
-    } else {
-      setIsCorrect(false);
+    }
+
+    // Now fetch tutor comment!
+    setIsTutorLoading(true);
+    try {
+      const response = await fetch('/api/tutor/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'user',
+              content: `L'étudiant a répondu "${input}" au texte à trous "${sentence}" (la bonne réponse était "${answer}"). Le résultat est donc ${correct ? 'CORRECT' : 'INCORRECT'}.\nDonne un commentaire très court (1 à 2 phrases max) sur ce concept en tant que tuteur, expliquant pourquoi c'est correct ou en rappelant brièvement la notion s'il y a erreur.`
+            }
+          ],
+          persona: 'curious_polymath',
+          language: language,
+          pageContext: `Sentence context: ${sentence}`
+        })
+      });
+
+      if (response.ok) {
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder('utf-8');
+        if (reader) {
+          let accumulated = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                try {
+                  const parsed = JSON.parse(line.slice(5).trim());
+                  if (parsed.text) {
+                    accumulated += parsed.text;
+                    setTutorComment(accumulated);
+                  }
+                } catch {}
+              }
+            }
+          }
+        }
+      } else {
+        throw new Error("Chat failed");
+      }
+    } catch (e) {
+      console.warn("[FILL IN BLANKS TUTOR FEEDBACK] Offline fallback...", e);
+      setTutorComment(correct
+        ? (language === 'FR' ? "Tuteur : Excellent travail ! Vous avez trouvé la bonne réponse." : "Tutor: Excellent work! You got the right answer.")
+        : (language === 'FR' ? `Tuteur : Ce n'est pas tout à fait correct. La bonne réponse est "${answer}".` : `Tutor: That's not quite correct. The expected answer is "${answer}".`)
+      );
+    } finally {
+      setIsTutorLoading(false);
     }
   };
 
   return (
-    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-slate-800'} flex flex-wrap items-center gap-3 transition-all`}>
-      <span className="text-slate-300 font-medium">{sentence.split('[...]')[0]}</span>
-      <input 
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className={`bg-slate-950 border ${isCorrect === true ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
-        placeholder={t.placeholder_answer}
-        disabled={isReadOnly}
-      />
-      <span className="text-slate-300 font-medium">{sentence.split('[...]')[1]}</span>
-      
-      {!isReadOnly && (
-        <button 
-          onClick={check}
-          className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
-        >
-          {t.validate}
-        </button>
-      )}
+    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isCorrect === true || isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : isCorrect === false ? 'border-rose-500/30 bg-rose-500/5' : 'border-slate-800'} transition-all space-y-4`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-slate-300 font-medium">{sentence.split('[...]')[0]}</span>
+        <input 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className={`bg-slate-950 border ${isCorrect === true || (isReadOnly && input) ? 'border-emerald-500' : isCorrect === false ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
+          placeholder={t.placeholder_answer}
+          disabled={isReadOnly || isCorrect !== null}
+        />
+        <span className="text-slate-300 font-medium">{sentence.split('[...]')[1]}</span>
+        
+        {isCorrect === null && !isReadOnly && (
+          <button 
+            onClick={check}
+            className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+          >
+            {t.validate}
+          </button>
+        )}
 
-      {isReadOnly && (
-        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
-          <CheckCircle2 className="w-3.5 h-3.5" /> {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
-        </span>
-      )}
+        {(isReadOnly || isCorrect === true) && (
+          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
+            <CheckCircle2 className="w-3.5 h-3.5" /> {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
+          </span>
+        )}
+      </div>
 
-      {isCorrect === true && !isReadOnly && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-pulse" />}
+      {isCorrect !== null && (
+        <div className="border-t border-slate-800/80 pt-4 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center justify-center px-3 py-1 bg-blue-600/10 border border-blue-500/20 rounded-xl min-w-[80px]">
+                <span className="text-[8px] font-black uppercase text-blue-400 tracking-wider">Note</span>
+                <span className="text-sm font-extrabold text-white">{isCorrect ? '1 / 1' : '0 / 1'}</span>
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
+                  <span className={isCorrect ? 'text-emerald-400 font-bold animate-pulse' : 'text-rose-400 font-bold'}>{input || '—'}</span>
+                </div>
+                {!isCorrect && (
+                  <div className="flex items-center gap-1.5 mt-1 border-t border-slate-800/40 pt-1">
+                    <span className="text-slate-400">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
+                    <span className="text-emerald-400 font-bold">{answer}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {(isTutorLoading || tutorComment) && (
+            <div className="p-4 bg-violet-950/20 border border-violet-500/20 rounded-2xl relative overflow-hidden shadow-md space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
+                <h4 className="text-[10px] font-black uppercase text-violet-400 tracking-wider">
+                  {language === 'FR' ? 'Commentaire du Tuteur' : 'Tutor Feedback'}
+                </h4>
+              </div>
+              {isTutorLoading && !tutorComment ? (
+                <div className="flex items-center gap-2 text-slate-400 text-[10px] italic">
+                  <div className="w-3 border border-violet-500 border-t-transparent rounded-full animate-spin aspect-square" />
+                  <span>{language === 'FR' ? 'Analyse...' : 'Analyzing...'}</span>
+                </div>
+              ) : (
+                <p className="text-slate-300 text-xs leading-relaxed italic font-medium pl-0.5">
+                  {tutorComment}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       
       {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
@@ -618,5 +717,96 @@ export const SpeechButton = ({ text }: { text: string }) => {
     >
       <Volume2 className="w-4 h-4" /> {t.listen}
     </button>
+  );
+};
+
+interface ExternalSandboxProps {
+  url: string;
+  title: string;
+  type?: 'phet' | 'codesandbox' | 'timeline' | 'generic';
+}
+
+export const ExternalSandbox = ({ url, title, type = 'generic' }: ExternalSandboxProps) => {
+  const { language } = useLanguage();
+  const [isReachable, setIsReachable] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const testReachability = async () => {
+      try {
+        const res = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+        if (active) {
+          setIsReachable(true);
+        }
+      } catch (err) {
+        if (active) {
+          setIsReachable(false);
+        }
+      }
+    };
+    testReachability();
+    return () => {
+      active = false;
+    };
+  }, [url]);
+
+  if (isReachable === false) {
+    return null;
+  }
+
+  const typeLabels = {
+    phet: language === 'FR' ? 'Simulation Scientifique (PhET)' : 'Scientific Simulation (PhET)',
+    codesandbox: language === 'FR' ? 'Bac à Sable (Sandbox de Code)' : 'Code Sandbox',
+    timeline: language === 'FR' ? 'Frise Chronologique Interactive' : 'Interactive Timeline',
+    generic: language === 'FR' ? 'Environnement Interactif' : 'Interactive Sandbox'
+  };
+
+  const currentLabel = typeLabels[type] || typeLabels.generic;
+
+  return (
+    <div className="my-10 p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] overflow-hidden space-y-4 shadow-xl">
+      <div className="flex items-center justify-between border-b border-slate-800/85 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
+              {currentLabel}
+            </span>
+            <h4 className="text-sm font-bold text-slate-100">{title}</h4>
+          </div>
+        </div>
+        <a 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-2 bg-slate-950 border border-slate-800 rounded-lg hover:border-slate-700 hover:text-white transition-all text-slate-400 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          {language === 'FR' ? 'Plein écran' : 'Fullscreen'}
+        </a>
+      </div>
+
+      <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner">
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-10 space-y-2">
+            <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+            <span className="text-xs text-slate-400 font-medium">
+              {language === 'FR' ? 'Chargement de la simulation...' : 'Loading simulation...'}
+            </span>
+          </div>
+        )}
+        <iframe 
+          src={url}
+          title={title}
+          className="w-full h-full border-none"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          onLoad={() => setIsLoading(false)}
+        />
+      </div>
+    </div>
   );
 };

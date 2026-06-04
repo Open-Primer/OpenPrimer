@@ -359,6 +359,10 @@ export const areTitlesTooSimilar = (title1: string, title2: string): boolean => 
 
 export const COCKPIT_DICTIONARY = {
   EN: {
+    "Volume Preference": "Volume Preference",
+    "Automatic": "Automatic",
+    "Explicit Hours": "Explicit Hours",
+    "Explicit Volume (Hours)": "Explicit Volume (Hours)",
     "AI Tutor Personalities": "AI Tutor Personalities",
     "Seeded Achievements badges": "Seeded Achievements badges",
     "Register Achievement": "Register Achievement",
@@ -739,6 +743,10 @@ export const COCKPIT_DICTIONARY = {
     "Microeconomics Market Forms": "Microeconomics Market Forms",
     "Machine Learning Fundamentals": "Machine Learning Fundamentals"},
   FR: {
+    "Volume Preference": "Préférence de Volume",
+    "Automatic": "Automatique",
+    "Explicit Hours": "Heures Explicites",
+    "Explicit Volume (Hours)": "Volume Explicite (Heures)",
     "AI Tutor Personalities": "Personnalités des tuteurs IA",
     "Seeded Achievements badges": "Badges d'exploits de départ",
     "Register Achievement": "Enregistrer l'exploit",
@@ -1118,6 +1126,10 @@ export const COCKPIT_DICTIONARY = {
     "Microeconomics Market Forms": "Formes de marché en microéconomie",
     "Machine Learning Fundamentals": "Fondations du Machine Learning"},
   ES: {
+    "Volume Preference": "Preferencia de Volumen",
+    "Automatic": "Automático",
+    "Explicit Hours": "Horas Explícitas",
+    "Explicit Volume (Hours)": "Volumen Explícito (Horas)",
     "AI Tutor Personalities": "Personalidades de tutores de IA",
     "Seeded Achievements badges": "Medallas de logros iniciales",
     "Register Achievement": "Registrar logro",
@@ -2924,6 +2936,8 @@ export default function AdminCurriculumPage() {
   const [showManualConfirm, setShowManualConfirm] = useState(false);
   const [disciplinesList, setDisciplinesList] = useState<string[]>(['Physics', 'Biology', 'Mathematics', 'Law', 'Humanities / Letters', 'Social Sciences', 'Computer Science', 'Medicine', 'Economics', 'Chemistry']);
   const [customDisciplineName, setCustomDisciplineName] = useState('');
+  const [manualVolumePref, setManualVolumePref] = useState<'automatic' | 'explicit'>('automatic');
+  const [manualVolumeHours, setManualVolumeHours] = useState<number>(30);
 
   // ─── AI Generated Badge States ─────────────────────────────────────────────
   const [generatedBadges, setGeneratedBadges] = useState<string[]>([]);
@@ -3386,6 +3400,7 @@ export default function AdminCurriculumPage() {
             const taskLang = (runningTask.targetLang || lang || 'EN').toUpperCase();
             try {
               if (runningTask.type === 'generation') {
+                const isCurriculum = runningTask.details?.includes('(CURRICULUM)') || runningTask.type === 'curriculum';
                 const res = await fetch('/api/content/generate', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -3393,7 +3408,8 @@ export default function AdminCurriculumPage() {
                     type: 'generation',
                     name: runningTask.title,
                     level: runningTask.level || 'L1',
-                    targetLang: taskLang.toLowerCase()
+                    targetLang: taskLang.toLowerCase(),
+                    isCurriculum
                   })
                 });
                 
@@ -3402,39 +3418,56 @@ export default function AdminCurriculumPage() {
                   throw new Error(data.error || 'Generation failed');
                 }
 
-                const newId = `crs_${(Date.now() % 1000000000) + Math.floor(Math.random() * 1000)}`;
-                await dbService.saveCourse({
-                  id: newId,
-                  title: runningTask.title,
-                  slug: (() => {
-                    const asciiClean = runningTask.title
-                      .normalize("NFD")
-                      .replace(/[\u0300-\u036f]/g, "")
-                      .toLowerCase()
-                      .replace(/[^a-z0-9\s_-]/g, '')
-                      .trim()
-                      .replace(/\s+/g, '_');
-                    return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
-                      ? asciiClean
-                      : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
-                  })(),
-                  subject: runningTask.subject || 'General',
-                  description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
-                  level: runningTask.level || 'L1',
-                  archivingLevel: 0,
-                  badge: 'badge_1',
-                  modulesCount: 5,
-                  lessonsCount: 20,
-                  is_active: true,
-                  languages: [taskLang.toLowerCase()],
-                  langs: [taskLang],
-                  translations: {
-                    [taskLang]: {
-                      title: runningTask.title,
-                      description: `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`
+                if (!isCurriculum) {
+                  const isOpt = runningTask.courseType === 'optional' || runningTask.courseType === 'optionnel';
+                  const childCourseId = (Date.now() % 10000000) + Math.floor(Math.random() * 1000);
+                  await dbService.saveCourse({
+                    id: childCourseId,
+                    title: runningTask.title,
+                    slug: (() => {
+                      const asciiClean = runningTask.title
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s_-]/g, '')
+                        .trim()
+                        .replace(/\s+/g, '_');
+                      return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
+                        ? asciiClean
+                        : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
+                    })(),
+                    subject: runningTask.subject || 'General',
+                    description: runningTask.description || `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+                    level: runningTask.level || 'L1',
+                    archivingLevel: 0,
+                    badge: 'badge_1',
+                    modulesCount: 5,
+                    lessonsCount: 20,
+                    is_active: true,
+                    languages: [taskLang.toLowerCase()],
+                    langs: [taskLang],
+                    translations: {
+                      [taskLang]: {
+                        title: runningTask.title,
+                        description: runningTask.description || `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+                        isOptional: isOpt,
+                        volume: runningTask.volume || '30 hours'
+                      }
+                    }
+                  });
+
+                  if (runningTask.parentCurriculumSlug) {
+                    const allCourses = await dbService.getAllCourses();
+                    const parent = allCourses.data?.find(c => c.slug === runningTask.parentCurriculumSlug);
+                    if (parent) {
+                      const updatedChildren = Array.from(new Set([...(parent.childCourses || []), childCourseId]));
+                      await dbService.saveCourse({
+                        ...parent,
+                        childCourses: updatedChildren
+                      });
                     }
                   }
-                });
+                }
               } else if (runningTask.type === 'translation') {
                 const matches = runningTask.title.match(/(.*)\s*\(([^)]+)\)$/);
                 if (matches && matches[1] && matches[2]) {
@@ -4137,7 +4170,9 @@ export default function AdminCurriculumPage() {
       details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
       targetLang: manualLang,
       level: manualLevel,
-      subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject
+      subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject,
+      courseType: manualType,
+      volume: manualVolumePref === 'explicit' ? `${manualVolumeHours} hours` : 'Automatic'
     };
 
     const updated = [...queue, newTask];
@@ -5205,6 +5240,30 @@ export default function AdminCurriculumPage() {
                           <option value="ZH">中文 🇨🇳</option>
                         </select>
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                          {tr("Volume Preference")}
+                        </label>
+                        <select value={manualVolumePref} onChange={(e) => setManualVolumePref(e.target.value as 'automatic' | 'explicit')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+                          <option value="automatic">{tr("Automatic")}</option>
+                          <option value="explicit">{tr("Explicit Hours")}</option>
+                        </select>
+                      </div>
+                      {manualVolumePref === 'explicit' && (
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+                            {tr("Explicit Volume (Hours)")}
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={200}
+                            value={manualVolumeHours}
+                            onChange={(e) => setManualVolumeHours(Math.max(1, Number(e.target.value)))}
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white font-mono"
+                          />
+                        </div>
+                      )}
                       <div className="col-span-1 md:col-span-2 p-4 bg-red-950/20 border border-red-500/20 rounded-2xl flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
                         <p className="text-[10px] font-medium text-red-400/90 leading-relaxed">
@@ -8061,6 +8120,10 @@ export default function AdminCurriculumPage() {
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Initial Language (label)")}</span>
                       <span className="text-white font-bold">{manualLang}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Volume Preference")}</span>
+                      <span className="text-white font-bold">{manualVolumePref === 'explicit' ? `${manualVolumeHours} ${tr("Hours")}` : tr("Automatic")}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Pipeline Priority (label)")}</span>

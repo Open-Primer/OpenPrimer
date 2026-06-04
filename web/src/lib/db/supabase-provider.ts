@@ -251,7 +251,11 @@ export const supabaseDatabaseProvider: DatabaseService = {
           const extra = {
             level: t.level || 'L1',
             targetLang: t.targetLang || '',
-            subject: t.subject || 'General'
+            subject: t.subject || 'General',
+            parentCurriculumSlug: t.parentCurriculumSlug || '',
+            courseType: t.courseType || '',
+            volume: t.volume || '',
+            description: t.description || ''
           };
           return {
             ...(rowId ? { id: rowId } : {}),

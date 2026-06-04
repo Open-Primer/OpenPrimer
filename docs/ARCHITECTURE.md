@@ -62,13 +62,13 @@ graph TD
 ```
 
 ### Precise Roles of AI Agents
-1.  **🗂️ Ingestion Agent:** Performs semantic search across verified scientific libraries (arXiv, bioRxiv, PubMed) to gather credible bibliographies and syllabus structures once a course is requested.
-2.  **📝 Synthesis Agent:** Computes structured course modules in `.mdx` formats. Employs Feynman analogy rules to simplify complex concepts and integrates interactive React JSX elements dynamically (plots, simulation windows).
-3.  **🎯 Quiz & Assessment Agent:** Analyzes raw course text and designs mini-quizzes and final exams with customized constructive feedback loops for wrong choices.
-4.  **🌐 Multi-Language Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, and **ZH** without altering mathematical LaTeX markup or React code blocks.
-5.  **🛠️ Pedagogical Revision Agent:** Monitors student feedback APIs, processes content error reports, and drafts automated corrective content updates.
-6.  **💬 Interactive Tutoring & Personalities Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode.
-7.  **⚖️ Curriculum Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
+1.  **🎓 Agent 0 (Curriculum Planner / Architect):** Structures complete curriculum pathways (defining modules, subject, volume, credit weights, mandatory vs elective status, and master/course descriptions) by learning from real-world online curricula.
+2.  **📋 Agent 1 & 2 (Course & Pedagogical Planner):** Profiles the target discipline according to its cognitive matrix (Deductive, Empirical, Discursive, or Engineering) and adapts the chapter outline to the student's age group (CP-CM2 to L3). Outputs a structured JSON blueprint specifying cognitive artifacts and technical depth guidelines for each lesson.
+3.  **✍️ Agent 3 (Academic Writer):** Generates dense, comprehensive, professional MDX course content with LaTeX, component blocks (`<Prerequisites>`, `<DiagnosticQuiz>`, `<Epistemology>`, `<Quiz>`), respecting Socratic/Feynman heuristics and strict anti-placeholder constraints.
+4.  **🔍 Agent 4 (Verifier/Critic):** Quality gate agent checking the generated MDX content for zero-placeholder and academic density compliance. Employs a revision feedback loop (max 3 cycles) to correct and refine sections before persistence.
+5.  **💬 Interactive Socratic Tutor Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode, guiding rather than giving answers.
+6.  **🌐 Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, and **ZH** without altering mathematical LaTeX markup or React code blocks.
+7.  **⚖️ Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
 
 ---
 

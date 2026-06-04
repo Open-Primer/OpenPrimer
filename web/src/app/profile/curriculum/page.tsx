@@ -34,6 +34,7 @@ export default function CurriculumPage() {
 
   const getCoursePath = (c: any) => {
     const slug = c.slug;
+    if (!slug) return '/catalog';
     if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
       return '/L1/Physics/Classical_Mechanics/introduction';
     }
@@ -49,7 +50,17 @@ export default function CurriculumPage() {
     if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
       return '/L1/Law/Droit_Test/introduction';
     }
-    return '/catalog';
+    if (slug === 'Maths_Test' || c.id === 7) {
+      return '/L1/Mathematics/Maths_Test/introduction';
+    }
+    if (slug === 'Maths_Test_L1' || c.id === 8) {
+      return '/L1/Mathematics/Maths_Test_L1/introduction';
+    }
+    if (slug === 'Statistics' || c.id === 11) {
+      return '/L1/Mathematics/Statistics/introduction';
+    }
+    const cleanSubject = c.subject ? c.subject.replace(/\s+/g, '_') : 'General';
+    return `/${c.level || 'L1'}/${cleanSubject}/${c.slug}/introduction`;
   };
 
   const getLocalizedTitle = (c: any) => {
@@ -869,24 +880,31 @@ export default function CurriculumPage() {
           const childDetails = childIds.map((cid: number) => {
             const matched = courses.find(c => c.id === cid) || {};
             const activeMod = progress?.activeModules?.find((m: any) => m.id === cid);
-            const prog = activeMod ? activeMod.progress : (cid === 7 ? 80 : cid === 8 ? 25 : 0);
+            const prog = activeMod ? activeMod.progress : 0;
+            const isOptional = matched.isOptional || Object.values(matched.translations || {}).some((tr: any) => tr.isOptional === true);
+            const hours = matched.ects ? matched.ects * 25 : 150;
             return {
               id: cid,
               title: matched.title || `Course Module ${cid}`,
               subject: matched.subject || 'Mathematics',
               level: matched.level || 'L1',
               slug: matched.slug || '',
-              progress: prog,
-              hours: matched.ects ? matched.ects * 25 : 150
+              progress: activeMod ? prog : 0,
+              hours: hours,
+              isOptional,
+              isEnrolled: !!activeMod
             };
           });
 
-          const avgProgress = childDetails.length > 0
-            ? Math.round(childDetails.reduce((sum: number, c: any) => sum + c.progress, 0) / childDetails.length)
+          // Filter only mandatory courses plus enrolled optional ones to calculate average progress
+          const coursesForProgress = childDetails.filter((c: any) => !c.isOptional || c.isEnrolled);
+          const avgProgress = coursesForProgress.length > 0
+            ? Math.round(coursesForProgress.reduce((sum: number, c: any) => sum + c.progress, 0) / coursesForProgress.length)
             : 0;
 
           const getCoursePath = (c: any) => {
             const slug = c.slug;
+            if (!slug) return '/catalog';
             if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
               return '/L1/Physics/Classical_Mechanics/introduction';
             }
@@ -911,7 +929,8 @@ export default function CurriculumPage() {
             if (slug === 'Statistics' || c.id === 11) {
               return '/L1/Mathematics/Statistics/introduction';
             }
-            return '/catalog';
+            const cleanSubject = c.subject ? c.subject.replace(/\s+/g, '_') : 'General';
+            return `/${c.level || 'L1'}/${cleanSubject}/${c.slug}/introduction`;
           };
 
           return (
@@ -1001,6 +1020,15 @@ export default function CurriculumPage() {
                                 <span className="px-2 py-0.5 bg-violet-955/30 border border-violet-500/10 text-[8px] font-black text-violet-400 rounded">
                                   {t.milestone_step.replace('{step}', String(idx + 1))}
                                 </span>
+                                <span className={`px-2 py-0.5 text-[8px] font-black uppercase rounded ${
+                                  cc.isOptional 
+                                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500' 
+                                    : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                                }`}>
+                                  {cc.isOptional 
+                                    ? (lang === 'FR' ? 'Optionnel' : 'Elective') 
+                                    : (lang === 'FR' ? 'Obligatoire' : 'Mandatory')}
+                                </span>
                               </div>
                               <h5 className="text-sm font-black text-white">{cc.title}</h5>
                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
@@ -1010,21 +1038,60 @@ export default function CurriculumPage() {
 
                             {/* Micro Progress and jump button */}
                             <div className="flex items-center gap-6 w-full sm:w-auto shrink-0 justify-between sm:justify-end">
-                              <div className="text-right">
-                                <span className="text-xs font-black text-violet-400 block mb-1">{cc.progress}%</span>
-                                <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
-                                  <div className="h-full bg-violet-500" style={{ width: `${cc.progress}%` }} />
+                              {cc.isEnrolled ? (
+                                <div className="text-right">
+                                  <span className="text-xs font-black text-violet-400 block mb-1">{cc.progress}%</span>
+                                  <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-full bg-violet-500" style={{ width: `${cc.progress}%` }} />
+                                  </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                                  {lang === 'FR' ? 'Non inscrit' : 'Not enrolled'}
+                                </span>
+                              )}
 
-                              <Link 
-                                href={getCoursePath(cc)}
-                                onClick={() => setSelectedCurriculumForDrillDown(null)}
-                                className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105"
-                              >
-                                {t.jump_in}
-                                <Icons.ChevronRight className="w-3.5 h-3.5" />
-                              </Link>
+                              <div className="flex items-center gap-2">
+                                {cc.isOptional && (
+                                  <button
+                                    onClick={async () => {
+                                      if (cc.isEnrolled) {
+                                        await handleOptOut(cc.id);
+                                      } else {
+                                        await enrollInRecommended(cc);
+                                      }
+                                    }}
+                                    className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border cursor-pointer ${
+                                      cc.isEnrolled 
+                                        ? 'border-red-500/30 text-red-400 bg-red-500/5 hover:bg-red-500/10' 
+                                        : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10'
+                                    }`}
+                                  >
+                                    {cc.isEnrolled 
+                                      ? (lang === 'FR' ? 'Retirer' : 'Remove') 
+                                      : (lang === 'FR' ? 'Choisir' : 'Choose')}
+                                  </button>
+                                )}
+
+                                {cc.isEnrolled ? (
+                                  <Link 
+                                    href={getCoursePath(cc)}
+                                    onClick={() => setSelectedCurriculumForDrillDown(null)}
+                                    className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105"
+                                  >
+                                    {t.jump_in}
+                                    <Icons.ChevronRight className="w-3.5 h-3.5" />
+                                  </Link>
+                                ) : (
+                                  <button
+                                    disabled
+                                    className="px-4 py-2.5 bg-slate-800 text-slate-650 text-[9px] font-black uppercase tracking-widest rounded-xl cursor-not-allowed flex items-center gap-1.5"
+                                  >
+                                    {t.jump_in}
+                                    <Icons.ChevronRight className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );

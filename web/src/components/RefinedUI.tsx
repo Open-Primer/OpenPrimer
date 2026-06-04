@@ -71,6 +71,11 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [tutorEnabled, setTutorEnabled] = useState(true);
+  const [activeTab, setActiveTab] = useState<'chat' | 'flashcards'>('chat');
+  const [flashcards, setFlashcards] = useState<{ term: string; definition: string }[]>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [cardMastery, setCardMastery] = useState<Record<string, string>>({});
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -371,6 +376,71 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
      }
   };
 
+  // Flashcards extraction from pageContext
+  useEffect(() => {
+    if (pageContext) {
+      const cards: { term: string; definition: string }[] = [];
+      const regex = /<Glossary\s+term=["']([^"']+)["']\s+definition=["']([^"']+)["']/g;
+      let match;
+      const seen = new Set<string>();
+      while ((match = regex.exec(pageContext)) !== null) {
+        const term = match[1];
+        const definition = match[2];
+        const key = `${term}::${definition}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cards.push({ term, definition });
+        }
+      }
+      setFlashcards(cards);
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+    }
+  }, [pageContext]);
+
+  // Load spaced repetition card mastery state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('op_srs_mastery');
+      if (saved) {
+        try {
+          setCardMastery(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  const handleRateCard = (rating: 'easy' | 'medium' | 'hard') => {
+    if (flashcards.length === 0) return;
+    const currentCard = flashcards[currentCardIndex];
+    const updatedMastery = { ...cardMastery, [currentCard.term]: rating };
+    setCardMastery(updatedMastery);
+    localStorage.setItem('op_srs_mastery', JSON.stringify(updatedMastery));
+
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+    }, 200);
+  };
+
+  // Listen for floating Feynman Selector triggers
+  useEffect(() => {
+    const handleFeynmanTrigger = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setIsOpen(true);
+        setActiveTab('chat');
+        setTimeout(() => {
+          handleSend(customEvent.detail);
+        }, 150);
+      }
+    };
+    window.addEventListener('op_trigger_tutor_feynman', handleFeynmanTrigger);
+    return () => {
+      window.removeEventListener('op_trigger_tutor_feynman', handleFeynmanTrigger);
+    };
+  }, [messages, persona, lang]);
+
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
       <AnimatePresence>
@@ -397,6 +467,24 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               </div>
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
+
+            {isLoggedIn && (
+              <div className="flex border-b border-slate-800/50 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500 shrink-0 select-none">
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer ${activeTab === 'chat' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
+                >
+                  {lang === 'FR' ? 'Tuteur' : 'Tutor'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('flashcards')}
+                  className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'flashcards' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
+                >
+                  <Brain className="w-3.5 h-3.5" />
+                  <span>Flashcards ({flashcards.length})</span>
+                </button>
+              </div>
+            )}
 
             {!isLoggedIn ? (
               <div className="flex-1 flex flex-col justify-center items-center p-8 text-center space-y-6 bg-slate-950/20">
@@ -454,95 +542,204 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                   )}
                 </AnimatePresence>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                  {messages.map((msg, idx) => (
-                    <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
-                        {msg.content}
-                      </div>
+                {activeTab === 'chat' ? (
+                  <>
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                      {messages.map((msg, idx) => (
+                        <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                          <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
+                            {msg.content}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
-                   {QUICK_ACTIONS.map(qa => (
-                     <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
-                       {qa.icon} {qa.label}
-                     </button>
-                   ))}
-                </div>
+                    <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
+                       {QUICK_ACTIONS.map(qa => (
+                         <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
+                           {qa.icon} {qa.label}
+                         </button>
+                       ))}
+                    </div>
 
-                <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
-                  <div className="relative flex items-center">
-                    <input 
-                      type="text" 
-                      disabled={isOffline} 
-                      value={input} 
-                      onChange={(e) => setInput(e.target.value)} 
-                      onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                      placeholder={isOffline ? t.offline_placeholder : t.placeholder} 
-                      className="w-full bg-slate-800/40 border border-slate-700/30 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
-                    />
-                    
-                    {isListening && (
-                      <div className="absolute inset-0 bg-slate-900/95 border border-blue-500/40 rounded-2xl flex items-center justify-between px-6 backdrop-blur-xl animate-fade-in z-20">
-                        <style>{`
-                          @keyframes wave-oscillate {
-                            0%, 100% { transform: scaleY(0.2); }
-                            50% { transform: scaleY(1.0); }
-                          }
-                          .osc-bar {
-                            transform-origin: center;
-                            animation: wave-oscillate var(--d, 1s) ease-in-out infinite;
-                          }
-                        `}</style>
-                        <div className="flex items-center gap-3">
-                          <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-                            {t.voice_active}
-                          </span>
-                        </div>
+                    <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
+                      <div className="relative flex items-center">
+                        <input 
+                          type="text" 
+                          disabled={isOffline} 
+                          value={input} 
+                          onChange={(e) => setInput(e.target.value)} 
+                          onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                          placeholder={isOffline ? t.offline_placeholder : t.placeholder} 
+                          className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
+                        />
                         
-                        {/* Premium SVG Oscilloscope */}
-                        <div className="flex items-center gap-1.5 h-6">
-                          <div className="w-[3px] bg-blue-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
-                          <div className="w-[3px] bg-indigo-500 rounded-full h-5 osc-bar" style={{ '--d': '0.5s' } as any} />
-                          <div className="w-[3px] bg-violet-500 rounded-full h-5 osc-bar" style={{ '--d': '0.9s' } as any} />
-                          <div className="w-[3px] bg-fuchsia-500 rounded-full h-5 osc-bar" style={{ '--d': '0.6s' } as any} />
-                          <div className="w-[3px] bg-pink-500 rounded-full h-5 osc-bar" style={{ '--d': '0.8s' } as any} />
-                          <div className="w-[3px] bg-rose-500 rounded-full h-5 osc-bar" style={{ '--d': '0.4s' } as any} />
-                          <div className="w-[3px] bg-red-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
-                        </div>
+                        {isListening && (
+                          <div className="absolute inset-0 bg-slate-900/95 border border-blue-500/40 rounded-2xl flex items-center justify-between px-6 backdrop-blur-xl animate-fade-in z-20">
+                            <style>{`
+                              @keyframes wave-oscillate {
+                                0%, 100% { transform: scaleY(0.2); }
+                                50% { transform: scaleY(1.0); }
+                              }
+                              .osc-bar {
+                                transform-origin: center;
+                                animation: wave-oscillate var(--d, 1s) ease-in-out infinite;
+                              }
+                            `}</style>
+                            <div className="flex items-center gap-3">
+                              <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                                {t.voice_active}
+                              </span>
+                            </div>
+                            
+                            {/* Premium SVG Oscilloscope */}
+                            <div className="flex items-center gap-1.5 h-6">
+                              <div className="w-[3px] bg-blue-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
+                              <div className="w-[3px] bg-indigo-500 rounded-full h-5 osc-bar" style={{ '--d': '0.5s' } as any} />
+                              <div className="w-[3px] bg-violet-500 rounded-full h-5 osc-bar" style={{ '--d': '0.9s' } as any} />
+                              <div className="w-[3px] bg-fuchsia-500 rounded-full h-5 osc-bar" style={{ '--d': '0.6s' } as any} />
+                              <div className="w-[3px] bg-pink-500 rounded-full h-5 osc-bar" style={{ '--d': '0.8s' } as any} />
+                              <div className="w-[3px] bg-rose-500 rounded-full h-5 osc-bar" style={{ '--d': '0.4s' } as any} />
+                              <div className="w-[3px] bg-red-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
+                            </div>
+
+                            <button 
+                              type="button"
+                              onClick={toggleListening}
+                              className="px-4 py-2 bg-red-650 hover:bg-red-600 border border-red-500/40 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] text-white transition-all shadow-md cursor-pointer"
+                            >
+                              {t.voice_stop}
+                            </button>
+                          </div>
+                        )}
 
                         <button 
                           type="button"
-                          onClick={toggleListening}
-                          className="px-4 py-2 bg-red-650 hover:bg-red-600 border border-red-500/40 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] text-white transition-all shadow-md cursor-pointer"
+                          disabled={isOffline} 
+                          onClick={toggleListening} 
+                          className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${isListening ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed`}
+                          title={t.voice_enable}
+                          aria-label="Active voice coaching input"
                         >
-                          {t.voice_stop}
+                          <Mic className="w-4 h-4" />
+                        </button>
+                        <button 
+                          disabled={isOffline} 
+                          onClick={() => handleSend()} 
+                          className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
+                        >
+                          <Send className="w-4 h-4" />
                         </button>
                       </div>
-                    )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col justify-between p-6 bg-slate-950/20 overflow-y-auto">
+                    <style>{`
+                      .perspective-1000 {
+                        perspective: 1000px;
+                      }
+                      .preserve-3d {
+                        transform-style: preserve-3d;
+                      }
+                      .backface-hidden {
+                        backface-visibility: hidden;
+                      }
+                      .rotateY-180 {
+                        transform: rotateY(180deg);
+                      }
+                    `}</style>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between text-[9px] font-black uppercase text-slate-500 tracking-widest select-none">
+                        <span>{lang === 'FR' ? 'Répétition Espacée' : 'Spaced Repetition'}</span>
+                        <span>
+                          {flashcards.length > 0 ? `${currentCardIndex + 1} / ${flashcards.length}` : '0 / 0'}
+                        </span>
+                      </div>
 
-                    <button 
-                      type="button"
-                      disabled={isOffline} 
-                      onClick={toggleListening} 
-                      className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${isListening ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed`}
-                      title={t.voice_enable}
-                      aria-label="Active voice coaching input"
-                    >
-                      <Mic className="w-4 h-4" />
-                    </button>
-                    <button 
-                      disabled={isOffline} 
-                      onClick={() => handleSend()} 
-                      className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                      {flashcards.length === 0 ? (
+                        <div className="py-12 text-center text-slate-500 text-xs italic">
+                          {lang === 'FR' 
+                            ? 'Aucun terme de glossaire disponible dans cette leçon pour générer des flashcards.' 
+                            : 'No glossary terms available in this lesson to generate flashcards.'}
+                        </div>
+                      ) : (
+                        <div className="perspective-1000 my-6">
+                          <motion.div
+                            animate={{ rotateY: isFlipped ? 180 : 0 }}
+                            transition={{ duration: 0.4 }}
+                            onClick={() => setIsFlipped(!isFlipped)}
+                            className="w-full min-h-[220px] rounded-3xl bg-slate-900 border border-slate-850 p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-xl relative preserve-3d"
+                          >
+                            {/* Card Front */}
+                            <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                              <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest mb-3">
+                                {lang === 'FR' ? 'CONCEPT' : 'TERM'}
+                              </span>
+                              <h3 className="text-base font-extrabold text-white leading-tight">
+                                {flashcards[currentCardIndex]?.term}
+                              </h3>
+                              {cardMastery[flashcards[currentCardIndex]?.term] && (
+                                <span className={`mt-4 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${
+                                  cardMastery[flashcards[currentCardIndex]?.term] === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                  cardMastery[flashcards[currentCardIndex]?.term] === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                  'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                }`}>
+                                  {cardMastery[flashcards[currentCardIndex]?.term]}
+                                </span>
+                              )}
+                              <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
+                                {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
+                              </p>
+                            </div>
+
+                            {/* Card Back */}
+                            <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden transform rotateY-180 ${!isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                              <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest mb-3">
+                                {lang === 'FR' ? 'DÉFINITION' : 'DEFINITION'}
+                              </span>
+                              <p className="text-xs text-slate-350 leading-relaxed font-semibold">
+                                {flashcards[currentCardIndex]?.definition}
+                              </p>
+                              <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
+                                {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
+                              </p>
+                            </div>
+                          </motion.div>
+                        </div>
+                      )}
+                    </div>
+
+                    {flashcards.length > 0 && isFlipped && (
+                      <div className="space-y-3 pt-4 border-t border-slate-800/40">
+                        <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center select-none">
+                          {lang === 'FR' ? 'Évaluez votre maîtrise :' : 'Rate your mastery:'}
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() => handleRateCard('hard')}
+                            className="py-2 bg-rose-950/20 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                          >
+                            🔴 {lang === 'FR' ? 'Difficile' : 'Hard'}
+                          </button>
+                          <button
+                            onClick={() => handleRateCard('medium')}
+                            className="py-2 bg-amber-950/20 border border-amber-500/30 hover:bg-amber-500/10 text-amber-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                          >
+                            🟡 {lang === 'FR' ? 'Moyen' : 'Medium'}
+                          </button>
+                          <button
+                            onClick={() => handleRateCard('easy')}
+                            className="py-2 bg-emerald-950/20 border border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                          >
+                            🟢 {lang === 'FR' ? 'Facile' : 'Easy'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </>
             )}
           </motion.div>

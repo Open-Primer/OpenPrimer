@@ -11,6 +11,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { ExportLessonButton } from '@/components/ExportLessonButton';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
@@ -189,13 +190,16 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     return (
       <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
-          {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-12 distraction-free-hide">
-            <Link href="/catalog" className="hover:text-blue-500 transition-colors">{getLocalizedSubject(lang, subject)}</Link>
-            <ChevronRight className="w-3 h-3 text-slate-800" />
-            <span className="text-slate-500">{moduleName}</span>
-            <ChevronRight className="w-3 h-3 text-slate-800" />
-            <span className="text-blue-500">{title}</span>
+          {/* Breadcrumbs & Export */}
+          <div className="flex items-center justify-between gap-4 mb-12 distraction-free-hide">
+            <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">
+              <Link href="/catalog" className="hover:text-blue-500 transition-colors">{getLocalizedSubject(lang, subject)}</Link>
+              <ChevronRight className="w-3 h-3 text-slate-800" />
+              <span className="text-slate-500">{moduleName}</span>
+              <ChevronRight className="w-3 h-3 text-slate-800" />
+              <span className="text-blue-500">{title}</span>
+            </div>
+            <ExportLessonButton title={title} subject={subject} level={level} content={pageData.content} lang={lang} />
           </div>
 
           <header className="mb-12 text-center md:text-left">
