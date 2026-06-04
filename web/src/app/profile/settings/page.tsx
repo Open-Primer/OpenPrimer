@@ -109,6 +109,8 @@ const ACC_TRANSLATIONS = {
     visual_ctrl_desc: "Enlarges academic text baseline size and optimizes readability baseline width.",
     tutor_toggle: "Enable AI Tutor",
     tutor_toggle_desc: "Shows the floating AI Tutor icon on curriculum pages to assist with your studies.",
+    tts_toggle: "Enable Text-to-Speech (TTS)",
+    tts_toggle_desc: "Shows the audio reader controller at the bottom of curriculum pages to read texts aloud.",
     colorblind: "Colorblind Theme Filters",
     colorblind_desc: "Select a scientifically-calibrated color correction filter to optimize contrast and visual clarity.",
     cb_none: "None (Default Theme Colors)",
@@ -127,6 +129,8 @@ const ACC_TRANSLATIONS = {
     visual_ctrl_desc: "Agrandit la taille de base des textes d'apprentissage pour un confort visuel optimal.",
     tutor_toggle: "Activer le Tuteur IA",
     tutor_toggle_desc: "Affiche l'icône flottante du Tuteur IA sur les pages de cours pour vous accompagner.",
+    tts_toggle: "Activer la Synthèse Vocale (TTS)",
+    tts_toggle_desc: "Affiche le lecteur audio en bas des pages de cours pour écouter le texte à haute voix.",
     colorblind: "Filtres pour Thèmes Daltoniens",
     colorblind_desc: "Sélectionnez un filtre de correction des couleurs calibré scientifiquement pour optimiser le contraste et la clarté visuelle.",
     cb_none: "Aucun (Couleurs par Défaut)",
@@ -145,6 +149,8 @@ const ACC_TRANSLATIONS = {
     visual_ctrl_desc: "Agranda el tamaño del texto para una comodidad visual óptima.",
     tutor_toggle: "Habilitar Tutor IA",
     tutor_toggle_desc: "Muestra el ícono flotante del Tutor IA en las páginas del currículo para ayudarte.",
+    tts_toggle: "Habilitar Síntesis de Voz (TTS)",
+    tts_toggle_desc: "Muestra el reproductor de audio en la parte inferior de las páginas del curso para escuchar el texto en voz alta.",
     colorblind: "Filtros para Daltonismo",
     colorblind_desc: "Seleccione un filtro de corrección de color calibrado científicamente para optimizar el contraste y la claridad visual.",
     cb_none: "Ninguno (Colores por defecto)",
@@ -163,6 +169,8 @@ const ACC_TRANSLATIONS = {
     visual_ctrl_desc: "Vergrößert die Basistextgröße der Lernmodule für optimalen Komfort.",
     tutor_toggle: "KI-Tutor aktivieren",
     tutor_toggle_desc: "Zeigt das schwebende KI-Tutor-Symbol auf den Lehrplanseiten an, um Sie beim Lernen zu unterstützen.",
+    tts_toggle: "Text-to-Speech (TTS) aktivieren",
+    tts_toggle_desc: "Zeigt den Audio-Reader-Controller am unteren Rand der Lehrplanseiten an, um Texte laut vorzulesen.",
     colorblind: "Farbenblindheits-Filter",
     colorblind_desc: "Wählen Sie einen wissenschaftlich kalibrierten Farbkorrekturfilter, um den Kontrast und die visuelle Klarheit zu optimieren.",
     cb_none: "Keiner (Standardfarben)",
@@ -181,6 +189,8 @@ const ACC_TRANSLATIONS = {
     visual_ctrl_desc: "智能放大课程主体文本的字号，提供更加柔和、轻松的视觉追踪区间。",
     tutor_toggle: "启用 AI 导师",
     tutor_toggle_desc: "在课程页面上显示悬浮的 AI 导师图标以协助您的学习。",
+    tts_toggle: "启用文本转语音 (TTS)",
+    tts_toggle_desc: "在课程页面底部显示音频阅读器控制器，以朗读文本。",
     colorblind: "色盲辅助色彩主题",
     colorblind_desc: "选择经过科学校准的颜色校正滤镜，以最大化提升学术图标与文字的高对比度清晰度。",
     cb_none: "无（默认主题色彩）",
@@ -283,6 +293,7 @@ export default function ProfileSettingsPage() {
   const [fineVisualControls, setFineVisualControls] = useState(false);
   const [tutorEnabled, setTutorEnabled] = useState(true);
   const [colorblindTheme, setColorblindTheme] = useState('none');
+  const [ttsEnabled, setTtsEnabled] = useState(true);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -301,6 +312,7 @@ export default function ProfileSettingsPage() {
     dyslexiaFriendly?: boolean;
     fineVisualControls?: boolean;
     tutorEnabled?: boolean;
+    ttsEnabled?: boolean;
     colorblindTheme?: string;
     name?: string;
   }) => {
@@ -319,6 +331,7 @@ export default function ProfileSettingsPage() {
           if (updates.dyslexiaFriendly !== undefined) dbUpdates.dyslexia_friendly = updates.dyslexiaFriendly;
           if (updates.fineVisualControls !== undefined) dbUpdates.fine_visual_controls = updates.fineVisualControls;
           if (updates.tutorEnabled !== undefined) dbUpdates.tutor_enabled = updates.tutorEnabled;
+          if (updates.ttsEnabled !== undefined) dbUpdates.tts_enabled = updates.ttsEnabled;
           if (updates.colorblindTheme !== undefined) dbUpdates.colorblind_theme = updates.colorblindTheme;
           if (updates.name !== undefined) dbUpdates.name = updates.name;
 
@@ -363,6 +376,7 @@ export default function ProfileSettingsPage() {
         setDyslexiaFriendly(!!p.dyslexiaFriendly);
         setFineVisualControls(!!p.fineVisualControls);
         setTutorEnabled(p.tutorEnabled !== false);
+        setTtsEnabled(p.ttsEnabled !== false);
         setColorblindTheme(p.colorblindTheme || 'none');
       } catch (err) {}
     }
@@ -376,7 +390,7 @@ export default function ProfileSettingsPage() {
           import('@/lib/supabase').then(async ({ supabase }) => {
             const { data, error } = await supabase
               .from('profiles')
-              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, tutor_enabled, colorblind_theme')
+              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, tutor_enabled, tts_enabled, colorblind_theme')
               .eq('id', userId)
               .single();
             if (data && !error) {
@@ -384,6 +398,7 @@ export default function ProfileSettingsPage() {
               setDyslexiaFriendly(!!data.dyslexia_friendly);
               setFineVisualControls(!!data.fine_visual_controls);
               setTutorEnabled(data.tutor_enabled !== false);
+              setTtsEnabled(data.tts_enabled !== false);
               setColorblindTheme(data.colorblind_theme || 'none');
 
               let firstName = p.firstName || "";
@@ -410,6 +425,7 @@ export default function ProfileSettingsPage() {
                 dyslexiaFriendly: !!data.dyslexia_friendly,
                 fineVisualControls: !!data.fine_visual_controls,
                 tutorEnabled: data.tutor_enabled !== false,
+                ttsEnabled: data.tts_enabled !== false,
                 colorblindTheme: data.colorblind_theme || 'none'
               };
               localStorage.setItem('op_user_profile', JSON.stringify(updatedProfile));
@@ -464,6 +480,7 @@ export default function ProfileSettingsPage() {
       dyslexiaFriendly: dyslexiaFriendly,
       fineVisualControls: fineVisualControls,
       tutorEnabled: tutorEnabled,
+      ttsEnabled: ttsEnabled,
       colorblindTheme: colorblindTheme,
       isVerified: true
     };
@@ -475,6 +492,7 @@ export default function ProfileSettingsPage() {
       dyslexiaFriendly,
       fineVisualControls,
       tutorEnabled,
+      ttsEnabled,
       colorblindTheme,
       name: fName || lName ? `${fName} ${lName}`.trim() : ""
     });
@@ -904,6 +922,38 @@ export default function ProfileSettingsPage() {
                         role="switch"
                      >
                         <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${tutorEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                     </button>
+                  </div>
+
+                  {/* Enable Text-to-Speech (TTS) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.tts_toggle || ACC_TRANSLATIONS.EN.tts_toggle}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.tts_toggle_desc || ACC_TRANSLATIONS.EN.tts_toggle_desc}
+                        </p>
+                     </div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           const val = !ttsEnabled;
+                           setTtsEnabled(val);
+                           const savedProfile = localStorage.getItem('op_user_profile');
+                           if (savedProfile) {
+                              const p = JSON.parse(savedProfile);
+                              p.ttsEnabled = val;
+                              localStorage.setItem('op_user_profile', JSON.stringify(p));
+                              window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                              syncAccessibilityToCloud({ ttsEnabled: val });
+                           }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${ttsEnabled ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={ttsEnabled}
+                        role="switch"
+                     >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${ttsEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
                      </button>
                   </div>
 

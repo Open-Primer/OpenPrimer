@@ -234,7 +234,8 @@ export const mockDatabaseProvider: DatabaseService = {
       audioVolume: 1.0,
       audioRate: 1.0,
       audioReadCourse: true,
-      audioReadTutor: true
+      audioReadTutor: true,
+      ttsEnabled: true
     };
     const list = [newUser, ...getUsers()];
     setUsersList(list);
@@ -976,7 +977,7 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: newFb, error: null };
   },
 
-  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean }) => {
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }) => {
     const list = getUsers().map(u => {
       if (u.id === id) {
         const updated = { ...u };
@@ -985,6 +986,7 @@ export const mockDatabaseProvider: DatabaseService = {
         if (settings.audioVoiceId !== undefined) updated.audioVoiceId = settings.audioVoiceId;
         if (settings.audioReadCourse !== undefined) updated.audioReadCourse = settings.audioReadCourse;
         if (settings.audioReadTutor !== undefined) updated.audioReadTutor = settings.audioReadTutor;
+        if (settings.ttsEnabled !== undefined) updated.ttsEnabled = settings.ttsEnabled;
         return updated;
       }
       return u;

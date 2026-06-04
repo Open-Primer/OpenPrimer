@@ -38,6 +38,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   // Checkbox settings: read course content and read tutor response (default: true)
   const [readCourse, setReadCourse] = useState(true);
   const [readTutor, setReadTutor] = useState(true);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
 
   // States to track active reading of tutor text
   const [isReadingTutor, setIsReadingTutor] = useState(false);
@@ -92,7 +93,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean }) => {
+  const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean; ttsEnabled?: boolean }) => {
     if (typeof window === 'undefined') return;
     const loggedIn = localStorage.getItem('op_session') === 'true';
 
@@ -103,6 +104,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (updates.rate !== undefined) sessionStorage.setItem('op_guest_audio_rate', String(updates.rate));
         if (updates.voiceId !== undefined) sessionStorage.setItem('op_guest_audio_voice_id', updates.voiceId);
         if (updates.readCourse !== undefined) sessionStorage.setItem('op_guest_audio_read_course', String(updates.readCourse));
+        if (updates.ttsEnabled !== undefined) sessionStorage.setItem('op_guest_tts_enabled', String(updates.ttsEnabled));
         // Guest readTutor is always active by default and cannot be customized (disabled in settings)
         sessionStorage.setItem('op_guest_audio_read_tutor', 'true');
       } catch (e) {
@@ -121,6 +123,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (updates.voiceId !== undefined) p.audioVoiceId = updates.voiceId;
         if (updates.readCourse !== undefined) p.audioReadCourse = updates.readCourse;
         if (updates.readTutor !== undefined) p.audioReadTutor = updates.readTutor;
+        if (updates.ttsEnabled !== undefined) p.ttsEnabled = updates.ttsEnabled;
         localStorage.setItem('op_user_profile', JSON.stringify(p));
       } catch (e) {}
     }
@@ -144,6 +147,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (updates.voiceId !== undefined) dbUpdates.audioVoiceId = updates.voiceId;
         if (updates.readCourse !== undefined) dbUpdates.audioReadCourse = updates.readCourse;
         if (updates.readTutor !== undefined) dbUpdates.audioReadTutor = updates.readTutor;
+        if (updates.ttsEnabled !== undefined) dbUpdates.ttsEnabled = updates.ttsEnabled;
 
         const { error } = await dbService.updateUserSettings(userId, dbUpdates);
         if (error) {
@@ -157,21 +161,39 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     }
   };
 
-  // Sync auth state
+  // Sync auth state and preferences
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const updateAuth = () => {
+    const updateAuthAndPreferences = () => {
       const session = localStorage.getItem('op_session');
-      setIsLoggedIn(session === 'true');
+      const loggedIn = session === 'true';
+      setIsLoggedIn(loggedIn);
+
+      let enabled = true;
+      if (!loggedIn) {
+        const val = sessionStorage.getItem('op_guest_tts_enabled');
+        enabled = val !== 'false';
+      } else {
+        const savedProfile = localStorage.getItem('op_user_profile');
+        if (savedProfile) {
+          try {
+            const p = JSON.parse(savedProfile);
+            enabled = p.ttsEnabled !== false;
+          } catch (e) {}
+        }
+      }
+      setTtsEnabled(enabled);
     };
-    updateAuth();
-    window.addEventListener('storage', updateAuth);
-    window.addEventListener('op_auth_state_changed', updateAuth);
-    window.addEventListener('op_auth_state_change', updateAuth);
+    updateAuthAndPreferences();
+    window.addEventListener('storage', updateAuthAndPreferences);
+    window.addEventListener('op_auth_state_changed', updateAuthAndPreferences);
+    window.addEventListener('op_auth_state_change', updateAuthAndPreferences);
+    window.addEventListener('op_accessibility_preferences_changed', updateAuthAndPreferences);
     return () => {
-      window.removeEventListener('storage', updateAuth);
-      window.removeEventListener('op_auth_state_changed', updateAuth);
-      window.removeEventListener('op_auth_state_change', updateAuth);
+      window.removeEventListener('storage', updateAuthAndPreferences);
+      window.removeEventListener('op_auth_state_changed', updateAuthAndPreferences);
+      window.removeEventListener('op_auth_state_change', updateAuthAndPreferences);
+      window.removeEventListener('op_accessibility_preferences_changed', updateAuthAndPreferences);
     };
   }, []);
 
@@ -219,6 +241,13 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           setReadCourse(true);
         }
 
+        const ttsE = sessionStorage.getItem('op_guest_tts_enabled');
+        if (ttsE !== null) {
+          setTtsEnabled(ttsE === 'true');
+        } else {
+          setTtsEnabled(true);
+        }
+
         // Guest mode: readTutor is always active by default and cannot be customized
         setReadTutor(true);
       } catch (err) {
@@ -256,6 +285,13 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           } else {
             p.audioReadTutor = true;
             setReadTutor(true);
+            needsSave = true;
+          }
+          if (p.ttsEnabled !== undefined) {
+            setTtsEnabled(p.ttsEnabled);
+          } else {
+            p.ttsEnabled = true;
+            setTtsEnabled(true);
             needsSave = true;
           }
           
@@ -305,6 +341,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                   if (currentUser.audioReadTutor !== undefined && currentUser.audioReadTutor !== null) {
                     setReadTutor(currentUser.audioReadTutor);
                     p.audioReadTutor = currentUser.audioReadTutor;
+                    updated = true;
+                  }
+                  if (currentUser.ttsEnabled !== undefined && currentUser.ttsEnabled !== null) {
+                    setTtsEnabled(currentUser.ttsEnabled);
+                    p.ttsEnabled = currentUser.ttsEnabled;
                     updated = true;
                   }
                   if (updated) {
@@ -803,6 +844,12 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     }
   };
 
+  useEffect(() => {
+    if (!ttsEnabled) {
+      stop();
+    }
+  }, [ttsEnabled]);
+
   if (!isSupported) {
     return (
       <div className="fixed bottom-6 left-6 z-50 p-4 bg-slate-900/90 border border-red-500/20 text-red-400 rounded-3xl backdrop-blur-xl flex items-center gap-3 text-xs shadow-xl max-w-sm font-sans">
@@ -810,6 +857,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         <p>Text-to-Speech is not supported in this browser. Please use Chrome, Safari, or Edge.</p>
       </div>
     );
+  }
+
+  if (!ttsEnabled) {
+    return null;
   }
 
   return (

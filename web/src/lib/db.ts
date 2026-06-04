@@ -107,6 +107,7 @@ export interface UserProfile {
   audioVoiceId?: string;
   audioReadCourse?: boolean;
   audioReadTutor?: boolean;
+  ttsEnabled?: boolean;
 }
 
 export interface TutorPersonality {
@@ -2192,7 +2193,7 @@ export interface DatabaseService {
   deleteCourse(courseId: number): Promise<{ data: any; error: any }>;
   getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
   saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;
-  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean }): Promise<{ data: any; error: any }>;
+  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }): Promise<{ data: any; error: any }>;
 }
 
 export function mockDatabaseProviderHash(password: string): string {

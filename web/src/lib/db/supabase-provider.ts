@@ -297,7 +297,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
         audioRate: u.audio_rate != null ? Number(u.audio_rate) : undefined,
         audioVoiceId: u.audio_voice_id ?? undefined,
         audioReadCourse: u.audio_read_course ?? true,
-        audioReadTutor: u.audio_read_tutor ?? true
+        audioReadTutor: u.audio_read_tutor ?? true,
+        ttsEnabled: u.tts_enabled ?? true
       }));
       return { data: mapped, error: null };
     } catch (e) {
@@ -385,7 +386,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
       audioVolume: 1.0,
       audioRate: 1.0,
       audioReadCourse: true,
-      audioReadTutor: true
+      audioReadTutor: true,
+      ttsEnabled: true
     };
     try {
       await supabase.from('profiles').insert({
@@ -404,7 +406,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
         audio_volume: 1.0,
         audio_rate: 1.0,
         audio_read_course: true,
-        audio_read_tutor: true
+        audio_read_tutor: true,
+        tts_enabled: true
       });
       return { data: newUser, error: null };
     } catch (err) {
@@ -1338,7 +1341,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean }) => {
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }) => {
     try {
       const updates = {} as any;
       if (settings.audioVolume !== undefined) updates.audio_volume = settings.audioVolume;
@@ -1346,6 +1349,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (settings.audioVoiceId !== undefined) updates.audio_voice_id = settings.audioVoiceId;
       if (settings.audioReadCourse !== undefined) updates.audio_read_course = settings.audioReadCourse;
       if (settings.audioReadTutor !== undefined) updates.audio_read_tutor = settings.audioReadTutor;
+      if (settings.ttsEnabled !== undefined) updates.tts_enabled = settings.ttsEnabled;
 
       const { data, error } = await supabase
         .from('profiles')

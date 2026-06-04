@@ -29,6 +29,7 @@
 *-service-account*.json
 openprimer-free*.json
 *serviceaccount*.json
+/secrets/
 
 # debug
 npm-debug.log*

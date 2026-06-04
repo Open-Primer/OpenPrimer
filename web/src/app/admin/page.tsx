@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, CheckCircle2, Star, Sparkles, Layers, RefreshCw, Activity, Trophy, Mail, LayoutDashboard } from 'lucide-react';
 import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
+import { COST_PER_CALL, TASK_TOKEN_ESTIMATES, TASK_MODELS, MODEL_PRICING } from '@/lib/ai-config';
 
 export const DASHBOARD_STRINGS = {
   EN: {
@@ -383,6 +384,14 @@ const StatCard = ({ title, value, icon, trend }: { title: string, value: string,
   </div>
 );
 
+const getTaskFromId = (id: string) => {
+  if (id === 'generation') return 'course_generation';
+  if (id === 'translation') return 'course_translation';
+  if (id === 'revision') return 'analytics';
+  if (id === 'tutor') return 'tutor_chat';
+  return 'tutor_chat';
+};
+
 export default function AdminDashboard() {
   const { language: lang } = useLanguage();
   const t = DASHBOARD_STRINGS[lang as keyof typeof DASHBOARD_STRINGS] || DASHBOARD_STRINGS.EN;
@@ -466,7 +475,18 @@ export default function AdminDashboard() {
 
       const { data: metrics } = await dbService.getAgentMetrics();
       if (metrics) {
-        setAgentMetrics(metrics);
+        const enhancedMetrics = metrics.map(m => {
+          const task = getTaskFromId(m.id);
+          const costPerCall = COST_PER_CALL[task] || 0.001;
+          const totalCost = costPerCall * (m.requests || 0);
+          const rolling30DaysCost = totalCost * 0.2; // 20% of total
+          return {
+            ...m,
+            totalCost,
+            rolling30DaysCost
+          };
+        });
+        setAgentMetrics(enhancedMetrics);
       } else {
         setAgentMetrics([]);
       }
@@ -605,9 +625,19 @@ export default function AdminDashboard() {
   const directPct = totalReq > 0 ? Math.max(0, 100 - socraticPct - gamifiedPct) : 0;
 
   // Dynamic token calculations
+  const dynamicInputTokens = agentMetrics.reduce((acc, m) => {
+    const task = getTaskFromId(m.id);
+    const est = TASK_TOKEN_ESTIMATES[task] || { inputTokens: 1000, outputTokens: 500 };
+    return acc + (m.requests || 0) * est.inputTokens;
+  }, 0);
+
+  const dynamicOutputTokens = agentMetrics.reduce((acc, m) => {
+    const task = getTaskFromId(m.id);
+    const est = TASK_TOKEN_ESTIMATES[task] || { inputTokens: 1000, outputTokens: 500 };
+    return acc + (m.requests || 0) * est.outputTokens;
+  }, 0);
+
   const totalAgentRequests = agentMetrics.reduce((acc, m) => acc + (m.requests || 0), 0);
-  const dynamicInputTokens = totalAgentRequests * 8500; // 8.5k per request
-  const dynamicOutputTokens = totalAgentRequests * 4200; // 4.2k per request
   const dynamicCachedRatio = totalAgentRequests > 0 ? 34.2 : 0.0;
 
   // Dynamic accuracy and generation rate
@@ -616,7 +646,16 @@ export default function AdminDashboard() {
     ? (lang === 'ZH' ? "每小时 42 个模块" : lang === 'FR' ? "42 Modules / Heure" : lang === 'DE' ? "42 Module / Stunde" : lang === 'ES' ? "42 Módulos / Hora" : "42 Modules / Hour") 
     : (lang === 'ZH' ? "每小时 0 个模块" : lang === 'FR' ? "0 Module / Heure" : lang === 'DE' ? "0 Module / Stunde" : lang === 'ES' ? "0 Módulos / Hora" : "0 Modules / Hour");
 
-  const savedAmount = (totalAgentRequests * 0.0476).toFixed(2);
+  const totalInputCost = agentMetrics.reduce((acc, m) => {
+    const task = getTaskFromId(m.id);
+    const model = TASK_MODELS[task];
+    const pricing = MODEL_PRICING[model];
+    const est = TASK_TOKEN_ESTIMATES[task] || { inputTokens: 1000, outputTokens: 500 };
+    if (!pricing) return acc;
+    const inputCost = ((m.requests || 0) * est.inputTokens / 1_000_000) * pricing.inputPer1M;
+    return acc + inputCost;
+  }, 0);
+  const savedAmount = (totalInputCost * 0.342).toFixed(2);
   const dynamicTokensSavedText = t.tokens_saved.replace("{amount}", savedAmount);
 
   const formatTokenCount = (tokens: number) => {

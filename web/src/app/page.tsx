@@ -327,11 +327,12 @@ export default function Home() {
             if (data.success) {
               // ---- Guest → Authenticated settings migration (email verification path) ----
               const verifiedProfile: Record<string, any> = { ...data.profile };
-              const GUEST_KEYS_VER = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course'] as const;
+              const GUEST_KEYS_VER = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course', 'op_guest_tts_enabled'] as const;
               const guestVolVer    = sessionStorage.getItem('op_guest_audio_volume');
               const guestRateVer   = sessionStorage.getItem('op_guest_audio_rate');
               const guestVoiceVer  = sessionStorage.getItem('op_guest_audio_voice_id');
               const guestReadCVer  = sessionStorage.getItem('op_guest_audio_read_course');
+              const guestTtsEnabledVer = sessionStorage.getItem('op_guest_tts_enabled');
               const hasGuestVer    = GUEST_KEYS_VER.some(k => sessionStorage.getItem(k) !== null);
 
               if (hasGuestVer) {
@@ -339,6 +340,7 @@ export default function Home() {
                 if (guestRateVer !== null)  verifiedProfile.audioRate      = Number(guestRateVer);
                 if (guestVoiceVer !== null) verifiedProfile.audioVoiceId   = guestVoiceVer;
                 if (guestReadCVer !== null) verifiedProfile.audioReadCourse = guestReadCVer === 'true';
+                if (guestTtsEnabledVer !== null) verifiedProfile.ttsEnabled = guestTtsEnabledVer === 'true';
                 verifiedProfile.audioReadTutor = true;
                 // Async cloud sync for verification path
                 if (verifiedProfile.id) {
@@ -348,6 +350,7 @@ export default function Home() {
                     if (guestRateVer !== null)  s.audioRate      = Number(guestRateVer);
                     if (guestVoiceVer !== null) s.audioVoiceId   = guestVoiceVer;
                     if (guestReadCVer !== null) s.audioReadCourse = guestReadCVer === 'true';
+                    if (guestTtsEnabledVer !== null) s.ttsEnabled = guestTtsEnabledVer === 'true';
                     await dbService.updateUserSettings(verifiedProfile.id, s);
                   }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud (verify):', e));
                 }
@@ -555,11 +558,12 @@ export default function Home() {
           // ---- Guest → Authenticated settings migration ----
           // If the user had modified audio preferences as a guest, migrate them
           // into their profile (localStorage + cloud sync) upon first login.
-          const GUEST_KEYS = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course'] as const;
+          const GUEST_KEYS = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course', 'op_guest_tts_enabled'] as const;
           const guestVolume    = sessionStorage.getItem('op_guest_audio_volume');
           const guestRate      = sessionStorage.getItem('op_guest_audio_rate');
           const guestVoiceId   = sessionStorage.getItem('op_guest_audio_voice_id');
           const guestReadCourse = sessionStorage.getItem('op_guest_audio_read_course');
+          const guestTtsEnabled = sessionStorage.getItem('op_guest_tts_enabled');
           const hasGuestPrefs  = GUEST_KEYS.some(k => sessionStorage.getItem(k) !== null);
 
           if (hasGuestPrefs) {
@@ -568,6 +572,7 @@ export default function Home() {
             if (guestRate !== null)      profile.audioRate      = Number(guestRate);
             if (guestVoiceId !== null)   profile.audioVoiceId   = guestVoiceId;
             if (guestReadCourse !== null) profile.audioReadCourse = guestReadCourse === 'true';
+            if (guestTtsEnabled !== null) profile.ttsEnabled = guestTtsEnabled === 'true';
             profile.audioReadTutor = true; // always active; guest cannot have changed it
 
             // Async cloud sync — fire and forget
@@ -577,6 +582,7 @@ export default function Home() {
               if (guestRate !== null)      settingsToSync.audioRate      = Number(guestRate);
               if (guestVoiceId !== null)   settingsToSync.audioVoiceId   = guestVoiceId;
               if (guestReadCourse !== null) settingsToSync.audioReadCourse = guestReadCourse === 'true';
+              if (guestTtsEnabled !== null) settingsToSync.ttsEnabled = guestTtsEnabled === 'true';
               await dbService.updateUserSettings(matchedUser.id, settingsToSync);
               console.log('[Auth] Guest audio preferences migrated to cloud:', settingsToSync);
             }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud:', e));
