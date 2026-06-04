@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NavItem } from '@/lib/content';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
@@ -14,10 +15,30 @@ interface SidebarProps {
   isOpen: boolean;
 }
 
+const highlightText = (text: string, query: string) => {
+  if (!query || !query.trim()) return <span>{text}</span>;
+  const parts = text.split(new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi'));
+  return (
+    <span>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark key={i} className="bg-blue-500/25 text-blue-300 px-0.5 rounded font-bold">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+};
+
 export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
   const [progress, setProgress] = useState<number>(0); // Default fallback
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [visitedPages, setVisitedPages] = useState<string[]>([]);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,6 +115,26 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pendingToast = localStorage.getItem('op_show_enrolled_toast');
+      if (pendingToast) {
+        localStorage.removeItem('op_show_enrolled_toast');
+        const courseName = pendingToast;
+        const msg = lang.toUpperCase() === 'FR' ? `🎉 Vous avez bien été inscrit au cours "${courseName}" !` :
+                    lang.toUpperCase() === 'ES' ? `🎉 ¡Te has inscrito correctamente en el curso "${courseName}"!` :
+                    lang.toUpperCase() === 'DE' ? `🎉 Sie haben sich erfolgreich für den Kurs "${courseName}" angemeldet!` :
+                    lang.toUpperCase() === 'ZH' ? `🎉 您已成功注册课程 "${courseName}"！` :
+                    `🎉 You have successfully enrolled in the course "${courseName}"!`;
+        setToastMessage(msg);
+        const timer = setTimeout(() => {
+          setToastMessage(null);
+        }, 4000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [lang]);
+
+  useEffect(() => {
     let active = true;
     async function loadProgress() {
       const parts = pathname.split('/');
@@ -111,6 +152,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
       let dbProgress = 0;
       let dbVisited: string[] = [];
+      let enrolled = false;
 
       if (useSupabase) {
         let userId = 'u1';
@@ -130,6 +172,9 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           if (progressData.lessonProgress) {
             dbVisited = Object.keys(progressData.lessonProgress);
           }
+          if (activeCourse && progressData.enrolled) {
+            enrolled = progressData.enrolled.includes(activeCourse.id);
+          }
         }
       } else {
         const storage = getProgressionStorage();
@@ -143,12 +188,18 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
           progressMap[activeSlug] = dbProgress;
           storage.setItem('op_course_progress', JSON.stringify(progressMap));
+
+          if (activeCourse) {
+            const enrolledCourses = JSON.parse(storage.getItem('op_enrolled_courses') || '[]');
+            enrolled = enrolledCourses.includes(activeCourse.id);
+          }
         }
       }
 
       if (active) {
         setProgress(dbProgress);
         setVisitedPages(dbVisited);
+        setIsEnrolled(enrolled);
       }
     }
 
@@ -163,7 +214,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       active = false;
       window.removeEventListener('op_progress_updated', handleUpdate);
     };
-  }, [pathname, items, lang]);
+  }, [pathname, items, lang, activeCourse]);
 
   if (!isOpen) return null;
 
@@ -197,8 +248,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter' && searchQuery.trim()) {
-                window.location.href = `/catalog?search=${encodeURIComponent(searchQuery.trim())}`;
+              if (e.key === 'Enter') {
+                e.preventDefault();
               }
             }}
             placeholder={t.search_course || 'Search this course...'}
@@ -213,14 +264,6 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             </button>
           )}
         </div>
-        {searchQuery.trim() && (
-          <p className="mt-1.5 text-[9px] text-slate-700 font-bold uppercase tracking-widest px-1">
-            {lang.toUpperCase() === 'FR' ? '↵ Entrée pour chercher dans le catalogue' :
-             lang.toUpperCase() === 'ES' ? '↵ Enter para buscar en el catálogo' :
-             lang.toUpperCase() === 'DE' ? '↵ Enter um im Katalog zu suchen' :
-             '↵ Enter to search catalog'}
-          </p>
-        )}
       </div>
 
       {activeCourse && (
@@ -239,6 +282,47 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           </svg>
           <span>{t.course_sheet || "Course Sheet"}</span>
         </button>
+      )}
+
+      {!isEnrolled && isLoggedIn && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[11px] leading-relaxed space-y-3">
+          <p className="font-bold">
+            {lang.toUpperCase() === 'FR' ? '⚠️ Vous n’êtes pas inscrit à ce cours' :
+             lang.toUpperCase() === 'ES' ? '⚠️ No estás inscrito en este curso' :
+             lang.toUpperCase() === 'DE' ? '⚠️ Sie sind nicht für diesen Kurs angemeldet' :
+             lang.toUpperCase() === 'ZH' ? '⚠️ 您未注册此课程' : '⚠️ You are not enrolled in this course'}
+          </p>
+          <p className="text-slate-400">
+            {lang.toUpperCase() === 'FR' ? 'Les points ne seront pas comptabilisés, les badges non attribués et toutes les fonctionnalités interactives ne seront pas sauvegardées.' :
+             lang.toUpperCase() === 'ES' ? 'Los puntos no se contabilizarán, los insignias no se otorgarán y todas las funciones interactivas no se guardarán.' :
+             lang.toUpperCase() === 'DE' ? 'Punkte werden nicht gezählt, Abzeichen nicht vergeben und alle interaktiven Funktionen werden nicht gespeichert.' :
+             lang.toUpperCase() === 'ZH' ? '积分将不予计算，徽章将不予授予，所有交互式功能将不会保存。' : 'Points will not be counted, badges not awarded, and all interactive features will not be saved.'}
+          </p>
+          <button
+            onClick={async () => {
+              if (activeCourse) {
+                let userId = 'u1';
+                const savedProfile = localStorage.getItem('op_user_profile');
+                if (savedProfile) {
+                  try {
+                    const p = JSON.parse(savedProfile);
+                    if (p.id) userId = p.id;
+                  } catch (err) {}
+                }
+                await dbService.enrollInCourse(userId, activeCourse.id);
+                localStorage.setItem('op_show_enrolled_toast', activeCourse.title || activeCourse.name || 'Course');
+                window.dispatchEvent(new Event('op_progress_updated'));
+                window.location.reload();
+              }
+            }}
+            className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-widest text-center transition-all cursor-pointer"
+          >
+            {lang.toUpperCase() === 'FR' ? 'S’inscrire' :
+             lang.toUpperCase() === 'ES' ? 'Inscribirse' :
+             lang.toUpperCase() === 'DE' ? 'Einschreiben' :
+             lang.toUpperCase() === 'ZH' ? '注册课程' : 'Enroll'}
+          </button>
+        </div>
       )}
 
       <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
@@ -289,12 +373,12 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                           <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
                         )}
                         <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-slate-200' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {result.name}
+                          {highlightText(result.name, searchQuery)}
                         </span>
                       </div>
                       {result.excerpt && (
                         <span className="pl-7 text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors line-clamp-2 leading-relaxed italic">
-                          {result.excerpt}
+                          {highlightText(result.excerpt, searchQuery)}
                         </span>
                       )}
                     </Link>
@@ -346,13 +430,42 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         ))}
       </div>
 
-      {isLoggedIn && (
+      {isLoggedIn && isEnrolled && (
         <div className="mt-8 pt-6 border-t border-slate-900/50">
            <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
              {t.course_progress || "Course Progress"} • <span className="text-blue-500 font-black">{progress}%</span>
            </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed bottom-6 right-6 z-[9999] max-w-sm p-4 bg-slate-900/90 border border-emerald-500/30 text-white rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1 text-xs font-bold leading-relaxed text-slate-200">
+              {toastMessage}
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-slate-500 hover:text-white transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </aside>
   );
 };

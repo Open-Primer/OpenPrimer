@@ -18,6 +18,91 @@ const normalizeText = (str: string) => {
     .replace(/[^a-z0-9]/g, "");
 };
 
+const unwrapSentenceText = (element: HTMLElement) => {
+  const highlighted = element.querySelectorAll('.reading-highlight-text');
+  highlighted.forEach(span => {
+    const parent = span.parentNode;
+    if (parent) {
+      while (span.firstChild) {
+        parent.insertBefore(span.firstChild, span);
+      }
+      parent.removeChild(span);
+    }
+  });
+  element.normalize();
+};
+
+const wrapSentenceText = (element: HTMLElement, sentenceText: string) => {
+  unwrapSentenceText(element);
+
+  const textNodes: Text[] = [];
+  const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+  let node: Node | null;
+  while ((node = walk.nextNode())) {
+    textNodes.push(node as Text);
+  }
+
+  const fullText = textNodes.map(n => n.nodeValue || '').join('');
+  const normSent = sentenceText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!normSent) return;
+
+  let normFull = "";
+  const mapIdx: number[] = [];
+
+  for (let i = 0; i < fullText.length; i++) {
+    const char = fullText[i];
+    const normChar = char.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (normChar) {
+      normFull += normChar;
+      mapIdx.push(i);
+    }
+  }
+
+  const matchIdx = normFull.indexOf(normSent);
+  if (matchIdx === -1) return;
+
+  const bestStart = mapIdx[matchIdx];
+  const bestEnd = mapIdx[matchIdx + normSent.length - 1] + 1;
+  const bestLength = bestEnd - bestStart;
+
+  if (bestStart >= 0 && bestLength > 0) {
+    let curCharIdx = 0;
+    let startNode: Text | null = null;
+    let startOffset = 0;
+    let endNode: Text | null = null;
+    let endOffset = 0;
+
+    for (const tNode of textNodes) {
+      const val = tNode.nodeValue || '';
+      const len = val.length;
+      if (!startNode && curCharIdx + len > bestStart) {
+        startNode = tNode;
+        startOffset = bestStart - curCharIdx;
+      }
+      if (startNode && !endNode && curCharIdx + len >= bestStart + bestLength) {
+        endNode = tNode;
+        endOffset = (bestStart + bestLength) - curCharIdx;
+        break;
+      }
+      curCharIdx += len;
+    }
+
+    if (startNode && endNode) {
+      try {
+        const range = document.createRange();
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+
+        const span = document.createElement('span');
+        span.className = 'reading-highlight-text';
+        range.surroundContents(span);
+      } catch (e) {
+        console.warn("Failed to surround sentence contents:", e);
+      }
+    }
+  }
+};
+
 export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => {
   const t = UI_STRINGS[lang.toUpperCase()] || UI_STRINGS.EN;
   const pathname = usePathname();
@@ -467,6 +552,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   // 4. Highlight and scroll sync logic for the active sentence
   useEffect(() => {
     if (highlightedElementRef.current) {
+      unwrapSentenceText(highlightedElementRef.current);
       highlightedElementRef.current.classList.remove('reading-highlight');
       highlightedElementRef.current = null;
     }
@@ -516,6 +602,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     if (bestMatch) {
       bestMatch.classList.add('reading-highlight');
       highlightedElementRef.current = bestMatch;
+      wrapSentenceText(bestMatch, sentence);
       if (!isScrollInitiatedRef.current) {
         setProgrammaticScroll();
         bestMatch.scrollIntoView({
@@ -528,6 +615,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     return () => {
       if (highlightedElementRef.current) {
+        unwrapSentenceText(highlightedElementRef.current);
         highlightedElementRef.current.classList.remove('reading-highlight');
       }
     };
@@ -766,12 +854,17 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const scrollContainer = document.querySelector('main') || window;
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     // Run once on load/sentences change to set initial sentence
     handleScroll();
 
+    // Set a fallback timer to ensure content hydration finishes
+    const timer = setTimeout(handleScroll, 500);
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
     };
   }, [sentences]);
 
@@ -878,6 +971,17 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           transition: all 0.3s ease !important;
           border-radius: 0 8px 8px 0 !important;
           animation: highlight-pulse 2s infinite ease-in-out;
+        }
+        .reading-highlight-text {
+          background-color: rgba(59, 130, 246, 0.22) !important;
+          color: #60a5fa !important;
+          border-bottom: 2px solid rgba(59, 130, 246, 0.5) !important;
+          border-radius: 4px !important;
+          padding: 1px 3px !important;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.2) !important;
+        }
+        .theme-paper .reading-highlight-text {
+          color: #1e3a8a !important;
         }
       `}</style>
 

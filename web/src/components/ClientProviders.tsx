@@ -444,7 +444,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       {/* Visual Command Deck HUD */}
       <AnimatePresence>
         {showShortcutsHelp && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

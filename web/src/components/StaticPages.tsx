@@ -487,6 +487,7 @@ export const CatalogPage = () => {
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [userProgress, setUserProgress] = useState<any>(null);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
 
   // enrolled IDs: loaded exclusively from Supabase in production;
   // only falls back to localStorage when explicitly in sandbox mode.
@@ -955,7 +956,7 @@ export const CatalogPage = () => {
                       const ratingVal = course.averageRating ?? 0;
                       const countVal = course.ratingCount ?? 0;
                       return (
-                        <div className="flex justify-between items-center mb-6 w-full gap-4">
+                        <div className="flex justify-between items-start mb-6 w-full gap-4">
                           {course.isCurriculum ? (
                             <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={t.complete_curriculum || "Complete Curriculum"}>
                               <GraduationCap className="w-6 h-6" />
@@ -965,31 +966,71 @@ export const CatalogPage = () => {
                               <Book className="w-6 h-6" />
                             </div>
                           )}
-                          <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
-                            {/* Course / Curriculum Differentiating Badge */}
-                            {course.isCurriculum ? (
-                              <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
-                                🎓 {t.curriculum || 'Curriculum'}
+                          <div className="flex flex-col items-end gap-2 flex-1 mr-8">
+                            {/* 1st row: badges */}
+                            <div className="flex gap-2 items-center flex-wrap justify-end">
+                              {/* Course / Curriculum Differentiating Badge */}
+                              {course.isCurriculum ? (
+                                <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
+                                  🎓 {t.curriculum || 'Curriculum'}
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
+                                  📖 {t.course || 'Course'}
+                                </span>
+                              )}
+                              {/* Unified gold star rating badge */}
+                              <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${ratingVal.toFixed(1)} / 5 — ${countVal} ${t.reviews || 'reviews'}`}>
+                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                {ratingVal.toFixed(1)} ({countVal})
                               </span>
-                            ) : (
-                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
-                                📖 {t.course || 'Course'}
+                              {/* Expected duration chip */}
+                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150))}>
+                                <Clock className="w-3 h-3 text-blue-400" />
+                                {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
                               </span>
-                            )}
-                            {/* Unified gold star rating badge */}
-                            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${ratingVal.toFixed(1)} / 5 — ${countVal} ${t.reviews || 'reviews'}`}>
-                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                              {ratingVal.toFixed(1)} ({countVal})
-                            </span>
-                            {/* Expected duration chip */}
-                            <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150))}>
-                              <Clock className="w-3 h-3 text-blue-400" />
-                              {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
-                            </span>
-                            {/* Level badge */}
-                            <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                              {formatCourseLevel(course.level, lang)}
-                            </span>
+                              {/* Level badge */}
+                              <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                {formatCourseLevel(course.level, lang)}
+                              </span>
+                            </div>
+                            
+                            {/* 2nd row: action buttons (Course Sheet, Bookmark) */}
+                            <div className="flex gap-2 items-center mt-1">
+                              {/* Course Presentation Sheet (always visible) */}
+                              <button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedEnrollCourse(course);
+                                }}
+                                className="h-8 px-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest"
+                                title={t.course_sheet || "Course Sheet"}
+                              >
+                                <FileText className="w-3 h-3" />
+                                <span>{t.course_sheet || "Course Sheet"}</span>
+                              </button>
+
+                              {/* Bookmark (logged-in only) */}
+                              {isLoggedIn && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleBookmark(course.id, e);
+                                  }}
+                                  title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+                                  className={`h-8 px-3 border rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest ${
+                                    bookmarks.includes(course.id)
+                                      ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                                  }`}
+                                >
+                                  <Bookmark className={`w-3 h-3 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                                  <span>{bookmarks.includes(course.id) ? (t.saved || 'Saved') : (t.save_course || 'Save')}</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -1029,9 +1070,9 @@ export const CatalogPage = () => {
                           e.stopPropagation();
                           window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
                         }}
-                        className="flex-1 py-2 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[8px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-1"
+                        className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2"
                       >
-                        <Play className="w-2.5 h-2.5 fill-current" />
+                        <Play className="w-3 h-3 fill-current" />
                         <span className="truncate">{hasStarted ? (t.continue_course || 'Continue') : (t.start_learning || 'Start learning')}</span>
                       </button>
 
@@ -1057,42 +1098,10 @@ export const CatalogPage = () => {
                               setSelectedEnrollCourse(course);
                             }
                           }}
-                          className="flex-1 py-2 px-2.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-2xl text-[8px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
                         >
-                          <Plus className="w-2.5 h-2.5" />
+                          <Plus className="w-3 h-3" />
                           <span className="truncate">{t.enroll_label || 'Enroll'}</span>
-                        </button>
-                      )}
-
-                      {/* 3. Course Presentation Sheet (always visible) */}
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedEnrollCourse(course);
-                        }}
-                        className="w-9 h-9 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-2xl transition-all flex items-center justify-center flex-shrink-0"
-                        title={t.course_sheet || "Course Sheet"}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* 4. Bookmark (logged-in only) */}
-                      {isLoggedIn && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleBookmark(course.id, e);
-                          }}
-                          title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-                          className={`w-9 h-9 border rounded-2xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
-                            bookmarks.includes(course.id)
-                              ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                          }`}
-                        >
-                          <Bookmark className={`w-3.5 h-3.5 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                         </button>
                       )}
                     </div>
@@ -1119,7 +1128,7 @@ export const CatalogPage = () => {
         {showWelcomePopup && (
           <div 
             onClick={dismissWelcomePopup}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
@@ -1178,11 +1187,49 @@ export const CatalogPage = () => {
               }
               await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
               setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              
+              setEnrollmentSuccess(true);
+              const courseToOpen = selectedEnrollCourse;
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
-              window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+              
+              setTimeout(() => {
+                setEnrollmentSuccess(false);
+                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+              }, 2000);
             }}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {enrollmentSuccess && (
+          <div className="fixed inset-0 z-[12000] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="p-8 bg-slate-900/80 border border-emerald-500/30 rounded-[32px] shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center"
+            >
+              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                <CheckCircle2 className="w-8 h-8 animate-bounce" />
+              </div>
+              <h3 className="text-lg font-black text-white uppercase tracking-widest mt-2">
+                {lang.toUpperCase() === 'FR' ? 'Inscription Réussie' : 'Enrollment Successful'}
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                {lang.toUpperCase() === 'FR' 
+                  ? 'Votre inscription a bien été prise en compte.' 
+                  : lang.toUpperCase() === 'ES'
+                  ? 'Su inscripción ha sido registrada con éxito.'
+                  : lang.toUpperCase() === 'DE'
+                  ? 'Ihre Anmeldung wurde erfolgreich registriert.'
+                  : lang.toUpperCase() === 'ZH'
+                  ? '您的注册已成功登记。'
+                  : 'Your enrollment has been successfully registered.'}
+              </p>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

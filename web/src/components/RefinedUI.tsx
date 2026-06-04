@@ -797,6 +797,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   const [reportComment, setReportComment] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
   const [readingMode, setReadingMode] = useState('dark');
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
 
   // Static flag map for well-known language codes
   const LANG_FLAG_MAP: Record<string, { flag: string; label: string }> = {
@@ -1197,7 +1198,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         {isReportModalOpen && (
           <div 
             onClick={() => { setIsReportModalOpen(false); setReportComment(''); }}
-            className="fixed inset-0 z-[11000] overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-4 md:p-8 cursor-pointer"
+            className="fixed inset-0 z-[11000] overflow-y-auto bg-slate-950/40 backdrop-blur-xl flex items-start justify-center p-4 md:p-8 cursor-pointer"
           >
             <motion.div 
               onClick={(e) => e.stopPropagation()}
@@ -1208,7 +1209,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500" /> {t.report_issue}
+                  <AlertTriangle className="w-5 h-5 text-blue-500" /> {t.report_issue}
                 </h3>
                 <button 
                   onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
@@ -1232,7 +1233,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     onChange={(e) => setReportComment(e.target.value)}
                     rows={4}
                     placeholder={t.report_placeholder}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500/50 transition-all resize-none text-white placeholder:text-slate-700" 
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all resize-none text-white placeholder:text-slate-700" 
                   />
                 </div>
                 
@@ -1255,7 +1256,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       triggerToast(t.report_success);
                     }}
                     disabled={submittingReport}
-                    className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/20 disabled:bg-slate-800 cursor-pointer"
+                    className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 disabled:bg-slate-800 cursor-pointer"
                   >
                     {submittingReport 
                       ? t.report_sending
@@ -1267,7 +1268,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           </div>
         )}
       </AnimatePresence>
-          {/* Syllabus Enrollment Drawer Modal */}
       <AnimatePresence>
         {selectedEnrollCourse && (
           <EnrollmentModal
@@ -1277,9 +1277,62 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             isLoggedIn={isLoggedIn}
             enrolledIds={enrolledIds}
             courses={courses}
-            showEnrollActions={false}
+            showEnrollActions={true}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
+            onEnroll={async () => {
+              let userId = 'u1';
+              const savedProfile = localStorage.getItem('op_user_profile');
+              if (savedProfile) {
+                try {
+                  const p = JSON.parse(savedProfile);
+                  if (p.id) userId = p.id;
+                } catch (err) {}
+              }
+              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
+              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              
+              setEnrollmentSuccess(true);
+              const courseToOpen = selectedEnrollCourse;
+              setSelectedEnrollCourse(null);
+              window.dispatchEvent(new Event('op_progress_updated'));
+              
+              setTimeout(() => {
+                setEnrollmentSuccess(false);
+                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+              }, 2000);
+            }}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {enrollmentSuccess && (
+          <div className="fixed inset-0 z-[12000] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="p-8 bg-slate-900/80 border border-emerald-500/30 rounded-[32px] shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center"
+            >
+              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                <CheckCircle className="w-8 h-8 animate-bounce" />
+              </div>
+              <h3 className="text-lg font-black text-white uppercase tracking-widest mt-2">
+                {lang.toUpperCase() === 'FR' ? 'Inscription Réussie' : 'Enrollment Successful'}
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                {lang.toUpperCase() === 'FR' 
+                  ? 'Votre inscription a bien été prise en compte.' 
+                  : lang.toUpperCase() === 'ES'
+                  ? 'Su inscripción ha sido registrada con éxito.'
+                  : lang.toUpperCase() === 'DE'
+                  ? 'Ihre Anmeldung wurde erfolgreich registriert.'
+                  : lang.toUpperCase() === 'ZH'
+                  ? '您的注册已成功登记。'
+                  : 'Your enrollment has been successfully registered.'}
+              </p>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>

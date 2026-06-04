@@ -51,7 +51,7 @@ export const EnrollmentModal = ({
   return (
     <div 
       onClick={onClose} 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}

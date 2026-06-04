@@ -28,6 +28,7 @@ export default function CurriculumPage() {
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
   const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
   const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
 
@@ -914,7 +915,7 @@ export default function CurriculumPage() {
           };
 
           return (
-            <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/95 backdrop-blur-md">
+            <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 
@@ -1202,9 +1203,62 @@ export default function CurriculumPage() {
             isLoggedIn={true}
             enrolledIds={enrolledIds}
             courses={courses}
-            showEnrollActions={false}
+            showEnrollActions={true}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
+            onEnroll={async () => {
+              let userId = 'u1';
+              const savedProfile = localStorage.getItem('op_user_profile');
+              if (savedProfile) {
+                try {
+                  const p = JSON.parse(savedProfile);
+                  if (p.id) userId = p.id;
+                } catch (err) {}
+              }
+              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
+              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              
+              setEnrollmentSuccess(true);
+              const courseToOpen = selectedEnrollCourse;
+              setSelectedEnrollCourse(null);
+              window.dispatchEvent(new Event('op_progress_updated'));
+              
+              setTimeout(() => {
+                setEnrollmentSuccess(false);
+                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+              }, 2000);
+            }}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {enrollmentSuccess && (
+          <div className="fixed inset-0 z-[12000] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="p-8 bg-slate-900/80 border border-emerald-500/30 rounded-[32px] shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center"
+            >
+              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                <Icons.CheckCircle className="w-8 h-8 animate-bounce" />
+              </div>
+              <h3 className="text-lg font-black text-white uppercase tracking-widest mt-2">
+                {lang.toUpperCase() === 'FR' ? 'Inscription Réussie' : 'Enrollment Successful'}
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                {lang.toUpperCase() === 'FR' 
+                  ? 'Votre inscription a bien été prise en compte.' 
+                  : lang.toUpperCase() === 'ES'
+                  ? 'Su inscripción ha sido registrada con éxito.'
+                  : lang.toUpperCase() === 'DE'
+                  ? 'Ihre Anmeldung wurde erfolgreich registriert.'
+                  : lang.toUpperCase() === 'ZH'
+                  ? '您的注册已成功登记。'
+                  : 'Your enrollment has been successfully registered.'}
+              </p>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { AudioReader } from '@/components/AudioReader';
 import { usePathname } from 'next/navigation';
-import { progressService } from '@/lib/db';
+import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;
@@ -16,6 +16,8 @@ interface CourseClientWrapperProps {
 export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(true);
+  const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +32,76 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     const loggedIn = session !== 'false' && session !== null;
     return loggedIn ? localStorage : sessionStorage;
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const slug = parts[2];
+      if (slug) {
+        dbService.getAllCourses().then(({ data }) => {
+          if (data) {
+            const matched = data.find((c: any) => c.slug === slug || c.slug?.toLowerCase() === slug.toLowerCase());
+            if (matched) {
+              setActiveCourse(matched);
+            }
+          }
+        });
+      }
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    let active = true;
+    async function checkEnrollment() {
+      const parts = pathname.split('/');
+      const isLPage = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
+      const activeSlug = isLPage ? parts[3] : null;
+      if (!activeSlug || !activeCourse) return;
+
+      const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
+      let enrolled = false;
+
+      if (useSupabase) {
+        let userId = 'u1';
+        const savedProfile = localStorage.getItem('op_user_profile');
+        if (savedProfile) {
+          try {
+            const p = JSON.parse(savedProfile);
+            if (p.id) userId = p.id;
+          } catch (e) {}
+        }
+        const lang = typeof window !== 'undefined' ? (localStorage.getItem('openprimer_lang') || 'EN') : 'EN';
+        const { data: progressData } = await dbService.getUserProgress(userId, lang);
+        if (progressData && active) {
+          if (progressData.enrolled) {
+            enrolled = progressData.enrolled.includes(activeCourse.id);
+          }
+        }
+      } else {
+        const storage = getProgressionStorage();
+        if (storage) {
+          const enrolledCourses = JSON.parse(storage.getItem('op_enrolled_courses') || '[]');
+          enrolled = enrolledCourses.includes(activeCourse.id);
+        }
+      }
+
+      if (active) {
+        setIsEnrolled(enrolled);
+      }
+    }
+
+    checkEnrollment();
+
+    const handleUpdate = () => {
+      checkEnrollment();
+    };
+    window.addEventListener('op_progress_updated', handleUpdate);
+
+    return () => {
+      active = false;
+      window.removeEventListener('op_progress_updated', handleUpdate);
+    };
+  }, [pathname, activeCourse]);
 
   // Scroll Persistence & Reading Progress Integration
   useEffect(() => {
@@ -90,15 +162,22 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     if (typeof window === 'undefined') return;
     const parts = pathname.split('/');
     const slug = parts[3] || 'Classical_Mechanics';
+    const loggedIn = localStorage.getItem('op_session') === 'true';
     
     // Start tracking this page visit
-    progressService.recordLessonEntry(slug, pathname);
+    if (!loggedIn || isEnrolled) {
+      progressService.recordLessonEntry(slug, pathname);
+    }
 
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        progressService.commitLessonTime(slug, pathname);
+        if (!loggedIn || isEnrolled) {
+          progressService.commitLessonTime(slug, pathname);
+        }
       } else {
-        progressService.recordLessonEntry(slug, pathname);
+        if (!loggedIn || isEnrolled) {
+          progressService.recordLessonEntry(slug, pathname);
+        }
       }
     };
 
@@ -170,6 +249,10 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
       scrollTimeout = setTimeout(() => {
         storage.setItem(savedScrollKey, String(scrollTop));
 
+        if (loggedIn && !isEnrolled) {
+          return;
+        }
+
         // Get all lesson paths for this course
         const flatPages: string[] = [];
         (navItems || []).forEach(folder => {
@@ -228,7 +311,9 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     }
 
     return () => {
-      progressService.commitLessonTime(slug, pathname);
+      if (!loggedIn || isEnrolled) {
+        progressService.commitLessonTime(slug, pathname);
+      }
       document.removeEventListener('visibilitychange', handleVisibility);
       clearTimeout(scrollTimeout);
       
@@ -237,6 +322,10 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
         el.removeEventListener('scroll', handleScroll);
         const scrollTop = el.scrollTop;
         storage.setItem(savedScrollKey, String(scrollTop));
+
+        if (loggedIn && !isEnrolled) {
+          return;
+        }
 
         const scrollHeight = el.scrollHeight;
         const clientHeight = el.clientHeight;
@@ -291,7 +380,7 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
         }
       }
     };
-  }, [pathname]);
+  }, [pathname, isEnrolled]);
 
   const modeStyles = {
     default: "bg-slate-950 text-slate-100",
