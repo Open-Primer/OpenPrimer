@@ -33,6 +33,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(-1);
   const [showSettings, setShowSettings] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Checkbox settings: read course content and read tutor response (default: true)
   const [readCourse, setReadCourse] = useState(true);
@@ -93,9 +94,24 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
   const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean }) => {
     if (typeof window === 'undefined') return;
-    const loggedIn = localStorage.getItem('op_session');
+    const loggedIn = localStorage.getItem('op_session') === 'true';
+
+    if (!loggedIn) {
+      // Guest mode: save to sessionStorage
+      try {
+        if (updates.volume !== undefined) sessionStorage.setItem('op_guest_audio_volume', String(updates.volume));
+        if (updates.rate !== undefined) sessionStorage.setItem('op_guest_audio_rate', String(updates.rate));
+        if (updates.voiceId !== undefined) sessionStorage.setItem('op_guest_audio_voice_id', updates.voiceId);
+        if (updates.readCourse !== undefined) sessionStorage.setItem('op_guest_audio_read_course', String(updates.readCourse));
+        // Guest readTutor is always active by default and cannot be customized (disabled in settings)
+        sessionStorage.setItem('op_guest_audio_read_tutor', 'true');
+      } catch (e) {
+        console.error("Error saving guest audio settings:", e);
+      }
+      return;
+    }
+
     const savedProfile = localStorage.getItem('op_user_profile');
-    
     // Always update local storage first so offline/anonymous users still have preferences saved
     if (savedProfile) {
       try {
@@ -109,7 +125,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       } catch (e) {}
     }
 
-    if (!loggedIn || !savedProfile) return;
+    if (!savedProfile) return;
 
     try {
       const p = JSON.parse(savedProfile);
@@ -141,128 +157,216 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     }
   };
 
+  // Sync auth state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateAuth = () => {
+      const session = localStorage.getItem('op_session');
+      setIsLoggedIn(session === 'true');
+    };
+    updateAuth();
+    window.addEventListener('storage', updateAuth);
+    window.addEventListener('op_auth_state_changed', updateAuth);
+    window.addEventListener('op_auth_state_change', updateAuth);
+    return () => {
+      window.removeEventListener('storage', updateAuth);
+      window.removeEventListener('op_auth_state_changed', updateAuth);
+      window.removeEventListener('op_auth_state_change', updateAuth);
+    };
+  }, []);
+
   // 1. Check support, load preferences and load voices
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Load initial state from local storage first (prevent layout flash)
-    const savedProfile = localStorage.getItem('op_user_profile');
+    const loggedIn = localStorage.getItem('op_session') === 'true';
+    setIsLoggedIn(loggedIn);
+
     let loadedVolume = 1.0;
     let loadedRate = 1.0;
     let savedVoiceId: string | null = null;
-    if (savedProfile) {
+
+    if (!loggedIn) {
+      // Load guest preferences from sessionStorage
       try {
-        const p = JSON.parse(savedProfile);
-        if (p.audioVolume !== undefined) {
-          loadedVolume = Number(p.audioVolume);
+        const vol = sessionStorage.getItem('op_guest_audio_volume');
+        if (vol !== null) {
+          loadedVolume = Number(vol);
           setVolume(loadedVolume);
           setLastVolume(loadedVolume || 1.0);
-        }
-        if (p.audioRate !== undefined) {
-          loadedRate = Number(p.audioRate);
-          setRate(loadedRate);
-        }
-        if (p.audioVoiceId) {
-          savedVoiceId = p.audioVoiceId;
-        }
-        
-        let needsSave = false;
-        if (p.audioReadCourse !== undefined) {
-          setReadCourse(p.audioReadCourse);
         } else {
-          p.audioReadCourse = true;
-          setReadCourse(true);
-          needsSave = true;
+          setVolume(1.0);
+          setLastVolume(1.0);
         }
-        if (p.audioReadTutor !== undefined) {
-          setReadTutor(p.audioReadTutor);
-        } else {
-          p.audioReadTutor = true;
-          setReadTutor(true);
-          needsSave = true;
-        }
-        
-        if (needsSave) {
-          localStorage.setItem('op_user_profile', JSON.stringify(p));
-        }
-      } catch (err) {}
-    }
 
-    // Try loading latest profile preferences from Supabase if connected
-    const loggedIn = localStorage.getItem('op_session');
-    if (loggedIn && savedProfile) {
-      try {
-        const p = JSON.parse(savedProfile);
-        const userId = p.id;
-        if (userId) {
-          import('@/lib/db').then(async ({ dbService }) => {
-            const { data, error } = await dbService.getUsers();
-            if (data && !error) {
-              const currentUser = data.find((u: any) => u.id === userId);
-              if (currentUser) {
-                let updated = false;
-                if (currentUser.audioVolume !== undefined && currentUser.audioVolume !== null) {
-                  const vol = Number(currentUser.audioVolume);
-                  setVolume(vol);
-                  setLastVolume(vol || 1.0);
-                  p.audioVolume = vol;
-                  loadedVolume = vol;
-                  updated = true;
-                }
-                if (currentUser.audioRate !== undefined && currentUser.audioRate !== null) {
-                  const r = Number(currentUser.audioRate);
-                  setRate(r);
-                  p.audioRate = r;
-                  loadedRate = r;
-                  updated = true;
-                }
-                if (currentUser.audioVoiceId) {
-                  p.audioVoiceId = currentUser.audioVoiceId;
-                  savedVoiceId = currentUser.audioVoiceId;
-                  updated = true;
-                }
-                if (currentUser.audioReadCourse !== undefined && currentUser.audioReadCourse !== null) {
-                  setReadCourse(currentUser.audioReadCourse);
-                  p.audioReadCourse = currentUser.audioReadCourse;
-                  updated = true;
-                }
-                if (currentUser.audioReadTutor !== undefined && currentUser.audioReadTutor !== null) {
-                  setReadTutor(currentUser.audioReadTutor);
-                  p.audioReadTutor = currentUser.audioReadTutor;
-                  updated = true;
-                }
-                if (updated) {
-                  localStorage.setItem('op_user_profile', JSON.stringify(p));
-                  // Try to match the voice now that it is resolved
-                  if (synthRef.current) {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    const matched = availableVoices.find(v => v.name === savedVoiceId);
-                    if (matched) {
-                      setSelectedVoice(matched);
+        const rt = sessionStorage.getItem('op_guest_audio_rate');
+        if (rt !== null) {
+          loadedRate = Number(rt);
+          setRate(loadedRate);
+        } else {
+          setRate(1.0);
+        }
+
+        const vId = sessionStorage.getItem('op_guest_audio_voice_id');
+        if (vId) {
+          savedVoiceId = vId;
+        }
+
+        const readC = sessionStorage.getItem('op_guest_audio_read_course');
+        if (readC !== null) {
+          setReadCourse(readC === 'true');
+        } else {
+          setReadCourse(true);
+        }
+
+        // Guest mode: readTutor is always active by default and cannot be customized
+        setReadTutor(true);
+      } catch (err) {
+        console.error("Error loading guest audio preferences:", err);
+      }
+    } else {
+      // Load initial state from local storage first (prevent layout flash)
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.audioVolume !== undefined) {
+            loadedVolume = Number(p.audioVolume);
+            setVolume(loadedVolume);
+            setLastVolume(loadedVolume || 1.0);
+          }
+          if (p.audioRate !== undefined) {
+            loadedRate = Number(p.audioRate);
+            setRate(loadedRate);
+          }
+          if (p.audioVoiceId) {
+            savedVoiceId = p.audioVoiceId;
+          }
+          
+          let needsSave = false;
+          if (p.audioReadCourse !== undefined) {
+            setReadCourse(p.audioReadCourse);
+          } else {
+            p.audioReadCourse = true;
+            setReadCourse(true);
+            needsSave = true;
+          }
+          if (p.audioReadTutor !== undefined) {
+            setReadTutor(p.audioReadTutor);
+          } else {
+            p.audioReadTutor = true;
+            setReadTutor(true);
+            needsSave = true;
+          }
+          
+          if (needsSave) {
+            localStorage.setItem('op_user_profile', JSON.stringify(p));
+          }
+        } catch (err) {}
+      }
+
+      // Try loading latest profile preferences from Supabase if connected
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          const userId = p.id;
+          if (userId) {
+            import('@/lib/db').then(async ({ dbService }) => {
+              const { data, error } = await dbService.getUsers();
+              if (data && !error) {
+                const currentUser = data.find((u: any) => u.id === userId);
+                if (currentUser) {
+                  let updated = false;
+                  if (currentUser.audioVolume !== undefined && currentUser.audioVolume !== null) {
+                    const vol = Number(currentUser.audioVolume);
+                    setVolume(vol);
+                    setLastVolume(vol || 1.0);
+                    p.audioVolume = vol;
+                    loadedVolume = vol;
+                    updated = true;
+                  }
+                  if (currentUser.audioRate !== undefined && currentUser.audioRate !== null) {
+                    const r = Number(currentUser.audioRate);
+                    setRate(r);
+                    p.audioRate = r;
+                    loadedRate = r;
+                    updated = true;
+                  }
+                  if (currentUser.audioVoiceId) {
+                    p.audioVoiceId = currentUser.audioVoiceId;
+                    savedVoiceId = currentUser.audioVoiceId;
+                    updated = true;
+                  }
+                  if (currentUser.audioReadCourse !== undefined && currentUser.audioReadCourse !== null) {
+                    setReadCourse(currentUser.audioReadCourse);
+                    p.audioReadCourse = currentUser.audioReadCourse;
+                    updated = true;
+                  }
+                  if (currentUser.audioReadTutor !== undefined && currentUser.audioReadTutor !== null) {
+                    setReadTutor(currentUser.audioReadTutor);
+                    p.audioReadTutor = currentUser.audioReadTutor;
+                    updated = true;
+                  }
+                  if (updated) {
+                    localStorage.setItem('op_user_profile', JSON.stringify(p));
+                    // Try to match the voice now that it is resolved
+                    if (synthRef.current) {
+                      const availableVoices = window.speechSynthesis.getVoices();
+                      const matched = availableVoices.find(v => v.name === savedVoiceId);
+                      if (matched) {
+                        setSelectedVoice(matched);
+                      }
                     }
                   }
                 }
               }
-            }
-          }).catch(e => console.warn("[AudioReader] Offline fallback mode enabled for preferences:", e));
-        }
-      } catch (err) {}
+            }).catch(e => console.warn("[AudioReader] Offline fallback mode enabled for preferences:", e));
+          }
+        } catch (err) {}
+      }
     }
 
     if ('speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
       
+      const PREFERRED_VOICES: Record<string, string[]> = {
+        'fr': ['Hortense', 'Thomas', 'Google français', 'Microsoft Hortense Desktop', 'Amélie', 'Julie'],
+        'en': ['Google US English', 'Microsoft Zira Desktop', 'Samantha', 'Karen', 'Alex', 'Daniel'],
+        'es': ['Google español', 'Microsoft Helena Desktop', 'Monica', 'Paulina'],
+        'de': ['Google Deutsch', 'Microsoft Hedda Desktop', 'Anna', 'Petra'],
+        'zh': ['Google 普通话（中国大陆）', 'Microsoft Huihui Desktop', 'Ting-Ting', 'Sinji'],
+      };
+
       const loadVoices = () => {
         const availableVoices = window.speechSynthesis.getVoices();
         setVoices(availableVoices);
         
-        let matchedVoice = availableVoices.find(v => v.name === savedVoiceId);
+        // 1. Restore previously saved voice by exact name
+        let matchedVoice = savedVoiceId
+          ? availableVoices.find(v => v.name === savedVoiceId)
+          : undefined;
+
         if (!matchedVoice) {
-          const targetLang = (lang || 'EN').toLowerCase();
-          matchedVoice = availableVoices.find(v => 
-            v.lang.toLowerCase().startsWith(targetLang) || 
-            (targetLang === 'en' && v.lang.toLowerCase().startsWith('en'))
-          ) || availableVoices[0];
+          const targetLang = (lang || 'EN').toLowerCase().split('-')[0];
+          const preferred = PREFERRED_VOICES[targetLang] || [];
+
+          // 2. Try preferred voice names for the language
+          for (const name of preferred) {
+            const found = availableVoices.find(v =>
+              v.name.toLowerCase().includes(name.toLowerCase())
+            );
+            if (found) { matchedVoice = found; break; }
+          }
+
+          // 3. Fallback: any voice whose BCP-47 lang starts with the target language
+          if (!matchedVoice) {
+            matchedVoice = availableVoices.find(v =>
+              v.lang.toLowerCase().startsWith(targetLang)
+            );
+          }
+
+          // 4. Final fallback: first available voice
+          if (!matchedVoice) matchedVoice = availableVoices[0];
         }
         setSelectedVoice(matchedVoice || null);
       };
@@ -283,7 +387,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         clearTimeout(syncTimeoutRef.current);
       }
     };
-  }, [lang]);
+  }, [lang, isLoggedIn]);
 
   // 2. Parse and clean the MDX content into read-friendly sentences
   useEffect(() => {
@@ -947,16 +1051,22 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                       <span>{lang.toUpperCase() === 'FR' ? 'Lire le cours' : 'Read course text'}</span>
                     </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors text-[9px]">
+                    <label className={`flex items-center gap-2 transition-colors text-[9px] ${
+                      isLoggedIn ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed text-slate-500 opacity-60'
+                    }`}>
                       <input
                         type="checkbox"
-                        checked={readTutor}
+                        checked={isLoggedIn ? readTutor : true}
+                        disabled={!isLoggedIn}
                         onChange={(e) => {
+                          if (!isLoggedIn) return;
                           const val = e.target.checked;
                           setReadTutor(val);
                           saveSettingsToCloud({ readTutor: val });
                         }}
-                        className="rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-0 focus:ring-offset-0 w-3 h-3 cursor-pointer"
+                        className={`rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-0 focus:ring-offset-0 w-3 h-3 ${
+                          isLoggedIn ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                        }`}
                       />
                       <span>{lang.toUpperCase() === 'FR' ? 'Lire le tuteur' : 'Read tutor answers'}</span>
                     </label>

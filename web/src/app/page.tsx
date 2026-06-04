@@ -325,7 +325,38 @@ export default function Home() {
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              localStorage.setItem('op_user_profile', JSON.stringify(data.profile));
+              // ---- Guest → Authenticated settings migration (email verification path) ----
+              const verifiedProfile: Record<string, any> = { ...data.profile };
+              const GUEST_KEYS_VER = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course'] as const;
+              const guestVolVer    = sessionStorage.getItem('op_guest_audio_volume');
+              const guestRateVer   = sessionStorage.getItem('op_guest_audio_rate');
+              const guestVoiceVer  = sessionStorage.getItem('op_guest_audio_voice_id');
+              const guestReadCVer  = sessionStorage.getItem('op_guest_audio_read_course');
+              const hasGuestVer    = GUEST_KEYS_VER.some(k => sessionStorage.getItem(k) !== null);
+
+              if (hasGuestVer) {
+                if (guestVolVer !== null)   verifiedProfile.audioVolume    = Number(guestVolVer);
+                if (guestRateVer !== null)  verifiedProfile.audioRate      = Number(guestRateVer);
+                if (guestVoiceVer !== null) verifiedProfile.audioVoiceId   = guestVoiceVer;
+                if (guestReadCVer !== null) verifiedProfile.audioReadCourse = guestReadCVer === 'true';
+                verifiedProfile.audioReadTutor = true;
+                // Async cloud sync for verification path
+                if (verifiedProfile.id) {
+                  import('@/lib/db').then(async ({ dbService }) => {
+                    const s: Record<string, any> = {};
+                    if (guestVolVer !== null)   s.audioVolume    = Number(guestVolVer);
+                    if (guestRateVer !== null)  s.audioRate      = Number(guestRateVer);
+                    if (guestVoiceVer !== null) s.audioVoiceId   = guestVoiceVer;
+                    if (guestReadCVer !== null) s.audioReadCourse = guestReadCVer === 'true';
+                    await dbService.updateUserSettings(verifiedProfile.id, s);
+                  }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud (verify):', e));
+                }
+                GUEST_KEYS_VER.forEach(k => sessionStorage.removeItem(k));
+                sessionStorage.removeItem('op_guest_audio_read_tutor');
+              }
+              // ---- End migration ----
+
+              localStorage.setItem('op_user_profile', JSON.stringify(verifiedProfile));
               localStorage.setItem('op_session', 'true');
               localStorage.setItem('op_registration_verified', 'true');
               localStorage.setItem('op_show_welcome_catalog_popup', 'true');
@@ -511,7 +542,8 @@ export default function Home() {
             localStorage.setItem('op_logged_in_before', 'true');
           }
 
-          const profile = {
+          const profile: Record<string, any> = {
+            id: matchedUser.id,
             firstName: matchedUser.name.split(' ')[0],
             lastName: matchedUser.name.split(' ').slice(1).join(' '),
             email: matchedUser.email,
@@ -519,6 +551,41 @@ export default function Home() {
             role: matchedUser.role,
             isVerified: matchedUser.isEmailVerified
           };
+
+          // ---- Guest → Authenticated settings migration ----
+          // If the user had modified audio preferences as a guest, migrate them
+          // into their profile (localStorage + cloud sync) upon first login.
+          const GUEST_KEYS = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course'] as const;
+          const guestVolume    = sessionStorage.getItem('op_guest_audio_volume');
+          const guestRate      = sessionStorage.getItem('op_guest_audio_rate');
+          const guestVoiceId   = sessionStorage.getItem('op_guest_audio_voice_id');
+          const guestReadCourse = sessionStorage.getItem('op_guest_audio_read_course');
+          const hasGuestPrefs  = GUEST_KEYS.some(k => sessionStorage.getItem(k) !== null);
+
+          if (hasGuestPrefs) {
+            // Merge guest prefs into profile — they take precedence over DB defaults
+            if (guestVolume !== null)    profile.audioVolume    = Number(guestVolume);
+            if (guestRate !== null)      profile.audioRate      = Number(guestRate);
+            if (guestVoiceId !== null)   profile.audioVoiceId   = guestVoiceId;
+            if (guestReadCourse !== null) profile.audioReadCourse = guestReadCourse === 'true';
+            profile.audioReadTutor = true; // always active; guest cannot have changed it
+
+            // Async cloud sync — fire and forget
+            import('@/lib/db').then(async ({ dbService }) => {
+              const settingsToSync: Record<string, any> = {};
+              if (guestVolume !== null)    settingsToSync.audioVolume    = Number(guestVolume);
+              if (guestRate !== null)      settingsToSync.audioRate      = Number(guestRate);
+              if (guestVoiceId !== null)   settingsToSync.audioVoiceId   = guestVoiceId;
+              if (guestReadCourse !== null) settingsToSync.audioReadCourse = guestReadCourse === 'true';
+              await dbService.updateUserSettings(matchedUser.id, settingsToSync);
+              console.log('[Auth] Guest audio preferences migrated to cloud:', settingsToSync);
+            }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud:', e));
+
+            // Clear guest sessionStorage keys
+            GUEST_KEYS.forEach(k => sessionStorage.removeItem(k));
+            sessionStorage.removeItem('op_guest_audio_read_tutor');
+          }
+          // ---- End migration ----
 
           localStorage.setItem('op_user_profile', JSON.stringify(profile));
           localStorage.setItem('op_session', 'true');

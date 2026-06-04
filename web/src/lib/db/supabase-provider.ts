@@ -381,7 +381,11 @@ export const supabaseDatabaseProvider: DatabaseService = {
       isEmailVerified: true,
       isBlocked: false,
       favorites: [],
-      aiCoachMessage: `Welcome ${user.name}!`
+      aiCoachMessage: `Welcome ${user.name}!`,
+      audioVolume: 1.0,
+      audioRate: 1.0,
+      audioReadCourse: true,
+      audioReadTutor: true
     };
     try {
       await supabase.from('profiles').insert({
@@ -396,7 +400,11 @@ export const supabaseDatabaseProvider: DatabaseService = {
         joined_at: newUser.joinedAt,
         favorites: newUser.favorites,
         tutor_choice: 'socratic',
-        password: hashedPassword
+        password: hashedPassword,
+        audio_volume: 1.0,
+        audio_rate: 1.0,
+        audio_read_course: true,
+        audio_read_tutor: true
       });
       return { data: newUser, error: null };
     } catch (err) {

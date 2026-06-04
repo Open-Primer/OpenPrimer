@@ -36,6 +36,13 @@ export const EnrollmentModal = ({
     return dbService.getLocalizedCourseTitle(c, lang);
   };
 
+  const getLocalizedSubject = (subj: string) => {
+    if (!subj) return '';
+    let key = subj.toLowerCase().replace(/\s+/g, '_');
+    if (key === 'mathematics') key = 'math';
+    return t[key] || subj;
+  };
+
   const ects = COURSE_SYLLABUS_DETAILS[course.id]?.ects || 6;
   const hours = COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150;
   const prerequisites = COURSE_SYLLABUS_DETAILS[course.id]?.prerequisites || [];
@@ -66,7 +73,7 @@ export const EnrollmentModal = ({
             <GraduationCap className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{course.subject}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{getLocalizedSubject(course.subject)}</p>
             <h2 className="text-2xl font-black text-white">{getLocalizedCourseTitle(course)}</h2>
           </div>
         </div>
@@ -151,73 +158,7 @@ export const EnrollmentModal = ({
           ))}
         </div>
 
-        {/* Enroll actions */}
-        {showEnrollActions && (
-          <div className="w-full text-left">
-            {!isLoggedIn ? (
-              <div className="space-y-6 pt-4 border-t border-slate-850 w-full">
-                <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl">
-                  <h5 className="text-xs font-black text-blue-400 uppercase tracking-wider mb-2 font-sans">
-                    {getLocalizedLabel('why_create_account', lang)}
-                  </h5>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
-                    {getLocalizedLabel('account_benefits', lang)}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={() => {
-                      onClose();
-                      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
-                    }}
-                    className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 text-center cursor-pointer font-sans"
-                  >
-                    {getLocalizedLabel('create_account', lang)}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      onClose();
-                      window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'login' }));
-                    }}
-                    className="flex-1 py-3.5 bg-slate-800 border border-slate-750 text-slate-300 font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:text-white hover:border-slate-700 text-center cursor-pointer font-sans"
-                  >
-                    {getLocalizedLabel('log_in', lang)}
-                  </button>
-                </div>
 
-                <div className="text-center pt-2">
-                  <button
-                    onClick={() => {
-                      onClose();
-                      window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
-                    }}
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2 inline-flex items-center gap-1.5 font-sans"
-                  >
-                    <span>{getLocalizedLabel('start_limited', lang)}</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 w-full pt-4 border-t border-slate-850">
-                <button 
-                  onClick={onClose}
-                  className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer font-sans"
-                >
-                  {t.cancel || "Cancel"}
-                </button>
-                <button
-                  onClick={onEnroll}
-                  className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer font-sans"
-                >
-                  <Rocket className="w-4 h-4" />
-                  {lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </motion.div>
     </div>
   );

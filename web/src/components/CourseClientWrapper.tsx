@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNav, AITutorOverlay } from '@/components/RefinedUI';
 import { AudioReader } from '@/components/AudioReader';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { progressService } from '@/lib/db';
 
 interface CourseClientWrapperProps {
@@ -14,23 +14,10 @@ interface CourseClientWrapperProps {
 }
 
 export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  // Check auth session
-  useEffect(() => {
-    const session = localStorage.getItem('op_session');
-    if (session !== 'true') {
-      setIsAuthenticated(false);
-      router.push('/login');
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
 
   // Expose to window for TopNav
   useEffect(() => {
@@ -201,13 +188,6 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     paper: "bg-[#fcfaf2] text-slate-900 font-serif",
     focus: "bg-black text-slate-400 font-sans"
   };
-
-  if (isAuthenticated === null) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
-  }
-  if (isAuthenticated === false) {
-    return null;
-  }
 
   return (
     <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.default}`}>

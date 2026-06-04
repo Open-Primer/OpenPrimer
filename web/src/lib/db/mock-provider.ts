@@ -230,7 +230,11 @@ export const mockDatabaseProvider: DatabaseService = {
       isEmailVerified: true,
       isBlocked: false,
       favorites: [],
-      aiCoachMessage: `Welcome ${user.name}!`
+      aiCoachMessage: `Welcome ${user.name}!`,
+      audioVolume: 1.0,
+      audioRate: 1.0,
+      audioReadCourse: true,
+      audioReadTutor: true
     };
     const list = [newUser, ...getUsers()];
     setUsersList(list);

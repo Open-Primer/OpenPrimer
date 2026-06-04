@@ -932,8 +932,8 @@ export const CatalogPage = () => {
                     })()}
 
                     {(() => {
-                      const ratingVal = (course.averageRating && course.averageRating > 0) ? course.averageRating : 3.4;
-                      const countVal = (course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12;
+                      const ratingVal = course.averageRating ?? 0;
+                      const countVal = course.ratingCount ?? 0;
                       return (
                         <div className="flex justify-between items-center mb-6 w-full gap-4">
                           {course.isCurriculum ? (
