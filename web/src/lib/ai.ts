@@ -266,9 +266,14 @@ Requirements:
 
       let rawMdx = '';
       let contentSuccess = false;
+      let vertexStatus = 'Not Attempted';
+      let vertexError = 'N/A';
+      let studioStatus = 'Not Attempted';
+      let studioError = 'N/A';
 
       if (isVertexConfigured()) {
         console.log(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (gemini-2.5-pro)...`);
+        vertexStatus = 'Attempted';
         try {
           const contentRes = await callVertexAI({
             task: 'course_generation',
@@ -280,14 +285,22 @@ Requirements:
             const contentJson = await contentRes.json();
             rawMdx = contentJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
             contentSuccess = true;
+            vertexStatus = 'Success';
+          } else {
+            const status = contentRes ? contentRes.status : 'unknown';
+            const statusText = contentRes ? contentRes.statusText : '';
+            vertexError = `HTTP Error ${status}: ${statusText}`;
+            console.error(`[AI GENERATOR] Vertex AI response error. Status: ${status}`);
           }
-        } catch (err) {
+        } catch (err: any) {
+          vertexError = err.message || String(err);
           console.warn(`[AI GENERATOR] Vertex AI lesson generation failed.`, err);
         }
       }
       
       if (!contentSuccess && apiKey) {
         console.log(`[AI GENERATOR] Generating lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+        studioStatus = 'Attempted';
         const startTime = Date.now();
         try {
           const contentRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -301,26 +314,63 @@ Requirements:
             const contentJson = await contentRes.json();
             rawMdx = contentJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
             contentSuccess = true;
+            studioStatus = 'Success';
 
             const durationMs = Date.now() - startTime;
             const usage = contentJson.usageMetadata || {};
             const promptTokens = usage.promptTokenCount || 0;
             const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
             await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptContent);
+          } else {
+            studioError = `HTTP Error ${contentRes.status}: ${contentRes.statusText}`;
+            console.error(`[AI GENERATOR] AI Studio response error. Status: ${contentRes.status}`);
           }
-        } catch (err) {
+        } catch (err: any) {
+          studioError = err.message || String(err);
           console.error(`[AI GENERATOR] AI Studio lesson content fetch exception:`, err);
         }
       }
 
       if (!rawMdx) {
         console.warn(`[AI GENERATOR] Failed to generate content for "${item.title}". Using fallback mock content.`);
-        rawMdx = `### Overview of ${item.title}\n\nThis is a premium fallback module for the lesson **${item.title}** under course **${courseName}**.\n\n> [!NOTE]\n> Please configure your AI Service account or API key to automatically compile full lessons.`;
+        rawMdx = `# 🔍 Academic Generation Diagnostics
+
+An error occurred while dynamically compiling the lesson content for **${item.title}** under course **${courseName}**.
+
+> [!WARNING]
+> The AI Generation pipeline was unable to contact the configured LLM providers or failed to validate the generated output. Below is a detailed, actionable diagnostics report to help you resolve this issue.
+
+### 📋 Environment & Configuration Status
+
+| Provider | Status | Configured | Error / Details |
+| :--- | :--- | :--- | :--- |
+| **Vertex AI** | ${vertexStatus} | \`${isVertexConfigured() ? 'TRUE' : 'FALSE'}\` | ${vertexError} |
+| **Gemini AI Studio** | ${studioStatus} | \`${!!apiKey ? 'TRUE' : 'FALSE'}\` | ${studioError} |
+
+### 🛠️ Actionable Troubleshooting Steps
+
+1. **Verify Environment Variables**:
+   Ensure the following are correctly defined in your server's \`.env.local\` or hosting provider dashboard:
+   - \`GOOGLE_APPLICATION_CREDENTIALS\` (absolute path to GCP Service Account JSON file)
+   - \`VERTEX_PROJECT_ID\` (your GCP project ID)
+   - \`VERTEX_LOCATION\` (e.g., \`us-central1\`)
+   - \`GEMINI_API_KEY\` (Gemini API Studio key)
+
+2. **Check GCP & Vertex AI Permissions**:
+   - Ensure the Vertex AI API is enabled in your Google Cloud Console.
+   - Verify the Service Account has the **Vertex AI User** role.
+
+3. **Verify API Quotas & Billing**:
+   - Check if you have exceeded Vertex AI or AI Studio rate limits/quotas.
+   - Confirm your Google Cloud Billing account is active.
+
+4. **Server Logs**:
+   - Inspect the server terminal output or deployment logs for full stack traces associated with this request.`;
       }
 
       // Agent 4 (Verifier/Critic) refinement loop
       let currentMdx = rawMdx;
-      let approved = false;
+      let approved = !contentSuccess; // Skip verification loop if generation failed and we are outputting diagnostics
       let iteration = 0;
       const maxIterations = 3;
 
@@ -494,6 +544,20 @@ ${validatedMdx}`;
       if (!mdxCheck.success) {
         console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
         mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
+        
+        const retryCheck = await validateMdxContent(mdxWithFrontmatter);
+        if (!retryCheck.success) {
+          console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}. Auto-logging to DB.`);
+          try {
+            await dbService.submitReport(
+              courseName.toLowerCase().replace(/ /g, '_'),
+              `${courseName.toLowerCase().replace(/ /g, '_')}/${item.slug}`,
+              `[GENERATION MDX EXCEPTION] ${retryCheck.error}`
+            );
+          } catch (reportErr) {
+            console.error("Failed to auto-submit generation error report:", reportErr);
+          }
+        }
       }
 
       // Save to Supabase
@@ -707,6 +771,20 @@ ${lesson.content}`;
       if (!mdxCheck.success) {
         console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
         validatedMdx = sanitizeMdxFallback(validatedMdx);
+
+        const retryCheck = await validateMdxContent(validatedMdx);
+        if (!retryCheck.success) {
+          console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}. Auto-logging to DB.`);
+          try {
+            await dbService.submitReport(
+              courseSlug,
+              `${courseSlug}/${lesson.lesson_slug}`,
+              `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
+            );
+          } catch (reportErr) {
+            console.error("Failed to auto-submit translation error report:", reportErr);
+          }
+        }
       }
 
       // Save translated lesson to Supabase
@@ -946,11 +1024,12 @@ async function validateMdxContent(content: string): Promise<{ success: boolean; 
   try {
     const { serialize } = await import('next-mdx-remote/serialize');
     const remarkMath = (await import('remark-math')).default;
+    const remarkGfm = (await import('remark-gfm')).default;
     const rehypeKatex = (await import('rehype-katex')).default;
     
     await serialize(content, {
       mdxOptions: {
-        remarkPlugins: [remarkMath],
+        remarkPlugins: [remarkMath, remarkGfm],
         rehypePlugins: [rehypeKatex],
         format: 'mdx',
       },
