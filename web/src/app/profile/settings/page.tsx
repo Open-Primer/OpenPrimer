@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { TopNav, UI_STRINGS, Footer } from '@/components/RefinedUI';
 import { dbService } from '@/lib/db';
 import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save, EyeOff, Lock } from 'lucide-react';
@@ -259,9 +260,12 @@ const PWD_TRANSLATIONS = {
 };
 
 export default function ProfileSettingsPage() {
+  const router = useRouter();
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const guide = ACCESSIBILITY_GUIDE[lang as keyof typeof ACCESSIBILITY_GUIDE] || ACCESSIBILITY_GUIDE.EN;
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const [user, setUser] = useState({
     firstName: "",
@@ -336,6 +340,14 @@ export default function ProfileSettingsPage() {
   };
 
   useEffect(() => {
+    const loggedIn = localStorage.getItem('op_session') === 'true';
+    if (!loggedIn) {
+      setIsAuthenticated(false);
+      router.push('/login');
+      return;
+    }
+    setIsAuthenticated(true);
+
     // Load dynamic profile
     const savedProfile = localStorage.getItem('op_user_profile');
     if (savedProfile) {
@@ -356,7 +368,6 @@ export default function ProfileSettingsPage() {
     }
 
     // Try loading latest profile preferences from Supabase if connected
-    const loggedIn = localStorage.getItem('op_session');
     if (loggedIn && savedProfile) {
       try {
         const p = JSON.parse(savedProfile);
@@ -546,6 +557,13 @@ export default function ProfileSettingsPage() {
     paper: "bg-[#fcfaf2] text-slate-900 font-serif",
     focus: "bg-black text-slate-400 font-sans"
   };
+
+  if (isAuthenticated === null) {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+  }
+  if (isAuthenticated === false) {
+    return null;
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>

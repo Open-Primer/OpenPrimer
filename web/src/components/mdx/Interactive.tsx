@@ -20,7 +20,14 @@ const INTERACTIVE_STRINGS = {
     predict_reveal: "Reveal Theoretical Answer",
     predict_explanation: "Explanation",
     predict_exp_desc: "The answer depends on physical principles we will explore in the next section...",
-    listen: "Listen"
+    listen: "Listen",
+    unlock_ai: "Unlock AI Analysis",
+    validated: "Validated",
+    tutor_validated: "Validation completed by AI Tutor",
+    exercise_completed: "Exercise completed successfully during this session.",
+    feynman_validated: "Feynman Technique: validated.",
+    tutor_recommended: "AI Tutor Recommended",
+    signup_free: "Sign up for free"
   },
   FR: {
     placeholder_answer: "votre réponse...",
@@ -36,7 +43,14 @@ const INTERACTIVE_STRINGS = {
     predict_reveal: "Révéler la réponse théorique",
     predict_explanation: "Explication",
     predict_exp_desc: "La réponse dépend des principes physiques que nous allons explorer dans la section suivante...",
-    listen: "Écouter"
+    listen: "Écouter",
+    unlock_ai: "Débloquer l'Analyse IA",
+    validated: "Validé",
+    tutor_validated: "Validation validée par le Tuteur IA",
+    exercise_completed: "Exercice complété avec succès lors de la session.",
+    feynman_validated: "Technique de Feynman : validée.",
+    tutor_recommended: "Tuteur IA Recommandé",
+    signup_free: "S'inscrire gratuitement"
   },
   ES: {
     placeholder_answer: "tu respuesta...",
@@ -52,7 +66,14 @@ const INTERACTIVE_STRINGS = {
     predict_reveal: "Revelar Respuesta Teórica",
     predict_explanation: "Explicación",
     predict_exp_desc: "La respuesta depende de los principios físicos que exploraremos en la siguiente sección...",
-    listen: "Escuchar"
+    listen: "Escuchar",
+    unlock_ai: "Desbloquear Análisis de IA",
+    validated: "Validado",
+    tutor_validated: "Validación completada por el Tutor de IA",
+    exercise_completed: "Ejercicio completado con éxito durante esta sesión.",
+    feynman_validated: "Técnica de Feynman: validada.",
+    tutor_recommended: "Tutor de IA Recomendado",
+    signup_free: "Registrarse gratis"
   },
   DE: {
     placeholder_answer: "Ihre Antwort...",
@@ -68,7 +89,14 @@ const INTERACTIVE_STRINGS = {
     predict_reveal: "Theoretische Antwort anzeigen",
     predict_explanation: "Erklärung",
     predict_exp_desc: "Die Antwort hängt von den physikalischen Prinzipien ab, die wir im nächsten Abschnitt untersuchen werden...",
-    listen: "Hören"
+    listen: "Hören",
+    unlock_ai: "KI-Analyse freischalten",
+    validated: "Validiert",
+    tutor_validated: "Validierung durch KI-Tutor abgeschlossen",
+    exercise_completed: "Übung in dieser Sitzung erfolgreich abgeschlossen.",
+    feynman_validated: "Feynman-Methode: validiert.",
+    tutor_recommended: "KI-Tutor empfohlen",
+    signup_free: "Kostenlos registrieren"
   },
   ZH: {
     placeholder_answer: "你的回答...",
@@ -84,7 +112,14 @@ const INTERACTIVE_STRINGS = {
     predict_reveal: "揭晓理论答案",
     predict_explanation: "解释",
     predict_exp_desc: "答案取决于我们将在下一节中探索的物理原理...",
-    listen: "朗读"
+    listen: "朗读",
+    unlock_ai: "解锁 AI 分析",
+    validated: "已验证",
+    tutor_validated: "已由 AI 导师完成验证",
+    exercise_completed: "此章节练习已成功完成。",
+    feynman_validated: "费曼学习法：已验证。",
+    tutor_recommended: "推荐 AI 导师",
+    signup_free: "免费注册"
   }
 };
 
@@ -261,7 +296,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
 
       {isReadOnly && (
         <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
-          <CheckCircle2 className="w-3.5 h-3.5" /> {language === 'FR' ? 'Validé' : 'Validated'}
+          <CheckCircle2 className="w-3.5 h-3.5" /> {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
         </span>
       )}
 
@@ -315,15 +350,15 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
       const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
       if (visited.includes(window.location.pathname)) {
         setIsReadOnly(true);
-        setText(language === 'FR' ? "Exercice complété avec succès lors de la session." : "Exercise completed successfully during this session.");
-        setFeedback(language === 'FR' ? "Technique de Feynman : validée." : "Feynman Technique: validated.");
+        setText(t.exercise_completed);
+        setFeedback(t.feynman_validated);
       }
     }
 
     return () => {
       window.removeEventListener('op_auth_state_change', handleAuthChange);
     };
-  }, [language]);
+  }, [language, t]);
 
   const analyze = async () => {
     if (isReadOnly) return;
@@ -369,13 +404,13 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
           disabled={isLoading}
           className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
         >
-          {!isLoggedIn ? (language === 'FR' ? 'Débloquer l\'Analyse IA' : 'Unlock AI Analysis') : isLoading ? t.feynman_submitting : t.feynman_submit}
+          {!isLoggedIn ? t.unlock_ai : isLoading ? t.feynman_submitting : t.feynman_submit}
         </button>
       )}
 
       {isReadOnly && (
         <div className="mt-4 flex items-center gap-1.5 select-none text-emerald-400 font-bold text-xs">
-          <CheckCircle2 className="w-4 h-4" /> {language === 'FR' ? 'Validation validée par le Tuteur IA' : 'Validation completed by AI Tutor'}
+          <CheckCircle2 className="w-4 h-4" /> {t.tutor_validated}
         </div>
       )}
 
@@ -395,7 +430,7 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <div>
-            <h5 className="text-sm font-black text-white">{language === 'FR' ? "Tuteur IA Recommandé" : "AI Tutor Recommended"}</h5>
+            <h5 className="text-sm font-black text-white">{t.tutor_recommended}</h5>
             <p className="text-[11px] text-slate-300 max-w-[320px] mt-2 leading-relaxed px-4">
               {feynmanDesc}
             </p>
@@ -404,7 +439,7 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
             onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
             className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
           >
-            {language === 'FR' ? "S'inscrire gratuitement" : "Sign up for free"}
+            {t.signup_free}
           </button>
         </div>
       )}

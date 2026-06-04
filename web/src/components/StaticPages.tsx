@@ -6,7 +6,8 @@ import {
   Shield, Target, Users, Mail, Phone, MapPin, Globe, Sparkles, 
   BookOpen, ChevronRight, Search, Filter, Book, Award, Zap, Languages,
   ShieldCheck, Clock, Star, CheckCircle2, GraduationCap, X, Bell, Rocket,
-  BrainCircuit, FlaskConical, Scale, Calculator, Atom, Leaf, Bookmark
+  BrainCircuit, FlaskConical, Scale, Calculator, Atom, Leaf, Bookmark,
+  Play, Plus, FileText
 } from 'lucide-react';
 import { TopNav, UI_STRINGS, Footer, formatCourseLevel, getLocalizedLabel } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -127,6 +128,7 @@ interface SmartEmptyStateProps {
 
 const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartEmptyStateProps) => {
   const es = EMPTY_STATE_STRINGS[lang as keyof typeof EMPTY_STATE_STRINGS] || EMPTY_STATE_STRINGS.EN;
+  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -260,8 +262,8 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
           <CourseKiosk 
             lang={lang} 
             mode="disciplines"
-            title={lang.toUpperCase() === 'FR' ? "Découvrez nos disciplines d'élite" : "Explore Our Elite Disciplines"}
-            subtitle={lang.toUpperCase() === 'FR' ? "Sélectionnez une discipline pour relancer votre recherche" : "Select a discipline to restart your search"}
+            title={t.explore_elite_disciplines}
+            subtitle={t.select_discipline_to_restart}
             onDisciplineClick={(subject) => onSelectSubject?.(subject)}
           />
         </div>
@@ -825,10 +827,7 @@ export const CatalogPage = () => {
               >
                 <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
                 <span className="hidden sm:inline">
-                  {lang.toUpperCase() === 'FR' ? 'Nouveautés' : 
-                   lang.toUpperCase() === 'ES' ? 'Nuevos' : 
-                   lang.toUpperCase() === 'DE' ? 'Neuheiten' : 
-                   lang.toUpperCase() === 'ZH' ? '最新课程' : 'New Only'}
+                  {t.new_only || 'New Only'}
                 </span>
               </button>
             </div>
@@ -874,44 +873,38 @@ export const CatalogPage = () => {
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading || (courses.length > 0 && filteredCourses.length === 0 && !searchQuery.trim() && subjectFilter === 'All' && !showNewOnly && filterType === 'All') ? (
+          {isLoading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">
-                {lang === 'FR' ? 'Chargement des cours...' : 'Loading courses...'}
+                {t.loading_courses || 'Loading courses...'}
               </p>
             </div>
           ) : sortedCourses.length > 0 ? sortedCourses.map((course) => {
             const isEnrolled = enrolledIds.includes(course.id);
             const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || m.title_key === course.title_key);
-            const progressPercent = activeModule ? activeModule.progress : 12;
+            
+            const isBrowser = typeof window !== 'undefined';
+            const localProgressMap = isBrowser ? (() => {
+              try {
+                return JSON.parse(localStorage.getItem('op_course_progress') || '{}');
+              } catch (e) {
+                return {};
+              }
+            })() : {};
+            const localPercent = typeof localProgressMap[course.slug] === 'number' 
+              ? localProgressMap[course.slug] 
+              : (typeof localProgressMap[course.id] === 'number' ? localProgressMap[course.id] : 0);
+            
+            const progressPercent = activeModule ? activeModule.progress : localPercent;
+            const hasStarted = isEnrolled || progressPercent > 0;
             return (
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
-                <Link 
-                  href={`/${course.level}/${course.subject}/${course.slug}/introduction`}
-                  onClick={async (e) => {
-                    if (isLoggedIn && !isEnrolled) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      let userId = 'u1';
-                      const savedProfile = localStorage.getItem('op_user_profile');
-                      if (savedProfile) {
-                        try {
-                          const p = JSON.parse(savedProfile);
-                          if (p.id) userId = p.id;
-                        } catch (err) {}
-                      }
-                      if (!course.isCurriculum) {
-                        await dbService.enrollInCourse(userId, course.id);
-                        setEnrolledIds(prev => [...prev, course.id]);
-                        window.dispatchEvent(new Event('op_progress_updated'));
-                        window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
-                      } else {
-                        setSelectedEnrollCourse(course);
-                      }
-                    }
+                <div 
+                  onClick={() => {
+                    window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
                   }}
-                  className="group block h-full"
+                  className="group block h-full cursor-pointer"
                 >
                   <div className="p-8 bg-slate-900/40 border border-slate-880/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
                     
@@ -924,20 +917,14 @@ export const CatalogPage = () => {
                       if (isNew) return (
                         <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
                           <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
-                            {lang.toUpperCase() === 'FR' ? 'Nouveau' :
-                             lang.toUpperCase() === 'ES' ? 'Nuevo' :
-                             lang.toUpperCase() === 'DE' ? 'Neu' :
-                             lang.toUpperCase() === 'ZH' ? '最新' : 'New'}
+                            {t.new_badge || 'New'}
                           </div>
                         </div>
                       );
                       if (isRecentlyRevised) return (
                         <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
                           <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
-                            {lang.toUpperCase() === 'FR' ? 'Révisé' :
-                             lang.toUpperCase() === 'ES' ? 'Revisado' :
-                             lang.toUpperCase() === 'DE' ? 'Überarbeitet' :
-                             lang.toUpperCase() === 'ZH' ? '已更新' : 'Revised'}
+                            {t.revised_badge || 'Revised'}
                           </div>
                         </div>
                       );
@@ -982,7 +969,11 @@ export const CatalogPage = () => {
                             {/* Bookmark (logged-in only) */}
                             {isLoggedIn && (
                               <button
-                                onClick={(e) => toggleBookmark(course.id, e)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleBookmark(course.id, e);
+                                }}
                                 title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
                                 className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
                               >
@@ -1006,41 +997,82 @@ export const CatalogPage = () => {
                     </p>
 
 
-                    {/* PROGRESS INDICATOR (only visible if logged in AND enrolled) */}
-                    {isLoggedIn && isEnrolled && (
+                    {/* PROGRESS INDICATOR (only visible if enrolled or started progress) */}
+                    {hasStarted && (
                       <div className="mb-6">
                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[8px] font-black uppercase text-slate-600">{lang === 'FR' ? 'Progression' : 'Progress'}</span>
+                            <span className="text-[8px] font-black uppercase text-slate-600">{t.progress || 'Progress'}</span>
                             <span className="text-[8px] font-black text-blue-500">{progressPercent}%</span>
                          </div>
                          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mb-2">
                             <div className="h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" style={{ width: `${progressPercent}%` }} />
                          </div>
                          <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
-                           <span>{lang === 'FR' ? 'Temps passé :' : 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
-                           <span>{lang === 'FR' ? 'Attendu :' : 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h</span>
+                           <span>{t.time_spent || 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
+                           <span>{t.expected_time || 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h</span>
                          </div>
                       </div>
                     )}
 
 
-                    <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
+                    <div className="flex items-center gap-2 pt-6 border-t border-slate-800/50 mt-auto w-full">
+                      {/* 1. Main Action Button: Poursuivre / Continuer / Commencer */}
                       <button 
                         onClick={(e) => {
-                          if (isLoggedIn && !isEnrolled) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                        }}
+                        className="flex-1 py-2 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[8px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-1"
+                      >
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                        <span className="truncate">{hasStarted ? (t.continue_course || 'Continue') : (t.start_learning || 'Start learning')}</span>
+                      </button>
+
+                      {/* 2. Enroll Button (if not enrolled) */}
+                      {!isEnrolled && (
+                        <button 
+                          onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setSelectedEnrollCourse(course);
-                          }
+                            if (isLoggedIn) {
+                              let userId = 'u1';
+                              const savedProfile = localStorage.getItem('op_user_profile');
+                              if (savedProfile) {
+                                try {
+                                  const p = JSON.parse(savedProfile);
+                                  if (p.id) userId = p.id;
+                                } catch (err) {}
+                              }
+                              await dbService.enrollInCourse(userId, course.id);
+                              setEnrolledIds(prev => [...prev, course.id]);
+                              window.dispatchEvent(new Event('op_progress_updated'));
+                            } else {
+                              setSelectedEnrollCourse(course);
+                            }
+                          }}
+                          className="flex-1 py-2 px-2.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-2xl text-[8px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-1"
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                          <span className="truncate">{t.enroll_label || 'Enroll'}</span>
+                        </button>
+                      )}
+
+                      {/* 3. Course Presentation Sheet (always visible) */}
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedEnrollCourse(course);
                         }}
-                        className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white`}
+                        className="w-9 h-9 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-2xl transition-all flex items-center justify-center flex-shrink-0"
+                        title={t.course_sheet || "Course Sheet"}
                       >
-                         {!isLoggedIn ? (t.start_learning || 'Start learning') : isEnrolled ? (t.continue_label || 'Continue') : (t.enroll_label || 'Enroll')}
+                        <FileText className="w-3.5 h-3.5" />
                       </button>
-                      <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             );
           }) : (
@@ -1080,30 +1112,18 @@ export const CatalogPage = () => {
               </div>
 
               <h2 className="text-2xl font-black text-white mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
-                {lang === 'FR' ? "Bienvenue sur OpenPrimer !" :
-                 lang === 'ES' ? "¡Bienvenido a OpenPrimer!" :
-                 lang === 'DE' ? "Willkommen bei OpenPrimer!" :
-                 lang === 'ZH' ? "欢迎来到 OpenPrimer！" :
-                 "Welcome to OpenPrimer!"}
+                {t.welcome_title || "Welcome to OpenPrimer!"}
               </h2>
               
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                {lang === 'FR' ? "Votre inscription a été validée avec succès. Il ne vous reste plus qu'à choisir les cours qui vous intéressent dans le catalogue ci-dessous pour composer votre premier curriculum personnalisé !" :
-                 lang === 'ES' ? "Su registro se ha validado correctamente. ¡Solo tiene que elegir los cookies que le interesan en el catálogo siguiente para componer su primer plan de estudios personalizado!" :
-                 lang === 'DE' ? "Ihre Registrierung wurde erfolgreich bestätigt. Wählen Sie nun einfach die Kurse, die Sie interessieren, aus dem untenstehenden Katalog aus, um Ihren ersten personalisierten Lehrplan zu erstellen!" :
-                 lang === 'ZH' ? "您的注册已成功通过验证。现在，您只需从下方的目录中选择您感兴趣的课程，即可构建您的第一个个性化课程表！" :
-                 "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
+                {t.welcome_desc || "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
               </p>
 
               <button
                 onClick={dismissWelcomePopup}
                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
               >
-                {lang === 'FR' ? "Commencer à explorer" :
-                 lang === 'ES' ? "Empezar a explorar" :
-                 lang === 'DE' ? "Jetzt erkunden" :
-                 lang === 'ZH' ? "开始探索" :
-                 "Start Exploring"}
+                {t.start_exploring || "Start Exploring"}
               </button>
             </motion.div>
           </div>
@@ -1611,7 +1631,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Mastery Weight</p>
-              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">{lang === 'FR' ? 'crédits' : 'credits'}</span></p>
+              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">{t.credits_label || (lang === 'FR' ? 'crédits' : 'credits')}</span></p>
            </div>
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Clock className="w-8 h-8 text-blue-500 mx-auto mb-3" />

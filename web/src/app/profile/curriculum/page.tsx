@@ -7,12 +7,14 @@ import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
 import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
 import { COURSE_SYLLABUS_DETAILS } from '@/components/StaticPages';
 
 
 export default function CurriculumPage() {
+  const router = useRouter();
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
@@ -239,6 +241,12 @@ export default function CurriculumPage() {
     async function loadProgress() {
       const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('op_user_profile') : null;
       const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('op_session') === 'true' : false;
+      
+      if (!loggedIn) {
+        router.push('/login');
+        return;
+      }
+
       let userId = 'u1';
       
       if (loggedIn && savedProfile) {

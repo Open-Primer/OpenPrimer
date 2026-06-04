@@ -121,6 +121,8 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
   EN: {
     popular_title: "Curated Course Kiosk",
     popular_subtitle: "Swipe or rotate through our elite recommended courses",
+    disciplines_title: "Explore Disciplines",
+    disciplines_subtitle: "Select a subject to discover matching academic pathways",
     view_details: "View Details",
     credits: "Credits",
     hours: "hours",
@@ -131,6 +133,8 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
   FR: {
     popular_title: "Kiosque de Cours",
     popular_subtitle: "Faites défiler nos cours recommandés d'élite",
+    disciplines_title: "Explorer les disciplines",
+    disciplines_subtitle: "Sélectionnez un sujet pour découvrir les parcours académiques correspondants",
     view_details: "En savoir plus",
     credits: "Crédits",
     hours: "heures",
@@ -141,6 +145,8 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
   ES: {
     popular_title: "Kiosco de Cursos",
     popular_subtitle: "Deslice o navegue por nuestros cursos recomendados de élite",
+    disciplines_title: "Explorar disciplinas",
+    disciplines_subtitle: "Seleccione un tema para descubrir las rutas académicas correspondientes",
     view_details: "Ver detalles",
     credits: "Créditos",
     hours: "horas",
@@ -151,6 +157,8 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
   DE: {
     popular_title: "Kurs-Kiosk",
     popular_subtitle: "Blättern Sie durch unsere empfohlenen Elite-Kurse",
+    disciplines_title: "Disziplinen erkunden",
+    disciplines_subtitle: "Wählen Sie ein Fach aus, um die entsprechenden akademischen Wege zu entdecken",
     view_details: "Details anzeigen",
     credits: "Credits",
     hours: "Stunden",
@@ -161,12 +169,42 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
   ZH: {
     popular_title: "精品课程旋转木马",
     popular_subtitle: "滑动或旋转浏览我们的推荐精英课程",
+    disciplines_title: "探索学科领域",
+    disciplines_subtitle: "选择一个学科以发现匹配的学术路径",
     view_details: "查看详情",
     credits: "学分",
     hours: "课时",
     courses_count: "门课程",
     course_count: "门课程",
     explore: "探索",
+  }
+};
+
+const KIOSK_ARIA_TEXTS: Record<string, Record<string, string>> = {
+  EN: {
+    prev_page: "Previous page",
+    next_page: "Next page",
+    go_to_page: "Go to page {num}"
+  },
+  FR: {
+    prev_page: "Page précédente",
+    next_page: "Page suivante",
+    go_to_page: "Aller à la page {num}"
+  },
+  ES: {
+    prev_page: "Página anterior",
+    next_page: "Página siguiente",
+    go_to_page: "Ir a la página {num}"
+  },
+  DE: {
+    prev_page: "Vorherige Seite",
+    next_page: "Nächste Seite",
+    go_to_page: "Gehe zu Seite {num}"
+  },
+  ZH: {
+    prev_page: "上一页",
+    next_page: "下一页",
+    go_to_page: "跳转到第 {num} 页"
   }
 };
 
@@ -178,6 +216,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
   const texts = KIOSK_TEXTS[lang.toUpperCase()] || KIOSK_TEXTS.EN;
+  const ariaTexts = KIOSK_ARIA_TEXTS[lang.toUpperCase()] || KIOSK_ARIA_TEXTS.EN;
 
   useEffect(() => {
     dbService.getAllCourses()
@@ -300,10 +339,10 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
       <div className="text-center mb-8">
         <h3 className="text-lg font-black tracking-widest text-slate-400 uppercase flex items-center justify-center gap-2">
           <Zap className="w-4 h-4 text-violet-400 animate-pulse" />
-          {title || (mode === 'courses' ? texts.popular_title : texts.popular_title)}
+          {title || (mode === 'courses' ? texts.popular_title : texts.disciplines_title)}
         </h3>
         <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-          {subtitle || texts.popular_subtitle}
+          {subtitle || (mode === 'courses' ? texts.popular_subtitle : texts.disciplines_subtitle)}
         </p>
       </div>
 
@@ -316,7 +355,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
             onClick={handlePrev}
             type="button"
             className="absolute left-0 z-30 w-10 h-10 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-violet-500/50 hover:bg-slate-900 transition-all shadow-lg backdrop-blur-md cursor-pointer"
-            aria-label={lang.toUpperCase() === 'FR' ? 'Page précédente' : 'Previous Page'}
+            aria-label={ariaTexts.prev_page}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -479,7 +518,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
             onClick={handleNext}
             type="button"
             className="absolute right-0 z-30 w-10 h-10 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-violet-500/50 hover:bg-slate-900 transition-all shadow-lg backdrop-blur-md cursor-pointer"
-            aria-label={lang.toUpperCase() === 'FR' ? 'Page suivante' : 'Next Page'}
+            aria-label={ariaTexts.next_page}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -502,7 +541,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                     ? 'w-6 bg-gradient-to-r from-violet-500 to-blue-500 shadow-md shadow-violet-500/30' 
                     : 'w-2 bg-slate-800 hover:bg-slate-700'
                 }`}
-                aria-label={lang.toUpperCase() === 'FR' ? `Aller à la page ${index + 1}` : `Go to page ${index + 1}`}
+                aria-label={ariaTexts.go_to_page.replace('{num}', String(index + 1))}
               />
             );
           })}
