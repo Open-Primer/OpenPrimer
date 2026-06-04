@@ -129,6 +129,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [isReadingTutor, setIsReadingTutor] = useState(false);
   const [tutorSentences, setTutorSentences] = useState<string[]>([]);
   const [currentTutorSentenceIndex, setCurrentTutorSentenceIndex] = useState(-1);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -557,7 +559,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       highlightedElementRef.current = null;
     }
 
-    if (currentSentenceIndex < 0 || currentSentenceIndex >= sentences.length) {
+    if (!isPlaying || isPaused || isUserScrolling || currentSentenceIndex < 0 || currentSentenceIndex >= sentences.length) {
       return;
     }
 
@@ -603,7 +605,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       bestMatch.classList.add('reading-highlight');
       highlightedElementRef.current = bestMatch;
       wrapSentenceText(bestMatch, sentence);
-      if (!isScrollInitiatedRef.current) {
+      
+      const rect = bestMatch.getBoundingClientRect();
+      const isVisible = rect.top >= 120 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 40;
+
+      if (!isVisible && !isScrollInitiatedRef.current) {
         setProgrammaticScroll();
         bestMatch.scrollIntoView({
           behavior: 'smooth',
@@ -619,7 +625,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         highlightedElementRef.current.classList.remove('reading-highlight');
       }
     };
-  }, [currentSentenceIndex, sentences]);
+  }, [currentSentenceIndex, sentences, isPlaying, isPaused, isUserScrolling]);
 
   // 5. Handle Keyboard Shortcuts
   useEffect(() => {
@@ -842,15 +848,21 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         return;
       }
 
-      // If playing course text, stop/pause the audio on manual scroll
-      if (isPlayingRef.current && !isReadingTutorRef.current) {
-        stop();
-      }
-
-      // Sync starting index to first visible sentence
-      const idx = getFirstVisibleSentenceIndex();
-      if (idx >= 0 && idx !== currentSentenceIndexRef.current) {
-        setCurrentSentenceIndex(idx);
+      if (isPlayingRef.current) {
+        // User is scrolling while playing -> temporarily hide highlight
+        setIsUserScrolling(true);
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsUserScrolling(false);
+        }, 1500);
+      } else {
+        // Sync starting index to first visible sentence when not playing
+        const idx = getFirstVisibleSentenceIndex();
+        if (idx >= 0 && idx !== currentSentenceIndexRef.current) {
+          setCurrentSentenceIndex(idx);
+        }
       }
     };
 
@@ -865,6 +877,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
       clearTimeout(timer);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
   }, [sentences]);
 
@@ -895,7 +910,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (sentences.length === 0) return;
         setIsPlaying(true);
         setIsPaused(false);
-        const startIndex = currentSentenceIndex >= 0 ? currentSentenceIndex : getFirstVisibleSentenceIndex();
+        const startIndex = getFirstVisibleSentenceIndex();
         speakSentence(startIndex);
       }
     }
@@ -908,6 +923,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setIsReadingTutor(false);
     setTutorSentences([]);
     setCurrentTutorSentenceIndex(-1);
+    setIsUserScrolling(false);
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     if (synthRef.current) {
       synthRef.current.cancel();
     }

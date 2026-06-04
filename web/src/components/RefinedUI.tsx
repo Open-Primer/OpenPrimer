@@ -1280,6 +1280,10 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             showEnrollActions={true}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
+              if (!isLoggedIn) {
+                window.location.href = `/signup`;
+                return;
+              }
               let userId = 'u1';
               const savedProfile = localStorage.getItem('op_user_profile');
               if (savedProfile) {

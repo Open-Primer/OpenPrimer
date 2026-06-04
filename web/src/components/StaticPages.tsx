@@ -1007,7 +1007,7 @@ export const CatalogPage = () => {
                                 className="h-8 px-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest"
                                 title={t.course_sheet || "Course Sheet"}
                               >
-                                <FileText className="w-3 h-3" />
+                                <Book className="w-3 h-3" />
                                 <span>{t.course_sheet || "Course Sheet"}</span>
                               </button>
 
@@ -1020,14 +1020,13 @@ export const CatalogPage = () => {
                                     toggleBookmark(course.id, e);
                                   }}
                                   title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-                                  className={`h-8 px-3 border rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest ${
+                                  className={`w-8 h-8 border rounded-xl transition-all flex items-center justify-center cursor-pointer ${
                                     bookmarks.includes(course.id)
                                       ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
                                       : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
                                   }`}
                                 >
                                   <Bookmark className={`w-3 h-3 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                                  <span>{bookmarks.includes(course.id) ? (t.saved || 'Saved') : (t.save_course || 'Save')}</span>
                                 </button>
                               )}
                             </div>
@@ -1093,9 +1092,18 @@ export const CatalogPage = () => {
                               }
                               await dbService.enrollInCourse(userId, course.id);
                               setEnrolledIds(prev => [...prev, course.id]);
+                              
+                              setEnrollmentSuccess(true);
+                              const courseToOpen = course;
+                              setSelectedEnrollCourse(null);
                               window.dispatchEvent(new Event('op_progress_updated'));
+                              
+                              setTimeout(() => {
+                                setEnrollmentSuccess(false);
+                                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+                              }, 2000);
                             } else {
-                              setSelectedEnrollCourse(course);
+                              window.location.href = `/signup`;
                             }
                           }}
                           className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
@@ -1177,6 +1185,10 @@ export const CatalogPage = () => {
             showEnrollActions={true}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
+              if (!isLoggedIn) {
+                window.location.href = `/signup`;
+                return;
+              }
               let userId = 'u1';
               const savedProfile = localStorage.getItem('op_user_profile');
               if (savedProfile) {

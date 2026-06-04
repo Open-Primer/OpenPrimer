@@ -389,6 +389,41 @@ nextjs-portal {
   color: #0f172a !important;
 }
 
+/* Translucent semantic badge background overrides in Paper Mode for contrast & readability */
+.theme-paper .bg-blue-950\/40,
+.theme-paper .bg-blue-955\/40,
+.theme-paper .bg-blue-550\/10,
+.theme-paper .bg-blue-500\/10,
+.theme-paper .bg-blue-600\/10,
+.theme-paper .bg-blue-600\/20,
+.theme-paper .bg-blue-950\/10 {
+  background-color: #e0f2fe !important;
+  border-color: #bae6fd !important;
+}
+
+.theme-paper .bg-violet-950\/40,
+.theme-paper .bg-violet-955\/40,
+.theme-paper .bg-violet-550\/10,
+.theme-paper .bg-violet-500\/10,
+.theme-paper .bg-violet-600\/10,
+.theme-paper .bg-violet-950\/10 {
+  background-color: #f3e8ff !important;
+  border-color: #e9d5ff !important;
+}
+
+.theme-paper .bg-amber-500\/10,
+.theme-paper .bg-amber-500\/20 {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+}
+
+.theme-paper .bg-emerald-500\/10,
+.theme-paper .bg-emerald-600\/10 {
+  background-color: #d1fae5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+
 /* AI Tutor Assistant Chat Bubble Specific Separator Contrast */
 .theme-paper .bg-slate-800\/50 {
   background-color: #eae5d3 !important;
