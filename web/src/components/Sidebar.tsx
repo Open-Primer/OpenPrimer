@@ -21,6 +21,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const [visitedPages, setVisitedPages] = useState<string[]>([]);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{ path: string; name: string; excerpt: string }[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
@@ -40,6 +42,44 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       }
     }
   }, [pathname]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const courseSlug = parts[2];
+        const level = parts[0];
+        const subject = parts[1];
+
+        if (courseSlug) {
+          const res = await fetch(
+            `/api/search-lessons?courseSlug=${encodeURIComponent(courseSlug)}&q=${encodeURIComponent(
+              searchQuery.trim()
+            )}&lang=${lang}&level=${encodeURIComponent(level || '')}&subject=${encodeURIComponent(
+              subject || ''
+            )}`
+          );
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setSearchResults(data);
+          }
+        }
+      } catch (err) {
+        console.error('Error searching lessons:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery, lang]);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
@@ -150,27 +190,29 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
 
   return (
     <aside className="w-80 h-full flex flex-col bg-slate-950/30 p-8 border-r border-slate-900/50">
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 pointer-events-none" />
-        <input
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && searchQuery.trim()) {
-              window.location.href = `/catalog?search=${encodeURIComponent(searchQuery.trim())}`;
-            }
-          }}
-          placeholder={t.search_course || 'Search this course...'}
-          className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-4 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white transition-colors"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-          </button>
-        )}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 pointer-events-none" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                window.location.href = `/catalog?search=${encodeURIComponent(searchQuery.trim())}`;
+              }
+            }}
+            placeholder={t.search_course || 'Search this course...'}
+            className="w-full bg-slate-900/50 border border-slate-800/50 rounded-2xl py-3 pl-12 pr-10 text-xs text-slate-300 focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-700 font-bold"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+          )}
+        </div>
         {searchQuery.trim() && (
           <p className="mt-1.5 text-[9px] text-slate-700 font-bold uppercase tracking-widest px-1">
             {lang.toUpperCase() === 'FR' ? '↵ Entrée pour chercher dans le catalogue' :
@@ -200,7 +242,68 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       )}
 
       <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
-        {filteredItems.length === 0 ? (
+        {searchQuery.trim() ? (
+          isSearching ? (
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-4 animate-pulse">
+              {lang.toUpperCase() === 'FR' ? 'Recherche en cours...' :
+               lang.toUpperCase() === 'ES' ? 'Buscando...' :
+               lang.toUpperCase() === 'DE' ? 'Suche läuft...' :
+               lang.toUpperCase() === 'ZH' ? '正在搜索...' : 'Searching...'}
+            </p>
+          ) : searchResults.length === 0 ? (
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-4">
+              {lang.toUpperCase() === 'FR' ? 'Aucun résultat' :
+               lang.toUpperCase() === 'ES' ? 'Sin resultados' :
+               lang.toUpperCase() === 'DE' ? 'Keine Ergebnisse' :
+               lang.toUpperCase() === 'ZH' ? '无结果' : 'No results'}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">
+                {lang.toUpperCase() === 'FR' ? 'Résultats de recherche' :
+                 lang.toUpperCase() === 'ES' ? 'Resultados de búsqueda' :
+                 lang.toUpperCase() === 'DE' ? 'Suchergebnisse' :
+                 lang.toUpperCase() === 'ZH' ? '搜索结果' : 'Search Results'}
+              </h4>
+              <div className="space-y-2">
+                {searchResults.map((result) => {
+                  const isActive = pathname === result.path;
+                  const isCompleted = visitedPages.includes(result.path);
+
+                  return (
+                    <Link
+                      key={result.path}
+                      href={result.path}
+                      className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl transition-all group ${
+                        isActive
+                          ? 'bg-blue-600/10 text-blue-400'
+                          : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        ) : isActive ? (
+                          <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" />
+                        ) : (
+                          <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
+                        )}
+                        <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-slate-200' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {result.name}
+                        </span>
+                      </div>
+                      {result.excerpt && (
+                        <span className="pl-7 text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors line-clamp-2 leading-relaxed italic">
+                          {result.excerpt}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )
+        ) : filteredItems.length === 0 ? (
           <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-4">
             {lang.toUpperCase() === 'FR' ? 'Aucun résultat' :
              lang.toUpperCase() === 'ES' ? 'Sin resultados' :
@@ -226,11 +329,11 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                     }`}
                   >
                     {isCompleted ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                     ) : isActive ? (
-                      <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse" />
+                      <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" />
                     ) : (
-                      <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600" />
+                      <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
                     )}
                     <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-slate-200' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
                       {page.name}
