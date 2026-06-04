@@ -772,4 +772,35 @@ body:not(.theme-paper):not(.theme-focus) footer {
   backdrop-filter: none !important;
 }
 
+/* --- Paper Theme Overlay Backdrop-Blur fixes --- */
+.theme-paper [class*="bg-slate-950/40"],
+.theme-paper [class*="bg-slate-950/50"],
+.theme-paper [class*="bg-slate-950/60"],
+.theme-paper [class*="bg-slate-950/70"],
+.theme-paper [class*="bg-slate-950/80"],
+.theme-paper [class*="bg-slate-950/90"],
+.theme-paper [class*="bg-slate-900/40"],
+.theme-paper [class*="bg-slate-900/50"],
+.theme-paper [class*="bg-slate-900/60"],
+.theme-paper [class*="bg-slate-900/70"],
+.theme-paper [class*="bg-slate-900/80"],
+.theme-paper [class*="bg-slate-900/90"] {
+  background-color: rgba(67, 60, 48, 0.4) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* --- Paper Theme Report Bug Button hover --- */
+.theme-paper .report-bug-btn {
+  color: #475569 !important;
+  border-color: #dbd5be !important;
+}
+.theme-paper .report-bug-btn:hover {
+  background-color: #fef2f2 !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #dc2626 !important;
+}
+.theme-paper .report-bug-btn:hover svg {
+  color: #dc2626 !important;
+}
+
 

@@ -1084,7 +1084,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         {isCoursePage && (
           <button 
             onClick={() => setIsReportModalOpen(true)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"
+            className="report-bug-btn p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"
           >
             <AlertTriangle className="w-4 h-4" />
             <span className="text-[8px] font-black uppercase tracking-widest hidden md:block">{t.report}</span>

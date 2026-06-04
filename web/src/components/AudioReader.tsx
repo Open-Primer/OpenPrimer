@@ -129,8 +129,6 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [isReadingTutor, setIsReadingTutor] = useState(false);
   const [tutorSentences, setTutorSentences] = useState<string[]>([]);
   const [currentTutorSentenceIndex, setCurrentTutorSentenceIndex] = useState(-1);
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -559,7 +557,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       highlightedElementRef.current = null;
     }
 
-    if (!isPlaying || isPaused || isUserScrolling || currentSentenceIndex < 0 || currentSentenceIndex >= sentences.length) {
+    if (!isPlaying || isPaused || currentSentenceIndex < 0 || currentSentenceIndex >= sentences.length) {
       return;
     }
 
@@ -625,7 +623,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         highlightedElementRef.current.classList.remove('reading-highlight');
       }
     };
-  }, [currentSentenceIndex, sentences, isPlaying, isPaused, isUserScrolling]);
+  }, [currentSentenceIndex, sentences, isPlaying, isPaused]);
 
   // 5. Handle Keyboard Shortcuts
   useEffect(() => {
@@ -849,14 +847,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       }
 
       if (isPlayingRef.current) {
-        // User is scrolling while playing -> temporarily hide highlight
-        setIsUserScrolling(true);
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
-        scrollTimeoutRef.current = setTimeout(() => {
-          setIsUserScrolling(false);
-        }, 1500);
+        // User scrolled manually during playback -> stop reading immediately
+        stop();
       } else {
         // Sync starting index to first visible sentence when not playing
         const idx = getFirstVisibleSentenceIndex();
@@ -877,42 +869,25 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
       clearTimeout(timer);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
     };
   }, [sentences]);
 
   const togglePlay = () => {
     if (!isSupported) return;
 
-    if (isPlaying) {
-      if (isPaused) {
-        setIsPaused(false);
-        if (synthRef.current) {
-          synthRef.current.resume();
-        }
-      } else {
-        setIsPaused(true);
-        if (synthRef.current) {
-          synthRef.current.pause();
-        }
-      }
+    if (isReadingTutor) {
+      if (tutorSentences.length === 0) return;
+      setIsPlaying(true);
+      setIsPaused(false);
+      const startIndex = currentTutorSentenceIndex >= 0 ? currentTutorSentenceIndex : 0;
+      speakTutorSentence(startIndex, tutorSentences);
     } else {
-      if (isReadingTutor) {
-        if (tutorSentences.length === 0) return;
-        setIsPlaying(true);
-        setIsPaused(false);
-        const startIndex = currentTutorSentenceIndex >= 0 ? currentTutorSentenceIndex : 0;
-        speakTutorSentence(startIndex, tutorSentences);
-      } else {
-        if (!readCourseRef.current) return;
-        if (sentences.length === 0) return;
-        setIsPlaying(true);
-        setIsPaused(false);
-        const startIndex = getFirstVisibleSentenceIndex();
-        speakSentence(startIndex);
-      }
+      if (!readCourseRef.current) return;
+      if (sentences.length === 0) return;
+      setIsPlaying(true);
+      setIsPaused(false);
+      const startIndex = getFirstVisibleSentenceIndex();
+      speakSentence(startIndex);
     }
   };
 
@@ -923,10 +898,6 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setIsReadingTutor(false);
     setTutorSentences([]);
     setCurrentTutorSentenceIndex(-1);
-    setIsUserScrolling(false);
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
     if (synthRef.current) {
       synthRef.current.cancel();
     }
@@ -1026,10 +997,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           <button
             onClick={togglePlay}
             className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center animate-fade-in"
-            title={isPlaying && !isPaused ? "Pause (Alt+S)" : "Play (Alt+S)"}
-            aria-label={isPlaying && !isPaused ? "Pause speech" : "Play speech"}
+            title="Play / Restart from Viewport Top (Alt+S)"
+            aria-label="Play or restart speech from top of screen"
           >
-            {isPlaying && !isPaused ? <Pause className="w-3 h-3 fill-white" /> : <Play className="w-3 h-3 fill-white ml-0.5" />}
+            <Play className="w-3 h-3 fill-white ml-0.5" />
           </button>
 
           <button
