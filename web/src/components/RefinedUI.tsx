@@ -1192,8 +1192,9 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           </div>
         )}
       </div>
+    </nav>
 
-      <AnimatePresence>
+    <AnimatePresence>
         {showToast && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed top-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-slate-900 border border-slate-800 shadow-2xl flex items-center gap-3 z-[60]">
             <CheckCircle className="w-4 h-4 text-emerald-400" />
@@ -1291,7 +1292,6 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           />
         )}
       </AnimatePresence>
-    </nav>
     </>
   );
 };

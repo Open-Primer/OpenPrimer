@@ -153,7 +153,14 @@ export const STATIC_UI_STRINGS = {
     recommended_next_steps_desc: "Based on your academic progression and recent completions",
     recommended_by_tutor: "Recommended by {tutor}",
     add_to_curriculum: "Add to Curriculum",
-    active: "Active"
+    active: "Active",
+    course: "Course",
+    reviews: "reviews",
+    expected_learning_hours: "{hours} expected learning hours",
+    complete_curriculum: "Complete Curriculum",
+    start_learning: "Start learning",
+    continue_label: "Continue",
+    enroll_label: "Enroll"
   },
   FR: {
     give_example_prompt: "Donne-moi un exemple concret de ce concept dans le monde réel.",
@@ -307,7 +314,14 @@ export const STATIC_UI_STRINGS = {
     recommended_next_steps_desc: "Basé sur votre progression académique et vos succès récents",
     recommended_by_tutor: "Recommandé par {tutor}",
     add_to_curriculum: "Ajouter au Curriculum",
-    active: "Actif"
+    active: "Actif",
+    course: "Cours",
+    reviews: "avis",
+    expected_learning_hours: "{hours} heures d'apprentissage prévues",
+    complete_curriculum: "Curriculum complet",
+    start_learning: "Commencer à apprendre",
+    continue_label: "Continuer",
+    enroll_label: "S'inscrire"
   },
   ES: {
     give_example_prompt: "Dame un ejemplo concreto de este concepto en el mundo real.",
@@ -461,7 +475,14 @@ export const STATIC_UI_STRINGS = {
     recommended_next_steps_desc: "Basado en tu progresión académica y finalizaciones recientes",
     recommended_by_tutor: "Recomendado por {tutor}",
     add_to_curriculum: "Añadir al Currículum",
-    active: "Activo"
+    active: "Activo",
+    course: "Curso",
+    reviews: "reseñas",
+    expected_learning_hours: "{hours} horas de aprendizaje previstas",
+    complete_curriculum: "Plan de estudios completo",
+    start_learning: "Comenzar a aprender",
+    continue_label: "Continuar",
+    enroll_label: "Inscribirse"
   },
   DE: {
     give_example_prompt: "Gib mir ein konkretes, reales Beispiel für dieses Konzept.",
@@ -598,7 +619,14 @@ export const STATIC_UI_STRINGS = {
     recommended_next_steps_desc: "Basierend auf Ihrem akademischen Fortschritt und den letzten Abschlüssen",
     recommended_by_tutor: "Empfohlen von {tutor}",
     add_to_curriculum: "Zum Lehrplan hinzufügen",
-    active: "Aktiv"
+    active: "Aktiv",
+    course: "Kurs",
+    reviews: "Bewertungen",
+    expected_learning_hours: "{hours} erwartete Lernstunden",
+    complete_curriculum: "Vollständiger Lehrplan",
+    start_learning: "Mit dem Lernen beginnen",
+    continue_label: "Fortfahren",
+    enroll_label: "Einschreiben"
   },
   ZH: {
     give_example_prompt: "给我一个这个概念的具体实际例子。",
@@ -752,6 +780,13 @@ export const STATIC_UI_STRINGS = {
     recommended_next_steps_desc: "基于您的学术进展和最近完成的课程",
     recommended_by_tutor: "导师 {tutor} 推荐",
     add_to_curriculum: "添加到课程表",
-    active: "生效"
+    active: "生效",
+    course: "课程",
+    reviews: "条评价",
+    expected_learning_hours: "预计学习时长 {hours} 小时",
+    complete_curriculum: "完整课程体系",
+    start_learning: "开始学习",
+    continue_label: "继续",
+    enroll_label: "注册课程"
   }
 };

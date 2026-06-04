@@ -16,7 +16,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
-  const [progress, setProgress] = useState<number>(12); // Default fallback
+  const [progress, setProgress] = useState<number>(0); // Default fallback
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [visitedPages, setVisitedPages] = useState<string[]>([]);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
@@ -69,7 +69,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       });
 
       const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
-      let dbProgress = 12;
+      let dbProgress = 0;
       let dbVisited: string[] = [];
 
       if (useSupabase) {
@@ -98,7 +98,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           dbVisited = visited;
           const visitedCount = flatPages.filter(p => visited.includes(p.path)).length;
           const totalPages = flatPages.length;
-          dbProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 12;
+          dbProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 0;
 
           const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
           progressMap[activeSlug] = dbProgress;

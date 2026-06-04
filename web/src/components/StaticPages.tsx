@@ -944,53 +944,59 @@ export const CatalogPage = () => {
                       return null;
                     })()}
 
-                    <div className="flex justify-between items-center mb-6 w-full gap-4">
-                      {course.isCurriculum ? (
-                        <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={lang === 'FR' ? "Curriculum complet" : "Complete Curriculum"}>
-                          <GraduationCap className="w-6 h-6" />
+                    {(() => {
+                      const ratingVal = (course.averageRating && course.averageRating > 0) ? course.averageRating : 3.4;
+                      const countVal = (course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12;
+                      return (
+                        <div className="flex justify-between items-center mb-6 w-full gap-4">
+                          {course.isCurriculum ? (
+                            <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={t.complete_curriculum || "Complete Curriculum"}>
+                              <GraduationCap className="w-6 h-6" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                              <Book className="w-6 h-6" />
+                            </div>
+                          )}
+                          <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
+                            {/* Course / Curriculum Differentiating Badge */}
+                            {course.isCurriculum ? (
+                              <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
+                                🎓 {t.curriculum || 'Curriculum'}
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
+                                📖 {t.course || 'Course'}
+                              </span>
+                            )}
+                            {/* Unified gold star rating badge */}
+                            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${ratingVal.toFixed(1)} / 5 — ${countVal} ${t.reviews || 'reviews'}`}>
+                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                              {ratingVal.toFixed(1)} ({countVal})
+                            </span>
+                            {/* Expected duration chip */}
+                            <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150))}>
+                              <Clock className="w-3 h-3 text-blue-400" />
+                              {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
+                            </span>
+                            {/* Bookmark (logged-in only) */}
+                            {isLoggedIn && (
+                              <button
+                                onClick={(e) => toggleBookmark(course.id, e)}
+                                title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+                                className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
+                              >
+                                <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                              </button>
+                            )}
+                            {/* Level badge */}
+                            <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                              {formatCourseLevel(course.level, lang)}
+                            </span>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                          <Book className="w-6 h-6" />
-                        </div>
-                      )}
-                      <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
-                        {/* Course / Curriculum Differentiating Badge */}
-                        {course.isCurriculum ? (
-                          <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
-                            🎓 Curriculum
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
-                            📖 Course
-                          </span>
-                        )}
-                        {/* Unified gold star rating badge */}
-                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${(course.averageRating ?? 0).toFixed(1)} / 5 — ${course.ratingCount ?? 0} reviews`}>
-                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                          {(course.averageRating && course.averageRating > 0) ? course.averageRating.toFixed(1) : "3.4"} ({(course.ratingCount && course.ratingCount > 0) ? course.ratingCount : 12})
-                        </span>
-                        {/* Expected duration chip */}
-                        <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={`${COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150} expected learning hours`}>
-                          <Clock className="w-3 h-3 text-blue-400" />
-                          {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
-                        </span>
-                        {/* Bookmark (logged-in only) */}
-                        {isLoggedIn && (
-                          <button
-                            onClick={(e) => toggleBookmark(course.id, e)}
-                            title={bookmarks.includes(course.id) ? 'Remove bookmark' : 'Save this course'}
-                            className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
-                          >
-                            <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                          </button>
-                        )}
-                        {/* Level badge */}
-                        <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                          {formatCourseLevel(course.level, lang)}
-                        </span>
-                      </div>
-                    </div>
+                      );
+                    })()}
                     
                     <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
                       {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
@@ -1029,7 +1035,7 @@ export const CatalogPage = () => {
                         }}
                         className={`px-6 py-2 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-blue-600/10 text-blue-400 border-blue-500/20 hover:bg-blue-600 hover:text-white`}
                       >
-                         {!isLoggedIn ? (lang === 'FR' ? 'Commencer à apprendre' : 'Start learning') : isEnrolled ? (lang === 'FR' ? 'Continuer' : 'Continue') : (lang === 'FR' ? "S'inscrire" : 'Enroll')}
+                         {!isLoggedIn ? (t.start_learning || 'Start learning') : isEnrolled ? (t.continue_label || 'Continue') : (t.enroll_label || 'Enroll')}
                       </button>
                       <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
