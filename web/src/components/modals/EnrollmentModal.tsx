@@ -64,20 +64,6 @@ export const EnrollmentModal = ({
         exit={{ opacity: 0, scale: 0.95 }}
         className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
       >
-        {bookmarks && onToggleBookmark && (
-          <button
-            onClick={(e) => onToggleBookmark(course.id, e)}
-            className={`absolute top-6 right-18 p-2 rounded-xl border transition-all cursor-pointer ${
-              bookmarks.includes(course.id)
-                ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
-                : 'bg-slate-950 border-slate-850 text-slate-500 hover:text-white hover:border-slate-700'
-            }`}
-            title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-            aria-label="Toggle bookmark"
-          >
-            <Bookmark className={`w-5 h-5 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-          </button>
-        )}
 
         <button 
           onClick={onClose}
