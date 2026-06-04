@@ -383,26 +383,16 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                 </div>
                 <div>
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
-                                       <select
-                      value={persona}
-                      onChange={(e) => {
-                        const nextPersonaId = e.target.value;
-                        setPersona(nextPersonaId);
-                        localStorage.setItem('op_active_tutor_personality', nextPersonaId);
-                        window.dispatchEvent(new CustomEvent('op_active_tutor_changed'));
-                      }}
-                      className="bg-transparent text-sm font-bold text-white border-none focus:outline-none focus:ring-0 cursor-pointer p-0 pr-6"
-                    >
-                      {personalities.length > 0 ? (
-                        personalities.map(p => (
-                          <option key={p.id} value={p.id} className="bg-slate-900 text-white text-xs">
-                            {p.translations?.[lang.toUpperCase()]?.name || p.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="socratic" className="bg-slate-900 text-white text-xs">Socratic Coach</option>
-                      )}
-                    </select>
+                   <button
+                     onClick={() => { window.location.href = '/profile/curriculum'; }}
+                     title={lang === 'FR' ? 'Changer de tuteur' : 'Change tutor'}
+                     className="flex items-center gap-1.5 text-sm font-bold text-white hover:text-blue-300 transition-colors cursor-pointer group"
+                   >
+                     <span>{getPersonaName(persona)}</span>
+                     <span className="text-[9px] font-black uppercase tracking-widest bg-blue-600/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-full group-hover:bg-blue-600/40 transition-colors">
+                       {lang === 'FR' ? 'ACTIF' : 'ACTIVE'}
+                     </span>
+                   </button>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
