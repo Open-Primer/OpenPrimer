@@ -13,6 +13,7 @@ import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
+import { ErrorModal } from '@/components/modals/ErrorModal';
 import { dbService } from '@/lib/db';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
@@ -331,47 +332,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       console.warn("Failed to generate sidebar for error view fallback:", e);
     }
 
-    const errorDetails = {
-      fr: {
-        title: "Lecture temporairement indisponible",
-        desc: "Un problème technique est survenu lors de l'accès à ce cours. L'incident a été signalé automatiquement à nos équipes pour correction rapide.",
-        button: "Parcourir le catalogue",
-        nextLesson: "Aller à la page suivante",
-        reportSent: "L'erreur a été transmise à l'administration."
-      },
-      en: {
-        title: "Reading temporarily unavailable",
-        desc: "A technical issue occurred while accessing this lesson. The incident has been automatically reported to our teams for a quick resolution.",
-        button: "Browse the catalog",
-        nextLesson: "Go to the next page",
-        reportSent: "The error has been reported to the administration."
-      },
-      es: {
-        title: "Lectura temporalmente no disponible",
-        desc: "Se produjo un problema técnico al acceder a esta lección. El incidente ha sido reportado automáticamente a nuestros équipes para una rápida resolución.",
-        button: "Explorar el catálogo",
-        nextLesson: "Ir a la página siguiente",
-        reportSent: "El error ha sido transmitido a la administración."
-      },
-      de: {
-        title: "Lesen vorübergehend nicht verfügbar",
-        desc: "Beim Zugriff auf diese Lektion ist ein technisches Problem aufgetreten. Der Vorfall wurde automatisch an unsere Teams gemeldet, um eine schnelle Lösung zu finden.",
-        button: "Katalog durchsuchen",
-        nextLesson: "Zur nächsten Seite gehen",
-        reportSent: "Der Fehler wurde an die Administration gemeldet."
-      },
-      zh: {
-        title: "阅读服务暂时不可用",
-        desc: "访问此课程时发生技术问题。该事件已自动报告给我们的团队，以便快速解决。",
-        button: "浏览课程目录",
-        nextLesson: "前往下一页",
-        reportSent: "错误已报告给管理部门。"
-      }
-    };
-    
-    const activeLangCode = lang.toLowerCase().split('-')[0];
-    const activeErrorStrings = errorDetails[activeLangCode as keyof typeof errorDetails] || errorDetails.en;
-
     if (navItems.length > 0) {
       return (
         <CourseClientWrapper navItems={navItems} pageContext={pageData?.content || ''}>
@@ -398,65 +358,12 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               </article>
             </div>
 
-            {/* Premium Glassmorphic Dialog Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center p-6 z-30">
-              <div className="w-full max-w-xl bg-slate-900/40 backdrop-blur-xl border border-white/10 p-10 rounded-[40px] text-center shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8),0_0_60px_-15px_rgba(239,68,68,0.15)] relative overflow-hidden">
-                {/* Background glow orb inside dialog */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                {/* Animated Warning Icon with dual circle pulse */}
-                <div className="mx-auto w-20 h-20 bg-red-950/20 border border-red-500/25 rounded-full flex items-center justify-center mb-8 relative">
-                  <div className="absolute inset-0 bg-red-500/5 rounded-full animate-ping duration-1000 scale-110 opacity-70" />
-                  <div className="absolute inset-2 bg-red-950/40 border border-red-500/35 rounded-full flex items-center justify-center">
-                    <svg 
-                      className="w-8 h-8 text-red-500 animate-pulse" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor" 
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                </div>
-
-                <h2 className="text-3xl font-extrabold tracking-tight text-white mb-4 bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                  {activeErrorStrings.title}
-                </h2>
-                
-                <p className="text-base text-slate-300 mb-6 leading-relaxed max-w-md mx-auto">
-                  {activeErrorStrings.desc}
-                </p>
-
-                <p className="text-xs text-emerald-400 font-bold mb-8 flex items-center justify-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                  {activeErrorStrings.reportSent}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  {nextPage && (
-                    <Link 
-                      href={nextPage.path}
-                      className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] text-center"
-                    >
-                      {activeErrorStrings.nextLesson}
-                    </Link>
-                  )}
-                  
-                  <Link 
-                    href="/catalog"
-                    className={`w-full sm:w-auto px-8 py-4 font-semibold rounded-full transition-all duration-200 active:scale-[0.98] text-center ${
-                      nextPage 
-                        ? 'bg-slate-950/60 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white' 
-                        : 'bg-white hover:bg-slate-100 text-slate-950 font-bold'
-                    }`}
-                  >
-                    {activeErrorStrings.button}
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <ErrorModal 
+              lang={lang} 
+              subject={subject} 
+              title={title} 
+              nextPagePath={nextPage ? nextPage.path : null} 
+            />
           </div>
         </CourseClientWrapper>
       );
@@ -468,52 +375,12 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-slate-900/30 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="w-full max-w-xl bg-slate-900/60 backdrop-blur-3xl border border-slate-800/80 p-10 rounded-[40px] text-center shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8),0_0_60px_-15px_rgba(239,68,68,0.15)] relative z-10 transition-all duration-300 hover:border-slate-700/80">
-          
-          {/* Animated Warning Icon with dual circle pulse */}
-          <div className="mx-auto w-20 h-20 bg-red-950/30 border border-red-500/20 rounded-full flex items-center justify-center mb-8 relative">
-            <div className="absolute inset-0 bg-red-500/5 rounded-full animate-ping duration-1000 scale-110 opacity-70" />
-            <div className="absolute inset-2 bg-red-950/50 border border-red-500/30 rounded-full" />
-            <svg 
-              className="w-8 h-8 text-red-500 relative z-10 animate-pulse" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-
-          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-4 bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-            {activeErrorStrings.title}
-          </h2>
-          
-          <p className="text-base text-slate-400 mb-10 leading-relaxed max-w-md mx-auto">
-            {activeErrorStrings.desc}
-          </p>
-
-          <p className="text-xs text-emerald-400 font-bold mb-8 flex items-center justify-center gap-2">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-            {activeErrorStrings.reportSent}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/catalog"
-              className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] text-center"
-            >
-              {activeErrorStrings.button}
-            </Link>
-            
-            <Link 
-              href="/"
-              className="w-full sm:w-auto px-8 py-4 bg-slate-950/60 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-semibold rounded-full transition-all duration-200 active:scale-[0.98] text-center"
-            >
-              {lang.toLowerCase() === 'fr' ? 'Accueil' : 'Home'}
-            </Link>
-          </div>
-        </div>
+        <ErrorModal 
+          lang={lang} 
+          subject={subject} 
+          title={title} 
+          nextPagePath={nextPage ? nextPage.path : null} 
+        />
       </div>
     );
   }
