@@ -28,6 +28,7 @@
 *.json.key
 *-service-account*.json
 openprimer-free*.json
+openprimer-free-a9fb82581e59.json
 *serviceaccount*.json
 /secrets/
 

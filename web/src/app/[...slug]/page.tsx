@@ -12,12 +12,15 @@ import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
+import { dbService } from '@/lib/db';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
   let autoSwitched = false;
+  let slug: string[] = [];
   try {
-    const { slug } = await params;
+    const resolvedParams = await params;
+    slug = resolvedParams?.slug || [];
     const cookieStore = await cookies();
     lang = (cookieStore.get('openprimer_lang')?.value || 'EN').toLowerCase();
 
@@ -41,6 +44,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       mdxOptions: {
         remarkPlugins: [remarkMath],
         rehypePlugins: [rehypeKatex],
+        format: 'mdx',
       },
     });
     
@@ -265,20 +269,100 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       throw err;
     }
     console.error("CRITICAL ERROR IN CoursePage:", err);
-    const langKey = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
-    const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+    
+    // In background, log the issue to the database
+    try {
+      const pagePath = (slug && slug.length > 0) ? slug.join('/') : 'Unknown Page';
+      const courseSlug = (slug && slug[2]) || 'general';
+      const errorMessage = err?.stack || err?.message || String(err);
+      
+      await dbService.submitReport(
+        courseSlug,
+        pagePath,
+        `[CRITICAL RENDERING EXCEPTION] ${errorMessage}`
+      );
+      console.log(`[ERROR AUTO-REPORT] Logged rendering error for page ${pagePath}`);
+    } catch (reportErr) {
+      console.error("Failed to submit error report:", reportErr);
+    }
+
+    const errorDetails = {
+      fr: {
+        title: "Lecture temporairement indisponible",
+        desc: "Un problème technique est survenu lors de l'accès à ce cours. L'incident a été signalé automatiquement à nos équipes pour correction rapide.",
+        button: "Parcourir le catalogue"
+      },
+      en: {
+        title: "Reading temporarily unavailable",
+        desc: "A technical issue occurred while accessing this lesson. The incident has been automatically reported to our teams for a quick resolution.",
+        button: "Browse the catalog"
+      },
+      es: {
+        title: "Lectura temporalmente no disponible",
+        desc: "Se produjo un problema técnico al acceder a esta lección. El incidente ha sido reportado automáticamente a nuestros equipos para una rápida resolución.",
+        button: "Explorar el catálogo"
+      },
+      de: {
+        title: "Lesen vorübergehend nicht verfügbar",
+        desc: "Beim Zugriff auf diese Lektion ist ein technisches Problem aufgetreten. Der Vorfall wurde automatisch an unsere Teams gemeldet, um eine schnelle Lösung zu finden.",
+        button: "Katalog durchsuchen"
+      },
+      zh: {
+        title: "阅读服务暂时不可用",
+        desc: "访问此课程时发生技术问题。该事件已自动报告给我们的团队，以便快速解决。",
+        button: "浏览课程目录"
+      }
+    };
+    
+    const activeLangCode = lang.toLowerCase().split('-')[0];
+    const activeErrorStrings = errorDetails[activeLangCode as keyof typeof errorDetails] || errorDetails.en;
+
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8">
-        <div className="max-w-2xl bg-red-950/20 border border-red-500/30 p-8 rounded-[32px] text-center backdrop-blur-2xl">
-          <h2 className="text-2xl font-black text-red-400 mb-4 uppercase tracking-wider">
-            {t.academic_rendering_error}
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Glow ambient background effects */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-slate-900/30 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="w-full max-w-xl bg-slate-900/60 backdrop-blur-3xl border border-slate-800/80 p-10 rounded-[40px] text-center shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8),0_0_60px_-15px_rgba(239,68,68,0.15)] relative z-10 transition-all duration-300 hover:border-slate-700/80">
+          
+          {/* Animated Warning Icon with dual circle pulse */}
+          <div className="mx-auto w-20 h-20 bg-red-950/30 border border-red-500/20 rounded-full flex items-center justify-center mb-8 relative">
+            <div className="absolute inset-0 bg-red-500/5 rounded-full animate-ping duration-1000 scale-110 opacity-70" />
+            <div className="absolute inset-2 bg-red-950/50 border border-red-500/30 rounded-full" />
+            <svg 
+              className="w-8 h-8 text-red-500 relative z-10 animate-pulse" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor" 
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-4 bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+            {activeErrorStrings.title}
           </h2>
-          <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-            {t.academic_rendering_error_desc}
+          
+          <p className="text-base text-slate-400 mb-10 leading-relaxed max-w-md mx-auto">
+            {activeErrorStrings.desc}
           </p>
-          <pre className="text-left text-xs bg-black/60 border border-slate-900 p-6 rounded-2xl overflow-auto text-emerald-400 max-h-[300px] custom-scrollbar">
-            {err ? (err.stack || err.message || String(err)) : "Unknown Error"}
-          </pre>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              href="/catalog"
+              className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] text-center"
+            >
+              {activeErrorStrings.button}
+            </Link>
+            
+            <Link 
+              href="/"
+              className="w-full sm:w-auto px-8 py-4 bg-slate-950/60 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-semibold rounded-full transition-all duration-200 active:scale-[0.98] text-center"
+            >
+              {lang.toLowerCase() === 'fr' ? 'Accueil' : 'Home'}
+            </Link>
+          </div>
         </div>
       </div>
     );

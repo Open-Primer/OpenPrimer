@@ -107,7 +107,7 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
   },
 
-  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }) => {
+  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database saving") };
   },
 
@@ -963,6 +963,26 @@ export const mockDatabaseProvider: DatabaseService = {
 
   getAgentMetrics: async () => {
     return { data: getAgentMetricsList(), error: null };
+  },
+
+  updateAgentMetrics: async (id: string, cost: number, durationMs: number) => {
+    const list = getAgentMetricsList();
+    const metric = list.find(m => m.id === id);
+    if (metric) {
+      const currentRequests = metric.requests || 0;
+      const newRequests = currentRequests + 1;
+      metric.totalCost = Number(((metric.totalCost || 0) + cost).toFixed(4));
+      metric.rolling30DaysCost = Number(((metric.rolling30DaysCost || 0) + cost).toFixed(4));
+      
+      const currentAvgTimeMs = parseInt(metric.avgResponseTime.replace(/\D/g, '')) || 0;
+      const newAvgTimeMs = Math.round((currentAvgTimeMs * currentRequests + durationMs) / newRequests);
+      metric.avgResponseTime = `${newAvgTimeMs}ms`;
+      metric.requests = newRequests;
+
+      setAgentMetricsList([...list]);
+      setLocalStorageItem('openprimer_agent_metrics', list);
+    }
+    return { data: null, error: null };
   },
 
   deleteCourse: async (courseId: number) => {

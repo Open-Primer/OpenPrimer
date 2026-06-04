@@ -983,9 +983,9 @@ export const CatalogPage = () => {
                                 {ratingVal.toFixed(1)} ({countVal})
                               </span>
                               {/* Expected duration chip */}
-                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150))}>
+                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)))}>
                                 <Clock className="w-3 h-3 text-blue-400" />
-                                {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
+                                {COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)}h
                               </span>
                               {/* Level badge */}
                               <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
@@ -1051,7 +1051,7 @@ export const CatalogPage = () => {
                          </div>
                          <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
                            <span>{t.time_spent || 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
-                           <span>{t.expected_time || 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h</span>
+                           <span>{t.expected_time || 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)}h</span>
                          </div>
                       </div>
                     )}

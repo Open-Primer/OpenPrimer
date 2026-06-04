@@ -13,7 +13,8 @@ interface PrerequisiteItem {
 }
 
 interface PrerequisitesProps {
-  items: PrerequisiteItem[];
+  items?: PrerequisiteItem[];
+  itemsBase64?: string;
 }
 
 const TRANS = {
@@ -54,9 +55,21 @@ const TRANS = {
   }
 };
 
-export const Prerequisites = ({ items }: PrerequisitesProps) => {
+export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
   const { language } = useLanguage();
   const t = TRANS[language as keyof typeof TRANS] || TRANS.EN;
+
+  console.log("Prerequisites Received Props:", { items, itemsBase64 });
+
+  // Resolve items
+  let resolvedItems = items || [];
+  if (itemsBase64) {
+    try {
+      resolvedItems = JSON.parse(atob(itemsBase64));
+    } catch (e) {
+      console.error("Failed to decode itemsBase64 in Prerequisites:", e);
+    }
+  }
 
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
 
@@ -72,7 +85,7 @@ export const Prerequisites = ({ items }: PrerequisitesProps) => {
     }
   }, []);
 
-  if (!items || items.length === 0) return null;
+  if (!resolvedItems || resolvedItems.length === 0) return null;
 
   return (
     <div className="my-8 p-6 bg-slate-900/30 border border-slate-800/80 rounded-3xl backdrop-blur-xl shadow-xl">
@@ -85,7 +98,7 @@ export const Prerequisites = ({ items }: PrerequisitesProps) => {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {items.map((item, index) => {
+        {resolvedItems.map((item, index) => {
           const progress = progressMap[item.slug] ?? 0;
           const isMastered = progress === 100;
 

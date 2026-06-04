@@ -6,8 +6,8 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface DiagnosticQuizProps {
   question: string;
-  options: string[];
-  correctIndex: number;
+  options?: string[] | string;
+  correctIndex?: number | string;
   targetSectionId: string;
   sectionTitle: string;
 }
@@ -70,13 +70,27 @@ export const DiagnosticQuiz = ({
   const { language } = useLanguage();
   const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
 
+  console.log("DiagnosticQuiz Received Props:", { question, options, correctIndex, targetSectionId, sectionTitle });
+
+  const resolvedOptions = Array.isArray(options)
+    ? options
+    : typeof options === 'string' && options
+      ? options.split('|||')
+      : [];
+
+  const resolvedCorrectIndex = typeof correctIndex === 'number'
+    ? correctIndex
+    : typeof correctIndex === 'string'
+      ? parseInt(correctIndex, 10)
+      : 0;
+
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
   const handleSubmit = () => {
     if (selectedIdx === null) return;
-    setIsCorrect(selectedIdx === correctIndex);
+    setIsCorrect(selectedIdx === resolvedCorrectIndex);
     setIsSubmitted(true);
   };
 
@@ -113,7 +127,7 @@ export const DiagnosticQuiz = ({
           </div>
 
           <div className="grid gap-2.5">
-            {options.map((opt, i) => (
+            {resolvedOptions.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedIdx(i)}

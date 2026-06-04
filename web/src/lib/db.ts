@@ -1691,6 +1691,10 @@ export const isSandboxFallbackAllowed = (): boolean => {
 }
 
 export const handleDatabaseError = (error: any) => {
+  if (error?.code === 'PGRST116') {
+    return;
+  }
+
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
@@ -2131,7 +2135,7 @@ export interface DatabaseService {
   deleteTranslationEmail(id: string): Promise<{ data: null; error: any }>;
   cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: any }>;
   getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: any }>;
-  saveLesson(lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }): Promise<{ data: any; error: any }>;
+  saveLesson(lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }): Promise<{ data: any; error: any }>;
   getSyllabus(id: string): Promise<{ data: MockCourse | null; error: any }>;
   getAllCourses(): Promise<{ data: MockCourse[] | null; error: any }>;
   getPipelineQueue(): Promise<{ data: any[]; error: any }>;
@@ -2190,6 +2194,7 @@ export interface DatabaseService {
   saveTutorPersonality(pers: TutorPersonality): Promise<{ data: TutorPersonality; error: any }>;
   deleteTutorPersonality(id: string): Promise<{ data: null; error: any }>;
   getAgentMetrics(): Promise<{ data: AgentMetric[]; error: any }>;
+  updateAgentMetrics(id: string, cost: number, durationMs: number): Promise<{ data: any; error: any }>;
   deleteCourse(courseId: number): Promise<{ data: any; error: any }>;
   getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
   saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;

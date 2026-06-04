@@ -95,7 +95,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string }) => {
+  saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -105,7 +105,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
             lesson_slug: lesson.lesson_slug,
             lang: lesson.lang.toLowerCase(),
             title: lesson.title,
-            content: lesson.content
+            content: lesson.content,
+            order: lesson.order
           },
           { onConflict: 'course_slug,lesson_slug,lang' }
         )
@@ -1304,6 +1305,44 @@ export const supabaseDatabaseProvider: DatabaseService = {
     } catch (e: any) {
       handleDatabaseError(e);
       return { data: [], error: e };
+    }
+  },
+
+  updateAgentMetrics: async (id: string, cost: number, durationMs: number) => {
+    try {
+      const { data, error } = await supabase.from('agent_metrics').select('*').eq('id', id).single();
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (data) {
+        const currentRequests = data.requests || 0;
+        const newRequests = currentRequests + 1;
+        const currentTotalCost = parseFloat(data.total_cost || '0');
+        const newTotalCost = currentTotalCost + cost;
+
+        const currentAvgTimeStr = data.avg_response_time || '0ms';
+        const currentAvgTimeMs = parseInt(currentAvgTimeStr.replace(/\D/g, '')) || 0;
+        const newAvgTimeMs = Math.round((currentAvgTimeMs * currentRequests + durationMs) / newRequests);
+        const newAvgTimeStr = `${newAvgTimeMs}ms`;
+
+        const currentRollingCost = parseFloat(data.rolling_30_days_cost || '0');
+        const newRollingCost = currentRollingCost + cost;
+
+        const { error: updateError } = await supabase
+          .from('agent_metrics')
+          .update({
+            total_cost: newTotalCost,
+            rolling_30_days_cost: newRollingCost,
+            requests: newRequests,
+            avg_response_time: newAvgTimeStr
+          })
+          .eq('id', id);
+        
+        if (updateError) throw updateError;
+      }
+      return { data: null, error: null };
+    } catch (e: any) {
+      handleDatabaseError(e);
+      return { data: null, error: e };
     }
   },
 

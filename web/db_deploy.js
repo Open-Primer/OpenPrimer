@@ -88,6 +88,7 @@ async function run() {
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tts_enabled BOOLEAN DEFAULT true",
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS version VARCHAR(50) DEFAULT 'v1.0.0'",
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS last_revision_date TIMESTAMP WITH TIME ZONE",
+      "ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS \"order\" INTEGER",
       "UPDATE public.profiles SET password = '3ba484af8a5fe572560ac841e91b77c9ddb8d6a2f6d9cd203975b8dc16e7fabc' WHERE email = 'vanguard.mysterious@gmail.com'"
     ];
 

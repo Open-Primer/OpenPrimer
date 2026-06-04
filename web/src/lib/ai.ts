@@ -1,13 +1,13 @@
 import { dbService } from './db';
 import { supabase } from './supabase';
-import { callVertexAI, isVertexConfigured } from './vertex-client';
+import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
 export async function generateCourseContent(courseName: string, level: string, targetLang: string = 'en') {
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
-Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive d'un cours universitaire ou scolaire. Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
+Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive du cours intitulé "${courseName}" pour le niveau "${level}". Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
 
 Un cours d'anatomie ne s'articule pas comme un cours de topologie algébrique ou de philosophie politique. Tu dois impérativement adapter le squelette du cours à l'ADN épistémologique de la discipline et à l'âge du public visé (de la Primaire à la Licence 3).
 
@@ -44,11 +44,14 @@ Le plan doit refléter la capacité d'abstraction du public cible :
 
 # ETAPE 3 : FORMAT DE SORTIE ATTENDU
 Tu dois sortir uniquement un objet JSON structurant le cours. Le chapitrage doit être exhaustif, détaillé et ne comporter AUCUN élément vague. Chaque sous-section doit spécifier sa "stratégie éditoriale".
+Le JSON généré doit être entièrement rédigé dans la langue cible suivante : "${targetLang}" (les titres, stratégies, et descriptions doivent être dans cette langue).
 Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'objet JSON brut.
+
 
 {
   "courseContext": {
     "discipline": "[Nom de la discipline]",
+    "description": "[Description détaillée et attractive du cours en 2-3 phrases, présentant les objectifs pédagogiques généraux et les compétences clés visées]",
     "epistemologicalMatrix": "[Déductive / Empirique / Discursive / Ingénierie]",
     "targetLevel": "${level}",
     "pedagogicalStrategy": "[Explication de la stratégie adoptée pour ce public et cette discipline]"
@@ -71,32 +74,55 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
   try {
     let rawJson = '';
+    let success = false;
     
     if (isVertexConfigured()) {
       console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (gemini-2.5-pro)...`);
-      const res = await callVertexAI({
-        task: 'course_generation',
-        contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
-      });
+      try {
+        const res = await callVertexAI({
+          task: 'course_generation',
+          contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+        });
 
-      if (res && res.ok) {
-        const jsonRes = await res.json();
-        rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        if (res && res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+          success = true;
+        }
+      } catch (err) {
+        console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
       }
-    } else if (apiKey) {
+    }
+    
+    if (!success && apiKey) {
       console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptSyllabus }] }],
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-      if (res.ok) {
-        const jsonRes = await res.json();
-        rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      const startTime = Date.now();
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptSyllabus }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+        if (res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+          success = true;
+
+          const durationMs = Date.now() - startTime;
+          const usage = jsonRes.usageMetadata || {};
+          const promptTokens = usage.promptTokenCount || 0;
+          const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptSyllabus);
+        } else {
+          const errText = await res.text();
+          console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
+        }
+      } catch (err) {
+        console.error(`[AI GENERATOR] AI Studio fetch exception:`, err);
       }
     }
 
@@ -126,7 +152,8 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     const courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
 
     // 2. For each lesson, generate rich MDX content
-    for (const item of lessonsList) {
+    for (let index = 0; index < lessonsList.length; index++) {
+      const item = lessonsList[index];
       const isPrimary = level.toLowerCase().includes('primary') || level.toLowerCase().includes('primaire');
       const isFrench = targetLang.toLowerCase() === 'fr';
       
@@ -238,31 +265,51 @@ Requirements:
  19. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
       let rawMdx = '';
+      let contentSuccess = false;
 
       if (isVertexConfigured()) {
         console.log(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (gemini-2.5-pro)...`);
-        const contentRes = await callVertexAI({
-          task: 'course_generation',
-          contents: [{ role: 'user', parts: [{ text: promptContent }] }],
-          generationConfig: { temperature: 0.3 }
-        });
+        try {
+          const contentRes = await callVertexAI({
+            task: 'course_generation',
+            contents: [{ role: 'user', parts: [{ text: promptContent }] }],
+            generationConfig: { temperature: 0.3 }
+          });
 
-        if (contentRes && contentRes.ok) {
-          const contentJson = await contentRes.json();
-          rawMdx = contentJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (contentRes && contentRes.ok) {
+            const contentJson = await contentRes.json();
+            rawMdx = contentJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            contentSuccess = true;
+          }
+        } catch (err) {
+          console.warn(`[AI GENERATOR] Vertex AI lesson generation failed.`, err);
         }
-      } else if (apiKey) {
+      }
+      
+      if (!contentSuccess && apiKey) {
         console.log(`[AI GENERATOR] Generating lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
-        const contentRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptContent }] }]
-          })
-        });
-        if (contentRes.ok) {
-          const contentJson = await contentRes.ok ? await contentRes.json() : null;
-          rawMdx = contentJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const startTime = Date.now();
+        try {
+          const contentRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptContent }] }]
+            })
+          });
+          if (contentRes.ok) {
+            const contentJson = await contentRes.json();
+            rawMdx = contentJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            contentSuccess = true;
+
+            const durationMs = Date.now() - startTime;
+            const usage = contentJson.usageMetadata || {};
+            const promptTokens = usage.promptTokenCount || 0;
+            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptContent);
+          }
+        } catch (err) {
+          console.error(`[AI GENERATOR] AI Studio lesson content fetch exception:`, err);
         }
       }
 
@@ -300,29 +347,50 @@ You must return a valid JSON object with the following keys:
 Return ONLY a valid JSON object. Do not include markdown code block backticks around the JSON.`;
 
         let verifierRaw = '';
+        let verifierSuccess = false;
         try {
           if (isVertexConfigured()) {
-            const vRes = await callVertexAI({
-              task: 'course_generation',
-              contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
-              generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
-            });
-            if (vRes && vRes.ok) {
-              const vJson = await vRes.json();
-              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+            try {
+              const vRes = await callVertexAI({
+                task: 'course_generation',
+                contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
+                generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+              });
+              if (vRes && vRes.ok) {
+                const vJson = await vRes.json();
+                verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+                verifierSuccess = true;
+              }
+            } catch (err) {
+              console.warn("[AI GENERATOR - AGENT 4] Vertex verification call exception:", err);
             }
-          } else if (apiKey) {
-            const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: verifierPrompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
-              })
-            });
-            if (vRes.ok) {
-              const vJson = await vRes.json();
-              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+          }
+          
+          if (!verifierSuccess && apiKey) {
+            console.log(`[AI GENERATOR - AGENT 4] Verifying lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+            const startTime = Date.now();
+            try {
+              const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: verifierPrompt }] }],
+                  generationConfig: { responseMimeType: "application/json" }
+                })
+              });
+              if (vRes.ok) {
+                const vJson = await vRes.json();
+                verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+                verifierSuccess = true;
+
+                const durationMs = Date.now() - startTime;
+                const usage = vJson.usageMetadata || {};
+                const promptTokens = usage.promptTokenCount || 0;
+                const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, verifierPrompt);
+              }
+            } catch (err) {
+              console.error(`[AI GENERATOR - AGENT 4] AI Studio verification fetch exception:`, err);
             }
           }
 
@@ -351,27 +419,48 @@ Generate the complete, updated, fully-fledged lesson content incorporating all c
 Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
             let refinedMdx = '';
+            let refineSuccess = false;
             if (isVertexConfigured()) {
-              const refRes = await callVertexAI({
-                task: 'course_generation',
-                contents: [{ role: 'user', parts: [{ text: refinerPrompt }] }],
-                generationConfig: { temperature: 0.3 }
-              });
-              if (refRes && refRes.ok) {
-                const refJson = await refRes.json();
-                refinedMdx = refJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              try {
+                const refRes = await callVertexAI({
+                  task: 'course_generation',
+                  contents: [{ role: 'user', parts: [{ text: refinerPrompt }] }],
+                  generationConfig: { temperature: 0.3 }
+                });
+                if (refRes && refRes.ok) {
+                  const refJson = await refRes.json();
+                  refinedMdx = refJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  refineSuccess = true;
+                }
+              } catch (err) {
+                console.warn("[AI GENERATOR - AGENT 4] Vertex refinement call exception:", err);
               }
-            } else if (apiKey) {
-              const refRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: refinerPrompt }] }]
-                })
-              });
-              if (refRes.ok) {
-                const refJson = await refRes.json();
-                refinedMdx = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+            
+            if (!refineSuccess && apiKey) {
+              console.log(`[AI GENERATOR - REFINE] Refining lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+              const startTime = Date.now();
+              try {
+                const refRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: refinerPrompt }] }]
+                  })
+                });
+                if (refRes.ok) {
+                  const refJson = await refRes.json();
+                  refinedMdx = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  refineSuccess = true;
+
+                  const durationMs = Date.now() - startTime;
+                  const usage = refJson.usageMetadata || {};
+                  const promptTokens = usage.promptTokenCount || 0;
+                  const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                  await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, refinerPrompt);
+                }
+              } catch (err) {
+                console.error(`[AI GENERATOR - REFINE] AI Studio refinement fetch exception:`, err);
               }
             }
 
@@ -390,14 +479,22 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
       // De-hallucinate bibliography links against Crossref / Google Books
       const validatedMdx = await validateAndFixBibliography(currentMdx);
 
-      const mdxWithFrontmatter = `---
+      let mdxWithFrontmatter = `---
 title: "${item.title}"
 subject: "${courseName}"
 level: "${level}"
 module: "${item.title}"
+order: ${index + 1}
 ---
 
 ${validatedMdx}`;
+
+      // Pre-validate MDX compilation to avoid 404 or compilation crashes
+      const mdxCheck = await validateMdxContent(mdxWithFrontmatter);
+      if (!mdxCheck.success) {
+        console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
+        mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
+      }
 
       // Save to Supabase
       await dbService.saveLesson({
@@ -405,8 +502,61 @@ ${validatedMdx}`;
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
         title: item.title,
-        content: mdxWithFrontmatter
+        content: mdxWithFrontmatter,
+        order: index + 1
       });
+    }
+
+    // Save/Update the Course card in the database
+    try {
+      const courseSlug = courseName.toLowerCase().replace(/ /g, '_');
+      const { data: allCourses } = await dbService.getAllCourses();
+      const existingCourse = allCourses?.find(c => c.slug === courseSlug);
+      
+      const courseDescription = courseContext.description || `A comprehensive course on ${courseName} dynamically generated at ${level} level.`;
+      const ectsCount = lessonsList.length || 4; // Calibration: 1 ECTS per lesson, or minimum of 4
+      
+      let courseId = existingCourse ? existingCourse.id : undefined;
+      if (!courseId && allCourses && allCourses.length > 0) {
+        const maxId = Math.max(...allCourses.map(c => typeof c.id === 'number' ? c.id : parseInt(c.id) || 0));
+        courseId = maxId + 1;
+      } else if (!courseId) {
+        courseId = Math.floor(Math.random() * 1000) + 20;
+      }
+
+      const updatedLanguages = existingCourse
+        ? (existingCourse.languages?.includes(targetLang.toLowerCase()) ? existingCourse.languages : [...(existingCourse.languages || []), targetLang.toLowerCase()])
+        : [targetLang.toLowerCase()];
+
+      const updatedLangsUpper = existingCourse
+        ? (existingCourse.langs?.includes(targetLang.toUpperCase()) ? existingCourse.langs : [...(existingCourse.langs || []), targetLang.toUpperCase()])
+        : [targetLang.toUpperCase()];
+
+      const translations = existingCourse?.translations || {};
+      translations[targetLang.toUpperCase()] = {
+        title: courseName,
+        description: courseDescription
+      };
+
+      await dbService.saveCourse({
+        id: courseId,
+        title: courseName,
+        slug: courseSlug,
+        subject: courseContext.discipline || "General",
+        description: courseDescription,
+        level: level,
+        archivingLevel: 0,
+        ects: ectsCount,
+        is_active: true,
+        languages: updatedLanguages,
+        langs: updatedLangsUpper,
+        isCurriculum: false,
+        childCourses: [],
+        translations: translations
+      });
+      console.log(`[AI GENERATOR] Saved/Updated course card for "${courseName}" (ID: ${courseId}, ECTS: ${ectsCount}, Languages: ${updatedLanguages.join(', ')})`);
+    } catch (saveErr) {
+      console.error("[AI GENERATOR] Failed to save/update course card:", saveErr);
     }
   } catch (err) {
     console.error("AI Generation failed:", err);
@@ -443,31 +593,51 @@ MDX CONTENT TO TRANSLATE:
 ${lesson.content}`;
 
       let translatedMdx = '';
+      let transSuccess = false;
 
       if (isVertexConfigured()) {
         console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via Vertex AI (gemini-2.5-flash)...`);
-        const res = await callVertexAI({
-          task: 'course_translation',
-          contents: [{ role: 'user', parts: [{ text: promptTranslate }] }],
-          generationConfig: { temperature: 0.1 }
-        });
+        try {
+          const res = await callVertexAI({
+            task: 'course_translation',
+            contents: [{ role: 'user', parts: [{ text: promptTranslate }] }],
+            generationConfig: { temperature: 0.1 }
+          });
 
-        if (res && res.ok) {
-          const resJson = await res.json();
-          translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (res && res.ok) {
+            const resJson = await res.json();
+            translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            transSuccess = true;
+          }
+        } catch (err) {
+          console.warn("[AI GENERATOR] Vertex translation call failed:", err);
         }
-      } else if (apiKey) {
+      }
+      
+      if (!transSuccess && apiKey) {
         console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptTranslate }] }]
-          })
-        });
-        if (res.ok) {
-          const resJson = await res.json();
-          translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const startTime = Date.now();
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptTranslate }] }]
+            })
+          });
+          if (res.ok) {
+            const resJson = await res.json();
+            translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            transSuccess = true;
+
+            const durationMs = Date.now() - startTime;
+            const usage = resJson.usageMetadata || {};
+            const promptTokens = usage.promptTokenCount || 0;
+            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTranslate);
+          }
+        } catch (err) {
+          console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
         }
       }
 
@@ -481,27 +651,48 @@ ${lesson.content}`;
       try {
         const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
         
+        let transTitleSuccess = false;
         if (isVertexConfigured()) {
-          const resTitle = await callVertexAI({
-            task: 'course_translation',
-            contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
-            generationConfig: { temperature: 0.1 }
-          });
-          if (resTitle && resTitle.ok) {
-            const tJson = await resTitle.json();
-            transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+          try {
+            const resTitle = await callVertexAI({
+              task: 'course_translation',
+              contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
+              generationConfig: { temperature: 0.1 }
+            });
+            if (resTitle && resTitle.ok) {
+              const tJson = await resTitle.json();
+              transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+              transTitleSuccess = true;
+            }
+          } catch (err) {
+            console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
           }
-        } else if (apiKey) {
-          const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptTitle }] }]
-            })
-          });
-          if (resTitle.ok) {
-            const tJson = await resTitle.json();
-            transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+        }
+        
+        if (!transTitleSuccess && apiKey) {
+          console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+          const startTime = Date.now();
+          try {
+            const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptTitle }] }]
+              })
+            });
+            if (resTitle.ok) {
+              const tJson = await resTitle.json();
+              transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+              transTitleSuccess = true;
+
+              const durationMs = Date.now() - startTime;
+              const usage = tJson.usageMetadata || {};
+              const promptTokens = usage.promptTokenCount || 0;
+              const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+              await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTitle);
+            }
+          } catch (err) {
+            console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
           }
         }
       } catch (e) {
@@ -509,7 +700,14 @@ ${lesson.content}`;
       }
 
       // De-hallucinate translated references
-      const validatedMdx = await validateAndFixBibliography(translatedMdx);
+      let validatedMdx = await validateAndFixBibliography(translatedMdx);
+
+      // Pre-validate translated MDX compilation
+      const mdxCheck = await validateMdxContent(validatedMdx);
+      if (!mdxCheck.success) {
+        console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
+        validatedMdx = sanitizeMdxFallback(validatedMdx);
+      }
 
       // Save translated lesson to Supabase
       await dbService.saveLesson({
@@ -517,7 +715,8 @@ ${lesson.content}`;
         lesson_slug: lesson.lesson_slug,
         lang: targetLang.toLowerCase(),
         title: transTitle,
-        content: validatedMdx
+        content: validatedMdx,
+        order: lesson.order
       });
     }
   } catch (err) {
@@ -620,18 +819,29 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
         rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       }
     } else if (apiKey) {
-      console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback...`);
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptCurriculum }] }],
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-      if (res.ok) {
-        const jsonRes = await res.json();
-        rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback (gemini-2.5-flash)...`);
+      const startTime = Date.now();
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptCurriculum }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+        if (res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+
+          const durationMs = Date.now() - startTime;
+          const usage = jsonRes.usageMetadata || {};
+          const promptTokens = usage.promptTokenCount || 0;
+          const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptCurriculum);
+        }
+      } catch (err) {
+        console.error("[AI CURRICULUM] AI Studio curriculum generation fetch exception:", err);
       }
     }
 
@@ -730,5 +940,50 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
     console.error("[generateCurriculum] Error in Agent 0 execution:", error);
     throw error;
   }
+}
+
+async function validateMdxContent(content: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { serialize } = await import('next-mdx-remote/serialize');
+    const remarkMath = (await import('remark-math')).default;
+    const rehypeKatex = (await import('rehype-katex')).default;
+    
+    await serialize(content, {
+      mdxOptions: {
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [rehypeKatex],
+        format: 'mdx',
+      },
+    });
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || String(err) };
+  }
+}
+
+function sanitizeMdxFallback(mdx: string): string {
+  const allowedTags = [
+    'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
+    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
+    'Epistemology', 'Video', 'Audio'
+  ];
+  const tagPattern = new RegExp(`<\\/?(${allowedTags.join('|')})\\b`, 'i');
+  
+  const parts = mdx.split(/(<\/?[a-zA-Z0-9_]+[^>]*>)/g);
+  const processedParts = parts.map(part => {
+    if (part.startsWith('<') && part.endsWith('>')) {
+      if (tagPattern.test(part)) {
+        return part;
+      }
+      return '&lt;' + part.slice(1);
+    } else {
+      return part
+        .replace(/</g, '&lt;')
+        .replace(/\{/g, '&#123;')
+        .replace(/\}/g, '&#125;');
+    }
+  });
+  
+  return processedParts.join('');
 }
 

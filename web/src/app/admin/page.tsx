@@ -478,8 +478,8 @@ export default function AdminDashboard() {
         const enhancedMetrics = metrics.map(m => {
           const task = getTaskFromId(m.id);
           const costPerCall = COST_PER_CALL[task] || 0.001;
-          const totalCost = costPerCall * (m.requests || 0);
-          const rolling30DaysCost = totalCost * 0.2; // 20% of total
+          const totalCost = m.totalCost && m.totalCost > 0 ? Number(Number(m.totalCost).toFixed(2)) : Number((costPerCall * (m.requests || 0)).toFixed(2));
+          const rolling30DaysCost = m.rolling30DaysCost && m.rolling30DaysCost > 0 ? Number(Number(m.rolling30DaysCost).toFixed(2)) : Number((totalCost * 0.2).toFixed(2));
           return {
             ...m,
             totalCost,

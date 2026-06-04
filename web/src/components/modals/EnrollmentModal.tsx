@@ -4,6 +4,7 @@ import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket, B
 import { getLocalizedLabel, formatCourseLevel, UI_STRINGS } from '../RefinedUI';
 import { COURSE_SYLLABUS_DETAILS } from '../StaticPages';
 import { dbService } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 interface EnrollmentModalProps {
   course: any;
@@ -32,6 +33,29 @@ export const EnrollmentModal = ({
   bookmarks,
   onToggleBookmark
 }: EnrollmentModalProps) => {
+  const [dynamicLessons, setDynamicLessons] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (course && !COURSE_SYLLABUS_DETAILS[course.id]) {
+      const fetchLessons = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('lessons')
+            .select('title, lesson_slug')
+            .eq('course_slug', course.slug)
+            .eq('lang', lang.toLowerCase())
+            .order('order', { ascending: true });
+          if (data && !error) {
+            setDynamicLessons(data);
+          }
+        } catch (err) {
+          console.error("Error fetching dynamic syllabus lessons:", err);
+        }
+      };
+      fetchLessons();
+    }
+  }, [course, lang]);
+
   if (!course) return null;
 
   const t = UI_STRINGS[lang.toUpperCase()] || UI_STRINGS.EN;
@@ -47,10 +71,33 @@ export const EnrollmentModal = ({
     return t[key] || subj;
   };
 
-  const ects = COURSE_SYLLABUS_DETAILS[course.id]?.ects || 6;
-  const hours = COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150;
+  const ects = COURSE_SYLLABUS_DETAILS[course.id]?.ects || course.ects || (course.credits ? Math.round(course.credits / 100) : 6);
+  const hours = COURSE_SYLLABUS_DETAILS[course.id]?.hours || (course.ects ? course.ects * 25 : (dynamicLessons.length > 0 ? dynamicLessons.length * 25 : 150));
   const prerequisites = COURSE_SYLLABUS_DETAILS[course.id]?.prerequisites || [];
-  const units = COURSE_SYLLABUS_DETAILS[course.id]?.units || [];
+  
+  const units = React.useMemo(() => {
+    if (COURSE_SYLLABUS_DETAILS[course.id]) {
+      return COURSE_SYLLABUS_DETAILS[course.id].units || [];
+    }
+    if (dynamicLessons.length > 0) {
+      return [
+        {
+          title: lang.toUpperCase() === 'FR' ? "Sujets d'étude" : "Study Modules",
+          modules: dynamicLessons.map(l => l.title)
+        }
+      ];
+    }
+    return [
+      {
+        title: lang.toUpperCase() === 'FR' ? "Syllabus en cours" : "Syllabus details",
+        modules: [
+          lang.toUpperCase() === 'FR' 
+            ? "Structure en cours de chargement..." 
+            : "Course structure loading..."
+        ]
+      }
+    ];
+  }, [course.id, dynamicLessons, lang]);
 
   return (
     <div 

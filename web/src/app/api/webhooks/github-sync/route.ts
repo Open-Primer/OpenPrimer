@@ -242,6 +242,7 @@ export async function POST(req: NextRequest) {
           // Parse MDX frontmatter (verified valid)
           const { data: frontmatter } = matter(fileContent);
           const title = frontmatter.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+          const order = typeof frontmatter.order === 'number' ? frontmatter.order : undefined;
 
           console.log(`⏳ Synchronizing lesson "${lessonSlug}" (${lang}) in database...`);
           const { error } = await supabase
@@ -251,7 +252,8 @@ export async function POST(req: NextRequest) {
               lesson_slug: lessonSlug,
               lang: lang,
               title: title,
-              content: fileContent
+              content: fileContent,
+              order: order
             }, {
               onConflict: 'course_slug,lesson_slug,lang'
             });

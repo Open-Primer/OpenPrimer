@@ -35,7 +35,8 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
         .from('lessons')
         .select('lesson_slug, title')
         .eq('course_slug', courseSlug)
-        .eq('lang', lang.toLowerCase());
+        .eq('lang', lang.toLowerCase())
+        .order('order', { ascending: true });
       
       if (dbLessons && dbLessons.length > 0) {
         const hasIntro = dbLessons.some((l: any) => l.lesson_slug.toLowerCase() === 'introduction');
@@ -186,7 +187,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || slug[0],
             module: meta.module || "Core Module"
           },
-          content: bodyContent
+          content: preprocessMdx(bodyContent)
         };
       }
 
@@ -210,7 +211,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || slug[0],
             module: meta.module || "Core Module"
           },
-          content: bodyContent
+          content: preprocessMdx(bodyContent)
         };
       }
     } catch (err) {
@@ -341,7 +342,7 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
           const { data, content: bodyContent } = matter(mdxContent);
           return {
             meta: data,
-            content: bodyContent
+            content: preprocessMdx(bodyContent)
           };
         }
       } catch (err) {
@@ -356,7 +357,7 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
 
   return {
     meta: data,
-    content
+    content: preprocessMdx(content)
   };
 }
 
@@ -441,4 +442,47 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
     console.error("Error reading dir for available languages:", e);
   }
   return null;
+}
+
+export function preprocessMdx(content: string): string {
+  let processed = content;
+  
+  // 1. Process DiagnosticQuiz options
+  processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const parsedArray = JSON.parse(arrStr);
+      const joined = parsedArray.join('|||');
+      return `<DiagnosticQuiz${p1}options="${joined}"${p3}/>`;
+    } catch (e) {
+      // Fallback: split by comma and clean quotes
+      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+      const joined = items.join('|||');
+      return `<DiagnosticQuiz${p1}options="${joined}"${p3}/>`;
+    }
+  });
+
+  // 2. Process DiagnosticQuiz correctIndex
+  processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)correctIndex=\{\s*(\d+)\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
+    return `<DiagnosticQuiz${p1}correctIndex="${p2}"${p3}/>`;
+  });
+
+  // 3. Process Prerequisites items
+  processed = processed.replace(/<Prerequisites([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const jsonValid = arrStr
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Quote keys
+        .replace(/'/g, '"'); // Replace single quotes with double quotes
+      
+      const parsed = JSON.parse(jsonValid);
+      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+      return `<Prerequisites${p1}itemsBase64="${base64}"${p3}/>`;
+    } catch (e) {
+      console.error("Failed to parse Prerequisites items in preprocessor:", e);
+      return match;
+    }
+  });
+
+  return processed;
 }

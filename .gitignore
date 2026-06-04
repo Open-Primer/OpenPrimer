@@ -27,3 +27,9 @@ Thumbs.db
 
 # Temp files
 tmp/
+
+# Credentials & Service Accounts
+*.json
+/web/secrets/
+openprimer-free-*.json
+
