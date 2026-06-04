@@ -158,6 +158,38 @@ export const EnrollmentModal = ({
           ))}
         </div>
 
+        {showEnrollActions && (
+          <div className="flex gap-4 mt-8 pt-6 border-t border-slate-850">
+            {enrolledIds.includes(course.id) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                }}
+                className="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
+              >
+                <Rocket className="w-4 h-4" />
+                {t.continue_course || 'Continue Course'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onEnroll}
+                className="flex-1 py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer"
+              >
+                <Rocket className="w-4 h-4" />
+                {t.enroll_label || 'Enroll & Start'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+            >
+              {lang.toUpperCase() === 'FR' ? 'Fermer' : 'Close'}
+            </button>
+          </div>
+        )}
 
       </motion.div>
     </div>

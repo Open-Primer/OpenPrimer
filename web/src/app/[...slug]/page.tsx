@@ -156,6 +156,27 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           DE: "Wirtschaft",
           ZH: "经济学",
           IT: "Economia"
+        },
+        "computer science": {
+          FR: "Informatique",
+          ES: "Informática",
+          DE: "Informatik",
+          ZH: "计算机科学",
+          IT: "Informatica"
+        },
+        cs: {
+          FR: "Informatique",
+          ES: "Informática",
+          DE: "Informatik",
+          ZH: "计算机科学",
+          IT: "Informatica"
+        },
+        history: {
+          FR: "Histoire",
+          ES: "Historia",
+          DE: "Geschichte",
+          ZH: "历史",
+          IT: "Storia"
         }
       };
 

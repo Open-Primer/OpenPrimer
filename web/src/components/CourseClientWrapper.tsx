@@ -109,6 +109,50 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     const storage = getProgressionStorage();
     const savedScrollKey = `op_scroll_pos_${slug}`;
 
+    const syncCurriculumProgress = (updatedProgressMap: any) => {
+      if (!storage) return;
+      try {
+        const coursesList = JSON.parse(storage.getItem('openprimer_courses') || '[]');
+        if (coursesList.length > 0) {
+          const currentCourse = coursesList.find((c: any) => c.slug === slug);
+          if (currentCourse) {
+            const currentCourseId = currentCourse.id;
+            const containingCurricula = coursesList.filter((c: any) => c.isCurriculum && c.childCourses?.includes(currentCourseId));
+            
+            containingCurricula.forEach((curr: any) => {
+              let totalChildProgress = 0;
+              let childCount = 0;
+              
+              curr.childCourses.forEach((childId: number) => {
+                const child = coursesList.find((c: any) => c.id === childId);
+                if (child) {
+                  const childProgressVal = updatedProgressMap[child.slug] ?? updatedProgressMap[child.id] ?? 0;
+                  totalChildProgress += childProgressVal;
+                  childCount++;
+                }
+              });
+              
+              if (childCount > 0) {
+                const calculatedCurrPercent = Math.round(totalChildProgress / childCount);
+                const currentCurrProgress = updatedProgressMap[curr.slug] ?? updatedProgressMap[curr.id] ?? 0;
+                
+                if (calculatedCurrPercent > currentCurrProgress) {
+                  updatedProgressMap[curr.slug] = calculatedCurrPercent;
+                  storage.setItem('op_course_progress', JSON.stringify(updatedProgressMap));
+                  
+                  if ((progressService as any).saveLocationAndCompletion) {
+                    (progressService as any).saveLocationAndCompletion(curr.slug, 0, calculatedCurrPercent, '/catalog');
+                  }
+                }
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error updating curriculum progress:", e);
+      }
+    };
+
     let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
       if (!el || !storage) return;
@@ -158,6 +202,9 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
           if (calculatedCoursePercent > currentCourseProgress) {
             progressMap[slug] = calculatedCoursePercent;
             storage.setItem('op_course_progress', JSON.stringify(progressMap));
+            
+            // Sync containing curricula
+            syncCurriculumProgress(progressMap);
             
             // Dispatch dynamic progress update event to instantly refresh curriculum cards
             window.dispatchEvent(new Event('op_progress_updated'));
@@ -227,6 +274,10 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
           if (calculatedCoursePercent > currentCourseProgress) {
             progressMap[slug] = calculatedCoursePercent;
             storage.setItem('op_course_progress', JSON.stringify(progressMap));
+            
+            // Sync containing curricula
+            syncCurriculumProgress(progressMap);
+            
             window.dispatchEvent(new Event('op_progress_updated'));
             
             if ((progressService as any).saveLocationAndCompletion) {

@@ -301,7 +301,22 @@ export const mockDatabaseProvider: DatabaseService = {
     const activeModules = enrolled.map((id: number) => {
       const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
       if (!course) return null;
-      const prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
+      
+      let prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
+      if (course.isCurriculum && course.childCourses && course.childCourses.length > 0) {
+        let totalChildProgress = 0;
+        let childCount = 0;
+        course.childCourses.forEach((childId: number) => {
+          const childCourse = getMockCourses().find(c => c.id === childId);
+          if (childCourse) {
+            const childProg = progressMap[childCourse.slug || ''] ?? progressMap[childCourse.id] ?? 0;
+            totalChildProgress += childProg;
+            childCount++;
+          }
+        });
+        prog = childCount > 0 ? Math.round(totalChildProgress / childCount) : 0;
+      }
+
       return {
         id: course.id,
         title: getLocalizedCourseTitleInternal(course, activeLang),

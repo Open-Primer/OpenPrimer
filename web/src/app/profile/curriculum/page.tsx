@@ -55,6 +55,13 @@ export default function CurriculumPage() {
     return dbService.getLocalizedCourseTitle(c, lang);
   };
 
+  const getLocalizedSubject = (subj: string) => {
+    if (!subj) return '';
+    let key = subj.toLowerCase().replace(/\s+/g, '_');
+    if (key === 'mathematics') key = 'math';
+    return t[key] || subj;
+  };
+
   const getRecommendations = () => {
     const activeModSlugs = progress?.activeModules?.map((m: any) => m.slug) || [];
     const completedSlugs = progress?.activeModules?.filter((m: any) => m.progress === 100).map((m: any) => m.slug) || [];
@@ -438,7 +445,7 @@ export default function CurriculumPage() {
                        const cardContent = (
                           <div 
                             role="listitem" 
-                            aria-label={`${course.title}, ${course.subject}, ${course.progress}% ${t.completed}`}
+                            aria-label={`${course.title}, ${getLocalizedSubject(course.subject)}, ${course.progress}% ${t.completed}`}
                             className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}
                           >
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
@@ -516,7 +523,7 @@ export default function CurriculumPage() {
                               <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
                                 {course.title}
                               </h3>
-                              <p className="text-sm text-slate-500 mb-6">{course.subject}</p>
+                              <p className="text-sm text-slate-500 mb-6">{getLocalizedSubject(course.subject)}</p>
                               
                               <div className="flex justify-between items-center mb-2">
                                 <span className="text-[9px] font-black uppercase text-slate-600">{t.progress}</span>
@@ -662,7 +669,7 @@ export default function CurriculumPage() {
                               <h3 className="text-xl font-black mb-2 text-emerald-100 group-hover:text-emerald-400 transition-colors">
                                 {getLocalizedTitle(course)}
                               </h3>
-                              <p className="text-sm text-slate-500 mb-6">{course.subject}</p>
+                              <p className="text-sm text-slate-500 mb-6">{getLocalizedSubject(course.subject)}</p>
                               
                               <div className="mt-auto">
                                  <div className="flex justify-between items-center mb-2">
@@ -750,7 +757,7 @@ export default function CurriculumPage() {
                           <div>
                             <div className="flex justify-between items-center mb-4 gap-2">
                               <span className="px-2.5 py-1 bg-slate-850 border border-slate-800 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                {recCourse.subject}
+                                {getLocalizedSubject(recCourse.subject)}
                               </span>
                               <div className="flex gap-2">
                                 <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1">
@@ -996,7 +1003,7 @@ export default function CurriculumPage() {
                               </div>
                               <h5 className="text-sm font-black text-white">{cc.title}</h5>
                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                                {cc.subject} • {cc.hours}h expected
+                                {getLocalizedSubject(cc.subject)} • {cc.hours}h expected
                               </p>
                             </div>
 

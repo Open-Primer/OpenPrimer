@@ -892,11 +892,31 @@ export const CatalogPage = () => {
                 return {};
               }
             })() : {};
-            const localPercent = typeof localProgressMap[course.slug] === 'number' 
-              ? localProgressMap[course.slug] 
-              : (typeof localProgressMap[course.id] === 'number' ? localProgressMap[course.id] : 0);
             
-            const progressPercent = activeModule ? activeModule.progress : localPercent;
+            let progressPercent = 0;
+            if (course.isCurriculum && course.childCourses && course.childCourses.length > 0) {
+              let totalChildProgress = 0;
+              let childCount = 0;
+              course.childCourses.forEach((childId: number) => {
+                const childCourse = sortedCourses.find(c => c.id === childId);
+                if (childCourse) {
+                  const childActive = userProgress?.activeModules?.find((m: any) => m.slug === childCourse.slug || m.id === childCourse.id || m.title_key === childCourse.title_key);
+                  const childLocal = typeof localProgressMap[childCourse.slug] === 'number'
+                    ? localProgressMap[childCourse.slug]
+                    : (typeof localProgressMap[childCourse.id] === 'number' ? localProgressMap[childCourse.id] : 0);
+                  const childProgress = childActive ? childActive.progress : childLocal;
+                  totalChildProgress += childProgress;
+                  childCount++;
+                }
+              });
+              progressPercent = childCount > 0 ? Math.round(totalChildProgress / childCount) : 0;
+            } else {
+              const localPercent = typeof localProgressMap[course.slug] === 'number' 
+                ? localProgressMap[course.slug] 
+                : (typeof localProgressMap[course.id] === 'number' ? localProgressMap[course.id] : 0);
+              progressPercent = activeModule ? activeModule.progress : localPercent;
+            }
+            
             const hasStarted = isEnrolled || progressPercent > 0;
             return (
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
@@ -966,20 +986,6 @@ export const CatalogPage = () => {
                               <Clock className="w-3 h-3 text-blue-400" />
                               {COURSE_SYLLABUS_DETAILS[course.id]?.hours || 150}h
                             </span>
-                            {/* Bookmark (logged-in only) */}
-                            {isLoggedIn && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleBookmark(course.id, e);
-                                }}
-                                title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-                                className={`p-2 rounded-lg transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
-                              >
-                                <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                              </button>
-                            )}
                             {/* Level badge */}
                             <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
                               {formatCourseLevel(course.level, lang)}
@@ -1070,6 +1076,25 @@ export const CatalogPage = () => {
                       >
                         <FileText className="w-3.5 h-3.5" />
                       </button>
+
+                      {/* 4. Bookmark (logged-in only) */}
+                      {isLoggedIn && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleBookmark(course.id, e);
+                          }}
+                          title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+                          className={`w-9 h-9 border rounded-2xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
+                            bookmarks.includes(course.id)
+                              ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                          }`}
+                        >
+                          <Bookmark className={`w-3.5 h-3.5 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
