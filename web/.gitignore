@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# Google Cloud service account credentials — NEVER commit these
+*.json.key
+*-service-account*.json
+openprimer-free*.json
+*serviceaccount*.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -99,187 +99,14 @@ export default function CurriculumPage() {
 
   const [showTutorModal, setShowTutorModal] = useState(false);
   const [activeTutorId, setActiveTutorId] = useState('socratic');
+  const [tutors, setTutors] = useState<any[]>([]);
 
-  const TUTORS = [
-    {
-      id: 'socratic',
-      emoji: '💬',
-      nameEN: 'Socratic Coach',
-      nameFR: 'Tuteur Socratique',
-      nameES: 'Entrenador Socrático',
-      nameDE: 'Sokratischer Coach',
-      nameZH: '苏格拉底式导师',
-      descEN: 'Pushes you to think for yourself by asking deep, guiding questions.',
-      descFR: 'Vous pousse à réfléchir par vous-même en vous guidant par des questions profondes.',
-      descES: 'Te empuja a pensar por ti mismo haciendo preguntas profundas y de guía.',
-      descDE: 'Bringt Sie durch tiefgründige, wegweisende Fragen dazu, selbstständig nachzudenken.',
-      descZH: '通过提出深刻的启发性问题，引导您进行独立思考。'
-    },
-    {
-      id: 'direct',
-      emoji: '⚡',
-      nameEN: 'Direct Synthesizer',
-      nameFR: 'Synthétiseur Direct',
-      nameES: 'Sintetizador Directo',
-      nameDE: 'Direkter Synthesizer',
-      nameZH: '直观总结者',
-      descEN: 'Outcome-focused, precise, and direct. Ideal for fast high-efficiency study.',
-      descFR: 'Synthétique, ultra-précis et efficace. Idéal pour des révisions rapides.',
-      descES: 'Centrado en los resultados, preciso y directo. Ideal para un estudio de alta eficiencia.',
-      descDE: 'Ergebnisorientiert, präzise und direkt. Ideal für hocheffizientes Lernen.',
-      descZH: '注重结果、精准且直接。非常适合快速而高效的备考复习。'
-    },
-    {
-      id: 'gamified',
-      emoji: '🚀',
-      nameEN: 'Gamified Companion',
-      nameFR: 'Compagnon Ludique',
-      nameES: 'Compañero de Juego',
-      nameDE: 'Spielerischer Begleiter',
-      nameZH: '趣味学习伙伴',
-      descEN: 'High-energy partner celebrating every milestone and streak with high-fives.',
-      descFR: 'Partenaire hyper-enthousiaste célébrant chaque réussite et point gagné.',
-      descES: 'Socio de alta energía que celebra cada hito y racha con chocadas de manos.',
-      descDE: 'Ein energiegeladener Partner, der jeden Meilenstein und jede Lernserie gebührend feiert.',
-      descZH: '充满活力的搭档，与您击掌庆祝每一个学习里程碑和连续学习天数。'
-    },
-    {
-      id: 'historical',
-      emoji: '📚',
-      nameEN: 'Historical Storyteller',
-      nameFR: 'Conteur Historique',
-      nameES: 'Narrador Histórico',
-      nameDE: 'Historischer Geschichtenerzähler',
-      nameZH: '历史叙事家',
-      descEN: 'Frames concepts inside the thrilling stories of the scholars who built them.',
-      descFR: 'Replace chaque formule dans l\'aventure historique des savants qui l\'ont forgée.',
-      descES: 'Encuadra los conceptos dentro de las apasionantes historias de los científicos que los construyeron.',
-      descDE: 'Betrachtet Konzepte im Rahmen der spannenden Lebenswege ihrer Entdecker.',
-      descZH: '将学术概念融入发现这些理论的科学家们惊心动魄的历史故事中。'
-    },
-    {
-      id: 'feynman',
-      emoji: '💡',
-      nameEN: 'Feynman Simplifier',
-      nameFR: 'Simplificateur Feynman',
-      nameES: 'Simplificador Feynman',
-      nameDE: 'Feynman-Vereinfacher',
-      nameZH: '费曼化繁为简者',
-      descEN: 'Master of simple analogies. Explains complex ideas as if to a complete beginner.',
-      descFR: 'Le maître des analogies simples. Explique la complexité comme si vous aviez 10 ans.',
-      descES: 'Maestro de las analogías simples. Explica ideas complejas como si fueras un principiante.',
-      descDE: 'Meister der einfachen Analogien. Erklärt komplexe Ideen wie für einen absoluten Anfänger.',
-      descZH: '简单比喻的大师。用最通俗易懂的语言向零基础初学者解释复杂的概念。'
-    },
-    {
-      id: 'proof',
-      emoji: '📐',
-      nameEN: 'Rigorous Proof Master',
-      nameFR: 'Maître des Preuves Rigoureuses',
-      nameES: 'Maestro de Pruebas Rigurosas',
-      nameDE: 'Meister des Rigiden Beweises',
-      nameZH: '严谨逻辑证明大师',
-      descEN: 'Rigorous and formal, emphasizing axiomatic math proofs and complete derivation.',
-      descFR: 'Rigoureux et formel, axé sur les démonstrations axiomatiques et la dérivation complète.',
-      descES: 'Riguroso y formal, con énfasis en pruebas matemáticas axiomáticas y derivación completa.',
-      descDE: 'Formaler Mathematiker, der streng auf Axiomen aufbaut und vollständige Beweise einfordert.',
-      descZH: '严密且形式化，侧重于公理化数学证明与完整的定理推导。'
-    },
-    {
-      id: 'engineer',
-      emoji: '🔧',
-      nameEN: 'Pragmatic Engineer',
-      nameFR: 'Ingénieur Pragmatique',
-      nameES: 'Ingeniero Pragmático',
-      nameDE: 'Pragmatischer Ingenieur',
-      nameZH: '实干派工程专家',
-      descEN: 'Grounds theory in real-world code, hardware, and industrial applications.',
-      descFR: 'Ancre chaque théorie dans des applications industrielles et du code réel.',
-      descES: 'Ancla la teoría en código real, hardware y aplicaciones industriales.',
-      descDE: 'Verankert Theorie in realem Code, Hardware und industriellen Anwendungen.',
-      descZH: '将理论落地到实际工业应用、代码片段与操作约束中。'
-    },
-    {
-      id: 'debater',
-      emoji: '🗣️',
-      nameEN: 'Interactive Debater',
-      nameFR: 'Débateur Interactif',
-      nameES: 'Debatiente Interactivo',
-      nameDE: 'Interaktiver Debattierer',
-      nameZH: '辩论式深度思考者',
-      descEN: 'Plays devil\'s advocate and challenges you to defend your reasoning.',
-      descFR: 'Joue l\'avocat du diable et vous pousse à défendre vos arguments.',
-      descES: 'Juega al abogado del diablo y te reta a defender tu razonamiento.',
-      descDE: 'Spielt Advocatus Diaboli und fordert Sie auf, Ihre Argumentation zu verteidigen.',
-      descZH: '扮演魔鬼代言人，挑战你为自己的观点辩护。'
-    },
-    {
-      id: 'analogy_alchemist',
-      emoji: '🧪',
-      nameEN: 'Analogy Alchemist',
-      nameFR: 'L\'Alchimiste des Analogies',
-      nameES: 'Alquimista de Analogías',
-      nameDE: 'Analogie-Alchemist',
-      nameZH: '万物类比炼金术士',
-      descEN: 'Translates abstract concepts into vivid everyday analogies before formulas.',
-      descFR: 'Traduit chaque concept abstrait en analogies concrètes du quotidien avant les formules.',
-      descES: 'Traduce conceptos abstractos a analogías vívidas antes de las fórmulas.',
-      descDE: 'Übersetzt abstrakte Konzepte in lebendige Alltagsanalogien, bevor er zu Formeln gelangt.',
-      descZH: '在公式之前，将抽象概念转化为生动的日常类比。'
-    },
-    {
-      id: 'cognitive_catalyst',
-      emoji: '🧠',
-      nameEN: 'Cognitive Catalyst',
-      nameFR: 'Le Catalyseur Cognitif',
-      nameES: 'Catalizador Cognitivo',
-      nameDE: 'Kognitiver Katalysator',
-      nameZH: '认知元学习催化剂',
-      descEN: 'Teaches you *how* to learn: active recall, spaced repetition, mental models.',
-      descFR: 'Vous apprend *comment* apprendre : rappel actif, répétition espacée, modèles mentaux.',
-      descES: 'Te enseña *cómo* aprender: recuerdo activo, repetición espaciada, modelos mentales.',
-      descDE: 'Lehrt Sie *wie* man lernt: aktives Abrufen, Spaced Repetition, mentale Modelle.',
-      descZH: '教授你*如何*学习：主动回忆、间隔重复、心理模型。'
-    },
-    {
-      id: 'heuristic_explorer',
-      emoji: '🔭',
-      nameEN: 'Heuristic Explorer',
-      nameFR: 'Explorateur Heuristique',
-      nameES: 'Explorador Heurístico',
-      nameDE: 'Heuristischer Entdecker',
-      nameZH: '启发式探索学者',
-      descEN: 'Master of Fermi estimates, order-of-magnitude thinking, and intuitive shortcuts.',
-      descFR: 'Maître des estimations de Fermi, de la pensée par ordre de grandeur et des raccourcis intuitifs.',
-      descES: 'Maestro de estimaciones de Fermi, razonamiento por órdenes de magnitud e atajos intuitivos.',
-      descDE: 'Meister der Fermi-Schätzungen, Größenordnungsdenken und intuitiver Abkürzungen.',
-      descZH: '费米估算、数量级思维与直觉捷径的大师。'
-    },
-    {
-      id: 'diamond_age',
-      emoji: '💎',
-      nameEN: 'Illustrated Primer Coach',
-      nameFR: 'Coach de l\'Illustrated Primer',
-      nameES: 'Coach de la Cartilla Ilustrada',
-      nameDE: 'Coach der Illustrierten Fibel',
-      nameZH: '插图启蒙书导师',
-      descEN: 'Teaches through personalized fairy tales, allegories, and imaginative metaphors.',
-      descFR: 'Enseigne à travers des contes personnalisés, des allégories et des métaphores imaginatives.',
-      descES: 'Enseña a través de cuentos personalizados, alegorías y metáforas imaginativas.',
-      descDE: 'Lehrt durch personalisierte Märchen, Allegorien und fantasievolle Metaphern.',
-      descZH: '通过个性化的童话故事、寓言和富有想象力的比喻进行教学。'
-    }
-  ];
 
   const getActiveTutorName = () => {
-    const tMatch = TUTORS.find(t => t.id === activeTutorId);
-    if (!tMatch) return 'Socratic Coach';
     const code = (lang || 'EN').toUpperCase();
-    if (code === 'FR') return tMatch.nameFR;
-    if (code === 'ES') return tMatch.nameES;
-    if (code === 'DE') return tMatch.nameDE;
-    if (code === 'ZH') return tMatch.nameZH;
-    return tMatch.nameEN;
+    const tMatch = tutors.find(t => t.id === activeTutorId);
+    if (!tMatch) return 'Socratic Coach';
+    return tMatch.translations?.[code]?.name || tMatch.name || activeTutorId;
   };
 
   const handleSelectTutor = async (id: string) => {
@@ -349,6 +176,10 @@ export default function CurriculumPage() {
       
       const { data: achs } = await dbService.getAchievements();
       if (achs) setAchievements(achs);
+
+      // Load tutor personalities dynamically from DB / mock
+      const { data: tutorData } = await dbService.getTutorPersonalities();
+      if (tutorData && tutorData.length > 0) setTutors(tutorData);
       
       const earned = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_earned_achievements') || '[]') : [];
       setEarnedIds(earned);
@@ -1286,8 +1117,21 @@ export default function CurriculumPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar bg-slate-900/50">
-                {TUTORS.map(tOption => {
+                {tutors.map(tOption => {
+                  const code = (lang || 'EN').toUpperCase();
+                  const localizedName = tOption.translations?.[code]?.name || tOption.name;
+                  const localizedDesc = tOption.translations?.[code]?.desc ||
+                    tOption.translations?.[code]?.prompt?.slice(0, 120) + '...' ||
+                    tOption.prompt?.slice(0, 120) + '...';
                   const isSelected = tOption.id === activeTutorId;
+                  // Emoji fallback map
+                  const EMOJI_MAP: Record<string, string> = {
+                    socratic: '💬', direct: '⚡', gamified: '🚀', historical: '📚',
+                    feynman: '💡', proof: '📐', engineer: '🔧', debater: '🗣️',
+                    analogy_alchemist: '🧪', cognitive_catalyst: '🧠',
+                    heuristic_explorer: '🔭', diamond_age: '💎',
+                  };
+                  const emoji = EMOJI_MAP[tOption.id] || '🤖';
                   return (
                     <div 
                       key={tOption.id}
@@ -1302,11 +1146,11 @@ export default function CurriculumPage() {
                         <div className={`w-14 h-14 rounded-2xl text-2xl flex items-center justify-center transition-all ${
                           isSelected ? 'bg-blue-600/20 scale-105' : 'bg-slate-900 group-hover:scale-105'
                         }`}>
-                          {tOption.emoji}
+                          {emoji}
                         </div>
                         <div>
                           <h4 className="font-black text-sm text-white tracking-wide flex items-center gap-2">
-                            {tOption[`name${lang.toUpperCase()}` as keyof typeof tOption] || tOption.nameEN}
+                            {localizedName}
                             {isSelected && (
                               <span className="px-2.5 py-0.5 bg-blue-600/20 text-blue-400 rounded-full text-[8px] font-black uppercase tracking-wider">
                                 {t.active}
@@ -1314,7 +1158,7 @@ export default function CurriculumPage() {
                             )}
                           </h4>
                           <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed max-w-md">
-                            {tOption[`desc${lang.toUpperCase()}` as keyof typeof tOption] || tOption.descEN}
+                            {localizedDesc}
                           </p>
                         </div>
                       </div>
