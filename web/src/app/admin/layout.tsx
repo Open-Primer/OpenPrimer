@@ -400,10 +400,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <Link href="/profile/settings" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
                         <Settings className="w-4 h-4" /> {t.settings}
                       </Link>
-                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                         <ShieldAlert className="w-4 h-4" /> {t.admin}
                       </Link>
-                      <div className="h-px bg-slate-800/50 my-1" />
+                      <div className="h-0.5 bg-slate-800/50 my-1" />
                       <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                         <LogOut className="w-4 h-4" /> {t.signout}
                       </button>

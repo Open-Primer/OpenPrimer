@@ -6,10 +6,10 @@ export async function GET() {
     if (!apiKey) {
       return NextResponse.json(
         { 
-          status: 'offline', 
-          error: 'GEMINI_API_KEY is not configured on the server.' 
+          status: 'mocked', 
+          warning: 'GEMINI_API_KEY is not configured. Running in simulated offline/mock mode.' 
         }, 
-        { status: 503 }
+        { status: 200 }
       );
     }
 

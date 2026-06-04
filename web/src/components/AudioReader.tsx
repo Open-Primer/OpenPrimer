@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Pause, Square, Settings, ChevronRight, MessageSquare, AlertCircle } from 'lucide-react';
+import { UI_STRINGS } from '@/components/RefinedUI';
 import { usePathname } from 'next/navigation';
 
 interface AudioReaderProps {
@@ -18,6 +19,7 @@ const normalizeText = (str: string) => {
 };
 
 export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => {
+  const t = UI_STRINGS[lang.toUpperCase()] || UI_STRINGS.EN;
   const pathname = usePathname();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -46,6 +48,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const highlightedElementRef = useRef<HTMLElement | null>(null);
   const isScrollInitiatedRef = useRef(false);
 
+  // Programmatic scroll tracking to differentiate programmatic scrollIntoView from user scroll
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Sync state refs to prevent stale closure issues in SpeechSynthesis callbacks
   const isPlayingRef = useRef(false);
   const isPausedRef = useRef(false);
@@ -56,7 +62,18 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const readTutorRef = useRef(true);
   const isReadingTutorRef = useRef(false);
   const tutorSentencesRef = useRef<string[]>([]);
+  const currentSentenceIndexRef = useRef(-1);
   const currentTutorSentenceIndexRef = useRef(-1);
+
+  const setProgrammaticScroll = () => {
+    isProgrammaticScrollRef.current = true;
+    if (programmaticScrollTimeoutRef.current) {
+      clearTimeout(programmaticScrollTimeoutRef.current);
+    }
+    programmaticScrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 1000);
+  };
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -68,8 +85,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     readTutorRef.current = readTutor;
     isReadingTutorRef.current = isReadingTutor;
     tutorSentencesRef.current = tutorSentences;
+    currentSentenceIndexRef.current = currentSentenceIndex;
     currentTutorSentenceIndexRef.current = currentTutorSentenceIndex;
-  }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, isReadingTutor, tutorSentences, currentTutorSentenceIndex]);
+  }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, isReadingTutor, tutorSentences, currentSentenceIndex, currentTutorSentenceIndex]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -354,6 +372,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       bestMatch.classList.add('reading-highlight');
       highlightedElementRef.current = bestMatch;
       if (!isScrollInitiatedRef.current) {
+        setProgrammaticScroll();
         bestMatch.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
@@ -585,26 +604,19 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
   // Scroll listener to update the TTS starting sentence / sync audio when scrolling
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
-
     const handleScroll = () => {
-      if (isPlaying && !isPaused) {
-        // Debounce sync while playing to avoid stuttering/interruption during active scroll
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const idx = getFirstVisibleSentenceIndex();
-          if (idx >= 0 && idx !== currentSentenceIndex) {
-            isScrollInitiatedRef.current = true;
-            speakSentence(idx);
-          }
-        }, 800); // 800ms debounce
+      if (isProgrammaticScrollRef.current) {
         return;
       }
 
-      // If stopped or paused, update immediately
+      // If playing course text, stop/pause the audio on manual scroll
+      if (isPlayingRef.current && !isReadingTutorRef.current) {
+        stop();
+      }
+
+      // Sync starting index to first visible sentence
       const idx = getFirstVisibleSentenceIndex();
-      if (idx >= 0 && idx !== currentSentenceIndex) {
-        isScrollInitiatedRef.current = true;
+      if (idx >= 0 && idx !== currentSentenceIndexRef.current) {
         setCurrentSentenceIndex(idx);
       }
     };
@@ -615,9 +627,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
     };
-  }, [sentences, isPlaying, isPaused, currentSentenceIndex]);
+  }, [sentences]);
 
   const togglePlay = () => {
     if (!isSupported) return;
@@ -701,12 +712,17 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     <div className="fixed bottom-6 left-6 z-50 font-sans w-[272px]">
       {/* Global CSS Style tag for highlighting the reading element */}
       <style>{`
+        @keyframes highlight-pulse {
+          0%, 100% { border-left-color: rgb(59, 130, 246); }
+          50% { border-left-color: rgba(59, 130, 246, 0.4); }
+        }
         .reading-highlight {
           background-color: rgba(59, 130, 246, 0.08) !important;
           border-left: 4px solid rgb(59, 130, 246) !important;
           padding-left: 12px !important;
           transition: all 0.3s ease !important;
           border-radius: 0 8px 8px 0 !important;
+          animation: highlight-pulse 2s infinite ease-in-out;
         }
       `}</style>
 
@@ -879,11 +895,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             {/* Settings dropdown */}
             {showSettings && (
               <div className="absolute bottom-10 right-0 bg-slate-900 border border-slate-800/80 p-3 rounded-2xl shadow-2xl backdrop-blur-xl w-48 text-[10px] z-50 text-slate-300 font-sans animate-fade-in">
-                <p className="font-bold text-slate-100 uppercase tracking-widest text-[8px] mb-2">Voice Coach</p>
+                <p className="font-bold text-slate-100 uppercase tracking-widest text-[8px] mb-2">{t.voice_coach}</p>
                 
                 <div className="space-y-2">
                   <div>
-                    <label htmlFor="voice-select" className="text-[8px] text-slate-500 font-bold block mb-1">Select Voice</label>
+                    <label htmlFor="voice-select" className="text-[8px] text-slate-500 font-bold block mb-1">{t.select_voice}</label>
                     <select
                       id="voice-select"
                       value={selectedVoice?.name || ''}

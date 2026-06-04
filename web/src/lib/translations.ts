@@ -1,7 +1,18 @@
 // --- INTERNATIONALIZATION DICTIONARY (SHARED CLIENT/SERVER) ---
 
 export const STATIC_UI_STRINGS = {
-  EN: { 
+  EN: {
+    give_example_prompt: "Give me a concrete real-world example of this concept.",
+    tell_story_prompt: "Tell me a historical anecdote about this discovery.",
+    simplify_prompt: "Explain this to me as if I were a complete beginner.",
+    test_me_prompt: "Give me a challenge question to test my understanding.",
+    voice_coach: "Voice Coach",
+    select_voice: "Select Voice",
+    read_course_text: "Read course text",
+    read_tutor_answers: "Read tutor answers",
+    shortcuts: "Shortcuts",
+    play: "Play",
+    stop: "Stop", 
     overview: "Overview",
     my_progress: "My Progress", admin: "Admin Console", settings: "Account Settings",
     popular_curricula: "Popular Curricula",
@@ -144,7 +155,18 @@ export const STATIC_UI_STRINGS = {
     add_to_curriculum: "Add to Curriculum",
     active: "Active"
   },
-  FR: { 
+  FR: {
+    give_example_prompt: "Donne-moi un exemple concret de ce concept dans le monde réel.",
+    tell_story_prompt: "Raconte-moi une anecdote historique sur cette découverte.",
+    simplify_prompt: "Explique-moi cela comme si j'étais un grand débutant.",
+    test_me_prompt: "Pose-moi une question difficile pour tester ma compréhension.",
+    voice_coach: "Entraîneur Vocal",
+    select_voice: "Sélectionner la voix",
+    read_course_text: "Lire le cours",
+    read_tutor_answers: "Lire le tuteur",
+    shortcuts: "Raccourcis",
+    play: "Lecture",
+    stop: "Arrêter", 
     overview: "Vue d'ensemble",
     my_progress: "Mon Progrès", admin: "Console Admin", settings: "Paramètres",
     popular_curricula: "Curriculums Populaires",
@@ -287,7 +309,18 @@ export const STATIC_UI_STRINGS = {
     add_to_curriculum: "Ajouter au Curriculum",
     active: "Actif"
   },
-  ES: { 
+  ES: {
+    give_example_prompt: "Dame un ejemplo concreto de este concepto en el mundo real.",
+    tell_story_prompt: "Cuéntame una anécdota histórica sobre este descubrimiento.",
+    simplify_prompt: "Explícame esto como si fuera un principiante absoluto.",
+    test_me_prompt: "Hazme una pregunta desafiante para evaluar mi comprensión.",
+    voice_coach: "Entrenador de Voz",
+    select_voice: "Seleccionar voz",
+    read_course_text: "Leer texto del curso",
+    read_tutor_answers: "Leer respuestas del tutor",
+    shortcuts: "Atajos",
+    play: "Reproducir",
+    stop: "Detener", 
     overview: "Descripción general",
     my_progress: "Mi Progreso", admin: "Consola Admin", settings: "Ajustes",
     popular_curricula: "Planes de Estudio Populares",
@@ -430,7 +463,20 @@ export const STATIC_UI_STRINGS = {
     add_to_curriculum: "Añadir al Currículum",
     active: "Activo"
   },
-  DE: { 
+  DE: {
+    give_example_prompt: "Gib mir ein konkretes, reales Beispiel für dieses Konzept.",
+    tell_story_prompt: "Erzähl mir eine historische Anekdote über diese Entdeckung.",
+    simplify_prompt: "Erkläre mir das so, als ob ich ein absoluter Anfänger wäre.",
+    test_me_prompt: "Stelle mir eine Testfrage, um mein Verständnis zu prüfen.",
+    voice_coach: "Sprach-Coach",
+    select_voice: "Stimme auswählen",
+    read_course_text: "Kurstext vorlesen",
+    read_tutor_answers: "Antworten des Tutors vorlesen",
+    shortcuts: "Tastaturkürzel",
+    play: "Abspielen",
+    stop: "Stoppen",
+    connection_difficulties: "Verbindungsschwierigkeiten erkannt... automatischer Wiederholungsversuch",
+    please_wait: "Bitte warten", 
     overview: "Übersicht",
     my_progress: "Mein Fortschritt", admin: "Admin-Konsole", settings: "Einstellungen",
     popular_curricula: "Beliebte Lehrpläne",
@@ -554,7 +600,18 @@ export const STATIC_UI_STRINGS = {
     add_to_curriculum: "Zum Lehrplan hinzufügen",
     active: "Aktiv"
   },
-  ZH: { 
+  ZH: {
+    give_example_prompt: "给我一个这个概念的具体实际例子。",
+    tell_story_prompt: "给我讲一个关于这个发现的历史轶事。",
+    simplify_prompt: "把这个解释给我听，就像我是一个完全的初学者一样。",
+    test_me_prompt: "给我一个挑战性问题来测试我的理解。",
+    voice_coach: "语音导师",
+    select_voice: "选择声音",
+    read_course_text: "朗读课程文本",
+    read_tutor_answers: "朗读导师回答",
+    shortcuts: "快捷键",
+    play: "播放",
+    stop: "停止", 
     overview: "概述",
     my_progress: "我的进度", admin: "管理控制台", settings: "账户设置",
     popular_curricula: "热门课程计划",

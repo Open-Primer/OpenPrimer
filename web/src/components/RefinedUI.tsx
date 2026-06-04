@@ -249,10 +249,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   if (!isCurriculumPage || !tutorEnabled) return null;
 
   const QUICK_ACTIONS = [
-    { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: "Give me a concrete real-world example of this concept." },
-    { label: t.tell_story, icon: <Bookmark className="w-3 h-3" />, prompt: "Tell me a historical anecdote about this discovery." },
-    { label: t.simplify, icon: <Globe className="w-3 h-3" />, prompt: "Explain this to me as if I were a complete beginner." },
-    { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: "Give me a challenge question to test my understanding." }
+    { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: t.give_example_prompt },
+    { label: t.tell_story, icon: <Bookmark className="w-3 h-3" />, prompt: t.tell_story_prompt },
+    { label: t.simplify, icon: <Globe className="w-3 h-3" />, prompt: t.simplify_prompt },
+    { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: t.test_me_prompt }
   ];
 
   // Persist history based on course slug instead of specific page pathname
@@ -454,9 +454,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                           <Loader2 className="w-3 h-3 animate-spin stroke-[3]" />
                         </div>
                         <span className="leading-tight">
-                          {lang === 'FR' 
-                            ? 'Difficultés de connexion détectées... reconnexion automatique' 
-                            : 'Connection difficulties detected... retrying automatically'}
+                          {t.connection_difficulties}
                         </span>
                       </div>
                       <div className="bg-amber-500/20 px-2.5 py-1 rounded-lg text-[7px] font-black uppercase animate-pulse shrink-0 text-amber-400 border border-amber-500/30">
@@ -1151,17 +1149,24 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       <Brain className="w-4 h-4" /> {t.catalog}
                     </Link>
                     
-                    <Link href="/profile/settings" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                    <Link 
+                      href="/profile/settings" 
+                      className={`flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all ${
+                        (userProfile?.role === 'admin' || userProfile?.email === 'vanguard.mysterious@gmail.com') 
+                          ? 'border-b border-slate-800/50' 
+                          : ''
+                      }`}
+                    >
                       <Settings className="w-4 h-4" /> {t.settings}
                     </Link>
 
                     {(userProfile?.role === 'admin' || userProfile?.email === 'vanguard.mysterious@gmail.com') && (
-                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                         <ShieldAlert className="w-4 h-4" /> {t.admin}
                       </Link>
                     )}
                     
-                    <div className="h-px bg-slate-800/50 my-1" />
+                    <div className="h-0.5 bg-slate-800/50 my-1" />
                     
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                       <LogOut className="w-4 h-4" /> {t.signout}
