@@ -878,7 +878,7 @@ export default function Home() {
         {authModal && (
           <div 
             onClick={handleCloseAuthModal}
-            className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
           >
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
