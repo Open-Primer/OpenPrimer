@@ -295,7 +295,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
         password: u.password,
         audioVolume: u.audio_volume != null ? Number(u.audio_volume) : undefined,
         audioRate: u.audio_rate != null ? Number(u.audio_rate) : undefined,
-        audioVoiceId: u.audio_voice_id ?? undefined
+        audioVoiceId: u.audio_voice_id ?? undefined,
+        audioReadCourse: u.audio_read_course ?? true,
+        audioReadTutor: u.audio_read_tutor ?? true
       }));
       return { data: mapped, error: null };
     } catch (e) {
@@ -1328,12 +1330,14 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string }) => {
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean }) => {
     try {
       const updates = {} as any;
       if (settings.audioVolume !== undefined) updates.audio_volume = settings.audioVolume;
       if (settings.audioRate !== undefined) updates.audio_rate = settings.audioRate;
       if (settings.audioVoiceId !== undefined) updates.audio_voice_id = settings.audioVoiceId;
+      if (settings.audioReadCourse !== undefined) updates.audio_read_course = settings.audioReadCourse;
+      if (settings.audioReadTutor !== undefined) updates.audio_read_tutor = settings.audioReadTutor;
 
       const { data, error } = await supabase
         .from('profiles')

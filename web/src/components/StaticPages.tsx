@@ -8,11 +8,13 @@ import {
   ShieldCheck, Clock, Star, CheckCircle2, GraduationCap, X, Bell, Rocket,
   BrainCircuit, FlaskConical, Scale, Calculator, Atom, Leaf, Bookmark
 } from 'lucide-react';
-import { TopNav, UI_STRINGS, Footer } from './RefinedUI';
+import { TopNav, UI_STRINGS, Footer, formatCourseLevel, getLocalizedLabel } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from './CourseKiosk';
+import { EnrollmentModal } from './modals/EnrollmentModal';
+
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
 const SUBJECT_SUGGESTIONS = [
@@ -405,82 +407,7 @@ export const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: numb
 export const CatalogPage = () => {
   const { language: lang, setLanguage: setActiveLang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
-  const getLocalizedLabel = (key: string) => {
-    const l = lang.toUpperCase();
-    const labels: Record<string, Record<string, string>> = {
-      mastery_weight: {
-        EN: "Mastery Weight",
-        FR: "Poids de maîtrise",
-        ES: "Peso de maestría",
-        DE: "Meisterungsgewicht",
-        ZH: "掌握权重"
-      },
-      duration: {
-        EN: "Duration",
-        FR: "Durée",
-        ES: "Duración",
-        DE: "Dauer",
-        ZH: "时长"
-      },
-      level: {
-        EN: "Level",
-        FR: "Niveau",
-        ES: "Nivel",
-        DE: "Stufe",
-        ZH: "级别"
-      },
-      credits: {
-        EN: "credits",
-        FR: "crédits",
-        ES: "créditos",
-        DE: "Credits",
-        ZH: "学分"
-      },
-      hours_unit: {
-        EN: "hrs",
-        FR: "h",
-        ES: "hrs",
-        DE: "Std.",
-        ZH: "小时"
-      },
-      why_create_account: {
-        EN: "Why create an account?",
-        FR: "Pourquoi créer un compte ?",
-        ES: "¿Por qué crear una cuenta?",
-        DE: "Warum ein Konto erstellen?",
-        ZH: "为什么要创建账户？"
-      },
-      account_benefits: {
-        EN: "A free account allows you to save your progress permanently, accumulate your study credits, unlock certifications, and interact with your personal AI Tutor.",
-        FR: "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'accumuler vos crédits de formation, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes.",
-        ES: "Una cuenta gratuita le permite guardar su progreso permanentemente, acumular sus créditos de estudio, desbloquear certificaciones e interactuar con su tutor de IA personal.",
-        DE: "Mit einem kostenlosen Konto können Sie Ihren Fortschritt dauerhaft speichern, Ihre Studienleistungen sammeln, Zertifikate freischalten und mit Ihrem persönlichen KI-Tutor interagieren.",
-        ZH: "免费账户可以永久保存您的进度、累积您的学习学分、解锁认证并与您的个人 AI 导师互动。"
-      },
-      create_account: {
-        EN: "Create an Account",
-        FR: "Créer un Compte",
-        ES: "Crear una Cuenta",
-        DE: "Konto Erstellen",
-        ZH: "创建账户"
-      },
-      log_in: {
-        EN: "Log In",
-        FR: "Se Connecter",
-        ES: "Iniciar Sesión",
-        DE: "Einloggen",
-        ZH: "登录"
-      },
-      start_limited: {
-        EN: "Start learning with limited features",
-        FR: "Démarrer avec des fonctions limitées",
-        ES: "Comenzar a aprender con funciones limitadas",
-        DE: "Mit eingeschränkten Funktionen lernen",
-        ZH: "以有限的功能开始学习"
-      }
-    };
-    return labels[key]?.[l] || labels[key]?.EN || '';
-  };
+
   const [subjectFilter, setSubjectFilter] = useState('All');
   // Initialize from URL immediately so ?search= params work on first render
   const [searchQuery, setSearchQuery] = useState(() => {
@@ -756,84 +683,7 @@ export const CatalogPage = () => {
     return dbService.getLocalizedCourseTitle(course, lang);
   };
 
-  const formatCourseLevel = (level: string | number) => {
-    const lvlStr = String(level).toUpperCase();
-    const isEn = lang.toUpperCase() === 'EN';
-    const isZh = lang.toUpperCase() === 'ZH';
-    const isEs = lang.toUpperCase() === 'ES';
-    const isDe = lang.toUpperCase() === 'DE';
-    const isFr = lang.toUpperCase() === 'FR';
 
-    if (lvlStr === 'SECONDARY_1') {
-      if (isFr) return 'Secondaire 1';
-      if (isZh) return '高中一年级';
-      if (isEs) return 'Secundaria 1';
-      if (isDe) return 'Sekundarstufe 1';
-      return 'Secondary 1';
-    }
-    if (lvlStr === 'SECONDARY_2') {
-      if (isFr) return 'Secondaire 2';
-      if (isZh) return '高中二年级';
-      if (isEs) return 'Secundaria 2';
-      if (isDe) return 'Sekundarstufe 2';
-      return 'Secondary 2';
-    }
-    if (lvlStr === 'SECONDARY_3') {
-      if (isFr) return 'Secondaire 3';
-      if (isZh) return '高中三年级';
-      if (isEs) return 'Secundaria 3';
-      if (isDe) return 'Sekundarstufe 3';
-      return 'Secondary 3';
-    }
-    if (lvlStr.startsWith('SECONDARY_')) {
-      const num = lvlStr.split('_')[1];
-      if (isFr) return `Secondaire ${num}`;
-      if (isZh) return `高中${num}年级`;
-      if (isEs) return `Secundaria ${num}`;
-      if (isDe) return `Sekundarstufe ${num}`;
-      return `Secondary ${num}`;
-    }
-    if (lvlStr.startsWith('PRIMARY_')) {
-      const num = lvlStr.split('_')[1];
-      if (isFr) return `Primaire ${num}`;
-      if (isZh) return `小学${num}年级`;
-      if (isEs) return `Primaria ${num}`;
-      if (isDe) return `Primarstufe ${num}`;
-      return `Primary ${num}`;
-    }
-
-    if (lvlStr === 'L1') {
-      if (isEn) return '101';
-      if (isZh) return '大一 (101)';
-      if (isEs) return 'L1 (101)';
-      if (isDe) return 'L1 (101)';
-      return 'L1';
-    }
-    if (lvlStr === 'L2') {
-      if (isEn) return '201';
-      if (isZh) return '大二 (201)';
-      if (isEs) return 'L2 (201)';
-      if (isDe) return 'L2 (201)';
-      return 'L2';
-    }
-    if (lvlStr === 'L3') {
-      if (isEn) return '301';
-      if (isZh) return '大三 (301)';
-      if (isEs) return 'L3 (301)';
-      if (isDe) return 'L3 (301)';
-      return 'L3';
-    }
-
-    if (/^\d+$/.test(lvlStr)) {
-      const num = parseInt(lvlStr, 10);
-      if (isZh) return `${num}年级`;
-      if (isEn) return `Grade ${num}`;
-      if (lang.toUpperCase() === 'FR') return `Niveau ${num}`;
-      if (isEs) return `Grado ${num}`;
-      if (isDe) return `Klasse ${num}`;
-    }
-    return lvlStr;
-  };
 
   const filteredCourses = courses.filter(c => {
     // Respect standardized archiving levels:
@@ -1137,7 +987,7 @@ export const CatalogPage = () => {
                         )}
                         {/* Level badge */}
                         <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                          {formatCourseLevel(course.level)}
+                          {formatCourseLevel(course.level, lang)}
                         </span>
                       </div>
                     </div>
@@ -1257,201 +1107,31 @@ export const CatalogPage = () => {
       {/* Socratic Interactive Syllabus Enrollment Overlay Panel */}
       <AnimatePresence>
         {selectedEnrollCourse && (
-          <div 
-            onClick={() => setSelectedEnrollCourse(null)} 
-            className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
-          >
-            <motion.div
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
-            >
-              <button 
-                onClick={() => setSelectedEnrollCourse(null)}
-                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
-                  <h2 className="text-2xl font-black text-white">{getLocalizedCourseTitle(selectedEnrollCourse)}</h2>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
-                  <Sparkles className="w-5 h-5 text-violet-400 mx-auto mb-1" />
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('mastery_weight')}</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects ? COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].ects * 100 : 600} {getLocalizedLabel('credits')}</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
-                  <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('duration')}</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} {getLocalizedLabel('hours_unit')}</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl text-center">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('level')}</p>
-                  <p className="text-xs font-black text-white">{formatCourseLevel(selectedEnrollCourse.level)}</p>
-                </div>
-              </div>
-
-              {/* Prerequisites */}
-              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
-                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {t.prerequisites || "Academic Prerequisites"}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
-                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
-                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
-                      const clickable = !!matchedCourse;
-                      
-                      const handleClick = () => {
-                        if (matchedCourse) {
-                          setSelectedEnrollCourse(matchedCourse);
-                        }
-                      };
-
-                      return (
-                        <div 
-                          key={idx} 
-                          onClick={clickable ? handleClick : undefined}
-                          title={clickable ? `${t.prerequisite_view_prefix || "View details for: "}${matchedCourse.title}` : undefined}
-                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
-                            clickable 
-                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
-                              : ''
-                          }`}
-                        >
-                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
-                            {pre}
-                            {clickable && <ChevronRight className="w-3 h-3 text-slate-500" />}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                            isSatisfied 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          }`}>
-                            {isSatisfied 
-                              ? (t.prerequisite_unlocked || "✓ Unlocked") 
-                              : (t.prerequisite_required || "⚠️ Required")}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Syllabus Units */}
-              <div className="space-y-6 mb-10">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
-                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
-                  <div key={uIdx} className="space-y-3">
-                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
-                    </h4>
-                    <div className="grid gap-2 pl-6">
-                      {unit.modules.map((mod, mIdx) => (
-                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
-                          {mod}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {!isLoggedIn ? (
-                <div className="space-y-6 pt-4 border-t border-slate-850 w-full">
-                  <div className="p-5 bg-blue-600/5 border border-blue-500/20 rounded-2xl">
-                    <h5 className="text-xs font-black text-blue-400 uppercase tracking-wider mb-2 font-sans">
-                      {getLocalizedLabel('why_create_account')}
-                    </h5>
-                    <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
-                      {getLocalizedLabel('account_benefits')}
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
-                      onClick={() => {
-                        setSelectedEnrollCourse(null);
-                        window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }));
-                      }}
-                      className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 text-center cursor-pointer font-sans"
-                    >
-                      {getLocalizedLabel('create_account')}
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setSelectedEnrollCourse(null);
-                        window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'login' }));
-                      }}
-                      className="flex-1 py-3.5 bg-slate-800 border border-slate-750 text-slate-300 font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:text-white hover:border-slate-700 text-center cursor-pointer font-sans"
-                    >
-                      {getLocalizedLabel('log_in')}
-                    </button>
-                  </div>
-
-                  <div className="text-center pt-2">
-                    <button
-                      onClick={() => {
-                        setSelectedEnrollCourse(null);
-                        window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
-                      }}
-                      className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2 inline-flex items-center gap-1.5 font-sans"
-                    >
-                      <span>{getLocalizedLabel('start_limited')}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4 w-full">
-                  <button 
-                    onClick={() => setSelectedEnrollCourse(null)}
-                    className="px-6 py-4 bg-slate-950 border border-slate-850 text-slate-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer font-sans"
-                  >
-                    {t.cancel || "Cancel"}
-                  </button>
-                  <button
-                    onClick={async () => {
-                      // Enroll course
-                      let userId = 'u1';
-                      const savedProfile = localStorage.getItem('op_user_profile');
-                      if (savedProfile) {
-                        try {
-                          const p = JSON.parse(savedProfile);
-                          if (p.id) userId = p.id;
-                        } catch (err) {}
-                      }
-                      await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
-                      setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
-                      setSelectedEnrollCourse(null);
-                      window.dispatchEvent(new Event('op_progress_updated'));
-                      // Redirect to course
-                      window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
-                    }}
-                    className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer font-sans"
-                  >
-                    <Rocket className="w-4 h-4" />
-                    {lang === 'FR' ? "S'inscrire & Commencer" : "Enroll & Start Learning"}
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </div>
+          <EnrollmentModal
+            course={selectedEnrollCourse}
+            onClose={() => setSelectedEnrollCourse(null)}
+            lang={lang}
+            isLoggedIn={isLoggedIn}
+            enrolledIds={enrolledIds}
+            courses={courses}
+            showEnrollActions={true}
+            onSelectCourse={(c) => setSelectedEnrollCourse(c)}
+            onEnroll={async () => {
+              let userId = 'u1';
+              const savedProfile = localStorage.getItem('op_user_profile');
+              if (savedProfile) {
+                try {
+                  const p = JSON.parse(savedProfile);
+                  if (p.id) userId = p.id;
+                } catch (err) {}
+              }
+              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
+              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              setSelectedEnrollCourse(null);
+              window.dispatchEvent(new Event('op_progress_updated'));
+              window.location.href = `/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

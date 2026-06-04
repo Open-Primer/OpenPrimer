@@ -972,13 +972,15 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: newFb, error: null };
   },
 
-  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string }) => {
+  updateUserSettings: async (id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean }) => {
     const list = getUsers().map(u => {
       if (u.id === id) {
         const updated = { ...u };
         if (settings.audioVolume !== undefined) updated.audioVolume = settings.audioVolume;
         if (settings.audioRate !== undefined) updated.audioRate = settings.audioRate;
         if (settings.audioVoiceId !== undefined) updated.audioVoiceId = settings.audioVoiceId;
+        if (settings.audioReadCourse !== undefined) updated.audioReadCourse = settings.audioReadCourse;
+        if (settings.audioReadTutor !== undefined) updated.audioReadTutor = settings.audioReadTutor;
         return updated;
       }
       return u;

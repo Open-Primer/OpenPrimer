@@ -83,6 +83,8 @@ async function run() {
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_volume NUMERIC(3, 2) DEFAULT 1.00",
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_rate NUMERIC(3, 2) DEFAULT 1.00",
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_voice_id VARCHAR(255) DEFAULT ''",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_read_course BOOLEAN DEFAULT true",
+      "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_read_tutor BOOLEAN DEFAULT true",
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS version VARCHAR(50) DEFAULT 'v1.0.0'",
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS last_revision_date TIMESTAMP WITH TIME ZONE",
       "UPDATE public.profiles SET password = '3ba484af8a5fe572560ac841e91b77c9ddb8d6a2f6d9cd203975b8dc16e7fabc' WHERE email = 'vanguard.mysterious@gmail.com'"

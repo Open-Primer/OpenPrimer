@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
+import { EnrollmentModal } from './modals/EnrollmentModal';
 import { COURSE_SYLLABUS_DETAILS } from './StaticPages';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
@@ -57,19 +58,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [input, setInput] = useState('');
   const [persona, setPersona] = useState(() => {
     if (typeof window !== 'undefined') {
-      const storedId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
-      const names: Record<string, string> = {
-        socratic: 'Socratic Coach',
-        direct: 'Direct Synthesizer',
-        gamified: 'Gamified Companion',
-        historical: 'Historical Storyteller',
-        feynman: 'Feynman Simplifier',
-        proof: 'Rigorous Proof Master',
-        diamond_age: 'Illustrated Primer Coach'
-      };
-      return names[storedId] || 'Socratic Coach';
+      return localStorage.getItem('op_active_tutor_personality') || 'socratic';
     }
-    return 'Socratic Coach';
+    return 'socratic';
   });
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
   const [isOffline, setIsOffline] = useState(false);
@@ -129,12 +120,15 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     }
   };
 
-  const getPersonaName = (pName: string) => {
-    const selected = personalities.find(p => p.name === pName || p.id === pName);
-    if (selected && selected.translations?.[lang.toUpperCase()]) {
-      return selected.translations[lang.toUpperCase()].name;
+  const getPersonaName = (pId: string) => {
+    const selected = personalities.find(p => p.id === pId || p.name === pId);
+    if (selected) {
+      if (selected.translations?.[lang.toUpperCase()]?.name) {
+        return selected.translations[lang.toUpperCase()].name;
+      }
+      return selected.name;
     }
-    return pName;
+    return pId;
   };
 
   useEffect(() => {
@@ -224,11 +218,11 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           const storedId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
           const active = data.find(p => p.id === storedId);
           if (active) {
-            setPersona(active.name);
+            setPersona(active.id);
           } else {
             const defaultPers = data.find(p => p.isDefault) || data[0];
             if (defaultPers) {
-              setPersona(defaultPers.name);
+              setPersona(defaultPers.id);
               localStorage.setItem('op_active_tutor_personality', defaultPers.id);
             }
           }
@@ -359,6 +353,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           }
         }
       }
+      if (accumulatedText && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('op_read_tutor_response', { detail: { text: accumulatedText } }));
+      }
     } catch (err) {
       console.error("Streaming error", err);
       setMessages(prev => {
@@ -389,24 +386,21 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                                        <select
                       value={persona}
                       onChange={(e) => {
-                        const nextPersona = e.target.value;
-                        setPersona(nextPersona);
-                        const selected = personalities.find(p => p.name === nextPersona || p.id === nextPersona || p.translations?.EN?.name === nextPersona);
-                        if (selected) {
-                          localStorage.setItem('op_active_tutor_personality', selected.id);
-                          window.dispatchEvent(new CustomEvent('op_active_tutor_changed'));
-                        }
+                        const nextPersonaId = e.target.value;
+                        setPersona(nextPersonaId);
+                        localStorage.setItem('op_active_tutor_personality', nextPersonaId);
+                        window.dispatchEvent(new CustomEvent('op_active_tutor_changed'));
                       }}
                       className="bg-transparent text-sm font-bold text-white border-none focus:outline-none focus:ring-0 cursor-pointer p-0 pr-6"
                     >
                       {personalities.length > 0 ? (
                         personalities.map(p => (
-                          <option key={p.id} value={p.name} className="bg-slate-900 text-white text-xs">
+                          <option key={p.id} value={p.id} className="bg-slate-900 text-white text-xs">
                             {p.translations?.[lang.toUpperCase()]?.name || p.name}
                           </option>
                         ))
                       ) : (
-                        <option value="Socratic Coach" className="bg-slate-900 text-white text-xs">Socratic Coach</option>
+                        <option value="socratic" className="bg-slate-900 text-white text-xs">Socratic Coach</option>
                       )}
                     </select>
                 </div>
@@ -727,9 +721,16 @@ export const getLocalizedLabel = (key: string, lang: string) => {
     start_limited: {
       EN: "Start learning with limited features",
       FR: "Démarrer avec des fonctions limitées",
-      ES: "Comenzar a aprender con funciones limitadas",
+      ES: "Comenzar a aprender con functions limitadas",
       DE: "Mit eingeschränkten Funktionen lernen",
       ZH: "以有限的功能开始学习"
+    },
+    completed_modules: {
+      EN: "Completed Courses",
+      FR: "Modules Complétés",
+      ES: "Cursos Completados",
+      DE: "Abgeschlossene Kurse",
+      ZH: "已完成模块"
     }
   };
   return labels[key]?.[l] || labels[key]?.EN || '';
@@ -1028,7 +1029,8 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[1000] px-8 flex items-center justify-between">
+    <>
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-2xl border-b border-slate-900 z-[1000] px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
         {isCoursePage && toggleSidebar && (
           <button 
@@ -1199,14 +1201,14 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         {isReportModalOpen && (
           <div 
             onClick={() => { setIsReportModalOpen(false); setReportComment(''); }}
-            className="fixed inset-0 z-[250] flex items-center justify-center p-8 bg-slate-950/80 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 z-[11000] overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-4 md:p-8 cursor-pointer"
           >
             <motion.div 
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="w-full max-w-lg bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default"
+              className="w-full max-w-lg bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default my-auto"
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
@@ -1214,7 +1216,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                 </h3>
                 <button 
                   onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
-                  className="text-slate-600 hover:text-white transition-colors"
+                  className="text-slate-600 hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -1241,7 +1243,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                 <div className="flex gap-4 pt-4">
                   <button 
                     onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
-                    className="flex-1 py-4 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400"
+                    className="flex-1 py-4 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400 cursor-pointer"
                   >
                     {t.cancel}
                   </button>
@@ -1257,7 +1259,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       triggerToast(t.report_success);
                     }}
                     disabled={submittingReport}
-                    className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/20 disabled:bg-slate-800"
+                    className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/20 disabled:bg-slate-800 cursor-pointer"
                   >
                     {submittingReport 
                       ? t.report_sending
@@ -1272,150 +1274,20 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           {/* Syllabus Enrollment Drawer Modal */}
       <AnimatePresence>
         {selectedEnrollCourse && (
-          <div 
-            onClick={() => setSelectedEnrollCourse(null)} 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md cursor-pointer"
-          >
-            <motion.div
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
-            >
-              <button 
-                onClick={() => setSelectedEnrollCourse(null)}
-                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
-                  <h2 className="text-2xl font-black text-white">
-                    {(() => {
-                      const isEn = lang.toUpperCase() === 'EN';
-                      const slug = selectedEnrollCourse.slug;
-                      const id = selectedEnrollCourse.id;
-                      if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
-                        return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-                      }
-                      if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
-                        return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-                      }
-                      if (slug === 'Biologie_Test' || slug === 'cell-biology' || id === 3) {
-                        return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-                      }
-                      if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
-                        return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-                      }
-                      if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
-                        return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-                      }
-                      if (slug === 'Droit_Test_L2' || id === 6) {
-                        return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
-                      }
-                      return selectedEnrollCourse.title;
-                    })()}
-                  </h2>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('mastery_weight', lang)}</p>
-                  <p className="text-xs font-black text-white">{(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6) * 100} {getLocalizedLabel('credits', lang)}</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('duration', lang)}</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} {getLocalizedLabel('hours_unit', lang)}</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-emerald-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{getLocalizedLabel('level', lang)}</p>
-                  <p className="text-xs font-black text-white">{formatCourseLevel(selectedEnrollCourse.level, lang)}</p>
-                </div>
-              </div>
-
-              {/* Prerequisites */}
-              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
-                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {t.prerequisites}
-                  </p>
-                  <div className="flex flex-col gap-2 text-left">
-                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
-                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
-                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
-                      const clickable = !!matchedCourse;
-                      
-                      const handleClick = () => {
-                        if (matchedCourse) {
-                          setSelectedEnrollCourse(matchedCourse);
-                        }
-                      };
-
-                      return (
-                        <div 
-                          key={idx} 
-                          onClick={clickable ? handleClick : undefined}
-                          title={clickable ? `${t.prerequisite_view_prefix}${matchedCourse.title}` : undefined}
-                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
-                            clickable 
-                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
-                              : ''
-                          }`}
-                        >
-                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5 font-sans">
-                            {pre}
-                            {clickable && <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                            isSatisfied 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          }`}>
-                            {isSatisfied 
-                              ? t.prerequisite_unlocked
-                              : t.prerequisite_required}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Syllabus Units */}
-              <div className="space-y-6 mb-10 text-left">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
-                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
-                  <div key={uIdx} className="space-y-3">
-                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
-                    </h4>
-                    <div className="grid gap-2 pl-6">
-                      {unit.modules.map((mod, mIdx) => (
-                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
-                          {mod}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+          <EnrollmentModal
+            course={selectedEnrollCourse}
+            onClose={() => setSelectedEnrollCourse(null)}
+            lang={lang}
+            isLoggedIn={isLoggedIn}
+            enrolledIds={enrolledIds}
+            courses={courses}
+            showEnrollActions={false}
+            onSelectCourse={(c) => setSelectedEnrollCourse(c)}
+          />
         )}
       </AnimatePresence>
     </nav>
+    </>
   );
 };
 // --- COMPONENT: INSTITUTIONAL FOOTER ---

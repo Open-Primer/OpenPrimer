@@ -32,6 +32,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [showSettings, setShowSettings] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
 
+  // Checkbox settings: read course content and read tutor response (default: true)
+  const [readCourse, setReadCourse] = useState(true);
+  const [readTutor, setReadTutor] = useState(true);
+
+  // States to track active reading of tutor text
+  const [isReadingTutor, setIsReadingTutor] = useState(false);
+  const [tutorSentences, setTutorSentences] = useState<string[]>([]);
+  const [currentTutorSentenceIndex, setCurrentTutorSentenceIndex] = useState(-1);
+
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const highlightedElementRef = useRef<HTMLElement | null>(null);
@@ -43,6 +52,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const rateRef = useRef(1.0);
   const volumeRef = useRef(1.0);
   const selectedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const readCourseRef = useRef(true);
+  const readTutorRef = useRef(true);
+  const isReadingTutorRef = useRef(false);
+  const tutorSentencesRef = useRef<string[]>([]);
+  const currentTutorSentenceIndexRef = useRef(-1);
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -50,11 +64,16 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     rateRef.current = rate;
     volumeRef.current = volume;
     selectedVoiceRef.current = selectedVoice;
-  }, [isPlaying, isPaused, rate, volume, selectedVoice]);
+    readCourseRef.current = readCourse;
+    readTutorRef.current = readTutor;
+    isReadingTutorRef.current = isReadingTutor;
+    tutorSentencesRef.current = tutorSentences;
+    currentTutorSentenceIndexRef.current = currentTutorSentenceIndex;
+  }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, isReadingTutor, tutorSentences, currentTutorSentenceIndex]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string }) => {
+  const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean }) => {
     if (typeof window === 'undefined') return;
     const loggedIn = localStorage.getItem('op_session');
     const savedProfile = localStorage.getItem('op_user_profile');
@@ -66,6 +85,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (updates.volume !== undefined) p.audioVolume = updates.volume;
         if (updates.rate !== undefined) p.audioRate = updates.rate;
         if (updates.voiceId !== undefined) p.audioVoiceId = updates.voiceId;
+        if (updates.readCourse !== undefined) p.audioReadCourse = updates.readCourse;
+        if (updates.readTutor !== undefined) p.audioReadTutor = updates.readTutor;
         localStorage.setItem('op_user_profile', JSON.stringify(p));
       } catch (e) {}
     }
@@ -87,6 +108,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (updates.volume !== undefined) dbUpdates.audioVolume = updates.volume;
         if (updates.rate !== undefined) dbUpdates.audioRate = updates.rate;
         if (updates.voiceId !== undefined) dbUpdates.audioVoiceId = updates.voiceId;
+        if (updates.readCourse !== undefined) dbUpdates.audioReadCourse = updates.readCourse;
+        if (updates.readTutor !== undefined) dbUpdates.audioReadTutor = updates.readTutor;
 
         const { error } = await dbService.updateUserSettings(userId, dbUpdates);
         if (error) {
@@ -124,6 +147,26 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         if (p.audioVoiceId) {
           savedVoiceId = p.audioVoiceId;
         }
+        
+        let needsSave = false;
+        if (p.audioReadCourse !== undefined) {
+          setReadCourse(p.audioReadCourse);
+        } else {
+          p.audioReadCourse = true;
+          setReadCourse(true);
+          needsSave = true;
+        }
+        if (p.audioReadTutor !== undefined) {
+          setReadTutor(p.audioReadTutor);
+        } else {
+          p.audioReadTutor = true;
+          setReadTutor(true);
+          needsSave = true;
+        }
+        
+        if (needsSave) {
+          localStorage.setItem('op_user_profile', JSON.stringify(p));
+        }
       } catch (err) {}
     }
 
@@ -158,6 +201,16 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                 if (currentUser.audioVoiceId) {
                   p.audioVoiceId = currentUser.audioVoiceId;
                   savedVoiceId = currentUser.audioVoiceId;
+                  updated = true;
+                }
+                if (currentUser.audioReadCourse !== undefined && currentUser.audioReadCourse !== null) {
+                  setReadCourse(currentUser.audioReadCourse);
+                  p.audioReadCourse = currentUser.audioReadCourse;
+                  updated = true;
+                }
+                if (currentUser.audioReadTutor !== undefined && currentUser.audioReadTutor !== null) {
+                  setReadTutor(currentUser.audioReadTutor);
+                  p.audioReadTutor = currentUser.audioReadTutor;
                   updated = true;
                 }
                 if (updated) {
@@ -391,6 +444,99 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     synthRef.current.speak(utterance);
   };
 
+  const speakTutorSentence = (index: number, list: string[], voiceOverride?: SpeechSynthesisVoice | null) => {
+    if (!synthRef.current || index < 0 || index >= list.length) {
+      setIsPlaying(false);
+      setIsPaused(false);
+      setIsReadingTutor(false);
+      setCurrentTutorSentenceIndex(-1);
+      return;
+    }
+
+    synthRef.current.cancel();
+    setCurrentTutorSentenceIndex(index);
+
+    const utterance = new SpeechSynthesisUtterance(list[index]);
+    utteranceRef.current = utterance;
+    
+    const activeVoice = voiceOverride || selectedVoiceRef.current;
+    if (activeVoice) {
+      utterance.voice = activeVoice;
+    }
+    utterance.rate = rateRef.current;
+    utterance.volume = volumeRef.current;
+
+    utterance.onend = () => {
+      if (isPlayingRef.current && !isPausedRef.current) {
+        const nextIndex = index + 1;
+        if (nextIndex < list.length) {
+          speakTutorSentence(nextIndex, list, activeVoice);
+        } else {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setIsReadingTutor(false);
+          setCurrentTutorSentenceIndex(-1);
+        }
+      }
+    };
+
+    utterance.onerror = (e) => {
+      if (e.error !== 'interrupted') {
+        console.error('SpeechSynthesis error:', e);
+        setIsPlaying(false);
+        setIsPaused(false);
+        setIsReadingTutor(false);
+      }
+    };
+
+    synthRef.current.speak(utterance);
+  };
+
+  // 7. Tutor Speech Response Listener
+  useEffect(() => {
+    const handleTutorResponse = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const text = customEvent.detail?.text;
+      if (!text || !readTutorRef.current) return;
+
+      // Clean MDX/Markdown formatting from the tutor response
+      let cleaned = text;
+      cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
+      cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');
+      cleaned = cleaned.replace(/#+\s+/g, '');
+      cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+      cleaned = cleaned.replace(/>\s+\[![^\]]+\]/g, ''); 
+      cleaned = cleaned.replace(/>+/g, '');
+      cleaned = cleaned.replace(/\*+/g, '');
+      cleaned = cleaned.replace(/`+/g, '');
+
+      const rawSentences = cleaned.split(/(?<=[.!?])\s+/);
+      const list = rawSentences
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 2 && !s.startsWith('<') && !s.startsWith('{'));
+
+      if (list.length > 0) {
+        if (synthRef.current) {
+          synthRef.current.cancel();
+        }
+        // Set state to play tutor response
+        setIsPlaying(true);
+        setIsPaused(false);
+        setIsReadingTutor(true);
+        setTutorSentences(list);
+        setCurrentTutorSentenceIndex(0);
+        
+        // Speak first tutor sentence
+        speakTutorSentence(0, list);
+      }
+    };
+
+    window.addEventListener('op_read_tutor_response', handleTutorResponse);
+    return () => {
+      window.removeEventListener('op_read_tutor_response', handleTutorResponse);
+    };
+  }, []);
+
   const getFirstVisibleSentenceIndex = (): number => {
     const article = document.querySelector('article');
     if (!article || sentences.length === 0) return 0;
@@ -474,7 +620,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   }, [sentences, isPlaying, isPaused, currentSentenceIndex]);
 
   const togglePlay = () => {
-    if (!isSupported || sentences.length === 0) return;
+    if (!isSupported) return;
 
     if (isPlaying) {
       if (isPaused) {
@@ -489,10 +635,20 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         }
       }
     } else {
-      setIsPlaying(true);
-      setIsPaused(false);
-      const startIndex = currentSentenceIndex >= 0 ? currentSentenceIndex : getFirstVisibleSentenceIndex();
-      speakSentence(startIndex);
+      if (isReadingTutor) {
+        if (tutorSentences.length === 0) return;
+        setIsPlaying(true);
+        setIsPaused(false);
+        const startIndex = currentTutorSentenceIndex >= 0 ? currentTutorSentenceIndex : 0;
+        speakTutorSentence(startIndex, tutorSentences);
+      } else {
+        if (!readCourseRef.current) return;
+        if (sentences.length === 0) return;
+        setIsPlaying(true);
+        setIsPaused(false);
+        const startIndex = currentSentenceIndex >= 0 ? currentSentenceIndex : getFirstVisibleSentenceIndex();
+        speakSentence(startIndex);
+      }
     }
   };
 
@@ -500,20 +656,35 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setIsPlaying(false);
     setIsPaused(false);
     setCurrentSentenceIndex(-1);
+    setIsReadingTutor(false);
+    setTutorSentences([]);
+    setCurrentTutorSentenceIndex(-1);
     if (synthRef.current) {
       synthRef.current.cancel();
     }
   };
 
   const nextSentence = () => {
-    if (currentSentenceIndex < sentences.length - 1) {
-      speakSentence(currentSentenceIndex + 1);
+    if (isReadingTutor) {
+      if (currentTutorSentenceIndex < tutorSentences.length - 1) {
+        speakTutorSentence(currentTutorSentenceIndex + 1, tutorSentences);
+      }
+    } else {
+      if (currentSentenceIndex < sentences.length - 1) {
+        speakSentence(currentSentenceIndex + 1);
+      }
     }
   };
 
   const prevSentence = () => {
-    if (currentSentenceIndex > 0) {
-      speakSentence(currentSentenceIndex - 1);
+    if (isReadingTutor) {
+      if (currentTutorSentenceIndex > 0) {
+        speakTutorSentence(currentTutorSentenceIndex - 1, tutorSentences);
+      }
+    } else {
+      if (currentSentenceIndex > 0) {
+        speakSentence(currentSentenceIndex - 1);
+      }
     }
   };
 
@@ -542,31 +713,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       {/* Main glassmorphic player pill (strictly aligned to sidebar width) */}
       <div className="w-full flex items-center justify-between bg-slate-900/95 border border-slate-800/80 p-2.5 px-3 rounded-full shadow-2xl backdrop-blur-xl transition-all hover:border-slate-700/80">
         
-        {/* Left Part: Live Visualizer or Static Icon */}
-        <div className="w-8 flex items-center justify-center">
-          {isPlaying && !isPaused ? (
-            <div className="flex items-center gap-0.5 h-3 justify-center">
-              <style>{`
-                @keyframes tts-wave-1 { 0%, 100% { height: 3px; } 50% { height: 11px; } }
-                @keyframes tts-wave-2 { 0%, 100% { height: 4px; } 50% { height: 9px; } }
-                @keyframes tts-wave-3 { 0%, 100% { height: 2px; } 50% { height: 12px; } }
-                @keyframes tts-wave-4 { 0%, 100% { height: 5px; } 50% { height: 7px; } }
-              `}</style>
-              <div className="w-[1.5px] bg-blue-400 rounded-full" style={{ animation: 'tts-wave-1 0.6s infinite ease-in-out' }} />
-              <div className="w-[1.5px] bg-indigo-400 rounded-full" style={{ animation: 'tts-wave-2 0.8s infinite ease-in-out' }} />
-              <div className="w-[1.5px] bg-violet-400 rounded-full" style={{ animation: 'tts-wave-3 0.5s infinite ease-in-out' }} />
-              <div className="w-[1.5px] bg-fuchsia-400 rounded-full" style={{ animation: 'tts-wave-4 0.7s infinite ease-in-out' }} />
-            </div>
-          ) : (
-            <Volume2 className="w-3.5 h-3.5 text-slate-500" />
-          )}
-        </div>
-
         {/* Center Part: Playback Controls */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={prevSentence}
-            disabled={currentSentenceIndex <= 0}
+            disabled={
+              isReadingTutor 
+                ? currentTutorSentenceIndex <= 0 
+                : currentSentenceIndex <= 0
+            }
             className="p-1 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
             title="Previous Sentence"
             aria-label="Previous sentence"
@@ -595,7 +750,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
           <button
             onClick={nextSentence}
-            disabled={currentSentenceIndex >= sentences.length - 1}
+            disabled={
+              isReadingTutor 
+                ? currentTutorSentenceIndex >= tutorSentences.length - 1 
+                : currentSentenceIndex >= sentences.length - 1
+            }
             className="p-1 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
             title="Next Sentence"
             aria-label="Next sentence"
@@ -680,8 +839,16 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             onChange={(e) => {
               const r = parseFloat(e.target.value);
               setRate(r);
-              if (isPlaying && !isPaused && currentSentenceIndex >= 0) {
-                speakSentence(currentSentenceIndex);
+              if (isPlaying && !isPaused) {
+                if (isReadingTutor) {
+                  if (currentTutorSentenceIndex >= 0) {
+                    speakTutorSentence(currentTutorSentenceIndex, tutorSentences);
+                  }
+                } else {
+                  if (currentSentenceIndex >= 0) {
+                    speakSentence(currentSentenceIndex);
+                  }
+                }
               }
               saveSettingsToCloud({ rate: r });
             }}
@@ -724,8 +891,16 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                         const match = voices.find(v => v.name === e.target.value);
                         if (match) {
                           setSelectedVoice(match);
-                          if (isPlaying && !isPaused && currentSentenceIndex >= 0) {
-                            speakSentence(currentSentenceIndex, match);
+                          if (isPlaying && !isPaused) {
+                            if (isReadingTutor) {
+                              if (currentTutorSentenceIndex >= 0) {
+                                speakTutorSentence(currentTutorSentenceIndex, tutorSentences, match);
+                              }
+                            } else {
+                              if (currentSentenceIndex >= 0) {
+                                speakSentence(currentSentenceIndex, match);
+                              }
+                            }
                           }
                           saveSettingsToCloud({ voiceId: match.name });
                         }
@@ -738,6 +913,37 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Read Course / Read Tutor Checkboxes */}
+                  <div className="pt-1.5 border-t border-slate-800 space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors text-[9px]">
+                      <input
+                        type="checkbox"
+                        checked={readCourse}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          setReadCourse(val);
+                          saveSettingsToCloud({ readCourse: val });
+                        }}
+                        className="rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-0 focus:ring-offset-0 w-3 h-3 cursor-pointer"
+                      />
+                      <span>{lang.toUpperCase() === 'FR' ? 'Lire le cours' : 'Read course text'}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors text-[9px]">
+                      <input
+                        type="checkbox"
+                        checked={readTutor}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          setReadTutor(val);
+                          saveSettingsToCloud({ readTutor: val });
+                        }}
+                        className="rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-0 focus:ring-offset-0 w-3 h-3 cursor-pointer"
+                      />
+                      <span>{lang.toUpperCase() === 'FR' ? 'Lire le tuteur' : 'Read tutor answers'}</span>
+                    </label>
                   </div>
 
                   <div className="pt-1.5 border-t border-slate-800 text-[8px] text-slate-500 space-y-0.5">

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
+import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
 import { COURSE_SYLLABUS_DETAILS } from '@/components/StaticPages';
 
 
@@ -585,7 +586,7 @@ export default function CurriculumPage() {
                                       <Icons.Trash2 className="w-4 h-4" />
                                     </button>
                                     <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                      {course.level}
+                                       {formatCourseLevel(course.level, lang)}
                                     </span>
                                  </div>
                               </div>
@@ -646,7 +647,7 @@ export default function CurriculumPage() {
               {completedCourses.length > 0 && (
                 <section className="mt-20">
                    <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-emerald-500">
-                      <Award className="w-6 h-6 text-emerald-500 animate-pulse" /> {lang.toUpperCase() === 'FR' ? "Modules Complétés" : "Completed Courses"}
+                      <Award className="w-6 h-6 text-emerald-500 animate-pulse" /> {getLocalizedLabel('completed_modules', lang)}
                    </h2>
                    <div className="grid md:grid-cols-2 gap-8">
                      {completedCourses.map((course: any) => {
@@ -668,11 +669,6 @@ export default function CurriculumPage() {
                            return '/L1/Law/Droit_Test/introduction';
                          }
                          return '/catalog';
-                       };
-
-                       const formatCourseLevel = (level: string | number) => {
-                         const lvlStr = String(level).toUpperCase();
-                         return lvlStr;
                        };
 
                        const getLocalizedTitle = (c: any) => {
@@ -736,7 +732,7 @@ export default function CurriculumPage() {
                                      </button>
 
                                     <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                      {formatCourseLevel(course.level)}
+                                      {formatCourseLevel(course.level, lang)}
                                     </span>
                                  </div>
                               </div>
@@ -1256,146 +1252,16 @@ export default function CurriculumPage() {
       {/* Syllabus Enrollment Drawer Modal */}
       <AnimatePresence>
         {selectedEnrollCourse && (
-          <div 
-            onClick={() => setSelectedEnrollCourse(null)} 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto cursor-pointer"
-          >
-            <motion.div
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
-            >
-              <button 
-                onClick={() => setSelectedEnrollCourse(null)}
-                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{selectedEnrollCourse.subject}</p>
-                  <h2 className="text-2xl font-black text-white">
-                    {(() => {
-                      const isEn = lang.toUpperCase() === 'EN';
-                      const slug = selectedEnrollCourse.slug;
-                      const id = selectedEnrollCourse.id;
-                      if (slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || id === 1) {
-                        return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-                      }
-                      if (slug === 'Physique_Test_L2' || slug === 'quantum-physics' || id === 2) {
-                        return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-                      }
-                      if (slug === 'Biologie_Test' || slug === 'cell-biology' || id === 3) {
-                        return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-                      }
-                      if (slug === 'Biologie_Test_L1' || slug === 'molecular-genetics' || id === 4) {
-                        return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-                      }
-                      if (slug === 'Droit_Test' || slug === 'constitutional-law' || id === 5) {
-                        return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-                      }
-                      if (slug === 'Droit_Test_L2' || id === 6) {
-                        return isEn ? "Law: Criminal Law (L2)" : "Droit : Droit Pénal (L2)";
-                      }
-                      return selectedEnrollCourse.title;
-                    })()}
-                  </h2>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-violet-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Mastery Weight</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.ects || 6} pts</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-blue-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Duration</p>
-                  <p className="text-xs font-black text-white">{COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.hours || 150} hrs</p>
-                </div>
-                <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl">
-                  <svg className="w-5 h-5 text-emerald-400 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">Level</p>
-                  <p className="text-xs font-black text-white">{String(selectedEnrollCourse.level).toUpperCase()}</p>
-                </div>
-              </div>
-
-              {/* Prerequisites */}
-              {selectedEnrollCourse && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.prerequisites && COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.length > 0 && (
-                <div className="mb-8 p-5 bg-slate-950/30 border border-slate-850 rounded-2xl">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3">
-                    {t.prerequisites}
-                  </p>
-                  <div className="flex flex-col gap-2 text-left">
-                    {COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id].prerequisites.map((pre, idx) => {
-                      const matchedCourse = courses.find(c => c.title.toLowerCase().includes(pre.toLowerCase()) || pre.toLowerCase().includes(c.title.toLowerCase()));
-                      const isSatisfied = matchedCourse ? enrolledIds.includes(matchedCourse.id) : false;
-                      const clickable = !!matchedCourse;
-                      
-                      const handleClick = () => {
-                        if (matchedCourse) {
-                          setSelectedEnrollCourse(matchedCourse);
-                        }
-                      };
-
-                      return (
-                        <div 
-                          key={idx} 
-                          onClick={clickable ? handleClick : undefined}
-                          title={clickable ? `${t.prerequisite_view_prefix}${matchedCourse.title}` : undefined}
-                          className={`flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-slate-850/60 transition-all ${
-                            clickable 
-                              ? 'hover:bg-slate-900/80 hover:border-blue-500/30 hover:scale-[1.01] cursor-pointer' 
-                              : ''
-                          }`}
-                        >
-                          <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5 font-sans">
-                            {pre}
-                            {clickable && <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                            isSatisfied 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          }`}>
-                            {isSatisfied 
-                              ? t.prerequisite_unlocked : t.prerequisite_required}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Syllabus Units */}
-              <div className="space-y-6 mb-10 text-left">
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview}</p>
-                {(COURSE_SYLLABUS_DETAILS[selectedEnrollCourse.id]?.units || []).map((unit, uIdx) => (
-                  <div key={uIdx} className="space-y-3">
-                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                      <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
-                    </h4>
-                    <div className="grid gap-2 pl-6">
-                      {unit.modules.map((mod, mIdx) => (
-                        <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
-                          {mod}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+          <EnrollmentModal
+            course={selectedEnrollCourse}
+            onClose={() => setSelectedEnrollCourse(null)}
+            lang={lang}
+            isLoggedIn={true}
+            enrolledIds={enrolledIds}
+            courses={courses}
+            showEnrollActions={false}
+            onSelectCourse={(c) => setSelectedEnrollCourse(c)}
+          />
         )}
       </AnimatePresence>
 
