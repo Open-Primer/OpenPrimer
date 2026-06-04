@@ -1204,6 +1204,8 @@ export default function CurriculumPage() {
             enrolledIds={enrolledIds}
             courses={courses}
             showEnrollActions={true}
+            bookmarks={bookmarks}
+            onToggleBookmark={toggleBookmark}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
               let userId = 'u1';

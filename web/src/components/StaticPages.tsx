@@ -835,17 +835,15 @@ export const CatalogPage = () => {
 
             {/* ── Row 2: Sort + Saved — right-aligned under Row 1 ─────────── */}
             <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end w-full">
-              {/* Saved bookmark — only when logged in */}
-              {isLoggedIn && (
-                <button 
-                  type="button"
-                  onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
-                  className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
-                >
-                  <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
-                  <span className="hidden sm:inline">{t.saved}</span>
-                </button>
-              )}
+              {/* Saved bookmark */}
+              <button 
+                type="button"
+                onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
+                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
+              >
+                <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
+                <span className="hidden sm:inline">{t.saved}</span>
+              </button>
 
               {/* Sort — Popularity / Graduates */}
               <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
@@ -1011,24 +1009,22 @@ export const CatalogPage = () => {
                                 <span>{t.course_sheet || "Course Sheet"}</span>
                               </button>
 
-                              {/* Bookmark (logged-in only) */}
-                              {isLoggedIn && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    toggleBookmark(course.id, e);
-                                  }}
-                                  title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-                                  className={`w-8 h-8 border rounded-xl transition-all flex items-center justify-center cursor-pointer ${
-                                    bookmarks.includes(course.id)
-                                      ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
-                                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                                  }`}
-                                >
-                                  <Bookmark className={`w-3 h-3 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                                </button>
-                              )}
+                              {/* Bookmark */}
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleBookmark(course.id, e);
+                                }}
+                                title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+                                className={`w-8 h-8 border rounded-xl transition-all flex items-center justify-center cursor-pointer ${
+                                  bookmarks.includes(course.id)
+                                    ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                                }`}
+                              >
+                                <Bookmark className={`w-3 h-3 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1183,6 +1179,8 @@ export const CatalogPage = () => {
             enrolledIds={enrolledIds}
             courses={courses}
             showEnrollActions={true}
+            bookmarks={bookmarks}
+            onToggleBookmark={toggleBookmark}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
               if (!isLoggedIn) {

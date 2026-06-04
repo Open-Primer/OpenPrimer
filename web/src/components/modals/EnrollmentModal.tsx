@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket } from 'lucide-react';
+import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket, Bookmark } from 'lucide-react';
 import { getLocalizedLabel, formatCourseLevel, UI_STRINGS } from '../RefinedUI';
 import { COURSE_SYLLABUS_DETAILS } from '../StaticPages';
 import { dbService } from '@/lib/db';
@@ -15,6 +15,8 @@ interface EnrollmentModalProps {
   onEnroll?: () => Promise<void>;
   onSelectCourse?: (course: any) => void;
   showEnrollActions?: boolean;
+  bookmarks?: number[];
+  onToggleBookmark?: (id: number, e: React.MouseEvent) => void;
 }
 
 export const EnrollmentModal = ({
@@ -26,7 +28,9 @@ export const EnrollmentModal = ({
   courses,
   onEnroll,
   onSelectCourse,
-  showEnrollActions = false
+  showEnrollActions = false,
+  bookmarks,
+  onToggleBookmark
 }: EnrollmentModalProps) => {
   if (!course) return null;
 
@@ -60,6 +64,21 @@ export const EnrollmentModal = ({
         exit={{ opacity: 0, scale: 0.95 }}
         className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
       >
+        {bookmarks && onToggleBookmark && (
+          <button
+            onClick={(e) => onToggleBookmark(course.id, e)}
+            className={`absolute top-6 right-18 p-2 rounded-xl border transition-all cursor-pointer ${
+              bookmarks.includes(course.id)
+                ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                : 'bg-slate-950 border-slate-850 text-slate-500 hover:text-white hover:border-slate-700'
+            }`}
+            title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+            aria-label="Toggle bookmark"
+          >
+            <Bookmark className={`w-5 h-5 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+          </button>
+        )}
+
         <button 
           onClick={onClose}
           className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
@@ -179,6 +198,21 @@ export const EnrollmentModal = ({
               >
                 <Rocket className="w-4 h-4" />
                 {t.enroll_label || 'Enroll & Start'}
+              </button>
+            )}
+            {bookmarks && onToggleBookmark && (
+              <button
+                type="button"
+                onClick={(e) => onToggleBookmark(course.id, e)}
+                className={`px-4 py-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${
+                  bookmarks.includes(course.id)
+                    ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                    : 'bg-slate-950 border-slate-850 text-slate-500 hover:text-white hover:border-slate-700'
+                }`}
+                title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+              >
+                <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                <span>{bookmarks.includes(course.id) ? (t.saved || 'Saved') : (t.save_course || 'Save')}</span>
               </button>
             )}
             <button
