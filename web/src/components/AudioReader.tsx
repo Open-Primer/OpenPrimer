@@ -519,8 +519,21 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   useEffect(() => {
     if (!content) return;
 
+    // Ensure headings, list items and paragraph breaks end with punctuation so they split cleanly
+    let preprocessed = content;
+    
+    // 1. If a line starts with '#' (heading) and doesn't end with punctuation, append a period
+    preprocessed = preprocessed.replace(/^(#+\s+.*?[^.!?])\s*$/gm, '$1.');
+    
+    // 2. If a line starts with '-' or '*' or '\d+.' (list item) and doesn't end with punctuation, append a period
+    preprocessed = preprocessed.replace(/^([-*]\s+.*?[^.!?])\s*$/gm, '$1.');
+    preprocessed = preprocessed.replace(/^(\d+\.\s+.*?[^.!?])\s*$/gm, '$1.');
+    
+    // 3. For any double newlines (paragraph boundaries), if the preceding block doesn't end with punctuation, append a period
+    preprocessed = preprocessed.replace(/([^.!?])\s*\n\n+/g, '$1.\n\n');
+
     // Clean MDX frontmatter
-    let cleaned = content.replace(/---[\s\S]*?---/, '');
+    let cleaned = preprocessed.replace(/---[\s\S]*?---/, '');
     
     // Clean LaTeX equations
     cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
@@ -538,7 +551,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     const rawSentences = cleaned.split(/(?<=[.!?])\s+/);
     const filteredSentences = rawSentences
       .map(s => s.trim())
-      .filter(s => s.length > 5 && !s.startsWith('<') && !s.startsWith('{')); // Filter out HTML and code blocks
+      .filter(s => s.length > 2 && !s.startsWith('<') && !s.startsWith('{')); // Filter out HTML and code blocks
 
     setSentences(filteredSentences);
     setCurrentSentenceIndex(-1);
@@ -954,6 +967,14 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           0%, 100% { border-left-color: rgb(59, 130, 246); }
           50% { border-left-color: rgba(59, 130, 246, 0.4); }
         }
+        @keyframes paper-highlight-pulse {
+          0%, 100% { border-left-color: rgb(245, 158, 11); }
+          50% { border-left-color: rgba(245, 158, 11, 0.4); }
+        }
+        @keyframes focus-highlight-pulse {
+          0%, 100% { border-left-color: #ffffff; }
+          50% { border-left-color: rgba(255, 255, 255, 0.3); }
+        }
         .reading-highlight {
           background-color: rgba(59, 130, 246, 0.08) !important;
           border-left: 4px solid rgb(59, 130, 246) !important;
@@ -970,8 +991,65 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           padding: 1px 3px !important;
           box-shadow: 0 0 8px rgba(59, 130, 246, 0.2) !important;
         }
+        /* Direct backup block-level highlights for fallback or styling headings */
+        .reading-highlight h1,
+        .reading-highlight h2,
+        .reading-highlight h3,
+        .reading-highlight h4,
+        .reading-highlight h5,
+        .reading-highlight h6,
+        .reading-highlight p,
+        .reading-highlight li,
+        .reading-highlight blockquote {
+          color: #60a5fa !important;
+        }
+
+        /* --- Paper Theme Overrides --- */
+        .theme-paper .reading-highlight {
+          background-color: rgba(245, 158, 11, 0.04) !important;
+          border-left: 4px solid rgb(245, 158, 11) !important;
+          animation: paper-highlight-pulse 2s infinite ease-in-out;
+        }
         .theme-paper .reading-highlight-text {
-          color: #1e3a8a !important;
+          background-color: rgba(245, 158, 11, 0.26) !important;
+          color: #78350f !important;
+          border-bottom: 2px solid rgba(245, 158, 11, 0.6) !important;
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.15) !important;
+        }
+        .theme-paper .reading-highlight h1,
+        .theme-paper .reading-highlight h2,
+        .theme-paper .reading-highlight h3,
+        .theme-paper .reading-highlight h4,
+        .theme-paper .reading-highlight h5,
+        .theme-paper .reading-highlight h6,
+        .theme-paper .reading-highlight p,
+        .theme-paper .reading-highlight li,
+        .theme-paper .reading-highlight blockquote {
+          color: #78350f !important;
+        }
+
+        /* --- Focus Theme Overrides --- */
+        .theme-focus .reading-highlight {
+          background-color: rgba(255, 255, 255, 0.03) !important;
+          border-left: 4px solid #ffffff !important;
+          animation: focus-highlight-pulse 2s infinite ease-in-out;
+        }
+        .theme-focus .reading-highlight-text {
+          background-color: rgba(255, 255, 255, 0.15) !important;
+          color: #ffffff !important;
+          border-bottom: 2px solid rgba(255, 255, 255, 0.4) !important;
+          box-shadow: none !important;
+        }
+        .theme-focus .reading-highlight h1,
+        .theme-focus .reading-highlight h2,
+        .theme-focus .reading-highlight h3,
+        .theme-focus .reading-highlight h4,
+        .theme-focus .reading-highlight h5,
+        .theme-focus .reading-highlight h6,
+        .theme-focus .reading-highlight p,
+        .theme-focus .reading-highlight li,
+        .theme-focus .reading-highlight blockquote {
+          color: #ffffff !important;
         }
       `}</style>
 
