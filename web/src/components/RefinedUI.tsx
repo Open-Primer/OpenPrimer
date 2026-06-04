@@ -1281,7 +1281,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
               if (!isLoggedIn) {
-                window.location.href = `/signup`;
+                window.location.href = `/signup?redirect=/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
                 return;
               }
               let userId = 'u1';

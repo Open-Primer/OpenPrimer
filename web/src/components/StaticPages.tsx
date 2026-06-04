@@ -1103,7 +1103,7 @@ export const CatalogPage = () => {
                                 window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
                               }, 2000);
                             } else {
-                              window.location.href = `/signup`;
+                              window.location.href = `/signup?redirect=/${course.level}/${course.subject}/${course.slug}/introduction`;
                             }
                           }}
                           className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
@@ -1186,7 +1186,7 @@ export const CatalogPage = () => {
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async () => {
               if (!isLoggedIn) {
-                window.location.href = `/signup`;
+                window.location.href = `/signup?redirect=/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
                 return;
               }
               let userId = 'u1';

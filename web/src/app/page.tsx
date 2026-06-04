@@ -304,6 +304,10 @@ export default function Home() {
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
+      const redirectParam = params.get('redirect');
+      if (redirectParam) {
+        sessionStorage.setItem('op_auth_redirect', redirectParam);
+      }
       const authParam = params.get('auth');
       if (authParam === 'login') {
         setAuthModal('login');
@@ -368,7 +372,13 @@ export default function Home() {
               setIsLoggedIn(true);
               setAuthModal(null);
               window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
-              router.push('/catalog');
+              const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+              if (redirectUrl) {
+                sessionStorage.removeItem('op_auth_redirect');
+                window.location.href = redirectUrl;
+              } else {
+                router.push('/catalog');
+              }
             } else {
               setErrorMsg(data.error || (lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed."));
             }
@@ -474,6 +484,7 @@ export default function Home() {
     setErrorMsg('');
 
     try {
+      const redirectUrl = typeof window !== 'undefined' ? sessionStorage.getItem('op_auth_redirect') || undefined : undefined;
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -482,7 +493,8 @@ export default function Home() {
           lastName,
           email: emailLower,
           password,
-          preferredLang: lang
+          preferredLang: lang,
+          redirectUrl
         })
       });
       const data = await res.json();

@@ -5,7 +5,7 @@ import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emai
 
 export async function POST(request: Request) {
   try {
-    const { firstName, lastName, email, password, preferredLang, selectedCourses } = await request.json();
+    const { firstName, lastName, email, password, preferredLang, selectedCourses, redirectUrl } = await request.json();
 
     // Server-side password complexity enforcement (12 chars min + complexity)
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
@@ -78,7 +78,10 @@ export async function POST(request: Request) {
       console.warn('[SIGNUP WARNING] Supabase connection error in persisting verification token:', dbErr);
     }
 
-    const verificationUrl = `${proto}://${host}/signup?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+    let verificationUrl = `${proto}://${host}/signup?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+    if (redirectUrl) {
+      verificationUrl += `&redirect=${encodeURIComponent(redirectUrl)}`;
+    }
 
     // Get email template from database or translate dynamically
     const dbTemplate = await getOrTranslateTemplate('verify_email', preferredLang || 'EN');
