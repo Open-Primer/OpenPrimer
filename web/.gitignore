@@ -51,3 +51,6 @@ next-env.d.ts
 # prebuild outputs
 /content
 /syllabus.json
+
+# Scratch / one-off debug scripts (may contain secrets or API keys)
+/scratch/
