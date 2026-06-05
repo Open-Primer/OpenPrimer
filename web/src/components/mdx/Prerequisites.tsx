@@ -13,7 +13,7 @@ interface PrerequisiteItem {
 }
 
 interface PrerequisitesProps {
-  items?: PrerequisiteItem[];
+  items?: (PrerequisiteItem | string)[];
   itemsBase64?: string;
 }
 
@@ -23,35 +23,40 @@ const TRANS = {
     desc: "To ensure proper understanding and manage cognitive load, the following prerequisite modules are recommended. If you haven't mastered them, we advise reviewing them first.",
     mastered: "Mastered",
     review: "Review Course",
-    not_started: "Prerequisite Required"
+    not_started: "Prerequisite Required",
+    recommended: "Recommended"
   },
   FR: {
     header: "Indices de charge cognitive — Prérequis Stricts",
     desc: "Pour optimiser votre charge cognitive et assurer la bonne compréhension de cette leçon, les prérequis suivants sont recommandés. Si vous ne les maîtrisez pas, nous vous conseillons de les réviser.",
     mastered: "Maîtrisé",
     review: "Réviser le cours",
-    not_started: "Prérequis Requis"
+    not_started: "Prérequis Requis",
+    recommended: "Recommandé"
   },
   ES: {
     header: "Índices de carga cognitiva — Prerrequisitos Estrictos",
     desc: "Para garantizar una comprensión adecuada y gestionar la carga cognitiva, se recomiendan los siguientes módulos de prerrequisitos. Si no los dominas, te aconsejamos revisarlos primero.",
     mastered: "Dominado",
     review: "Revisar curso",
-    not_started: "Prerrequisito Requerido"
+    not_started: "Prerrequisito Requerido",
+    recommended: "Recomendado"
   },
   DE: {
     header: "Kognitive Belastungsindizes — Strikte Voraussetzungen",
     desc: "Um ein angemessenes Verständnis zu gewährleisten und die kognitive Belastung zu steuern, werden die folgenden Voraussetzungsmodule empfohlen. Wenn Sie diese nicht beherrschen, empfehlen wir Ihnen, sie zuerst zu wiederholen.",
     mastered: "Meistert",
     review: "Kurs wiederholen",
-    not_started: "Voraussetzung erforderlich"
+    not_started: "Voraussetzung erforderlich",
+    recommended: "Empfohlen"
   },
   ZH: {
     header: "认知负荷指标 — 严格先修课程",
     desc: "为了确保正确理解并管理认知负荷，建议先修以下模块。如果您尚未掌握，建议先进行复习。",
     mastered: "已掌握",
     review: "复习课程",
-    not_started: "需要先修课程"
+    not_started: "需要先修课程",
+    recommended: "推荐"
   }
 };
 
@@ -99,11 +104,35 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {resolvedItems.map((item, index) => {
-          const progress = progressMap[item.slug] ?? 0;
+          if (typeof item === 'string') {
+            return (
+              <div
+                key={index}
+                className="p-4 rounded-2xl border bg-slate-950/20 border-slate-850/60 flex flex-col justify-between gap-3 transition-all duration-200"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest block mb-0.5">
+                      {t.recommended}
+                    </span>
+                    <h5 className="text-xs font-bold text-slate-300 leading-relaxed">{item}</h5>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const progress = progressMap[item.slug || ''] ?? 0;
           const isMastered = progress === 100;
+          const subject = item.subject || 'General';
+          const level = item.level || 'L1';
+          const title = item.title || 'Untitled Course';
 
           // Format course link
-          const path = `/${item.level}/${item.subject}/${item.slug}/introduction`;
+          const path = `/${level}/${subject}/${item.slug || ''}/introduction`;
 
           return (
             <div
@@ -117,9 +146,9 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest block mb-0.5">
-                    {item.subject} • {item.level.replace('_', ' ')}
+                    {subject} • {level.replace('_', ' ')}
                   </span>
-                  <h5 className="text-sm font-bold text-white">{item.title}</h5>
+                  <h5 className="text-sm font-bold text-white">{title}</h5>
                 </div>
                 {isMastered ? (
                   <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400 flex items-center gap-1">

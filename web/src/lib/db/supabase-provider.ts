@@ -256,7 +256,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
             parentCurriculumSlug: t.parentCurriculumSlug || '',
             courseType: t.courseType || '',
             volume: t.volume || '',
-            description: t.description || ''
+            description: t.description || '',
+            completedAt: t.completedAt || ''
           };
           return {
             ...(rowId ? { id: rowId } : {}),

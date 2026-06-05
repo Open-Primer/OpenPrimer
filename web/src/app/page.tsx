@@ -366,7 +366,6 @@ export default function Home() {
               localStorage.setItem('op_user_profile', JSON.stringify(verifiedProfile));
               localStorage.setItem('op_session', 'true');
               localStorage.setItem('op_registration_verified', 'true');
-              localStorage.setItem('op_show_welcome_catalog_popup', 'true');
               localStorage.setItem('op_logged_in_before', 'true');
               
               setIsLoggedIn(true);
@@ -374,9 +373,11 @@ export default function Home() {
               window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
               const redirectUrl = sessionStorage.getItem('op_auth_redirect');
               if (redirectUrl) {
+                localStorage.removeItem('op_show_welcome_catalog_popup');
                 sessionStorage.removeItem('op_auth_redirect');
                 window.location.href = redirectUrl;
               } else {
+                localStorage.setItem('op_show_welcome_catalog_popup', 'true');
                 router.push('/catalog');
               }
             } else {
@@ -553,7 +554,10 @@ export default function Home() {
           const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 
           if (isVerified && !hasLoggedInBefore) {
-            localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+            const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+            if (!redirectUrl) {
+              localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+            }
             localStorage.setItem('op_logged_in_before', 'true');
           }
 

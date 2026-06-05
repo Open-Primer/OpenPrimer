@@ -91,6 +91,7 @@ export default function AuthCallbackPage() {
           if (sessionRedirect) {
             targetPath = sessionRedirect;
             sessionStorage.removeItem("op_auth_redirect");
+            localStorage.removeItem("op_show_welcome_catalog_popup");
           }
         }
         router.push(targetPath);

@@ -457,6 +457,14 @@ export const COCKPIT_DICTIONARY = {
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Search courses and archive/unarchive specific languages or entire courses instantly.",
     "Search courses...": "Search courses...",
     // 5. Pipeline Queue Tab
+    "Pipeline Queue Parameters": "Pipeline Queue Parameters",
+    "Configure global parameters and retry policies for the task pipeline.": "Configure global parameters and retry policies for the task pipeline.",
+    "Auto-Retry Failed Tasks": "Auto-Retry Failed Tasks",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Enable to automatically retry tasks that have failed due to database or agent errors.",
+    "Auto-Retry Interval": "Auto-Retry Interval",
+    "Cooldown delay in hours before a failed task is retried.": "Cooldown delay in hours before a failed task is retried.",
+    "Task Retention": "Task Retention",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Retention period in days before completed or failed tasks are permanently purged.",
     "Search tasks...": "Search tasks...",
     "No active tasks in queue. Build system idle.": "No active tasks in queue. Build system idle.",
     // 6. Achievements Tab
@@ -741,7 +749,11 @@ export const COCKPIT_DICTIONARY = {
     "Biochemistry Syllabus Update": "Biochemistry Syllabus Update",
     "Organic Chemistry Reactions": "Organic Chemistry Reactions",
     "Microeconomics Market Forms": "Microeconomics Market Forms",
-    "Machine Learning Fundamentals": "Machine Learning Fundamentals"},
+    "Machine Learning Fundamentals": "Machine Learning Fundamentals",
+    "Logs": "Logs",
+    "Retry": "Retry",
+    "Increase Priority": "Increase Priority",
+    "Decrease Priority": "Decrease Priority"},
   FR: {
     "Volume Preference": "Préférence de Volume",
     "Automatic": "Automatique",
@@ -841,6 +853,14 @@ export const COCKPIT_DICTIONARY = {
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Rechercher des cours et archiver/désarchiver des langues ou des cours entiers.",
     "Search courses...": "Rechercher des cours...",
     // 5. Pipeline Queue Tab
+    "Pipeline Queue Parameters": "Paramètres de la file d'attente",
+    "Configure global parameters and retry policies for the task pipeline.": "Configurez les paramètres globaux et les politiques de relance de la file d'attente.",
+    "Auto-Retry Failed Tasks": "Relance automatique des tâches échouées",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Activer pour relancer automatiquement les tâches ayant échoué.",
+    "Auto-Retry Interval": "Intervalle de relance automatique",
+    "Cooldown delay in hours before a failed task is retried.": "Délai avant relance d'une tâche échouée (en heures).",
+    "Task Retention": "Rétention des tâches",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Période de rétention avant purge définitive des tâches terminées ou échouées (en jours).",
     "Search tasks...": "Rechercher des tâches...",
     "No active tasks in queue. Build system idle.": "Aucune tâche active dans la file. Système en veille.",
     // 6. Achievements Tab
@@ -1124,7 +1144,11 @@ export const COCKPIT_DICTIONARY = {
     "Biochemistry Syllabus Update": "Mise à jour du programme de biochimie",
     "Organic Chemistry Reactions": "Réactions de chimie organique",
     "Microeconomics Market Forms": "Formes de marché en microéconomie",
-    "Machine Learning Fundamentals": "Fondations du Machine Learning"},
+    "Machine Learning Fundamentals": "Fondations du Machine Learning",
+    "Logs": "Journaux",
+    "Retry": "Relancer",
+    "Increase Priority": "Augmenter la priorité",
+    "Decrease Priority": "Diminuer la priorité"},
   ES: {
     "Volume Preference": "Preferencia de Volumen",
     "Automatic": "Automático",
@@ -1224,6 +1248,14 @@ export const COCKPIT_DICTIONARY = {
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Buscar cursos y archivar/desarchivar idiomas o cursos completos.",
     "Search courses...": "Buscar cursos...",
     // 5. Pipeline Queue Tab
+    "Pipeline Queue Parameters": "Parámetros de la cola del pipeline",
+    "Configure global parameters and retry policies for the task pipeline.": "Configure los parámetros globales y las políticas de reintento para el flujo de tareas.",
+    "Auto-Retry Failed Tasks": "Reintento automático de tareas fallidas",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Activar para reintentar automáticamente las tareas que han fallado.",
+    "Auto-Retry Interval": "Intervalo de reintento automático",
+    "Cooldown delay in hours before a failed task is retried.": "Retraso antes de reintentar una tarea fallida (en horas).",
+    "Task Retention": "Retención de tareas",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retención antes de purgar permanentemente las tareas completadas o fallidas (en días).",
     "Search tasks...": "Buscar tareas...",
     "No active tasks in queue. Build system idle.": "No hay tareas activas. Sistema inactivo.",
     // 6. Achievements Tab
@@ -1507,7 +1539,11 @@ export const COCKPIT_DICTIONARY = {
     "Biochemistry Syllabus Update": "Actualización del plan de estudios de bioquímica",
     "Organic Chemistry Reactions": "Reacciones de química orgánica",
     "Microeconomics Market Forms": "Formas de mercado de microeconomía",
-    "Machine Learning Fundamentals": "Fundamentos de Aprendizaje Automático"},
+    "Machine Learning Fundamentals": "Fundamentos de Aprendizaje Automático",
+    "Logs": "Registros",
+    "Retry": "Reintentar",
+    "Increase Priority": "Aumentar prioridad",
+    "Decrease Priority": "Disminuir prioridad"},
   DE: {
     "AI Tutor Personalities": "KI-Tutor-Persönlichkeiten",
     "Seeded Achievements badges": "Standard-Errungenschaften",
@@ -1604,6 +1640,14 @@ export const COCKPIT_DICTIONARY = {
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "Suchen Sie Kurse und archivieren/reaktivieren Sie Sprachen oder ganze Kurse.",
     "Search courses...": "Kurse suchen...",
     // 5. Pipeline Queue Tab
+    "Pipeline Queue Parameters": "Pipeline-Warteschlangenparameter",
+    "Configure global parameters and retry policies for the task pipeline.": "Konfigurieren Sie globale Parameter und Wiederholungsrichtlinien für die Aufgabenpipeline.",
+    "Auto-Retry Failed Tasks": "Automatische Wiederholung fehlgeschlagener Aufgaben",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Aktivieren Sie diese Option, um fehlgeschlagene Aufgaben automatisch neu zu starten.",
+    "Auto-Retry Interval": "Wiederholungsintervall",
+    "Cooldown delay in hours before a failed task is retried.": "Abkühlungsverzögerung in Stunden, bevor eine fehlgeschlagene Aufgabe erneut versucht wird.",
+    "Task Retention": "Aufgabenaufbewahrung",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Aufbewahrungszeitraum in Tagen, bevor abgeschlossene oder fehlgeschlagene Aufgaben dauerhaft gelöscht werden.",
     "Search tasks...": "Aufgaben suchen...",
     "No active tasks in queue. Build system idle.": "Keine aktiven Aufgaben. System im Leerlauf.",
     // 6. Achievements Tab
@@ -1888,7 +1932,11 @@ export const COCKPIT_DICTIONARY = {
     "Biochemistry Syllabus Update": "Aktualisierung des Lehrplans für Biochemie",
     "Organic Chemistry Reactions": "Organische Chemie Reaktionen",
     "Microeconomics Market Forms": "Marktformen der Mikroökonomie",
-    "Machine Learning Fundamentals": "Grundlagen des maschinellen Lernens"},
+    "Machine Learning Fundamentals": "Grundlagen des maschinellen Lernens",
+    "Logs": "Protokolle",
+    "Retry": "Wiederholen",
+    "Increase Priority": "Priorität erhöhen",
+    "Decrease Priority": "Priorität verringern"},
   ZH: {
     "AI Tutor Personalities": "AI 导师个性配置",
     "Seeded Achievements badges": "预设成就勋章",
@@ -1980,6 +2028,15 @@ export const COCKPIT_DICTIONARY = {
     "Curriculum Registry and Archival Control": "课程注册与归档控制",
     "Search courses and archive/unarchive specific languages or entire courses instantly.": "立即搜索课程并归档/取消归档特定语言或整个课程。",
     "Search courses...": "搜索课程...",
+    // 5. Pipeline Queue Tab
+    "Pipeline Queue Parameters": "任务队列参数",
+    "Configure global parameters and retry policies for the task pipeline.": "配置任务管道的全局参数和重试策略。",
+    "Auto-Retry Failed Tasks": "自动重试失败任务",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "启用后可自动重试因数据库或代理错误而失败的任务。",
+    "Auto-Retry Interval": "自动重试间隔",
+    "Cooldown delay in hours before a failed task is retried.": "重试失败任务之前的冷却延迟时间（小时）。",
+    "Task Retention": "任务保留期",
+    "Retention period in days before completed or failed tasks are permanently purged.": "已完成或失败任务被永久清除前的保留天数。",
     "Search tasks...": "搜索任务...",
     "No active tasks in queue. Build system idle.": "队列中没有活动任务。构建系统空闲。",
     "Strict Parameter Check": "严格参数检查",
@@ -2262,7 +2319,11 @@ export const COCKPIT_DICTIONARY = {
     "Biochemistry Syllabus Update": "生物化学教学大纲更新",
     "Organic Chemistry Reactions": "有机化学反应",
     "Microeconomics Market Forms": "微观经济学市场形式",
-    "Machine Learning Fundamentals": "机器学习基础"}
+    "Machine Learning Fundamentals": "机器学习基础",
+    "Logs": "日志",
+    "Retry": "重试",
+    "Increase Priority": "提高优先级",
+    "Decrease Priority": "降低优先级"}
 };
 
 export const LOCALIZED_POPUPS = {
@@ -2680,7 +2741,15 @@ const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Refuse / Archive": "Refuse / Archive",
     "Approve & Revise": "Approve & Revise",
     "Increase Priority": "Increase Priority",
-    "Decrease Priority": "Decrease Priority"
+    "Decrease Priority": "Decrease Priority",
+    "Pipeline Queue Parameters": "Pipeline Queue Parameters",
+    "Configure global parameters and retry policies for the task pipeline.": "Configure global parameters and retry policies for the task pipeline.",
+    "Auto-Retry Failed Tasks": "Auto-Retry Failed Tasks",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Enable to automatically retry tasks that have failed due to database or agent errors.",
+    "Auto-Retry Interval": "Auto-Retry Interval",
+    "Cooldown delay in hours before a failed task is retried.": "Cooldown delay in hours before a failed task is retried.",
+    "Task Retention": "Task Retention",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Retention period in days before completed or failed tasks are permanently purged."
   },
   FR: {
     "Approve & Promote": "Approuver & Promouvoir",
@@ -2689,7 +2758,15 @@ const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Refuse / Archive": "Refuser / Archiver",
     "Approve & Revise": "Approuver & Réviser",
     "Increase Priority": "Augmenter la priorité",
-    "Decrease Priority": "Diminuer la priorité"
+    "Decrease Priority": "Diminuer la priorité",
+    "Pipeline Queue Parameters": "Paramètres de la File d'Attente",
+    "Configure global parameters and retry policies for the task pipeline.": "Configurez les paramètres globaux et les politiques de relance du pipeline.",
+    "Auto-Retry Failed Tasks": "Auto-Relance des Échecs",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Activer pour relancer automatiquement les tâches ayant échoué en raison d'erreurs de base de données ou d'agents.",
+    "Auto-Retry Interval": "Intervalle de Relance",
+    "Cooldown delay in hours before a failed task is retried.": "Délai en heures avant qu'une tâche échouée ne soit automatiquement relancée.",
+    "Task Retention": "Rétention des Tâches",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Période de conservation en jours avant que les tâches terminées ou échouées ne soient purgées."
   },
   ES: {
     "Approve & Promote": "Aprobar y Promover",
@@ -2698,7 +2775,15 @@ const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Refuse / Archive": "Rechazar / Archivar",
     "Approve & Revise": "Aprobar y Revisar",
     "Increase Priority": "Aumentar prioridad",
-    "Decrease Priority": "Disminuir prioridad"
+    "Decrease Priority": "Disminuir prioridad",
+    "Pipeline Queue Parameters": "Parámetros de la Cola de Tareas",
+    "Configure global parameters and retry policies for the task pipeline.": "Configure los parámetros globales y las políticas de reintento para la cola de tareas.",
+    "Auto-Retry Failed Tasks": "Reintento Automático de Fallos",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Activar para reintentar automáticamente las tareas que han fallado debido a errores de base de datos o agentes.",
+    "Auto-Retry Interval": "Intervalo de Reintento",
+    "Cooldown delay in hours before a failed task is retried.": "Tiempo de espera en horas antes de que se vuelva a intentar una tarea fallida.",
+    "Task Retention": "Retención de Tareas",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retención en días antes de que las tareas completadas o fallidas se eliminen permanentemente."
   },
   DE: {
     "Approve & Promote": "Genehmigen & Fördern",
@@ -2707,7 +2792,15 @@ const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Refuse / Archive": "Ablehnen / Archivieren",
     "Approve & Revise": "Genehmigen & Überarbeiten",
     "Increase Priority": "Priorität erhöhen",
-    "Decrease Priority": "Priorität verringern"
+    "Decrease Priority": "Priorität verringern",
+    "Pipeline Queue Parameters": "Warteschlangenparameter",
+    "Configure global parameters and retry policies for the task pipeline.": "Konfigurieren Sie globale Parameter und Wiederholungsrichtlinien für die Warteschlange.",
+    "Auto-Retry Failed Tasks": "Fehlgeschlagene Aufträge wiederholen",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "Aktivieren, um fehlgeschlagene Aufträge automatisch zu wiederholen.",
+    "Auto-Retry Interval": "Wiederholungsintervall",
+    "Cooldown delay in hours before a failed task is retried.": "Wertezeit in Stunden, bevor ein fehlgeschlagener Auftrag wiederholt wird.",
+    "Task Retention": "Aufbewahrungszeitraum",
+    "Retention period in days before completed or failed tasks are permanently purged.": "Aufbewahrungsdauer in Tagen, bevor abgeschlossene oder fehlgeschlagene Aufträge gelöscht werden."
   },
   ZH: {
     "Approve & Promote": "批准并晋升",
@@ -2716,7 +2809,15 @@ const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Refuse / Archive": "拒绝/归档",
     "Approve & Revise": "批准并修改",
     "Increase Priority": "提高优先级",
-    "Decrease Priority": "降低优先级"
+    "Decrease Priority": "降低优先级",
+    "Pipeline Queue Parameters": "任务管道队列参数",
+    "Configure global parameters and retry policies for the task pipeline.": "配置任务管道的全局参数和重试策略。",
+    "Auto-Retry Failed Tasks": "自动重试失败任务",
+    "Enable to automatically retry tasks that have failed due to database or agent errors.": "启用此选项可自动重试因数据库或代理错误而失败的任务。",
+    "Auto-Retry Interval": "自动重试间隔",
+    "Cooldown delay in hours before a failed task is retried.": "失败任务自动重试之前的冷却延迟时间（小时）。",
+    "Task Retention": "任务保留时间",
+    "Retention period in days before completed or failed tasks are permanently purged.": "已完成或失败的任务被永久清除之前的保留期（天）。"
   }
 };
 
@@ -2815,6 +2916,11 @@ export default function AdminCurriculumPage() {
   const [threshold, setThreshold] = useState(5);
   const [autoApproveDelayHours, setAutoApproveDelayHours] = useState(24);
   const [reevaluationDays, setReevaluationDays] = useState(15);
+
+  // Pipeline Queue settings
+  const [queueAutoRetry, setQueueAutoRetry] = useState(false);
+  const [queueAutoRetryDelayHours, setQueueAutoRetryDelayHours] = useState(24);
+  const [queueRetentionDays, setQueueRetentionDays] = useState(30);
 
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -3239,6 +3345,10 @@ export default function AdminCurriculumPage() {
       case 'revMinReports': setRevMinReports(Number(value) || 3); break;
       case 'revRetentionDays': setRevRetentionDays(Number(value) || 30); break;
       case 'autoRevisionDelayHours': setAutoRevisionDelayHours(Number(value) || 24); break;
+
+      case 'queueAutoRetry': setQueueAutoRetry(value === 'true'); break;
+      case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(value) || 24); break;
+      case 'queueRetentionDays': setQueueRetentionDays(Number(value) || 30); break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -3286,6 +3396,10 @@ export default function AdminCurriculumPage() {
             case 'revMinReports': setRevMinReports(Number(val) || 3); break;
             case 'revRetentionDays': setRevRetentionDays(Number(val) || 30); break;
             case 'autoRevisionDelayHours': setAutoRevisionDelayHours(Number(val) || 24); break;
+
+            case 'queueAutoRetry': setQueueAutoRetry(val === 'true'); break;
+            case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(val) || 24); break;
+            case 'queueRetentionDays': setQueueRetentionDays(Number(val) || 30); break;
           }
         });
       }
@@ -3342,7 +3456,7 @@ export default function AdminCurriculumPage() {
     const qRes = await dbService.getPipelineQueue();
     if (qRes && qRes.data) {
       const parsed = qRes.data;
-      const migrated = parsed.map((t: any) => {
+      let migrated = parsed.map((t: any) => {
         const updates: any = {};
         if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
           updates.completedAt = t.timestamp
@@ -3355,7 +3469,43 @@ export default function AdminCurriculumPage() {
         }
         return Object.keys(updates).length ? { ...t, ...updates } : t;
       });
-      const needsSave = migrated.some((t: any, i: number) => t !== parsed[i]);
+
+      const now = Date.now();
+      let changed = false;
+
+      // 1. Process Auto-Retry for failed tasks
+      if (queueAutoRetry) {
+        migrated = migrated.map((t: any) => {
+          if (t.status === 'failed') {
+            const completedTime = t.completedAt ? new Date(t.completedAt).getTime() : 0;
+            if (completedTime > 0 && (now - completedTime >= queueAutoRetryDelayHours * 60 * 60 * 1000)) {
+              changed = true;
+              return {
+                ...t,
+                status: 'queued',
+                progress: 0,
+                logs: [...(t.logs || []), `[SYSTEM] Automatically retried task after ${queueAutoRetryDelayHours}h cooldown.`]
+              };
+            }
+          }
+          return t;
+        });
+      }
+
+      // 2. Process Retention (delete tasks older than queueRetentionDays)
+      migrated = migrated.filter((t: any) => {
+        const isFinished = t.status === 'complete' || t.status === 'completed' || t.status === 'failed' || t.status === 'cancelled';
+        if (isFinished) {
+          const completedTime = t.completedAt ? new Date(t.completedAt).getTime() : new Date(t.created_at || t.timestamp || now).getTime();
+          if (now - completedTime >= queueRetentionDays * 24 * 60 * 60 * 1000) {
+            changed = true;
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const needsSave = changed || migrated.some((t: any, i: number) => t !== parsed[i]);
       if (needsSave) {
         dbService.savePipelineQueue(migrated);
       }
@@ -3560,6 +3710,7 @@ export default function AdminCurriculumPage() {
                       ...t,
                       status: 'failed',
                       progress: 0,
+                      completedAt: new Date().toISOString(),
                       logs: [...(t.logs || []), `Error: ${err.message || String(err)}`]
                     };
                   }
@@ -6423,8 +6574,81 @@ export default function AdminCurriculumPage() {
 
               {/* 5. PIPELINE QUEUE TAB */}
               {view === 'queue' && (
-                <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-8">
+                  {/* Pipeline Queue Control Parameters */}
+                  <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 animate-fadeIn">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-slate-900/60">
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-white uppercase tracking-widest">{tr("Pipeline Queue Parameters")}</h3>
+                        <p className="text-xs text-slate-500">{tr("Configure global parameters and retry policies for the task pipeline.")}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      {/* 0. Auto-Retry Failed Tasks */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Retry Failed Tasks")}</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            {tr("Enable to automatically retry tasks that have failed due to database or agent errors.")}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <button 
+                            type="button"
+                            onClick={() => updateParameter('queueAutoRetry', String(!queueAutoRetry))}
+                            className={`w-10 h-5 rounded-full relative transition-all ${queueAutoRetry ? 'bg-cyan-600' : 'bg-slate-800'}`}
+                          >
+                            <motion.div animate={{ x: queueAutoRetry ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                          </button>
+                          <span className="text-xs font-bold text-slate-300">{tr(queueAutoRetry ? 'ON' : 'OFF')}</span>
+                        </div>
+                      </div>
+
+                      {/* 1. Auto-Retry Interval */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Retry Interval")}</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            {tr("Cooldown delay in hours before a failed task is retried.")}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={queueAutoRetryDelayHours} 
+                            onChange={(e) => updateParameter('queueAutoRetryDelayHours', String(Math.max(1, Number(e.target.value))))}
+                            className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Hours")}</span>
+                        </div>
+                      </div>
+
+                      {/* 2. Task Retention */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Task Retention")}</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            {tr("Retention period in days before completed or failed tasks are permanently purged.")}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={queueRetentionDays} 
+                            onChange={(e) => updateParameter('queueRetentionDays', String(Math.max(1, Number(e.target.value))))}
+                            className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Days")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                      <h3 className="text-xl font-black text-slate-200">{tr("Active Task Pipeline Queue")}</h3>
                      <div className="flex items-center gap-3">
                        <input
@@ -6715,7 +6939,8 @@ export default function AdminCurriculumPage() {
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+            )}
 
              {/* 6. ACHIEVEMENTS GRID TAB */}
              {view === 'achievements' && (

@@ -2059,7 +2059,10 @@ let systemParametersList: SystemParameter[] = [
   { key: 'revMinVotes', value: '5' },
   { key: 'revMinReports', value: '3' },
   { key: 'revRetentionDays', value: '30' },
-  { key: 'autoRevisionDelayHours', value: '24' }
+  { key: 'autoRevisionDelayHours', value: '24' },
+  { key: 'queueAutoRetry', value: 'false' },
+  { key: 'queueAutoRetryDelayHours', value: '24' },
+  { key: 'queueRetentionDays', value: '30' }
 ];
 
 if (typeof window !== 'undefined') {

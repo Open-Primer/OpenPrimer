@@ -31,11 +31,68 @@ export async function GET(request: Request) {
       logs.push(`[SYSTEM] Querying Supabase 'task_queue' table...`);
       const { data, error } = await supabase
         .from('task_queue')
-        .select('*')
-        .eq('status', 'queued');
+        .select('*');
         
       if (!error && data) {
-        queuedTasks = data;
+        // Load settings from system_parameters
+        let queueAutoRetry = false;
+        let queueAutoRetryDelayHours = 24;
+        let queueRetentionDays = 30;
+
+        const { data: dbParams } = await supabase.from('system_parameters').select('*');
+        if (dbParams) {
+          const paramsMap = new Map<string, string>(dbParams.map(p => [p.key, p.value]));
+          queueAutoRetry = paramsMap.get('queueAutoRetry') === 'true';
+          queueAutoRetryDelayHours = Number(paramsMap.get('queueAutoRetryDelayHours')) || 24;
+          queueRetentionDays = Number(paramsMap.get('queueRetentionDays')) || 30;
+        }
+
+        const now = new Date();
+        const retentionCutoff = new Date(now.getTime() - queueRetentionDays * 24 * 60 * 60 * 1000);
+        const tasksToDelete: string[] = [];
+        const tasksToRetry: any[] = [];
+
+        data.forEach((task: any) => {
+          let extra: any = {};
+          try {
+            extra = JSON.parse(task.description || '{}');
+          } catch (e) {}
+
+          const isFinished = task.status === 'completed' || task.status === 'complete' || task.status === 'failed' || task.status === 'cancelled';
+          const completedTime = extra.completedAt ? new Date(extra.completedAt) : new Date(task.created_at || now);
+
+          if (isFinished && completedTime < retentionCutoff) {
+            tasksToDelete.push(task.id);
+          } else if (queueAutoRetry && task.status === 'failed') {
+            const retryCutoff = new Date(now.getTime() - queueAutoRetryDelayHours * 60 * 60 * 1000);
+            if (completedTime < retryCutoff) {
+              tasksToRetry.push(task);
+            }
+          }
+        });
+
+        if (tasksToDelete.length > 0) {
+          logs.push(`[RETENTION] Purging ${tasksToDelete.length} stale tasks older than ${queueRetentionDays} days.`);
+          await supabase.from('task_queue').delete().in('id', tasksToDelete);
+        }
+
+        if (tasksToRetry.length > 0) {
+          logs.push(`[RETRY] Automatically retrying ${tasksToRetry.length} failed tasks.`);
+          for (const task of tasksToRetry) {
+            await supabase
+              .from('task_queue')
+              .update({
+                status: 'queued',
+                progress: 0,
+                logs: [...(task.logs || []), `[SYSTEM] Automatically retried task after ${queueAutoRetryDelayHours}h cooldown.`]
+              })
+              .eq('id', task.id);
+            task.status = 'queued';
+            task.progress = 0;
+          }
+        }
+
+        queuedTasks = data.filter((t: any) => !tasksToDelete.includes(t.id) && t.status === 'queued');
       } else {
         logs.push(`[WARNING] Failed to query Supabase task queue: ${error?.message}. Emulating task loop.`);
       }
@@ -123,11 +180,18 @@ export async function GET(request: Request) {
 
         // Mark task as completed
         if (!isOffline) {
+          let extra: any = {};
+          try {
+            extra = JSON.parse(nextTask.description || '{}');
+          } catch (e) {}
+          extra.completedAt = new Date().toISOString();
+
           await supabase
             .from('task_queue')
             .update({ 
               status: 'completed', 
               progress: 100, 
+              description: JSON.stringify(extra),
               logs: [...(nextTask.logs || []), 'Successfully completed course content generation.'] 
             })
             .eq('id', nextTask.id);
@@ -136,11 +200,18 @@ export async function GET(request: Request) {
         logs.push(`[SUCCESS] Task "${nextTask.name}" processed successfully.`);
       } catch (taskErr: any) {
         if (!isOffline) {
+          let extra: any = {};
+          try {
+            extra = JSON.parse(nextTask.description || '{}');
+          } catch (e) {}
+          extra.completedAt = new Date().toISOString();
+
           await supabase
             .from('task_queue')
             .update({ 
               status: 'failed', 
               progress: 0, 
+              description: JSON.stringify(extra),
               logs: [...(nextTask.logs || []), `Failed: ${taskErr.message || String(taskErr)}`] 
             })
             .eq('id', nextTask.id);

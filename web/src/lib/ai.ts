@@ -332,40 +332,9 @@ Requirements:
       }
 
       if (!rawMdx) {
-        console.warn(`[AI GENERATOR] Failed to generate content for "${item.title}". Using fallback mock content.`);
-        rawMdx = `# 🔍 Academic Generation Diagnostics
-
-An error occurred while dynamically compiling the lesson content for **${item.title}** under course **${courseName}**.
-
-> [!WARNING]
-> The AI Generation pipeline was unable to contact the configured LLM providers or failed to validate the generated output. Below is a detailed, actionable diagnostics report to help you resolve this issue.
-
-### 📋 Environment & Configuration Status
-
-| Provider | Status | Configured | Error / Details |
-| :--- | :--- | :--- | :--- |
-| **Vertex AI** | ${vertexStatus} | \`${isVertexConfigured() ? 'TRUE' : 'FALSE'}\` | ${vertexError} |
-| **Gemini AI Studio** | ${studioStatus} | \`${!!apiKey ? 'TRUE' : 'FALSE'}\` | ${studioError} |
-
-### 🛠️ Actionable Troubleshooting Steps
-
-1. **Verify Environment Variables**:
-   Ensure the following are correctly defined in your server's \`.env.local\` or hosting provider dashboard:
-   - \`GOOGLE_APPLICATION_CREDENTIALS\` (absolute path to GCP Service Account JSON file)
-   - \`VERTEX_PROJECT_ID\` (your GCP project ID)
-   - \`VERTEX_LOCATION\` (e.g., \`us-central1\`)
-   - \`GEMINI_API_KEY\` (Gemini API Studio key)
-
-2. **Check GCP & Vertex AI Permissions**:
-   - Ensure the Vertex AI API is enabled in your Google Cloud Console.
-   - Verify the Service Account has the **Vertex AI User** role.
-
-3. **Verify API Quotas & Billing**:
-   - Check if you have exceeded Vertex AI or AI Studio rate limits/quotas.
-   - Confirm your Google Cloud Billing account is active.
-
-4. **Server Logs**:
-   - Inspect the server terminal output or deployment logs for full stack traces associated with this request.`;
+        const errorMsg = `[AI GENERATOR CRITICAL ERROR] Failed to generate content for lesson "${item.title}" in course "${courseName}". Vertex AI Status: ${vertexStatus} (${vertexError}), AI Studio Status: ${studioStatus} (${studioError}).`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Agent 4 (Verifier/Critic) refinement loop
@@ -624,6 +593,7 @@ ${validatedMdx}`;
     }
   } catch (err) {
     console.error("AI Generation failed:", err);
+    throw err;
   }
 }
 
@@ -799,6 +769,7 @@ ${lesson.content}`;
     }
   } catch (err) {
     console.error("AI Translation failed:", err);
+    throw err;
   }
 }
 

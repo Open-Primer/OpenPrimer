@@ -430,15 +430,8 @@ export default function CurriculumPage() {
           const activeCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
           const completedCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
 
-          const activeCourses = activeCoursesAll.filter((course: any) => {
-            const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
-            return !courseDetails || !courseDetails.languages || courseDetails.languages.length === 0 || courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
-          });
-
-          const completedCourses = completedCoursesAll.filter((course: any) => {
-            const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
-            return !courseDetails || !courseDetails.languages || courseDetails.languages.length === 0 || courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
-          });
+          const activeCourses = activeCoursesAll;
+          const completedCourses = completedCoursesAll;
 
           return (
             <>
@@ -472,7 +465,13 @@ export default function CurriculumPage() {
                                       </span>
                                     ) : (
                                       <>
-                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                        {courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
+                                           <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1">
+                                             <Icons.Globe className="w-3 h-3" />
+                                             {courseDetails.languages.join(', ').toUpperCase()}
+                                           </span>
+                                         )}
+                                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
                                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                           {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
                                         </span>
@@ -652,7 +651,13 @@ export default function CurriculumPage() {
                                     <Award className="w-6 h-6 animate-pulse" />
                                  </div>
                                  <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                    {courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
+                                       <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1">
+                                         <Icons.Globe className="w-3 h-3" />
+                                         {courseDetails.languages.join(', ').toUpperCase()}
+                                       </span>
+                                     )}
+                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
                                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                       {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
                                     </span>
@@ -1302,32 +1307,17 @@ export default function CurriculumPage() {
 
       <AnimatePresence>
         {enrollmentSuccess && (
-          <div className="fixed inset-0 z-[12000] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="p-8 bg-slate-900/80 border border-emerald-500/30 rounded-[32px] shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center"
-            >
-              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
-                <Icons.CheckCircle className="w-8 h-8 animate-bounce" />
-              </div>
-              <h3 className="text-lg font-black text-white uppercase tracking-widest mt-2">
-                {lang.toUpperCase() === 'FR' ? 'Inscription Réussie' : 'Enrollment Successful'}
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                {lang.toUpperCase() === 'FR' 
-                  ? 'Votre inscription a bien été prise en compte.' 
-                  : lang.toUpperCase() === 'ES'
-                  ? 'Su inscripción ha sido registrada con éxito.'
-                  : lang.toUpperCase() === 'DE'
-                  ? 'Ihre Anmeldung wurde erfolgreich registriert.'
-                  : lang.toUpperCase() === 'ZH'
-                  ? '您的注册已成功登记。'
-                  : 'Your enrollment has been successfully registered.'}
-              </p>
-            </motion.div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: -20, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -20, x: "-50%" }}
+            className="fixed top-24 left-1/2 px-6 py-3.5 rounded-full bg-slate-900/90 border border-emerald-500/30 shadow-2xl flex items-center gap-3 z-[12000] backdrop-blur-xl"
+          >
+            <Icons.CheckCircle className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <span className="text-xs font-bold text-slate-100 tracking-wide">
+              {lang.toUpperCase() === 'FR' ? 'Inscription Réussie !' : 'Enrollment Successful!'}
+            </span>
+          </motion.div>
         )}
       </AnimatePresence>
 
