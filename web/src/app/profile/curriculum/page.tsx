@@ -15,7 +15,7 @@ import { COURSE_SYLLABUS_DETAILS } from '@/components/StaticPages';
 
 export default function CurriculumPage() {
   const router = useRouter();
-  const { language: lang } = useLanguage();
+  const { language: lang, setLanguage: setLang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   const [progress, setProgress] = useState<any>(null);
@@ -28,6 +28,17 @@ export default function CurriculumPage() {
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+
+  const handleCourseClick = (c: any) => {
+    if (c && c.languages && c.languages.length > 0) {
+      const currentLangLower = lang.toLowerCase();
+      const supportsCurrentLang = c.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+      if (!supportsCurrentLang) {
+        const newLang = c.languages[0].toUpperCase();
+        setLang(newLang);
+      }
+    }
+  };
   const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
   const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
   const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
@@ -576,7 +587,12 @@ export default function CurriculumPage() {
                        }
 
                        return (
-                         <Link key={course.id} href={getCoursePath(courseDetails || course)} className="group">
+                          <Link 
+                            key={course.id} 
+                            href={getCoursePath(courseDetails || course)} 
+                            onClick={() => handleCourseClick(courseDetails || course)}
+                            className="group"
+                          >
                            {cardContent}
                          </Link>
                        );
@@ -638,7 +654,12 @@ export default function CurriculumPage() {
                        const averageRating = courseDetails?.averageRating || 0;
 
                        return (
-                         <Link key={course.id} href={getCoursePath(course)} className="group">
+                          <Link 
+                            key={course.id} 
+                            href={getCoursePath(course)} 
+                            onClick={() => handleCourseClick(courseDetails || course)}
+                            className="group"
+                          >
                            <div className="p-8 bg-slate-900/40 border border-emerald-500/20 rounded-[48px] hover:border-emerald-500/50 transition-all shadow-2xl flex flex-col h-full relative overflow-hidden">
                               <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
                                 <div className="absolute top-6 -right-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none">
@@ -828,10 +849,7 @@ export default function CurriculumPage() {
         {/* ACHIEVEMENTS GALLERY */}
         {(() => {
           const earnedAchievements = achievements.filter(ach => earnedIds.includes(ach.id));
-          const filteredAchievements = earnedAchievements.filter(ach => {
-            if (lang.toUpperCase() === 'EN') return true;
-            return !!ach.translations?.[lang.toUpperCase()]?.name || !!ach.translations?.[lang.toUpperCase()]?.description;
-          });
+          const filteredAchievements = earnedAchievements;
 
           if (earnedAchievements.length === 0) return null;
 
@@ -1081,7 +1099,10 @@ export default function CurriculumPage() {
                                 {cc.isEnrolled ? (
                                   <Link 
                                     href={getCoursePath(cc)}
-                                    onClick={() => setSelectedCurriculumForDrillDown(null)}
+                                    onClick={() => {
+                                      handleCourseClick(cc);
+                                      setSelectedCurriculumForDrillDown(null);
+                                    }}
                                     className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105"
                                   >
                                     {t.jump_in}

@@ -21,14 +21,42 @@ export async function GET(request: Request) {
       .select('*')
       .order('date', { ascending: true });
 
-    if (!error && data && data.length > 0) {
-      const history = data.map(row => ({
-        date: row.date,
-        db: Number(row.db),
-        email: Number(row.email),
-        ai: Number(row.ai),
-        images: Number(row.images)
-      }));
+    if (!error) {
+      const historyMap = new Map<string, any>();
+      if (data) {
+        for (const row of data) {
+          if (row.date) {
+            historyMap.set(row.date, row);
+          }
+        }
+      }
+
+      const history = [];
+      const today = new Date();
+      for (let i = 364; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateString = d.toISOString().split('T')[0];
+
+        const dbRow = historyMap.get(dateString);
+        if (dbRow) {
+          history.push({
+            date: dateString,
+            db: Number(dbRow.db),
+            email: Number(dbRow.email),
+            ai: Number(dbRow.ai),
+            images: Number(dbRow.images)
+          });
+        } else {
+          history.push({
+            date: dateString,
+            db: 0,
+            email: 0,
+            ai: 0,
+            images: 0
+          });
+        }
+      }
       return NextResponse.json({ success: true, source: 'database', data: history });
     }
   } catch (dbErr: any) {

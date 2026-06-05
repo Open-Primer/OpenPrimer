@@ -248,7 +248,10 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (queue.length > 0) {
         const rows = queue.map(t => {
           const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.id);
-          const rowId = isValidUUID ? t.id : undefined;
+          const rowId = isValidUUID ? t.id : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+          });
           const extra = {
             level: t.level || 'L1',
             targetLang: t.targetLang || '',
@@ -260,7 +263,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
             completedAt: t.completedAt || ''
           };
           return {
-            ...(rowId ? { id: rowId } : {}),
+            id: rowId,
             name: t.title || '',
             description: JSON.stringify(extra),
             priority: t.priority || 'Medium',

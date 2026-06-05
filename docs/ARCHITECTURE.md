@@ -33,7 +33,7 @@ OpenPrimer utilizes a hybrid decoupled system. The public GitHub repository serv
 
 ## 2. Dynamic Content Factory & Multi-Agent AI Ecosystem
 
-OpenPrimer deploys a coordinated team of autonomous AI agents designed to handle course generation, translation, correction, and student tutoring under LangChain-orchestrated pipelines.
+OpenPrimer deploys a coordinated team of autonomous AI agents designed to handle course generation, translation, correction, and student tutoring under coordinated pipelines.
 
 ```mermaid
 graph TD
@@ -69,6 +69,35 @@ graph TD
 5.  **💬 Interactive Socratic Tutor Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode, guiding rather than giving answers.
 6.  **🌐 Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, and **ZH** without altering mathematical LaTeX markup or React code blocks.
 7.  **⚖️ Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
+
+---
+
+### Curriculum Generation Pipeline (Agent 0 & Queue Scheduler)
+
+The initiation of academic pathways is orchestrated in a decoupled, queue-centric model to prevent request timeouts and support large-scale program generation.
+
+```mermaid
+graph TD
+    Client[Client UI / API Request] -->|POST /api/content/generate| API[API: generate/route.ts]
+    API -->|isCurriculum = true| Agent0[Agent 0: generateCurriculum in ai.ts]
+    Agent0 -->|1. LLM Query| Model{Vertex AI / Gemini API}
+    Model -->|2. Returns JSON Structure| Agent0
+    Agent0 -->|3. Persist Curriculum Metadata| DB[dbService.saveCourse]
+    Agent0 -->|4. Push Tasks to Queue| Queue[dbService.savePipelineQueue]
+    
+    CRON[CRON: cron/route.ts] -->|GET /api/content/cron| Queue
+    Queue -->|Picks next task| CRON
+    CRON -->|Triggers Agent 1, 2, 3 generation| Agent123[generateCourseContent]
+    Agent123 -->|Saves generated course| DB
+```
+
+#### Detailed Workflow:
+1. **Trigger & Initiation**: When a user or system event triggers curriculum generation via the client app or API endpoint `POST /api/content/generate` (with payload `isCurriculum: true`), `generateCurriculum` runs.
+2. **Pathways Planning**: Agent 0 queries the configured AI provider (Vertex AI with Google AI Studio fallback) using the curriculum name, academic level (e.g., `L1`), and target language. It receives a JSON outline listing constituent courses, descriptions, subjects, mandatory/optional status, and credit hours.
+3. **Curriculum Metadata Persistence**: The parent curriculum is immediately registered in the database (`courses` table) with the `is_curriculum` flag set to `true` and `child_courses` initially empty.
+4. **Queue Enqueueing**: The child courses parsed from Agent 0's response are mapped to individual generation tasks (`type: 'generation'`) and added to the database's `task_queue` table with status `queued` and priority `High`.
+5. **CRON Processing Loop**: The background scheduler (`GET /api/content/cron`) queries the `task_queue` table, sorts pending tasks by priority, locks the next available task (changing status to `running`), and triggers the downstream course generation engine (Agents 1, 2, and 3) to compile the rich MDX content.
+
 
 ---
 

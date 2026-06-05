@@ -72,6 +72,7 @@ const HEALTH_STRINGS = {
     inc_quota_scaling: "Incident: LLM quota scaling",
     inc_oom: "Incident: Batch out-of-memory",
     status_nominal: "Nominal",
+    status_no_data: "No Log Data",
     status_outage: "Outage",
     sla_grid_title: "Rolling Service Availability Grid (Last 365 Days Timeline)",
     overall_avg: "Overall Average",
@@ -146,6 +147,7 @@ const HEALTH_STRINGS = {
     inc_quota_scaling: "Incident : Échelle de quota",
     inc_oom: "Incident : Dépassement mémoire",
     status_nominal: "Nominal",
+    status_no_data: "Pas de Log",
     status_outage: "Interruption",
     sla_grid_title: "Calendrier Annuel de Disponibilité (365 Jours)",
     overall_avg: "Moyenne Globale",
@@ -220,6 +222,7 @@ const HEALTH_STRINGS = {
     inc_quota_scaling: "Incidente: Escalamiento de cuota de LLM",
     inc_oom: "Incidente: Memoria agotada en lote",
     status_nominal: "Nominal",
+    status_no_data: "Sin Datos de Log",
     status_outage: "Interrupción",
     sla_grid_title: "Cuadrícula de Disponibilidad de Servicio (Línea de Tiempo de 365 Días)",
     overall_avg: "Promedio General",
@@ -294,6 +297,7 @@ const HEALTH_STRINGS = {
     inc_quota_scaling: "Incident: LLM-Kontingentskalierung",
     inc_oom: "Incident: Stapel-Speicherüberlauf",
     status_nominal: "Nominal",
+    status_no_data: "Keine Logdaten",
     status_outage: "Ausfall",
     sla_grid_title: "Fortlaufendes Service-Verfügbarkeitsraster (Zeitachse der letzten 365 Tage)",
     overall_avg: "Gesamtdurchschnitt",
@@ -368,6 +372,7 @@ const HEALTH_STRINGS = {
     inc_quota_scaling: "故障事件：大模型 API 配额大版面调优",
     inc_oom: "故障事件：批量生成任务内存溢出",
     status_nominal: "正常",
+    status_no_data: "无日志数据",
     status_outage: "停机中断",
     sla_grid_title: "滚动服务可用率网格 (最近 365 天时间线)",
     overall_avg: "全局平均可用率",
@@ -565,6 +570,9 @@ export default function ServerHealthPage() {
 
   const getDayStatus = (dayData: typeof slaHistory[0]) => {
     const vals = [dayData.db, dayData.email, dayData.ai, dayData.images];
+    const maxVal = Math.max(...vals);
+    if (maxVal === 0) return 'no_data';
+    
     const minVal = Math.min(...vals);
     if (minVal < 98) return 'outage';
     if (minVal < 100) return 'degraded';
@@ -657,7 +665,7 @@ export default function ServerHealthPage() {
       lbl_sb_url: 'Supabase Project URL',
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API Key',
-      lbl_gemini: 'Gemini 1.5 API Key',
+      lbl_gemini: 'Gemini API Key or Service Account JSON',
       btn_apply: 'Apply Hot-Swap Keys',
       btn_reset: 'Reset to Defaults'
     },
@@ -667,7 +675,7 @@ export default function ServerHealthPage() {
       lbl_sb_url: 'URL du Projet Supabase',
       lbl_sb_key: 'Clé Publique Anon Supabase',
       lbl_resend: 'Clé API Resend',
-      lbl_gemini: 'Clé API Gemini 1.5',
+      lbl_gemini: 'Clé API Gemini ou Compte de Service JSON',
       btn_apply: 'Appliquer les Clés',
       btn_reset: 'Réinitialiser aux Défauts'
     },
@@ -677,7 +685,7 @@ export default function ServerHealthPage() {
       lbl_sb_url: 'URL del Proyecto Supabase',
       lbl_sb_key: 'Clave Pública Anon Supabase',
       lbl_resend: 'Clave API Resend',
-      lbl_gemini: 'Clave API Gemini 1.5',
+      lbl_gemini: 'Clave API Gemini o Cuenta de Servicio JSON',
       btn_apply: 'Aplicar Cambios',
       btn_reset: 'Restablecer Valores'
     },
@@ -687,7 +695,7 @@ export default function ServerHealthPage() {
       lbl_sb_url: 'Supabase Projekt-URL',
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API-Schlüssel',
-      lbl_gemini: 'Gemini 1.5 API-Schlüssel',
+      lbl_gemini: 'Gemini API-Schlüssel oder Service-Account-JSON',
       btn_apply: 'Schlüssel anwenden',
       btn_reset: 'Auf Standard zurücksetzen'
     },
@@ -697,7 +705,7 @@ export default function ServerHealthPage() {
       lbl_sb_url: 'Supabase 项目 URL',
       lbl_sb_key: 'Supabase Anon 公钥',
       lbl_resend: 'Resend 邮件 API 密钥',
-      lbl_gemini: 'Gemini 1.5 API 密钥',
+      lbl_gemini: 'Gemini API 密钥或服务账号 JSON',
       btn_apply: '应用热插拔密钥',
       btn_reset: '重置为默认值'
     }
@@ -799,29 +807,39 @@ export default function ServerHealthPage() {
                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
                       hoveredDay.status === 'nominal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                       : hoveredDay.status === 'degraded' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' 
+                      : hoveredDay.status === 'no_data' ? 'bg-slate-800/80 text-slate-400 border border-slate-700/50'
                       : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
                     }`}>
                       {hoveredDay.status === 'nominal' ? (t.status_nominal || 'Nominal')
                         : hoveredDay.status === 'degraded' ? (t.status_degraded || 'Degraded')
+                        : hoveredDay.status === 'no_data' ? (t.status_no_data || 'No Log Data')
                         : (t.status_outage || 'Outage')}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 text-[9px] font-mono text-slate-300">
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_database || 'DB'}:</span> 
-                      <span className={hoveredDay.db < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.db}%</span>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.db < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.db}%`}
+                      </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_email || 'Email'}:</span> 
-                      <span className={hoveredDay.email < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.email}%</span>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.email < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.email}%`}
+                      </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_ai || 'AI'}:</span> 
-                      <span className={hoveredDay.ai < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.ai}%</span>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.ai < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.ai}%`}
+                      </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_images || 'Images'}:</span> 
-                      <span className={hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>{hoveredDay.images}%</span>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.images}%`}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -857,8 +875,9 @@ export default function ServerHealthPage() {
                    {slaHistory.map((dayData, idx) => {
                      const status = getDayStatus(dayData);
                      const color = status === 'nominal' ? 'bg-emerald-500 border-emerald-400/20 shadow-[0_0_4px_rgba(16,185,129,0.1)] hover:bg-emerald-400'
-                       : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400'
-                       : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400';
+                        : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400'
+                        : status === 'no_data' ? 'bg-slate-850/60 border-slate-800/80 shadow-none hover:bg-slate-800 hover:border-slate-700'
+                        : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400';
 
                      const isHovered = hoveredDay?.date === dayData.date;
 
@@ -882,6 +901,7 @@ export default function ServerHealthPage() {
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {t.status_nominal}</span>
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {t.status_degraded}</span>
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {t.status_outage}</span>
+                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-slate-850 border border-slate-800" /> {t.status_no_data || 'No Log Data'}</span>
                    </div>
                    <span>{t.today}</span>
                 </div>
@@ -967,7 +987,7 @@ export default function ServerHealthPage() {
                   autoComplete="new-password"
                   value={geminiApiKey}
                   onChange={e => setGeminiApiKey(e.target.value)}
-                  placeholder="••••••••••••••••••••••••••••"
+                  placeholder={geminiApiKey && geminiApiKey.trim().startsWith('{') ? "Service Account JSON loaded..." : "••••••••••••••••••••••••••••"}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
                 />
                 <button
@@ -977,6 +997,38 @@ export default function ServerHealthPage() {
                 >
                   {showGeminiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <label className="text-[9px] font-bold text-slate-500 hover:text-white transition-colors cursor-pointer bg-slate-800/60 border border-slate-750 rounded-lg px-2.5 py-1.5 active:scale-[0.98]">
+                  <span>Upload Service Account JSON File</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const text = event.target?.result as string;
+                          try {
+                            JSON.parse(text);
+                            setGeminiApiKey(text);
+                            setShowGeminiKey(false);
+                          } catch (err) {
+                            alert("Invalid JSON file!");
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                  />
+                </label>
+                {geminiApiKey && geminiApiKey.trim().startsWith('{') && (
+                  <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/10 px-2 py-1 rounded-lg">
+                    JSON Key Loaded
+                  </span>
+                )}
               </div>
             </div>
 
