@@ -45,7 +45,7 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
  * - Analytics/Badges   → Flash Lite (simple, lowest cost)
  */
 export const TASK_MODELS: Record<string, ModelId> = {
-  course_generation:  'gemini-2.5-pro',       // High quality for content creation
+  course_generation:  'gemini-2.5-flash',     // Fast & cheap direct replacement for 1.5 Flash
   course_translation: 'gemini-2.5-flash',     // Good quality for academic translation
   tutor_chat:         'gemini-2.5-flash',     // Fast & cheap for real-time chat
   jit_translate:      'gemini-2.5-flash',     // Inline lesson translation
