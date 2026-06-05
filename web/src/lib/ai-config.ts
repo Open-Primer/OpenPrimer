@@ -50,8 +50,8 @@ export const TASK_MODELS: Record<string, ModelId> = {
   tutor_chat:         'gemini-2.5-flash',     // Fast & cheap for real-time chat
   jit_translate:      'gemini-2.5-flash',     // Inline lesson translation
   batch_translate:    'gemini-2.5-flash',     // Batch field translation
-  analytics:          'gemini-2.0-flash-lite', // Simple report generation
-  badge_expand:       'gemini-2.0-flash-lite', // Simple prompt expansion
+  analytics:          'gemini-2.5-flash',     // Simple report generation
+  badge_expand:       'gemini-2.5-flash',     // Simple prompt expansion
 };
 
 /**
