@@ -95,8 +95,13 @@ graph TD
 1. **Trigger & Initiation**: When a user or system event triggers curriculum generation via the client app or API endpoint `POST /api/content/generate` (with payload `isCurriculum: true`), `generateCurriculum` runs.
 2. **Pathways Planning**: Agent 0 queries the configured AI provider (Vertex AI with Google AI Studio fallback) using the curriculum name, academic level (e.g., `L1`), and target language. It receives a JSON outline listing constituent courses, descriptions, subjects, mandatory/optional status, and credit hours.
 3. **Curriculum Metadata Persistence**: The parent curriculum is immediately registered in the database (`courses` table) with the `is_curriculum` flag set to `true` and `child_courses` initially empty.
-4. **Queue Enqueueing**: The child courses parsed from Agent 0's response are mapped to individual generation tasks (`type: 'generation'`) and added to the database's `task_queue` table with status `queued` and priority `High`.
+4. **Queue Enqueueing & UUID Resolution**: The child courses parsed from Agent 0's response are mapped to individual generation tasks (`type: 'generation'`) and added to the database's `task_queue` table. To avoid `23502` NULL constraint failures on the `id` column in PostgreSQL, the `savePipelineQueue` method inside `supabase-provider.ts` automatically generates custom UUIDs for any incoming task objects lacking a unique primary key before running bulk inserts.
 5. **CRON Processing Loop**: The background scheduler (`GET /api/content/cron`) queries the `task_queue` table, sorts pending tasks by priority, locks the next available task (changing status to `running`), and triggers the downstream course generation engine (Agents 1, 2, and 3) to compile the rich MDX content.
+6. **MDX Validation & Bibliography Alignment**: During synthesis, the generator performs a Crossref and Google Books API verification on bibliography references to de-hallucinate scholarly links and replace them with real DOIs. The generated lesson is also checked for MDX compilation readiness using `next-mdx-remote/serialize`. If parsing fails, a dynamic `sanitizeMdxFallback` procedure runs to escape unclosed custom React tags or braces before final DB persistence.
+
+#### Environment Variables Hoisting Guard
+To support direct command-line script execution (e.g. `npx tsx scripts/run_agent_zero.ts` or diagnostic queries) without Next.js Webpack wrapping, we implement a dedicated environment pre-loader script (`scripts/env-loader.ts`). This script is imported at the absolute entry point of any standalone runner script. It parses and exposes variables from `.env.local` before the main ES6 import hoisting can trigger early, unconfigured database client instantiation.
+
 
 
 ---

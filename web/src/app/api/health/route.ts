@@ -106,14 +106,26 @@ async function checkGemini(customKey?: string): Promise<ServiceResult> {
   if (customKey && (customKey.trim().startsWith('{') || customKey.trim().startsWith('['))) {
     isJson = true;
     jsonString = customKey;
+  } else if (!customKey && process.env.VERTEX_SERVICE_ACCOUNT_JSON) {
+    const directJson = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
+    if (directJson.trim().startsWith('{') || directJson.trim().startsWith('[')) {
+      jsonString = directJson;
+      isJson = true;
+    }
   } else if (!customKey && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    try {
-      if (fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-        jsonString = fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'utf8');
-        isJson = true;
+    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credPath.trim().startsWith('{') || credPath.trim().startsWith('[')) {
+      jsonString = credPath;
+      isJson = true;
+    } else {
+      try {
+        if (fs.existsSync(credPath)) {
+          jsonString = fs.readFileSync(credPath, 'utf8');
+          isJson = true;
+        }
+      } catch (e) {
+        console.warn('[HEALTH] Failed to read GOOGLE_APPLICATION_CREDENTIALS file:', e);
       }
-    } catch (e) {
-      console.warn('[HEALTH] Failed to read GOOGLE_APPLICATION_CREDENTIALS file:', e);
     }
   }
 

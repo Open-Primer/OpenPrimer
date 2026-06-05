@@ -27,20 +27,46 @@ let _cachedToken: string | null = null;
 let _tokenExpiry = 0;
 
 /**
- * Load service account credentials from the JSON file path
- * specified in GOOGLE_APPLICATION_CREDENTIALS env variable.
+ * Load service account credentials from the VERTEX_SERVICE_ACCOUNT_JSON env variable,
+ * or fallback to the JSON file path specified in GOOGLE_APPLICATION_CREDENTIALS.
  */
 async function loadCredentials(): Promise<ServiceAccountCredentials | null> {
+  // 1. Try loading from direct JSON environment variable first
+  const directJson = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
+  if (directJson && (directJson.trim().startsWith('{') || directJson.trim().startsWith('['))) {
+    try {
+      return JSON.parse(directJson) as ServiceAccountCredentials;
+    } catch (e) {
+      console.warn('[VERTEX] Failed to parse VERTEX_SERVICE_ACCOUNT_JSON:', e);
+    }
+  }
+
+  // 2. Fallback to GOOGLE_APPLICATION_CREDENTIALS env var
   const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (!credPath) return null;
+
+  // Support GOOGLE_APPLICATION_CREDENTIALS directly containing the JSON string
+  if (credPath.trim().startsWith('{') || credPath.trim().startsWith('[')) {
+    try {
+      return JSON.parse(credPath) as ServiceAccountCredentials;
+    } catch (e) {
+      console.warn('[VERTEX] Failed to parse GOOGLE_APPLICATION_CREDENTIALS as JSON:', e);
+    }
+  }
+
+  // Otherwise, load from the file path
   try {
     const fs = await import('fs');
-    const raw = fs.readFileSync(credPath, 'utf8');
-    return JSON.parse(raw) as ServiceAccountCredentials;
+    if (fs.existsSync(credPath)) {
+      const raw = fs.readFileSync(credPath, 'utf8');
+      return JSON.parse(raw) as ServiceAccountCredentials;
+    } else {
+      console.warn(`[VERTEX] GOOGLE_APPLICATION_CREDENTIALS file path does not exist: ${credPath}`);
+    }
   } catch (e) {
-    console.warn('[VERTEX] Failed to load service account credentials:', e);
-    return null;
+    console.warn('[VERTEX] Failed to load service account credentials from file path:', e);
   }
+  return null;
 }
 
 /**
@@ -81,7 +107,7 @@ async function getAccessToken(): Promise<string | null> {
 
   const creds = await loadCredentials();
   if (!creds) {
-    console.warn('[VERTEX] No GOOGLE_APPLICATION_CREDENTIALS configured — Vertex AI unavailable.');
+    console.warn('[VERTEX] No Vertex AI credentials configured — Vertex AI unavailable.');
     return null;
   }
 
@@ -260,5 +286,5 @@ export async function recordMetrics(
 
 /** Returns true if Vertex AI credentials are configured */
 export function isVertexConfigured(): boolean {
-  return !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  return !!(process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS);
 }
