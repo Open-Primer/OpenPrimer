@@ -207,7 +207,7 @@ async function checkGemini(customKey?: string): Promise<ServiceResult> {
       // Active probe to Vertex AI
       const projectId = creds.project_id;
       const location = creds.location || 'us-central1';
-      const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-1.5-flash:generateContent`;
+      const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`;
       
       const apiRes = await fetch(probeUrl, {
         method: 'POST',
