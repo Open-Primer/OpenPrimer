@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     // 1. IP-Based Rate Limiting (5 requests per minute)
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    if (isRateLimited(ip, 5, 60000)) {
+    if (await isRateLimited(ip, 5, 60000, 'contact')) {
       return NextResponse.json({ success: false, error: 'Too many feedback requests. Please try again in a minute.' }, { status: 429 });
     }
 

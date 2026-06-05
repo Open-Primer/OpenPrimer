@@ -167,7 +167,7 @@ export async function GET(request: Request) {
           
           const newId = `crs_${Date.now()}`;
           const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
-          await dbService.saveCourse({
+          const saveRes = await dbService.saveCourse({
             id: newId,
             title: nextTask.name,
             slug: slug,
@@ -179,6 +179,23 @@ export async function GET(request: Request) {
             languages: [targetLang],
             langs: [targetLang.toUpperCase()]
           });
+
+          if (saveRes && saveRes.data && extra.parentCurriculumSlug) {
+            const childCourseId = saveRes.data.id;
+            logs.push(`[SCHEDULER] Linking child course "${nextTask.name}" (ID: ${childCourseId}) to parent curriculum "${extra.parentCurriculumSlug}"`);
+            const allCourses = await dbService.getAllCourses();
+            const parent = allCourses.data?.find(c => c.slug === extra.parentCurriculumSlug);
+            if (parent) {
+              const updatedChildren = Array.from(new Set([...(parent.childCourses || []), childCourseId]));
+              await dbService.saveCourse({
+                ...parent,
+                childCourses: updatedChildren
+              });
+              logs.push(`[SCHEDULER] Successfully linked child course to parent curriculum.`);
+            } else {
+              logs.push(`[SCHEDULER] Parent curriculum "${extra.parentCurriculumSlug}" not found in database.`);
+            }
+          }
         }
 
         // Mark task as completed

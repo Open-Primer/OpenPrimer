@@ -1,38 +1,75 @@
+import { supabaseAdmin } from './supabase';
+
 interface RateLimitRecord {
   timestamps: number[];
 }
 
-const store = new Map<string, RateLimitRecord>();
+const localStore = new Map<string, RateLimitRecord>();
 
-/**
- * Robust in-memory rate limiter keyed by client IP address
- * Default: 20 requests per 1 minute (60,000ms)
- */
-export function isRateLimited(ip: string, limit: number = 20, windowMs: number = 60000): boolean {
+function localRateLimit(ip: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const record = store.get(ip) || { timestamps: [] };
-  
-  // Filter timestamps outside the sliding window
+  const record = localStore.get(ip) || { timestamps: [] };
   record.timestamps = record.timestamps.filter(t => now - t < windowMs);
-  
   if (record.timestamps.length >= limit) {
     return true;
   }
-  
   record.timestamps.push(now);
-  store.set(ip, record);
+  localStore.set(ip, record);
   return false;
 }
 
-// Memory safety cleanup routine run every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [ip, record] of store.entries()) {
-      record.timestamps = record.timestamps.filter(t => now - t < 60000);
-      if (record.timestamps.length === 0) {
-        store.delete(ip);
-      }
+/**
+ * Sliding window database-backed rate limiter for serverless environments.
+ * Keyed by IP and action type. Cascades to memory-based limit in non-production.
+ */
+export async function isRateLimited(
+  ip: string,
+  limit: number = 20,
+  windowMs: number = 60000,
+  action: string = 'api_call'
+): Promise<boolean> {
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (!isProduction) {
+    return localRateLimit(`${action}:${ip}`, limit, windowMs);
+  }
+
+  try {
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - windowMs);
+    const signature = `rl:${action}:${ip}`;
+
+    // Query current hit count within the sliding window
+    const { count, error } = await supabaseAdmin
+      .from('search_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('query', signature)
+      .gt('timestamp', windowStart.toISOString());
+
+    if (error) {
+      console.warn('[RATE LIMIT] DB count query error, falling back to memory limit:', error);
+      return localRateLimit(`${action}:${ip}`, limit, windowMs);
     }
-  }, 300000);
+
+    if (count !== null && count >= limit) {
+      return true;
+    }
+
+    // Insert hit log to persist state across serverless instances
+    const { error: insertError } = await supabaseAdmin
+      .from('search_logs')
+      .insert({
+        query: signature,
+        was_successful: true,
+        timestamp: now.toISOString()
+      });
+
+    if (insertError) {
+      console.warn('[RATE LIMIT] DB insertion error:', insertError);
+    }
+
+    return false;
+  } catch (err) {
+    console.error('[RATE LIMIT] Fatal exception, falling back to memory limit:', err);
+    return localRateLimit(`${action}:${ip}`, limit, windowMs);
+  }
 }

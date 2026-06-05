@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { progressService } from '../../../../lib/db';
+import { verifySession } from '@/lib/authHelper';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,8 +11,9 @@ export async function GET(request: Request) {
   const adminToken = request.headers.get('x-admin-token');
   const host = request.headers.get('host') || '';
   const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+  const user = await verifySession(request);
 
-  if (adminSession !== 'true' && adminToken !== 'OP-ADMIN-SECRET-2026' && !isLocal) {
+  if (!user && adminSession !== 'true' && adminToken !== 'OP-ADMIN-SECRET-2026' && !isLocal) {
     return NextResponse.json({ success: false, error: 'Unauthorized: Administrative access required' }, { status: 401 });
   }
 

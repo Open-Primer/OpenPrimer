@@ -20,15 +20,14 @@ const githubRepo = process.env.GITHUB_REPO;
  * Verify GitHub webhook cryptographic SHA-256 signature
  */
 function verifySignature(payload: string, signature: string | null): boolean {
-  if (!webhookSecret) {
-    console.warn('⚠️ GITHUB_WEBHOOK_SECRET is not defined. Skipping signature verification.');
-    return true; // Dev mode / bypass if not configured
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd || webhookSecret) {
+    if (!webhookSecret || !signature) return false;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    const digest = 'sha256=' + hmac.update(payload).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
   }
-  if (!signature) return false;
-
-  const hmac = crypto.createHmac('sha256', webhookSecret);
-  const digest = 'sha256=' + hmac.update(payload).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+  return true; // Dev mode / bypass if not configured
 }
 
 /**

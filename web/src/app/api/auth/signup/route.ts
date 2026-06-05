@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
 import { supabase } from '../../../../lib/supabase';
 import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emailService';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (await isRateLimited(ip, 3, 60000, 'signup')) {
+      return NextResponse.json({ success: false, error: 'Too many signup attempts. Please try again in a minute.' }, { status: 429 });
+    }
+
     const { firstName, lastName, email, password, preferredLang, selectedCourses, redirectUrl } = await request.json();
 
     // Server-side password complexity enforcement (12 chars min + complexity)

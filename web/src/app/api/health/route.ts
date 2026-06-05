@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import { supabase } from '../../../lib/supabase';
+import { verifySession } from '@/lib/authHelper';
 
 export const dynamic = 'force-dynamic';
 
@@ -301,20 +302,25 @@ async function checkPollinations(): Promise<ServiceResult> {
 }
 
 export async function GET(request: Request) {
-  const adminSession = request.headers.get('x-admin-session');
-  const adminToken = request.headers.get('x-admin-token');
-  const host = request.headers.get('host') || '';
-  const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
-
-  // Enforce administrative authentication
-  if (adminSession !== 'true' && adminToken !== 'OP-ADMIN-SECRET-2026' && !isLocal) {
-    return NextResponse.json({ success: false, error: 'Unauthorized: Administrative access required' }, { status: 401 });
-  }
-
   const customSupabaseUrl = request.headers.get('x-supabase-url') || undefined;
   const customSupabaseKey = request.headers.get('x-supabase-anon-key') || undefined;
   const customResendKey = request.headers.get('x-resend-api-key') || undefined;
   const customGeminiKey = request.headers.get('x-gemini-api-key') || undefined;
+
+  const hasCustomKeys = !!(customSupabaseUrl || customSupabaseKey || customResendKey || customGeminiKey);
+
+  if (hasCustomKeys) {
+    const adminSession = request.headers.get('x-admin-session');
+    const adminToken = request.headers.get('x-admin-token');
+    const host = request.headers.get('host') || '';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const user = await verifySession(request);
+
+    // Enforce administrative authentication for custom credential testing
+    if (!user && adminSession !== 'true' && adminToken !== 'OP-ADMIN-SECRET-2026' && !isLocal) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Administrative access required to test custom credentials' }, { status: 401 });
+    }
+  }
 
   const [db, email, ai, images] = await Promise.all([
     checkSupabase(customSupabaseUrl, customSupabaseKey),

@@ -3547,13 +3547,25 @@ export default function AdminCurriculumPage() {
           triggeredTaskIds.current.add(runningTask.id);
 
           (async () => {
+            let token: string | undefined;
+            try {
+              const { supabase } = await import("@/lib/supabase");
+              const { data: { session } } = await supabase.auth.getSession();
+              token = session?.access_token;
+            } catch (err) {
+              console.warn("[SCHEDULER] Failed to retrieve client auth session token:", err);
+            }
+
             const taskLang = (runningTask.targetLang || lang || 'EN').toUpperCase();
             try {
               if (runningTask.type === 'generation') {
                 const isCurriculum = runningTask.details?.includes('(CURRICULUM)') || runningTask.type === 'curriculum';
                 const res = await fetch('/api/content/generate', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                  },
                   body: JSON.stringify({
                     type: 'generation',
                     name: runningTask.title,
@@ -3629,7 +3641,10 @@ export default function AdminCurriculumPage() {
                   if (foundCourse) {
                     const res = await fetch('/api/content/generate', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                      },
                       body: JSON.stringify({
                         type: 'translation',
                         courseSlug: foundCourse.slug,
@@ -6753,25 +6768,7 @@ export default function AdminCurriculumPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/50">
-                        {[...filteredQueue]
-                          .sort((a, b) => {
-                            if (queueSortField === 'priority') {
-                              const priorityWeights: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
-                              const wA = priorityWeights[a.priority || 'Medium'] || 0;
-                              const wB = priorityWeights[b.priority || 'Medium'] || 0;
-                              return queueSortDir === 'desc' ? wB - wA : wA - wB;
-                            }
-                            let valA = a[queueSortField as keyof typeof a] || '';
-                            let valB = b[queueSortField as keyof typeof b] || '';
-                            if (typeof valA === 'string') {
-                              valA = valA.toLowerCase();
-                              valB = (valB as string).toLowerCase();
-                            }
-                            if (valA < valB) return queueSortDir === 'asc' ? -1 : 1;
-                            if (valA > valB) return queueSortDir === 'asc' ? 1 : -1;
-                            return 0;
-                          })
-                          .map(task => {
+                        {paginatedQueue.map(task => {
                           const isPaused = task.status === 'paused';
                           const isTranslation = task.type === 'translation';
                           
@@ -6846,9 +6843,10 @@ export default function AdminCurriculumPage() {
                                     (() => {
                                       const matched = courses.find(c => c.title.toLowerCase() === task.title.toLowerCase());
                                       if (matched && task.type === 'generation') {
+                                        const safeSubject = (matched.subject || 'General').replace(/\s+/g, '_');
                                         return (
                                           <a 
-                                            href={`/${matched.level}/${matched.subject}/${matched.slug}/introduction`}
+                                            href={`/${matched.level}/${safeSubject}/${matched.slug}/introduction`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"

@@ -98,9 +98,21 @@ graph TD
 4. **Queue Enqueueing & UUID Resolution**: The child courses parsed from Agent 0's response are mapped to individual generation tasks (`type: 'generation'`) and added to the database's `task_queue` table. To avoid `23502` NULL constraint failures on the `id` column in PostgreSQL, the `savePipelineQueue` method inside `supabase-provider.ts` automatically generates custom UUIDs for any incoming task objects lacking a unique primary key before running bulk inserts.
 5. **CRON Processing Loop**: The background scheduler (`GET /api/content/cron`) queries the `task_queue` table, sorts pending tasks by priority, locks the next available task (changing status to `running`), and triggers the downstream course generation engine (Agents 1, 2, and 3) to compile the rich MDX content.
 6. **MDX Validation & Bibliography Alignment**: During synthesis, the generator performs a Crossref and Google Books API verification on bibliography references to de-hallucinate scholarly links and replace them with real DOIs. The generated lesson is also checked for MDX compilation readiness using `next-mdx-remote/serialize`. If parsing fails, a dynamic `sanitizeMdxFallback` procedure runs to escape unclosed custom React tags or braces before final DB persistence.
+7. **Automated Child-Course Association (Post-Completion Hook)**: Upon successful completion of a child-course generation task, the CRON handler reads the `parentCurriculumSlug` field embedded in the task's `description` JSON payload. It then resolves the parent curriculum's `id` from the `courses` table by matching the slug, and atomically appends the newly-generated child course's `id` to the parent's `child_courses` integer array via `dbService.saveCourse`. This ensures the student curriculum dashboard can always resolve and drill down into the enrolled curriculum's constituent modules without manual data entry.
 
 #### Environment Variables Hoisting Guard
 To support direct command-line script execution (e.g. `npx tsx scripts/run_agent_zero.ts` or diagnostic queries) without Next.js Webpack wrapping, we implement a dedicated environment pre-loader script (`scripts/env-loader.ts`). This script is imported at the absolute entry point of any standalone runner script. It parses and exposes variables from `.env.local` before the main ES6 import hoisting can trigger early, unconfigured database client instantiation.
+
+#### CLI Maintenance & Repair Scripts
+
+Because Vercel serverless functions enforce a strict execution timeout ceiling that makes it unreliable to run long background pipelines end-to-end, the following dedicated CLI scripts live under `web/scripts/` and are designed to be executed locally (or from a long-running machine) to maintain and repair the curriculum pipeline:
+
+| Script | Command | Purpose |
+|---|---|---|
+| `process_tasks.ts` | `npx tsx scripts/process_tasks.ts` | Pulls all `queued` tasks from `task_queue`, processes them sequentially, and writes the generated course content plus child-course association to the database. Bypasses HTTP timeout limits entirely. |
+| `fix_child_courses.ts` | `npx tsx scripts/fix_child_courses.ts` | Scans all `completed` tasks that carry a `parentCurriculumSlug` payload and retroactively populates the `child_courses` array on their parent curricula. Use this as a repair tool if the automated hook in the CRON handler missed any associations due to server restarts or transient errors. |
+
+**Prerequisite:** Ensure `.env.local` is populated and run `npm run env-loader` (or prefix with `import './scripts/env-loader'`) before executing any script that uses Supabase credentials.
 
 
 
@@ -185,4 +197,41 @@ OpenPrimer/
 ├── generator/        # Ingestion & Synthesis core generators (Python)
 ├── mobile/           # Mobile app client (React Native / Flutter)
 └── web/              # Primary Next.js Application Core
+    ├── scripts/      # CLI maintenance & repair utilities
+    │   ├── env-loader.ts        # .env.local pre-loader for standalone scripts
+    │   ├── process_tasks.ts     # Sequential task queue processor (CLI)
+    │   ├── fix_child_courses.ts # Retroactive child-course association repair
+    │   └── alter_profiles.ts    # Database migration (profiles accessibility cols)
+    ├── src/
+    │   ├── app/                 # Next.js App Router pages & API routes
+    │   │   └── api/content/cron/route.ts  # Background CRON with auto-association hook
+    │   ├── lib/
+    │   │   ├── db.ts            # Unified dbService facade (mock + Supabase)
+    │   │   ├── db/supabase-provider.ts    # Supabase implementation
+    │   │   └── supabase_schema.sql        # Canonical PostgreSQL schema
+    │   └── components/          # Shared React UI components
+    └── public/                  # Static assets
 ```
+
+---
+
+## 5. Database Schema Notes
+
+### `courses` Table — Curriculum Linkage
+The `child_courses` column (`INTEGER[]`) on the `courses` table is the authoritative source for parent-child curriculum relationships:
+- Parent curricula have `is_curriculum = true` and a non-empty `child_courses` array.
+- Child course IDs are appended atomically by the CRON association hook (step 7) or retroactively by `fix_child_courses.ts`.
+- The student curriculum dashboard (`/profile/curriculum`) reads this array to resolve and render drill-down module cards.
+
+### `profiles` Table — Accessibility Preferences
+The following columns were added via `scripts/alter_profiles.ts` migration (June 2026) to persist per-user accessibility state server-side:
+
+| Column | Type | Default | Purpose |
+|---|---|---|---|
+| `reduce_motion` | BOOLEAN | `false` | Disables UI animations |
+| `dyslexia_friendly` | BOOLEAN | `false` | Switches to dyslexia-optimized font |
+| `fine_visual_controls` | BOOLEAN | `false` | Enlarges academic text baseline |
+| `tutor_enabled` | BOOLEAN | `true` | Shows/hides floating AI tutor icon |
+| `colorblind_theme` | VARCHAR(100) | `'none'` | Applies CSS color-correction filter |
+
+These are synced in real-time from the `/profile/settings` page via the `syncAccessibilityToCloud()` helper, which writes directly to the `profiles` table using the Supabase JS client.

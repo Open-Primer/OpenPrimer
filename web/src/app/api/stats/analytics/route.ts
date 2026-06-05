@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { dbService } from '../../../../lib/db';
 import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { verifySession } from '@/lib/authHelper';
 
 export async function POST(request: Request) {
   try {
+    const user = await verifySession(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
     const { data: logs } = await dbService.getSearchHistory();
 
     const formattedLogs = logs && logs.length > 0

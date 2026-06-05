@@ -661,46 +661,29 @@ export default function Home() {
 
     const emailLower = email.trim().toLowerCase();
 
-    // Verify if identifier is registered
-    const DEMO_EMAILS = [
-      'vanguard.mysterious@gmail.com',
-      'student1@openprimer.org',
-      'student2@openprimer.org',
-      'student3@openprimer.org',
-      'silvere@openprimer.org'
-    ];
-    let emailFound = DEMO_EMAILS.includes(emailLower);
-
-    if (!emailFound) {
-      const storedProfileStr = localStorage.getItem('op_user_profile');
-      if (storedProfileStr) {
-        try {
-          const storedProfile = JSON.parse(storedProfileStr);
-          if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
-            emailFound = true;
-          }
-        } catch (err) {}
-      }
-    }
-
-    if (!emailFound) {
-      setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est inconnue.' : 'This email address is not registered.');
-      return;
-    }
-
     try {
       setErrorMsg('');
-      const { supabase } = await import("@/lib/supabase");
-      const { error } = await supabase.auth.resetPasswordForEmail(emailLower, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+      // Call our custom reset-password API which:
+      // 1. Looks up the user in the profiles DB (not Supabase Auth)
+      // 2. Generates a secure token stored in auth_verification
+      // 3. Sends the email via Resend using the lost_password template
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailLower, lang })
       });
-      if (error) {
-        console.warn("Supabase resetPasswordForEmail error, using simulator:", error);
+      const data = await res.json();
+      if (!data.success) {
+        // Only show a real error for server failures, not for "email not found"
+        // (to avoid email enumeration attacks, the API returns success even if not found)
+        setErrorMsg(data.error || (lang === 'FR' ? 'Une erreur est survenue. Veuillez réessayer.' : 'An error occurred. Please try again.'));
+        return;
       }
-      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Un lien de réinitialisation de mot de passe a été envoyé à votre adresse email.' : 'A password reset link has been sent to your email address.'));
+      // Always show the neutral success message regardless of whether email exists
+      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Si cette adresse email est enregistrée, vous recevrez un lien de réinitialisation.' : 'If this email address is registered, you will receive a reset link shortly.'));
     } catch (err: any) {
-      console.warn("Password reset exception, falling back to simulator:", err);
-      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Un lien de réinitialisation de mot de passe a été envoyé à votre adresse email.' : 'A password reset link has been sent to your email address.'));
+      console.error('[FORGOT PASSWORD]', err);
+      setErrorMsg(lang === 'FR' ? 'Erreur de connexion au serveur.' : 'Server connection error. Please try again.');
     }
   };
 

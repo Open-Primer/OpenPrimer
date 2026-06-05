@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCourseContent, translateCourseContent, generateCurriculum } from '@/lib/ai';
 import { dbService } from '@/lib/db';
+import { verifySession } from '@/lib/authHelper';
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await verifySession(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { type, name, level, targetLang, courseSlug, isCurriculum } = body;
 
