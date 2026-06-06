@@ -65,7 +65,7 @@ Output ONLY the expanded English image prompt in a single sentence or short para
     console.log(`[BADGE-GEN SUCCESS] Badge image successfully generated via Pollinations.ai.`);
     return NextResponse.json({ success: true, dataUri });
   } catch (err: any) {
-    console.error(`[BADGE-GEN ERROR]`, err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    console.error('[BADGE-GEN ERROR]', err);
+    return NextResponse.json({ success: false, error: 'Badge generation failed' }, { status: 500 });
   }
 }

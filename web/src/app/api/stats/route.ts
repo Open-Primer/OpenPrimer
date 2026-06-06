@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { dbService } from '@/lib/db';
+import { isRateLimited } from '@/lib/rateLimit';
 import fs from 'fs';
 import path from 'path';
 
@@ -47,7 +48,13 @@ function countUniqueMdxLessons(): number {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Rate limit: 60 req/min per IP (public aggregate data)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1';
+  if (await isRateLimited(ip, 60, 60000, 'stats')) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   try {
     // Fetch dynamic courses
     const { data: courses } = await dbService.getAllCourses();
@@ -95,7 +102,7 @@ export async function GET() {
       platform_rating: platformRating
     });
   } catch (error) {
-    console.error("Error generating dynamic stats:", error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('[STATS ERROR]', error);
+    return NextResponse.json({ error: 'Unable to load stats' }, { status: 500 });
   }
 }

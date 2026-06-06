@@ -1,0 +1,70 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run every Monday at 08:00 Paris time (06:00 UTC)
+    - cron: '0 6 * * 1'
+
+jobs:
+  npm-audit:
+    name: npm audit (CVE scan)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run npm audit (moderate+)
+        # Fail CI if any moderate or higher CVE is found
+        run: npm audit --audit-level=moderate
+        continue-on-error: true  # Report but don't block deploys for now
+
+      - name: Run npm audit (high+ — block on critical)
+        run: npm audit --audit-level=high
+
+  secret-scan:
+    name: Secret detection (Gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Fails if any secret pattern is detected in git history
+
+  headers-check:
+    name: Security headers check
+    runs-on: ubuntu-latest
+    # Only runs on push to main (not on PRs, no live URL available)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Check security headers via securityheaders.com API
+        run: |
+          SCORE=$(curl -s "https://securityheaders.com/?q=https://open-primer.vercel.app&followRedirects=on" \
+            -H "Accept: text/html" | grep -o 'grade-[A-F+]*' | head -1 || echo "unknown")
+          echo "Security headers grade: $SCORE"
+          # Informational only — does not fail CI

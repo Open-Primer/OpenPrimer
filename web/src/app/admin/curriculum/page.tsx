@@ -3358,6 +3358,11 @@ export default function AdminCurriculumPage() {
   };
 
   const loadData = async () => {
+    // Local loaded variables to solve async React state sync timing bugs inside loadData
+    let loadedQueueAutoRetry = queueAutoRetry;
+    let loadedQueueAutoRetryDelayHours = queueAutoRetryDelayHours;
+    let loadedQueueRetentionDays = queueRetentionDays;
+
     if (typeof window !== 'undefined') {
       try {
         const emailRes = await dbService.getTranslationEmails();
@@ -3397,9 +3402,18 @@ export default function AdminCurriculumPage() {
             case 'revRetentionDays': setRevRetentionDays(Number(val) || 30); break;
             case 'autoRevisionDelayHours': setAutoRevisionDelayHours(Number(val) || 24); break;
 
-            case 'queueAutoRetry': setQueueAutoRetry(val === 'true'); break;
-            case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(val) || 24); break;
-            case 'queueRetentionDays': setQueueRetentionDays(Number(val) || 30); break;
+            case 'queueAutoRetry': 
+              setQueueAutoRetry(val === 'true'); 
+              loadedQueueAutoRetry = val === 'true';
+              break;
+            case 'queueAutoRetryDelayHours': 
+              setQueueAutoRetryDelayHours(Number(val) || 24); 
+              loadedQueueAutoRetryDelayHours = Number(val) || 24;
+              break;
+            case 'queueRetentionDays': 
+              setQueueRetentionDays(Number(val) || 30); 
+              loadedQueueRetentionDays = Number(val) || 30;
+              break;
           }
         });
       }
@@ -3474,17 +3488,17 @@ export default function AdminCurriculumPage() {
       let changed = false;
 
       // 1. Process Auto-Retry for failed tasks
-      if (queueAutoRetry) {
+      if (loadedQueueAutoRetry) {
         migrated = migrated.map((t: any) => {
           if (t.status === 'failed') {
             const completedTime = t.completedAt ? new Date(t.completedAt).getTime() : 0;
-            if (completedTime > 0 && (now - completedTime >= queueAutoRetryDelayHours * 60 * 60 * 1000)) {
+            if (completedTime > 0 && (now - completedTime >= loadedQueueAutoRetryDelayHours * 60 * 60 * 1000)) {
               changed = true;
               return {
                 ...t,
                 status: 'queued',
                 progress: 0,
-                logs: [...(t.logs || []), `[SYSTEM] Automatically retried task after ${queueAutoRetryDelayHours}h cooldown.`]
+                logs: [...(t.logs || []), `[SYSTEM] Automatically retried task after ${loadedQueueAutoRetryDelayHours}h cooldown.`]
               };
             }
           }
@@ -3492,12 +3506,12 @@ export default function AdminCurriculumPage() {
         });
       }
 
-      // 2. Process Retention (delete tasks older than queueRetentionDays)
+      // 2. Process Retention (delete finished tasks older than loadedQueueRetentionDays)
       migrated = migrated.filter((t: any) => {
         const isFinished = t.status === 'complete' || t.status === 'completed' || t.status === 'failed' || t.status === 'cancelled';
         if (isFinished) {
           const completedTime = t.completedAt ? new Date(t.completedAt).getTime() : new Date(t.created_at || t.timestamp || now).getTime();
-          if (now - completedTime >= queueRetentionDays * 24 * 60 * 60 * 1000) {
+          if (now - completedTime >= loadedQueueRetentionDays * 24 * 60 * 60 * 1000) {
             changed = true;
             return false;
           }
@@ -4262,6 +4276,21 @@ export default function AdminCurriculumPage() {
     }
   }, [feedbacks, autoRevision, revThreshold, queue, refusedRevisions]);
 
+  // REACTIVE REFUSED REVISIONS CLEANUP LOOP (Purges expired refused revisions based on revRetentionDays)
+  useEffect(() => {
+    const now = Date.now();
+    const expiredRefusedRevisions = refusedRevisions.filter(rr => {
+      const elapsedDays = (now - new Date(rr.timestamp || now).getTime()) / (1000 * 60 * 60 * 24);
+      return elapsedDays >= revRetentionDays;
+    });
+
+    if (expiredRefusedRevisions.length > 0) {
+      Promise.all(expiredRefusedRevisions.map(rr => dbService.deleteRefusedRevision(rr.id))).then(() => {
+        loadData();
+      });
+    }
+  }, [refusedRevisions, revRetentionDays]);
+
   // Generation Handlers
   const handleDeployExpansion = (title: string, prerequisite: string, level: string, subject: string) => {
     const targetLvl = level || 'L1';
@@ -4451,7 +4480,8 @@ export default function AdminCurriculumPage() {
       targetLang,
       requests: 3,
       priority: 'Low',
-      previouslyRefused: true
+      previouslyRefused: true,
+      timestamp: new Date().toISOString()
     });
     loadData();
   };
@@ -4559,7 +4589,8 @@ export default function AdminCurriculumPage() {
       status: 'Pending',
       aiProposal: 'Pedagogical refinement rejected by Curator.',
       previouslyRefused: true,
-      priority: 'Low'
+      priority: 'Low',
+      timestamp: new Date().toISOString()
     });
     loadData();
   };

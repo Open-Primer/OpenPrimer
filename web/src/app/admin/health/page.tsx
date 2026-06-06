@@ -547,10 +547,12 @@ export default function ServerHealthPage() {
     }
 
     let incident = t.no_major_incidents || 'No major incidents';
-    if (id === 'db') incident = t.inc_db_upgrade || 'Incident: Replica DB upgrade';
-    if (id === 'email') incident = t.inc_rate_limit || 'Incident: Rate-limit tuning';
-    if (id === 'ai') incident = t.inc_quota_scaling || 'Incident: LLM quota scaling';
-    if (id === 'images') incident = t.inc_oom || 'Incident: Batch out-of-memory';
+    if (avg < 100) {
+      if (id === 'db') incident = t.inc_db_upgrade || 'Incident: Replica DB upgrade';
+      if (id === 'email') incident = t.inc_rate_limit || 'Incident: Rate-limit tuning';
+      if (id === 'ai') incident = t.inc_quota_scaling || 'Incident: LLM quota scaling';
+      if (id === 'images') incident = t.inc_oom || 'Incident: Batch out-of-memory';
+    }
 
     return {
       avg: `${avg.toFixed(2)}%`,
@@ -847,13 +849,6 @@ export default function ServerHealthPage() {
                 <div className="flex justify-between items-center w-full animate-in fade-in duration-200">
                   <div className="flex items-center gap-2">
                     <span>{t.sla_grid_title}</span>
-                    <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
-                      slaSource === 'database' 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
-                    }`}>
-                      {slaSource === 'database' ? ((t as any).live_db || 'Live DB') : ((t as any).sandbox || 'Sandbox')}
-                    </span>
                   </div>
                   <span className="text-emerald-400 font-mono font-bold">
                     {overallAvg.toFixed(3)}% {t.overall_avg}

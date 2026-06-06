@@ -68,6 +68,7 @@ export interface RefusedTranslationEntry {
   requests: number;
   priority: string;
   previouslyRefused: boolean;
+  timestamp?: string;
 }
 
 export interface RefusedRevisionEntry {
@@ -79,6 +80,7 @@ export interface RefusedRevisionEntry {
   aiProposal: string;
   previouslyRefused: boolean;
   priority: string;
+  timestamp?: string;
 }
 
 export interface UserProfile {
@@ -1168,11 +1170,11 @@ export let availableLanguagesList: LanguageInfo[] = initialLanguages;
 
 
 let initialRefusedTranslations: RefusedTranslationEntry[] = [
-  { id: 'ref_t1', name: "Constitutional Law", sourceLang: "en", targetLang: "de", requests: 1, priority: "Low", previouslyRefused: true }
+  { id: 'ref_t1', name: "Constitutional Law", sourceLang: "en", targetLang: "de", requests: 1, priority: "Low", previouslyRefused: true, timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() }
 ];
 
 let initialRefusedRevisions: RefusedRevisionEntry[] = [
-  { id: 'ref_r1', course: "Quantum Physics", issueSummary: "Incorrect Bohr model details in chapter 2 quiz.", count: 1, status: "Pending", aiProposal: "Update quiz content and adjust Bohr constant calculations.", previouslyRefused: true, priority: "Low" }
+  { id: 'ref_r1', course: "Quantum Physics", issueSummary: "Incorrect Bohr model details in chapter 2 quiz.", count: 1, status: "Pending", aiProposal: "Update quiz content and adjust Bohr constant calculations.", previouslyRefused: true, priority: "Low", timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() }
 ];
 
 let initialCourseFeedbacks: CourseFeedback[] = [

@@ -1,0 +1,48 @@
+# Dependabot configuration
+# Auto-generates PRs when vulnerabilities are found in npm dependencies
+# https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  # npm / Next.js ecosystem
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    groups:
+      # Group all Next.js-related updates into one PR to reduce noise
+      nextjs:
+        patterns:
+          - "next"
+          - "next-*"
+          - "@next/*"
+      # Group all React updates
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      # Group all Supabase client updates
+      supabase:
+        patterns:
+          - "@supabase/*"
+    ignore:
+      # Pin next.js major version — only allow patch/minor updates
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+    labels:
+      - "dependencies"
+      - "security"
+
+  # GitHub Actions runner versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"

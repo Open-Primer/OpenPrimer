@@ -4,6 +4,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { supabase } from '../../../lib/supabase';
 import { isDatabaseConfigured } from '../../../lib/db';
+import { isRateLimited } from '../../../lib/rateLimit';
 
 const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
   ? path.join(process.cwd(), 'content')
@@ -54,6 +55,12 @@ function getLessonFiles(dir: string, lang: string): { filePath: string; lessonSl
 }
 
 export async function GET(req: NextRequest) {
+  // Rate limit: 30 req/min per IP (full-text content search is expensive)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1';
+  if (await isRateLimited(ip, 30, 60000, 'search_lessons')) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const courseSlug = searchParams.get('courseSlug');
   const q = searchParams.get('q');
@@ -61,6 +68,9 @@ export async function GET(req: NextRequest) {
 
   if (!courseSlug || !q || !q.trim()) {
     return NextResponse.json([]);
+  }
+  if (q.length > 200) {
+    return NextResponse.json({ error: 'Query too long' }, { status: 400 });
   }
 
   const qNorm = normalizeText(q);

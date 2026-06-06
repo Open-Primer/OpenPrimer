@@ -68,6 +68,6 @@ ${sourceContent}`;
 
   } catch (error: any) {
     console.error(`[JIT-TRANSLATE ERROR]`, error);
-    return NextResponse.json({ error: `Translation failed: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: 'Translation service unavailable. Please try again later.' }, { status: 500 });
   }
 }

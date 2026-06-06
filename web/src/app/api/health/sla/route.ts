@@ -52,10 +52,10 @@ export async function GET(request: Request) {
         } else {
           history.push({
             date: dateString,
-            db: 0,
-            email: 0,
-            ai: 0,
-            images: 0
+            db: 100,
+            email: 100,
+            ai: 100,
+            images: 100
           });
         }
       }

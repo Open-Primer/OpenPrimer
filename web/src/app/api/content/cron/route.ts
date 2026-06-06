@@ -245,7 +245,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, logs });
   } catch (error: any) {
-    logs.push(`[CRITICAL ERROR] Scheduler failed: ${error.message || String(error)}`);
-    return NextResponse.json({ success: false, error: error.message || String(error), logs });
+    logs.push(`[CRITICAL ERROR] Scheduler failed — check server logs for details.`);
+    console.error('[CRON ERROR]', error);
+    return NextResponse.json({ success: false, error: 'Scheduler error', logs });
   }
 }
