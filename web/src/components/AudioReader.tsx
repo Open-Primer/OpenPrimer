@@ -775,7 +775,8 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     const handleTutorResponse = (e: Event) => {
       const customEvent = e as CustomEvent;
       const text = customEvent.detail?.text;
-      if (!text || !readTutorRef.current) return;
+      const isOpen = customEvent.detail?.isOpen;
+      if (!text || (!readTutorRef.current && !isOpen)) return;
 
       // Clean MDX/Markdown formatting from the tutor response
       let cleaned = text;
@@ -809,9 +810,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       }
     };
 
+    const handleStopCourseSpeech = () => {
+      stop();
+    };
+
     window.addEventListener('op_read_tutor_response', handleTutorResponse);
+    window.addEventListener('op_stop_course_speech', handleStopCourseSpeech);
     return () => {
       window.removeEventListener('op_read_tutor_response', handleTutorResponse);
+      window.removeEventListener('op_stop_course_speech', handleStopCourseSpeech);
     };
   }, []);
 

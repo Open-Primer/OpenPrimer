@@ -285,6 +285,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const handleSend = async (text?: string) => {
     const content = text || input;
     if (!content.trim()) return;
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('op_stop_course_speech'));
+    }
     
     const newMessages = [...messages, { role: 'user', content }];
     setMessages(newMessages);
@@ -359,7 +363,12 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
         }
       }
       if (accumulatedText && typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('op_read_tutor_response', { detail: { text: accumulatedText } }));
+        window.dispatchEvent(new CustomEvent('op_read_tutor_response', { 
+          detail: { 
+            text: accumulatedText,
+            isOpen: isOpen
+          } 
+        }));
       }
     } catch (err) {
       console.error("Streaming error", err);
@@ -1340,7 +1349,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     <Link 
                       href="/profile/settings" 
                       className={`flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all ${
-                        (userProfile?.role === 'admin' || userProfile?.email === 'vanguard.mysterious@gmail.com') 
+                        userProfile?.role === 'admin'
                           ? 'border-b border-slate-800/50' 
                           : ''
                       }`}
@@ -1348,7 +1357,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       <Settings className="w-4 h-4" /> {t.settings}
                     </Link>
 
-                    {(userProfile?.role === 'admin' || userProfile?.email === 'vanguard.mysterious@gmail.com') && (
+                    {userProfile?.role === 'admin' && (
                       <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                         <ShieldAlert className="w-4 h-4" /> {t.admin}
                       </Link>

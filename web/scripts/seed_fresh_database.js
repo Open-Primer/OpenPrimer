@@ -207,6 +207,16 @@ async function main() {
       );
 
       -- Apply RLS policies & permissions
+      CREATE OR REPLACE FUNCTION public.is_admin()
+      RETURNS BOOLEAN SECURITY DEFINER AS $$
+      BEGIN
+        RETURN EXISTS (
+          SELECT 1 FROM public.profiles
+          WHERE id = (auth.uid())::text AND role = 'admin'
+        );
+      END;
+      $$ LANGUAGE plpgsql;
+
       ALTER TABLE public.system_parameters ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to system_parameters" ON public.system_parameters;
       CREATE POLICY "Allow all access to system_parameters" ON public.system_parameters FOR ALL USING (true) WITH CHECK (true);
@@ -230,17 +240,44 @@ async function main() {
 
       ALTER TABLE public.translation_requests ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to translation_requests" ON public.translation_requests;
-      CREATE POLICY "Allow all access to translation_requests" ON public.translation_requests FOR ALL USING (true) WITH CHECK (true);
+      DROP POLICY IF EXISTS "Service role full access to translation_requests" ON public.translation_requests;
+      DROP POLICY IF EXISTS "Allow public insert to translation_requests" ON public.translation_requests;
+      DROP POLICY IF EXISTS "Admins can access translation_requests" ON public.translation_requests;
+      CREATE POLICY "Service role full access to translation_requests" ON public.translation_requests
+        FOR ALL TO service_role USING (true) WITH CHECK (true);
+      CREATE POLICY "Allow public insert to translation_requests" ON public.translation_requests
+        FOR INSERT WITH CHECK (true);
+      CREATE POLICY "Admins can access translation_requests" ON public.translation_requests
+        FOR ALL TO public
+        USING (public.is_admin() = true)
+        WITH CHECK (public.is_admin() = true);
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.translation_requests TO public, anon, authenticated;
 
       ALTER TABLE public.course_feedbacks ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to course_feedbacks" ON public.course_feedbacks;
-      CREATE POLICY "Allow all access to course_feedbacks" ON public.course_feedbacks FOR ALL USING (true) WITH CHECK (true);
+      DROP POLICY IF EXISTS "Service role full access to course_feedbacks" ON public.course_feedbacks;
+      DROP POLICY IF EXISTS "Allow public insert to course_feedbacks" ON public.course_feedbacks;
+      DROP POLICY IF EXISTS "Admins can access course_feedbacks" ON public.course_feedbacks;
+      CREATE POLICY "Service role full access to course_feedbacks" ON public.course_feedbacks
+        FOR ALL TO service_role USING (true) WITH CHECK (true);
+      CREATE POLICY "Allow public insert to course_feedbacks" ON public.course_feedbacks
+        FOR INSERT WITH CHECK (true);
+      CREATE POLICY "Admins can access course_feedbacks" ON public.course_feedbacks
+        FOR ALL TO public
+        USING (public.is_admin() = true)
+        WITH CHECK (public.is_admin() = true);
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.course_feedbacks TO public, anon, authenticated;
 
       ALTER TABLE public.report_clusters ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Allow all access to report_clusters" ON public.report_clusters;
-      CREATE POLICY "Allow all access to report_clusters" ON public.report_clusters FOR ALL USING (true) WITH CHECK (true);
+      DROP POLICY IF EXISTS "Service role full access to report_clusters" ON public.report_clusters;
+      DROP POLICY IF EXISTS "Admins can access report_clusters" ON public.report_clusters;
+      CREATE POLICY "Service role full access to report_clusters" ON public.report_clusters
+        FOR ALL TO service_role USING (true) WITH CHECK (true);
+      CREATE POLICY "Admins can access report_clusters" ON public.report_clusters
+        FOR ALL TO public
+        USING (public.is_admin() = true)
+        WITH CHECK (public.is_admin() = true);
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.report_clusters TO public, anon, authenticated;
 
       ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
@@ -552,7 +589,7 @@ async function main() {
       }
     ];
 
-    console.log("\nðŸŒ± Seeding System User Accounts...");
+    console.log("\n🌱 Seeding System User Accounts...");
     for (const acc of accounts) {
       console.log(`Creating account in Supabase Auth: ${acc.email}`);
       const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
@@ -574,11 +611,11 @@ async function main() {
         VALUES ($1, $2, $3, $4, 1, 0, true, false, '{}', 'socratic', 1.00, 1.00, '')
       `, [userId, acc.name, acc.email, acc.role]);
 
-      console.log(`âœ… Seeded account: ${acc.email}`);
+      console.log(`✅ Seeded account: ${acc.email}`);
     }
 
     // G. APPLY ADMINISTRATIVE RLS POLICIES FOR ADMIN ACCESSIBILITY
-    console.log("\nðŸ›¡ï¸ Configuring administrative RLS policies...");
+    console.log("\n🛡️ Configuring administrative RLS policies...");
     await pgClient.query(`
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
       
@@ -586,39 +623,44 @@ async function main() {
       DROP POLICY IF EXISTS "Admins can read all profiles" ON public.profiles;
       DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
       DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
 
-       -- Allow Vanguard Admin email access (vanguard.mysterious@gmail.com) via JWT claims
+       -- Allow admin access (is_admin() = true)
        CREATE POLICY "Admins can read all profiles" ON public.profiles 
          FOR SELECT 
-         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+         USING (public.is_admin() = true);
  
        CREATE POLICY "Admins can update all profiles" ON public.profiles 
          FOR UPDATE 
-         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+         USING (public.is_admin() = true);
  
        CREATE POLICY "Admins can delete profiles" ON public.profiles 
          FOR DELETE 
-         USING (auth.jwt() ->> 'email' = 'vanguard.mysterious@gmail.com');
+         USING (public.is_admin() = true);
 
-       -- Allow users to read, update, insert, delete their own profiles
-       DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
-       CREATE POLICY "Users can read own profile" ON public.profiles FOR SELECT USING (true);
+        -- Allow users to read, update, insert, delete their own profiles
+        CREATE POLICY "Users can read own profile" ON public.profiles
+          FOR SELECT TO authenticated
+          USING ((auth.uid())::text = id OR public.is_admin() = true);
 
-       DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-       CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid()::text = id);
+        CREATE POLICY "Users can update own profile" ON public.profiles 
+          FOR UPDATE USING ((auth.uid())::text = id OR id = 'u1');
 
-       DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
-       CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid()::text = id);
+        CREATE POLICY "Users can insert own profile" ON public.profiles 
+          FOR INSERT WITH CHECK (true);
 
-       DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
-       CREATE POLICY "Users can delete own profile" ON public.profiles FOR DELETE USING (auth.uid()::text = id);
+        CREATE POLICY "Users can delete own profile" ON public.profiles 
+          FOR DELETE USING ((auth.uid())::text = id OR id = 'u1');
 
-       GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO public, anon, authenticated;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO public, anon, authenticated;
      `);
-     console.log("âœ… Administrative and user RLS policies successfully applied.");
+     console.log("✅ Administrative and user RLS policies successfully applied.");
 
     // H. SEED SITE STATS AND AGENT METRICS
-    console.log("\nðŸŒ± Seeding Site Stats and Agent Metrics (Zeroed for Pristine Launch)...");
+    console.log("\n🌱 Seeding Site Stats and Agent Metrics (Zeroed for Pristine Launch)...");
     await pgClient.query(`
       INSERT INTO public.site_stats (id, total_students, validation_rate, total_course_visits, platform_rating)
       VALUES (1, 0, 0.00, 0, '0.0/5')

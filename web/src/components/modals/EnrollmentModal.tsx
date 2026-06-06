@@ -34,10 +34,12 @@ export const EnrollmentModal = ({
   onToggleBookmark
 }: EnrollmentModalProps) => {
   const [dynamicLessons, setDynamicLessons] = React.useState<any[]>([]);
+  const [isLoadingLessons, setIsLoadingLessons] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    if (course && !COURSE_SYLLABUS_DETAILS[course.id]) {
+    if (course && !COURSE_SYLLABUS_DETAILS[course.id] && !course.isCurriculum) {
       const fetchLessons = async () => {
+        setIsLoadingLessons(true);
         try {
           const { data, error } = await supabase
             .from('lessons')
@@ -50,9 +52,14 @@ export const EnrollmentModal = ({
           }
         } catch (err) {
           console.error("Error fetching dynamic syllabus lessons:", err);
+        } finally {
+          setIsLoadingLessons(false);
         }
       };
       fetchLessons();
+    } else {
+      setDynamicLessons([]);
+      setIsLoadingLessons(false);
     }
   }, [course, lang]);
 
@@ -62,6 +69,18 @@ export const EnrollmentModal = ({
 
   const getLocalizedCourseTitle = (c: any) => {
     return dbService.getLocalizedCourseTitle(c, lang);
+  };
+
+  const getLocalizedCourseDescription = (c: any) => {
+    if (!c) return '';
+    const code = lang.toUpperCase();
+    if (c.translations?.[code]?.description) {
+      return c.translations[code].description;
+    }
+    if (c.translations?.[code]?.desc) {
+      return c.translations[code].desc;
+    }
+    return c.description || '';
   };
 
   const getLocalizedSubject = (subj: string) => {
@@ -76,6 +95,17 @@ export const EnrollmentModal = ({
   const prerequisites = COURSE_SYLLABUS_DETAILS[course.id]?.prerequisites || [];
   
   const units = React.useMemo(() => {
+    if (course.isCurriculum) {
+      const childCourses = (course.childCourses || [])
+        .map((childId: any) => courses?.find((c: any) => String(c.id) === String(childId)))
+        .filter(Boolean);
+      return [
+        {
+          title: lang.toUpperCase() === 'FR' ? "Cours inclus" : "Included Courses",
+          modules: childCourses.map((c: any) => dbService.getLocalizedCourseTitle(c, lang) || c.title)
+        }
+      ];
+    }
     if (COURSE_SYLLABUS_DETAILS[course.id]) {
       return COURSE_SYLLABUS_DETAILS[course.id].units || [];
     }
@@ -91,13 +121,13 @@ export const EnrollmentModal = ({
       {
         title: lang.toUpperCase() === 'FR' ? "Syllabus en cours" : "Syllabus details",
         modules: [
-          lang.toUpperCase() === 'FR' 
-            ? "Structure en cours de chargement..." 
-            : "Course structure loading..."
+          isLoadingLessons
+            ? (lang.toUpperCase() === 'FR' ? "Structure en cours de chargement..." : "Course structure loading...")
+            : (lang.toUpperCase() === 'FR' ? "Syllabus en cours de rédaction..." : "Syllabus details coming soon...")
         ]
       }
     ];
-  }, [course.id, dynamicLessons, lang]);
+  }, [course, dynamicLessons, lang, courses, isLoadingLessons]);
 
   return (
     <div 
@@ -129,6 +159,11 @@ export const EnrollmentModal = ({
             <h2 className="text-2xl font-black text-white">{getLocalizedCourseTitle(course)}</h2>
           </div>
         </div>
+
+        {/* Localized Course Description */}
+        <p className="text-sm text-slate-300 leading-relaxed mb-6 text-left whitespace-pre-wrap">
+          {getLocalizedCourseDescription(course)}
+        </p>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-4 mb-8 text-center">

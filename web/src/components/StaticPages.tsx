@@ -686,6 +686,18 @@ export const CatalogPage = () => {
     return dbService.getLocalizedCourseTitle(course, lang);
   };
 
+  const getLocalizedCourseDescription = (course: any) => {
+    if (!course) return '';
+    const code = lang.toUpperCase();
+    if (course.translations?.[code]?.description) {
+      return course.translations[code].description;
+    }
+    if (course.translations?.[code]?.desc) {
+      return course.translations[code].desc;
+    }
+    return course.description || '';
+  };
+
 
 
   const filteredCourses = courses.filter(c => {
@@ -1034,8 +1046,8 @@ export const CatalogPage = () => {
                     <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
                       {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
                     </h3>
-                    <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed">
-                      {translatedCourses[course.id]?.description || course.description}
+                    <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
+                      {translatedCourses[course.id]?.description || getLocalizedCourseDescription(course)}
                     </p>
 
 
