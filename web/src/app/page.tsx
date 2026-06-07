@@ -550,6 +550,22 @@ export default function Home() {
         const isPasswordCorrect = expectedPassword === inputHash || expectedPassword === password;
 
         if (isPasswordCorrect) {
+          // Asynchronously sign in to Supabase Auth to establish a real session
+          try {
+            const { supabase: sClient } = await import("@/lib/supabase");
+            const { error: authError } = await sClient.auth.signInWithPassword({
+              email: emailLower,
+              password: password
+            });
+            if (authError) {
+              console.warn("[Auth] Supabase auth sign-in failed:", authError.message);
+            } else {
+              console.log("[Auth] Supabase auth sign-in successful!");
+            }
+          } catch (authException) {
+            console.warn("[Auth] Supabase auth sign-in exception:", authException);
+          }
+
           const isVerified = localStorage.getItem('op_registration_verified') === 'true';
           const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 

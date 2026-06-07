@@ -202,6 +202,7 @@ export interface MockCourse {
   is_active: boolean;
   isActive?: boolean;
   archivingLevel?: number; // 0: Active, 1: Level 1, 2: Level 2, 3: Level 3
+  archiving_level?: number; // Legacy/DB format alias
   archivedLanguages?: string[];
   ratingCount?: number;
   averageRating?: number;
@@ -210,6 +211,7 @@ export interface MockCourse {
   created_at?: string; // Creation timestamp for new tracking (NEW badge < 90 days)
   last_revision_date?: string; // Last content revision — displayed on cards
   version?: string; // Course version number for dynamic revision and governance tracking
+  version_string?: string; // Legacy/DB format alias
   translations?: Record<string, { title: string; description: string }>;
   isCurriculum?: boolean;
   childCourses?: number[];
@@ -1853,7 +1855,7 @@ export const handleDatabaseError = (error: any) => {
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-  if (isLocalhost && isConnectionFailure(error)) {
+  if (isLocalhost && isSandboxFallbackAllowed() && isConnectionFailure(error)) {
     console.warn("⚠️ [DATABASE FALLBACK] Supabase connection failed. Falling back to LocalStorage mock provider on localhost:", error);
     dynamicOffline = true;
     return;
@@ -1915,8 +1917,23 @@ if (isBrowser) {
     const defaultContactFeedbacks = initialContactFeedbacks;
 
     const storedCourses = getLocalStorageItem('openprimer_courses', defaultCourses);
-    const mergedCourses = [...storedCourses];
+    const filteredStoredCourses = storedCourses.filter((c: any) => {
+      const slug = (c.slug || '').toLowerCase();
+      const level = (c.level || '').toLowerCase();
+      if (slug === 'introduction_à_la_sociologie' || slug === 'introduction_a_la_sociologie') return false;
+      if (slug === 'classical_mechanics' && (level === 'beginner' || level === 'general')) return false;
+      if (slug === 'maths_test' && (level === 'beginner' || level === 'general')) return false;
+      if (slug === 'chimie_test' && (level === 'beginner' || level === 'general')) return false;
+      return true;
+    });
+    const mergedCourses = [...filteredStoredCourses];
     mockCourses.forEach(initialC => {
+      const slug = (initialC.slug || '').toLowerCase();
+      const level = (initialC.level || '').toLowerCase();
+      if (slug === 'introduction_à_la_sociologie' || slug === 'introduction_a_la_sociologie') return;
+      if (slug === 'classical_mechanics' && (level === 'beginner' || level === 'general')) return;
+      if (slug === 'maths_test' && (level === 'beginner' || level === 'general')) return;
+      if (slug === 'chimie_test' && (level === 'beginner' || level === 'general')) return;
       if (!mergedCourses.some(c => c.id === initialC.id)) {
         mergedCourses.push(initialC);
       }
@@ -2570,7 +2587,8 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
     const isLocalhost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    const useSupabase = isDatabaseConfigured && !isOffline && (!isLocalhost || !dynamicOffline);
+    const sandboxAllowed = isSandboxFallbackAllowed();
+    const useSupabase = isDatabaseConfigured && !isOffline && (!isLocalhost || !dynamicOffline || !sandboxAllowed);
     const activeProvider = useSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
 
     const value = Reflect.get(activeProvider, prop, receiver);
@@ -2584,7 +2602,7 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
 
         try {
           const res = await value.apply(activeProvider, args);
-          if (useSupabase && isLocalhost && res && res.error && isConnectionFailure(res.error)) {
+          if (useSupabase && isLocalhost && sandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
             console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost due to connection failure. Falling back to Mock/LocalStorage provider.`, res.error);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
@@ -2594,7 +2612,7 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
           }
           return res;
         } catch (err) {
-          if (useSupabase && isLocalhost && isConnectionFailure(err)) {
+          if (useSupabase && isLocalhost && sandboxAllowed && isConnectionFailure(err)) {
             console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw a connection error on localhost. Falling back to Mock/LocalStorage provider.`, err);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
@@ -3040,7 +3058,7 @@ export async function syncLocalStorageToSupabase(userId: string): Promise<{ succ
   if (typeof window === 'undefined') return { success: false, syncedCourses: 0, syncedProgress: 0, syncedTasks: 0 };
   
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocalhost || !isDatabaseConfigured || dynamicOffline || isOffline) {
+  if (!isLocalhost || !isDatabaseConfigured || (dynamicOffline && isSandboxFallbackAllowed()) || isOffline) {
     return { success: false, syncedCourses: 0, syncedProgress: 0, syncedTasks: 0 };
   }
 

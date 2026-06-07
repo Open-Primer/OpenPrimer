@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer, getLocalizedLabel, formatCourseLevel } from '@/components/RefinedUI';
 import * as Icons from 'lucide-react';
-import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy, Globe } from 'lucide-react';
+import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy, Globe, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
@@ -27,6 +27,32 @@ export default function CurriculumPage() {
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [dismissedRecIds, setDismissedRecIds] = useState<number[]>([]);
+  const [dismissedConflicts, setDismissedConflicts] = useState<number[]>([]);
+  const [keepChildCourses, setKeepChildCourses] = useState<boolean>(true);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
+  const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
+  const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
+
+
+  // Helper to extract base slug for course version comparison
+  const getBaseSlug = (slug: string) => {
+    return (slug || '').toLowerCase()
+      .replace(/[_-]v\d+[\d\.]*/g, '')
+      .replace(/[_-]version\d+/g, '');
+  };
+
+  useEffect(() => {
+    if (abandonTarget) {
+      setKeepChildCourses(true);
+    }
+  }, [abandonTarget]);
+
+  // States for course feedback review modals
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedReviewCourse, setSelectedReviewCourse] = useState<any | null>(null);
+  const [isReviewReadOnly, setIsReviewReadOnly] = useState(false);
+  const [courseFeedbacks, setCourseFeedbacks] = useState<Record<number, any>>({});
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem('op_dismissed_recommendations');
@@ -61,9 +87,7 @@ export default function CurriculumPage() {
       }
     }
   };
-  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
-  const [selectedCurriculumForDrillDown, setSelectedCurriculumForDrillDown] = useState<any | null>(null);
-  const [abandonTarget, setAbandonTarget] = useState<any | null>(null);
+
 
   const getCoursePath = (c: any) => {
     const slug = c.slug;
@@ -107,6 +131,53 @@ export default function CurriculumPage() {
     return t[key] || subj;
   };
 
+  const versionConflicts = React.useMemo(() => {
+    if (!progress?.activeModules || courses.length === 0) return [];
+
+    const enrolledCurricula = progress.activeModules.filter((m: any) => {
+      const cd = courses.find((x: any) => x.id === m.id);
+      return cd?.isCurriculum || m.isCurriculum;
+    });
+
+    const enrolledCurriculaDetails = enrolledCurricula.map((curr: any) => courses.find((cd: any) => cd.id === curr.id)).filter(Boolean);
+    
+    const standaloneEnrolled = progress.activeModules.filter((m: any) => {
+      const cd = courses.find((x: any) => x.id === m.id);
+      return !cd?.isCurriculum && !m.isCurriculum;
+    });
+
+    const conflicts: any[] = [];
+
+    standaloneEnrolled.forEach((standalone: any) => {
+      if (dismissedConflicts.includes(standalone.id)) return;
+
+      const standaloneDetails = courses.find((cd: any) => cd.id === standalone.id);
+      if (!standaloneDetails) return;
+
+      const baseSlug = getBaseSlug(standaloneDetails.slug);
+
+      enrolledCurriculaDetails.forEach((curr: any) => {
+        if (curr.childCourses && curr.childCourses.length > 0) {
+          curr.childCourses.forEach((childId: number) => {
+            const childDetails = courses.find((cd: any) => cd.id === childId);
+            if (childDetails && childDetails.id !== standaloneDetails.id) {
+              const childBaseSlug = getBaseSlug(childDetails.slug);
+              if (childBaseSlug === baseSlug) {
+                conflicts.push({
+                  standalone: standaloneDetails,
+                  curriculumChild: childDetails,
+                  curriculum: curr
+                });
+              }
+            }
+          });
+        }
+      });
+    });
+
+    return conflicts;
+  }, [progress, courses, dismissedConflicts]);
+
   const getRecommendations = () => {
     if (!progress?.activeModules || progress.activeModules.length === 0) {
       return [];
@@ -114,47 +185,40 @@ export default function CurriculumPage() {
     const activeModSlugs = progress.activeModules.map((m: any) => m.slug) || [];
     const completedSlugs = progress.activeModules.filter((m: any) => m.progress === 100).map((m: any) => m.slug) || [];
 
-    // Collect unique languages of the user's current enrolled courses
-    const activeLangs = new Set<string>();
-    progress.activeModules.forEach((m: any) => {
-      const cd = courses.find((c: any) => c.slug === m.slug || c.id === m.id);
-      if (cd && cd.languages) {
-        cd.languages.forEach((l: string) => activeLangs.add(l.toLowerCase()));
-      }
-    });
-
-    // Candidates = all courses except already active/enrolled ones and dismissed ones
+    // Candidates = all courses except already active/enrolled ones
     const candidates = courses.filter((c: any) => {
-      if (activeModSlugs.includes(c.slug)) return false;
-      if (dismissedRecIds.includes(c.id)) return false;
-      // Ensure the course supports at least one of the active languages (no fallback)
-      if (!c.languages || c.languages.length === 0) return false;
-      return c.languages.some((l: string) => activeLangs.has(l.toLowerCase()));
+      return !activeModSlugs.includes(c.slug);
     });
 
-    // Apply smart subject matching
-    let result: any[] = [];
-    if (completedSlugs.includes('Classical_Mechanics') || completedSlugs.includes('classical-mechanics')) {
-      result = candidates.filter((c: any) => c.slug === 'quantum-physics' || c.slug === 'Physique_Test_L2' || c.slug === 'Calculus_I');
-    } else if (completedSlugs.includes('Cell_Biology') || completedSlugs.includes('cell-biology') || completedSlugs.includes('Biologie_Test')) {
-      result = candidates.filter((c: any) => c.slug === 'molecular-genetics' || c.slug === 'Biologie_Test_L1');
-    }
+    // Apply strict smart matching based only on completed curriculum slugs (no fallback to candidates or starters)
+    let matched: any[] = [];
+    
+    const hasCompletedPhysics = completedSlugs.some((slug: string) => 
+      slug === 'Classical_Mechanics' || slug === 'classical-mechanics' || slug === 'Maths_Test'
+    );
+    const hasCompletedBiology = completedSlugs.some((slug: string) => 
+      slug === 'Cell_Biology' || slug === 'cell-biology' || slug === 'Biologie_Test'
+    );
 
-    if (result.length === 0) {
-      // Default to standard starting recommendations in the user's active languages
-      result = candidates.filter((c: any) => 
-        c.slug === 'Classical_Mechanics' || c.slug === 'classical-mechanics' || 
-        c.slug === 'Biologie_Test' || c.slug === 'cell-biology' || 
-        c.slug === 'Droit_Test' || c.slug === 'constitutional-law'
+    if (hasCompletedPhysics) {
+      matched = candidates.filter((c: any) => 
+        c.slug === 'quantum-physics' || c.slug === 'Physique_Test_L2' || c.slug === 'Calculus_I' || c.slug === 'Maths_Test_L1'
+      );
+    } else if (hasCompletedBiology) {
+      matched = candidates.filter((c: any) => 
+        c.slug === 'molecular-genetics' || c.slug === 'Biologie_Test_L1'
       );
     }
 
-    // If still nothing, return the first few eligible candidates
-    if (result.length === 0) {
-      result = candidates;
+    if (matched.length === 0) {
+      return [];
     }
 
-    return result.slice(0, 2);
+    // Slice to maximum 2 recommendations BEFORE filtering dismissed, so that dismissing does not pull subsequent candidate cards
+    const baseRecommendations = matched.slice(0, 2);
+
+    // Filter out dismissed ones from this fixed pair
+    return baseRecommendations.filter(c => !dismissedRecIds.includes(c.id));
   };
 
   const enrollInRecommended = async (course: any) => {
@@ -276,6 +340,21 @@ export default function CurriculumPage() {
       const revDate = progressService.getCurriculumLastRevision(ids);
       setCurriculumRevision(revDate);
 
+      // Load user course feedbacks for all completed modules in parallel
+      const completedModules = progressData?.activeModules?.filter((m: any) => m.progress === 100) || [];
+      const feedbacksMap: Record<number, any> = {};
+      await Promise.all(completedModules.map(async (m: any) => {
+        try {
+          const res = await dbService.getCourseFeedbacks(m.id.toString());
+          if (res.data && res.data.length > 0) {
+            feedbacksMap[m.id] = res.data[0];
+          }
+        } catch (err) {
+          console.error("Error fetching feedback for course:", m.id, err);
+        }
+      }));
+      setCourseFeedbacks(feedbacksMap);
+
       setLoading(false);
     }
     loadProgress();
@@ -298,6 +377,51 @@ export default function CurriculumPage() {
   }, [lang]);
 
 
+  const getCourseEarnedAchievements = (courseId: number, courseSlug: string) => {
+    const courseEarned: any[] = [];
+    const courseIdStr = courseId.toString();
+    
+    // 1. Fast Learner check
+    const fastLearnerAch = achievements.find(a => a.threshold.toLowerCase().includes('3 days'));
+    if (fastLearnerAch && earnedIds.includes(fastLearnerAch.id)) {
+      const enrollDateStr = localStorage.getItem('op_enroll_date_' + courseIdStr) || localStorage.getItem('op_enroll_date_' + courseSlug);
+      if (enrollDateStr) {
+        const diffDays = (Date.now() - new Date(enrollDateStr).getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays <= 3) {
+          courseEarned.push(fastLearnerAch);
+        }
+      } else {
+        courseEarned.push(fastLearnerAch);
+      }
+    }
+    
+    // 2. Perfect Score check
+    const perfectScoreAch = achievements.find(a => a.threshold.toLowerCase().includes('100% score'));
+    if (perfectScoreAch && earnedIds.includes(perfectScoreAch.id)) {
+      const quizResults = JSON.parse(localStorage.getItem('op_quiz_results') || '{}');
+      const qr = quizResults[courseIdStr] || quizResults[courseSlug];
+      if (qr && qr.correctAnswers === qr.totalQuestions && qr.totalQuestions > 0) {
+        courseEarned.push(perfectScoreAch);
+      }
+    }
+    
+    // 3. Course completion milestones check (e.g., "completed 1 course", "completed 5 courses")
+    const completedCount = Object.values(JSON.parse(localStorage.getItem('op_course_progress') || '{}')).filter(v => v === 100).length;
+    achievements.forEach(a => {
+      const th = a.threshold.toLowerCase();
+      if (th.includes('course') && !th.includes('3 days')) {
+        if (earnedIds.includes(a.id)) {
+          const reqCount = parseInt(th.replace(/\D/g, '')) || 1;
+          if (completedCount >= reqCount) {
+            courseEarned.push(a);
+          }
+        }
+      }
+    });
+    
+    return Array.from(new Set(courseEarned));
+  };
+
   const toggleBookmark = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -308,7 +432,7 @@ export default function CurriculumPage() {
     localStorage.setItem('op_bookmarks', JSON.stringify(newBookmarks));
   };
 
-  const handleOptOut = async (id: number) => {
+  const handleOptOut = async (id: number, keepChildCoursesOpt?: boolean) => {
     const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('op_user_profile') : null;
     const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('op_session') === 'true' : false;
     let userId = 'u1';
@@ -321,6 +445,15 @@ export default function CurriculumPage() {
     }
 
     await dbService.abandonCourse(userId, id);
+
+    // If opting out of a curriculum and the user selected not to keep progress/enrolments of child courses
+    if (abandonTarget && abandonTarget.isCurriculum && keepChildCoursesOpt === false) {
+      if (abandonTarget.childCourses && abandonTarget.childCourses.length > 0) {
+        for (const childId of abandonTarget.childCourses) {
+          await dbService.abandonCourse(userId, childId);
+        }
+      }
+    }
 
     // Reload user progress from database/cache
     const { data: progressData } = await dbService.getUserProgress(userId, lang);
@@ -388,6 +521,61 @@ export default function CurriculumPage() {
             </div>
           </motion.div>
         )}
+
+        {versionConflicts.length > 0 && versionConflicts.map((conflict: any) => (
+          <motion.div 
+            key={`conflict-${conflict.standalone.id}`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-8 p-6 bg-gradient-to-br from-red-600/10 via-slate-900/40 to-slate-950 border border-red-500/20 rounded-[32px] relative overflow-hidden animate-pulse"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <Icons.AlertTriangle className="w-24 h-24 text-red-400" />
+            </div>
+            
+            <button
+              onClick={() => setDismissedConflicts(prev => [...prev, conflict.standalone.id])}
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
+              title={lang === 'FR' ? "Ignorer cette alerte" : "Dismiss conflict"}
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+
+            <div className="flex gap-4 items-start relative z-10 mr-8">
+              <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shrink-0">
+                <Icons.AlertTriangle className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="space-y-2 flex-1">
+                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
+                  {lang === 'FR' ? "Conflit de version détecté" : "Version Conflict Detected"}
+                </h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {lang === 'FR' 
+                    ? `Vous êtes inscrit à la fois au cours individuel "${conflict.standalone.title}" et au cursus "${conflict.curriculum.title}" qui contient déjà le module "${conflict.curriculumChild.title}". Cela peut entraîner des doublons ou des incohérences de progression.`
+                    : `You are enrolled in both the standalone course "${conflict.standalone.title}" and the curriculum "${conflict.curriculum.title}", which already includes the module "${conflict.curriculumChild.title}". This may lead to duplicate or conflicting progress.`}
+                </p>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setAbandonTarget(conflict.standalone);
+                    }}
+                    className="px-3.5 py-1.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    {lang === 'FR' ? "Abandonner le cours individuel" : "Abandon Standalone Course"}
+                  </button>
+                  <button
+                    onClick={() => setDismissedConflicts(prev => [...prev, conflict.standalone.id])}
+                    className="px-3.5 py-1.5 bg-slate-950/45 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    {lang === 'FR' ? "Ignorer l'alerte" : "Ignore Conflict"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+
 
         {/* AI PEDAGOGICAL SUMMARY */}
         {progress.activeModules && progress.activeModules.length > 0 && (
@@ -497,8 +685,34 @@ export default function CurriculumPage() {
           const activeCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
           const completedCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
 
-          const activeCourses = activeCoursesAll;
-          const completedCourses = completedCoursesAll;
+          const enrolledCurricula = progress.activeModules ? progress.activeModules.filter((m: any) => {
+            const cd = courses.find((x: any) => x.id === m.id);
+            return cd?.isCurriculum || m.isCurriculum;
+          }) : [];
+          
+          const enrolledCurriculaDetails = enrolledCurricula.map((curr: any) => courses.find((cd: any) => cd.id === curr.id)).filter(Boolean);
+          const curriculumChildIds = new Set<number>();
+          enrolledCurriculaDetails.forEach((curr: any) => {
+            if (curr.childCourses && curr.childCourses.length > 0) {
+              curr.childCourses.forEach((id: number) => curriculumChildIds.add(id));
+            }
+          });
+
+          const activeCourses = activeCoursesAll.filter((course: any) => {
+            const courseDetails = courses.find((cd: any) => cd.slug === course.slug || cd.id === course.id);
+            const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
+            if (isCurr) return true;
+            if (curriculumChildIds.has(course.id)) return false;
+            return true;
+          });
+
+          const completedCourses = completedCoursesAll.filter((course: any) => {
+            const courseDetails = courses.find((cd: any) => cd.slug === course.slug || cd.id === course.id);
+            const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
+            if (isCurr) return true;
+            if (curriculumChildIds.has(course.id)) return false;
+            return true;
+          });
 
           return (
             <>
@@ -551,85 +765,89 @@ export default function CurriculumPage() {
                           <div 
                             role="listitem" 
                             aria-label={`${course.title}, ${getLocalizedSubject(course.subject)}, ${course.progress}% ${t.completed}`}
-                            className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/40' : 'border-slate-800 hover:border-blue-500/50'} rounded-[48px] transition-all shadow-2xl flex flex-col h-full relative overflow-hidden`}
+                            className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-955/20' : 'border-blue-500/20 shadow-blue-500/5 bg-gradient-to-br from-blue-955/5 via-slate-900/40 to-slate-950/20'} rounded-[40px] shadow-2xl flex flex-col h-full group relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1`}
                           >
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
                                  <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 flex-shrink-0">
                                     {isCurr ? <GraduationCap className="w-6 h-6 text-violet-400" /> : <Book className="w-6 h-6" />}
                                  </div>
                                  <div className="flex gap-2 items-center flex-1 justify-end flex-wrap">
+                                    {/* 1. Type Badge */}
                                     {isCurr ? (
-                                      <div className="flex gap-2 items-center flex-wrap">
-                                        <span className="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 flex items-center gap-1">
-                                          <Icons.Layers className="w-3 h-3 text-violet-400" />
-                                          Curriculum
-                                        </span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
-                                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                          {averageRating > 0 ? averageRating.toFixed(1) : "4.8"} ({ratingCount > 0 ? ratingCount : 12})
-                                        </span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1">
-                                          <Clock className="w-3.5 h-3.5" />
-                                          {totalHours}H
-                                        </span>
-                                      </div>
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 flex items-center gap-1.5 select-none">
+                                        <Icons.Layers className="w-3.5 h-3.5 text-violet-400" />
+                                        Curriculum
+                                      </span>
                                     ) : (
-                                      <>
-                                        {courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
-                                           <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1">
-                                             <Icons.Globe className="w-3 h-3" />
-                                             {courseDetails.languages.join(', ').toUpperCase()}
-                                           </span>
-                                         )}
-                                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
-                                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                          {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
-                                        </span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1">
-                                          <Clock className="w-3.5 h-3.5" />
-                                          {(courseDetails?.hours ?? 150)}H
-                                        </span>
-                                      </>
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
+                                        <Icons.BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                                        {lang === 'FR' ? 'Cours' : 'Course'}
+                                      </span>
                                     )}
+
+                                    {/* Multilingual / translation mismatch badge */}
+                                    {!isCurr && courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={lang === 'FR' ? 'Non disponible dans votre langue active' : 'Not available in your active language'}>
+                                        <Icons.Globe className="w-3.5 h-3.5 animate-pulse" />
+                                        {courseDetails.languages.join(', ').toUpperCase()}
+                                      </span>
+                                    )}
+
+                                    {/* 2. Stars Rating */}
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                                      {averageRating > 0 ? averageRating.toFixed(1) : (isCurr ? "4.8" : "3.4")} ({ratingCount > 0 ? ratingCount : (isCurr ? 24 : 12)})
+                                    </span>
+
+                                    {/* 3. Volume Horaire (Hours) */}
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {totalHours}H
+                                    </span>
+
+                                    {/* 4. Level Badge */}
+                                    <span className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 tracking-wider select-none">
+                                      {formatCourseLevel(course.level, lang)}
+                                    </span>
+
+                                    {/* 5. Syllabus Link Button */}
                                     <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedEnrollCourse(courseDetails || course);
+                                      }}
+                                      title="Syllabus"
+                                      className="p-2 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                                    >
+                                      <Icons.BookOpen className="w-4 h-4" />
+                                    </button>
+
+                                    {/* 6. Bookmark Toggle Button */}
+                                    <button
+                                      type="button"
                                       onClick={(e) => toggleBookmark(course.id, e)}
                                       aria-pressed={bookmarks.includes(course.id)}
                                       title={bookmarks.includes(course.id) 
-                                        ? (lang === 'FR' ? 'Supprimer des favoris' 
-                                           : lang === 'ES' ? 'Quitar de favoritos' 
-                                           : lang === 'DE' ? 'Aus Lesezeichen entfernen' 
-                                           : lang === 'ZH' ? '从收藏夹中移除' 
-                                           : 'Remove bookmark') 
-                                        : (lang === 'FR' ? 'Sauvegarder ce cours' 
-                                           : lang === 'ES' ? 'Guardar este curso' 
-                                           : lang === 'DE' ? 'Diesen Kurs speichern' 
-                                           : lang === 'ZH' ? '收藏此课程' 
-                                           : 'Save this course')}
-                                      className={`p-2 rounded-xl transition-all ${bookmarks.includes(course.id) ? 'text-blue-400 bg-blue-400/10' : 'text-slate-700 hover:text-slate-400 hover:bg-slate-800'}`}
+                                        ? (lang === 'FR' ? 'Supprimer des favoris' : 'Remove bookmark') 
+                                        : (lang === 'FR' ? 'Sauvegarder ce cours' : 'Save this course')}
+                                      className={`p-2 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                                        bookmarks.includes(course.id) 
+                                          ? 'text-blue-400 bg-blue-400/10 border-blue-500/20' 
+                                          : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                                      }`}
                                     >
                                       <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
                                     </button>
-                                    {!isCurr && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setSelectedEnrollCourse(courseDetails || course);
-                                        }}
-                                        title={t.presentation_sheet}
-                                        className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                      </button>
-                                    )}
 
+                                    {/* 7. Trash / Abandon Icon Button */}
                                     {isMandatoryChild ? (
                                       <div
                                         title={lang === 'FR' ? "Cours obligatoire du curriculum (abandon impossible)" : "Mandatory curriculum course (cannot disenroll)"}
-                                        className="p-2 rounded-xl text-slate-500 bg-slate-950/30 border border-slate-800 flex items-center justify-center cursor-not-allowed group/tooltip relative"
+                                        className="p-2 rounded-xl text-slate-655 bg-slate-950/30 border border-slate-850 flex items-center justify-center cursor-not-allowed"
                                       >
-                                        <Icons.Lock className="w-4 h-4 text-slate-655" />
+                                        <Icons.Lock className="w-4 h-4" />
                                       </div>
                                     ) : (
                                       <button
@@ -640,14 +858,11 @@ export default function CurriculumPage() {
                                           setAbandonTarget(courseDetails || course);
                                         }}
                                         title={t.abandon}
-                                        className="p-2 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-950/30 transition-all cursor-pointer flex items-center justify-center"
+                                        className="p-2 bg-slate-950/40 border border-slate-800 hover:border-red-500/30 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer flex items-center justify-center"
                                       >
                                         <Icons.Trash2 className="w-4 h-4" />
                                       </button>
                                     )}
-                                    <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                       {formatCourseLevel(course.level, lang)}
-                                    </span>
                                  </div>
                               </div>
                               <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
@@ -716,149 +931,244 @@ export default function CurriculumPage() {
                    </h2>
                    <div className="grid md:grid-cols-2 gap-8">
                      {completedCourses.map((course: any) => {
-                       const getCoursePath = (c: any) => {
-                         const slug = c.slug;
-                         if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-                           return '/L1/Physics/Classical_Mechanics/introduction';
-                         }
-                         if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-                           return '/L2/Physics/Physique_Test_L2/introduction';
-                         }
-                         if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-                           return '/L1/Biology/Cell_Biology/introduction';
-                         }
-                         if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-                           return '/L1/Biology/Biologie_Test_L1/introduction';
-                         }
-                         if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-                           return '/L1/Law/Droit_Test/introduction';
-                         }
-                         return '/catalog';
-                       };
+                        const getCoursePath = (c: any) => {
+                          const slug = c.slug;
+                          if (!slug) return '/catalog';
+                          if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+                            return '/L1/Physics/Classical_Mechanics/introduction';
+                          }
+                          if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+                            return '/L2/Physics/Physique_Test_L2/introduction';
+                          }
+                          if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+                            return '/L1/Biology/Cell_Biology/introduction';
+                          }
+                          if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+                            return '/L1/Biology/Biologie_Test_L1/introduction';
+                          }
+                          if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+                            return '/L1/Law/Droit_Test/introduction';
+                          }
+                          if (slug === 'Maths_Test' || c.id === 7) {
+                            return '/L1/Mathematics/Maths_Test/introduction';
+                          }
+                          if (slug === 'Maths_Test_L1' || c.id === 8) {
+                            return '/L1/Mathematics/Maths_Test_L1/introduction';
+                          }
+                          if (slug === 'Statistics' || c.id === 11) {
+                            return '/L1/Mathematics/Statistics/introduction';
+                          }
+                          const cleanSubject = c.subject ? c.subject.replace(/\s+/g, '_') : 'General';
+                          return `/${c.level || 'L1'}/${cleanSubject}/${c.slug}/introduction`;
+                        };
 
-                       const getLocalizedTitle = (c: any) => {
-                         const isEn = lang.toUpperCase() === 'EN';
-                         const slug = c.slug;
-                         if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-                           return isEn ? "Physics: Classical Mechanics" : "Physique : Mécanique Classique";
-                         }
-                         if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-                           return isEn ? "Physics: Quantum Physics (L2)" : "Physique : Physique Quantique (L2)";
-                         }
-                         if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-                           return isEn ? "Biology: Cell Biology" : "Biologie : Biologie Cellulaire";
-                         }
-                         if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-                           return isEn ? "Biology: Molecular Genetics" : "Biologie : Génétique Moléculaire";
-                         }
-                         if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-                           return isEn ? "Law: Constitutional Law" : "Droit : Droit Constitutionnel";
-                         }
-                         return t[c.title_key as keyof typeof t] || c.title_key;
-                       };
+                        const getLocalizedTitle = (c: any) => {
+                          return dbService.getLocalizedCourseTitle(c, lang);
+                        };
 
-                       const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
-                       const ratingCount = courseDetails?.ratingCount || 0;
-                       const averageRating = courseDetails?.averageRating || 0;
+                        const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
+                        const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
+                        
+                        let ratingCount = courseDetails?.ratingCount || 0;
+                        let averageRating = courseDetails?.averageRating || 0;
+                        let totalHours = courseDetails?.hours || 150;
 
-                       // Check if this course is a child of any enrolled curriculum and if it is multilingual
-                       const enrolledCurricula = (progress.activeModules || []).filter((c: any) => {
-                         const cd = courses.find((x: any) => x.id === c.id);
-                         return cd?.isCurriculum || c.isCurriculum;
-                       }).map((c: any) => courses.find((x: any) => x.id === c.id)).filter(Boolean);
+                        if (isCurr && courseDetails?.childCourses && courseDetails.childCourses.length > 0) {
+                          let sumHours = 0;
+                          let sumWeightedRating = 0;
+                          let sumRatingCount = 0;
+                          courseDetails.childCourses.forEach((cId: number) => {
+                            const child = courses.find((c: any) => c.id === cId);
+                            if (child) {
+                              const childHours = child.hours || 150;
+                              const childRating = child.averageRating || 3.4;
+                              sumHours += childHours;
+                              sumWeightedRating += childRating * childHours;
+                              sumRatingCount += child.ratingCount || 12;
+                            }
+                          });
+                          totalHours = sumHours > 0 ? sumHours : totalHours;
+                          averageRating = sumHours > 0 ? sumWeightedRating / sumHours : averageRating;
+                          ratingCount = sumRatingCount > 0 ? sumRatingCount : ratingCount;
+                        }
 
-                       const parentCurriculum = enrolledCurricula.find((curr: any) => curr?.childCourses?.includes(course.id));
-                       const isMultilingualParent = parentCurriculum && parentCurriculum.languages && parentCurriculum.languages.length > 1;
-                       const courseLang = courseDetails?.languages?.[0] || 'en';
+                        // Check if this course is a child of any enrolled curriculum and if it is multilingual
+                        const enrolledCurricula = (progress.activeModules || []).filter((c: any) => {
+                          const cd = courses.find((x: any) => x.id === c.id);
+                          return cd?.isCurriculum || c.isCurriculum;
+                        }).map((c: any) => courses.find((x: any) => x.id === c.id)).filter(Boolean);
 
-                       return (
+                        const parentCurriculum = enrolledCurricula.find((curr: any) => curr?.childCourses?.includes(course.id));
+                        const isMultilingualParent = parentCurriculum && parentCurriculum.languages && parentCurriculum.languages.length > 1;
+                        const courseLang = courseDetails?.languages?.[0] || 'en';
+
+                        const earnedBadges = getCourseEarnedAchievements(course.id, course.slug);
+                        const feedback = courseFeedbacks[course.id];
+                        const hasReview = feedback !== undefined;
+
+                        const cardContent = (
+                          <div 
+                            role="listitem"
+                            aria-label={`${course.title}, ${getLocalizedSubject(course.subject)}, 100% ${t.completed}`}
+                            className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-950/20' : 'border-emerald-500/20 shadow-emerald-500/5 bg-gradient-to-br from-emerald-955/5 via-slate-900/40 to-slate-950/20'} rounded-[40px] shadow-2xl flex flex-col h-full relative overflow-hidden`}
+                          >
+                             {/* Corner Ribbon */}
+                             <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                               <div className={`absolute top-6 -right-8 w-[150px] bg-gradient-to-r ${isCurr ? 'from-violet-600 to-fuchsia-400' : 'from-emerald-600 to-teal-400'} text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none`}>
+                                 {lang === 'FR' ? 'Complété' : 'Completed'}
+                               </div>
+                             </div>
+
+                             <div className="flex justify-between items-center mb-6 gap-2 w-full">
+                                <div className={`w-12 h-12 ${isCurr ? 'bg-violet-600/10 text-violet-400' : 'bg-emerald-600/10 text-emerald-400'} rounded-2xl flex items-center justify-center flex-shrink-0`}>
+                                   {isCurr ? <GraduationCap className="w-6 h-6" /> : <Award className="w-6 h-6 animate-pulse" />}
+                                </div>
+                                <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
+                                   {/* 1. Type Badge */}
+                                   {isCurr ? (
+                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 flex items-center gap-1.5 select-none">
+                                       <Icons.Layers className="w-3.5 h-3.5 text-violet-400" />
+                                       Curriculum
+                                     </span>
+                                   ) : (
+                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
+                                       <Icons.BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                                       {lang === 'FR' ? 'Cours' : 'Course'}
+                                     </span>
+                                   )}
+
+                                   {/* Multilingual / translation mismatch badge */}
+                                   {!isCurr && courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
+                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={lang === 'FR' ? 'Non disponible dans votre langue active' : 'Not available in your active language'}>
+                                       <Icons.Globe className="w-3.5 h-3.5 animate-pulse" />
+                                       {courseDetails.languages.join(', ').toUpperCase()}
+                                     </span>
+                                   )}
+
+                                   {/* 2. Stars Rating */}
+                                   <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                     <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                                     {averageRating > 0 ? averageRating.toFixed(1) : (isCurr ? "4.8" : "3.4")} ({ratingCount > 0 ? ratingCount : (isCurr ? 24 : 12)})
+                                   </span>
+
+                                   {/* 3. Volume Horaire (Hours) */}
+                                   <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
+                                     <Clock className="w-3.5 h-3.5" />
+                                     {totalHours}H
+                                   </span>
+
+                                   {/* 4. Level Badge */}
+                                   <span className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 tracking-wider select-none">
+                                     {formatCourseLevel(course.level, lang)}
+                                   </span>
+
+                                   {/* 5. Syllabus Link Button */}
+                                   <button
+                                     type="button"
+                                     onClick={(e) => {
+                                       e.preventDefault();
+                                       e.stopPropagation();
+                                       setSelectedEnrollCourse(courseDetails || course);
+                                     }}
+                                     title="Syllabus"
+                                     className="p-2 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                                   >
+                                     <Icons.BookOpen className="w-4 h-4" />
+                                   </button>
+
+                                   {/* 6. Bookmark Toggle Button */}
+                                   <button
+                                     type="button"
+                                     onClick={(e) => toggleBookmark(course.id, e)}
+                                     aria-pressed={bookmarks.includes(course.id)}
+                                     title={bookmarks.includes(course.id) 
+                                       ? (lang === 'FR' ? 'Supprimer des favoris' : 'Remove bookmark') 
+                                       : (lang === 'FR' ? 'Sauvegarder ce cours' : 'Save this course')}
+                                     className={`p-2 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                                       bookmarks.includes(course.id) 
+                                         ? 'text-blue-400 bg-blue-400/10 border-blue-500/20' 
+                                         : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                                     }`}
+                                   >
+                                     <Bookmark className={`w-4 h-4 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
+                                   </button>
+                                </div>
+                             </div>
+
+                             <h3 className={`text-xl font-black mb-2 text-white group-hover:${isCurr ? 'text-violet-400' : 'text-emerald-400'} transition-colors`}>
+                               {getLocalizedTitle(courseDetails || course)}{isMultilingualParent ? ` (${courseLang.toUpperCase()})` : ''}
+                             </h3>
+                             <p className="text-sm text-slate-500 mb-2">{getLocalizedSubject(course.subject)}</p>
+
+                             {/* Dynamic miniature badge grid */}
+                             {earnedBadges.length > 0 && (
+                               <div className="flex gap-1.5 flex-wrap mb-4" role="group" aria-label={lang === 'FR' ? 'Badges gagnés' : 'Earned badges'}>
+                                 {earnedBadges.map((ach) => {
+                                   const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
+                                   const IconComp = (Icons as any)[badge.iconName] || Icons.Award;
+                                   return (
+                                     <div
+                                       key={ach.id}
+                                       className={`w-6 h-6 rounded-lg bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shrink-0 shadow-sm border border-white/10`}
+                                       title={ach.translations?.[lang.toUpperCase()]?.name || ach.name}
+                                     >
+                                       <IconComp className="w-3.5 h-3.5" />
+                                     </div>
+                                   );
+                                 })}
+                               </div>
+                             )}
+                             
+                             <div className="mt-auto">
+                                <div className="flex justify-between items-center mb-2">
+                                   <span className="text-[9px] font-black uppercase text-slate-600">{lang.toUpperCase() === 'FR' ? 'Statut' : 'Status'}</span>
+                                   <span className={`text-[9px] font-black ${isCurr ? 'text-violet-400' : 'text-emerald-400'}`}>100% {lang.toUpperCase() === 'FR' ? 'Terminé' : 'Completed'}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
+                                   <div className={`h-full ${isCurr ? 'bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.6)]' : 'bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)]'}`} style={{ width: '100%' }} />
+                                </div>
+                                
+                                {/* Evaluation Popup Action trigger */}
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSelectedReviewCourse(courseDetails || course);
+                                    setIsReviewReadOnly(hasReview);
+                                    setShowReviewModal(true);
+                                  }}
+                                  className="pt-4 border-t border-slate-800/50 flex justify-between items-center cursor-pointer group/btn"
+                                >
+                                   <span className={`text-[9px] font-black uppercase tracking-widest text-slate-550 group-hover:${isCurr ? 'text-violet-400' : 'text-emerald-400'} transition-colors`}>
+                                      {hasReview 
+                                        ? (lang === 'FR' ? "Voir l'évaluation" : "View Review") 
+                                        : (lang === 'FR' ? "Revoir le cours" : "Review Course")}
+                                   </span>
+                                   <ChevronRight className={`w-4 h-4 text-slate-500 group-hover:${isCurr ? 'text-violet-400' : 'text-emerald-400'} group-hover:translate-x-1 transition-all`} />
+                                </div>
+                             </div>
+                          </div>
+                        );
+
+                        if (isCurr) {
+                          return (
+                            <div key={course.id} onClick={() => setSelectedCurriculumForDrillDown(courseDetails || course)} className="group cursor-pointer">
+                              {cardContent}
+                            </div>
+                          );
+                        }
+
+                        return (
                           <Link 
                             key={course.id} 
-                            href={getCoursePath(course)} 
+                            href={getCoursePath(courseDetails || course)} 
                             onClick={() => handleCourseClick(courseDetails || course)}
                             className="group"
                           >
-                           <div className="p-8 bg-slate-900/40 border border-emerald-500/20 rounded-[48px] hover:border-emerald-500/50 transition-all shadow-2xl flex flex-col h-full relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
-                                <div className="absolute top-6 -right-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none">
-                                  {lang.toUpperCase() === 'FR' ? 'Complété' : 'Completed'}
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between items-center mb-6 gap-2 w-full">
-                                 <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400 flex-shrink-0">
-                                    <Award className="w-6 h-6 animate-pulse" />
-                                 </div>
-                                 <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
-                                    {courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
-                                       <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1">
-                                         <Icons.Globe className="w-3 h-3" />
-                                         {courseDetails.languages.join(', ').toUpperCase()}
-                                       </span>
-                                     )}
-                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
-                                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                      {averageRating > 0 ? averageRating.toFixed(1) : "3.4"} ({ratingCount > 0 ? ratingCount : 12})
-                                    </span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 flex items-center gap-1.5">
-                                      <Clock className="w-3.5 h-3.5" />
-                                      {(courseDetails?.hours ?? 150)}H
-                                    </span>
-                                    <button
-                                       type="button"
-                                       onClick={(e) => {
-                                         e.preventDefault();
-                                         e.stopPropagation();
-                                         setSelectedEnrollCourse(courseDetails || course);
-                                       }}
-                                       title={t.presentation_sheet}
-                                       className="p-2 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 transition-all cursor-pointer flex items-center justify-center mr-1"
-                                     >
-                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                     </button>
-
-                                    <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                      {formatCourseLevel(course.level, lang)}
-                                    </span>
-                                 </div>
-                              </div>
-                              <h3 className="text-xl font-black mb-2 text-emerald-100 group-hover:text-emerald-400 transition-colors">
-                                {getLocalizedTitle(courseDetails || course)}{isMultilingualParent ? ` (${courseLang.toUpperCase()})` : ''}
-                              </h3>
-                              <p className="text-sm text-slate-500 mb-6">{getLocalizedSubject(course.subject)}</p>
-                              
-                              <div className="mt-auto">
-                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[9px] font-black uppercase text-emerald-600">{lang.toUpperCase() === 'FR' ? 'Statut' : 'Status'}</span>
-                                    <span className="text-[9px] font-black text-emerald-500">100% {lang.toUpperCase() === 'FR' ? 'Terminé' : 'Completed'}</span>
-                                 </div>
-                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
-                                    <div className="h-full bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)]" style={{ width: '100%' }} />
-                                 </div>
-
-                                 {/* Time spent indicator card */}
-                                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider mb-6 w-full">
-                                   <span className="flex items-center gap-1">
-                                     <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                     {t.time_spent} <strong className="text-white">{progressService.getLessonTimeForCourse(course.slug)}m</strong>
-                                   </span>
-                                   <span>
-                                     {t.expected_time} <strong className="text-slate-400">{(courseDetails?.hours ?? 150)}h</strong>
-                                   </span>
-                                 </div>
-                                 
-                                 {/* Continue/Review button at bottom of completed module */}
-                                 <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-550 group-hover:text-emerald-400 transition-colors">
-                                       {lang.toUpperCase() === 'FR' ? 'Revoir le cours' : 'Review Course'}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-                                 </div>
-                              </div>
-                           </div>
-                         </Link>
-                       );
-                     })}
+                            {cardContent}
+                          </Link>
+                        );
+                      })}
                    </div>
                 </section>
               )}
@@ -1474,6 +1784,26 @@ export default function CurriculumPage() {
                 {t.disenroll_confirm_desc.replace('{title}', abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course'))}
               </p>
 
+              {abandonTarget.isCurriculum && (
+                <div className="mb-8 p-5 bg-slate-950/40 border border-slate-800 rounded-3xl flex items-start gap-4 hover:border-slate-700 transition-colors">
+                  <input
+                    type="checkbox"
+                    id="keepChildCourses"
+                    checked={keepChildCourses}
+                    onChange={(e) => setKeepChildCourses(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-800 text-red-600 focus:ring-red-500 bg-slate-950 cursor-pointer accent-red-600"
+                  />
+                  <label htmlFor="keepChildCourses" className="text-xs text-slate-300 font-medium leading-relaxed select-none cursor-pointer">
+                    <span className="font-black text-white block mb-1">
+                      {lang === 'FR' ? "Conserver l'inscription aux modules" : "Keep course enrollments"}
+                    </span>
+                    {lang === 'FR' 
+                      ? "Conservez vos progrès et inscriptions individuelles pour les cours de ce cursus. Décochez pour tout abandonner." 
+                      : "Keep your individual progress and enrollment for the child courses. Uncheck to abandon all."}
+                  </label>
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -1485,7 +1815,7 @@ export default function CurriculumPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    handleOptOut(abandonTarget.id);
+                    handleOptOut(abandonTarget.id, keepChildCourses);
                     setAbandonTarget(null);
                   }}
                   className="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-900/30 hover:scale-102 transition-all cursor-pointer"
@@ -1639,6 +1969,199 @@ export default function CurriculumPage() {
             }}
           />
         )}
+      </AnimatePresence>
+
+      {/* 🌟 COMPLETED COURSE REVIEW MODAL (INTERACTIVE & READ-ONLY BLURRED POPUP) */}
+      <AnimatePresence>
+        {showReviewModal && selectedReviewCourse && (() => {
+          const courseId = selectedReviewCourse.id.toString();
+          const isReviewed = isReviewReadOnly;
+          const fb = courseFeedbacks[selectedReviewCourse.id] || { rating: 0, comment: '' };
+          
+          // Local states inside the popup to allow interactive inputs
+          const [localRating, setLocalRating] = useState(fb.rating || 0);
+          const [localHoverRating, setLocalHoverRating] = useState(0);
+          const [localComment, setLocalComment] = useState(fb.comment || '');
+          const [localSubmitted, setLocalSubmitted] = useState(false);
+
+          const handleLocalSubmit = async (e: React.FormEvent) => {
+            e.preventDefault();
+            if (localRating === 0) return;
+
+            setSubmittingReview(true);
+            try {
+              await dbService.addCourseFeedback({
+                courseId,
+                rating: localRating,
+                comment: localComment
+              });
+
+              // Update the courseFeedbacks map state in CurriculumPage
+              setCourseFeedbacks(prev => ({
+                ...prev,
+                [selectedReviewCourse.id]: { rating: localRating, comment: localComment }
+              }));
+              
+              setLocalSubmitted(true);
+              setIsReviewReadOnly(true);
+              setTimeout(() => {
+                setShowReviewModal(false);
+                setSelectedReviewCourse(null);
+              }, 1800);
+            } catch (err) {
+              console.error("Error submitting review:", err);
+            } finally {
+              setSubmittingReview(false);
+            }
+          };
+
+          return (
+            <div 
+              onClick={() => {
+                setShowReviewModal(false);
+                setSelectedReviewCourse(null);
+              }} 
+              className="fixed inset-0 z-[400] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md cursor-pointer"
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl p-10 relative overflow-hidden cursor-default"
+              >
+                {/* Background ambient light */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+                
+                {/* Header ribbon if completed */}
+                {isReviewed && (
+                  <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-600/10 text-emerald-400 border-l border-b border-emerald-500/20 rounded-bl-2xl text-[8px] font-black uppercase tracking-wider select-none animate-pulse">
+                    {lang === 'FR' ? "ÉVALUÉ • LECTURE SEULE" : "REVIEWED • READ ONLY"}
+                  </div>
+                )}
+
+                {/* Close Button X */}
+                <button 
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setSelectedReviewCourse(null);
+                  }}
+                  className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-500 hover:text-white rounded-xl cursor-pointer transition-colors"
+                  title={lang === 'FR' ? "Fermer" : "Close"}
+                >
+                  <Icons.X className="w-4 h-4" />
+                </button>
+
+                {/* Modal Title */}
+                <div className="flex items-center gap-4 text-emerald-500 mb-6 mr-8">
+                  <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                    <Star className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 block mb-1">
+                      {isReviewed 
+                        ? (lang === 'FR' ? "VOTRE ÉVALUATION ENREGISTRÉE" : "YOUR SAVED REVIEW") 
+                        : (lang === 'FR' ? "PARTAGEZ VOTRE EXPÉRIENCE" : "SHARE YOUR EXPERIENCE")}
+                    </span>
+                    <h3 className="text-xl font-black text-white leading-tight">
+                      {getLocalizedTitle(selectedReviewCourse)}
+                    </h3>
+                  </div>
+                </div>
+
+                {localSubmitted && (
+                  <div className="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl p-4 text-xs font-semibold flex items-center gap-3 border-l-4 border-l-emerald-500">
+                    <Icons.CheckCircle className="w-5 h-5 shrink-0" />
+                    <span>
+                      {lang === 'FR' 
+                        ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
+                        : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
+                    </span>
+                  </div>
+                )}
+
+                <form onSubmit={handleLocalSubmit} className="space-y-6">
+                  {/* Rating container with blurred/read-only mode */}
+                  <div className={isReviewed ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
+                    {/* Stars Selection */}
+                    <div className="space-y-3">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                        {lang === 'FR' ? "Évaluez ce cours" : "Rate this course"} {!isReviewed && <span className="text-red-500">*</span>}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            disabled={isReviewed}
+                            onClick={() => setLocalRating(star)}
+                            onMouseEnter={() => !isReviewed && setLocalHoverRating(star)}
+                            onMouseLeave={() => !isReviewed && setLocalHoverRating(0)}
+                            className={`p-1 transition-transform outline-none ${isReviewed ? 'cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
+                          >
+                            <Star 
+                              className={`w-8 h-8 transition-colors ${
+                                star <= (localHoverRating || localRating) 
+                                  ? 'fill-amber-400 text-amber-400' 
+                                  : 'text-slate-700'
+                              }`} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Comment Area */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                        {lang === 'FR' ? "Commentaires ou Suggestions" : "Comments or Suggestions"}
+                      </span>
+                      <textarea
+                        value={localComment}
+                        onChange={(e) => setLocalComment(e.target.value)}
+                        disabled={isReviewed}
+                        placeholder={
+                          lang === 'FR' 
+                            ? "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions..."
+                            : "What did you think of the pacing, clarity, or explanations? Suggest revisions..."
+                        }
+                        rows={4}
+                        className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isReviewed ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions footer */}
+                  <div className="flex gap-4 pt-4 border-t border-slate-800/50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowReviewModal(false);
+                        setSelectedReviewCourse(null);
+                      }}
+                      className="flex-1 py-4 bg-slate-950 hover:bg-slate-850 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
+                    >
+                      {lang === 'FR' ? "Fermer" : "Close"}
+                    </button>
+                    {!isReviewed && (
+                      <button
+                        type="submit"
+                        disabled={localRating === 0 || submittingReview}
+                        className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
+                          localRating > 0 && !submittingReview
+                            ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
+                            : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
+                        }`}
+                      >
+                        {lang === 'FR' ? "Soumettre l'évaluation" : "Submit Review"}
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          );
+        })()}
       </AnimatePresence>
 
       <AnimatePresence>

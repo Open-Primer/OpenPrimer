@@ -817,7 +817,11 @@ export const CatalogPage = () => {
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
                 <div 
                   onClick={() => {
-                    window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                    if (course.isCurriculum) {
+                      setSelectedEnrollCourse(course);
+                    } else {
+                      window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                    }
                   }}
                   className="group block h-full cursor-pointer"
                 >
@@ -959,12 +963,20 @@ export const CatalogPage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                          if (course.isCurriculum) {
+                            setSelectedEnrollCourse(course);
+                          } else {
+                            window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                          }
                         }}
                         className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2"
                       >
                         <Play className="w-3 h-3 fill-current" />
-                        <span className="truncate">{hasStarted ? (t.continue_course || 'Continue') : (t.start_learning || 'Start learning')}</span>
+                        <span className="truncate">
+                          {course.isCurriculum 
+                            ? (t.manage_curriculum || 'Gérer le Curriculum') 
+                            : (hasStarted ? t.continue_course : t.start_learning)}
+                        </span>
                       </button>
 
                       {/* 2. Enroll Button (if not enrolled) */}

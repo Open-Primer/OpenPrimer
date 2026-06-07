@@ -34,6 +34,26 @@ interface VideoProps {
 
 export const Video = ({ id, title, provider: propProvider, url, duration }: VideoProps) => {
   const [status, setStatus] = useState<VideoStatus>('checking');
+  const [lang, setLang] = useState('en');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lang') || 'en';
+      setLang(stored.toLowerCase());
+    }
+  }, []);
+
+  const isFr = lang === 'fr';
+  const t = {
+    verifying: isFr ? 'Vérification de la ressource...' : 'Verifying resource...',
+    unavailableTitle: isFr ? 'Ressource indisponible' : 'Resource Unavailable / Indisponible',
+    unavailableDesc: isFr 
+      ? `La vidéo "${title}" est hors ligne. Vous pouvez trouver du contenu équivalent sur le web.`
+      : `The video "${title}" is offline. You can find equivalent material on the web.`,
+    searchBtn: isFr ? 'Rechercher sur Google' : 'Search on Google',
+    academicVideo: isFr ? 'Vidéo Académique' : 'Academic Video',
+    focusTip: isFr ? 'Conseil concentration : Prenez une pause de 30s si nécessaire.' : 'Focus Tip: Take a 30s break if needed.'
+  };
 
   // Resolve provider, url and videoId
   let finalProvider: 'YouTube' | 'Vimeo' | 'generic' = propProvider || 'generic';
@@ -99,7 +119,7 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
         <div className="aspect-video flex flex-col items-center justify-center gap-4 text-slate-600">
           <Loader2 className="w-8 h-8 animate-spin text-slate-700" />
           <span className="text-[9px] font-black uppercase tracking-widest">
-            Verifying resource…
+            {t.verifying}
           </span>
         </div>
       </div>
@@ -118,10 +138,10 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
           </div>
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-550 mb-0.5">
-              Resource Unavailable / Indisponible
+              {t.unavailableTitle}
             </p>
             <p className="text-xs text-slate-400 font-bold leading-normal">
-              The video "{title}" is offline. You can find equivalent material on the web.
+              {t.unavailableDesc}
             </p>
           </div>
         </div>
@@ -132,7 +152,7 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
           className="px-4 py-2 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer select-none"
         >
           <Search className="w-3.5 h-3.5" />
-          Search on Google
+          {t.searchBtn}
         </a>
       </div>
     );
@@ -186,7 +206,7 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
-                {finalProvider} • Academic Video
+                {finalProvider} • {t.academicVideo}
               </span>
               {duration && (
                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
@@ -203,7 +223,7 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
         <div className="flex items-center gap-3 self-end md:self-auto">
           {isLongVideo && (
             <span className="text-[9px] text-amber-500/80 italic font-medium max-w-[180px] text-right leading-tight">
-              Focus Tip: Take a 30s break if needed.
+              {t.focusTip}
             </span>
           )}
           <a

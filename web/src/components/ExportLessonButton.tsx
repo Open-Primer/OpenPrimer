@@ -9,10 +9,40 @@ interface ExportLessonButtonProps {
   level: string;
   content: string;
   lang: string;
+  courseSlug?: string;
+  version?: string;
 }
 
-export const ExportLessonButton = ({ title, subject, level, content, lang }: ExportLessonButtonProps) => {
+export const ExportLessonButton = ({ title, subject, level, content, lang, courseSlug, version }: ExportLessonButtonProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const getExportFilename = (suffix: string, ext: string) => {
+    const cleanLevel = level.toUpperCase().replace(/[^A-Z0-9]+/g, '');
+    const cleanSubject = subject.replace(/[^a-zA-Z0-9]+/g, '_');
+    const cleanCourse = (courseSlug || '').replace(/[^a-zA-Z0-9]+/g, '_');
+    const cleanChapter = title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    
+    let parts = [cleanLevel, cleanSubject];
+    if (cleanCourse) parts.push(cleanCourse);
+    parts.push(cleanChapter);
+    
+    if (version) {
+      let cleanVer = version.trim().toLowerCase().replace(/[^a-z0-9_.]/g, '');
+      if (cleanVer.startsWith('v')) {
+        cleanVer = cleanVer.substring(1);
+      }
+      cleanVer = cleanVer.replace(/\./g, '_');
+      if (cleanVer) {
+        parts.push(`v${cleanVer}`);
+      }
+    }
+    
+    if (suffix) {
+      parts.push(suffix);
+    }
+    
+    return `${parts.filter(Boolean).join('_')}.${ext}`;
+  };
 
   const t = {
     export: lang === 'fr' ? 'Exporter' : 'Export',
@@ -24,7 +54,7 @@ export const ExportLessonButton = ({ title, subject, level, content, lang }: Exp
   };
 
   const handleExportRevisionSheet = () => {
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_revision.md`;
+    const filename = getExportFilename('revision', 'md');
     
     // Parse Glossary terms
     const glossaryTerms: { term: string; definition: string }[] = [];
@@ -75,7 +105,7 @@ ${glossaryTerms.map(item => `* **${item.term}** : ${item.definition}`).join('\n'
   };
 
   const handleExportMarkdown = () => {
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.md`;
+    const filename = getExportFilename('', 'md');
     const frontmatter = `---
 title: "${title}"
 subject: "${subject}"
@@ -96,7 +126,7 @@ ${content}`;
   };
 
   const handleExportJson = () => {
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.json`;
+    const filename = getExportFilename('', 'json');
     const data = {
       title,
       subject,
@@ -118,7 +148,7 @@ ${content}`;
   };
 
   const handleExportHtml = () => {
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.html`;
+    const filename = getExportFilename('', 'html');
     const htmlContent = `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -171,7 +201,7 @@ ${content}`;
   };
 
   const handleExportScorm = () => {
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_scorm.zip`;
+    const filename = getExportFilename('scorm', 'zip');
     
     const imsManifestXml = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest identifier="OpenPrimer_SCORM_Course" version="1.1"

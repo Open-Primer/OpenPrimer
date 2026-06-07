@@ -55,6 +55,7 @@ test.describe('OpenPrimer Production Readiness', () => {
   test('User Profile and Curriculum Accessibility', async ({ page }) => {
     await page.goto(BASE_URL);
     await page.evaluate(() => {
+      localStorage.setItem('op_session', 'true');
       localStorage.setItem('op_enrolled_courses', JSON.stringify([1, 2]));
       localStorage.setItem('op_course_progress', JSON.stringify({ Classical_Mechanics: 45, Physique_Test_L2: 12 }));
     });

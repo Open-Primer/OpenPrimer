@@ -291,7 +291,7 @@ module: "Introduction"
 
 Bienvenue dans le module souverain de **${course.title}**, conçu et synthétisé de manière dynamique par notre moteur d'intelligence artificielle pédagogique.
 
-> [Spacer] Ce cours a été généré à la demande pour répondre à vos objectifs d'apprentissage uniques. Toutes les sections sont entièrement personnalisées pour votre niveau (${course.level}).
+> Ce cours a été généré à la demande pour répondre à vos objectifs d'apprentissage uniques. Toutes les sections sont entièrement personnalisées pour votre niveau (${course.level}).
 
 ## 🌟 Objectifs du cours
 Dans ce cours axé sur **${course.subject}**, nous allons explorer en profondeur les concepts clés, en s'assurant d'une base théorique solide combinée à des applications concrètes :
@@ -303,10 +303,6 @@ Dans ce cours axé sur **${course.subject}**, nous allons explorer en profondeur
 1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
 2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
 3. **Études de Cas et Applications** : Mettre la théorie en pratique.
-
----
-
-*Félicitations pour le démarrage de votre parcours académique ! Utilisez le bouton ci-dessous pour valider votre progression.*
 `;
           } else {
             mdxContent = `---
@@ -320,7 +316,7 @@ module: "Introduction"
 
 Welcome to the sovereign module of **${course.title}**, dynamically synthesized by our pedagogical artificial intelligence engine.
 
-> [Spacer] This course was generated on demand to meet your unique learning objectives. All sections are fully personalized for your level (${course.level}).
+> This course was generated on demand to meet your unique learning objectives. All sections are fully personalized for your level (${course.level}).
 
 ## 🌟 Learning Objectives
 In this course focused on **${course.subject}**, we will dive deep into key concepts, ensuring a solid theoretical foundation combined with concrete applications:
@@ -332,10 +328,6 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
 1. **Introduction and Contextualization**: Understanding the "why" and the origins.
 2. **Fundamental Principles**: Conceptual formulation and rigor.
 3. **Case Studies and Applications**: Putting theory into practice.
-
----
-
-*Congratulations on starting your academic journey! Use the button below to validate your progress.*
 `;
           }
 
@@ -444,8 +436,24 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
   return null;
 }
 
+function healGlossaryTags(mdx: string): string {
+  let processed = mdx;
+  // 1. Correct typo </Glossule>
+  processed = processed.replace(/<\/Glossule\s*>/gi, '</Glossary>');
+
+  // 2. Auto-close unclosed Glossary tags.
+  processed = processed.replace(/<Glossary\s+term="([^"]+)"\s+definition="([^"]+)">([^<]+?)(?=\s*(?:<Glossary|\n\n|$))/gi, (match, term, def, displayName) => {
+    return `<Glossary term="${term}" definition="${def}">${displayName}</Glossary>`;
+  });
+
+  return processed;
+}
+
 export function preprocessMdx(content: string): string {
-  let processed = content;
+  let processed = healGlossaryTags(content);
+  
+  // Strip any raw [Spacer] brackets
+  processed = processed.replace(/\[Spacer\]\s*/gi, '');
   
   // 1. Process DiagnosticQuiz options
   processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
@@ -486,7 +494,7 @@ export function preprocessMdx(content: string): string {
 
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
-    return `<sup id="cite-${num}">[[${num}](#ref-${num})]</sup>`;
+    return `<sup id="cite-${num}"><a href="#ref-${num}">[${num}]</a></sup>`;
   });
 
   // 5. Render Glossary as static list at the bottom of the page
@@ -496,7 +504,7 @@ export function preprocessMdx(content: string): string {
     let glossaryContent = processed.slice(glossaryIndex);
     
     glossaryContent = glossaryContent.replace(/<Glossary\s+term="([^"]+)"\s+definition="([\s\S]*?)">([\s\S]*?)<\/Glossary>/gi, (match, term, def, displayName) => {
-      return `**${displayName}** : ${def}`;
+      return `\n- **${displayName}** : ${def}\n`;
     });
     
     processed = preGlossary + glossaryContent;
@@ -512,10 +520,10 @@ export function preprocessMdx(content: string): string {
     refContent = refContent.replace(/\[↩\]\(#cite-\d+\)/g, '').replace(/\[↩\]/g, '');
     
     // Structure references as clean separate blocks with proper IDs and back-links
-    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|$))/gi, (match, anchorId, num, rest) => {
+    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
       const activeNum = num || anchorId;
       const trimmedRest = rest.trim();
-      return `<span id="ref-${activeNum}"></span>**[${activeNum}]** ${trimmedRest} [[↩](#cite-${activeNum})]\n\n`;
+      return `<span id="ref-${activeNum}"></span>**[${activeNum}]** ${trimmedRest} <a href="#cite-${activeNum}">[↩]</a>\n\n`;
     });
     
     processed = preRef + refContent;

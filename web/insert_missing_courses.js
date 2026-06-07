@@ -48,18 +48,7 @@ const missingCourses = [
     is_active: true,
     is_curriculum: false
   },
-  {
-    id: 103,
-    title: "Introduction à la Sociologie",
-    slug: "introduction_à_la_sociologie",
-    level: "Beginner",
-    subject: "Social",
-    description: "Comprenez les structures sociales, la démarche sociologique et les dynamiques collectives qui façonnent notre monde.",
-    languages: ["fr"],
-    ects: 4,
-    is_active: true,
-    is_curriculum: false
-  },
+
   {
     id: 104,
     title: "Biologie Cellulaire Fondamentale",

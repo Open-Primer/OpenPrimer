@@ -17,9 +17,17 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
   const [exists, setExists] = useState<boolean | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [activeLang, setActiveLang] = useState(lang || 'en');
 
   useEffect(() => {
-    if (!name || !lang) {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lang') || 'en';
+      setActiveLang(lang || stored);
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    if (!name || !activeLang) {
       setExists(false);
       return;
     }
@@ -27,7 +35,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
     let isMounted = true;
     const fetchWiki = async () => {
       try {
-        const langCode = lang.toLowerCase().trim();
+        const langCode = activeLang.toLowerCase().trim();
         // Replace spaces with underscores for the Wikipedia API
         const formattedName = name.replace(/ /g, '_');
         const wikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
@@ -53,7 +61,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
     return () => {
       isMounted = false;
     };
-  }, [name, lang]);
+  }, [name, activeLang]);
 
   if (exists === false || exists === null) {
     return <>{children}</>;
@@ -69,6 +77,13 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
       setIsOpen(false);
     }, 150);
     setTimeoutId(id);
+  };
+
+  const isFr = activeLang.toLowerCase().trim() === 'fr';
+  const t = {
+    biography: isFr ? 'Biographie' : 'Biography',
+    loading: isFr ? 'Chargement de la biographie...' : 'Loading biography...',
+    readWiki: isFr ? 'Lire sur Wikipédia' : 'Read on Wikipedia'
   };
 
   return (
@@ -98,7 +113,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
               <div className="w-6 h-6 rounded-lg bg-violet-600/20 flex items-center justify-center text-violet-400">
                 <User className="w-3.5 h-3.5" />
               </div>
-              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">Biography</span>
+              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{t.biography}</span>
             </div>
             {summary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4">
@@ -106,7 +121,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
               </p>
             ) : (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
-                Loading biography...
+                {t.loading}
               </p>
             )}
             {url && (
@@ -116,7 +131,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-wider"
               >
-                Read on Wikipedia ({lang.toUpperCase()})
+                {t.readWiki} ({activeLang.toUpperCase()})
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}

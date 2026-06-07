@@ -126,7 +126,7 @@ export const mockDatabaseProvider: DatabaseService = {
       }
     }
 
-    const computedCourses = getMockCourses().map(c => {
+    const computedCourses = getMockCourses().filter(c => !/test/i.test(c.slug)).map(c => {
       const feedbacks = getCourseFeedbacks().filter(f => {
         const fId = String(f.courseId).toLowerCase();
         const currentSlug = c.slug.toLowerCase();
@@ -187,6 +187,9 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   deleteUser: async (id: string) => {
+    if (id === 'u1' || id === '26d54efe-6f14-4e36-9fcf-3fcf684a4444') {
+      return { data: null, error: new Error('Deletion of Vanguard Admin profile is prohibited.') as any };
+    }
     const list = getUsers().filter(u => u.id !== id);
     setUsersList(list);
     setLocalStorageItem('openprimer_users', list);
@@ -318,7 +321,7 @@ export const mockDatabaseProvider: DatabaseService = {
     const lessonProgress = isBrowser ? JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') : {};
     
     const activeModules = enrolled.map((id: number) => {
-      const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
+      const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2) && !/test/i.test(c.slug));
       if (!course) return null;
       
       let prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
@@ -544,7 +547,7 @@ export const mockDatabaseProvider: DatabaseService = {
         const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
         const targetBase = getBaseSlug(targetCourse.slug);
         
-        const parseVer = (v: string) => {
+        const parseVer = (v: string | undefined) => {
           const clean = (v || '').replace(/[^\d\.]/g, '');
           if (!clean) return [0];
           return clean.split('.').map(Number);
@@ -836,7 +839,7 @@ export const mockDatabaseProvider: DatabaseService = {
     // Automatically demote older versions to Level 2
     const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
     const newBase = getBaseSlug(newCourse.slug);
-    const parseVer = (v: string) => {
+    const parseVer = (v: string | undefined) => {
       const clean = (v || '').replace(/[^\d\.]/g, '');
       if (!clean) return [0];
       return clean.split('.').map(Number);
@@ -915,7 +918,7 @@ export const mockDatabaseProvider: DatabaseService = {
     if ((finalCourse.archivingLevel === 0 || finalCourse.archiving_level === 0) && finalCourse.is_active) {
       const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
       const savedBase = getBaseSlug(finalCourse.slug);
-      const parseVer = (v: string) => {
+      const parseVer = (v: string | undefined) => {
         const clean = (v || '').replace(/[^\d\.]/g, '');
         if (!clean) return [0];
         return clean.split('.').map(Number);

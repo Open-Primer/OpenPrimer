@@ -548,9 +548,9 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       e.stopPropagation();
                       setShowTutorModal(true);
                     }}
-                    className="ml-1 text-[8px] font-black tracking-wider text-blue-400 hover:text-blue-200 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 normal-case"
+                    className="ml-1 text-[8px] font-black tracking-wider text-amber-400 hover:text-amber-200 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 normal-case"
                   >
-                    ({getPersonaName(persona)} - <span className="underline">{lang === 'FR' ? 'Changer' : 'Change'}</span>)
+                    {lang === 'FR' ? "Le tuteur, l'alchimiste des analogies" : "The tutor, the alchemist of analogies"}
                   </span>
                 </button>
                 <button
@@ -1045,11 +1045,11 @@ export const getLocalizedLabel = (key: string, lang: string) => {
       ZH: "以有限的功能开始学习"
     },
     completed_modules: {
-      EN: "Completed Courses",
-      FR: "Modules Complétés",
-      ES: "Cursos Completados",
-      DE: "Abgeschlossene Kurse",
-      ZH: "已完成模块"
+      EN: "Curriculum and Completed Courses",
+      FR: "Cursus et modules complétés",
+      ES: "Currículo y cursos completados",
+      DE: "Lehrplan und abgeschlossene Kurse",
+      ZH: "课程与已完成模块"
     }
   };
   return labels[key]?.[l] || labels[key]?.EN || '';

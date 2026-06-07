@@ -25,7 +25,8 @@ import {
   getAvailableLanguagesList,
   getCanonicalCourseId,
   purgePipelineAndRequestsForCourseOrCurriculum,
-  mockDatabaseProviderHash
+  mockDatabaseProviderHash,
+  progressService
 } from '../db';
 
 export const supabaseDatabaseProvider: DatabaseService = {
@@ -191,7 +192,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           translations: c.translations || {},
           version: c.version || 'v1.0.0',
           last_revision_date: c.last_revision_date || c.created_at || null
-        }));
+        })).filter((c: MockCourse) => !/test/i.test(c.slug));
         setMockCourses(dbCourses);
         return { data: dbCourses, error: null };
       }
@@ -318,6 +319,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   deleteUser: async (id: string) => {
     try {
+      if (id === '26d54efe-6f14-4e36-9fcf-3fcf684a4444') {
+        throw new Error('Deletion of Vanguard Admin profile is prohibited.');
+      }
       await supabase.from('progress').delete().eq('user_id', id);
       const { data, error } = await supabase.from('profiles').delete().eq('id', id);
       if (error) throw error;
@@ -567,7 +571,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       }
 
       const activeModules = enrolled.map((id: number) => {
-        const course = courses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
+        const course = courses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2) && !/test/i.test(c.slug));
         if (!course) return null;
         
         let prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
@@ -647,6 +651,30 @@ export const supabaseDatabaseProvider: DatabaseService = {
         console.error("Local storage sync error in getUserProgress:", e);
       }
 
+      let earnedAchievementsCount = 0;
+      try {
+        const { data: achsData } = await supabase.from('achievements').select('*');
+        if (achsData && achsData.length > 0) {
+          const achs: Achievement[] = achsData.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            description: a.description,
+            threshold: a.threshold,
+            count: a.count || 0,
+            status: a.status || 'Active',
+            startDate: a.start_date || null,
+            endDate: a.end_date || null,
+            icon: a.icon || 'Award',
+            translations: a.translations || {},
+            archivingLevel: a.archiving_level || 0
+          }));
+          const earnedIds = progressService.evaluateAchievements(achs);
+          earnedAchievementsCount = earnedIds.length;
+        }
+      } catch (achErr) {
+        console.error("Error evaluating achievements from database:", achErr);
+      }
+
       return {
         data: {
           masteryPoints,
@@ -657,7 +685,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           totalMinutes,
           activeModules,
           enrolled,
-          earnedAchievementsCount: 0,
+          earnedAchievementsCount,
           aiSummary: aiSummary,
           lessonProgress
         },

@@ -76,6 +76,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const subject = pageData.meta.subject || 'Academic Content';
     const moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
     const level = pageData.meta.level || 'L1';
+    const courseSlug = slug[2];
+    const { data: courseData } = await dbService.getSyllabus(courseSlug);
+    const courseVersion = courseData?.version || '1.0';
 
     const getLocalizedCoreModule = (currentLang: string, lvl: string) => {
       const lUpper = currentLang.toUpperCase();
@@ -206,7 +209,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               <ChevronRight className="w-3 h-3 text-slate-800" />
               <span className="text-blue-500">{title}</span>
             </div>
-            <ExportLessonButton title={title} subject={subject} level={level} content={pageData.content} lang={lang} />
+            <ExportLessonButton title={title} subject={subject} level={level} content={pageData.content} lang={lang} courseSlug={courseSlug} version={courseVersion} />
           </div>
 
           <header className="mb-12 text-center md:text-left">
