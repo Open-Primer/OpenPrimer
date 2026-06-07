@@ -6593,8 +6593,12 @@ export default function AdminCurriculumPage() {
                                       }
 
                                       if (nextLvl === 3) { setCourseArchiveTarget({ course }); return; }
-                                      await dbService.setCourseArchivingLevel(course.id, nextLvl);
-                                      loadData();
+                                      const { error } = await dbService.setCourseArchivingLevel(course.id, nextLvl);
+                                      if (error) {
+                                        showToast(error.message || String(error), 'error');
+                                      } else {
+                                        loadData();
+                                      }
                                     }}
                                   />
                                 </td>
@@ -8118,7 +8122,12 @@ export default function AdminCurriculumPage() {
                           {pStrings.purge_badge_cancel_btn}
                         </button>
                         <button onClick={async () => {
-                          await dbService.setCourseArchivingLevel(courseArchiveTarget.course.id, 3);
+                          const { error } = await dbService.setCourseArchivingLevel(courseArchiveTarget.course.id, 3);
+                          if (error) {
+                            showToast(error.message || String(error), 'error');
+                          } else {
+                            showToast(tr("Course permanently purged successfully"), 'success');
+                          }
                           setCourseArchiveTarget(null);
                           loadData();
                         }} className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10 cursor-pointer">
@@ -8176,7 +8185,11 @@ export default function AdminCurriculumPage() {
                     const { course, nextLevel, parentCurricula } = curriculumArchivalPending;
                     // First archive all parent curricula to nextLevel
                     for (const curr of parentCurricula) {
-                      await dbService.setCourseArchivingLevel(curr.id, nextLevel);
+                      const { error } = await dbService.setCourseArchivingLevel(curr.id, nextLevel);
+                      if (error) {
+                        showToast(error.message || String(error), 'error');
+                        return;
+                      }
                     }
                     // Then archive the course itself
                     if (nextLevel === 3) {
@@ -8184,7 +8197,11 @@ export default function AdminCurriculumPage() {
                       setCourseArchiveTarget({ course });
                       return;
                     }
-                    await dbService.setCourseArchivingLevel(course.id, nextLevel);
+                    const { error } = await dbService.setCourseArchivingLevel(course.id, nextLevel);
+                    if (error) {
+                      showToast(error.message || String(error), 'error');
+                      return;
+                    }
                     setCurriculumArchivalPending(null);
                     showToast(
                       tr("Curriculum(s) and course successfully archived"), 
@@ -8240,7 +8257,11 @@ export default function AdminCurriculumPage() {
                     const { curriculum, nextLevel, childCourses } = curriculumCascadePending;
                     // Archive child courses
                     for (const child of childCourses) {
-                      await dbService.setCourseArchivingLevel(child.id, nextLevel);
+                      const { error } = await dbService.setCourseArchivingLevel(child.id, nextLevel);
+                      if (error) {
+                        showToast(error.message || String(error), 'error');
+                        return;
+                      }
                     }
                     // Archive curriculum itself
                     if (nextLevel === 3) {
@@ -8248,7 +8269,11 @@ export default function AdminCurriculumPage() {
                       setCourseArchiveTarget({ course: curriculum });
                       return;
                     }
-                    await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    const { error } = await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    if (error) {
+                      showToast(error.message || String(error), 'error');
+                      return;
+                    }
                     setCurriculumCascadePending(null);
                     showToast(
                       tr("Curriculum and all child courses successfully archived"), 
@@ -8267,7 +8292,11 @@ export default function AdminCurriculumPage() {
                       setCourseArchiveTarget({ course: curriculum });
                       return;
                     }
-                    await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    const { error } = await dbService.setCourseArchivingLevel(curriculum.id, nextLevel);
+                    if (error) {
+                      showToast(error.message || String(error), 'error');
+                      return;
+                    }
                     setCurriculumCascadePending(null);
                     showToast(
                       tr("Curriculum archived only (courses remain active)"), 

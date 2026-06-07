@@ -1045,7 +1045,9 @@ let mockCourses: MockCourse[] = [
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago (New!)
     last_revision_date: new Date().toISOString(),
     isCurriculum: true,
-    childCourses: [1, 3, 8],  // Classical Mechanics + Cell Biology + Calculus I
+    childCourses: [1, 3, 8, 7, 11],  // Classical Mechanics + Cell Biology + Calculus I + Linear Algebra + Statistics
+    optionalCourses: [7, 11],
+    minOptionalCount: 1,
     ratingCount: 312,
     averageRating: 4.9,
     translations: {

@@ -509,11 +509,44 @@ export default function CurriculumPage() {
                    </h2>
                    <div className="grid md:grid-cols-2 gap-8" role="list">
                      {activeCourses.map((course: any) => {
-                       const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
-                       const ratingCount = courseDetails?.ratingCount || 0;
-                       const averageRating = courseDetails?.averageRating || 0;
+                       const courseDetails = courses.find((cd: any) => cd.slug === course.slug || cd.id === course.id);
                        const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
                        
+                       let ratingCount = courseDetails?.ratingCount || 0;
+                       let averageRating = courseDetails?.averageRating || 0;
+                       let totalHours = courseDetails?.hours || 150;
+
+                       if (isCurr && courseDetails?.childCourses && courseDetails.childCourses.length > 0) {
+                         let sumHours = 0;
+                         let sumWeightedRating = 0;
+                         let sumRatingCount = 0;
+                         courseDetails.childCourses.forEach((cId: number) => {
+                           const child = courses.find((c: any) => c.id === cId);
+                           if (child) {
+                             const childHours = child.hours || 150;
+                             const childRating = child.averageRating || 3.4;
+                             sumHours += childHours;
+                             sumWeightedRating += childRating * childHours;
+                             sumRatingCount += child.ratingCount || 12;
+                           }
+                         });
+                         totalHours = sumHours > 0 ? sumHours : totalHours;
+                         averageRating = sumHours > 0 ? sumWeightedRating / sumHours : averageRating;
+                         ratingCount = sumRatingCount > 0 ? sumRatingCount : ratingCount;
+                       }
+                       
+                       // Check if this course is a child of any enrolled curriculum and if it is multilingual
+                       const enrolledCurricula = activeCoursesAll.filter((c: any) => {
+                         const cd = courses.find((x: any) => x.id === c.id);
+                         return cd?.isCurriculum || c.isCurriculum;
+                       }).map((c: any) => courses.find((x: any) => x.id === c.id)).filter(Boolean);
+
+                       const parentCurriculum = enrolledCurricula.find((curr: any) => curr?.childCourses?.includes(course.id));
+                       const isMultilingualParent = parentCurriculum && parentCurriculum.languages && parentCurriculum.languages.length > 1;
+                       const isMandatoryChild = parentCurriculum && 
+                         (!parentCurriculum.optionalCourses || !parentCurriculum.optionalCourses.includes(course.id));
+                       const courseLang = courseDetails?.languages?.[0] || 'en';
+
                        const cardContent = (
                           <div 
                             role="listitem" 
@@ -526,10 +559,20 @@ export default function CurriculumPage() {
                                  </div>
                                  <div className="flex gap-2 items-center flex-1 justify-end flex-wrap">
                                     {isCurr ? (
-                                      <span className="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 flex items-center gap-1">
-                                        <Icons.Layers className="w-3 h-3 text-violet-400" />
-                                        Curriculum
-                                      </span>
+                                      <div className="flex gap-2 items-center flex-wrap">
+                                        <span className="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 flex items-center gap-1">
+                                          <Icons.Layers className="w-3 h-3 text-violet-400" />
+                                          Curriculum
+                                        </span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                          {averageRating > 0 ? averageRating.toFixed(1) : "4.8"} ({ratingCount > 0 ? ratingCount : 12})
+                                        </span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1">
+                                          <Clock className="w-3.5 h-3.5" />
+                                          {totalHours}H
+                                        </span>
+                                      </div>
                                     ) : (
                                       <>
                                         {courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
@@ -581,25 +624,34 @@ export default function CurriculumPage() {
                                       </button>
                                     )}
 
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setAbandonTarget(courseDetails || course);
-                                      }}
-                                      title={t.abandon}
-                                      className="p-2 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-950/30 transition-all cursor-pointer flex items-center justify-center"
-                                    >
-                                      <Icons.Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {isMandatoryChild ? (
+                                      <div
+                                        title={lang === 'FR' ? "Cours obligatoire du curriculum (abandon impossible)" : "Mandatory curriculum course (cannot disenroll)"}
+                                        className="p-2 rounded-xl text-slate-500 bg-slate-950/30 border border-slate-800 flex items-center justify-center cursor-not-allowed group/tooltip relative"
+                                      >
+                                        <Icons.Lock className="w-4 h-4 text-slate-655" />
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setAbandonTarget(courseDetails || course);
+                                        }}
+                                        title={t.abandon}
+                                        className="p-2 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-950/30 transition-all cursor-pointer flex items-center justify-center"
+                                      >
+                                        <Icons.Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
                                     <span className="px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
                                        {formatCourseLevel(course.level, lang)}
                                     </span>
                                  </div>
                               </div>
                               <h3 className="text-xl font-black mb-2 group-hover:text-blue-400 transition-colors">
-                                {course.title}
+                                {getLocalizedTitle(courseDetails || course)}{isMultilingualParent ? ` (${courseLang.toUpperCase()})` : ''}
                               </h3>
                               <p className="text-sm text-slate-500 mb-6">{getLocalizedSubject(course.subject)}</p>
                               
@@ -709,6 +761,16 @@ export default function CurriculumPage() {
                        const ratingCount = courseDetails?.ratingCount || 0;
                        const averageRating = courseDetails?.averageRating || 0;
 
+                       // Check if this course is a child of any enrolled curriculum and if it is multilingual
+                       const enrolledCurricula = (progress.activeModules || []).filter((c: any) => {
+                         const cd = courses.find((x: any) => x.id === c.id);
+                         return cd?.isCurriculum || c.isCurriculum;
+                       }).map((c: any) => courses.find((x: any) => x.id === c.id)).filter(Boolean);
+
+                       const parentCurriculum = enrolledCurricula.find((curr: any) => curr?.childCourses?.includes(course.id));
+                       const isMultilingualParent = parentCurriculum && parentCurriculum.languages && parentCurriculum.languages.length > 1;
+                       const courseLang = courseDetails?.languages?.[0] || 'en';
+
                        return (
                           <Link 
                             key={course.id} 
@@ -761,7 +823,7 @@ export default function CurriculumPage() {
                                  </div>
                               </div>
                               <h3 className="text-xl font-black mb-2 text-emerald-100 group-hover:text-emerald-400 transition-colors">
-                                {getLocalizedTitle(course)}
+                                {getLocalizedTitle(courseDetails || course)}{isMultilingualParent ? ` (${courseLang.toUpperCase()})` : ''}
                               </h3>
                               <p className="text-sm text-slate-500 mb-6">{getLocalizedSubject(course.subject)}</p>
                               
@@ -1069,24 +1131,56 @@ export default function CurriculumPage() {
       <AnimatePresence>
         {selectedCurriculumForDrillDown && (() => {
           const childIds = selectedCurriculumForDrillDown.childCourses || [];
+          
+          let ratingCount = selectedCurriculumForDrillDown.ratingCount || 0;
+          let averageRating = selectedCurriculumForDrillDown.averageRating || 0;
+          let totalHours = selectedCurriculumForDrillDown.hours || 0;
+          const isMultilingualParent = selectedCurriculumForDrillDown.languages && selectedCurriculumForDrillDown.languages.length > 1;
+
+          if (childIds.length > 0) {
+            let sumHours = 0;
+            let sumWeightedRating = 0;
+            let sumRatingCount = 0;
+            childIds.forEach((cId: number) => {
+              const child = courses.find(c => c.id === cId);
+              if (child) {
+                const childHours = child.hours || 150;
+                const childRating = child.averageRating || 3.4;
+                sumHours += childHours;
+                sumWeightedRating += childRating * childHours;
+                sumRatingCount += child.ratingCount || 12;
+              }
+            });
+            totalHours = sumHours > 0 ? sumHours : totalHours;
+            averageRating = sumHours > 0 ? sumWeightedRating / sumHours : averageRating;
+            ratingCount = sumRatingCount > 0 ? sumRatingCount : ratingCount;
+          }
+
           const childDetails = childIds.map((cid: number) => {
             const matched = courses.find(c => c.id === cid) || {};
             const activeMod = progress?.activeModules?.find((m: any) => m.id === cid);
             const prog = activeMod ? activeMod.progress : 0;
-            const isOptional = matched.isOptional || Object.values(matched.translations || {}).some((tr: any) => tr.isOptional === true);
+            const isOptional = matched.isOptional || (selectedCurriculumForDrillDown.optionalCourses && selectedCurriculumForDrillDown.optionalCourses.includes(cid));
             const hours = matched.ects ? matched.ects * 25 : 150;
+            const langCode = matched.languages?.[0] || 'en';
             return {
               id: cid,
-              title: matched.title || `Course Module ${cid}`,
+              title: getLocalizedTitle(matched) || matched.title || `Course Module ${cid}`,
               subject: matched.subject || 'Mathematics',
               level: matched.level || 'L1',
               slug: matched.slug || '',
               progress: activeMod ? prog : 0,
               hours: hours,
               isOptional,
-              isEnrolled: !!activeMod
+              isEnrolled: !!activeMod,
+              langCode
             };
           });
+
+          const optionalCoursesList = childDetails.filter((c: any) => c.isOptional);
+          const enrolledOptionalCount = optionalCoursesList.filter((c: any) => c.isEnrolled).length;
+          const minOptionalCount = selectedCurriculumForDrillDown.minOptionalCount || 0;
+          const isCompliant = enrolledOptionalCount >= minOptionalCount;
 
           // Filter only mandatory courses plus enrolled optional ones to calculate average progress
           const coursesForProgress = childDetails.filter((c: any) => !c.isOptional || c.isEnrolled);
@@ -1138,7 +1232,7 @@ export default function CurriculumPage() {
                 className="w-full max-w-3xl bg-slate-900 border border-violet-500/30 rounded-[40px] shadow-2xl overflow-hidden text-slate-200 cursor-default"
               >
                 {/* Header */}
-                <div className="p-8 border-b border-slate-800 bg-gradient-to-r from-violet-950/20 via-slate-900 to-slate-950/40 flex justify-between items-center">
+                <div className="p-8 border-b border-slate-800 bg-gradient-to-r from-violet-955/20 via-slate-900 to-slate-950/40 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <Icons.GraduationCap className="w-8 h-8 text-violet-400" />
                     <div>
@@ -1148,6 +1242,16 @@ export default function CurriculumPage() {
                       <h3 className="text-2xl font-black text-white leading-tight">
                         {selectedCurriculumForDrillDown.title}
                       </h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          {averageRating > 0 ? averageRating.toFixed(1) : "4.8"} ({ratingCount > 0 ? ratingCount : 12})
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {totalHours}H
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <button 
@@ -1195,6 +1299,43 @@ export default function CurriculumPage() {
                     </div>
                   </div>
 
+                  {minOptionalCount > 0 && (
+                    <div className={`p-6 border rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 backdrop-blur-xl ${
+                      isCompliant 
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                        : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${
+                          isCompliant 
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                            : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                        }`}>
+                          {isCompliant ? <Icons.ShieldCheck className="w-5 h-5" /> : <Icons.AlertTriangle className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black leading-tight text-white">
+                            {lang === 'FR' ? 'Choix des options' : 'Elective Course Choices'}
+                          </h4>
+                          <p className="text-xs opacity-85 mt-1 font-semibold leading-normal">
+                            {lang === 'FR' 
+                              ? `${enrolledOptionalCount} sur ${minOptionalCount} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`
+                              : `${enrolledOptionalCount} of ${minOptionalCount} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border self-start sm:self-auto ${
+                        isCompliant 
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                          : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                      }`}>
+                        {isCompliant 
+                          ? (lang === 'FR' ? 'Conforme' : 'Compliant') 
+                          : (lang === 'FR' ? 'Requis' : 'Required')}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Child Course List */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1226,9 +1367,11 @@ export default function CurriculumPage() {
                                     : (lang === 'FR' ? 'Obligatoire' : 'Mandatory')}
                                 </span>
                               </div>
-                              <h5 className="text-sm font-black text-white">{cc.title}</h5>
+                              <h5 className="text-sm font-black text-white">
+                                {cc.title}{isMultilingualParent && cc.langCode ? ` (${cc.langCode.toUpperCase()})` : ''}
+                              </h5>
                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                                {getLocalizedSubject(cc.subject)} • {cc.hours}h expected
+                                {getLocalizedSubject(cc.subject)} • {cc.hours}h {lang === 'FR' ? 'prévues' : 'expected'}
                               </p>
                             </div>
 

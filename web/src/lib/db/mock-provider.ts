@@ -294,6 +294,25 @@ export const mockDatabaseProvider: DatabaseService = {
   getUserProgress: async (userId: string, lang?: string) => {
     const isBrowser = typeof window !== 'undefined';
     let enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]') : [];
+    
+    // Self-healing: auto-enroll missing mandatory child courses of enrolled curricula
+    let healed = false;
+    enrolled.forEach((id: number) => {
+      const course = getMockCourses().find(c => c.id === id);
+      if (course && course.isCurriculum && course.childCourses) {
+        const optional = course.optionalCourses || [];
+        const mandatory = course.childCourses.filter(cid => !optional.includes(cid));
+        mandatory.forEach(mId => {
+          if (!enrolled.includes(mId)) {
+            enrolled.push(mId);
+            healed = true;
+          }
+        });
+      }
+    });
+    if (healed && isBrowser) {
+      window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
+    }
     let progressMap = isBrowser ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
     const activeLang = (lang || (isBrowser ? window.localStorage.getItem('openprimer_lang') : 'EN') || 'EN').toUpperCase();
     const lessonProgress = isBrowser ? JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') : {};
@@ -405,8 +424,21 @@ export const mockDatabaseProvider: DatabaseService = {
     const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
     if (!enrolled.includes(courseId)) {
       enrolled.push(courseId);
-      window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
     }
+    
+    // Auto-enroll mandatory child courses if it is a curriculum
+    const course = getMockCourses().find(c => c.id === courseId);
+    if (course && course.isCurriculum && course.childCourses) {
+      const optional = course.optionalCourses || [];
+      const mandatory = course.childCourses.filter(cid => !optional.includes(cid));
+      mandatory.forEach(mId => {
+        if (!enrolled.includes(mId)) {
+          enrolled.push(mId);
+        }
+      });
+    }
+
+    window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
     return { data: true, error: null };
   },
 
@@ -505,6 +537,49 @@ export const mockDatabaseProvider: DatabaseService = {
       purgePipelineAndRequestsForCourseOrCurriculum(courseId);
     }
     let courses = getMockCourses();
+    
+    if (level === 0) {
+      const targetCourse = courses.find(c => c.id === courseId);
+      if (targetCourse) {
+        const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
+        const targetBase = getBaseSlug(targetCourse.slug);
+        
+        const parseVer = (v: string) => {
+          const clean = (v || '').replace(/[^\d\.]/g, '');
+          if (!clean) return [0];
+          return clean.split('.').map(Number);
+        };
+        
+        const isNewer = (sib: any) => {
+          if (sib.id === courseId) return false;
+          if (getBaseSlug(sib.slug) !== targetBase) return false;
+          
+          // Compare versions
+          const sibParsed = parseVer(sib.version || sib.version_string);
+          const targetParsed = parseVer(targetCourse.version || targetCourse.version_string);
+          const maxLen = Math.max(sibParsed.length, targetParsed.length);
+          for (let i = 0; i < maxLen; i++) {
+            const sibNum = sibParsed[i] || 0;
+            const targetNum = targetParsed[i] || 0;
+            if (sibNum > targetNum) return true;
+            if (sibNum < targetNum) return false;
+          }
+          
+          // fallback to created_at or ID
+          if (sib.created_at && targetCourse.created_at) {
+            if (new Date(sib.created_at).getTime() > new Date(targetCourse.created_at).getTime()) return true;
+          }
+          if (sib.id > targetCourse.id) return true;
+          return false;
+        };
+        
+        const hasNewerVersion = courses.some(isNewer);
+        if (hasNewerVersion) {
+          return { data: null, error: new Error("Désarchivage impossible : une version plus récente de ce cours existe actuellement dans la base de données. Vous devez d'abord la supprimer définitivement pour pouvoir réactiver cette version.") };
+        }
+      }
+    }
+
     if (level === 3) {
       courses = courses.filter(c => c.id !== courseId);
     } else {
@@ -748,7 +823,7 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   addCourse: async (course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>) => {
-    const list = getMockCourses();
+    let list = getMockCourses();
     const newCourse: MockCourse = {
       ...course,
       id: list.length > 0 ? Math.max(...list.map(c => c.id)) + 1 : 1,
@@ -757,7 +832,40 @@ export const mockDatabaseProvider: DatabaseService = {
       archivingLevel: 0,
       created_at: new Date().toISOString()
     };
-    const updated = [newCourse, ...list];
+    
+    // Automatically demote older versions to Level 2
+    const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
+    const newBase = getBaseSlug(newCourse.slug);
+    const parseVer = (v: string) => {
+      const clean = (v || '').replace(/[^\d\.]/g, '');
+      if (!clean) return [0];
+      return clean.split('.').map(Number);
+    };
+    
+    const updated = [newCourse, ...list].map(c => {
+      if (c.id !== newCourse.id && getBaseSlug(c.slug) === newBase && (c.archivingLevel === 0 || c.archiving_level === 0 || c.is_active)) {
+        // Compare versions to make sure it's older
+        const sibParsed = parseVer(c.version || c.version_string);
+        const targetParsed = parseVer(newCourse.version || newCourse.version_string);
+        let older = false;
+        const maxLen = Math.max(sibParsed.length, targetParsed.length);
+        for (let i = 0; i < maxLen; i++) {
+          const sibNum = sibParsed[i] || 0;
+          const targetNum = targetParsed[i] || 0;
+          if (sibNum < targetNum) { older = true; break; }
+          if (sibNum > targetNum) { older = false; break; }
+        }
+        if (!older && new Date(c.created_at || 0).getTime() < new Date(newCourse.created_at || 0).getTime()) {
+          older = true;
+        }
+        if (older) {
+          console.log(`[Anti-Corruption] Auto-archiving older version course ID ${c.id} to Level 2`);
+          return { ...c, archivingLevel: 2, archiving_level: 2, is_active: false };
+        }
+      }
+      return c;
+    });
+
     setMockCourses(updated);
     setLocalStorageItem('openprimer_courses', updated);
     return { data: newCourse, error: null };
@@ -802,6 +910,42 @@ export const mockDatabaseProvider: DatabaseService = {
       };
       updated = [...list, finalCourse];
     }
+
+    // Automatically demote older versions to Level 2 if saving as Level 0/Active
+    if ((finalCourse.archivingLevel === 0 || finalCourse.archiving_level === 0) && finalCourse.is_active) {
+      const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
+      const savedBase = getBaseSlug(finalCourse.slug);
+      const parseVer = (v: string) => {
+        const clean = (v || '').replace(/[^\d\.]/g, '');
+        if (!clean) return [0];
+        return clean.split('.').map(Number);
+      };
+      
+      updated = updated.map(c => {
+        if (c.id !== finalCourse.id && getBaseSlug(c.slug) === savedBase && (c.archivingLevel === 0 || c.archiving_level === 0 || c.is_active)) {
+          // Compare versions to make sure it's older
+          const sibParsed = parseVer(c.version || c.version_string);
+          const targetParsed = parseVer(finalCourse.version || finalCourse.version_string);
+          let older = false;
+          const maxLen = Math.max(sibParsed.length, targetParsed.length);
+          for (let i = 0; i < maxLen; i++) {
+            const sibNum = sibParsed[i] || 0;
+            const targetNum = targetParsed[i] || 0;
+            if (sibNum < targetNum) { older = true; break; }
+            if (sibNum > targetNum) { older = false; break; }
+          }
+          if (!older && new Date(c.created_at || 0).getTime() < new Date(finalCourse.created_at || 0).getTime()) {
+            older = true;
+          }
+          if (older) {
+            console.log(`[Anti-Corruption] Auto-archiving older version course ID ${c.id} to Level 2`);
+            return { ...c, archivingLevel: 2, archiving_level: 2, is_active: false };
+          }
+        }
+        return c;
+      });
+    }
+
     setMockCourses(updated);
     setLocalStorageItem('openprimer_courses', updated);
     return { data: finalCourse, error: null };

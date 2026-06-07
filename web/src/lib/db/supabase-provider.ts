@@ -514,6 +514,36 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
       if (data) {
         enrolled = data.filter(r => !(r.lesson_progress && (r.lesson_progress as any)._abandoned)).map(r => r.course_id);
+        
+        // Self-healing: auto-enroll missing mandatory child courses
+        const healedIds: number[] = [];
+        enrolled.forEach((id: number) => {
+          const course = courses.find(c => c.id === id);
+          if (course && course.isCurriculum && course.childCourses) {
+            const optional = course.optionalCourses || [];
+            const mandatory = course.childCourses.filter(cid => !optional.includes(cid));
+            mandatory.forEach(mId => {
+              if (!enrolled.includes(mId)) {
+                enrolled.push(mId);
+                healedIds.push(mId);
+              }
+            });
+          }
+        });
+        
+        if (healedIds.length > 0) {
+          const healRows = healedIds.map(mId => ({
+            user_id: userId,
+            course_id: mId,
+            progress: 0,
+            last_visited: new Date().toISOString()
+          }));
+          await supabase.from('progress').upsert(healRows, { onConflict: 'user_id,course_id' });
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
+          }
+        }
+
         data.forEach(r => {
           const isAbandoned = r.lesson_progress && (r.lesson_progress as any)._abandoned;
           if (!isAbandoned) {
@@ -644,23 +674,42 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   enrollInCourse: async (userId: string, courseId: number) => {
     try {
+      const courses = getMockCourses();
+      const course = courses.find(c => c.id === courseId);
+      const rowsToInsert = [{
+        user_id: userId,
+        course_id: courseId,
+        progress: 0,
+        last_visited: new Date().toISOString()
+      }];
+
+      if (course && course.isCurriculum && course.childCourses) {
+        const optional = course.optionalCourses || [];
+        const mandatory = course.childCourses.filter(cid => !optional.includes(cid));
+        mandatory.forEach(mId => {
+          rowsToInsert.push({
+            user_id: userId,
+            course_id: mId,
+            progress: 0,
+            last_visited: new Date().toISOString()
+          });
+        });
+      }
+
       const { error } = await supabase
         .from('progress')
-        .upsert({
-          user_id: userId,
-          course_id: courseId,
-          progress: 0,
-          last_visited: new Date().toISOString()
-        }, { onConflict: 'user_id,course_id' });
+        .upsert(rowsToInsert, { onConflict: 'user_id,course_id' });
       if (error) throw error;
 
       try {
         if (typeof window !== 'undefined') {
           const enrolledCourses = JSON.parse(localStorage.getItem('op_enrolled_courses') || '[]');
-          if (!enrolledCourses.includes(courseId)) {
-            enrolledCourses.push(courseId);
-            localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolledCourses));
-          }
+          rowsToInsert.forEach(row => {
+            if (!enrolledCourses.includes(row.course_id)) {
+              enrolledCourses.push(row.course_id);
+            }
+          });
+          localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolledCourses));
         }
       } catch (e) {
         console.error("Local storage sync error in enrollInCourse:", e);
@@ -764,6 +813,62 @@ export const supabaseDatabaseProvider: DatabaseService = {
       purgePipelineAndRequestsForCourseOrCurriculum(courseId);
     }
     try {
+      if (level === 0) {
+        // Fetch target course details
+        const { data: targetCourse, error: fetchErr } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('id', courseId)
+          .single();
+          
+        if (fetchErr) throw fetchErr;
+        if (targetCourse) {
+          const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
+          const targetBase = getBaseSlug(targetCourse.slug);
+          
+          // Fetch all other sibling courses
+          const { data: siblingCourses, error: siblingErr } = await supabase
+            .from('courses')
+            .select('*')
+            .neq('id', courseId);
+            
+          if (!siblingErr && siblingCourses) {
+            const parseVer = (v: string) => {
+              const clean = (v || '').replace(/[^\d\.]/g, '');
+              if (!clean) return [0];
+              return clean.split('.').map(Number);
+            };
+            
+            const isNewer = (sib: any) => {
+              if (getBaseSlug(sib.slug) !== targetBase) return false;
+              
+              // Compare versions
+              const sibParsed = parseVer(sib.version);
+              const targetParsed = parseVer(targetCourse.version);
+              const maxLen = Math.max(sibParsed.length, targetParsed.length);
+              for (let i = 0; i < maxLen; i++) {
+                const sibNum = sibParsed[i] || 0;
+                const targetNum = targetParsed[i] || 0;
+                if (sibNum > targetNum) return true;
+                if (sibNum < targetNum) return false;
+              }
+              
+              // fallback to created_at or ID
+              if (sib.created_at && targetCourse.created_at) {
+                if (new Date(sib.created_at).getTime() > new Date(targetCourse.created_at).getTime()) return true;
+              }
+              if (sib.id > targetCourse.id) return true;
+              return false;
+            };
+            
+            const hasNewerVersion = siblingCourses.some(isNewer);
+            if (hasNewerVersion) {
+              return { data: null, error: new Error("Désarchivage impossible : une version plus récente de ce cours existe actuellement dans la base de données. Vous devez d'abord la supprimer définitivement pour pouvoir réactiver cette version.") };
+            }
+          }
+        }
+      }
+      
       if (level === 3) {
         const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
         if (error) throw error;
@@ -1170,6 +1275,54 @@ export const supabaseDatabaseProvider: DatabaseService = {
         ? currentMock.map(c => c.id === savedCourse.id ? savedCourse : c)
         : [...currentMock, savedCourse];
       setMockCourses(updatedMock);
+
+      // Automatically demote older versions to Level 2
+      if (savedCourse.archivingLevel === 0 && savedCourse.is_active) {
+        const getBaseSlug = (s: string) => (s || '').toLowerCase().replace(/[_-]v\d+[\d\.]*/g, '').replace(/[_-]version\d+/g, '');
+        const savedBase = getBaseSlug(savedCourse.slug);
+        
+        // Fetch all courses in the same series from Supabase
+        const { data: siblingCourses, error: siblingError } = await supabase
+          .from('courses')
+          .select('id, slug, version, archiving_level, created_at')
+          .neq('id', savedCourse.id);
+          
+        if (!siblingError && siblingCourses) {
+          const parseVer = (v: string) => {
+            const clean = (v || '').replace(/[^\d\.]/g, '');
+            if (!clean) return [0];
+            return clean.split('.').map(Number);
+          };
+          const isOlder = (sib: any) => {
+            if (getBaseSlug(sib.slug) !== savedBase) return false;
+            
+            // Compare version string
+            const sibParsed = parseVer(sib.version);
+            const savedParsed = parseVer(savedCourse.version);
+            const maxLen = Math.max(sibParsed.length, savedParsed.length);
+            for (let i = 0; i < maxLen; i++) {
+              const sibNum = sibParsed[i] || 0;
+              const savedNum = savedParsed[i] || 0;
+              if (sibNum < savedNum) return true;
+              if (sibNum > savedNum) return false;
+            }
+            // fallback to created_at or ID
+            if (new Date(sib.created_at).getTime() < new Date(savedCourse.created_at).getTime()) return true;
+            if (sib.id < savedCourse.id) return true;
+            return false;
+          };
+          
+          for (const sib of siblingCourses) {
+            if (isOlder(sib) && sib.archiving_level === 0) {
+              console.log(`[Anti-Corruption] Auto-archiving older version course ID ${sib.id} to Level 2`);
+              await supabase
+                .from('courses')
+                .update({ archiving_level: 2, is_active: false })
+                .eq('id', sib.id);
+            }
+          }
+        }
+      }
 
       return { data: savedCourse, error: null };
     } catch (e) {
