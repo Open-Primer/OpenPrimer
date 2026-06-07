@@ -1809,6 +1809,64 @@ if (isDatabaseConfigured && !isSandboxModeActive) {
   reportClusters = [];
   availableLanguagesList = [];
 }
+export const isConnectionFailure = (error: any): boolean => {
+  if (!error) return false;
+
+  // If the error has a standard PostgREST / Postgres error code, it means we successfully contacted the database server
+  // and received a structured SQL / PostgREST error.
+  if (error.code) {
+    const codeStr = String(error.code);
+    if (codeStr.startsWith('PGRST') || /^[0-9A-Z]{5}$/.test(codeStr)) {
+      return false;
+    }
+  }
+
+  const errMsg = (error?.message || String(error)).toLowerCase();
+
+  const isNetwork = 
+    (typeof navigator !== 'undefined' && !navigator.onLine) ||
+    errMsg.includes("fetch") || 
+    errMsg.includes("network") || 
+    errMsg.includes("timeout") || 
+    errMsg.includes("offline") ||
+    errMsg.includes("failed to fetch") ||
+    errMsg.includes("load failed") ||
+    errMsg.includes("connection refused") ||
+    errMsg.includes("dns") ||
+    error?.status === 0 ||
+    error?.status === 502 ||
+    error?.status === 503 ||
+    error?.status === 504;
+
+  return !!isNetwork;
+};
+
+export const handleDatabaseError = (error: any) => {
+  if (error?.code === 'PGRST116') {
+    return;
+  }
+
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (isLocalhost && isConnectionFailure(error)) {
+    console.warn("⚠️ [DATABASE FALLBACK] Supabase connection failed. Falling back to LocalStorage mock provider on localhost:", error);
+    dynamicOffline = true;
+    return;
+  }
+
+  // Only log in the console when a real DB connection is expected (production/configured env)
+  if (isDatabaseConfigured && !error?.code?.startsWith('PGRST') && error?.code !== 'PGRST116') {
+    console.error("❌ [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+  }
+  if (typeof window !== 'undefined') {
+    if (isConnectionFailure(error)) {
+      window.dispatchEvent(new CustomEvent('op_database_connection_failure', {
+        detail: { message: error?.message || String(error) }
+      }));
+    }
+  }
+};
 
 if (isBrowser) {
   // If openprimer_users doesn't exist, we treat it as a fresh start and clear any residual user progress data
@@ -1935,7 +1993,7 @@ export const isSandboxFallbackAllowed = (): boolean => {
   return false;
 }
 
-export const handleDatabaseError = (error: any) => {
+const handleDatabaseErrorLegacy = (error: any) => {
   if (error?.code === 'PGRST116') {
     return;
   }
@@ -2522,8 +2580,8 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
 
         try {
           const res = await value.apply(activeProvider, args);
-          if (useSupabase && isLocalhost && res && res.error) {
-            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost. Falling back to Mock/LocalStorage provider.`, res.error);
+          if (useSupabase && isLocalhost && res && res.error && isConnectionFailure(res.error)) {
+            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost due to connection failure. Falling back to Mock/LocalStorage provider.`, res.error);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
             if (typeof retryValue === 'function') {
@@ -2532,8 +2590,8 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
           }
           return res;
         } catch (err) {
-          if (useSupabase && isLocalhost) {
-            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw an error on localhost. Falling back to Mock/LocalStorage provider.`, err);
+          if (useSupabase && isLocalhost && isConnectionFailure(err)) {
+            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw a connection error on localhost. Falling back to Mock/LocalStorage provider.`, err);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
             if (typeof retryValue === 'function') {
@@ -2974,10 +3032,126 @@ export const progressService = {
   }
 };
 
+export async function syncLocalStorageToSupabase(userId: string): Promise<{ success: boolean; syncedCourses: number; syncedProgress: number; syncedTasks: number }> {
+  if (typeof window === 'undefined') return { success: false, syncedCourses: 0, syncedProgress: 0, syncedTasks: 0 };
+  
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isLocalhost || !isDatabaseConfigured || dynamicOffline || isOffline) {
+    return { success: false, syncedCourses: 0, syncedProgress: 0, syncedTasks: 0 };
+  }
+
+  console.log(`[SYNC] Beginning LocalStorage to Supabase synchronization for user ${userId}...`);
+
+  let syncedCourses = 0;
+  let syncedProgress = 0;
+  let syncedTasks = 0;
+
+  try {
+    // 1. Sync Courses
+    const localCoursesStr = window.localStorage.getItem('openprimer_courses');
+    if (localCoursesStr) {
+      const localCourses = JSON.parse(localCoursesStr) as any[];
+      // We want to find any local custom courses (usually id >= 100)
+      const customCourses = localCourses.filter(c => c.id >= 100);
+      
+      for (const course of customCourses) {
+        // Check if the course already exists in Supabase
+        const { data: dbCourse } = await supabase.from('courses').select('*').eq('slug', course.slug).maybeSingle();
+        if (!dbCourse) {
+          console.log(`[SYNC] Course '${course.title}' (${course.slug}) is missing in Supabase. Uploading...`);
+          // Save the course to Supabase using supabaseDatabaseProvider.saveCourse
+          await supabaseDatabaseProvider.saveCourse(course);
+          syncedCourses++;
+        }
+      }
+    }
+
+    // 2. Sync Enrolled Courses & Progress
+    const enrolledStr = window.localStorage.getItem('op_enrolled_courses');
+    if (enrolledStr && userId !== 'u1') {
+      const enrolledIds = JSON.parse(enrolledStr) as number[];
+      const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') as Record<string, number>;
+      const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') as Record<string, any>;
+      const quizResults = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}') as Record<string, any>;
+
+      // Get all current courses (both seeded and synced ones)
+      const localCourses = JSON.parse(localCoursesStr || '[]') as any[];
+
+      for (const enrolledId of enrolledIds) {
+        // Find the course in our local list to get its slug
+        const course = localCourses.find(c => c.id === enrolledId);
+        if (!course) continue;
+
+        const slug = course.slug;
+        const percentage = progressMap[slug] ?? progressMap[enrolledId.toString()] ?? 0;
+
+        // Get course-specific lesson progress and quiz results
+        const courseLessonProgress: Record<string, any> = {};
+        for (const k in lessonProgress) {
+          if (lessonProgress[k].slug === slug) {
+            courseLessonProgress[k] = lessonProgress[k];
+          }
+        }
+
+        const courseQuizResults: Record<string, any> = {};
+        for (const k in quizResults) {
+          if (quizResults[k].slug === slug) {
+            courseQuizResults[k] = quizResults[k];
+          }
+        }
+
+        const totalMinutes = progressService.getLessonTimeForCourse(slug);
+
+        console.log(`[SYNC] Syncing progress for '${course.title}' to Supabase (${percentage}%)...`);
+        
+        const { error } = await supabase
+          .from('progress')
+          .upsert({
+            user_id: userId,
+            course_id: course.id,
+            progress: percentage,
+            lesson_progress: courseLessonProgress,
+            quiz_results: courseQuizResults,
+            total_minutes: totalMinutes,
+            last_visited: new Date().toISOString()
+          }, { onConflict: 'user_id,course_id' });
+
+        if (error) {
+          console.error(`[SYNC] Error syncing progress for ${slug}:`, error);
+        } else {
+          syncedProgress++;
+        }
+      }
+    }
+
+    // 3. Sync Pipeline Task Queue
+    const pipelineStr = window.localStorage.getItem('openprimer_pipeline_queue');
+    if (pipelineStr) {
+      const localQueue = JSON.parse(pipelineStr) as any[];
+      if (localQueue.length > 0) {
+        // Check if the remote task queue is empty
+        const { data: remoteQueue } = await supabase.from('task_queue').select('*');
+        if (!remoteQueue || remoteQueue.length === 0) {
+          console.log(`[SYNC] Remote task queue is empty. Syncing local pipeline queue of ${localQueue.length} tasks...`);
+          await supabaseDatabaseProvider.savePipelineQueue(localQueue);
+          syncedTasks = localQueue.length;
+        }
+      }
+    }
+
+    console.log(`[SYNC] Sync complete! Synced ${syncedCourses} courses, ${syncedProgress} progress records, and ${syncedTasks} tasks.`);
+    return { success: true, syncedCourses, syncedProgress, syncedTasks };
+  } catch (err) {
+    console.error("[SYNC] Failure during LocalStorage to Supabase sync:", err);
+    return { success: false, syncedCourses, syncedProgress, syncedTasks };
+  }
+}
+
 // EXPOSE TO WINDOW FOR PLAYWRIGHT E2E TESTING
 if (typeof window !== 'undefined') {
   (window as any).dbService = dbService;
   (window as any).progressService = progressService;
+  (window as any).syncLocalStorageToSupabase = syncLocalStorageToSupabase;
 }
 
 

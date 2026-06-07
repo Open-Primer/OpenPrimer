@@ -12,7 +12,7 @@ import {
 import { TopNav, UI_STRINGS, Footer, formatCourseLevel, getLocalizedLabel } from './RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
+import { dbService, progressService, isDatabaseConfigured, syncLocalStorageToSupabase } from '@/lib/db';
 import { CourseKiosk } from './CourseKiosk';
 import { EnrollmentModal } from './modals/EnrollmentModal';
 import { getLocalizedDiscipline, translateDisciplineQuery } from '@/lib/translations';
@@ -438,6 +438,14 @@ export const CatalogPage = () => {
               } catch (e) {}
             }
           }
+          
+          // Background sync local trapped data to Supabase before querying
+          try {
+            await syncLocalStorageToSupabase(userId);
+          } catch (syncErr) {
+            console.error('[SYNC] Startup background sync failed:', syncErr);
+          }
+
           const { data: progressData } = await dbService.getUserProgress(userId);
           if (progressData) {
             setUserProgress(progressData);
@@ -571,8 +579,27 @@ export const CatalogPage = () => {
     }
     if (c.is_active === false) return false;
     
-    // If languages is empty/null, the course is treated as language-agnostic (visible in all languages)
-    const matchesLang = !c.languages || c.languages.length === 0 || !!(c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()));
+    // Determine matchesLang precisely to separate French and English catalogs cleanly
+    let matchesLang = false;
+    if (c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase())) {
+      const activeLangCode = (lang || 'EN').toUpperCase();
+      if (activeLangCode === 'EN') {
+        matchesLang = true;
+      } else {
+        // If active language is non-English, the course must either:
+        // 1. Have an explicit translation for this language code
+        // 2. Or, if it is a generated course, its primary content must not be in English
+        const hasTranslation = c.translations && c.translations[activeLangCode];
+        if (hasTranslation) {
+          matchesLang = true;
+        } else {
+          const isEnglishPrimary = c.languages.some((l: string) => l.toLowerCase() === 'en') && (!c.id || c.id < 13);
+          if (!isEnglishPrimary) {
+            matchesLang = true;
+          }
+        }
+      }
+    }
     const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
     

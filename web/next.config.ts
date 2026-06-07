@@ -46,6 +46,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Supprime le header "X-Powered-By: Next.js" qui fingerprinte le stack aux attaquants
   poweredByHeader: false,
+  output: "standalone",
   outputFileTracingIncludes: {
     '/**': ['content/**/*']
   },

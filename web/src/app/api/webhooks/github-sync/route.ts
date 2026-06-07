@@ -4,11 +4,11 @@ import crypto from 'crypto';
 import matter from 'gray-matter';
 import { pushToGitHub, deleteFromGitHub } from '../../../../lib/github';
 
-// Initialize Supabase admin client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Initialize Supabase admin client (with safe mock fallbacks for build time compilation)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '');
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Webhook shared secret
 const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
