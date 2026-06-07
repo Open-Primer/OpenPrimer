@@ -15,6 +15,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from './CourseKiosk';
 import { EnrollmentModal } from './modals/EnrollmentModal';
+import { getLocalizedDiscipline, translateDisciplineQuery } from '@/lib/translations';
 
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
@@ -27,14 +28,6 @@ const SUBJECT_SUGGESTIONS = [
   { label: 'Computer Science', icon: BrainCircuit, href: '/catalog?search=Computer', color: 'cyan' },
 ];
 
-const SUGGESTIONS_TRANSLATIONS: Record<string, Record<string, string>> = {
-  'Mathematics': { EN: 'Mathematics', FR: 'Mathématiques', ES: 'Matemáticas', DE: 'Mathematik', ZH: '数学' },
-  'Physics': { EN: 'Physics', FR: 'Physique', ES: 'Física', DE: 'Physik', ZH: '物理学' },
-  'Biology': { EN: 'Biology', FR: 'Biologie', ES: 'Biología', DE: 'Biologie', ZH: '生物学' },
-  'Chemistry': { EN: 'Chemistry', FR: 'Chimie', ES: 'Química', DE: 'Chemie', ZH: '化学' },
-  'Law': { EN: 'Law', FR: 'Droit', ES: 'Derecho', DE: 'Rechtswissenschaften', ZH: '法学' },
-  'Computer Science': { EN: 'Computer Science', FR: 'Informatique', ES: 'Informática', DE: 'Informatik', ZH: '计算机科学' },
-};
 
 const EMPTY_STATE_STRINGS = {
   EN: {
@@ -284,126 +277,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
   );
 };
 
-export const COURSE_SYLLABUS_DETAILS: Record<number, { ects: number; hours: number; prerequisites: string[]; units: { title: string; modules: string[] }[] }> = {
-  1: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["Mathematics L1 (Calculus)", "General Physics (Introduction)"],
-    units: [
-      { title: "Kinematics", modules: ["Position Vectors", "Polar Coordinates", "Frenet Frames"] },
-      { title: "Dynamics", modules: ["Newton's Laws", "Differential Equations", "Momentum"] },
-      { title: "Work & Energy", modules: ["Work-Energy Theorem", "Potential Energy", "Conservative Forces"] }
-    ]
-  },
-  2: {
-    ects: 8,
-    hours: 200,
-    prerequisites: ["Classical Mechanics L1", "Linear Algebra"],
-    units: [
-      { title: "Quantum States", modules: ["Wave-Particle Duality", "Schrödinger Equation", "State Vectors"] },
-      { title: "Quantum Operators", modules: ["Hermitian Operators", "Eigenvalues", "Uncertainty Principle"] }
-    ]
-  },
-  3: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["General Chemistry", "Introduction to Biology"],
-    units: [
-      { title: "Cellular Structures", modules: ["Membrane Dynamics", "Organelles", "Cytoskeleton"] },
-      { title: "Metabolism", modules: ["Glycolysis", "Krebs Cycle", "Oxidative Phosphorylation"] }
-    ]
-  },
-  4: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["Cell Biology L1"],
-    units: [
-      { title: "Genetic Code", modules: ["DNA Replication", "Transcription Factors", "Translation"] },
-      { title: "Gene Regulation", modules: ["Operons", "Epigenetics", "Recombinant DNA"] }
-    ]
-  },
-  5: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["Introduction to Legal Studies"],
-    units: [
-      { title: "Constitutional Systems", modules: ["Separation of Powers", "Judicial Review", "Federalism"] },
-      { title: "Fundamental Rights", modules: ["Due Process", "Equal Protection", "Freedom of Expression"] }
-    ]
-  },
-  6: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["Constitutional Law L1"],
-    units: [
-      { title: "General Principles", modules: ["Actus Reus", "Mens Rea", "Strict Liability"] },
-      { title: "Specific Offenses", modules: ["Homicide", "Property Crimes", "Defenses"] }
-    ]
-  },
-  7: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["High School Algebra"],
-    units: [
-      { title: "Vector Spaces", modules: ["Linear Combinations", "Span & Basis", "Dimension"] },
-      { title: "Linear Transformations", modules: ["Matrices", "Kernel & Image", "Determinants"] }
-    ]
-  },
-  8: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["High School Precalculus"],
-    units: [
-      { title: "Limits & Continuity", modules: ["Delta-Epsilon Definition", "Squeeze Theorem", "Asymptotes"] },
-      { title: "Derivatives", modules: ["Chain Rule", "Implicit Differentiation", "Optimization"] }
-    ]
-  },
-  9: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["General Chemistry"],
-    units: [
-      { title: "Hydrocarbons", modules: ["Alkanes & Alkenes", "Stereochemistry", "Conformational Analysis"] },
-      { title: "Reactions", modules: ["Nucleophilic Substitution", "Elimination Reactions", "Electrophilic Addition"] }
-    ]
-  },
-  10: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["Calculus I"],
-    units: [
-      { title: "Consumer Theory", modules: ["Preferences & Utility", "Budget Constraint", "Optimal Choice"] },
-      { title: "Producer Theory", modules: ["Production Functions", "Cost Minimization", "Profit Maximization"] }
-    ]
-  },
-  11: {
-    ects: 6,
-    hours: 150,
-    prerequisites: ["High School Mathematics"],
-    units: [
-      { title: "Probability", modules: ["Combinatorics", "Bayes Theorem", "Random Variables"] },
-      { title: "Statistical Inference", modules: ["Hypothesis Testing", "Confidence Intervals", "Regression"] }
-    ]
-  },
-  12: {
-    ects: 18,
-    hours: 450,
-    prerequisites: ["Linear Algebra", "Calculus I", "L1 Statistics"],
-    units: [
-      { title: "Foundations & Networks", modules: ["Neural Networks", "Gradient Descent", "Backpropagation"] },
-      { title: "Sovereign Systems & LLMs", modules: ["Attention Mechanisms", "Model Sharding", "Distributed Inference"] }
-    ]
-  },
-  18: {
-    ects: 26,
-    hours: 650,
-    prerequisites: ["High School General Sciences"],
-    units: [
-      { title: "Structure & Genetics L1", modules: ["Cell Biology", "Molecular Genetics"] },
-      { title: "Biochemistry & Microbiology L1", modules: ["Structural Biochemistry", "Microbiology", "General Ecology"] }
-    ]
-  }
-};
+// COURSE_SYLLABUS_DETAILS static fallback dictionary was removed. OpenPrimer is now 100% database-driven.
 
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
@@ -445,26 +319,9 @@ export const CatalogPage = () => {
   // Dynamically translate active search queries when language changes
   useEffect(() => {
     if (!searchQuery) return;
-    
-    let foundKey: string | null = null;
-    let foundLang: string | null = null;
-    
-    for (const [key, langMap] of Object.entries(SUGGESTIONS_TRANSLATIONS)) {
-      for (const [l, val] of Object.entries(langMap)) {
-        if (searchQuery.toLowerCase() === val.toLowerCase() || searchQuery.toLowerCase() === key.toLowerCase()) {
-          foundKey = key;
-          foundLang = l;
-          break;
-        }
-      }
-      if (foundKey) break;
-    }
-    
-    if (foundKey) {
-      const translated = SUGGESTIONS_TRANSLATIONS[foundKey]?.[lang.toUpperCase()] || foundKey;
-      if (translated && translated.toLowerCase() !== searchQuery.toLowerCase()) {
-        setSearchQuery(translated);
-      }
+    const translated = translateDisciplineQuery(searchQuery, lang);
+    if (translated && translated.toLowerCase() !== searchQuery.toLowerCase()) {
+      setSearchQuery(translated);
     }
   }, [lang]);
 
@@ -995,9 +852,9 @@ export const CatalogPage = () => {
                                 {ratingVal.toFixed(1)} ({countVal})
                               </span>
                               {/* Expected duration chip */}
-                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)))}>
+                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(course.hours || (course.ects ? course.ects * 25 : 150)))}>
                                 <Clock className="w-3 h-3 text-blue-400" />
-                                {COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)}h
+                                {course.hours || (course.ects ? course.ects * 25 : 150)}h
                               </span>
                               {/* Level badge */}
                               <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
@@ -1063,7 +920,7 @@ export const CatalogPage = () => {
                          </div>
                          <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
                            <span>{t.time_spent || 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
-                           <span>{t.expected_time || 'Expected:'} {COURSE_SYLLABUS_DETAILS[course.id]?.hours || course.hours || (course.ects ? course.ects * 25 : 150)}h</span>
+                           <span>{t.expected_time || 'Expected:'} {course.hours || (course.ects ? course.ects * 25 : 150)}h</span>
                          </div>
                       </div>
                     )}
@@ -1131,7 +988,7 @@ export const CatalogPage = () => {
               onClear={() => setSearchQuery('')}
               lang={lang}
               onSelectSubject={(subject) => {
-                const translated = SUGGESTIONS_TRANSLATIONS[subject]?.[lang.toUpperCase()] || subject;
+                const translated = getLocalizedDiscipline(subject, lang);
                 setSearchQuery(translated);
               }}
             />
@@ -1194,9 +1051,10 @@ export const CatalogPage = () => {
             bookmarks={bookmarks}
             onToggleBookmark={toggleBookmark}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
-            onEnroll={async () => {
+            onEnroll={async (activeC) => {
+              const targetCourse = activeC || selectedEnrollCourse;
               if (!isLoggedIn) {
-                window.location.href = `/signup?redirect=/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+                window.location.href = `/signup?redirect=/${targetCourse.level}/${targetCourse.subject}/${targetCourse.slug}/introduction`;
                 return;
               }
               let userId = 'u1';
@@ -1207,11 +1065,11 @@ export const CatalogPage = () => {
                   if (p.id) userId = p.id;
                 } catch (err) {}
               }
-              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
-              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              await dbService.enrollInCourse(userId, targetCourse.id);
+              setEnrolledIds(prev => [...prev, targetCourse.id]);
               
               setEnrollmentSuccess(true);
-              const courseToOpen = selectedEnrollCourse;
+              const courseToOpen = targetCourse;
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               

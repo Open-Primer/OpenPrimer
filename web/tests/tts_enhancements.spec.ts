@@ -72,4 +72,80 @@ test.describe('OpenPrimer TTS Enhancements', () => {
     expect(savedProfile.audioReadTutor).toBe(false);
     expect(savedProfile.audioReadCourse).toBe(true);
   });
+
+  test('should verify alternative graphic descriptions and premium floating glassmorphic tooltips', async ({ page }) => {
+    // Navigate directly to the lesson page
+    await page.goto(`${BASE_URL}/L1/History/revolution/introduction`);
+    await page.waitForLoadState('networkidle');
+
+    // 1. Inject custom HTML inside the existing article to test hover states
+    await page.evaluate(() => {
+      const article = document.querySelector('article');
+      if (article) {
+        article.innerHTML = `
+          <h1 id="test-title">Visual Element Testing Page</h1>
+          <p id="test-p">This is an active sentence paragraph to test.</p>
+          
+          <!-- Standard Image with alt text -->
+          <img id="test-img" src="/img.png" alt="A magnificent historic schematic of revolution" style="width: 100px; height: 100px; display: block; margin-bottom: 20px;" />
+          
+          <!-- Clickable nested image (exclusion) -->
+          <a href="#" id="test-link">
+            <img id="test-nested-img" src="/nested-img.png" alt="Clickable link image alt should be suppressed" style="width: 50px; height: 50px; display: block; margin-bottom: 20px;" />
+          </a>
+          
+          <!-- Video Container with title -->
+          <div id="test-video" class="video-container" title="Footage of history lecture" style="width: 100px; height: 100px; display: block; margin-bottom: 20px;">Video Content</div>
+          
+          <!-- Simulation iframe with title -->
+          <iframe id="test-iframe" src="about:blank" title="Simulation of trajectory mapping" style="width: 100px; height: 100px; display: block; margin-bottom: 20px;"></iframe>
+        `;
+      }
+    });
+
+    // 2. Hover over the standard image and verify the premium glassmorphic tooltip
+    const testImg = page.locator('#test-img');
+    await testImg.hover();
+    
+    // Allow animation/mouseover cycle
+    await page.waitForTimeout(100);
+
+    const tooltip = page.locator('div.fixed.pointer-events-none[class*="z-[9999]"]');
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('A magnificent historic schematic of revolution');
+    await expect(tooltip).toContainText('Illustration');
+
+    // 3. Hover over the nested image (nested inside <a>, so it must be excluded)
+    const testNestedImg = page.locator('#test-nested-img');
+    await testNestedImg.hover();
+    await page.waitForTimeout(100);
+
+    // Verify tooltip is not displayed (or is hidden)
+    await expect(tooltip).not.toBeVisible();
+
+    // 4. Hover over the video container
+    const testVideo = page.locator('#test-video');
+    await testVideo.hover();
+    await page.waitForTimeout(100);
+
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Footage of history lecture');
+    await expect(tooltip).toContainText('Video');
+
+    // 5. Hover over the iframe simulation
+    const testIframe = page.locator('#test-iframe');
+    await testIframe.hover();
+    await page.waitForTimeout(100);
+
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Simulation of trajectory mapping');
+    await expect(tooltip).toContainText('Simulation');
+
+    // 6. Move mouse out to non-graphic text and verify tooltip disappears
+    const testTitle = page.locator('#test-title');
+    await testTitle.hover();
+    await page.waitForTimeout(100);
+    await expect(tooltip).not.toBeVisible();
+  });
 });
+

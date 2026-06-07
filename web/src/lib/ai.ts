@@ -215,7 +215,7 @@ Requirements:
 8. Radical Accessibility: Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility.
 9. Glossary and Highlighted Terms:
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
-   - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically along with their definitions.
+   - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically. Inside this bottom list, write them statically as plain text \`**Term** : Definition\` (do NOT wrap them in \`<Glossary>\` inside this bottom section).
 10. Historical Figures and Scientists:
     - For every historical figure, scientist, or prominent person mentioned in the text (e.g., Napoleon, Isaac Newton, Albert Einstein, Marie Curie, etc.), you MUST wrap their name in the custom React component: \`<HistoricalPerson name="Exact_Wikipedia_Page_Title_In_Target_Language" lang="target_language_code">DisplayName</HistoricalPerson>\`.
     - Examples (if writing in French): \`<HistoricalPerson name="Isaac_Newton" lang="fr">Isaac Newton</HistoricalPerson>\`, \`<HistoricalPerson name="Albert_Einstein" lang="fr">Albert Einstein</HistoricalPerson>\`, \`<HistoricalPerson name="Napoléon_Ier" lang="fr">Napoléon Bonaparte</HistoricalPerson>\`.
@@ -246,23 +246,29 @@ Requirements:
    - Since this is a primary school level course, DO NOT include any bibliography or references section.` : `
    - Systematically include a bibliography/references section at the very end of the page (after the Glossary), using the heading \`### Références\` if writing in French, or \`### References\` if in English/other languages.
    - All references in this section MUST be real, high-quality, clickable links (using Markdown link syntax \`[Title / Author / Source](URL)\` with real or realistic scholarly URLs, e.g. redirecting to a scientific article, database, or academic website).
-   - Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.`}
+   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.`}
  15. Short Audio and Video Duration Limits (Micro-learning):
      - To optimize student focus and prevent attention loss, all recommended or embedded videos (using \`<Video id="..." title="..." provider="..." duration="..." />\` or \`<Video url="..." title="..." duration="..." />\`) and audio tracks (using \`<Audio url="..." title="..." duration="..." />\`) MUST be short (maximum 2 to 3 minutes long).
      - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\` or \`duration="1:45"\`) and keep it within this short micro-learning boundary.
  16. Authentic Resource References:
      - All external resources, including video IDs, audio URLs, and bibliography references, will be automatically checked for reachability and validated against live APIs (e.g. Crossref, Google Books, YouTube). Do not invent fake or hallucinated URLs or media IDs.
- 17. Optional Enriching Elements (Éléments d'enrichissement facultatifs) :
-     - Unlike the mandatory structures above, the following features are completely OPTIONAL. You should organically choose to use just one or two (or more) of them if they fit the level and subject, to avoid drowning the content in a rigid formatting scheme:
+ 17. Mandatory and Discipline-Specific Visual, Interactive & Auditory Elements (Éléments visuels, interactifs et auditifs obligatoires par discipline) :
+      - You MUST systematically integrate highly interactive and visual elements into the lesson content to enhance comprehension and engagement. These are NOT optional for their respective disciplines and are critical to visual and auditory learning:
+        * Biology, Anatomy, Medicine, or Life Sciences: You MUST systematically insert at least one detailed \`<InteractiveDiagram title="Organelles de la cellule" type="cell" />\` (renders an interactive cellular map with clickable hotspot definitions that show/hide explanations for active recall, highly recommended for biology/medicine anatomy).
+        * Economics, Finance, Mathematics, or Physics: You MUST systematically insert at least one dynamic 2D graph simulator tag: \`<FunctionPlotter mode="linear|compound-interest|supply-demand" title="Graph Title" xLabel="X-Axis" yLabel="Y-Axis" />\` (plots supply-demand curves, compound interest, or linear growth, equipped with interactive parameter slider controls).
+        * Step-by-Step Processes, Workflows, Chronological Events, Systems Pathways, or Logical Flows (All Disciplines): You MUST systematically include a visual flowchart written directly inside standard \`\`\`mermaid code blocks (parsed and rendered automatically in the client).
+        * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
+        * Auditory and Video Enrichment (All Disciplines): You MUST systematically recommend or embed at least one short, high-quality audio or video resource using \`<Video id="..." title="..." provider="..." duration="..." />\` (or using \`url="..."\`) or \`<Audio url="..." title="..." duration="..." />\` (always keep duration under the micro-learning limit of 2 to 3 minutes, e.g. \`duration="2 min"\`).
+ 18. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
+     - The following features are completely OPTIONAL. You should organically choose to use just one or two of them if they fit the level and subject, to avoid drowning the content:
        * L'Ancre Problématique (The Hook): A real-world story, scene, or case study demonstrating the necessity of the concept.
        * Le Guide des Idées Reçues (Debunking Grid): 3 to 5 common misconceptions dismantled by the lesson.
        * Le Résumé "Skimmable" (Lecture Rapide): A bulleted/bolded ultra-condensed overview at the start/end of modules.
-       * Graphiques Cognitifs: Visual diagrams, flowcharts, or timelines written in Mermaid.js.
        * Analogies Transversales: Creative cross-discipline analogies to explain abstract concepts.
        * Bac à Sable Interactif (Sandbox / Simulator): Simulation guides or interactive parameter manipulation cues.
        * L'Invite de Journalisation Métacognitive: A short metacognitive journal prompt encouraging self-reflection.
- 18. Write the response in "${targetLang.toUpperCase()}".
- 19. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
+ 19. Write the response in "${targetLang.toUpperCase()}".
+ 20. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
       let rawMdx = '';
       let contentSuccess = false;

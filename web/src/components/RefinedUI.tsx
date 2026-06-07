@@ -9,7 +9,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
 import { EnrollmentModal } from './modals/EnrollmentModal';
-import { COURSE_SYLLABUS_DETAILS } from './StaticPages';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 
@@ -63,8 +62,8 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     return 'socratic';
   });
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const pathname = usePathname();
   const isCurriculumPage = pathname.includes('/L1/') || pathname.includes('/L2/') || pathname.includes('/L3/');
 
@@ -181,36 +180,14 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     };
   }, []);
 
-  // Periodic health check with auto-reconnection loop
+  // Automatically clean up any active generation stream on unmount
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    async function checkHealth() {
-      try {
-        if (isOffline) {
-          setIsRetrying(true);
-        }
-        const res = await fetch('/api/tutor/health');
-        if (!res.ok) {
-          throw new Error('Tutor health degraded');
-        }
-        setIsOffline(false);
-        setIsRetrying(false);
-      } catch (err) {
-        setIsOffline(true);
-        setIsRetrying(true);
-      }
-    }
-
-    if (isOpen) {
-      checkHealth();
-      timer = setInterval(checkHealth, 5000); // Check every 5 seconds for robust state synchronization
-    }
-
     return () => {
-      if (timer) clearInterval(timer);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
-  }, [isOpen, isOffline]);
+  }, []);
 
   // Query Tutor Personalities & Safeguard Check on Mount/Open
   useEffect(() => {
@@ -282,9 +259,20 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     }
   }, [messages, courseSlug, lang]);
 
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+  };
+
   const handleSend = async (text?: string) => {
     const content = text || input;
     if (!content.trim()) return;
+
+    // Stop previous stream if any
+    stopGeneration();
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('op_stop_course_speech'));
@@ -296,6 +284,10 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
     // Append an assistant slot that we will stream into
     setMessages(prev => [...prev, { role: 'assistant', content: '...' }]);
+    setIsGenerating(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     
     try {
       let token: string | undefined;
@@ -309,6 +301,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
       const response = await fetch('/api/tutor/chat', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -320,6 +313,17 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           language: lang
         })
       });
+
+      if (!response.ok) {
+        let errorMsg = t.tutor_error || "The tutor is temporarily unavailable due to connection issues. Please try again.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errorMsg = errData.error;
+          }
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
 
       if (!response.body) {
         throw new Error("No response stream");
@@ -370,19 +374,34 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           } 
         }));
       }
-    } catch (err) {
-      console.error("Streaming error", err);
-      setMessages(prev => {
-        const updated = [...prev];
-        if (updated.length > 0) {
-          updated[updated.length - 1] = { 
-            role: 'assistant', 
-            content: t.tutor_error
-          };
-         }
-         return updated;
-       });
-     }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log("Tutor stream aborted by user.");
+        // Clean up last message if it's still three dots
+        setMessages(prev => {
+          const updated = [...prev];
+          if (updated.length > 0 && updated[updated.length - 1].content === '...') {
+            updated[updated.length - 1] = { role: 'assistant', content: lang === 'FR' ? "Génération interrompue." : "Generation stopped." };
+          }
+          return updated;
+        });
+      } else {
+        console.error("Streaming error", err);
+        setMessages(prev => {
+          const updated = [...prev];
+          if (updated.length > 0) {
+            updated[updated.length - 1] = { 
+              role: 'assistant', 
+              content: err.message || t.tutor_error
+            };
+          }
+          return updated;
+        });
+      }
+    } finally {
+      setIsGenerating(false);
+      abortControllerRef.current = null;
+    }
   };
 
   // Flashcards extraction from pageContext
@@ -527,29 +546,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               </div>
             ) : (
               <>
-                {/* Offline Connection Loss banner */}
-                <AnimatePresence>
-                  {isOffline && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-6 py-3.5 bg-amber-500/10 border-b border-amber-500/25 text-amber-500 flex items-center justify-between text-[9px] font-black uppercase tracking-widest gap-3 shrink-0 overflow-hidden"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-5 h-5 bg-amber-500/20 rounded-lg flex items-center justify-center text-amber-400 shrink-0">
-                          <Loader2 className="w-3 h-3 animate-spin stroke-[3]" />
-                        </div>
-                        <span className="leading-tight">
-                          {t.connection_difficulties}
-                        </span>
-                      </div>
-                      <div className="bg-amber-500/20 px-2.5 py-1 rounded-lg text-[7px] font-black uppercase animate-pulse shrink-0 text-amber-400 border border-amber-500/30">
-                        {t.please_wait}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Connection loss indicator or notices can go here if needed, keeping it empty for clean lightweight UI */}
 
                 {activeTab === 'chat' ? (
                   <>
@@ -565,7 +562,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
 
                     <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
                        {QUICK_ACTIONS.map(qa => (
-                         <button key={qa.label} disabled={isOffline} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
+                         <button key={qa.label} disabled={isGenerating} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
                            {qa.icon} {qa.label}
                          </button>
                        ))}
@@ -575,71 +572,47 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       <div className="relative flex items-center">
                         <input 
                           type="text" 
-                          disabled={isOffline} 
+                          disabled={isGenerating} 
                           value={input} 
                           onChange={(e) => setInput(e.target.value)} 
                           onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                          placeholder={isOffline ? t.offline_placeholder : t.placeholder} 
+                          placeholder={t.placeholder} 
                           className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
                         />
                         
-                        {isListening && (
-                          <div className="absolute inset-0 bg-slate-900/95 border border-blue-500/40 rounded-2xl flex items-center justify-between px-6 backdrop-blur-xl animate-fade-in z-20">
-                            <style>{`
-                              @keyframes wave-oscillate {
-                                0%, 100% { transform: scaleY(0.2); }
-                                50% { transform: scaleY(1.0); }
-                              }
-                              .osc-bar {
-                                transform-origin: center;
-                                animation: wave-oscillate var(--d, 1s) ease-in-out infinite;
-                              }
-                            `}</style>
-                            <div className="flex items-center gap-3">
-                              <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-                                {t.voice_active}
-                              </span>
-                            </div>
-                            
-                            {/* Premium SVG Oscilloscope */}
-                            <div className="flex items-center gap-1.5 h-6">
-                              <div className="w-[3px] bg-blue-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
-                              <div className="w-[3px] bg-indigo-500 rounded-full h-5 osc-bar" style={{ '--d': '0.5s' } as any} />
-                              <div className="w-[3px] bg-violet-500 rounded-full h-5 osc-bar" style={{ '--d': '0.9s' } as any} />
-                              <div className="w-[3px] bg-fuchsia-500 rounded-full h-5 osc-bar" style={{ '--d': '0.6s' } as any} />
-                              <div className="w-[3px] bg-pink-500 rounded-full h-5 osc-bar" style={{ '--d': '0.8s' } as any} />
-                              <div className="w-[3px] bg-rose-500 rounded-full h-5 osc-bar" style={{ '--d': '0.4s' } as any} />
-                              <div className="w-[3px] bg-red-500 rounded-full h-5 osc-bar" style={{ '--d': '0.7s' } as any} />
-                            </div>
-
-                            <button 
-                              type="button"
-                              onClick={toggleListening}
-                              className="px-4 py-2 bg-red-650 hover:bg-red-600 border border-red-500/40 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] text-white transition-all shadow-md cursor-pointer"
-                            >
-                              {t.voice_stop}
-                            </button>
-                          </div>
-                        )}
-
                         <button 
                           type="button"
-                          disabled={isOffline} 
+                          disabled={isGenerating} 
                           onClick={toggleListening} 
-                          className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${isListening ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed`}
-                          title={t.voice_enable}
+                          className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${
+                            isListening 
+                              ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.3)] animate-pulse' 
+                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                          } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          title={isListening ? t.voice_stop : t.voice_enable}
                           aria-label="Active voice coaching input"
                         >
                           <Mic className="w-4 h-4" />
                         </button>
-                        <button 
-                          disabled={isOffline} 
-                          onClick={() => handleSend()} 
-                          className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
+
+                        {isGenerating ? (
+                          <button 
+                            type="button"
+                            onClick={stopGeneration} 
+                            className="absolute right-4 top-3 p-2 bg-red-650 rounded-xl text-white hover:bg-red-650 transition-all cursor-pointer flex items-center justify-center border border-red-500/30"
+                            title={lang === 'FR' ? "Arrêter la réflexion" : "Stop response"}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+                          </button>
+                        ) : (
+                          <button 
+                            disabled={isGenerating} 
+                            onClick={() => handleSend()} 
+                            className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </>
@@ -1485,9 +1458,10 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             courses={courses}
             showEnrollActions={true}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
-            onEnroll={async () => {
+            onEnroll={async (activeC) => {
+              const targetCourse = activeC || selectedEnrollCourse;
               if (!isLoggedIn) {
-                window.location.href = `/signup?redirect=/${selectedEnrollCourse.level}/${selectedEnrollCourse.subject}/${selectedEnrollCourse.slug}/introduction`;
+                window.location.href = `/signup?redirect=/${targetCourse.level}/${targetCourse.subject}/${targetCourse.slug}/introduction`;
                 return;
               }
               let userId = 'u1';
@@ -1498,11 +1472,11 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                   if (p.id) userId = p.id;
                 } catch (err) {}
               }
-              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
-              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              await dbService.enrollInCourse(userId, targetCourse.id);
+              setEnrolledIds(prev => [...prev, targetCourse.id]);
               
               setEnrollmentSuccess(true);
-              const courseToOpen = selectedEnrollCourse;
+              const courseToOpen = targetCourse;
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               

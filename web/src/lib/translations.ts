@@ -19,9 +19,15 @@ export const STATIC_UI_STRINGS = {
     terms: "Terms of Service", privacy: "Privacy Sovereignty",
     copyright: "© 2026 OpenPrimer Project • Online University",
     all: "All", saved: "Saved", physics: "Physics", biology: "Biology", law: "Law", math: "Mathematics", chemistry: "Chemistry", economics: "Economics", computer_science: "Computer Science", history: "History", search: "Search modules...",
+    math_desc: "Explore algebra, calculus, probability theory, and deep mathematical modeling.",
+    physics_desc: "Master classical mechanics, quantum systems, waves, and thermodynamics.",
+    biology_desc: "Discover molecular genetics, cellular biology, biochemistry, and general ecology.",
+    chemistry_desc: "Understand organic reactions, atomic bonds, synthesis, and biochemistry.",
+    law_desc: "Study constitutional structures, general criminal law, and sovereign governance.",
+    computer_science_desc: "Learn algorithms, computational logic, network architecture, and security protocols.",
     tagline: "The Future of Open Academic Sovereignty",
     cta_start: "Start Learning", cta_foundation: "Explore Foundation",
-    tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.",
+    tutor: "AI Tutor", placeholder: "Ask a question...", welcome: "Hello! I am your OpenPrimer tutor.", tutor_error: "The tutor is temporarily unavailable due to connection issues. Please try again.",
     copy: "Link copied!", report: "Report", signout: "Sign Out", login: "Log In", signup: "Sign In", profile: "My Profile",
     delete: "Delete Account", langLabel: "Language",
     foundation: "Foundation", curriculum: "Curriculum", legal: "Legal",
@@ -192,9 +198,15 @@ export const STATIC_UI_STRINGS = {
     terms: "Conditions d'Utilisation", privacy: "Souveraineté des Données",
     copyright: "© 2026 Projet OpenPrimer • Université en ligne",
     all: "Tous", saved: "Favoris", physics: "Physique", biology: "Biologie", law: "Droit", math: "Mathématiques", chemistry: "Chimie", economics: "Économie", computer_science: "Informatique", history: "Histoire", search: "Rechercher des modules...",
+    math_desc: "Explorez l'algèbre, le calcul, la théorie des probabilités et la modélisation mathématique.",
+    physics_desc: "Maîtrisez la mécanique classique, les systèmes quantiques, les ondes et la thermodynamique.",
+    biology_desc: "Découvrez la génétique moléculaire, la biologie cellulaire, la biochimie et l'écologie.",
+    chemistry_desc: "Comprenez les réactions organiques, les liaisons atomiques, la synthèse et la biochimie.",
+    law_desc: "Étudiez le droit constitutionnel, le droit pénal général et la gouvernance souveraine.",
+    computer_science_desc: "Apprenez les algorithmes, la logique informatique, l'architecture réseau et la sécurité.",
     tagline: "L'Avenir de la Souveraineté Académique Libre",
     cta_start: "Commencer", cta_foundation: "Explorer la Fondation",
-    tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", 
+    tutor: "Tuteur IA", placeholder: "Posez une question...", welcome: "Bonjour ! Je suis votre tuteur OpenPrimer.", tutor_error: "Le tuteur est temporairement indisponible en raison de problèmes de connexion. Veuillez réessayer.",
     copy: "Lien copié !", report: "Signaler", signout: "Déconnexion", login: "Se connecter", signup: "S'inscrire", profile: "Mon Curriculum", 
     delete: "Supprimer le compte", langLabel: "Langue",
     foundation: "Fondation", curriculum: "Curriculum", legal: "Légal",
@@ -365,9 +377,15 @@ export const STATIC_UI_STRINGS = {
     terms: "Términos de Servicio", privacy: "Soberanía de Privacidad",
     copyright: "© 2026 Fundación OpenPrimer • Universidad en línea",
     all: "Todos", saved: "Guardados", physics: "Física", biology: "Biología", law: "Derecho", math: "Matemáticas", chemistry: "Química", economics: "Economía", computer_science: "Informática", history: "Historia", search: "Buscar módulos...",
+    math_desc: "Explore el álgebra, el cálculo, la teoría de la probabilidad y el modelado matemático.",
+    physics_desc: "Domine la mecánica clásica, los sistemas cuánticos, las ondas y la termodinámica.",
+    biology_desc: "Descubra la genética molecular, la biología celular, la bioquímica y la ecología general.",
+    chemistry_desc: "Comprenda las reacciones orgánicas, los enlaces atómicos, la síntesis y la bioquímica.",
+    law_desc: "Estudie las estructuras constitucionales, el derecho penal general y la gobernanza soberana.",
+    computer_science_desc: "Aprenda algoritmos, lógica computacional, arquitectura de redes y protocolos de seguridad.",
     tagline: "El Futuro de la Soberanía Académica Abierta",
     cta_start: "Empezar", cta_foundation: "Explorar Fundación",
-    tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", 
+    tutor: "Tutor IA", placeholder: "Hacer una pregunta...", welcome: "¡Hola! Soy tu tutor OpenPrimer.", tutor_error: "El tutor no está disponible temporalmente debido a problemas de conexión. Por favor, inténtelo de nuevo.",
     copy: "¡Enlace copiado!", report: "Reportar", signout: "Cerrar sesión", login: "Iniciar sesión", signup: "Registrarse", profile: "Mi Currículo", 
     delete: "Eliminar cuenta", langLabel: "Idioma",
     foundation: "Fundación", curriculum: "Currículo", legal: "Legal",
@@ -550,9 +568,15 @@ export const STATIC_UI_STRINGS = {
     terms: "Nutzungsbedingungen", privacy: "Datenschutz-Souveränität",
     copyright: "© 2026 OpenPrimer Stiftung • Online-Universität",
     all: "Alle", saved: "Gespeichert", physics: "Physik", biology: "Biologie", law: "Recht", math: "Mathematik", chemistry: "Chemie", economics: "Wirtschaftswissenschaften", computer_science: "Informatik", history: "Geschichte", search: "Module suchen...",
+    math_desc: "Erkunden Sie Algebra, Analysis, Wahrscheinlichkeitstheorie und mathematische Modellierung.",
+    physics_desc: "Meistern Sie klassische Mechanik, Quantensysteme, Wellen und Thermodynamik.",
+    biology_desc: "Entdecken Sie Molekulargenetik, Zellbiologie, Biochemie und allgemeine Ökologie.",
+    chemistry_desc: "Verstehen Sie organische Reaktionen, atomare Bindungen, Synthese und Biochemie.",
+    law_desc: "Studieren Sie Verfassungsstrukturen, allgemeines Strafrecht und souveräne Regierungsführung.",
+    computer_science_desc: "Lernen Sie Algorithmen, Computerlogik, Netzwerkarchitektur und Sicherheitsprotokolle.",
     tagline: "Die Zukunft der freien akademischen Souveränität",
     cta_start: "Lernen starten", cta_foundation: "Stiftung erkunden",
-    tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", 
+    tutor: "KI-Tutor", placeholder: "Frage stellen...", welcome: "Hallo! Ich bin dein OpenPrimer Tutor.", tutor_error: "Der Tutor ist aufgrund von Verbindungsproblemen vorübergehend nicht verfügbar. Bitte versuchen Sie es erneut.",
     copy: "Link kopiert!", report: "Melden", signout: "Abmelden", login: "Einloggen", signup: "Registrieren", profile: "Mein Lehrplan", 
     delete: "Konto löschen", langLabel: "Sprache",
     foundation: "Stiftung", curriculum: "Lehrplan", legal: "Rechtliches",
@@ -620,7 +644,11 @@ export const STATIC_UI_STRINGS = {
     active_language: "Aktive Sprache : Deutsch",
     catalog_translation_guide: "KATALOG-ÜBERSETZUNGSLEITFADEN",
     translation_guide_text: "💡 Ändern Sie die Sprache in der oberen Navigationsleiste, um Kurse in anderen Sprachen zu entdecken.",
+    voice_not_supported: "Spracherkennung wird in diesem Browser nicht unterstützt. Bitte verwenden Sie Chrome.",
     confirm: "Bestätigen",
+    voice_active: "SPRACHAUFNAHME AKTIV...", voice_stop: "Stoppen",
+    voice_enable: "Aktives Sprachcoaching aktivieren",
+    offline_placeholder: "Verbindung nicht verfügbar...",
     course_sheet_title: "Präsentationsblatt anzeigen", course_sheet: "Beschreibung",
     achievements_gallery: "Errungenschaften-Galerie",
     no_achievements_earned: "Noch keine Errungenschaften freigeschaltet. Schließen Sie Kurse und Quizze ab, um Ihre ersten Abzeichen zu verdienen!",
@@ -695,9 +723,15 @@ export const STATIC_UI_STRINGS = {
     terms: "服务条款", privacy: "隐私主权",
     copyright: "© 2026 OpenPrimer 基金会 • 在线大学",
     all: "全部", saved: "已保存", physics: "物理", biology: "生物", law: "法律", math: "数学", chemistry: "化学", economics: "经济学", computer_science: "计算机科学", history: "历史", search: "搜索模块...",
+    math_desc: "探索代数、微积分、概率论 and 深层数学建模。",
+    physics_desc: "掌握经典力学、量子系统、波动学和热力学。",
+    biology_desc: "发现分子遗传学、细胞生物学、生物化学和普通生态学。",
+    chemistry_desc: "理解有机反应、化学键、合成及生物化学。",
+    law_desc: "学习宪法结构、普通刑法和主权治理。",
+    computer_science_desc: "学习算法、计算逻辑、网络架构和安全协议。",
     tagline: "开放学术主权的未来",
     cta_start: "开始学习", cta_foundation: "探索基金会",
-    tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", 
+    tutor: "AI 导师", placeholder: "提问...", welcome: "你好！我是你的 OpenPrimer 导师。", tutor_error: "由于连接问题，导师暂时不可用。请重试。",
     copy: "链接已复制！", report: "举报", signout: "登出", login: "登录", signup: "注册", profile: "我的课程", 
     delete: "删除账户", langLabel: "语言",
     foundation: "基金会", curriculum: "课程", legal: "法律",
@@ -850,4 +884,64 @@ export const STATIC_UI_STRINGS = {
     continue_label: "继续",
     enroll_label: "注册课程"
   }
+};
+
+// --- CENTRALIZED DISCIPLINE INTERNATIONALIZATION ---
+
+// Maps database master subject name (English) to its standard i18n key in STATIC_UI_STRINGS
+export const DISCIPLINE_I18N_KEYS: Record<string, string> = {
+  'Mathematics': 'math',
+  'Physics': 'physics',
+  'Biology': 'biology',
+  'Chemistry': 'chemistry',
+  'Law': 'law',
+  'Computer Science': 'computer_science',
+  'Economics': 'economics',
+  'History': 'history'
+};
+
+// Helper to translate a discipline name dynamically
+export const getLocalizedDiscipline = (subject: string, lang: string): string => {
+  const i18nKey = DISCIPLINE_I18N_KEYS[subject];
+  if (!i18nKey) return subject;
+  const langKey = lang.toUpperCase();
+  const dict = (STATIC_UI_STRINGS as any)[langKey] || STATIC_UI_STRINGS.EN;
+  return dict[i18nKey] || subject;
+};
+
+// Helper to translate a discipline description dynamically
+export const getLocalizedDisciplineDescription = (subject: string, lang: string): string => {
+  const i18nKey = DISCIPLINE_I18N_KEYS[subject];
+  if (!i18nKey) return '';
+  const descKey = `${i18nKey}_desc`;
+  const langKey = lang.toUpperCase();
+  const dict = (STATIC_UI_STRINGS as any)[langKey] || STATIC_UI_STRINGS.EN;
+  return dict[descKey] || '';
+};
+
+// Helper to translate an active keyboard search query on-the-fly when language switches
+export const translateDisciplineQuery = (query: string, targetLang: string): string => {
+  const lowerQuery = query.trim().toLowerCase();
+  if (!lowerQuery) return query;
+
+  let matchedSubject: string | null = null;
+  for (const [subject, i18nKey] of Object.entries(DISCIPLINE_I18N_KEYS)) {
+    if (lowerQuery === subject.toLowerCase()) {
+      matchedSubject = subject;
+      break;
+    }
+    for (const dict of Object.values(STATIC_UI_STRINGS)) {
+      const translation = (dict as any)[i18nKey];
+      if (translation && translation.toLowerCase() === lowerQuery) {
+        matchedSubject = subject;
+        break;
+      }
+    }
+    if (matchedSubject) break;
+  }
+
+  if (matchedSubject) {
+    return getLocalizedDiscipline(matchedSubject, targetLang);
+  }
+  return query;
 };

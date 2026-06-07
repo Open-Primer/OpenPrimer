@@ -127,6 +127,14 @@ nextjs-portal {
 .theme-paper .prose {
   color: #0f172a !important;
 }
+.theme-paper .prose a {
+  color: #1d4ed8 !important; /* Premium high-contrast blue */
+  text-decoration: underline !important;
+  font-weight: 700 !important;
+}
+.theme-paper .prose a:hover {
+  color: #2563eb !important;
+}
 .theme-paper .prose p,
 .theme-paper .prose li,
 .theme-paper .prose-p {

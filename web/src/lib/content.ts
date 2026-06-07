@@ -484,5 +484,42 @@ export function preprocessMdx(content: string): string {
     }
   });
 
+  // 4. Highlight inline citations & add ID anchors for bidirectional scroll
+  processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
+    return `<sup id="cite-${num}">[[${num}](#ref-${num})]</sup>`;
+  });
+
+  // 5. Render Glossary as static list at the bottom of the page
+  const glossaryIndex = processed.search(/###\s*(Glossaire|Glossary)/i);
+  if (glossaryIndex !== -1) {
+    const preGlossary = processed.slice(0, glossaryIndex);
+    let glossaryContent = processed.slice(glossaryIndex);
+    
+    glossaryContent = glossaryContent.replace(/<Glossary\s+term="([^"]+)"\s+definition="([\s\S]*?)">([\s\S]*?)<\/Glossary>/gi, (match, term, def, displayName) => {
+      return `**${displayName}** : ${def}`;
+    });
+    
+    processed = preGlossary + glossaryContent;
+  }
+
+  // 6. Fix references run-on lists, ensure individual lines, and add backlinks
+  const refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+  if (refIndex !== -1) {
+    const preRef = processed.slice(0, refIndex);
+    let refContent = processed.slice(refIndex);
+
+    // Remove any existing back-links to avoid duplicates
+    refContent = refContent.replace(/\[↩\]\(#cite-\d+\)/g, '').replace(/\[↩\]/g, '');
+    
+    // Structure references as clean separate blocks with proper IDs and back-links
+    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|$))/gi, (match, anchorId, num, rest) => {
+      const activeNum = num || anchorId;
+      const trimmedRest = rest.trim();
+      return `<span id="ref-${activeNum}"></span>**[${activeNum}]** ${trimmedRest} [[↩](#cite-${activeNum})]\n\n`;
+    });
+    
+    processed = preRef + refContent;
+  }
+
   return processed;
 }

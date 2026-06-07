@@ -256,31 +256,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   }
 
   if (submitted) {
-    return (
-      <div className="mt-32 pt-12 border-t border-slate-900 text-center space-y-6 animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 animate-bounce">
-          <CheckCircle className="w-8 h-8" />
-        </div>
-        <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-          {isFr ? "Merci pour votre évaluation !" : "Thank you for your rating!"}
-        </h3>
-        <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
-          {isFr 
-            ? "Vos commentaires ont été enregistrés et seront pris en compte par le Moteur de Révision pour continuer d'améliorer ce cours."
-            : "Your feedback has been saved and will be analyzed by the Revision Engine to keep refining this course."}
-        </p>
-        <div className="pt-4">
-          <Link 
-            href={nextCoursePath || "/profile/curriculum"} 
-            className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/20"
-          >
-            {nextCoursePath 
-              ? (isFr ? "Continuer mon Cursus" : "Continue My Journey")
-              : (isFr ? "Retourner au Curriculum" : "Return to My Curriculum")} <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    );
+    // We fall through to render the same form but in disabled state.
   }
 
   return (
@@ -300,21 +276,33 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           </p>
         </div>
 
+        {submitted && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl p-4 text-xs font-semibold flex items-center gap-3 border-l-4 border-l-emerald-500">
+            <CheckCircle className="w-5 h-5 shrink-0" />
+            <span>
+              {isFr 
+                ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
+                : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
+            </span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Stars Selection */}
           <div className="space-y-3">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-              {isFr ? "Évaluez ce cours" : "Rate this course"} <span className="text-red-500">*</span>
+              {isFr ? "Évaluez ce cours" : "Rate this course"} {!submitted && <span className="text-red-500">*</span>}
             </span>
             <div className="flex items-center gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
+                  disabled={submitted}
                   onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-1 hover:scale-110 transition-transform cursor-pointer outline-none"
+                  onMouseEnter={() => !submitted && setHoverRating(star)}
+                  onMouseLeave={() => !submitted && setHoverRating(0)}
+                  className={`p-1 transition-transform outline-none ${submitted ? 'cursor-not-allowed opacity-60' : 'hover:scale-110 cursor-pointer'}`}
                 >
                   <Star 
                     className={`w-8 h-8 transition-colors ${
@@ -336,34 +324,57 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              disabled={submitted}
               placeholder={
                 isFr 
                   ? "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions..."
                   : "What did you think of the pacing, clarity, or explanations? Suggest revisions..."
               }
               rows={4}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-emerald-500/50 transition-all font-medium leading-relaxed"
+              className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${submitted ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-900/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-900/50">
             <Link 
-              href={nextCoursePath || "/profile/curriculum"} 
+              href="/profile/curriculum" 
               className="text-xs font-black uppercase text-slate-500 hover:text-slate-350 transition-colors"
             >
-              {isFr ? "Passer" : "Skip"}
+              {isFr ? "Retourner au Curriculum" : "Back to Curriculum"}
             </Link>
-            <button
-              type="submit"
-              disabled={rating === 0}
-              className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
-                rating > 0 
-                  ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              {isFr ? "Soumettre et Terminer" : "Submit & Complete"}
-            </button>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {!submitted ? (
+                <>
+                  <Link 
+                    href={nextCoursePath || "/profile/curriculum"} 
+                    className="text-xs font-black uppercase text-slate-500 hover:text-slate-350 transition-colors px-4 py-2 sm:py-0"
+                  >
+                    {isFr ? "Passer" : "Skip"}
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={rating === 0}
+                    className={`w-full sm:w-auto px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
+                      rating > 0 
+                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {isFr ? "Soumettre et Terminer" : "Submit & Complete"}
+                  </button>
+                </>
+              ) : (
+                nextCoursePath && (
+                  <Link 
+                    href={nextCoursePath} 
+                    className="w-full sm:w-auto text-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/10"
+                  >
+                    {isFr ? "Continuer mon Cursus" : "Continue My Journey"}
+                  </Link>
+                )
+              )}
+            </div>
           </div>
         </form>
       </div>

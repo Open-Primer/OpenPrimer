@@ -10,12 +10,49 @@ interface AudioReaderProps {
   lang?: string;
 }
 
+interface SentenceMeta {
+  text: string;
+  type: 'text' | 'quiz_checklist' | 'quiz_question' | 'quiz_option' | 'quiz_explanation' | 'solved_problem_desc' | 'solved_problem_solution' | 'fill_in_blanks' | 'graphic';
+  content?: string;
+  altText?: string;
+}
+
 const normalizeText = (str: string) => {
   return str
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+};
+
+const normalizeMatchingText = (str: string) => {
+  return normalizeText(str)
+    .replace(/^illustration\s*[:]\s*/, '')
+    .replace(/^simulation\s*[:]\s*/, '')
+    .replace(/^video\s*[:]\s*/, '');
+};
+
+const cleanMdxText = (text: string) => {
+  let cleaned = text;
+  // Clean LaTeX equations
+  cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
+  cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');
+  
+  // Clean markdown headings, links, blockquotes
+  cleaned = cleaned.replace(/#+\s+/g, '');
+  cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+  cleaned = cleaned.replace(/>\s+\[![^\]]+\]/g, ''); // Clean markdown alerts like > [!NOTE]
+  cleaned = cleaned.replace(/>+/g, '');
+  cleaned = cleaned.replace(/\*+/g, '');
+  cleaned = cleaned.replace(/`+/g, '');
+  return cleaned;
+};
+
+const getAttribute = (tag: string, attr: string): string => {
+  const regex = new RegExp(`${attr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|\\{([^}]+)\\})`, 'i');
+  const match = tag.match(regex);
+  if (!match) return '';
+  return (match[1] || match[2] || match[3] || '').trim();
 };
 
 const unwrapSentenceText = (element: HTMLElement) => {
@@ -103,10 +140,368 @@ const wrapSentenceText = (element: HTMLElement, sentenceText: string) => {
   }
 };
 
+const isElementVisible = (el: HTMLElement): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  // 1. Basic offset check (display: none / detached)
+  if (!(el.offsetWidth || el.offsetHeight || el.getClientRects().length)) {
+    return false;
+  }
+
+  // 2. Traversal up style ancestors
+  let current: HTMLElement | null = el;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {
+      return false;
+    }
+    current = current.parentElement;
+  }
+
+  return true;
+};
+
+const getElementReadableText = (el: HTMLElement): string => {
+  if (el.tagName === 'IMG') {
+    return (el as HTMLImageElement).alt || '';
+  }
+  if (el.tagName === 'IFRAME' || el.tagName === 'VIDEO') {
+    return el.getAttribute('title') || el.getAttribute('aria-label') || '';
+  }
+  // Try to find nested attributes
+  const title = el.getAttribute('title') || el.getAttribute('aria-label') || '';
+  if (title) return title;
+  const imgInside = el.querySelector('img');
+  if (imgInside) {
+    return imgInside.alt || '';
+  }
+  return '';
+};
+
+const extractAndCleanMdxContent = (content: string, lang: string): { sentences: string[]; metadata: SentenceMeta[] } => {
+  // Ensure headings, list items and paragraph breaks end with punctuation so they split cleanly
+  let preprocessed = content;
+  
+  // 1. If a line starts with '#' (heading) and doesn't end with punctuation, append a period
+  preprocessed = preprocessed.replace(/^(#+\s+.*?[^.!?])\s*$/gm, '$1.');
+  
+  // 2. If a line starts with '-' or '*' or '\d+.' (list item) and doesn't end with punctuation, append a period
+  preprocessed = preprocessed.replace(/^([-*]\s+.*?[^.!?])\s*$/gm, '$1.');
+  preprocessed = preprocessed.replace(/^(\d+\.\s+.*?[^.!?])\s*$/gm, '$1.');
+  
+  // 3. For any double newlines (paragraph boundaries), if the preceding block doesn't end with punctuation, append a period
+  preprocessed = preprocessed.replace(/([^.!?])\s*\n\n+/g, '$1.\n\n');
+
+  // Clean MDX frontmatter
+  preprocessed = preprocessed.replace(/^---[\s\S]*?---/, '');
+
+  interface MatchBlock {
+    start: number;
+    end: number;
+    type: 'quiz' | 'solved_problem' | 'fill_in_blanks' | 'graphic';
+    raw: string;
+  }
+
+  const matches: MatchBlock[] = [];
+
+  // Match Quiz blocks
+  const quizRegex = /<Quiz>([\s\S]*?)<\/Quiz>/gi;
+  let m;
+  while ((m = quizRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: quizRegex.lastIndex,
+      type: 'quiz',
+      raw: m[0]
+    });
+  }
+
+  // Match SolvedProblem blocks
+  const solvedProblemRegex = /<SolvedProblem[^>]*?>([\s\S]*?)<\/SolvedProblem>/gi;
+  while ((m = solvedProblemRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: solvedProblemRegex.lastIndex,
+      type: 'solved_problem',
+      raw: m[0]
+    });
+  }
+
+  // Match FillInBlanks blocks
+  const fillInBlanksRegex = /<FillInBlanks[^>]*?\/>/gi;
+  while ((m = fillInBlanksRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: fillInBlanksRegex.lastIndex,
+      type: 'fill_in_blanks',
+      raw: m[0]
+    });
+  }
+
+  // Match Graphics: Markdown Image, HTML Image, Video
+  const markdownImgRegex = /!\[([^\]]*)\]\([^\)]+\)/g;
+  while ((m = markdownImgRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: markdownImgRegex.lastIndex,
+      type: 'graphic',
+      raw: m[0]
+    });
+  }
+
+  const htmlImgRegex = /<img[^>]*?>/gi;
+  while ((m = htmlImgRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: htmlImgRegex.lastIndex,
+      type: 'graphic',
+      raw: m[0]
+    });
+  }
+
+  const videoRegex = /<Video[^>]*?\/>/gi;
+  while ((m = videoRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: videoRegex.lastIndex,
+      type: 'graphic',
+      raw: m[0]
+    });
+  }
+
+  // Sort matched blocks by start index
+  matches.sort((a, b) => a.start - b.start);
+
+  const sentences: string[] = [];
+  const metadata: SentenceMeta[] = [];
+
+  const addSentence = (text: string, type: SentenceMeta['type'], contentValue?: string, altText?: string) => {
+    const cleaned = cleanMdxText(text).trim();
+    if (cleaned.length > 2 && !cleaned.startsWith('<') && !cleaned.startsWith('{')) {
+      sentences.push(cleaned);
+      metadata.push({ text: cleaned, type, content: contentValue, altText });
+    }
+  };
+
+  let lastIndex = 0;
+  for (const block of matches) {
+    // Process preceding text gap
+    if (block.start > lastIndex) {
+      const gapText = preprocessed.substring(lastIndex, block.start);
+      const splitSentences = gapText.split(/(?<=[.!?])\s+/);
+      for (const s of splitSentences) {
+        addSentence(s, 'text');
+      }
+    }
+
+    // Process block
+    if (block.type === 'quiz') {
+      const title = lang.toUpperCase() === 'FR' ? "Vérification des Connaissances" : "Knowledge Check";
+      const desc = lang.toUpperCase() === 'FR' 
+        ? "Répondez aux questions suivantes pour évaluer votre compréhension de la leçon. Assurez-vous d'avoir bien révisé le cours, installez-vous dans un endroit calme."
+        : "Answer the following questions to assess your understanding of this lesson. Make sure you have reviewed the course material.";
+      addSentence(`${title}. ${desc}`, 'quiz_checklist', block.raw);
+
+      const questionRegex = /<Question\s+q=(?:"([^"]*)"|'([^']*)'|\{([^}]+)\})(?:\s+explanation=(?:"([^"]*)"|'([^']*)'|\{([^}]+)\}))?[^>]*?>([\s\S]*?)<\/Question>/gi;
+      let qMatch;
+      while ((qMatch = questionRegex.exec(block.raw)) !== null) {
+        const questionText = (qMatch[1] || qMatch[2] || qMatch[3] || '').trim();
+        const explanationText = (qMatch[4] || qMatch[5] || qMatch[6] || '').trim();
+        const optionsContent = qMatch[7];
+
+        if (questionText) {
+          addSentence(questionText, 'quiz_question', block.raw);
+
+          const optionRegex = /<Option\s+text=(?:"([^"]*)"|'([^']*)'|\{([^}]+)\})[^>]*?\/>/gi;
+          let optMatch;
+          while ((optMatch = optionRegex.exec(optionsContent)) !== null) {
+            const optText = (optMatch[1] || optMatch[2] || optMatch[3] || '').trim();
+            if (optText) {
+              addSentence(optText, 'quiz_option', block.raw);
+            }
+          }
+
+          if (explanationText) {
+            addSentence(explanationText, 'quiz_explanation', block.raw);
+          }
+        }
+      }
+    } else if (block.type === 'solved_problem') {
+      const titleMatch = block.raw.match(/title=(?:"([^"]*)"|'([^']*)'|\{([^}]+)\})/i);
+      const title = titleMatch ? (titleMatch[1] || titleMatch[2] || titleMatch[3] || '').trim() : '';
+      const contentInside = block.raw.replace(/<SolvedProblem[^>]*?>/i, '').replace(/<\/SolvedProblem>/i, '');
+
+      const heading = lang.toUpperCase() === 'FR' ? `Problème résolu académique : ${title}` : `Academic Challenge: ${title}`;
+      addSentence(heading, 'solved_problem_desc', block.raw);
+
+      const descSentences = contentInside.split(/(?<=[.!?])\s+/);
+      for (const s of descSentences) {
+        addSentence(s, 'solved_problem_desc', block.raw);
+      }
+
+      const solutionLabel = lang.toUpperCase() === 'FR' 
+        ? "La dérivation ci-dessus découle des principes fondamentaux de la mécanique newtonienne. Assurez-vous que tous les systèmes de coordonnées sont inertiels avant d'appliquer les opérateurs différentiels du second ordre."
+        : "The above derivation follows the first principles of Newtonian mechanics. Ensure all coordinate systems are inertial before applying the second-order differential operators.";
+      addSentence(solutionLabel, 'solved_problem_solution', block.raw);
+    } else if (block.type === 'fill_in_blanks') {
+      const sentenceAttr = getAttribute(block.raw, 'sentence');
+      const answerAttr = getAttribute(block.raw, 'answer');
+      
+      const textToRead = lang.toUpperCase() === 'FR'
+        ? `Texte à trous : ${sentenceAttr.replace('____', `[blanc: ${answerAttr}]`)}`
+        : `Fill in the blank: ${sentenceAttr.replace('____', `[blank: ${answerAttr}]`)}`;
+
+      addSentence(textToRead, 'fill_in_blanks', block.raw);
+    } else if (block.type === 'graphic') {
+      let alt = '';
+      let type: 'illustration' | 'video' | 'simulation' = 'illustration';
+
+      if (block.raw.startsWith('![')) {
+        const altMatch = block.raw.match(/!\[([^\]]*)\]/);
+        alt = altMatch ? altMatch[1].trim() : '';
+      } else if (block.raw.toLowerCase().startsWith('<img')) {
+        alt = getAttribute(block.raw, 'alt');
+      } else if (block.raw.toLowerCase().startsWith('<video')) {
+        alt = getAttribute(block.raw, 'title');
+        type = 'video';
+      }
+
+      const voicePrefix = lang.toUpperCase() === 'FR'
+        ? (type === 'video' ? "Vidéo : " : "Illustration : ")
+        : (type === 'video' ? "Video: " : "Illustration: ");
+
+      if (alt) {
+        addSentence(`${voicePrefix}${alt}`, 'graphic', block.raw, alt);
+      }
+    }
+
+    lastIndex = block.end;
+  }
+
+  if (lastIndex < preprocessed.length) {
+    const remainingText = preprocessed.substring(lastIndex);
+    const splitSentences = remainingText.split(/(?<=[.!?])\s+/);
+    for (const s of splitSentences) {
+      addSentence(s, 'text');
+    }
+  }
+
+  return { sentences, metadata };
+};
+
 export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => {
   const t = UI_STRINGS[lang.toUpperCase()] || UI_STRINGS.EN;
   const pathname = usePathname();
   const [isPlaying, setIsPlaying] = useState(false);
+
+  interface TooltipState {
+    visible: boolean;
+    text: string;
+    category: 'illustration' | 'video' | 'simulation';
+    x: number;
+    y: number;
+  }
+  const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, text: '', category: 'illustration', x: 0, y: 0 });
+
+  const isSentenceIndexHidden = (index: number): boolean => {
+    if (index < 0 || index >= sentences.length) return true;
+    const meta = sentenceMetaRef.current[index];
+    if (!meta) return false;
+
+    // Standard text sentences are always visible/read
+    if (meta.type === 'text') return false;
+
+    const article = document.querySelector('article');
+    if (!article) return false;
+
+    if (meta.type === 'quiz_checklist' || meta.type === 'quiz_question' || meta.type === 'quiz_option' || meta.type === 'quiz_explanation') {
+      const quizEl = article.querySelector('.my-10') || article.querySelector('[class*="quiz"]') || article.querySelector('div[class*="bg-slate-900/50"]');
+      if (!quizEl) return true;
+
+      if (!isElementVisible(quizEl as HTMLElement)) return true;
+
+      if (meta.type === 'quiz_checklist') {
+        const hasStartButton = quizEl.querySelector('button')?.textContent?.toLowerCase().includes('quiz') || quizEl.textContent?.toLowerCase().includes('checklist');
+        return !hasStartButton;
+      }
+
+      const hasStartButton = quizEl.querySelector('button')?.textContent?.toLowerCase().includes('quiz');
+      if (hasStartButton) return true;
+
+      const normalizedText = normalizeText(meta.text);
+      const candidates = Array.from(quizEl.querySelectorAll('p, button, span, div')) as HTMLElement[];
+      const matched = candidates.find(c => normalizeText(c.innerText || c.textContent || '').includes(normalizedText));
+      if (!matched) return true;
+
+      return !isElementVisible(matched);
+    }
+
+    if (meta.type === 'solved_problem_desc' || meta.type === 'solved_problem_solution') {
+      const problemContainers = Array.from(article.querySelectorAll('div[class*="bg-emerald-500/5"], div[class*="border-emerald-500/20"]')) as HTMLElement[];
+      if (problemContainers.length === 0) return false;
+
+      const normalizedText = normalizeText(meta.text);
+      let matchedContainer: HTMLElement | null = null;
+      for (const container of problemContainers) {
+        if (normalizeText(container.textContent || '').includes(normalizedText)) {
+          matchedContainer = container;
+          break;
+        }
+      }
+
+      if (!matchedContainer) return false;
+
+      if (!isElementVisible(matchedContainer)) return true;
+
+      if (meta.type === 'solved_problem_solution') {
+        const solutionText = "inertial before applying";
+        const candidates = Array.from(matchedContainer.querySelectorAll('div, p')) as HTMLElement[];
+        const hasSolutionInDom = candidates.some(c => c.textContent?.toLowerCase().includes(solutionText));
+        if (!hasSolutionInDom) return true;
+
+        const matchedSolution = candidates.find(c => c.textContent?.toLowerCase().includes(solutionText));
+        if (matchedSolution) {
+          return !isElementVisible(matchedSolution);
+        }
+      }
+    }
+
+    if (meta.type === 'fill_in_blanks') {
+      const blankContainers = Array.from(article.querySelectorAll('div, p, span')) as HTMLElement[];
+      
+      let matched: HTMLElement | null = null;
+      for (const c of blankContainers) {
+        const text = normalizeText(c.innerText || c.textContent || '');
+        if (text && text.includes("texte") && text.includes("trous")) {
+          matched = c;
+          break;
+        }
+        if (text && text.includes("fill") && text.includes("blank")) {
+          matched = c;
+          break;
+        }
+      }
+      if (matched) {
+        return !isElementVisible(matched);
+      }
+    }
+
+    if (meta.type === 'graphic') {
+      const candidates = Array.from(article.querySelectorAll('img, iframe, video, .video-container, .iframe-container, [role="img"]')) as HTMLElement[];
+      const matched = candidates.find(c => {
+        const elText = getElementReadableText(c);
+        if (meta.altText && elText.toLowerCase().includes(meta.altText.toLowerCase())) return true;
+        if (meta.text && elText.toLowerCase().includes(meta.text.toLowerCase())) return true;
+        return false;
+      });
+      if (matched) {
+        return !isElementVisible(matched);
+      }
+      return true;
+    }
+
+    return false;
+  };
   const [isPaused, setIsPaused] = useState(false);
   const [rate, setRate] = useState(1.0);
   const [volume, setVolume] = useState(1.0);
@@ -131,6 +526,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [currentTutorSentenceIndex, setCurrentTutorSentenceIndex] = useState(-1);
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const sentenceMetaRef = useRef<SentenceMeta[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const highlightedElementRef = useRef<HTMLElement | null>(null);
   const isScrollInitiatedRef = useRef(false);
@@ -519,52 +915,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   useEffect(() => {
     if (!content) return;
 
-    // Ensure headings, list items and paragraph breaks end with punctuation so they split cleanly
-    let preprocessed = content;
-    
-    // 1. If a line starts with '#' (heading) and doesn't end with punctuation, append a period
-    preprocessed = preprocessed.replace(/^(#+\s+.*?[^.!?])\s*$/gm, '$1.');
-    
-    // 2. If a line starts with '-' or '*' or '\d+.' (list item) and doesn't end with punctuation, append a period
-    preprocessed = preprocessed.replace(/^([-*]\s+.*?[^.!?])\s*$/gm, '$1.');
-    preprocessed = preprocessed.replace(/^(\d+\.\s+.*?[^.!?])\s*$/gm, '$1.');
-    
-    // 3. For any double newlines (paragraph boundaries), if the preceding block doesn't end with punctuation, append a period
-    preprocessed = preprocessed.replace(/([^.!?])\s*\n\n+/g, '$1.\n\n');
-
-    // Clean MDX frontmatter
-    let cleaned = preprocessed.replace(/---[\s\S]*?---/, '');
-    
-    // Clean interactive JSX components completely (so they are not read by TTS)
-    cleaned = cleaned.replace(/<Quiz>[\s\S]*?<\/Quiz>/gi, '');
-    cleaned = cleaned.replace(/<EssayEvaluation[\s\S]*?\/>/gi, '');
-    cleaned = cleaned.replace(/<SelfEval[\s\S]*?\/>/gi, '');
-    cleaned = cleaned.replace(/<SolvedProblem>[\s\S]*?<\/SolvedProblem>/gi, '');
-    cleaned = cleaned.replace(/<Prerequisites[\s\S]*?\/>/gi, '');
-    cleaned = cleaned.replace(/<Epistemology>[\s\S]*?<\/Epistemology>/gi, '');
-    cleaned = cleaned.replace(/<DiagnosticQuiz[\s\S]*?\/>/gi, '');
-
-    // Clean LaTeX equations
-    cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
-    cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');
-    
-    // Clean markdown headings, links, blockquotes
-    cleaned = cleaned.replace(/#+\s+/g, '');
-    cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-    cleaned = cleaned.replace(/>\s+\[![^\]]+\]/g, ''); // Clean markdown alerts like > [!NOTE]
-    cleaned = cleaned.replace(/>+/g, '');
-    cleaned = cleaned.replace(/\*+/g, '');
-    cleaned = cleaned.replace(/`+/g, '');
-    
-    // Split into sentences (by period, exclamation, or question mark followed by space/newline)
-    const rawSentences = cleaned.split(/(?<=[.!?])\s+/);
-    const filteredSentences = rawSentences
-      .map(s => s.trim())
-      .filter(s => s.length > 2 && !s.startsWith('<') && !s.startsWith('{')); // Filter out HTML and code blocks
-
-    setSentences(filteredSentences);
+    const { sentences: parsedSentences, metadata } = extractAndCleanMdxContent(content, lang);
+    setSentences(parsedSentences);
+    sentenceMetaRef.current = metadata;
     setCurrentSentenceIndex(-1);
-  }, [content]);
+  }, [content, lang]);
 
   // 3. Reset audio playback state when pathname, content or language changes
   useEffect(() => {
@@ -586,21 +941,33 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     const sentence = sentences[currentSentenceIndex];
     if (!sentence) return;
 
-    const normalizedSentence = normalizeText(sentence);
+    const normalizedSentence = normalizeMatchingText(sentence);
     if (!normalizedSentence) return;
 
     const article = document.querySelector('article');
     if (!article) return;
 
+    const isGraphicNode = (el: HTMLElement) => {
+      const tag = el.tagName.toUpperCase();
+      return tag === 'IMG' || tag === 'IFRAME' || tag === 'VIDEO' || el.classList.contains('video-container') || el.classList.contains('iframe-container') || el.getAttribute('role') === 'img';
+    };
+
+    const getElText = (el: HTMLElement) => {
+      if (isGraphicNode(el)) {
+        return getElementReadableText(el);
+      }
+      return el.innerText || el.textContent || '';
+    };
+
     const candidates = Array.from(
-      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6')
+      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6, img, iframe, video, .video-container, .iframe-container, [role="img"]')
     ) as HTMLElement[];
 
     let bestMatch: HTMLElement | null = null;
     
-    // First pass: exact content match (normalized)
+    // First pass: exact content match (normalized matching text)
     for (const el of candidates) {
-      const normalizedElText = normalizeText(el.innerText || el.textContent || '');
+      const normalizedElText = normalizeMatchingText(getElText(el));
       if (normalizedElText.includes(normalizedSentence)) {
         bestMatch = el;
         break;
@@ -611,7 +978,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     if (!bestMatch) {
       let maxOverlap = 0;
       for (const el of candidates) {
-        const text = normalizeText(el.innerText || el.textContent || '');
+        const text = normalizeMatchingText(getElText(el));
         const sentenceWords = normalizedSentence.split(/\s+/);
         const matchCount = sentenceWords.filter(w => text.includes(w)).length;
         if (matchCount > maxOverlap && matchCount > sentenceWords.length * 0.5) {
@@ -624,7 +991,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     if (bestMatch) {
       bestMatch.classList.add('reading-highlight');
       highlightedElementRef.current = bestMatch;
-      wrapSentenceText(bestMatch, sentence);
+      
+      if (!isGraphicNode(bestMatch)) {
+        wrapSentenceText(bestMatch, sentence);
+      }
       
       const rect = bestMatch.getBoundingClientRect();
       const isVisible = rect.top >= 120 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 40;
@@ -682,6 +1052,12 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       setIsPlaying(false);
       setIsPaused(false);
       setCurrentSentenceIndex(-1);
+      return;
+    }
+
+    // Dynamic visibility check: if hidden/inactive, skip instantly and silently
+    if (isSentenceIndexHidden(index)) {
+      speakSentence(index + 1, voiceOverride);
       return;
     }
 
@@ -826,8 +1202,20 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     const article = document.querySelector('article');
     if (!article || sentences.length === 0) return 0;
 
+    const isGraphicNode = (el: HTMLElement) => {
+      const tag = el.tagName.toUpperCase();
+      return tag === 'IMG' || tag === 'IFRAME' || tag === 'VIDEO' || el.classList.contains('video-container') || el.classList.contains('iframe-container') || el.getAttribute('role') === 'img';
+    };
+
+    const getElText = (el: HTMLElement) => {
+      if (isGraphicNode(el)) {
+        return getElementReadableText(el);
+      }
+      return el.innerText || el.textContent || '';
+    };
+
     const candidates = Array.from(
-      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6')
+      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6, img, iframe, video, .video-container, .iframe-container, [role="img"]')
     ) as HTMLElement[];
 
     const navbarHeight = 100; // Account for top navigation bar padding
@@ -854,13 +1242,32 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     }
 
     if (bestCandidate) {
-      const text = bestCandidate.innerText || bestCandidate.textContent || '';
-      const normalizedElText = normalizeText(text);
+      const bestIdx = candidates.indexOf(bestCandidate);
+      if (bestIdx !== -1) {
+        let maxSearchOffset = Math.max(bestIdx, candidates.length - 1 - bestIdx);
+        for (let offset = 0; offset <= maxSearchOffset; offset++) {
+          const indicesToCheck = [];
+          if (bestIdx + offset < candidates.length) {
+            indicesToCheck.push(bestIdx + offset);
+          }
+          if (offset > 0 && bestIdx - offset >= 0) {
+            indicesToCheck.push(bestIdx - offset);
+          }
 
-      for (let i = 0; i < sentences.length; i++) {
-        const normalizedSentence = normalizeText(sentences[i]);
-        if (normalizedSentence && normalizedElText.includes(normalizedSentence)) {
-          return i;
+          for (const idx of indicesToCheck) {
+            const candidate = candidates[idx];
+            const text = getElText(candidate);
+            const normalizedElText = normalizeMatchingText(text);
+            if (!normalizedElText) continue;
+
+            for (let i = 0; i < sentences.length; i++) {
+              if (isSentenceIndexHidden(i)) continue;
+              const normalizedSentence = normalizeMatchingText(sentences[i]);
+              if (normalizedSentence && normalizedElText.includes(normalizedSentence)) {
+                return i;
+              }
+            }
+          }
         }
       }
     }
@@ -961,6 +1368,96 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       stop();
     }
   }, [ttsEnabled]);
+
+  // 8. Hover Tooltip Listener for Graphic Elements inside <article>
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+
+      const graphic = target.closest('img, iframe, video, .video-container, .iframe-container, [role="img"]') as HTMLElement;
+      if (!graphic) {
+        setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev);
+        return;
+      }
+
+      if (graphic.closest('a, button, input, select, option, textarea, [role="button"], [role="link"]')) {
+        setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev);
+        return;
+      }
+
+      const text = getElementReadableText(graphic);
+      if (!text) {
+        setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev);
+        return;
+      }
+
+      let category: TooltipState['category'] = 'illustration';
+      const tag = graphic.tagName.toUpperCase();
+      if (tag === 'VIDEO' || graphic.classList.contains('video-container')) {
+        category = 'video';
+      } else if (tag === 'IFRAME' || graphic.classList.contains('iframe-container')) {
+        const src = graphic.getAttribute('src') || '';
+        if (src.includes('youtube') || src.includes('vimeo')) {
+          category = 'video';
+        } else {
+          category = 'simulation';
+        }
+      }
+
+      setTooltip({
+        visible: true,
+        text,
+        category,
+        x: e.clientX,
+        y: e.clientY
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!tooltip.visible) return;
+
+      let x = e.clientX + 15;
+      let y = e.clientY + 15;
+
+      const tooltipWidth = 240;
+      const tooltipHeight = 100;
+      if (x + tooltipWidth > window.innerWidth) {
+        x = e.clientX - tooltipWidth - 10;
+      }
+      if (y + tooltipHeight > window.innerHeight) {
+        y = e.clientY - tooltipHeight - 10;
+      }
+
+      setTooltip(prev => prev.visible ? { ...prev, x, y } : prev);
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+      const graphic = target.closest('img, iframe, video, .video-container, .iframe-container, [role="img"]');
+      if (graphic) {
+        setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev);
+      }
+    };
+
+    const article = document.querySelector('article');
+    if (article) {
+      article.addEventListener('mouseover', handleMouseOver);
+      article.addEventListener('mousemove', handleMouseMove);
+      article.addEventListener('mouseout', handleMouseOut);
+    }
+
+    return () => {
+      if (article) {
+        article.removeEventListener('mouseover', handleMouseOver);
+        article.removeEventListener('mousemove', handleMouseMove);
+        article.removeEventListener('mouseout', handleMouseOut);
+      }
+    };
+  }, [tooltip.visible]);
 
   if (!isSupported) {
     return (
@@ -1322,6 +1819,37 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           </div>
         </div>
       </div>
+
+      {/* Premium glassmorphic tooltip layer */}
+      {tooltip.visible && (
+        <div
+          className="fixed pointer-events-none z-[9999] max-w-[280px] p-4 bg-slate-950/95 border border-slate-800/80 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8),_0_0_15px_rgba(59,130,246,0.15)] backdrop-blur-xl transition-all duration-150 ease-out flex flex-col gap-2 font-sans"
+          style={{
+            left: `${tooltip.x}px`,
+            top: `${tooltip.y}px`,
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+              tooltip.category === 'video'
+                ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                : tooltip.category === 'simulation'
+                  ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                  : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+            }`}>
+              {tooltip.category === 'video' 
+                ? (lang.toUpperCase() === 'FR' ? '🔍 Vidéo' : '🔍 Video')
+                : tooltip.category === 'simulation'
+                  ? (lang.toUpperCase() === 'FR' ? '🔍 Simulation' : '🔍 Simulation')
+                  : (lang.toUpperCase() === 'FR' ? '🔍 Illustration' : '🔍 Illustration')
+              }
+            </span>
+          </div>
+          <p className="text-[11px] leading-relaxed font-bold text-slate-100 italic">
+            {tooltip.text}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

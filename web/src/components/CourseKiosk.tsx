@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService } from '@/lib/db';
+import { getLocalizedDiscipline, getLocalizedDisciplineDescription } from '@/lib/translations';
 
 interface CourseKioskProps {
   lang: string;
@@ -61,60 +62,6 @@ const formatCourseLevel = (level: string, lang: string) => {
     }
   }
   return level;
-};
-
-const SUGGESTIONS_TRANSLATIONS: Record<string, Record<string, string>> = {
-  'Mathematics': { EN: 'Mathematics', FR: 'Mathématiques', ES: 'Matemáticas', DE: 'Mathematik', ZH: '数学' },
-  'Physics': { EN: 'Physics', FR: 'Physique', ES: 'Física', DE: 'Physik', ZH: '物理' },
-  'Biology': { EN: 'Biology', FR: 'Biologie', ES: 'Biología', DE: 'Biologie', ZH: '生物' },
-  'Chemistry': { EN: 'Chemistry', FR: 'Chimie', ES: 'Química', DE: 'Chemie', ZH: '化学' },
-  'Law': { EN: 'Law', FR: 'Droit', ES: 'Derecho', DE: 'Recht', ZH: '法律' },
-  'Computer Science': { EN: 'Computer Science', FR: 'Informatique', ES: 'Informática', DE: 'Informatik', ZH: '计算机科学' },
-};
-
-const DISCIPLINE_DESCRIPTIONS: Record<string, Record<string, string>> = {
-  'Mathematics': {
-    EN: "Explore algebra, calculus, probability theory, and deep mathematical modeling.",
-    FR: "Explorez l'algèbre, le calcul, la théorie des probabilités et la modélisation mathématique.",
-    ES: "Explore el álgebra, el cálculo, la teoría de la probabilidad y el modelado matemático.",
-    DE: "Erkunden Sie Algebra, Analysis, Wahrscheinlichkeitstheorie und mathematische Modellierung.",
-    ZH: "探索代数、微积分、概率论和深层数学建模。"
-  },
-  'Physics': {
-    EN: "Master classical mechanics, quantum systems, waves, and thermodynamics.",
-    FR: "Maîtrisez la mécanique classique, les systèmes quantiques, les ondes et la thermodynamique.",
-    ES: "Domine la mecánica clásica, los sistemas cuánticos, las ondas y la termodinámica.",
-    DE: "Meistern Sie klassische Mechanik, Quantensysteme, Wellen und Thermodynamik.",
-    ZH: "掌握经典力学、量子系统、波动学和热力学。"
-  },
-  'Biology': {
-    EN: "Discover molecular genetics, cellular biology, biochemistry, and general ecology.",
-    FR: "Découvrez la génétique moléculaire, la biologie cellulaire, la biochimie et l'écologie.",
-    ES: "Descubra la genética molecular, la biología celular, la bioquímica y la ecología general.",
-    DE: "Entdecken Sie Molekulargenetik, Zellbiologie, Biochemie und allgemeine Ökologie.",
-    ZH: "发现分子遗传学、细胞生物学、生物化学和普通生态学。"
-  },
-  'Chemistry': {
-    EN: "Understand organic reactions, atomic bonds, synthesis, and biochemistry.",
-    FR: "Comprenez les réactions organiques, les liaisons atomiques, la synthèse et la biochimie.",
-    ES: "Comprenda las reacciones orgánicas, los enlaces atómicos, la síntesis y la bioquímica.",
-    DE: "Verstehen Sie organische Reaktionen, atomare Bindungen, Synthese und Biochemie.",
-    ZH: "理解有机反应、化学键、合成及生物化学。"
-  },
-  'Law': {
-    EN: "Study constitutional structures, general criminal law, and sovereign governance.",
-    FR: "Étudiez le droit constitutionnel, le droit pénal général et la gouvernance souveraine.",
-    ES: "Estudie las estructuras constitucionales, el derecho penal general y la gobernanza soberana.",
-    DE: "Studieren Sie Verfassungsstrukturen, allgemeines Strafrecht und souveräne Regierungsführung.",
-    ZH: "学习宪法结构、普通刑法和主权治理。"
-  },
-  'Computer Science': {
-    EN: "Learn algorithms, computational logic, network architecture, and security protocols.",
-    FR: "Apprenez les algorithmes, la logique informatique, l'architecture réseau et la sécurité.",
-    ES: "Aprenda algoritmos, lógica computacional, arquitectura de redes y protocolos de seguridad.",
-    DE: "Lernen Sie Algorithmen, Computerlogik, Netzwerkarchitektur und Sicherheitsprotokolle.",
-    ZH: "学习算法、计算逻辑、网络架构和安全协议。"
-  }
 };
 
 const KIOSK_TEXTS: Record<string, Record<string, string>> = {
@@ -459,8 +406,8 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                   // Disciplines mode
                   const colors = KIOSK_COLORS[item.colorIndex];
                   const IconComponent = SUBJECT_ICONS[item.subject] || Book;
-                  const localizedTitle = SUGGESTIONS_TRANSLATIONS[item.label]?.[lang.toUpperCase()] || item.label;
-                  const localizedDesc = DISCIPLINE_DESCRIPTIONS[item.label]?.[lang.toUpperCase()] || DISCIPLINE_DESCRIPTIONS[item.label]?.EN || '';
+                  const localizedTitle = getLocalizedDiscipline(item.label, lang);
+                  const localizedDesc = getLocalizedDisciplineDescription(item.label, lang);
 
                   return (
                     <button

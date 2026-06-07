@@ -10,8 +10,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
 import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
-import { COURSE_SYLLABUS_DETAILS } from '@/components/StaticPages';
-
 
 export default function CurriculumPage() {
   const router = useRouter();
@@ -1300,7 +1298,8 @@ export default function CurriculumPage() {
             bookmarks={bookmarks}
             onToggleBookmark={toggleBookmark}
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
-            onEnroll={async () => {
+            onEnroll={async (activeC) => {
+              const targetCourse = activeC || selectedEnrollCourse;
               let userId = 'u1';
               const savedProfile = localStorage.getItem('op_user_profile');
               if (savedProfile) {
@@ -1309,11 +1308,11 @@ export default function CurriculumPage() {
                   if (p.id) userId = p.id;
                 } catch (err) {}
               }
-              await dbService.enrollInCourse(userId, selectedEnrollCourse.id);
-              setEnrolledIds(prev => [...prev, selectedEnrollCourse.id]);
+              await dbService.enrollInCourse(userId, targetCourse.id);
+              setEnrolledIds(prev => [...prev, targetCourse.id]);
               
               setEnrollmentSuccess(true);
-              const courseToOpen = selectedEnrollCourse;
+              const courseToOpen = targetCourse;
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               
