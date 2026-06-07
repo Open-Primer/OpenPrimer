@@ -1,0 +1,4 @@
+*.md
+docs/
+.agent/
+.antigravity/
