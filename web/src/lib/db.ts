@@ -213,6 +213,8 @@ export interface MockCourse {
   translations?: Record<string, { title: string; description: string }>;
   isCurriculum?: boolean;
   childCourses?: number[];
+  optionalCourses?: number[];
+  minOptionalCount?: number;
   hours?: number;
   prerequisites?: string[];
   recommended_next_steps?: string[];

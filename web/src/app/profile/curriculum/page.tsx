@@ -26,6 +26,30 @@ export default function CurriculumPage() {
   const [readingMode, setReadingMode] = useState('dark');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
+  const [dismissedRecIds, setDismissedRecIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('op_dismissed_recommendations');
+    if (dismissed) {
+      try {
+        setDismissedRecIds(JSON.parse(dismissed));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleDismissRecommendation = (id: number) => {
+    const updated = [...dismissedRecIds, id];
+    setDismissedRecIds(updated);
+    localStorage.setItem('op_dismissed_recommendations', JSON.stringify(updated));
+  };
+
+  const getLocalizedCourseDescription = (c: any) => {
+    if (!c) return '';
+    const code = (lang || 'EN').toUpperCase();
+    return c.translations?.[code]?.description || c.description || '';
+  };
+
+  const isCourseNew = (course: any) => progressService.isNewCourse(course.created_at);
 
   const handleCourseClick = (c: any) => {
     if (c && c.languages && c.languages.length > 0) {
@@ -84,19 +108,53 @@ export default function CurriculumPage() {
   };
 
   const getRecommendations = () => {
-    const activeModSlugs = progress?.activeModules?.map((m: any) => m.slug) || [];
-    const completedSlugs = progress?.activeModules?.filter((m: any) => m.progress === 100).map((m: any) => m.slug) || [];
+    if (!progress?.activeModules || progress.activeModules.length === 0) {
+      return [];
+    }
+    const activeModSlugs = progress.activeModules.map((m: any) => m.slug) || [];
+    const completedSlugs = progress.activeModules.filter((m: any) => m.progress === 100).map((m: any) => m.slug) || [];
 
-    const candidates = courses.filter((c: any) => !activeModSlugs.includes(c.slug));
+    // Collect unique languages of the user's current enrolled courses
+    const activeLangs = new Set<string>();
+    progress.activeModules.forEach((m: any) => {
+      const cd = courses.find((c: any) => c.slug === m.slug || c.id === m.id);
+      if (cd && cd.languages) {
+        cd.languages.forEach((l: string) => activeLangs.add(l.toLowerCase()));
+      }
+    });
 
+    // Candidates = all courses except already active/enrolled ones and dismissed ones
+    const candidates = courses.filter((c: any) => {
+      if (activeModSlugs.includes(c.slug)) return false;
+      if (dismissedRecIds.includes(c.id)) return false;
+      // Ensure the course supports at least one of the active languages (no fallback)
+      if (!c.languages || c.languages.length === 0) return false;
+      return c.languages.some((l: string) => activeLangs.has(l.toLowerCase()));
+    });
+
+    // Apply smart subject matching
+    let result: any[] = [];
     if (completedSlugs.includes('Classical_Mechanics') || completedSlugs.includes('classical-mechanics')) {
-      return candidates.filter((c: any) => c.slug === 'quantum-physics' || c.slug === 'Physique_Test_L2' || c.slug === 'Calculus_I');
+      result = candidates.filter((c: any) => c.slug === 'quantum-physics' || c.slug === 'Physique_Test_L2' || c.slug === 'Calculus_I');
+    } else if (completedSlugs.includes('Cell_Biology') || completedSlugs.includes('cell-biology') || completedSlugs.includes('Biologie_Test')) {
+      result = candidates.filter((c: any) => c.slug === 'molecular-genetics' || c.slug === 'Biologie_Test_L1');
     }
-    if (completedSlugs.includes('Cell_Biology') || completedSlugs.includes('cell-biology') || completedSlugs.includes('Biologie_Test')) {
-      return candidates.filter((c: any) => c.slug === 'molecular-genetics' || c.slug === 'Biologie_Test_L1');
+
+    if (result.length === 0) {
+      // Default to standard starting recommendations in the user's active languages
+      result = candidates.filter((c: any) => 
+        c.slug === 'Classical_Mechanics' || c.slug === 'classical-mechanics' || 
+        c.slug === 'Biologie_Test' || c.slug === 'cell-biology' || 
+        c.slug === 'Droit_Test' || c.slug === 'constitutional-law'
+      );
     }
-    
-    return candidates.filter((c: any) => c.slug === 'Classical_Mechanics' || c.slug === 'classical-mechanics' || c.slug === 'Biologie_Test' || c.slug === 'cell-biology' || c.slug === 'Droit_Test' || c.slug === 'constitutional-law').slice(0, 2);
+
+    // If still nothing, return the first few eligible candidates
+    if (result.length === 0) {
+      result = candidates;
+    }
+
+    return result.slice(0, 2);
   };
 
   const enrollInRecommended = async (course: any) => {
@@ -784,56 +842,169 @@ export default function CurriculumPage() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-8">
                     {recommendations.map((recCourse: any) => {
-                      const ratingCount = recCourse?.ratingCount || 0;
-                      const averageRating = recCourse?.averageRating || 0;
                       return (
-                        <div key={recCourse.id} className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl hover:border-blue-500/30 transition-all flex flex-col justify-between group">
-                          <div>
-                            <div className="flex justify-between items-center mb-4 gap-2">
-                              <span className="px-2.5 py-1 bg-slate-850 border border-slate-800 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                {getLocalizedSubject(recCourse.subject)}
-                              </span>
-                              <div className="flex gap-2">
-                                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1">
-                                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                                  {averageRating > 0 ? averageRating.toFixed(1) : "3.4"}
-                                </span>
-                                <span className="px-2.5 py-1 bg-slate-850 border border-slate-800 rounded-xl text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                  {recCourse.level}
-                                </span>
-                              </div>
-                            </div>
-                            <h3 className="text-lg font-black text-white group-hover:text-blue-400 transition-colors mb-2">
+                        <div 
+                          key={recCourse.id}
+                          className="group block h-full relative"
+                        >
+                          {/* Absolute positioned close/dismiss button on each card */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDismissRecommendation(recCourse.id);
+                            }}
+                            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
+                            title={lang === 'FR' ? "Masquer cette recommandation" : "Dismiss recommendation"}
+                          >
+                            <Icons.X className="w-4 h-4" />
+                          </button>
+
+                          <div 
+                            onClick={() => setSelectedEnrollCourse(recCourse)}
+                            className="p-8 bg-slate-900/40 border border-slate-880/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden cursor-pointer"
+                          >
+                            
+                            {/* Corner ribbon: NEW takes priority over REVISED */}
+                            {(() => {
+                              const isNew = isCourseNew(recCourse);
+                              const isRecentlyRevised = !isNew &&
+                                recCourse.last_revision_date &&
+                                (Date.now() - new Date(recCourse.last_revision_date).getTime()) < 30 * 24 * 60 * 60 * 1000;
+                              if (isNew) return (
+                                <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                                  <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
+                                    {t.new_badge || 'New'}
+                                  </div>
+                                </div>
+                              );
+                              if (isRecentlyRevised) return (
+                                <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
+                                  <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
+                                    {t.revised_badge || 'Revised'}
+                                  </div>
+                                </div>
+                              );
+                              return null;
+                            })()}
+
+                            {(() => {
+                              const ratingVal = recCourse.averageRating ?? 0;
+                              const countVal = recCourse.ratingCount ?? 0;
+                              return (
+                                <div className="flex justify-between items-start mb-6 w-full gap-4">
+                                  {recCourse.isCurriculum ? (
+                                    <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={t.complete_curriculum || "Complete Curriculum"}>
+                                      <GraduationCap className="w-6 h-6" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                                      <Book className="w-6 h-6" />
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col items-end gap-2 flex-1 mr-8">
+                                    {/* 1st row: badges */}
+                                    <div className="flex gap-2 items-center flex-wrap justify-end">
+                                      {/* Course / Curriculum Differentiating Badge */}
+                                      {recCourse.isCurriculum ? (
+                                        <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
+                                          🎓 {t.curriculum || 'Curriculum'}
+                                        </span>
+                                      ) : (
+                                        <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
+                                          📖 {t.course || 'Course'}
+                                        </span>
+                                      )}
+                                      {/* Unified gold star rating badge */}
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${ratingVal.toFixed(1)} / 5 — ${countVal} ${t.reviews || 'reviews'}`}>
+                                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                        {ratingVal.toFixed(1)} ({countVal})
+                                      </span>
+                                      {/* Expected duration chip */}
+                                      <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(recCourse.hours || (recCourse.ects ? recCourse.ects * 25 : 150)))}>
+                                        <Clock className="w-3 h-3 text-blue-400" />
+                                        {recCourse.hours || (recCourse.ects ? recCourse.ects * 25 : 150)}h
+                                      </span>
+                                      {/* Level badge */}
+                                      <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                        {formatCourseLevel(recCourse.level, lang)}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* 2nd row: action buttons (Course Sheet, Bookmark) */}
+                                    <div className="flex gap-2 items-center mt-1">
+                                      {/* Course Presentation Sheet (always visible) */}
+                                      <button 
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedEnrollCourse(recCourse);
+                                        }}
+                                        className="h-8 px-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest"
+                                        title={t.course_sheet || "Course Sheet"}
+                                      >
+                                        <Book className="w-3 h-3" />
+                                        <span>{t.course_sheet || "Course Sheet"}</span>
+                                      </button>
+
+                                      {/* Bookmark */}
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          toggleBookmark(recCourse.id, e);
+                                        }}
+                                        title={bookmarks.includes(recCourse.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
+                                        className={`w-8 h-8 border rounded-xl transition-all flex items-center justify-center cursor-pointer ${
+                                          bookmarks.includes(recCourse.id)
+                                            ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
+                                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                                        }`}
+                                      >
+                                        <Bookmark className={`w-3 h-3 ${bookmarks.includes(recCourse.id) ? 'fill-current' : ''}`} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            
+                            <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
                               {getLocalizedTitle(recCourse)}
                             </h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-medium mb-6">
-                              {lang === 'FR' 
-                                ? "Explorez ce parcours pour approfondir vos compétences et valider de nouvelles briques d'apprentissage souveraines." 
-                                : lang === 'ES'
-                                ? "Explora este camino para profundizar tus habilidades y validar nuevos elementos del conocimiento soberano."
-                                : lang === 'DE'
-                                ? "Erkunden Sie diesen Pfad, um Ihre Fähigkeiten zu vertiefen und neue Elemente des souveränen Wissens zu validieren."
-                                : lang === 'ZH'
-                                ? "探索这条路径以深化您的技能并验证主权知识的新元素。"
-                                : "Explore this path to deepen your skills and validate new elements of sovereign knowledge."}
+                            <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
+                              {getLocalizedCourseDescription(recCourse)}
                             </p>
-                          </div>
-                          
-                          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-800/50">
-                            <button
-                              onClick={() => setSelectedEnrollCourse(recCourse)}
-                              className="flex-1 py-3 bg-slate-950 border border-slate-850 hover:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer text-center"
-                            >
-                              {t.presentation_sheet}
-                            </button>
-                            <button
-                              onClick={() => enrollInRecommended(recCourse)}
-                              className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/15 cursor-pointer text-center"
-                            >
-                              {t.add_to_curriculum}
-                            </button>
+
+                            <div className="flex items-center gap-2 pt-6 border-t border-slate-800/50 mt-auto w-full">
+                              {/* 1. Main Action Button: Poursuivre / Continuer / Commencer */}
+                              <button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.location.href = `/${recCourse.level}/${recCourse.subject}/${recCourse.slug}/introduction`;
+                                }}
+                                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2 cursor-pointer"
+                              >
+                                <Icons.Play className="w-3 h-3 fill-current" />
+                                <span className="truncate">{t.start_learning || 'Start learning'}</span>
+                              </button>
+
+                              {/* 2. Enroll Button */}
+                              <button 
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  await enrollInRecommended(recCourse);
+                                }}
+                                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
+                              >
+                                <Icons.Plus className="w-3 h-3" />
+                                <span className="truncate">{t.enroll_label || 'Enroll'}</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1098,27 +1269,20 @@ export default function CurriculumPage() {
                                   </button>
                                 )}
 
-                                {cc.isEnrolled ? (
-                                  <Link 
-                                    href={getCoursePath(cc)}
-                                    onClick={() => {
-                                      handleCourseClick(cc);
-                                      setSelectedCurriculumForDrillDown(null);
-                                    }}
-                                    className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105"
-                                  >
-                                    {t.jump_in}
-                                    <Icons.ChevronRight className="w-3.5 h-3.5" />
-                                  </Link>
-                                ) : (
-                                  <button
-                                    disabled
-                                    className="px-4 py-2.5 bg-slate-800 text-slate-650 text-[9px] font-black uppercase tracking-widest rounded-xl cursor-not-allowed flex items-center gap-1.5"
-                                  >
-                                    {t.jump_in}
-                                    <Icons.ChevronRight className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
+                                <button
+                                  onClick={async () => {
+                                    if (!cc.isEnrolled) {
+                                      await enrollInRecommended(cc);
+                                    }
+                                    handleCourseClick(cc);
+                                    setSelectedCurriculumForDrillDown(null);
+                                    router.push(getCoursePath(cc));
+                                  }}
+                                  className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105 cursor-pointer"
+                                >
+                                  {t.jump_in}
+                                  <Icons.ChevronRight className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                           </div>

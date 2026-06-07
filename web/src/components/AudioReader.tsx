@@ -572,6 +572,12 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     currentTutorSentenceIndexRef.current = currentTutorSentenceIndex;
   }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, isReadingTutor, tutorSentences, currentSentenceIndex, currentTutorSentenceIndex]);
 
+  useEffect(() => {
+    if (!readTutor && isReadingTutor) {
+      stop();
+    }
+  }, [readTutor, isReadingTutor]);
+
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean; ttsEnabled?: boolean }) => {
@@ -1152,7 +1158,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       const customEvent = e as CustomEvent;
       const text = customEvent.detail?.text;
       const isOpen = customEvent.detail?.isOpen;
-      if (!text || (!readTutorRef.current && !isOpen)) return;
+      if (!text || !readTutorRef.current) return;
 
       // Clean MDX/Markdown formatting from the tutor response
       let cleaned = text;

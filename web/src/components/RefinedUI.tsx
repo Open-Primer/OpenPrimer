@@ -540,9 +540,18 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               <div className="flex border-b border-slate-800/50 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500 shrink-0 select-none">
                 <button
                   onClick={() => setActiveTab('chat')}
-                  className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer ${activeTab === 'chat' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
+                  className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'chat' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
                 >
-                  {lang === 'FR' ? 'Tuteur' : 'Tutor'}
+                  <span>{lang === 'FR' ? 'Tuteur' : 'Tutor'}</span>
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowTutorModal(true);
+                    }}
+                    className="ml-1 text-[8px] font-black tracking-wider text-blue-400 hover:text-blue-200 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 normal-case"
+                  >
+                    ({getPersonaName(persona)} - <span className="underline">{lang === 'FR' ? 'Changer' : 'Change'}</span>)
+                  </span>
                 </button>
                 <button
                   onClick={() => setActiveTab('flashcards')}

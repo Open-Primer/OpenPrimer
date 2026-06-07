@@ -36,6 +36,7 @@ export const EnrollmentModal = ({
   const [history, setHistory] = React.useState<any[]>([]);
   const [dynamicLessons, setDynamicLessons] = React.useState<any[]>([]);
   const [isLoadingLessons, setIsLoadingLessons] = React.useState<boolean>(false);
+  const [fetchedChildCourses, setFetchedChildCourses] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     setActiveCourse(course);
@@ -43,21 +44,71 @@ export const EnrollmentModal = ({
   }, [course]);
 
   React.useEffect(() => {
+    if (activeCourse?.isCurriculum) {
+      const childIds = activeCourse.childCourses || [];
+      const resolvedFromProps = childIds
+        .map((childId: any) => courses?.find((c: any) => String(c.id) === String(childId)))
+        .filter(Boolean);
+
+      if (resolvedFromProps.length > 0) {
+        setFetchedChildCourses(resolvedFromProps);
+      } else if (childIds.length > 0) {
+        // Fetch child courses from Supabase
+        const fetchChildCoursesFromDb = async () => {
+          try {
+            const { data, error } = await supabase
+              .from('courses')
+              .select('*')
+              .in('id', childIds);
+            if (data && !error) {
+              setFetchedChildCourses(data);
+            }
+          } catch (e) {
+            console.error("Error fetching child courses dynamically:", e);
+          }
+        };
+        fetchChildCoursesFromDb();
+      } else {
+        setFetchedChildCourses([]);
+      }
+    } else {
+      setFetchedChildCourses([]);
+    }
+  }, [activeCourse, courses]);
+
+  React.useEffect(() => {
     if (activeCourse && !activeCourse.isCurriculum) {
       const fetchLessons = async () => {
         setIsLoadingLessons(true);
         try {
+          // 1. Try to fetch with active language
           const { data, error } = await supabase
             .from('lessons')
             .select('title, lesson_slug')
             .eq('course_slug', activeCourse.slug)
             .eq('lang', lang.toLowerCase())
             .order('order', { ascending: true });
-          if (data && !error) {
+          
+          if (data && data.length > 0 && !error) {
             setDynamicLessons(data);
+          } else {
+            // 2. If empty or error, fallback to English
+            const { data: enData, error: enError } = await supabase
+              .from('lessons')
+              .select('title, lesson_slug')
+              .eq('course_slug', activeCourse.slug)
+              .eq('lang', 'en')
+              .order('order', { ascending: true });
+            
+            if (enData && !enError) {
+              setDynamicLessons(enData);
+            } else {
+              setDynamicLessons([]);
+            }
           }
         } catch (err) {
           console.error("Error fetching dynamic syllabus lessons:", err);
+          setDynamicLessons([]);
         } finally {
           setIsLoadingLessons(false);
         }
@@ -154,19 +205,12 @@ export const EnrollmentModal = ({
     nextSteps = [isFR ? `Curriculum L2 ${nextSubject}` : `L2 ${nextSubject} Curriculum`];
   }
 
-  // Get child courses if curriculum
-  const childCourses = activeCourse.isCurriculum
-    ? (activeCourse.childCourses || [])
-        .map((childId: any) => courses?.find((c: any) => String(c.id) === String(childId)))
-        .filter(Boolean)
-    : [];
-
   const units = React.useMemo(() => {
     if (activeCourse.isCurriculum) {
       return [
         {
           title: lang.toUpperCase() === 'FR' ? "Cours inclus" : "Included Courses",
-          modules: childCourses.map((c: any) => dbService.getLocalizedCourseTitle(c, lang) || c.title)
+          modules: fetchedChildCourses.map((c: any) => dbService.getLocalizedCourseTitle(c, lang) || c.title)
         }
       ];
     }
@@ -191,7 +235,7 @@ export const EnrollmentModal = ({
         ]
       }
     ];
-  }, [activeCourse, dynamicLessons, lang, childCourses, isLoadingLessons]);
+  }, [activeCourse, dynamicLessons, lang, fetchedChildCourses, isLoadingLessons]);
 
   return (
     <div 
@@ -260,13 +304,13 @@ export const EnrollmentModal = ({
         </div>
 
         {/* Curriculum Child Courses grid */}
-        {activeCourse.isCurriculum && childCourses.length > 0 && (
+        {activeCourse.isCurriculum && fetchedChildCourses.length > 0 && (
           <div className="mb-8">
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3 text-left">
               {lang.toUpperCase() === 'FR' ? "Cours Inclus dans le Curriculum" : "Courses Included in the Curriculum"}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
-              {childCourses.map((child: any) => {
+              {fetchedChildCourses.map((child: any) => {
                 const isChildEnrolled = enrolledIds.includes(child.id);
                 return (
                   <div
