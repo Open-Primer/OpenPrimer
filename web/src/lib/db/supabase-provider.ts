@@ -609,6 +609,14 @@ export const supabaseDatabaseProvider: DatabaseService = {
         tutorId
       );
 
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));
+        }
+      } catch (e) {
+        console.error("Local storage sync error in getUserProgress:", e);
+      }
+
       return {
         data: {
           masteryPoints,
@@ -618,6 +626,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           learningTime,
           totalMinutes,
           activeModules,
+          enrolled,
           earnedAchievementsCount: 0,
           aiSummary: aiSummary,
           lessonProgress
@@ -644,6 +653,19 @@ export const supabaseDatabaseProvider: DatabaseService = {
           last_visited: new Date().toISOString()
         }, { onConflict: 'user_id,course_id' });
       if (error) throw error;
+
+      try {
+        if (typeof window !== 'undefined') {
+          const enrolledCourses = JSON.parse(localStorage.getItem('op_enrolled_courses') || '[]');
+          if (!enrolledCourses.includes(courseId)) {
+            enrolledCourses.push(courseId);
+            localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolledCourses));
+          }
+        }
+      } catch (e) {
+        console.error("Local storage sync error in enrollInCourse:", e);
+      }
+
       return { data: true, error: null };
     } catch (err) {
       handleDatabaseError(err);
@@ -666,6 +688,17 @@ export const supabaseDatabaseProvider: DatabaseService = {
         .eq('user_id', userId)
         .eq('course_id', courseId);
       if (error) throw error;
+
+      try {
+        if (typeof window !== 'undefined') {
+          let enrolledCourses = JSON.parse(localStorage.getItem('op_enrolled_courses') || '[]');
+          enrolledCourses = enrolledCourses.filter((id: number) => id !== courseId);
+          localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolledCourses));
+        }
+      } catch (e) {
+        console.error("Local storage sync error in abandonCourse:", e);
+      }
+
       return { data: true, error: null };
     } catch (err) {
       handleDatabaseError(err);

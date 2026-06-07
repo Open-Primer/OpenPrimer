@@ -13,8 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const ALLOWED_ORIGINS = [
   'https://open-primer.vercel.app',
   'https://openprimer.vercel.app',
-  // Add your custom domain here when configured, e.g.:
-  // 'https://openprimer.com',
+  'https://openprimer.app',
+  'https://www.openprimer.app',
 ];
 
 // Patterns that identify automated scanners, not legitimate browsers
@@ -45,7 +45,8 @@ function isBlockedBot(ua: string): boolean {
   return BLOCKED_UA_PATTERNS.some(pattern => pattern.test(ua));
 }
 
-function isCorsViolation(origin: string | null, pathname: string): boolean {
+function isCorsViolation(origin: string | null, request: NextRequest): boolean {
+  const { pathname } = request.nextUrl;
   // Only enforce CORS on API routes in production
   if (process.env.NODE_ENV !== 'production') return false;
   if (!pathname.startsWith('/api/')) return false;
@@ -53,6 +54,10 @@ function isCorsViolation(origin: string | null, pathname: string): boolean {
   if (!origin) return false;
   // Allow localhost for development previews
   if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return false;
+
+  // Allow same-origin requests dynamically in production
+  if (origin === request.nextUrl.origin) return false;
+
   return !ALLOWED_ORIGINS.includes(origin);
 }
 
@@ -71,7 +76,7 @@ export function proxy(request: NextRequest) {
   }
 
   // 2. CORS enforcement for API routes
-  if (isCorsViolation(origin, pathname)) {
+  if (isCorsViolation(origin, request)) {
     return new NextResponse(
       JSON.stringify({ error: 'Forbidden: Cross-origin request not allowed' }),
       {

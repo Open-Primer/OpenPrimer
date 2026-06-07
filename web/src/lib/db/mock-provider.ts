@@ -391,6 +391,7 @@ export const mockDatabaseProvider: DatabaseService = {
         learningTime,
         totalMinutes,
         activeModules,
+        enrolled,
         earnedAchievementsCount: earnedAchievements.length,
         aiSummary: aiSummary,
         lessonProgress

@@ -137,9 +137,9 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   useEffect(() => {
     let active = true;
     async function loadProgress() {
-      const parts = pathname.split('/');
-      const isLPage = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
-      const activeSlug = isLPage ? parts[3] : null;
+      const segments = pathname.split('/').filter(Boolean);
+      const activeSlug = segments.length >= 4 && 
+        !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]) ? segments[2] : null;
       if (!activeSlug) return;
       
       const flatPages: any[] = [];
@@ -172,8 +172,9 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
           if (progressData.lessonProgress) {
             dbVisited = Object.keys(progressData.lessonProgress);
           }
-          if (activeCourse && progressData.enrolled) {
-            enrolled = progressData.enrolled.includes(activeCourse.id);
+          if (activeCourse) {
+            enrolled = progressData.enrolled?.includes(activeCourse.id) || 
+                       progressData.activeModules?.some((m: any) => m.id === activeCourse.id);
           }
         }
       } else {

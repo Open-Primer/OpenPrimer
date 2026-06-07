@@ -955,12 +955,16 @@ export default function CurriculumPage() {
           };
 
           return (
-            <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl">
+            <div 
+              onClick={() => setSelectedCurriculumForDrillDown(null)} 
+              className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
+            >
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 
                 exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-                className="w-full max-w-3xl bg-slate-900 border border-violet-500/30 rounded-[40px] shadow-2xl overflow-hidden text-slate-200"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-3xl bg-slate-900 border border-violet-500/30 rounded-[40px] shadow-2xl overflow-hidden text-slate-200 cursor-default"
               >
                 {/* Header */}
                 <div className="p-8 border-b border-slate-800 bg-gradient-to-r from-violet-950/20 via-slate-900 to-slate-950/40 flex justify-between items-center">
@@ -1132,12 +1136,16 @@ export default function CurriculumPage() {
       {/* 🔮 DOUBLE-SAFEGUARD GLASSMORPHIC OPT-OUT MODAL */}
       <AnimatePresence>
         {abandonTarget && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl">
+          <div 
+            onClick={() => setAbandonTarget(null)} 
+            className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
+          >
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl p-10 relative overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl p-10 relative overflow-hidden cursor-default"
             >
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
               
@@ -1186,12 +1194,13 @@ export default function CurriculumPage() {
       {/* TUTOR SELECTOR MODAL */}
       <AnimatePresence>
         {showTutorModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl">
+          <div onClick={() => setShowTutorModal(false)} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl cursor-pointer">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] cursor-default"
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <div className="flex items-center gap-3.5">

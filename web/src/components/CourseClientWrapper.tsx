@@ -98,9 +98,9 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
   useEffect(() => {
     let active = true;
     async function checkEnrollment() {
-      const parts = pathname.split('/');
-      const isLPage = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
-      const activeSlug = isLPage ? parts[3] : null;
+      const segments = pathname.split('/').filter(Boolean);
+      const activeSlug = segments.length >= 4 && 
+        !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]) ? segments[2] : null;
       if (!activeSlug || !activeCourse) return;
 
       const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
@@ -118,9 +118,8 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
         const lang = typeof window !== 'undefined' ? (localStorage.getItem('openprimer_lang') || 'EN') : 'EN';
         const { data: progressData } = await dbService.getUserProgress(userId, lang);
         if (progressData && active) {
-          if (progressData.enrolled) {
-            enrolled = progressData.enrolled.includes(activeCourse.id);
-          }
+          enrolled = progressData.enrolled?.includes(activeCourse.id) || 
+                     progressData.activeModules?.some((m: any) => m.id === activeCourse.id);
         }
       } else {
         const storage = getProgressionStorage();
@@ -154,8 +153,9 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     const el = mainRef.current;
     if (!el) return;
 
-    const parts = pathname.split('/');
-    const slug = parts[3];
+    const segments = pathname.split('/').filter(Boolean);
+    const slug = segments.length >= 4 && 
+      !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]) ? segments[2] : null;
     if (!slug) return;
 
     const storage = getProgressionStorage();
@@ -205,8 +205,9 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
   // Lesson session timer per page & scroll tracking
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const parts = pathname.split('/');
-    const slug = parts[3] || 'Classical_Mechanics';
+    const segments = pathname.split('/').filter(Boolean);
+    const slug = segments.length >= 4 && 
+      !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]) ? segments[2] : 'Classical_Mechanics';
     const loggedIn = localStorage.getItem('op_session') === 'true';
     
     // Start tracking this page visit
