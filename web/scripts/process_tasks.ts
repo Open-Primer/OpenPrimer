@@ -9,46 +9,27 @@ const PRIORITY_WEIGHTS: Record<string, number> = {
 };
 
 async function processNextTask() {
-  console.log(`[${new Date().toISOString()}] Querying queued tasks from 'task_queue'...`);
+  console.log(`[${new Date().toISOString()}] Claiming next task from queue atomically via RPC...`);
   
-  const { data: queuedTasks, error } = await supabase
-    .from('task_queue')
-    .select('*')
-    .eq('status', 'queued');
+  const { data: claimedTasks, error } = await supabase
+    .rpc('claim_next_task');
 
   if (error) {
-    console.error("Error fetching tasks:", error.message);
+    console.error("Error claiming task:", error.message);
     return;
   }
 
-  if (!queuedTasks || queuedTasks.length === 0) {
+  if (!claimedTasks || claimedTasks.length === 0) {
     console.log("No pending queued tasks in 'task_queue' table.");
     return;
   }
 
-  // Sort tasks by priority (descending) and oldest created_at (FIFO)
-  queuedTasks.sort((a, b) => {
-    const wA = PRIORITY_WEIGHTS[a.priority] || 2;
-    const wB = PRIORITY_WEIGHTS[b.priority] || 2;
-    if (wA !== wB) return wB - wA;
-    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-  });
-
-  const nextTask = queuedTasks[0];
+  const nextTask = claimedTasks[0];
   console.log(`\n===========================================`);
-  console.log(`🚀 Processing Task: "${nextTask.name}"`);
+  console.log(`🚀 Processing Task (Claimed): "${nextTask.name}"`);
   console.log(`ID: ${nextTask.id} | Priority: ${nextTask.priority}`);
   console.log(`===========================================`);
 
-  // Update status to running
-  await supabase
-    .from('task_queue')
-    .update({ 
-      status: 'running', 
-      progress: 20, 
-      logs: [...(nextTask.logs || []), 'Started running via CLI task runner.'] 
-    })
-    .eq('id', nextTask.id);
 
   try {
     let extra: any = {};

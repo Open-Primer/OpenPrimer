@@ -1,7 +1,19 @@
 import path from 'path';
 import fs from 'fs';
 
-const envPath = path.resolve(__dirname, '../.env.local');
+let envPath = '';
+const cwd = process.cwd();
+
+if (fs.existsSync(path.join(cwd, '.env.local'))) {
+  envPath = path.join(cwd, '.env.local');
+} else if (fs.existsSync(path.join(cwd, 'web', '.env.local'))) {
+  envPath = path.join(cwd, 'web', '.env.local');
+} else {
+  const dirName = typeof __dirname !== 'undefined' ? __dirname : '';
+  if (dirName) {
+    envPath = path.resolve(dirName, '../.env.local');
+  }
+}
 if (fs.existsSync(envPath)) {
   const content = fs.readFileSync(envPath, 'utf8');
   content.split('\n').forEach(line => {
