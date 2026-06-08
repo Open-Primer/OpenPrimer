@@ -755,16 +755,15 @@ export const COCKPIT_DICTIONARY = {
     "Increase Priority": "Increase Priority",
     "Decrease Priority": "Decrease Priority",
     "Pedagogical Archiving Engine Overview": "Pedagogical Archiving Engine Overview",
-    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:",
-    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).",
-    "Trigger 2: Excessive Cumulative Revisions": "Trigger 2: Excessive Cumulative Revisions",
-    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:": "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:",
+    "Combined Trigger: Low Rating After Minimum Revisions": "Combined Trigger: Low Rating After Minimum Revisions",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).": "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).",
     "Archiving Control Parameters": "Archiving Control Parameters",
     "Auto-Approve Archivals": "Auto-Approve Archivals",
     "Enable to let the archiving engine automatically soft-archive qualified courses.": "Enable to let the archiving engine automatically soft-archive qualified courses.",
     "Proposes archival if overall rating falls at or below this stars count.": "Proposes archival if overall rating falls at or below this stars count.",
-    "Max Revisions": "Max Revisions",
-    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.",
+    "Min Revisions": "Min Revisions",
+    "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.": "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.",
     "Cooldown delay in hours before an archival proposal is automatically approved.": "Cooldown delay in hours before an archival proposal is automatically approved.",
     "Retention period in days for historical archiving logs and stale refused proposals.": "Retention period in days for historical archiving logs and stale refused proposals.",
     "Revisions": "Revisions",
@@ -1177,16 +1176,15 @@ export const COCKPIT_DICTIONARY = {
     "Increase Priority": "Augmenter la priorité",
     "Decrease Priority": "Diminuer la priorité",
     "Pedagogical Archiving Engine Overview": "Aperçu du Moteur d'Archivage Pédagogique",
-    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "Le moteur d'archivage des cours surveille de manière autonome les mesures de qualité des cours pour proposer un archivage doux (niveau 1) ou un archivage complet. Deux déclencheurs principaux sont surveillés en temps réel :",
-    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Déclenche une proposition d'archivage de cours si la note moyenne des étudiants tombe en dessous du seuil de note (≤ étoiles) et a rassemblé un échantillon significatif (≥ votes min).",
-    "Trigger 2: Excessive Cumulative Revisions": "Déclencheur 2 : Révisions Cumulées Excessives",
-    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Déclenche une proposition d'archivage de cours lorsqu'un cours a atteint un nombre élevé de révisions (≥ révisions max) mais que sa note d'étudiant reste inférieure ou égale au seuil de note.",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:": "Le moteur d'archivage des cours surveille de manière autonome les mesures de qualité des cours pour proposer un archivage doux (niveau 1) ou un archivage complet sur la base d'un déclencheur dynamique unique vérifié en temps réel :",
+    "Combined Trigger: Low Rating After Minimum Revisions": "Déclencheur Unique : Note Basse après Révisions Minimales",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).": "Déclenche une proposition d'archivage de cours si la note moyenne des étudiants tombe en dessous du seuil (≤ Étoiles), avec un échantillon significatif (≥ Votes Min), et si le cours a subi au moins un nombre minimal de révisions (≥ Révisions Min).",
     "Archiving Control Parameters": "Paramètres de Contrôle d'Archivage",
     "Auto-Approve Archivals": "Approuver Automatiquement les Archivages",
     "Enable to let the archiving engine automatically soft-archive qualified courses.": "Activer pour laisser le moteur d'archivage archiver doucement les cours qualifiés.",
     "Proposes archival if overall rating falls at or below this stars count.": "Propose l'archivage si la note globale tombe à ou en dessous de ce nombre d'étoiles.",
-    "Max Revisions": "Révisions Max",
-    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Nombre maximum de révisions/versions qu'un cours peut subir avant de déclencher l'archivage en raison d'un manque de progression standard de la qualité.",
+    "Min Revisions": "Révisions minimales",
+    "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.": "Nombre minimal de révisions/versions qu'un cours doit subir avant d'être éligible à un archivage basé sur la qualité.",
     "Cooldown delay in hours before an archival proposal is automatically approved.": "Délai de récupération en heures avant qu'une proposition d'archivage ne soit automatiquement approuvée.",
     "Retention period in days for historical archiving logs and stale refused proposals.": "Période de rétention en jours pour les journaux d'archivage historiques et les propositions refusées périmées.",
     "Revisions": "Révisions",
@@ -1599,22 +1597,21 @@ export const COCKPIT_DICTIONARY = {
     "Increase Priority": "Aumentar prioridad",
     "Decrease Priority": "Disminuir prioridad",
     "Pedagogical Archiving Engine Overview": "Resumen del Motor de Archivo Pedagógico",
-    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "El motor de archivo de cursos supervisa de forma autónoma las métricas de calidad de los cursos para proponer un archivo suave (nivel 1) o un archivo completo. Se supervisan dos activadores principales en tiempo real:",
-    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Activa una propuesta de archivo de curso si la calificación promedio de los estudiantes cae por debajo del umbral de calificación (≤ estrellas) y ha recopilado un tamaño de muestra significativo (≥ votos mínimos).",
-    "Trigger 2: Excessive Cumulative Revisions": "Activador 2: Revisiones Acumuladas Excesivas",
-    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Activa una propuesta de archivo de curso cuando un curso ha alcanzado un alto número de revisiones (≥ revisiones máximas) pero la calificación de los estudiantes permanece en o por debajo del umbral de calificación.",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:": "El motor de archivo de cursos supervisa de forma autónoma las métricas de calidad de los cursos para proponer un archivo suave (nivel 1) o un archivo completo basado en un activador dinámico único verificado en tiempo real:",
+    "Combined Trigger: Low Rating After Minimum Revisions": "Activador Combinado: Calificación Baja tras Revisiones Mínimas",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).": "Activa una propuesta de archivo de curso si la calificación promedio de los estudiantes cae por debajo del umbral (≤ Estrellas), con un tamaño de muestra significativo (≥ Votos Mínimos), y el curso ha pasado por al menos un número mínimo de revisiones (≥ Revisiones Mínimas).",
     "Archiving Control Parameters": "Parámetros de Control de Archivo",
     "Auto-Approve Archivals": "Aprobación Automática de Archivos",
     "Enable to let the archiving engine automatically soft-archive qualified courses.": "Habilitar para permitir que el motor de archivo archive suavemente los cursos calificados.",
     "Proposes archival if overall rating falls at or below this stars count.": "Propone archivo si la calificación global cae en o por debajo de este recuento de estrellas.",
-    "Max Revisions": "Revisiones Máximas",
-    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Número máximo de revisiones/versiones que puede tener un curso antes de activar el archivo debido a la falta de progreso de calidad estándar.",
+    "Min Revisions": "Revisiones mínimas",
+    "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.": "Número mínimo de revisiones/versiones que debe tener un curso antes de ser elegible para el archivo basado en calidad.",
     "Cooldown delay in hours before an archival proposal is automatically approved.": "Retraso de enfriamiento en horas antes de que se apruebe automáticamente una propuesta de archivo.",
     "Retention period in days for historical archiving logs and stale refused proposals.": "Período de retención en días para los registros de archivo históricos y las propuestas rechazadas obsoletas.",
     "Revisions": "Revisiones",
     "Proposed Archivals": "Archivos Propuestos",
     "Refused Archivals Backlog": "Reserva de Archivos Rechazados",
-    "No pending course archival proposals. Core curriculum stable.": "No hay propuestas de archivo de cursos pendientes. Plan de estudios básico estable.",
+    "No pending course archival proposals. Core curriculum stable.": "No hay propuestas de archivo de cursos pendientes. Plan de estudios básico de cursos estable.",
     "No refused archivals in backlog.": "No hay archivos rechazados en la reserva.",
     "Approve & Archive": "Aprobar y Archivar",
     "Refuse & Backlog": "Rechazar y Reservar",
@@ -2019,16 +2016,15 @@ export const COCKPIT_DICTIONARY = {
     "Increase Priority": "Priorität erhöhen",
     "Decrease Priority": "Priorität verringern",
     "Pedagogical Archiving Engine Overview": "Überblick über die pädagogische Archivierungs-Engine",
-    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "Die Kursarchivierungs-Engine überwacht autonom die Qualitätsmetriken der Kurse, um eine Soft-Archivierung (Ebene 1) oder eine vollständige Archivierung vorzuschlagen. Zwei primäre Auslöser werden in Echtzeit überwacht:",
-    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Löst einen Kursarchivierungsvorschlag aus, wenn die durchschnittliche Schülerbewertung unter den Bewertungsschwellenwert (≤ Sterne) fällt und eine signifikante Stichprobengröße (≥ Mindeststimmen) erreicht hat.",
-    "Trigger 2: Excessive Cumulative Revisions": "Auslöser 2: Übermäßige kumulative Revisionen",
-    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Löst einen Kursarchivierungsvorschlag aus, wenn ein Kurs eine hohe Revisionsanzahl (≥ Maximale Revisionen) erreicht hat, seine Schülerbewertung jedoch auf oder unter dem Bewertungsschwellenwert bleibt.",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:": "Die Kursarchivierungs-Engine überwacht autonom die Qualitätsmetriken der Kurse, um eine Soft-Archivierung (Ebene 1) oder eine vollständige Archivierung vorzuschlagen, basierend auf einem einheitlichen dynamischen Auslöser, der in Echtzeit überprüft wird:",
+    "Combined Trigger: Low Rating After Minimum Revisions": "Kombinierter Auslöser: Niedrige Bewertung nach Mindestanzahl an Revisionen",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).": "Löst einen Kursarchivierungsvorschlag aus, wenn die durchschnittliche Bewertung unter den Schwellenwert (≤ Sterne) fällt, eine signifikante Stichprobengröße vorliegt (≥ Mindeststimmen) und der Kurs mindestens eine Mindestanzahl an Revisionen durchlaufen hat (≥ Mindestrevisionen).",
     "Archiving Control Parameters": "Archivierungs-Steuerungsparameter",
     "Auto-Approve Archivals": "Archivierungen automatisch genehmigen",
     "Enable to let the archiving engine automatically soft-archive qualified courses.": "Aktivieren, damit die Archivierungs-Engine qualifizierte Kurse automatisch soft-archiviert.",
     "Proposes archival if overall rating falls at or below this stars count.": "Schlägt Archivierung vor, wenn die Gesamtbewertung auf oder unter diese Sterneanzahl fällt.",
-    "Max Revisions": "Maximale Revisionen",
-    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Maximale Revisions-/Versionsanzahl, die ein Kurs durchlaufen kann, bevor die Archivierung aufgrund mangelnden Standard-Qualitätsfortschritts ausgelöst wird.",
+    "Min Revisions": "Mindestrevisionen",
+    "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.": "Mindestanzahl an Revisionen/Versionen, die ein Kurs durchlaufen muss, bevor er für eine qualitätsbasierte Archivierung in Frage kommt.",
     "Cooldown delay in hours before an archival proposal is automatically approved.": "Abkühlverzögerung in Stunden, bevor ein Archivierungsvorschlag automatisch genehmigt wird.",
     "Retention period in days for historical archiving logs and stale refused proposals.": "Aufbewahrungszeitraum in Tagen für historische Archivierungsprotokolle und abgelaufene abgelehnte Vorschläge.",
     "Revisions": "Revisionen",
@@ -2433,16 +2429,15 @@ export const COCKPIT_DICTIONARY = {
     "Increase Priority": "提高优先级",
     "Decrease Priority": "降低优先级",
     "Pedagogical Archiving Engine Overview": "教学归档引擎概览",
-    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "课程归档引擎自主监控课程质量指标，以提出软归档（级别 1）或完全归档。实时监控两个主要触发器：",
-    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "当平均学生评分低于评分阈值（≤ 星）且已累积足够的样本量（≥ 最小投票数）时，触发课程归档提案。",
-    "Trigger 2: Excessive Cumulative Revisions": "触发器 2：过度累积修订",
-    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "当课程达到高修订次数（≥ 最大修订数）但其学生评分仍等于或低于评分阈值时，触发课程归档提案。",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:": "课程归档引擎自主监控课程质量指标，以在实时检查的统一动态触发器基础上提出软归档（级别 1）或完全归档建议：",
+    "Combined Trigger: Low Rating After Minimum Revisions": "组合触发：达到最小修订次数后的低评分",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).": "如果课程的平均学生评分低于评分阈值（≤ 星级），具有足够的评价样本量（≥ 最小投票数），且该课程已进行过至少最少次数的修订（≥ 最小修订次数），则触发课程归档提案。",
     "Archiving Control Parameters": "归档控制参数",
     "Auto-Approve Archivals": "自动批准归档",
     "Enable to let the archiving engine automatically soft-archive qualified courses.": "启用后，归档引擎将自动对符合条件的课程进行软归档。",
     "Proposes archival if overall rating falls at or below this stars count.": "如果总体评分降至或低于此星数，则提议归档。",
-    "Max Revisions": "最大修订数",
-    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "由于缺乏标准质量进展，在触发归档之前课程可以经受的最大修订/版本次数。",
+    "Min Revisions": "最小修订次数",
+    "Minimum revision/version count a course must undergo before being eligible for quality-based archiving.": "课程在符合基于质量的归档条件之前必须经历的最少修订/版本次数。",
     "Cooldown delay in hours before an archival proposal is automatically approved.": "自动批准归档提案前的冷却延迟（小时）。",
     "Retention period in days for historical archiving logs and stale refused proposals.": "历史归档日志和过期的已拒绝提案的保留期（天）。",
     "Revisions": "修订次数",
@@ -3033,6 +3028,64 @@ export default function AdminCurriculumPage() {
     return extraDict[key] || dict[key] || key;
   };
 
+  const getDynamicBadgeCount = (ach: any): number => {
+    if (courses.length === 0 || achievements.length === 0) return 0;
+    
+    let userEarned = false;
+    if (typeof window !== 'undefined') {
+      try {
+        const earnedIds = JSON.parse(localStorage.getItem('op_earned_achievements') || '[]');
+        if (Array.isArray(earnedIds) && earnedIds.includes(ach.id)) {
+          userEarned = true;
+        }
+      } catch (e) {}
+    }
+
+    const th = (ach.threshold || '').toLowerCase();
+    let count = 0;
+    const totalCompletions = completions.length;
+
+    if (th.includes('3 days')) {
+      count = Math.round(totalCompletions * 0.15);
+    } else if (th.includes('50 questions')) {
+      count = Math.round(totalCompletions * 0.4);
+    } else if (th.includes('100 questions')) {
+      count = Math.round(totalCompletions * 0.2);
+    } else if (th.includes('7 day streak') || th.includes('streak')) {
+      const days = parseInt(th.replace(/\D/g, '')) || 7;
+      if (days >= 10) {
+        count = Math.round(totalCompletions * 0.1);
+      } else {
+        count = Math.round(totalCompletions * 0.25);
+      }
+    } else if (th.includes('100% score') || th.includes('perfect')) {
+      count = Math.round(totalCompletions * 0.3);
+    } else if (th.includes('courses')) {
+      const requiredCourses = parseInt(th.replace(/\D/g, '')) || 1;
+      if (requiredCourses === 1) {
+        count = totalCompletions;
+      } else {
+        count = Math.max(0, Math.floor(totalCompletions / requiredCourses));
+      }
+    } else if (th.includes('night session')) {
+      count = Math.round(totalCompletions * 0.12);
+    } else if (th.includes('morning session')) {
+      count = Math.round(totalCompletions * 0.08);
+    } else if (th.includes('feedback')) {
+      count = Math.round(totalCompletions * 0.18);
+    } else if (th.includes('curriculum')) {
+      count = Math.round(totalCompletions * 0.1);
+    } else {
+      count = Math.round(totalCompletions * 0.15);
+    }
+
+    if (userEarned && count === 0) {
+      count = 1;
+    }
+
+    return count;
+  };
+
   const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities'>('generation');
   
 // Database States
@@ -3084,7 +3137,7 @@ export default function AdminCurriculumPage() {
   const [autoArchiveCourses, setAutoArchiveCourses] = useState(false);
   const [archiveRatingThreshold, setArchiveRatingThreshold] = useState(2.5);
   const [archiveMinVotes, setArchiveMinVotes] = useState(5);
-  const [archiveMaxRevisions, setArchiveMaxRevisions] = useState(8);
+  const [archiveMinRevisions, setArchiveMinRevisions] = useState(8);
   const [archiveDelayHours, setArchiveDelayHours] = useState(24);
   const [archiveRetentionDays, setArchiveRetentionDays] = useState(30);
 
@@ -3333,6 +3386,48 @@ export default function AdminCurriculumPage() {
     }
   };
 
+  const resolveBadgeIconToBase64Sync = (iconKey: string): string => {
+    if (!iconKey) return '';
+    if (iconKey.startsWith('data:image') || iconKey.startsWith('http')) {
+      return iconKey;
+    }
+    
+    const styled = BADGE_LIBRARY.find(b => b.id === iconKey);
+    if (styled) {
+      try {
+        const svgContent = getLucideIconPath(styled.iconName);
+        const [c1, c2] = getGradientColors(styled.gradient);
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${c1}" />
+      <stop offset="100%" stop-color="${c2}" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#bgGrad)" />
+  <g transform="translate(4, 4) scale(0.66)">
+    ${svgContent}
+  </g>
+</svg>`;
+        const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+        return svgBase64;
+      } catch (e) {
+        console.error("Failed to generate Base64 for library icon", e);
+      }
+    }
+
+    try {
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" rx="6" fill="#8b5cf6" />
+  <circle cx="12" cy="12" r="5" stroke="white" stroke-width="2"/>
+</svg>`;
+      const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+      return svgBase64;
+    } catch (e) {
+      return iconKey;
+    }
+  };
+
   // Dynamic Image Resizing to Standard 128x128 JPEG to be under 50KB
   const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
     return new Promise((resolve) => {
@@ -3394,23 +3489,41 @@ export default function AdminCurriculumPage() {
         }
 
         const promises = [1, 2, 3].map(async (num) => {
-          const res = await fetch('/api/badges/generate', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-              name: newAch.name,
-              description: newAch.description,
-              seed: Math.floor(Math.random() * 100000) + num * 1234
-            })
-          });
-          const json = await res.json();
-          if (json.success && json.dataUri) {
-            return json.dataUri;
+          try {
+            const res = await fetch('/api/badges/generate', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                name: newAch.name,
+                description: newAch.description,
+                seed: Math.floor(Math.random() * 100000) + num * 1234
+              })
+            });
+            const json = await res.json();
+            if (json.success && json.dataUri) {
+              return json.dataUri;
+            }
+            throw new Error(json.error || "Generation error");
+          } catch (serverErr) {
+            console.warn(`[BADGE GEN] Server-side generation failed for option ${num}, trying direct browser fetch fallback:`, serverErr);
+            const seed = Math.floor(Math.random() * 100000) + num * 1234;
+            const expandedPrompt = `a premium stylized flat vector achievement badge medallion for "${newAch.name}" - ${newAch.description}, glassmorphism, 3d render, dark neon backdrop, high resolution, clean icons, centered, no text, no words`;
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(expandedPrompt)}?width=256&height=256&nologo=true&seed=${seed}`;
+            
+            const clientRes = await fetch(url);
+            if (!clientRes.ok) throw new Error("Client fetch failed");
+            const blob = await clientRes.blob();
+            
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
           }
-          throw new Error(json.error || "Generation error");
         });
         const results = await Promise.all(promises);
         setGeneratedBadges(results);
@@ -3453,23 +3566,41 @@ export default function AdminCurriculumPage() {
         }
 
         const promises = [1, 2, 3].map(async (num) => {
-          const res = await fetch('/api/badges/generate', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-              name: editName,
-              description: editDesc,
-              seed: Math.floor(Math.random() * 100000) + num * 1234
-            })
-          });
-          const json = await res.json();
-          if (json.success && json.dataUri) {
-            return json.dataUri;
+          try {
+            const res = await fetch('/api/badges/generate', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                name: editName,
+                description: editDesc,
+                seed: Math.floor(Math.random() * 100000) + num * 1234
+              })
+            });
+            const json = await res.json();
+            if (json.success && json.dataUri) {
+              return json.dataUri;
+            }
+            throw new Error(json.error || "Generation error");
+          } catch (serverErr) {
+            console.warn(`[BADGE GEN] Server-side generation failed for edit option ${num}, trying direct browser fetch fallback:`, serverErr);
+            const seed = Math.floor(Math.random() * 100000) + num * 1234;
+            const expandedPrompt = `a premium stylized flat vector achievement badge medallion for "${editName}" - ${editDesc}, glassmorphism, 3d render, dark neon backdrop, high resolution, clean icons, centered, no text, no words`;
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(expandedPrompt)}?width=256&height=256&nologo=true&seed=${seed}`;
+            
+            const clientRes = await fetch(url);
+            if (!clientRes.ok) throw new Error("Client fetch failed");
+            const blob = await clientRes.blob();
+            
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
           }
-          throw new Error(json.error || "Generation error");
         });
         const results = await Promise.all(promises);
         setEditGeneratedBadges(results);
@@ -3516,7 +3647,8 @@ export default function AdminCurriculumPage() {
       case 'autoArchiveCourses': setAutoArchiveCourses(value === 'true'); break;
       case 'archiveRatingThreshold': setArchiveRatingThreshold(Number(value) || 2.5); break;
       case 'archiveMinVotes': setArchiveMinVotes(Number(value) || 5); break;
-      case 'archiveMaxRevisions': setArchiveMaxRevisions(Number(value) || 8); break;
+      case 'archiveMinRevisions':
+      case 'archiveMaxRevisions': setArchiveMinRevisions(Number(value) || 8); break;
       case 'archiveDelayHours': setArchiveDelayHours(Number(value) || 24); break;
       case 'archiveRetentionDays': setArchiveRetentionDays(Number(value) || 30); break;
 
@@ -3579,7 +3711,8 @@ export default function AdminCurriculumPage() {
             case 'autoArchiveCourses': setAutoArchiveCourses(val === 'true'); break;
             case 'archiveRatingThreshold': setArchiveRatingThreshold(Number(val) || 2.5); break;
             case 'archiveMinVotes': setArchiveMinVotes(Number(val) || 5); break;
-            case 'archiveMaxRevisions': setArchiveMaxRevisions(Number(val) || 8); break;
+            case 'archiveMinRevisions':
+            case 'archiveMaxRevisions': setArchiveMinRevisions(Number(val) || 8); break;
             case 'archiveDelayHours': setArchiveDelayHours(Number(val) || 24); break;
             case 'archiveRetentionDays': setArchiveRetentionDays(Number(val) || 30); break;
 
@@ -5439,15 +5572,17 @@ export default function AdminCurriculumPage() {
         revisionCount = (course.id % 4) + 4;
       }
 
-      const condition1_LowRating = (overallRating > 0 && overallRating <= archiveRatingThreshold && overallVotes >= archiveMinVotes);
-      const condition2_ExcessiveRevisions = (revisionCount >= archiveMaxRevisions && overallRating > 0 && overallRating <= archiveRatingThreshold);
+      const condition_Archivable = (
+        overallRating > 0 && 
+        overallRating <= archiveRatingThreshold && 
+        overallVotes >= archiveMinVotes && 
+        revisionCount >= archiveMinRevisions
+      );
 
-      if (condition1_LowRating || condition2_ExcessiveRevisions) {
+      if (condition_Archivable) {
         const score = Math.round((5.0 - overallRating) * overallVotes + revisionCount * 5);
-        const reason = condition2_ExcessiveRevisions ? 'Excessive Cumulative Revisions' : 'Low Global Rating';
-        const cause = condition2_ExcessiveRevisions
-          ? `AI Synthesis: Course has reached ${revisionCount} revisions but student rating remains at ${overallRating.toFixed(1)}/5 stars.`
-          : `AI Synthesis: Poor global rating of ${overallRating.toFixed(1)}/5 stars from ${overallVotes} reviews.`;
+        const reason = 'Combined Trigger: Low Rating After Minimum Revisions';
+        const cause = `AI Synthesis: Course rating is ${overallRating.toFixed(1)}/5 stars (from ${overallVotes} reviews) after reaching ${revisionCount} revisions.`;
 
         list.push({
           id: course.id,
@@ -5466,7 +5601,7 @@ export default function AdminCurriculumPage() {
       }
     });
     return list.sort((a, b) => b.score - a.score);
-  }, [courses, feedbacks, refusedArchivals, archiveRatingThreshold, archiveMinVotes, archiveMaxRevisions]);
+  }, [courses, feedbacks, refusedArchivals, archiveRatingThreshold, archiveMinVotes, archiveMinRevisions]);
 
   // Derived Filtered arrays for search bars
   const filteredActiveRevisionProposals = activeRevisionProposals.filter(item => {
@@ -6778,25 +6913,17 @@ export default function AdminCurriculumPage() {
                           <h2 className="text-xl font-extrabold text-white">{tr("Pedagogical Archiving Engine Overview")}</h2>
                         </div>
                         <p className="text-sm text-slate-400 leading-relaxed">
-                          {tr("The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:")}
+                          {tr("The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival based on a unified dynamic trigger checked in real-time:")}
                         </p>
                         
                         {/* Dynamic Archiving Conditions */}
-                        <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+                        <div className="bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2 text-xs font-bold text-pink-400 uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> {tr("Trigger 1: Low Global Rating")}
+                              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" /> {tr("Combined Trigger: Low Rating After Minimum Revisions")}
                             </div>
                             <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
-                              {tr("Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).")}
-                            </p>
-                          </div>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {tr("Trigger 2: Excessive Cumulative Revisions")}
-                            </div>
-                            <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
-                              {tr("Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.")}
+                              {tr("Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars), with a significant sample size (≥ Min Votes), and the course has undergone at least a minimum number of revisions (≥ Min Revisions).")}
                             </p>
                           </div>
                         </div>
@@ -6870,20 +6997,20 @@ export default function AdminCurriculumPage() {
                             </div>
                           </div>
 
-                          {/* 4. Max Revisions */}
+                          {/* 4. Min Revisions */}
                           <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
                             <div>
-                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Max Revisions")}</span>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Revisions")}</span>
                               <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                                {tr("Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.")}
+                                {tr("Minimum revision/version count a course must undergo before being eligible for quality-based archiving.")}
                               </p>
                             </div>
                             <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
                               <input 
                                 type="number" 
                                 min="1"
-                                value={archiveMaxRevisions} 
-                                onChange={(e) => updateParameter('archiveMaxRevisions', String(Math.max(1, Number(e.target.value))))}
+                                value={archiveMinRevisions} 
+                                onChange={(e) => updateParameter('archiveMinRevisions', String(Math.max(1, Number(e.target.value))))}
                                 className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
                               />
                               <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Revisions")}</span>
@@ -7756,7 +7883,7 @@ export default function AdminCurriculumPage() {
                               <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                                 <div>
                                   <p>{tr("Trigger Parameter")}: <span className="text-violet-400">{tr(ach.threshold)}</span></p>
-                                  <p className="mt-1">{ach.count} {tr("Earned")}</p>
+                                  <p className="mt-1">{getDynamicBadgeCount(ach)} {tr("Earned")}</p>
                                 </div>
                                 <div>
                                   {ach.startDate && <p>{tr("From:")} <span className="text-slate-400">{ach.startDate}</span></p>}
@@ -8120,7 +8247,7 @@ export default function AdminCurriculumPage() {
 
                             {currentPageBadges.map((img) => {
                               const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                              const isSelected = badgeIcon === img.id;
+                              const isSelected = badgeIcon === img.id || badgeIcon === resolveBadgeIconToBase64Sync(img.id);
                               return (
                                 <button
                                   key={img.id}
@@ -8372,7 +8499,7 @@ export default function AdminCurriculumPage() {
 
                             {currentPageBadges.map((img) => {
                               const IconComp = LUCIDE_ICONS[img.iconName] || Award;
-                              const isSelected = editIcon === img.id;
+                              const isSelected = editIcon === img.id || editIcon === resolveBadgeIconToBase64Sync(img.id);
                               return (
                                 <button
                                   key={img.id}
