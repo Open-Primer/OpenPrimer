@@ -34,11 +34,28 @@ jobs:
 
       - name: Build and Push Container
         run: |
-          gcloud builds submit ./web \
+          echo "Submitting build asynchronously..."
+          BUILD_ID=$(gcloud builds submit ./web \
             --tag europe-west9-docker.pkg.dev/openprimer-free/openprimer-repo/web-app:latest \
             --project=openprimer-free \
-            --suppress-logs \
-            --polling-interval=15
+            --async \
+            --format="value(id)")
+          
+          echo "Build submitted successfully. Build ID: $BUILD_ID"
+          echo "Polling build status..."
+          
+          while true; do
+            STATUS=$(gcloud builds describe $BUILD_ID --project=openprimer-free --format="value(status)")
+            echo "Current status: $STATUS"
+            if [ "$STATUS" = "SUCCESS" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "INTERNAL_ERROR" ] || [ "$STATUS" = "TIMEOUT" ] || [ "$STATUS" = "CANCELLED" ]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+            sleep 15
+          done
 
       - name: Deploy to Cloud Run
         run: |
