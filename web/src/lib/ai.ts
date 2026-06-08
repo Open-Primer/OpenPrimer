@@ -256,7 +256,23 @@ Requirements:
      - All external resources, including video IDs, audio URLs, and bibliography references, will be automatically checked for reachability and validated against live APIs (e.g. Crossref, Google Books, YouTube). Do not invent fake or hallucinated URLs or media IDs.
  17. Mandatory and Discipline-Specific Visual, Interactive & Auditory Elements (Éléments visuels, interactifs et auditifs obligatoires par discipline) :
       - You MUST systematically integrate highly interactive and visual elements into the lesson content to enhance comprehension and engagement. These are NOT optional for their respective disciplines and are critical to visual and auditory learning:
-        * Biology, Anatomy, Medicine, or Life Sciences: You MUST systematically insert at least one detailed \`<InteractiveDiagram title="Organelles de la cellule" type="cell" />\` (renders an interactive cellular map with clickable hotspot definitions that show/hide explanations for active recall, highly recommended for biology/medicine anatomy).
+        * Biology, Anatomy, Medicine, or Life Sciences: You MUST systematically insert at least one highly detailed custom \`<InteractiveDiagram>\` component. Do NOT use default placeholders. You MUST specify a custom \`title\`, a \`type\` (choose 'cell' for cellular structures, 'neuron' for neurons/nervous cells, or 'custom' for any other structures, organs, or pathways), and a custom \`hotspots\` array defining 3 to 6 distinct elements relevant to the topic.
+           Example for a neuron:
+           \`<InteractiveDiagram title="Anatomie du neurone moteur" type="neuron" hotspots={[
+             { id: "soma", name: "Soma", x: 35, y: 50, description: "Corps cellulaire contenant le noyau et assurant la synthèse des protéines." },
+             { id: "dendrites", name: "Dendrites", x: 15, y: 25, description: "Antennes réceptrices de signaux chimiques d'autres neurones." },
+             { id: "axone", name: "Axone", x: 55, y: 52, description: "Câble conducteur de l'influx nerveux sous forme de potentiel d'action." },
+             { id: "myeline", name: "Gaine de myéline", x: 72, y: 44, description: "Gaine protectrice lipidique qui accélère la conduction électrique." },
+             { id: "synapse", name: "Terminaisons synaptiques", x: 90, y: 62, description: "Zones de contact libérant des neurotransmetteurs dans la fente synaptique." }
+           ]} />\`
+           Example for any other system (using type="custom"):
+           \`<InteractiveDiagram title="La Synapse Chimique" type="custom" hotspots={[
+             { id: "pre", name: "Membrane présynaptique", x: 25, y: 35, description: "Extrémité axonale où sont stockées les vésicules contenant les neurotransmetteurs." },
+             { id: "ves", name: "Vésicules synaptiques", x: 40, y: 40, description: "Saccules membranaires libérant les neurotransmetteurs sous l'effet du calcium." },
+             { id: "fente", name: "Fente synaptique", x: 55, y: 50, description: "Espace intercellulaire de 20 nm traversé par diffusion passive par les neurotransmetteurs." },
+             { id: "recepteur", name: "Récepteurs postsynaptiques", x: 75, y: 65, description: "Canaux ioniques ou RCPG s'ouvrant après liaison du neurotransmetteur." }
+           ]} />\`
+           Coordinates x and y are integer percentages from 0 to 100 on a 2D canvas. Choose locations logically matching the underlying animated SVG layout.
         * Economics, Finance, Mathematics, or Physics: You MUST systematically insert at least one dynamic 2D graph simulator tag: \`<FunctionPlotter mode="linear|compound-interest|supply-demand" title="Graph Title" xLabel="X-Axis" yLabel="Y-Axis" />\` (plots supply-demand curves, compound interest, or linear growth, equipped with interactive parameter slider controls).
         * Step-by-Step Processes, Workflows, Chronological Events, Systems Pathways, or Logical Flows (All Disciplines): You MUST systematically include a visual flowchart written directly inside standard \`\`\`mermaid code blocks (parsed and rendered automatically in the client).
         * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
