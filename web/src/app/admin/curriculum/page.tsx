@@ -6059,9 +6059,18 @@ export default function AdminCurriculumPage() {
 
                   {/* Refused translation backlog */}
                   <div className="pt-6 border-t border-slate-900">
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">{t.refused_trans_backlog}</h4>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                      <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">{t.refused_trans_backlog}</h4>
+                      <input 
+                        type="text" 
+                        placeholder={tr("Search by course or target language...")}
+                        value={translationRefusedSearch}
+                        onChange={(e) => setTranslationRefusedSearch(e.target.value)}
+                        className="px-4 py-2 bg-slate-950/80 border border-slate-900 rounded-2xl text-xs focus:border-blue-500/50 outline-none text-white w-full md:w-56 transition-all"
+                      />
+                    </div>
                     <div className="grid md:grid-cols-3 gap-6">
-                      {refusedTranslations.map((item) => {
+                      {filteredRefusedTranslations.map((item) => {
                         const elapsedDays = (Date.now() - new Date(item.timestamp || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
                         const remainingDays = Math.max(0, Math.ceil(transReevaluationDays - elapsedDays));
                         return (
@@ -6082,7 +6091,7 @@ export default function AdminCurriculumPage() {
                           </div>
                         );
                       })}
-                      {refusedTranslations.length === 0 && (
+                      {filteredRefusedTranslations.length === 0 && (
                         <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_refused_trans}</p>
                       )}
                     </div>
