@@ -36,7 +36,8 @@ jobs:
         run: |
           gcloud builds submit ./web \
             --tag europe-west9-docker.pkg.dev/openprimer-free/openprimer-repo/web-app:latest \
-            --project=openprimer-free
+            --project=openprimer-free \
+            --suppress-logs
 
       - name: Deploy to Cloud Run
         run: |
