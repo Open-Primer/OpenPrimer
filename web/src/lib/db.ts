@@ -2910,8 +2910,12 @@ export const progressService = {
       if (times[key].lastVisited) {
         activeDates.add(times[key].lastVisited.split('T')[0]);
       }
-    }
-    const streak = activeDates.size; // Simple unique days count for streak
+    const completedCount = enrolled.filter((id: number) => {
+      const course = mockCourses.find(c => c.id === id);
+      const slug = course?.slug || '';
+      return progressMap[slug] === 100 || progressMap[id.toString()] === 100;
+    }).length;
+    const streak = Math.max(activeDates.size, completedCount);
 
     achievements.forEach(ach => {
       const th = ach.threshold.toLowerCase();
