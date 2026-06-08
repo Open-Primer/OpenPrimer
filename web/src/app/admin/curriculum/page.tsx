@@ -3005,6 +3005,7 @@ export default function AdminCurriculumPage() {
   // Double-Safeguard Target Modals
   const [cancelTaskTarget, setCancelTaskTarget] = useState<any | null>(null);
   const triggeredTaskIds = useRef<Set<string>>(new Set());
+  const isFirstLoad = useRef(true);
   const [errorDetailsTarget, setErrorDetailsTarget] = useState<any | null>(null);
   const [purgeLanguageTarget, setPurgeLanguageTarget] = useState<any | null>(null);
   const [courseArchiveTarget, setCourseArchiveTarget] = useState<any | null>(null);
@@ -3248,11 +3249,10 @@ export default function AdminCurriculumPage() {
         setGeneratedBadges(results);
       } catch (err) {
         console.error("AI Badge Generation Error", err);
-        // Fallback placeholder images if API key or network fails
-        const seed = `${newAch.name}_${newAch.description}`;
-        const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
-        const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
-        const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
+        // Fallback inline Base64 vector SVGs that are immune to CORS/COEP/escaping issues
+        const opt1 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhiNWNmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VjNDg5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cxKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUwIDIyIEw1OSAzOCBMNzcgNDAgTDYzIDUyIEw2NyA3MCBMNTAgNjAgTDMzIDcwIEwzNyA1MiBMMjMgNDAgTDQxIDM4IFoiIGZpbGw9IiNmNTllMGIiLz48L3N2Zz4=';
+        const opt2 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2YjZkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cyKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUyIDIyIEwzNSA0OCBMNDggNDggTDQ0IDc0IEw2NSA0NCBMNTAgNDQgWiIgZmlsbD0iI2VhYjMwOCIvPjwvc3ZnPg==';
+        const opt3 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y5NzMxNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VhYjMwOCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2czKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTM1IDMwIEw2NSAzMCBMNjUgNDIgQzY1IDUwIDU4IDU4IDUwIDU4IEM0MiA1OCAzNSA1MCAzNSA0MiBaIE01MCA1OCBMNTAgNjggTTQwIDY4IEw2MCA2OCIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==';
         setGeneratedBadges([opt1, opt2, opt3]);
       } finally {
         setIsGeneratingBadges(false);
@@ -3308,10 +3308,10 @@ export default function AdminCurriculumPage() {
         setEditGeneratedBadges(results);
       } catch (err) {
         console.error("AI Badge Generation Error", err);
-        const seed = `${editName}_${editDesc}`;
-        const opt1 = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}_opt1`;
-        const opt2 = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}_opt2`;
-        const opt3 = `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(seed)}_opt3`;
+        // Fallback inline Base64 vector SVGs that are immune to CORS/COEP/escaping issues
+        const opt1 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhiNWNmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VjNDg5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cxKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUwIDIyIEw1OSAzOCBMNzcgNDAgTDYzIDUyIEw2NyA3MCBMNTAgNjAgTDMzIDcwIEwzNyA1MiBMMjMgNDAgTDQxIDM4IFoiIGZpbGw9IiNmNTllMGIiLz48L3N2Zz4=';
+        const opt2 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2YjZkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cyKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUyIDIyIEwzNSA0OCBMNDggNDggTDQ0IDc0IEw2NSA0NCBMNTAgNDQgWiIgZmlsbD0iI2VhYjMwOCIvPjwvc3ZnPg==';
+        const opt3 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y5NzMxNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VhYjMwOCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2czKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTM1IDMwIEw2NSAzMCBMNjUgNDIgQzY1IDUwIDU4IDU4IDUwIDU4IEM0MiA1OCAzNSA1MCAzNSA0MiBaIE01MCA1OCBMNTAgNjggTTQwIDY4IEw2MCA2OCIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==';
         setEditGeneratedBadges([opt1, opt2, opt3]);
       } finally {
         setIsEditGeneratingBadges(false);
@@ -3470,16 +3470,38 @@ export default function AdminCurriculumPage() {
     const qRes = await dbService.getPipelineQueue();
     if (qRes && qRes.data) {
       const parsed = qRes.data;
+
+      if (isFirstLoad.current) {
+        isFirstLoad.current = false;
+        parsed.forEach((t: any) => {
+          if (t.status === 'running') {
+            triggeredTaskIds.current.add(t.id);
+          }
+        });
+      }
+
       let migrated = parsed.map((t: any) => {
         const updates: any = {};
+        if (t.status === 'complete') {
+          updates.status = 'completed';
+        }
         if ((t.status === 'complete' || t.status === 'completed') && !t.completedAt) {
           updates.completedAt = t.timestamp
             ? new Date(new Date(t.timestamp).getTime() + 30_000).toISOString()
             : new Date().toISOString();
         }
-        if (t.type === 'translation' && !t.targetLang) {
+        if (!t.targetLang) {
           const m = (t.title || '').match(/\(([A-Z]{2,3})\)$/);
-          if (m) updates.targetLang = m[1];
+          if (m) {
+            updates.targetLang = m[1];
+          } else {
+            const detailMatch = (t.details || '').match(/(?:Language|Target Language):\s*([A-Z]{2,3})/i);
+            if (detailMatch) {
+              updates.targetLang = detailMatch[1].toUpperCase();
+            } else {
+              updates.targetLang = 'EN';
+            }
+          }
         }
         return Object.keys(updates).length ? { ...t, ...updates } : t;
       });
@@ -3718,7 +3740,7 @@ export default function AdminCurriculumPage() {
                   if (t.id === runningTask.id) {
                     return {
                       ...t,
-                      status: 'complete',
+                      status: 'completed',
                       progress: 100,
                       completedAt: new Date().toISOString(),
                       logs: [...(t.logs || []), 'Successfully completed generation.']

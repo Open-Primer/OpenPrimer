@@ -64,10 +64,14 @@ async function deployProtection() {
       CREATE OR REPLACE FUNCTION public.protect_vanguard_admin()
       RETURNS TRIGGER AS $$
       BEGIN
-        IF OLD.id = '26d54efe-6f14-4e36-9fcf-3fcf684a4444' OR OLD.email = 'vanguard.mysterious@gmail.com' THEN
+        IF OLD.id = '26d54efe-6f14-4e36-9fcf-3fcf684a4444' OR LOWER(OLD.email) = 'vanguard.mysterious@gmail.com' THEN
           RAISE EXCEPTION 'Deletion or modification of Vanguard Admin profile is prohibited.';
         END IF;
-        RETURN OLD;
+        IF TG_OP = 'DELETE' THEN
+          RETURN OLD;
+        ELSE
+          RETURN NEW;
+        END IF;
       END;
       $$ LANGUAGE plpgsql SECURITY DEFINER;
     `;
@@ -84,6 +88,42 @@ async function deployProtection() {
     `;
     await client.query(ddlTrigger);
     console.log('✅ Trigger deployed.');
+
+    // 2.5 Repair mojibake in agent_metrics table
+    console.log('⏳ Repairing mojibake in agent_metrics table...');
+    const updateMetricsQuery = `
+      UPDATE public.agent_metrics SET
+        name_fr = CASE 
+          WHEN id = 'generation' THEN 'Agent de Génération de Cursus'
+          WHEN id = 'translation' THEN 'Agent de Traduction Multi-Langues'
+          WHEN id = 'revision' THEN 'Agent de Révision Pédagogique'
+          WHEN id = 'tutor' THEN 'Agent de Tutorat IA & Personnalités'
+          ELSE name_fr
+        END,
+        name_es = CASE 
+          WHEN id = 'generation' THEN 'Agente de Generación de Cursos'
+          WHEN id = 'translation' THEN 'Agente de Traducción Multilingüe'
+          WHEN id = 'revision' THEN 'Agente de Revisión Pedagógica'
+          WHEN id = 'tutor' THEN 'Agente de Tutoría IA y Personalidades'
+          ELSE name_es
+        END,
+        name_de = CASE 
+          WHEN id = 'generation' THEN 'Kursgenerierungs-Agent'
+          WHEN id = 'translation' THEN 'Übersetzungs-Agent'
+          WHEN id = 'revision' THEN 'Pädagogischer Revisions-Agent'
+          WHEN id = 'tutor' THEN 'KI-Tutor-Agent & Persönlichkeiten'
+          ELSE name_de
+        END,
+        name_zh = CASE 
+          WHEN id = 'generation' THEN '课程生成智能体'
+          WHEN id = 'translation' THEN '翻译智能体'
+          WHEN id = 'revision' THEN '教学修订智能体'
+          WHEN id = 'tutor' THEN 'AI 智能体 with Personality'
+          ELSE name_zh
+        END;
+    `;
+    await client.query(updateMetricsQuery);
+    console.log('✅ Agent metrics repaired.');
 
     // 3. Verify trigger
     console.log('🔍 Verifying trigger installation...');

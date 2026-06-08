@@ -27,7 +27,7 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https:; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://api.resend.com https://aiplatform.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
+    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https:; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://api.resend.com https://aiplatform.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https://*.youtube.com https://*.youtube-nocookie.com https://*.vimeo.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
   },
   {
     key: 'Cross-Origin-Opener-Policy',
@@ -36,11 +36,12 @@ const securityHeaders = [
   {
     key: 'Cross-Origin-Resource-Policy',
     value: 'same-origin'
-  },
-  {
-    key: 'Cross-Origin-Embedder-Policy',
-    value: 'require-corp'
   }
+  // COEP require-corp is commented out to allow embedding external videos via iframe (YouTube/Vimeo)
+  // {
+  //   key: 'Cross-Origin-Embedder-Policy',
+  //   value: 'require-corp'
+  // }
 ];
 
 const nextConfig: NextConfig = {

@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase, supabaseAdmin } from '../supabase';
 import {
   DatabaseService,
   SystemParameter,
@@ -322,8 +322,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (id === '26d54efe-6f14-4e36-9fcf-3fcf684a4444') {
         throw new Error('Deletion of Vanguard Admin profile is prohibited.');
       }
-      await supabase.from('progress').delete().eq('user_id', id);
-      const { data, error } = await supabase.from('profiles').delete().eq('id', id);
+      await supabaseAdmin.from('progress').delete().eq('user_id', id);
+      const { data, error } = await supabaseAdmin.from('profiles').delete().eq('id', id);
       if (error) throw error;
       return { data, error };
     } catch (e) {
@@ -334,9 +334,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   toggleBlockUser: async (id: string) => {
     try {
-      const { data: user, error: selectError } = await supabase.from('profiles').select('is_blocked').eq('id', id).single();
+      const { data: user, error: selectError } = await supabaseAdmin.from('profiles').select('is_blocked').eq('id', id).single();
       if (selectError || !user) throw selectError || new Error("User not found");
-      const { data, error } = await supabase.from('profiles').update({ is_blocked: !user?.is_blocked }).eq('id', id);
+      const { data, error } = await supabaseAdmin.from('profiles').update({ is_blocked: !user?.is_blocked }).eq('id', id);
       if (error) throw error;
       return { data, error };
     } catch (e) {
@@ -347,7 +347,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   updateUserRole: async (id: string, role: string) => {
     try {
-      const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id);
+      const { data, error } = await supabaseAdmin.from('profiles').update({ role }).eq('id', id);
       if (error) throw error;
       return { data, error };
     } catch (e) {
@@ -360,7 +360,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
     const hashedPassword = supabaseDatabaseProvider.hashPassword(password);
     try {
       // 1. Update password column in public.profiles table
-      const { data, error } = await supabase.from('profiles').update({ password: hashedPassword }).eq('id', id);
+      const { data, error } = await supabaseAdmin.from('profiles').update({ password: hashedPassword }).eq('id', id);
       if (error) throw error;
 
       // 2. Also try updating supabase auth if session is active
@@ -403,7 +403,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       ttsEnabled: true
     };
     try {
-      await supabase.from('profiles').insert({
+      await supabaseAdmin.from('profiles').insert({
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
@@ -1144,29 +1144,55 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  getCourseFeedbacks: async (courseId?: string) => {
+  getCourseFeedbacks: async (courseId?: string, userId?: string) => {
     try {
       const { data, error } = await supabase.from('course_feedbacks').select('*');
       if (error) throw error;
+      
+      let list = data || [];
+      if (userId) {
+        list = list.filter((f: any) => f.user_id === userId || f.userId === userId || !f.user_id);
+      }
+      
       if (courseId) {
         const canonicalId = getCanonicalCourseId(courseId);
-        return { data: (data || []).filter((f: any) => getCanonicalCourseId(f.course_id) === canonicalId), error: null };
+        return { data: list.filter((f: any) => getCanonicalCourseId(f.course_id) === canonicalId), error: null };
       }
-      return { data: data || [], error: null };
+      return { data: list, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: [], error: e as any };
     }
   },
 
-  addCourseFeedback: async (feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>) => {
+  addCourseFeedback: async (feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'> & { userId?: string }) => {
     try {
-      const { data, error } = await supabase.from('course_feedbacks').insert({
+      const insertData: any = {
         course_id: feedback.courseId,
         rating: feedback.rating,
         comment: feedback.comment,
         is_treated: false
-      }).select().single();
+      };
+      if (feedback.userId) {
+        insertData.user_id = feedback.userId;
+      }
+      
+      let result = await supabase.from('course_feedbacks').insert(insertData).select().single();
+      if (result.error && feedback.userId) {
+        // Fallback retry without user_id if the column is missing in remote db
+        const fallbackData = {
+          course_id: feedback.courseId,
+          rating: feedback.rating,
+          comment: feedback.comment,
+          is_treated: false
+        };
+        const retryResult = await supabase.from('course_feedbacks').insert(fallbackData).select().single();
+        if (!retryResult.error) {
+          result = retryResult;
+        }
+      }
+      
+      const { data, error } = result;
       if (error) throw error;
       return { data: error ? null : {
         id: data.id,
@@ -1528,7 +1554,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   updateAgentMetrics: async (id: string, cost: number, durationMs: number) => {
     try {
-      const { data, error } = await supabase.from('agent_metrics').select('*').eq('id', id).single();
+      const { data, error } = await supabaseAdmin.from('agent_metrics').select('*').eq('id', id).single();
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
@@ -1545,7 +1571,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         const currentRollingCost = parseFloat(data.rolling_30_days_cost || '0');
         const newRollingCost = currentRollingCost + cost;
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
           .from('agent_metrics')
           .update({
             total_cost: newTotalCost,

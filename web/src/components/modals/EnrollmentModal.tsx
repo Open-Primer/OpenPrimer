@@ -428,23 +428,25 @@ export const EnrollmentModal = ({
         )}
 
         {/* Syllabus Units */}
-        <div className="space-y-6 mb-10 text-left">
-          <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview || "Syllabus Overview"}</p>
-          {units.map((unit: any, uIdx: number) => (
-            <div key={uIdx} className="space-y-3">
-              <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
-              </h4>
-              <div className="grid gap-2 pl-6">
-                {(unit.modules || []).map((mod: string, mIdx: number) => (
-                  <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
-                    {mod}
-                  </div>
-                ))}
+        {!activeCourse.isCurriculum && (
+          <div className="space-y-6 mb-10 text-left">
+            <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">{t.syllabus_overview || "Syllabus Overview"}</p>
+            {units.map((unit: any, uIdx: number) => (
+              <div key={uIdx} className="space-y-3">
+                <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-4 h-px bg-blue-500/30" /> {unit.title}
+                </h4>
+                <div className="grid gap-2 pl-6">
+                  {(unit.modules || []).map((mod: string, mIdx: number) => (
+                    <div key={mIdx} className="px-4 py-2 bg-slate-950/20 border border-slate-850 rounded-xl text-xs text-slate-300">
+                      {mod}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {showEnrollActions && (
           <div className="flex gap-4 mt-8 pt-6 border-t border-slate-850">

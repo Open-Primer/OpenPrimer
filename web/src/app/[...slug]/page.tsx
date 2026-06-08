@@ -23,7 +23,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
   let pageData: any = null;
   try {
     const resolvedParams = await params;
-    slug = resolvedParams?.slug || [];
+    slug = (resolvedParams?.slug || []).map(part => decodeURIComponent(part));
     const cookieStore = await cookies();
     lang = (cookieStore.get('openprimer_lang')?.value || 'EN').toLowerCase();
 

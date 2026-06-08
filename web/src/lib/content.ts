@@ -25,6 +25,7 @@ export function getSyllabus() {
 }
 
 export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<NavItem[]> {
+  dir = decodeURIComponent(dir);
   const parts = dir.split('/');
   
   if (parts.length === 3) {
@@ -171,6 +172,7 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
 }
 
 export async function getPageContent(slug: string[], lang: string = 'en') {
+  slug = slug.map(s => decodeURIComponent(s));
   if (slug.length >= 3) {
     const courseSlug = slug[2];
     const lessonSlug = slug[3] || 'introduction';
@@ -354,6 +356,7 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
 }
 
 export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
+  slug = slug.map(s => decodeURIComponent(s));
   // 1. Check the DB lessons table first (handles DB-only courses like 'revolution')
   if (slug.length >= 3) {
     const courseSlug = slug[2];
@@ -438,10 +441,33 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
 
 function healGlossaryTags(mdx: string): string {
   let processed = mdx;
-  // 1. Correct typo </Glossule>
-  processed = processed.replace(/<\/Glossule\s*>/gi, '</Glossary>');
 
-  // 2. Auto-close unclosed Glossary tags.
+  // 1. Normalize escaped tag characters for our components
+  processed = processed.replace(/&lt;\/(\w+)/gi, '</$1');
+  processed = processed.replace(/&lt;(\w+)/gi, '<$1');
+  processed = processed.replace(/(Glossary|HistoricalPerson|Epistemology|DiagnosticQuiz|InteractiveDiagram|Video|Prerequisites|Quiz|Question|Option|Summary)[^>]*?&gt;/gi, (match) => {
+    return match.replace(/&gt;/gi, '>');
+  });
+
+  // 2. Fix nested broken tags like </Glossion</Glossary> or </Glossées</Glossary> or </Glossion génétique</Glossary>
+  processed = processed.replace(/<\/[a-zA-Z\u00C0-\u00FF\s]+<\/(Glossary|HistoricalPerson)>/gi, '</$1>');
+
+  // 3. Match any single closing tag starting with </Gloss or </Historical followed by any characters, and turn them into the correct close tags
+  processed = processed.replace(/(?:<\/|&lt;\/\s*)(Gloss|Historical)[a-zA-Z\u00C0-\u00FF]*([^a-zA-Z\u00C0-\u00FF]*)/gi, (match, prefix, suffix) => {
+    const isHistorical = prefix.toLowerCase().startsWith('historical');
+    const correctTag = isHistorical ? '</HistoricalPerson>' : '</Glossary>';
+    
+    let cleanSuffix = suffix;
+    if (cleanSuffix.includes('>')) {
+      cleanSuffix = cleanSuffix.replace(/>/g, '');
+    }
+    if (cleanSuffix.includes('&gt;')) {
+      cleanSuffix = cleanSuffix.replace(/&gt;/g, '');
+    }
+    return correctTag + cleanSuffix;
+  });
+
+  // 4. Auto-close unclosed Glossary tags.
   processed = processed.replace(/<Glossary\s+term="([^"]+)"\s+definition="([^"]+)">([^<]+?)(?=\s*(?:<Glossary|\n\n|$))/gi, (match, term, def, displayName) => {
     return `<Glossary term="${term}" definition="${def}">${displayName}</Glossary>`;
   });
@@ -455,6 +481,36 @@ export function preprocessMdx(content: string): string {
   // Strip any raw [Spacer] brackets
   processed = processed.replace(/\[Spacer\]\s*/gi, '');
   
+  // Clean stray [/note] or [/Note]
+  processed = processed.replace(/\[\/[nN]ote\]/g, '');
+
+  // Strip heading custom identifiers like {#section-id} that crash MDX/acorn
+  processed = processed.replace(/\s*{#[\w\-]+}/g, '');
+
+  // Restore curly braces inside math blocks ($...$ and $$...$$) so KaTeX can compile them
+  // 1. Block math ($$ ... $$)
+  processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, mathContent) => {
+    const unescapedMath = mathContent
+      .replace(/&#123;/g, '{')
+      .replace(/&#125;/g, '}');
+    return `$$${unescapedMath}$$`;
+  });
+
+  // 2. Inline math ($ ... $)
+  processed = processed.replace(/(?<!\\)\$([^\$\n]+?)(?<!\\)\$/g, (match, mathContent) => {
+    const unescapedMath = mathContent
+      .replace(/&#123;/g, '{')
+      .replace(/&#125;/g, '}');
+    return `$${unescapedMath}$`;
+  });
+
+  // Fix HTML entities for curly braces only inside specific attributes of components to prevent MDX expression parsing errors
+  processed = processed.replace(/(options|items)=\{\s*([\s\S]*?)(?:}|&#125;)/gi, '$1={$2}');
+  processed = processed.replace(/(correctIndex|durationLimit|duration)=(?:\{|&#123;)\s*(\d+)\s*(?:}|&#125;)/gi, '$1={$2}');
+
+  // Fix non-self-closing img tags
+  processed = processed.replace(/<img([^>]*?)(?<!\/)>/gi, '<img$1 />');
+
   // 1. Process DiagnosticQuiz options
   processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
     try {
@@ -523,7 +579,7 @@ export function preprocessMdx(content: string): string {
     refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
       const activeNum = num || anchorId;
       const trimmedRest = rest.trim();
-      return `<span id="ref-${activeNum}"></span>**[${activeNum}]** ${trimmedRest} <a href="#cite-${activeNum}">[↩]</a>\n\n`;
+      return `<span id="ref-${activeNum}"></span><a href="#cite-${activeNum}" class="no-underline hover:text-indigo-400 transition-colors">**[${activeNum}]**</a> ${trimmedRest}\n\n`;
     });
     
     processed = preRef + refContent;

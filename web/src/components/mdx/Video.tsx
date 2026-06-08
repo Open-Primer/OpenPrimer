@@ -7,27 +7,28 @@ type VideoStatus = 'checking' | 'ok' | 'unavailable';
 
 /** Detect provider from a raw URL (best-effort) */
 function detectProvider(url: string): 'YouTube' | 'Vimeo' | 'generic' {
-  if (/youtube\.com|youtu\.be/.test(url)) return 'YouTube';
-  if (/vimeo\.com/.test(url)) return 'Vimeo';
+  if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
+  if (/vimeo\.com|player\.vimeo\.com/i.test(url)) return 'Vimeo';
   return 'generic';
 }
 
 /** Extract YouTube video ID from a URL */
 function extractYoutubeId(url: string): string | null {
-  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/i);
   return m ? m[1] : null;
 }
 
 /** Extract Vimeo video ID from a URL */
 function extractVimeoId(url: string): string | null {
-  const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  // Matches player.vimeo.com/video/12345, vimeo.com/12345, vimeo.com/channels/staffpicks/12345, vimeo.com/groups/abc/videos/12345, etc.
+  const m = url.match(/(?:vimeo\.com|player\.vimeo\.com)\/(?:video\/|channels\/(?:[^\/]+)\/|groups\/(?:[^\/]+)\/videos\/)?(\d+)/i);
   return m ? m[1] : null;
 }
 
 interface VideoProps {
   id?: string;
   title: string;
-  provider?: 'YouTube' | 'Vimeo' | 'generic';
+  provider?: string;
   url?: string;
   duration?: string; // e.g. "3 min" or "2:30"
 }
@@ -55,8 +56,17 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
     focusTip: isFr ? 'Conseil concentration : Prenez une pause de 30s si nécessaire.' : 'Focus Tip: Take a 30s break if needed.'
   };
 
+  // Normalize provider input
+  let normalizedPropProvider: 'YouTube' | 'Vimeo' | 'generic' = 'generic';
+  if (propProvider) {
+    const lower = propProvider.toLowerCase();
+    if (lower === 'youtube') normalizedPropProvider = 'YouTube';
+    else if (lower === 'vimeo') normalizedPropProvider = 'Vimeo';
+    else normalizedPropProvider = 'generic';
+  }
+
   // Resolve provider, url and videoId
-  let finalProvider: 'YouTube' | 'Vimeo' | 'generic' = propProvider || 'generic';
+  let finalProvider: 'YouTube' | 'Vimeo' | 'generic' = normalizedPropProvider;
   let finalUrl = url || '';
   let videoId = id || '';
 
@@ -68,7 +78,7 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
       videoId = extractVimeoId(url) || '';
     }
   } else if (id) {
-    finalProvider = propProvider || 'YouTube';
+    finalProvider = propProvider ? normalizedPropProvider : 'YouTube';
     finalUrl = finalProvider === 'YouTube'
       ? `https://youtube.com/watch?v=${id}`
       : `https://vimeo.com/${id}`;

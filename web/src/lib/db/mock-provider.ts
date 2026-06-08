@@ -368,12 +368,33 @@ export const mockDatabaseProvider: DatabaseService = {
 
     const earnedAchievements = progressService.evaluateAchievements(getAchievementsList());
 
+    const completedCount = activeModules.filter((m: any) => m.progress === 100).length;
+    const inProgressCount = activeModules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
+
     const quizResults = progressService.getQuizResults();
     const quizEntries = Object.values(quizResults) as any[];
-    const rawMasteryPoints = quizEntries.reduce(
+    const rawQuizPoints = quizEntries.reduce(
       (sum: number, q: any) => sum + (q.correctAnswers || 0),
       0
     );
+
+    let completedCoursePoints = 0;
+    activeModules.forEach((m: any) => {
+      if (m.progress === 100) {
+        const course = getMockCourses().find(c => c.id === m.id);
+        if (course) {
+          if (course.isCurriculum) {
+            completedCoursePoints += 100;
+          } else {
+            completedCoursePoints += Math.max(50, (course.ects || 6) * 10);
+          }
+        } else {
+          completedCoursePoints += 50;
+        }
+      }
+    });
+
+    const rawMasteryPoints = rawQuizPoints + completedCoursePoints;
     const storedFloor = isBrowser
       ? parseInt(window.localStorage.getItem('op_mastery_floor') || '0', 10)
       : 0;
@@ -387,11 +408,8 @@ export const mockDatabaseProvider: DatabaseService = {
           activeDates.add(times[key].lastVisited.split('T')[0]);
         }
       }
-      return activeDates.size;
+      return Math.max(activeDates.size, completedCount);
     })() : 0;
-
-    const completedCount = activeModules.filter((m: any) => m.progress === 100).length;
-    const inProgressCount = activeModules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
 
     let tutorId = isBrowser ? (window.localStorage.getItem('op_active_tutor_personality') || 'socratic') : 'socratic';
 
@@ -785,8 +803,11 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: { purged: originalCount - filtered.length }, error: null };
   },
 
-  getCourseFeedbacks: async (courseId?: string) => {
-    const list = getCourseFeedbacks();
+  getCourseFeedbacks: async (courseId?: string, userId?: string) => {
+    let list = getCourseFeedbacks();
+    if (userId) {
+      list = list.filter(f => f.userId === userId || !f.userId);
+    }
     if (courseId) {
       const canonicalId = getCanonicalCourseId(courseId);
       return { data: list.filter(f => getCanonicalCourseId(f.courseId) === canonicalId), error: null };
@@ -794,7 +815,7 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: list, error: null };
   },
 
-  addCourseFeedback: async (feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>) => {
+  addCourseFeedback: async (feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'> & { userId?: string }) => {
     const newFeedback: CourseFeedback = {
       ...feedback,
       id: `cf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

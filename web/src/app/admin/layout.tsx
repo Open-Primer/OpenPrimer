@@ -199,7 +199,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             .single();
 
           if (profile && profile.role === 'admin') {
-            setDynamicRole(user.email === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
+            setDynamicRole(user.email.toLowerCase() === 'vanguard.mysterious@gmail.com' ? 'Vanguard Admin' : 'Administrator');
             setIsAuthorized(true);
             return;
           } else if (profileError) {

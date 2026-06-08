@@ -459,7 +459,13 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-8 py-6">
                    <button 
-                    onClick={() => setConfirmingAction({ type: 'role', userId: user.id, extra: user.role === 'admin' ? 'student' : 'admin' })}
+                    onClick={() => {
+                      if (user.email?.toLowerCase() === 'vanguard.mysterious@gmail.com') {
+                        setConfirmingAction({ type: 'vanguard_locked', userId: user.id });
+                      } else {
+                        setConfirmingAction({ type: 'role', userId: user.id, extra: user.role === 'admin' ? 'student' : 'admin' });
+                      }
+                    }}
                     className="flex items-center gap-2"
                    >
                      {user.role === 'admin' ? (
@@ -509,7 +515,7 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-8 py-6 text-right">
                    <div className="flex justify-end gap-2">
-                     {user.email === 'vanguard.mysterious@gmail.com' ? (
+                     {user.email?.toLowerCase() === 'vanguard.mysterious@gmail.com' ? (
                        <button 
                         onClick={() => setConfirmingAction({ type: 'vanguard_locked', userId: user.id })}
                         className="p-2 rounded-xl bg-slate-900 border border-red-500/20 text-red-500/40 hover:text-red-400 hover:bg-red-950/10 transition-all cursor-pointer flex items-center justify-center relative group"

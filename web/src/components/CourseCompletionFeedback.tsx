@@ -50,6 +50,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -85,14 +86,34 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         }
       });
 
-      // Fetch existing course feedback
-      dbService.getCourseFeedbacks(courseId).then((res) => {
+      // 1. Dual-read: try reading from local storage first (instant responsiveness)
+      const localFeedbackKey = `op_feedback_${userId}_${courseId}`;
+      const savedLocalFeedback = localStorage.getItem(localFeedbackKey);
+      if (savedLocalFeedback) {
+        try {
+          const parsed = JSON.parse(savedLocalFeedback);
+          setUserRating(parsed.rating);
+          setUserComment(parsed.comment || '');
+          setRating(parsed.rating);
+          setComment(parsed.comment || '');
+        } catch (e) {}
+      }
+
+      // 2. Fetch existing course feedback from remote DB to synchronize
+      dbService.getCourseFeedbacks(courseId, userId).then((res) => {
         if (res.data && res.data.length > 0) {
-          const fb = res.data[0];
+          // Find if there is feedback explicitly associated with this user
+          const fb = res.data.find((f: any) => f.user_id === userId || f.userId === userId) || res.data[0];
           setUserRating(fb.rating);
           setUserComment(fb.comment || '');
           setRating(fb.rating);
           setComment(fb.comment || '');
+          
+          // Write back to local storage to sync
+          localStorage.setItem(localFeedbackKey, JSON.stringify({
+            rating: fb.rating,
+            comment: fb.comment || ''
+          }));
         }
       });
 
@@ -178,19 +199,45 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     });
   }, [courseId]);
 
+  // Handle toast timeout
+  useEffect(() => {
+    if (showSuccessToast) {
+      const timer = setTimeout(() => setShowSuccessToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessToast]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) return;
 
+    const savedProfile = localStorage.getItem('op_user_profile');
+    let userId = 'u1';
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.id) userId = profile.id;
+      } catch (err) {}
+    }
+
+    // 1. Write to local storage immediately as source of truth
+    localStorage.setItem(`op_feedback_${userId}_${courseId}`, JSON.stringify({
+      rating,
+      comment
+    }));
+
+    // 2. Dual-write to database asynchronously
     await dbService.addCourseFeedback({
       courseId,
       rating,
-      comment
+      comment,
+      userId
     });
 
     setUserRating(rating);
     setUserComment(comment);
     setSubmitted(true);
+    setShowSuccessToast(true);
   };
 
   const getCourseEarnedAchievements = () => {
@@ -342,17 +389,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           </p>
         </div>
 
-        {submitted && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl p-4 text-xs font-semibold flex items-center gap-3 border-l-4 border-l-emerald-500">
-            <CheckCircle className="w-5 h-5 shrink-0" />
-            <span>
-              {isFr 
-                ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
-                : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
-            </span>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
             {/* Stars Selection */}
@@ -405,7 +441,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-900/50">
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-              {!isEvaluationCompleted ? (
+              {!isEvaluationCompleted && (
                 <button
                   type="submit"
                   disabled={rating === 0}
@@ -417,35 +453,81 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                 >
                   {isFr ? "Soumettre et Terminer" : "Submit & Complete"}
                 </button>
-              ) : (
-                nextCoursePath && (
-                  <Link 
-                    href={nextCoursePath} 
-                    className="w-full sm:w-auto text-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-600/10"
-                  >
-                    {isFr ? "Continuer mon Cursus" : "Continue My Journey"}
-                  </Link>
-                )
               )}
             </div>
           </div>
         </form>
       </div>
 
-      {/* Large Premium Chapter Transition Link */}
-      <Link href="/profile/curriculum" className="mt-12 pt-12 border-t border-slate-900 flex justify-between items-center group cursor-pointer">
-         <div>
-           <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-             {isFr ? "Terminer l'apprentissage" : "Finish Learning"}
-           </p>
-           <p className="text-lg font-black text-slate-400 group-hover:text-blue-400 transition-colors mt-1">
-             {isFr ? "Retourner au Curriculum" : "Back to My Curriculum"}
-           </p>
-         </div>
-         <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-700 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all">
-           <ChevronRight className="w-5 h-5" />
-         </div>
-      </Link>
+      {/* Floating Premium Success Toast Notification */}
+      {showSuccessToast && (
+        <div className="fixed bottom-8 right-8 md:bottom-12 md:right-12 px-6 py-4 rounded-[24px] bg-slate-900/95 backdrop-blur-2xl border border-emerald-500/30 shadow-2xl shadow-emerald-500/10 flex items-center gap-4 z-[10000] animate-slide-in max-w-sm">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-inner">
+            <CheckCircle className="w-5 h-5 animate-pulse" />
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+              {isFr ? "Évaluation Enregistrée" : "Rating Saved"}
+            </p>
+            <p className="text-[11px] font-medium text-slate-300 leading-normal">
+              {isFr 
+                ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
+                : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Relocated Premium Transition Cards outside the form block */}
+      <div className="mt-12 pt-12 border-t border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {nextCoursePath ? (
+          <>
+            {/* Main call-to-action: Continue on to the next subsequent chapter in the curriculum */}
+            <Link 
+              href={nextCoursePath} 
+              className="flex-1 max-w-md p-6 bg-slate-900/20 hover:bg-emerald-500/10 border border-slate-850 hover:border-emerald-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
+            >
+              <div className="space-y-1">
+                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block">
+                  {isFr ? "Chapitre Suivant • Continuer mon Cursus" : "Next Chapter • Continue My Journey"}
+                </span>
+                <span className="text-base font-black text-slate-300 group-hover:text-emerald-400 transition-colors block">
+                  {isFr ? "Passer au chapitre suivant" : "Go to next chapter"}
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all shadow-md shrink-0">
+                <ChevronRight className="w-5 h-5" />
+              </div>
+            </Link>
+
+            {/* Secondary fallback link: Back to Curriculum list */}
+            <Link 
+              href="/profile/curriculum" 
+              className="px-6 py-4 rounded-2xl border border-slate-850 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all text-center shrink-0 cursor-pointer"
+            >
+              {isFr ? "Retourner au Curriculum" : "Back to My Curriculum"}
+            </Link>
+          </>
+        ) : (
+          /* End of curriculum path, provide return button as main action */
+          <Link 
+            href="/profile/curriculum" 
+            className="flex-1 p-6 bg-slate-900/20 hover:bg-blue-600/10 border border-slate-850 hover:border-blue-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
+          >
+            <div className="space-y-1">
+              <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block">
+                {isFr ? "Terminer l'apprentissage" : "Finish Learning"}
+              </span>
+              <span className="text-base font-black text-slate-300 group-hover:text-blue-400 transition-colors block">
+                {isFr ? "Retourner au Curriculum" : "Back to My Curriculum"}
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all shadow-md shrink-0">
+              <ChevronRight className="w-5 h-5" />
+            </div>
+          </Link>
+        )}
+      </div>
     </div>
   );
 };

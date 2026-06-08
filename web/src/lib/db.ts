@@ -175,6 +175,7 @@ export interface CourseFeedback {
   comment: string;
   timestamp: string;
   isTreated: boolean;
+  userId?: string;
 }
 
 export interface ReportCluster {
@@ -2429,8 +2430,8 @@ export interface DatabaseService {
   getSearchHistory(): Promise<{ data: SearchHistoryEntry[] | null; error: any }>;
   addSearchHistoryEntry(entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }): Promise<{ data: SearchHistoryEntry | null; error: any }>;
   cleanupSearchHistory(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
-  getCourseFeedbacks(courseId?: string): Promise<{ data: CourseFeedback[]; error: any }>;
-  addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'>): Promise<{ data: CourseFeedback | null; error: any }>;
+  getCourseFeedbacks(courseId?: string, userId?: string): Promise<{ data: CourseFeedback[]; error: any }>;
+  addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'> & { userId?: string }): Promise<{ data: CourseFeedback | null; error: any }>;
   markFeedbackTreated(id: string | number): Promise<{ data: any; error: any }>;
   cleanupCourseFeedbacks(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
   addCourse(course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>): Promise<{ data: MockCourse; error: any }>;

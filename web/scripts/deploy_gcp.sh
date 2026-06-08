@@ -45,11 +45,13 @@ parse_env() {
 }
 
 supabase_url=$(parse_env "NEXT_PUBLIC_SUPABASE_URL")
+supabase_anon_key=$(parse_env "NEXT_PUBLIC_SUPABASE_ANON_KEY")
 service_role_key=$(parse_env "SUPABASE_SERVICE_ROLE_KEY")
 gemini_api_key=$(parse_env "GEMINI_API_KEY")
 cron_secret=$(parse_env "CRON_SECRET")
 
 if [ -z "$supabase_url" ]; then echo "❌ Error: NEXT_PUBLIC_SUPABASE_URL not found in .env.local"; exit 1; fi
+if [ -z "$supabase_anon_key" ]; then echo "❌ Error: NEXT_PUBLIC_SUPABASE_ANON_KEY not found in .env.local"; exit 1; fi
 if [ -z "$service_role_key" ]; then echo "❌ Error: SUPABASE_SERVICE_ROLE_KEY not found in .env.local"; exit 1; fi
 
 if [ -z "$cron_secret" ]; then
@@ -78,6 +80,51 @@ echo -e "\n\033[0;33m🏗️ Building container image remotely using Google Clou
 image_tag="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/web-app:latest"
 web_dir="$(cd "$script_dir/.." && pwd)"
 
+env_prod_path="$web_dir/.env.production"
+gcloud_ignore_path="$web_dir/.gcloudignore"
+
+cleanup() {
+    echo -e "\n\033[0;33m🧹 Cleaning up temporary build-time files...\033[0m"
+    rm -f "$env_prod_path" "$gcloud_ignore_path"
+}
+trap cleanup EXIT
+
+echo -e "📝 Creating temporary build-time files (.env.production & .gcloudignore)..."
+cat << EOF > "$env_prod_path"
+NEXT_PUBLIC_SUPABASE_URL=$supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=$service_role_key
+GEMINI_API_KEY=$gemini_api_key
+CRON_SECRET=$cron_secret
+EOF
+
+cat << EOF > "$gcloud_ignore_path"
+# Standard gcloudignore rules
+.gcloudignore
+.git/
+.gitignore
+
+# Ignore build artifacts and caches
+node_modules/
+.next/
+playwright-report/
+test-results/
+.codex/
+.cursor/
+.vscode/
+.zed/
+
+# Protect sensitive secrets
+secrets/
+*.json.key
+*-service-account*.json
+openprimer-free*.json
+*serviceaccount*.json
+
+# DO NOT ignore .env.production so Next.js build gets its build-time variables!
+! .env.production
+EOF
+
 echo "Running build submit from $web_dir..."
 gcloud builds submit "$web_dir" --tag "$image_tag" --project="$PROJECT_ID"
 
@@ -92,7 +139,7 @@ gcloud run deploy "$SERVICE_NAME" \
     --region="$REGION" \
     --allow-unauthenticated \
     --port=3000 \
-    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=${supabase_url},SUPABASE_SERVICE_ROLE_KEY=${service_role_key},CRON_SECRET=${cron_secret},GEMINI_API_KEY=${gemini_api_key}" \
+    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=${supabase_url},NEXT_PUBLIC_SUPABASE_ANON_KEY=${supabase_anon_key},SUPABASE_SERVICE_ROLE_KEY=${service_role_key},CRON_SECRET=${cron_secret},GEMINI_API_KEY=${gemini_api_key}" \
     --project="$PROJECT_ID"
 
 service_url=$(gcloud run services describe "$SERVICE_NAME" --platform=managed --region="$REGION" --project="$PROJECT_ID" --format="value(status.url)" 2>/dev/null)

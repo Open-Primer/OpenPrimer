@@ -527,9 +527,6 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                      className="flex items-center gap-1.5 text-sm font-bold text-white hover:text-blue-300 transition-colors cursor-pointer group"
                    >
                      <span>{getPersonaName(persona)}</span>
-                     <span className="text-[9px] font-black uppercase tracking-widest bg-blue-600/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-full group-hover:bg-blue-600/40 transition-colors">
-                       {lang === 'FR' ? 'ACTIF' : 'ACTIVE'}
-                     </span>
                    </button>
                 </div>
               </div>
@@ -543,15 +540,6 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                   className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'chat' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
                 >
                   <span>{lang === 'FR' ? 'Tuteur' : 'Tutor'}</span>
-                  <span 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowTutorModal(true);
-                    }}
-                    className="ml-1 text-[8px] font-black tracking-wider text-amber-400 hover:text-amber-200 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 normal-case"
-                  >
-                    {lang === 'FR' ? "Le tuteur, l'alchimiste des analogies" : "The tutor, the alchemist of analogies"}
-                  </span>
                 </button>
                 <button
                   onClick={() => setActiveTab('flashcards')}
@@ -730,10 +718,12 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                               <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest mb-3">
                                 {lang === 'FR' ? 'DÉFINITION' : 'DEFINITION'}
                               </span>
-                              <p className="text-xs text-slate-350 leading-relaxed font-semibold">
-                                {flashcards[currentCardIndex]?.definition}
-                              </p>
-                              <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
+                              <div className="overflow-y-auto max-h-[140px] px-2 custom-scrollbar my-2 text-center w-full">
+                                <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                                  {flashcards[currentCardIndex]?.definition}
+                                </p>
+                              </div>
+                              <p className="text-[9px] text-slate-500 mt-4 italic font-bold tracking-wider uppercase select-none">
                                 {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
                               </p>
                             </div>
@@ -742,31 +732,47 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                       )}
                     </div>
 
-                    {flashcards.length > 0 && isFlipped && (
-                      <div className="space-y-3 pt-4 border-t border-slate-800/40">
-                        <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center select-none">
-                          {lang === 'FR' ? 'Évaluez votre maîtrise :' : 'Rate your mastery:'}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            onClick={() => handleRateCard('hard')}
-                            className="py-2 bg-rose-950/20 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                          >
-                            🔴 {lang === 'FR' ? 'Difficile' : 'Hard'}
-                          </button>
-                          <button
-                            onClick={() => handleRateCard('medium')}
-                            className="py-2 bg-amber-950/20 border border-amber-500/30 hover:bg-amber-500/10 text-amber-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                          >
-                            🟡 {lang === 'FR' ? 'Moyen' : 'Medium'}
-                          </button>
-                          <button
-                            onClick={() => handleRateCard('easy')}
-                            className="py-2 bg-emerald-950/20 border border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                          >
-                            🟢 {lang === 'FR' ? 'Facile' : 'Easy'}
-                          </button>
-                        </div>
+                    {flashcards.length > 0 && (
+                      <div className="space-y-4 pt-4 border-t border-slate-800/40 shrink-0">
+                        {isFlipped ? (
+                          <div className="space-y-3">
+                            <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center select-none">
+                              {lang === 'FR' ? 'Évaluez votre maîtrise :' : 'Rate your mastery:'}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                              <button
+                                onClick={() => handleRateCard('hard')}
+                                className="py-2 bg-rose-950/20 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                              >
+                                🔴 {lang === 'FR' ? 'Difficile' : 'Hard'}
+                              </button>
+                              <button
+                                onClick={() => handleRateCard('medium')}
+                                className="py-2 bg-amber-950/20 border border-amber-500/30 hover:bg-amber-500/10 text-amber-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                              >
+                                🟡 {lang === 'FR' ? 'Moyen' : 'Medium'}
+                              </button>
+                              <button
+                                onClick={() => handleRateCard('easy')}
+                                className="py-2 bg-emerald-950/20 border border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                              >
+                                🟢 {lang === 'FR' ? 'Facile' : 'Easy'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-4 rounded-2xl bg-blue-600/5 border border-blue-500/10 text-left">
+                            <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1 select-none">
+                              <Sparkles className="w-3 h-3 animate-pulse" />
+                              {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
+                            </p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                              {lang === 'FR' 
+                                ? "Chaque évaluation entraîne directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
+                                : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

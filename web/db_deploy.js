@@ -92,6 +92,7 @@ async function runMigrations() {
     "ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS \"order\" INTEGER",
     // Admin user password hash (SHA-256 of default password)
     "UPDATE public.profiles SET password = '3ba484af8a5fe572560ac841e91b77c9ddb8d6a2f6d9cd203975b8dc16e7fabc' WHERE email = 'vanguard.mysterious@gmail.com' AND (password IS NULL OR password = '')",
+    "ALTER TABLE public.course_feedbacks ADD COLUMN IF NOT EXISTS user_id VARCHAR(255)",
   ];
 
   for (const query of migrations) {

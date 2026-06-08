@@ -23,7 +23,7 @@ const TRANS = {
     desc: "To ensure proper understanding and manage cognitive load, the following prerequisite modules are recommended. If you haven't mastered them, we advise reviewing them first.",
     mastered: "Mastered",
     review: "Review Course",
-    not_started: "Prerequisite Required",
+    not_started: "Required",
     recommended: "Recommended"
   },
   FR: {
@@ -31,7 +31,7 @@ const TRANS = {
     desc: "Pour optimiser votre charge cognitive et assurer la bonne compréhension de cette leçon, les prérequis suivants sont recommandés. Si vous ne les maîtrisez pas, nous vous conseillons de les réviser.",
     mastered: "Maîtrisé",
     review: "Réviser le cours",
-    not_started: "Prérequis Requis",
+    not_started: "Requis",
     recommended: "Recommandé"
   },
   ES: {
@@ -39,7 +39,7 @@ const TRANS = {
     desc: "Para garantizar una comprensión adecuada y gestionar la carga cognitiva, se recomiendan los siguientes módulos de prerrequisitos. Si no los dominas, te aconsejamos revisarlos primero.",
     mastered: "Dominado",
     review: "Revisar curso",
-    not_started: "Prerrequisito Requerido",
+    not_started: "Requerido",
     recommended: "Recomendado"
   },
   DE: {
@@ -47,7 +47,7 @@ const TRANS = {
     desc: "Um ein angemessenes Verständnis zu gewährleisten und die kognitive Belastung zu steuern, werden die folgenden Voraussetzungsmodule empfohlen. Wenn Sie diese nicht beherrschen, empfehlen wir Ihnen, sie zuerst zu wiederholen.",
     mastered: "Meistert",
     review: "Kurs wiederholen",
-    not_started: "Voraussetzung erforderlich",
+    not_started: "Erforderlich",
     recommended: "Empfohlen"
   },
   ZH: {
@@ -55,7 +55,7 @@ const TRANS = {
     desc: "为了确保正确理解并管理认知负荷，建议先修以下模块。如果您尚未掌握，建议先进行复习。",
     mastered: "已掌握",
     review: "复习课程",
-    not_started: "需要先修课程",
+    not_started: "必修",
     recommended: "推荐"
   }
 };
@@ -70,7 +70,7 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
   let resolvedItems = items || [];
   if (itemsBase64) {
     try {
-      resolvedItems = JSON.parse(atob(itemsBase64));
+      resolvedItems = JSON.parse(decodeURIComponent(escape(atob(itemsBase64))));
     } catch (e) {
       console.error("Failed to decode itemsBase64 in Prerequisites:", e);
     }

@@ -819,9 +819,10 @@ export default function CurriculumPage() {
                                         setSelectedEnrollCourse(courseDetails || course);
                                       }}
                                       title="Syllabus"
-                                      className="p-2 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                                      className="px-3 py-1.5 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
                                     >
-                                      <Icons.BookOpen className="w-4 h-4" />
+                                      <Icons.BookOpen className="w-3.5 h-3.5" />
+                                      Syllabus
                                     </button>
 
                                     {/* 6. Bookmark Toggle Button */}
@@ -1021,7 +1022,7 @@ export default function CurriculumPage() {
 
                              <div className="flex justify-between items-center mb-6 gap-2 w-full">
                                 <div className={`w-12 h-12 ${isCurr ? 'bg-violet-600/10 text-violet-400' : 'bg-emerald-600/10 text-emerald-400'} rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                                   {isCurr ? <GraduationCap className="w-6 h-6" /> : <Award className="w-6 h-6 animate-pulse" />}
+                                   {isCurr ? <GraduationCap className="w-6 h-6" /> : <Book className="w-6 h-6" />}
                                 </div>
                                 <div className="flex gap-2 items-center flex-1 justify-end flex-wrap mr-8">
                                    {/* 1. Type Badge */}

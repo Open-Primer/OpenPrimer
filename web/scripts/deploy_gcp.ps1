@@ -57,10 +57,12 @@ Get-Content $envFilePath | ForEach-Object {
 }
 
 $supabaseUrl = $envVars["NEXT_PUBLIC_SUPABASE_URL"]
+$supabaseAnonKey = $envVars["NEXT_PUBLIC_SUPABASE_ANON_KEY"]
 $serviceRoleKey = $envVars["SUPABASE_SERVICE_ROLE_KEY"]
 $geminiApiKey = $envVars["GEMINI_API_KEY"]
 
 if (-not $supabaseUrl) { throw "NEXT_PUBLIC_SUPABASE_URL not found in .env.local" }
+if (-not $supabaseAnonKey) { throw "NEXT_PUBLIC_SUPABASE_ANON_KEY not found in .env.local" }
 if (-not $serviceRoleKey) { throw "SUPABASE_SERVICE_ROLE_KEY not found in .env.local" }
 
 # Define or load CRON_SECRET
@@ -90,17 +92,61 @@ if (-not $repoCheck) {
 }
 
 # 4. Trigger Google Cloud Build Remote Compilation
-Write-Host "Building container image remotely using Google Cloud Build..." -ForegroundColor Yellow
+$webDir = Resolve-Path (Join-Path $PSScriptRoot "..")
 $imageTag = "$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/web-app:latest"
 
-# Change directory to the web folder to execute the build submit
-$webDir = Resolve-Path (Join-Path $PSScriptRoot "..")
-Write-Host "Running build submit from $webDir..." -ForegroundColor Cyan
+$envProdPath = Join-Path $webDir ".env.production"
+$gcloudIgnorePath = Join-Path $webDir ".gcloudignore"
 
-gcloud builds submit $webDir --tag $imageTag --project=$PROJECT_ID
-if ($LastExitCode -ne 0) { throw "Google Cloud Build remote compilation failed." }
+try {
+    Write-Host "Creating temporary build-time configuration files (.env.production & .gcloudignore)..." -ForegroundColor Yellow
+    $envProdContent = @"
+NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabaseAnonKey
+SUPABASE_SERVICE_ROLE_KEY=$serviceRoleKey
+GEMINI_API_KEY=$geminiApiKey
+CRON_SECRET=$cronSecret
+"@
 
-Write-Host "Remote build completed and pushed to Artifact Registry." -ForegroundColor Green
+    $gcloudIgnoreContent = @"
+# Standard gcloudignore rules
+.gcloudignore
+.git/
+.gitignore
+
+# Ignore build artifacts and caches
+node_modules/
+.next/
+playwright-report/
+test-results/
+.codex/
+.cursor/
+.vscode/
+.zed/
+
+# Protect sensitive secrets
+secrets/
+*.json.key
+*-service-account*.json
+openprimer-free*.json
+*serviceaccount*.json
+
+# DO NOT ignore .env.production so Next.js build gets its build-time variables!
+! .env.production
+"@
+
+    Set-Content -Path $envProdPath -Value $envProdContent -Encoding utf8
+    Set-Content -Path $gcloudIgnorePath -Value $gcloudIgnoreContent -Encoding utf8
+
+    Write-Host "Building container image remotely using Google Cloud Build from $webDir..." -ForegroundColor Yellow
+    gcloud builds submit $webDir --tag $imageTag --project=$PROJECT_ID
+    if ($LastExitCode -ne 0) { throw "Google Cloud Build remote compilation failed." }
+    Write-Host "Remote build completed and pushed to Artifact Registry." -ForegroundColor Green
+} finally {
+    Write-Host "Cleaning up temporary build-time files..." -ForegroundColor Yellow
+    if (Test-Path $envProdPath) { Remove-Item $envProdPath -Force }
+    if (Test-Path $gcloudIgnorePath) { Remove-Item $gcloudIgnorePath -Force }
+}
 
 # 5. Deploy Container to Google Cloud Run
 Write-Host "Deploying container to Google Cloud Run..." -ForegroundColor Yellow
@@ -111,7 +157,7 @@ gcloud run deploy $SERVICE_NAME `
     --region=$REGION `
     --allow-unauthenticated `
     --port=3000 `
-    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl,SUPABASE_SERVICE_ROLE_KEY=$serviceRoleKey,CRON_SECRET=$cronSecret,GEMINI_API_KEY=$geminiApiKey" `
+    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl,NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabaseAnonKey,SUPABASE_SERVICE_ROLE_KEY=$serviceRoleKey,CRON_SECRET=$cronSecret,GEMINI_API_KEY=$geminiApiKey" `
     --project=$PROJECT_ID
 if ($LastExitCode -ne 0) { throw "Google Cloud Run deployment failed." }
 
