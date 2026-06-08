@@ -14,7 +14,13 @@ const chatSchema = z.object({
   ).min(1),
   persona: z.string().min(1),
   pageContext: z.string().optional(),
-  language: z.string().min(2).max(10)
+  language: z.string().min(2).max(10),
+  srsMastery: z.record(z.string(), z.string()).optional(),
+  courseLevel: z.string().optional(),
+  courseTitle: z.string().optional(),
+  courseSubject: z.string().optional(),
+  selfEvalPre: z.number().nullable().optional(),
+  selfEvalPost: z.number().nullable().optional()
 });
 
 export async function POST(request: Request) {
@@ -35,7 +41,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid payload structure.', details: parsed.error.format() }, { status: 400 });
     }
 
-    const { messages, persona, pageContext, language } = parsed.data;
+    const { 
+      messages, 
+      persona, 
+      pageContext, 
+      language, 
+      srsMastery,
+      courseLevel,
+      courseTitle,
+      courseSubject,
+      selfEvalPre,
+      selfEvalPost
+    } = parsed.data;
     const langUpper = (language || 'EN').toUpperCase();
 
     // Fetch persona system prompt from DB
@@ -82,12 +99,76 @@ export async function POST(request: Request) {
       ? `Context of the studied page:\n---\n${pageContext}\n---\n`
       : "";
 
-    const directive = `Always respond strictly in ${langName} (${langUpper}). Be concise and rigorous. No meta-comments or preamble.`;
+    // Build Spaced Repetition (SRS) cognitive context block if available
+    let srsDirective = "";
+    if (srsMastery && Object.keys(srsMastery).length > 0) {
+      const conceptClean = (c: string) => c.trim().replace(/^["']|["']$/g, '');
+      const hardConcepts = Object.entries(srsMastery)
+        .filter(([_, level]) => level === 'hard')
+        .map(([concept]) => concept);
+      const mediumConcepts = Object.entries(srsMastery)
+        .filter(([_, level]) => level === 'medium')
+        .map(([concept]) => concept);
+      const easyConcepts = Object.entries(srsMastery)
+        .filter(([_, level]) => level === 'easy')
+        .map(([concept]) => concept);
+
+      srsDirective = "\n--- COGNITIVE PROFILE (STUDENT STRENGTHS & WEAKNESSES) ---\n";
+      srsDirective += "The student has evaluated their mastery of specific concepts using Spaced Repetition flashcards:\n";
+      if (hardConcepts.length > 0) {
+        srsDirective += `- STRUGGLING / HARD CONCEPTS: ${hardConcepts.map(c => `"${conceptClean(c)}"`).join(', ')}. The student is struggling to understand or recall these topics. You MUST subtly focus on these, simplify their definitions, use clear analogies, and organically check for recall of these without ever mentioning that the student rated them as hard or mentioning the word 'flashcards'.\n`;
+      }
+      if (mediumConcepts.length > 0) {
+        srsDirective += `- MEDIUM MASTERY CONCEPTS: ${mediumConcepts.map(c => `"${conceptClean(c)}"`).join(', ')}. The student has a basic grasp of these but could benefit from a bit of reinforcement.\n`;
+      }
+      if (easyConcepts.length > 0) {
+        srsDirective += `- STRONG / EASY CONCEPTS: ${easyConcepts.map(c => `"${conceptClean(c)}"`).join(', ')}. The student has fully mastered these. Do not waste time explaining simple aspects of these unless requested.\n`;
+      }
+      srsDirective += "Subtly tailor your teaching strategy to this profile while keeping your role natural and immersive. Never break the fourth wall or explicitly say 'I see you rated X as hard'.\n---\n";
+    }
+
+    const directive = `Always respond strictly in ${langName} (${langUpper}). Be concise and rigorous. No meta-comments or preamble. You may use bold Markdown (**text**) and LaTeX formatting ($...$ for inline, $$...$$ for blocks) to structure your educational explanations and math/physics equations clearly, as these are rendered perfectly in the user interface. Use standard Markdown tables for structured data, comparisons, and structured text tables. Use Mermaid diagrams (written inside standard \`\`\`mermaid code blocks) to visually represent step-by-step processes, pathways, or system workflows, as they will be automatically rendered as high-fidelity visual charts in the user interface.`;
+    
+    // Build Pedagogical / Curriculum Level Adaptive Prompts
+    let levelContext = "";
+    if (courseSubject || courseTitle || courseLevel) {
+      levelContext = "\n--- CURRICULUM & ADAPTIVE PEDAGOGICAL LEVEL CONTEXT ---\n";
+      levelContext += `You are currently teaching a lesson on the subject of: "${courseSubject || 'Academic Study'}" for the specific page titled: "${courseTitle || 'Active Lesson'}".\n`;
+      
+      const levelUpper = (courseLevel || 'L1').toUpperCase();
+      if (levelUpper.includes('L3') || levelUpper.includes('301') || levelUpper.includes('EXPERT')) {
+        levelContext += `- ACADEMIC LEVEL (Advanced / L3 / 301): The student is studying at an advanced undergraduate/graduate level. Use rigorous scientific/mathematical formalism, precise mathematical notation, complete proofs where helpful, and avoid overly child-like or hand-waving analogies unless specifically requested. Address them as an aspiring expert.\n`;
+      } else if (levelUpper.includes('L2') || levelUpper.includes('201') || levelUpper.includes('INTERMEDIATE')) {
+        levelContext += `- ACADEMIC LEVEL (Intermediate / L2 / 201): The student is studying at an intermediate level. Balance conceptual explanations and logical physical analogies with clean mathematical formulations and step-by-step mathematical reasoning.\n`;
+      } else {
+        // Default to L1 / introductory
+        levelContext += `- ACADEMIC LEVEL (Introductory / L1 / 101): The student is studying at an introductory level. Prioritize core conceptual understanding, foundational mechanics, vivid physical analogies, and strong visualization before showing formulas. Ensure any math or scientific derivation is fully explained step-by-step without skipping transitions.\n`;
+      }
+
+      // Incorporate student self-evaluation scores for active page
+      if (selfEvalPost !== undefined && selfEvalPost !== null) {
+        if (selfEvalPost <= 2) {
+          levelContext += `- STUDENT CONFIDENCE (Low: ${selfEvalPost}/5): The student has evaluated their own understanding of this specific page's content as low or confusing. Be exceptionally encouraging, break down complex concepts into bite-sized logical steps, use multi-part illustrative analogies, and verify comprehension gently. Minimize assumed prior knowledge.\n`;
+        } else if (selfEvalPost >= 4) {
+          levelContext += `- STUDENT CONFIDENCE (High: ${selfEvalPost}/5): The student feels highly confident about this specific page's content. Skip basic or trivial definitions. Keep explanations highly efficient, introduce stimulating advanced edge cases, explore deeper intellectual connections, or challenge them with thought-provoking conceptual queries.\n`;
+        } else {
+          levelContext += `- STUDENT CONFIDENCE (Moderate: ${selfEvalPost}/5): The student has a moderate grasp. Provide structured reinforcing explanations that bridge their gaps.\n`;
+        }
+      } else if (selfEvalPre !== undefined && selfEvalPre !== null) {
+        if (selfEvalPre <= 2) {
+          levelContext += `- STUDENT PRE-CONFIDENCE (Low: ${selfEvalPre}/5): The student started this page feeling low in confidence. Check if they have cleared their early doubts, offer supportive foundational support, and prioritize clear conceptual breakdowns.\n`;
+        } else if (selfEvalPre >= 4) {
+          levelContext += `- STUDENT PRE-CONFIDENCE (High: ${selfEvalPre}/5): The student started with high confidence. Keep the pacing swift and mathematically/conceptually rich.\n`;
+        }
+      }
+      levelContext += "Adjust your explanatory depth, technical vocabulary, and mathematical detail to match this academic level and student confidence rating perfectly and organically. Never break the fourth wall by mentioning the level or rating numbers to the student.\n---\n";
+    }
+
     const personalizationDirective = firstName && firstName !== 'Dev'
       ? `The student's name is ${firstName}. Address them naturally and warmly using their first name occasionally.`
       : `The student's name is not provided. Use a professional, neutral tone.`;
 
-    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${directive}\n\n${personalizationDirective}`;
+    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${levelContext}${srsDirective}${directive}\n\n${personalizationDirective}`;
 
     const contents = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'model' : 'user',

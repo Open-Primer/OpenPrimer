@@ -2525,6 +2525,8 @@ export const ACADEMIC_LEVELS = [
   { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Primer Año', DE: 'L1 — 1. Studienjahr', ZH: 'L1 — \u5927\u4e00' },
   { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Segundo Año', DE: 'L2 — 2. Studienjahr', ZH: 'L2 — \u5927\u4e8c' },
   { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — \u5927\u4e09\uff08\u5b68\u58eb\uff09' },
+  { value: 'M1',           EN: 'M1 — 1st Year (Master)', FR: 'M1 — 1ère Année de Master', ES: 'M1 — Máster (1er Año)', DE: 'M1 — Master (1. Jahr)', ZH: 'M1 — \u7814\u4e00' },
+  { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — \u7814\u4e8c' },
 ] as const;
 
 export const DISCIPLINES = [
@@ -3180,21 +3182,32 @@ export default function AdminCurriculumPage() {
   // Dynamic Image Resizing to Standard 128x128 JPEG to be under 50KB
   const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
     return new Promise((resolve) => {
+      // Bypass canvas resizing entirely for SVGs to prevent tainted canvas exceptions
+      if (imageSrc && (imageSrc.includes('image/svg+xml') || imageSrc.startsWith('<svg') || imageSrc.includes('.svg'))) {
+        resolve(imageSrc);
+        return;
+      }
+
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(imageSrc);
+            return;
+          }
+          canvas.width = 128;
+          canvas.height = 128;
+          ctx.clearRect(0, 0, 128, 128);
+          ctx.drawImage(img, 0, 0, 128, 128);
+          const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(resultBase64);
+        } catch (err) {
+          console.warn("[IMAGE STANDARDIZATION] Canvas operation failed. Falling back to original source:", err);
           resolve(imageSrc);
-          return;
         }
-        canvas.width = 128;
-        canvas.height = 128;
-        ctx.clearRect(0, 0, 128, 128);
-        ctx.drawImage(img, 0, 0, 128, 128);
-        const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
-        resolve(resultBase64);
       };
       img.onerror = () => {
         resolve(imageSrc);
@@ -3910,11 +3923,17 @@ export default function AdminCurriculumPage() {
         } else if (course.level === 'L2') {
           nextLevel = 'L3';
           nextTitlePrefix = 'Masterclass';
+        } else if (course.level === 'L3') {
+          nextLevel = 'M1';
+          nextTitlePrefix = 'Research';
+        } else if (course.level === 'M1') {
+          nextLevel = 'M2';
+          nextTitlePrefix = 'Specialized';
         }
         
         if (nextLevel) {
           // Remove level prefixes to make cleaner progression course name
-          const baseTitle = course.title.replace(/(L1|L2|L3|Advanced|Masterclass|Physique|Biologie|Droit|Maths|Test|\(.*\))/g, '').trim();
+          const baseTitle = course.title.replace(/(L1|L2|L3|M1|M2|Advanced|Masterclass|Research|Specialized|Physique|Biologie|Droit|Maths|Test|\(.*\))/g, '').trim();
           const proposedTitle = `${nextTitlePrefix} ${baseTitle}`;
           const lowerProposed = proposedTitle.toLowerCase();
           
@@ -6591,7 +6610,7 @@ export default function AdminCurriculumPage() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-slate-400 font-mono font-bold">
-                                  {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : course.level))}
+                                  {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : (course.level === 'M1' ? '501' : (course.level === 'M2' ? '502' : course.level))))}
                                 </td>
                                 <td className="px-6 py-4">
                                   <ArchivingLevelButtons 
@@ -6898,7 +6917,22 @@ export default function AdminCurriculumPage() {
                                 <div className="flex items-center gap-2">
                                   {task.status === 'complete' || task.status === 'completed' ? (
                                     (() => {
-                                      const matched = courses.find(c => c.title.toLowerCase() === task.title.toLowerCase());
+                                      const cleanForCompare = (str: string): string => {
+                                        if (!str) return '';
+                                        return str
+                                          .toLowerCase()
+                                          .normalize('NFD')
+                                          .replace(/[\u0300-\u036f]/g, '')
+                                          .replace(/[^a-z0-9]/g, '')
+                                          .trim();
+                                      };
+                                      const matched = courses.find(c => {
+                                        const cleanCT = cleanForCompare(c.title);
+                                        const cleanTT = cleanForCompare(task.title);
+                                        const cleanCS = cleanForCompare(c.slug);
+                                        const cleanTS = cleanForCompare(task.title.replace(/\s+/g, '_'));
+                                        return cleanCT === cleanTT || cleanCS === cleanTT || cleanCT === cleanTS || cleanCS === cleanTS;
+                                      });
                                       if (matched && task.type === 'generation') {
                                         const safeSubject = (matched.subject || 'General').replace(/\s+/g, '_');
                                         return (

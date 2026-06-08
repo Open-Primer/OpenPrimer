@@ -383,7 +383,9 @@ nextjs-portal {
 
 .theme-paper .text-red-400,
 .theme-paper .text-red-500,
-.theme-paper .text-red-650 {
+.theme-paper .text-red-650,
+.theme-paper .text-rose-400,
+.theme-paper .text-rose-500 {
   color: #991b1b !important; /* Deep Crimson */
 }
 
@@ -402,21 +404,29 @@ nextjs-portal {
 .theme-paper .bg-blue-955\/40,
 .theme-paper .bg-blue-550\/10,
 .theme-paper .bg-blue-500\/10,
-.theme-paper .bg-blue-600\/10,
 .theme-paper .bg-blue-600\/20,
 .theme-paper .bg-blue-950\/10 {
   background-color: #e0f2fe !important;
   border-color: #bae6fd !important;
 }
 
+.theme-paper .bg-blue-600\/10 {
+  background-color: rgba(14, 165, 233, 0.15) !important;
+  border-color: rgba(14, 165, 233, 0.25) !important;
+}
+
 .theme-paper .bg-violet-950\/40,
 .theme-paper .bg-violet-955\/40,
 .theme-paper .bg-violet-550\/10,
 .theme-paper .bg-violet-500\/10,
-.theme-paper .bg-violet-600\/10,
 .theme-paper .bg-violet-950\/10 {
   background-color: #f3e8ff !important;
   border-color: #e9d5ff !important;
+}
+
+.theme-paper .bg-violet-600\/10 {
+  background-color: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.25) !important;
 }
 
 .theme-paper .bg-amber-500\/10,
@@ -429,6 +439,22 @@ nextjs-portal {
 .theme-paper .bg-emerald-600\/10 {
   background-color: #d1fae5 !important;
   border-color: #a7f3d0 !important;
+}
+
+/* Translucent semantic backgrounds for incorrect states in Paper Mode */
+.theme-paper .bg-red-500\/10,
+.theme-paper .bg-red-600\/10,
+.theme-paper .bg-rose-500\/10,
+.theme-paper .bg-rose-600\/10 {
+  background-color: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
+/* Translucent semantic backgrounds for soft purple tutor feedback cards in Paper Mode */
+.theme-paper .bg-violet-950\/10,
+.theme-paper .bg-violet-500\/10 {
+  background-color: #f3e8ff !important;
+  border-color: #e9d5ff !important;
 }
 
 
@@ -634,6 +660,38 @@ nextjs-portal {
   display: none !important;
 }
 
+/* Custom focus input and placeholder overrides for the pure black monochrome theme */
+.theme-focus input[type="text"],
+.theme-focus input[type="email"],
+.theme-focus input[type="password"],
+.theme-focus input[type="number"],
+.theme-focus input[type="date"],
+.theme-focus select,
+.theme-focus textarea,
+.theme-focus input {
+  background-color: #0c0c0d !important;
+  border-color: #262626 !important;
+  color: #e5e5e5 !important;
+}
+
+.theme-focus input::placeholder,
+.theme-focus textarea::placeholder,
+.theme-focus input::-webkit-input-placeholder,
+.theme-focus textarea::-webkit-input-placeholder {
+  color: #737373 !important;
+  opacity: 1 !important;
+}
+
+/* Translucent semantic backgrounds for incorrect states in Focus Mode */
+.theme-focus .bg-red-500\/10,
+.theme-focus .bg-red-600\/10,
+.theme-focus .bg-rose-500\/10,
+.theme-focus .bg-rose-600\/10 {
+  background-color: #1c0f0f !important;
+  border-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+}
+
 /* Custom premium styles for warning and translation guide banners across themes */
 .theme-paper .translation-guide-banner {
   background-color: #eff6ff !important;
@@ -810,5 +868,81 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-paper .report-bug-btn:hover svg {
   color: #dc2626 !important;
 }
+
+
+/* --- Premium Custom Alerts Styling --- */
+.custom-alert {
+  transition: all 0.3s ease;
+}
+
+/* Paper Theme Alerts Overrides */
+.theme-paper .custom-alert.alert-note {
+  background-color: #f0f9ff !important;
+  border-color: #dbd5be !important;
+  border-left-color: #0284c7 !important;
+}
+.theme-paper .custom-alert.alert-note .alert-title,
+.theme-paper .custom-alert.alert-note svg {
+  color: #0369a1 !important;
+}
+
+.theme-paper .custom-alert.alert-warning {
+  background-color: #fffbeb !important;
+  border-color: #dbd5be !important;
+  border-left-color: #d97706 !important;
+}
+.theme-paper .custom-alert.alert-warning .alert-title,
+.theme-paper .custom-alert.alert-warning svg {
+  color: #b45309 !important;
+}
+
+.theme-paper .custom-alert.alert-important {
+  background-color: #fff1f2 !important;
+  border-color: #dbd5be !important;
+  border-left-color: #e11d48 !important;
+}
+.theme-paper .custom-alert.alert-important .alert-title,
+.theme-paper .custom-alert.alert-important svg {
+  color: #be123c !important;
+}
+
+.theme-paper .custom-alert.alert-tip {
+  background-color: #f0fdf4 !important;
+  border-color: #dbd5be !important;
+  border-left-color: #16a34a !important;
+}
+.theme-paper .custom-alert.alert-tip .alert-title,
+.theme-paper .custom-alert.alert-tip svg {
+  color: #15803d !important;
+}
+
+.theme-paper .custom-alert.alert-caution {
+  background-color: #fef2f2 !important;
+  border-color: #dbd5be !important;
+  border-left-color: #dc2626 !important;
+}
+.theme-paper .custom-alert.alert-caution .alert-title,
+.theme-paper .custom-alert.alert-caution svg {
+  color: #b91c1c !important;
+}
+
+.theme-paper .custom-alert .alert-content {
+  color: #1e293b !important;
+}
+
+/* Focus Theme Alerts Overrides (Pure Black/White High Contrast) */
+.theme-focus .custom-alert {
+  background-color: #000000 !important;
+  border-color: #262626 !important;
+  border-left-color: #ffffff !important;
+}
+.theme-focus .custom-alert .alert-title,
+.theme-focus .custom-alert svg {
+  color: #ffffff !important;
+}
+.theme-focus .custom-alert .alert-content {
+  color: #a3a3a3 !important;
+}
+
 
 

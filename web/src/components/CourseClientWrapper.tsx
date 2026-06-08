@@ -12,9 +12,19 @@ interface CourseClientWrapperProps {
   children: React.ReactNode;
   navItems: any[];
   pageContext?: string;
+  courseLevel?: string;
+  courseTitle?: string;
+  courseSubject?: string;
 }
 
-export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseClientWrapperProps) => {
+export const CourseClientWrapper = ({ 
+  children, 
+  navItems, 
+  pageContext,
+  courseLevel,
+  courseTitle,
+  courseSubject
+}: CourseClientWrapperProps) => {
   const { language } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
@@ -23,10 +33,46 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
+  const [tutorEnabled, setTutorEnabled] = useState(true);
+
+  // Sync tutor preference from localStorage
+  useEffect(() => {
+    const syncTutorEnabled = () => {
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.tutorEnabled !== undefined) {
+            setTutorEnabled(p.tutorEnabled);
+          } else if (p.tutor_enabled !== undefined) {
+            setTutorEnabled(p.tutor_enabled);
+          } else {
+            setTutorEnabled(true);
+          }
+        } catch (e) {
+          setTutorEnabled(true);
+        }
+      } else {
+        setTutorEnabled(true);
+      }
+    };
+    syncTutorEnabled();
+    window.addEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
+    window.addEventListener('storage', syncTutorEnabled);
+    return () => {
+      window.removeEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
+      window.removeEventListener('storage', syncTutorEnabled);
+    };
+  }, []);
 
   // Feynman text selection listener
   useEffect(() => {
     const handleSelectionChange = () => {
+      if (!tutorEnabled) {
+        setSelection(null);
+        return;
+      }
+      
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
         setSelection(null);
@@ -64,7 +110,7 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
-  }, []);
+  }, [tutorEnabled]);
 
   // Expose to window for TopNav
   useEffect(() => {
@@ -450,10 +496,15 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
         </main>
       </div>
 
-      <AITutorOverlay pageContext={pageContext} />
+      <AITutorOverlay 
+        pageContext={pageContext} 
+        courseLevel={courseLevel}
+        courseTitle={courseTitle}
+        courseSubject={courseSubject}
+      />
       <AudioReader content={pageContext} lang={typeof window !== 'undefined' ? (localStorage.getItem('openprimer_lang') || 'EN') : 'EN'} />
 
-      {selection && (
+      {tutorEnabled && selection && (
         <div 
           style={{ 
             position: 'fixed', 
@@ -462,47 +513,49 @@ export const CourseClientWrapper = ({ children, navItems, pageContext }: CourseC
             transform: 'translateX(-50%)',
             zIndex: 9999 
           }}
-          className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl animate-fade-in text-[10px] font-black uppercase tracking-wider text-slate-100"
+          className="flex items-center gap-1.5 p-1.5 bg-slate-900/90 border border-slate-800/80 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-md animate-fade-in text-[10px] font-black uppercase tracking-wider text-slate-100"
         >
-          <span className="text-slate-400 px-2 select-none">Feynman:</span>
+          <span className="text-slate-400 px-2 select-none normal-case font-bold text-xs">
+            {language === 'FR' ? 'Demander en tant que :' : 'Ask as:'}
+          </span>
           <button
             onClick={() => {
               const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe comme si j'avais 5 ans (Primaire) :\n\n"${selection.text}"`
-                : `Explain this paragraph to me like I am 5 years old (Primary) :\n\n"${selection.text}"`;
+                ? `Explique-moi ce paragraphe au niveau Débutant (concept ultra-simplifié avec des analogies simples et vivantes) :\n\n"${selection.text}"`
+                : `Explain this paragraph to me at a Beginner level (ultra-simplified concept with simple, vivid analogies) :\n\n"${selection.text}"`;
               window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
               setSelection(null);
               window.getSelection()?.removeAllRanges();
             }}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-blue-600 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+            className="px-3 py-1.5 bg-slate-950/60 hover:bg-blue-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-blue-500/50 flex items-center gap-1 font-bold text-xs normal-case"
           >
-            👶 5 ans
+            👶 {language === 'FR' ? 'Débutant' : 'Beginner'}
           </button>
           <button
             onClick={() => {
               const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe comme si j'avais 15 ans (Collège) :\n\n"${selection.text}"`
-                : `Explain this paragraph to me like I am 15 years old (Middle School) :\n\n"${selection.text}"`;
+                ? `Explique-moi ce paragraphe au niveau Intermédiaire (explication claire avec des modèles conceptuels équilibrés) :\n\n"${selection.text}"`
+                : `Explain this paragraph to me at an Intermediate level (clear explanation with balanced conceptual models) :\n\n"${selection.text}"`;
               window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
               setSelection(null);
               window.getSelection()?.removeAllRanges();
             }}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-indigo-650 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+            className="px-3 py-1.5 bg-slate-950/60 hover:bg-indigo-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-indigo-500/50 flex items-center gap-1 font-bold text-xs normal-case"
           >
-            👦 15 ans
+            👦 {language === 'FR' ? 'Intermédiaire' : 'Intermediate'}
           </button>
           <button
             onClick={() => {
               const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe via le formalisme mathématique strict (L3) :\n\n"${selection.text}"`
-                : `Explain this paragraph using strict mathematical formalism (L3) :\n\n"${selection.text}"`;
+                ? `Explique-moi ce paragraphe au niveau Expert (avec un formalisme scientifique/mathématique rigoureux et précis) :\n\n"${selection.text}"`
+                : `Explain this paragraph to me at an Expert level (using rigorous and precise scientific/mathematical formalism) :\n\n"${selection.text}"`;
               window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
               setSelection(null);
               window.getSelection()?.removeAllRanges();
             }}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-violet-650 rounded-lg hover:text-white transition-all cursor-pointer border border-slate-800"
+            className="px-3 py-1.5 bg-slate-950/60 hover:bg-violet-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-violet-500/50 flex items-center gap-1 font-bold text-xs normal-case"
           >
-            🎓 L3 Math
+            🎓 {language === 'FR' ? 'Expert' : 'Expert'}
           </button>
         </div>
       )}

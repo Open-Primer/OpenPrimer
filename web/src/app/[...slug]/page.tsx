@@ -102,6 +102,14 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         if (lUpper === 'EN') lvlVal = '301';
         else if (lUpper === 'ZH') lvlVal = '大三 (301)';
         else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L3 (301)';
+      } else if (lvlStr === 'M1') {
+        if (lUpper === 'EN') lvlVal = '501';
+        else if (lUpper === 'ZH') lvlVal = '研一 (501)';
+        else if (lUpper === 'ES' || lUpper === 'DE' || lUpper === 'FR') lvlVal = 'M1 (501)';
+      } else if (lvlStr === 'M2') {
+        if (lUpper === 'EN') lvlVal = '502';
+        else if (lUpper === 'ZH') lvlVal = '研二 (502)';
+        else if (lUpper === 'ES' || lUpper === 'DE' || lUpper === 'FR') lvlVal = 'M2 (502)';
       } else if (/^\d+$/.test(lvlStr)) {
         const num = parseInt(lvlStr, 10);
         if (lUpper === 'ZH') lvlVal = `${num}年级`;
@@ -198,7 +206,13 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     };
 
     return (
-      <CourseClientWrapper navItems={navItems} pageContext={pageData.content}>
+      <CourseClientWrapper 
+        navItems={navItems} 
+        pageContext={pageData.content}
+        courseLevel={level}
+        courseTitle={title}
+        courseSubject={subject}
+      >
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
           {/* Breadcrumbs & Export */}
           <div className="flex items-center justify-between gap-4 mb-12 distraction-free-hide">
@@ -337,7 +351,13 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     if (navItems.length > 0) {
       return (
-        <CourseClientWrapper navItems={navItems} pageContext={pageData?.content || ''}>
+        <CourseClientWrapper 
+          navItems={navItems} 
+          pageContext={pageData?.content || ''}
+          courseLevel={pageData?.meta?.level || 'L1'}
+          courseTitle={title}
+          courseSubject={subject}
+        >
           <div className="max-w-4xl mx-auto py-16 px-12 pb-40 relative min-h-[600px]">
             {/* Blurred background layout to give context */}
             <div className="filter blur-md opacity-30 select-none pointer-events-none">

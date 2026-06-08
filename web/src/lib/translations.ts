@@ -2,6 +2,7 @@
 
 export const STATIC_UI_STRINGS = {
   EN: {
+    glossary_definition: "Glossary Definition",
     give_example_prompt: "Give me a concrete real-world example of this concept.",
     tell_story_prompt: "Tell me a historical anecdote about this discovery.",
     simplify_prompt: "Explain this to me as if I were a complete beginner.",
@@ -181,6 +182,7 @@ export const STATIC_UI_STRINGS = {
     enroll_label: "Enroll"
   },
   FR: {
+    glossary_definition: "Définition du Glossaire",
     give_example_prompt: "Donne-moi un exemple concret de ce concept dans le monde réel.",
     tell_story_prompt: "Raconte-moi une anecdote historique sur cette découverte.",
     simplify_prompt: "Explique-moi cela comme si j'étais un grand débutant.",
@@ -360,6 +362,7 @@ export const STATIC_UI_STRINGS = {
     enroll_label: "S'inscrire"
   },
   ES: {
+    glossary_definition: "Definición del Glosario",
     give_example_prompt: "Dame un ejemplo concreto de este concepto en el mundo real.",
     tell_story_prompt: "Cuéntame una anécdota histórica sobre este descubrimiento.",
     simplify_prompt: "Explícame esto como si fuera un principiante absoluto.",
@@ -539,6 +542,7 @@ export const STATIC_UI_STRINGS = {
     enroll_label: "Inscribirse"
   },
   DE: {
+    glossary_definition: "Glossar-Definition",
     give_example_prompt: "Gib mir ein konkretes, reales Beispiel für dieses Konzept.",
     tell_story_prompt: "Erzähl mir eine historische Anekdote über diese Entdeckung.",
     simplify_prompt: "Erkläre mir das so, als ob ich ein absoluter Anfänger wäre.",
@@ -706,7 +710,8 @@ export const STATIC_UI_STRINGS = {
     enroll_label: "Einschreiben"
   },
   ZH: {
-    give_example_prompt: "给我一个这个概念的具体实际例子。",
+    glossary_definition: "词汇表定义",
+    give_example_prompt: "给我一个这个概念在现实世界中的具体例子。",
     tell_story_prompt: "给我讲一个关于这个发现的历史轶事。",
     simplify_prompt: "把这个解释给我听，就像我是一个完全的初学者一样。",
     test_me_prompt: "给我一个挑战性问题来测试我的理解。",

@@ -7,6 +7,317 @@ const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
   ? path.join(process.cwd(), 'content')
   : path.join(process.cwd(), '../content');
 
+export const SUBJECT_TRANSLATIONS: Record<string, Record<string, string>> = {
+  mathematics: {
+    en: "mathematics",
+    fr: "les mathématiques",
+    es: "las matemáticas",
+    de: "die Mathematik",
+    zh: "数学"
+  },
+  statistics: {
+    en: "statistics & probability",
+    fr: "les statistiques et probabilités",
+    es: "la estadística y probabilidad",
+    de: "die Statistik und Wahrscheinlichkeit",
+    zh: "统计与概率论"
+  },
+  physics: {
+    en: "physics",
+    fr: "la physique",
+    es: "la física",
+    de: "die Physik",
+    zh: "物理学"
+  },
+  chemistry: {
+    en: "chemistry",
+    fr: "la chimie",
+    es: "la química",
+    de: "die Chemie",
+    zh: "化学"
+  },
+  biology: {
+    en: "biology",
+    fr: "la biologie",
+    es: "la biología",
+    de: "die Biologie",
+    zh: "生物学"
+  },
+  biochemistry: {
+    en: "biochemistry",
+    fr: "la biochimie",
+    es: "la bioquímica",
+    de: "die Biochemie",
+    zh: "生物化学"
+  },
+  genetics: {
+    en: "genetics",
+    fr: "la génétique",
+    es: "la genética",
+    de: "die Genetik",
+    zh: "遗传学"
+  },
+  computer_science: {
+    en: "computer science",
+    fr: "l'informatique",
+    es: "la informática",
+    de: "die Informatik",
+    zh: "计算机科学"
+  },
+  data_science: {
+    en: "data science & analytics",
+    fr: "la science des données",
+    es: "la ciencia de datos",
+    de: "die Datenwissenschaft",
+    zh: "数据科学"
+  },
+  law: {
+    en: "law",
+    fr: "le droit",
+    es: "el derecho",
+    de: "die Rechtswissenschaften",
+    zh: "法学"
+  },
+  criminology: {
+    en: "criminology",
+    fr: "la criminologie",
+    es: "la criminología",
+    de: "die Kriminologie",
+    zh: "犯罪学"
+  },
+  political_science: {
+    en: "political science",
+    fr: "la science politique",
+    es: "la ciencia política",
+    de: "die Politikwissenschaft",
+    zh: "政治学"
+  },
+  economics: {
+    en: "economics",
+    fr: "l'économie",
+    es: "la economía",
+    de: "die Wirtschaftswissenschaften",
+    zh: "经济学"
+  },
+  sociology: {
+    en: "sociology",
+    fr: "la sociologie",
+    es: "la sociología",
+    de: "die Soziologie",
+    zh: "社会学"
+  },
+  psychology: {
+    en: "psychology",
+    fr: "la psychologie",
+    es: "la psicología",
+    de: "die Psychologie",
+    zh: "心理学"
+  },
+  social_psychology: {
+    en: "social psychology",
+    fr: "la psychologie sociale",
+    es: "la psicología social",
+    de: "die Sozialpsychologie",
+    zh: "社会心理学"
+  },
+  cognitive_science: {
+    en: "cognitive science",
+    fr: "les sciences cognitives",
+    es: "la ciencia cognitiva",
+    de: "die Kognitionswissenschaft",
+    zh: "认知科学"
+  },
+  history: {
+    en: "history",
+    fr: "l'histoire",
+    es: "la historia",
+    de: "die Geschichte",
+    zh: "历史学"
+  },
+  philosophy: {
+    en: "philosophy",
+    fr: "la philosophie",
+    es: "la filosofía",
+    de: "die Philosophie",
+    zh: "哲学"
+  },
+  theology: {
+    en: "theology",
+    fr: "la théologie",
+    es: "la teología",
+    de: "die Teologie",
+    zh: "神学"
+  },
+  social: {
+    en: "social sciences",
+    fr: "les sciences sociales",
+    es: "las ciencias sociales",
+    de: "die Sozialwissenschaften",
+    zh: "社会科学"
+  },
+  general: {
+    en: "general knowledge",
+    fr: "la culture générale",
+    es: "la cultura general",
+    de: "die Allgemeinbildung",
+    zh: "一般知识"
+  }
+};
+
+export function getTranslatedSubject(subject: string, lang: string): string {
+  const cleanSubject = (subject || '').trim().toLowerCase().replace(/\s+/g, '_');
+  const langKey = (lang || 'en').trim().toLowerCase();
+  
+  const translations = SUBJECT_TRANSLATIONS[cleanSubject];
+  if (translations && translations[langKey]) {
+    return translations[langKey];
+  }
+  
+  if (cleanSubject === 'social_sciences' || cleanSubject === 'social' || cleanSubject === 'sociales') {
+    return SUBJECT_TRANSLATIONS['social'][langKey] || 'social sciences';
+  }
+  
+  return subject || '';
+}
+
+export function getLocalizedDefaultTemplate(course: any, pageTitle: string, lang: string): string {
+  const currentLang = (lang || 'en').toLowerCase();
+  const subjectTranslated = getTranslatedSubject(course.subject, currentLang);
+  
+  if (currentLang === 'fr') {
+    return `---
+title: "${pageTitle}"
+subject: "${course.subject}"
+level: "${course.level}"
+module: "Introduction"
+---
+
+# ${course.title} - ${pageTitle}
+
+Bienvenue dans le module souverain de **${course.title}**, conçu et synthétisé de manière dynamique par notre moteur d'intelligence artificielle pédagogique.
+
+> Ce cours a été généré à la demande pour répondre à vos objectifs d'apprentissage uniques. Toutes les sections sont entièrement personnalisées pour votre niveau (${course.level}).
+
+## 🌟 Objectifs du cours
+Dans ce cours axé sur **${subjectTranslated}**, nous allons explorer en profondeur les concepts clés, en s'assurant d'une base théorique solide combinée à des applications concrètes :
+- Maîtriser les fondations de *${course.title}*.
+- Connecter les théories académiques à des perspectives concrètes et historiques.
+- Développer un esprit d'analyse critique et une intuition profonde.
+
+## 📚 Structure du Module
+1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
+2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
+3. **Études de Cas et Applications** : Mettre la théorie en pratique.
+`;
+  }
+  
+  if (currentLang === 'es') {
+    return `---
+title: "${pageTitle}"
+subject: "${course.subject}"
+level: "${course.level}"
+module: "Introducción"
+---
+
+# ${course.title} - ${pageTitle}
+
+Bienvenido al módulo soberano de **${course.title}**, sintetizado dinámicamente por nuestro motor de inteligencia artificial pedagógica.
+
+> Este curso fue generado a pedido para cumplir con sus objetivos de aprendizaje únicos. Todas las secciones están completamente personalizadas para su nivel (${course.level}).
+
+## 🌟 Objetivos de Aprendizaje
+En este curso centrado en **${subjectTranslated}**, profundizaremos en conceptos clave, asegurando una base teórica sólida combinada con aplicaciones concretas:
+- Dominar los fundamentos de *${course.title}*.
+- Conectar teorías académicas con perspectivas concretas e históricas.
+- Desarrollar el análisis crítico y una intuición profunda.
+
+## 📚 Estructura del Módulo
+1. **Introducción y Contextualización**: Comprender el "por qué" y los orígenes.
+2. **Principios Fundamentales**: Formulación y rigor conceptual.
+3. **Estudios de Caso y Aplicaciones**: Poner la teoría en práctica.
+`;
+  }
+  
+  if (currentLang === 'de') {
+    return `---
+title: "${pageTitle}"
+subject: "${course.subject}"
+level: "${course.level}"
+module: "Einführung"
+---
+
+# ${course.title} - ${pageTitle}
+
+Willkommen im souveränen Modul von **${course.title}**, das von unserer pädagogischen künstlichen Intelligenz dynamisch synthetisiert wurde.
+
+> Dieser Kurs wurde auf Anfrage erstellt, um Ihre individuellen Lernziele zu erreichen. Alle Abschnitte sind vollständig auf Ihr Niveau (${course.level}) personalisiert.
+
+## 🌟 Lernziele
+In diesem Kurs, der sich auf **${subjectTranslated}** konzentriert, werden wir tief in Schlüsselkonzepte eintauchen und eine solide theoretische Grundlage in Kombination mit konkreten Anwendungen sicherstellen:
+- Beherrschen Sie die Grundlagen von *${course.title}*.
+- Verbinden Sie akademische Theorien mit konkreten und historischen Perspektiven.
+- Entwickeln Sie kritische Analysen und tiefe Intuition.
+
+## 📚 Modulstruktur
+1. **Einführung und Kontextualisierung**: Das "Warum" und die Ursprünge verstehen.
+2. **Grundlegende Prinzipien**: Begriffliche Formulierung und Strenge.
+3. **Fallstudien und Anwendungen**: Theorie in die Praxis umsetzen.
+`;
+  }
+  
+  if (currentLang === 'zh') {
+    return `---
+title: "${pageTitle}"
+subject: "${course.subject}"
+level: "${course.level}"
+module: "介绍"
+---
+
+# ${course.title} - ${pageTitle}
+
+欢迎来到**${course.title}**主权模块，该模块由我们的教学人工智能引擎动态合成。
+
+> 本课程是根据您的独特学习目标按需生成的。所有部分均针对您的水平（${course.level}）进行了完全个性化定制。
+
+## 🌟 学习目标
+在本门专注于**${subjectTranslated}**的课程中，我们将深入探讨核心概念，确保将坚实的理论基础与具体应用相结合：
+- 掌握*${course.title}*的核心基石。
+- 将学术理论与具体和历史视角相联系。
+- 培养批判性分析和深刻的直觉。
+
+## 📚 模块结构
+1. **引入与情境化**：理解“为什么”以及其起源。
+2. **基本原理**：概念构建与严谨性。
+3. **案例研究与应用**：将理论付诸实践。
+`;
+  }
+  
+  return `---
+title: "${pageTitle}"
+subject: "${course.subject}"
+level: "${course.level}"
+module: "Introduction"
+---
+
+# ${course.title} - ${pageTitle}
+
+Welcome to the sovereign module of **${course.title}**, dynamically synthesized by our pedagogical artificial intelligence engine.
+
+> This course was generated on demand to meet your unique learning objectives. All sections are fully personalized for your level (${course.level}).
+
+## 🌟 Learning Objectives
+In this course focused on **${subjectTranslated}**, we will dive deep into key concepts, ensuring a solid theoretical foundation combined with concrete applications:
+- Master the foundations of *${course.title}*.
+- Connect academic theories with concrete and historical perspectives.
+- Develop critical analysis and deep intuition.
+
+## 📚 Module Structure
+1. **Introduction and Contextualization**: Understanding the "why" and the origins.
+2. **Fundamental Principles**: Conceptual formulation and rigor.
+3. **Case Studies and Applications**: Putting theory into practice.
+`;
+}
+
 export interface NavItem {
   name: string;
   type: 'folder' | 'file';
@@ -189,7 +500,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || slug[0],
             module: meta.module || "Core Module"
           },
-          content: preprocessMdx(bodyContent)
+          content: preprocessMdx(bodyContent, lang)
         };
       }
 
@@ -213,7 +524,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || slug[0],
             module: meta.module || "Core Module"
           },
-          content: preprocessMdx(bodyContent)
+          content: preprocessMdx(bodyContent, fallbackLesson.lang || lang)
         };
       }
     } catch (err) {
@@ -278,65 +589,13 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             zh: "概述"
           };
           const pageTitle = slug[3] ? slug[3].replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()) : (overviewMap[lang.toLowerCase()] || "Overview");
-          const isFr = lang.toLowerCase() === 'fr';
           
-          let mdxContent = '';
-          if (isFr) {
-            mdxContent = `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Introduction"
----
-
-# ${course.title} - ${pageTitle}
-
-Bienvenue dans le module souverain de **${course.title}**, conçu et synthétisé de manière dynamique par notre moteur d'intelligence artificielle pédagogique.
-
-> Ce cours a été généré à la demande pour répondre à vos objectifs d'apprentissage uniques. Toutes les sections sont entièrement personnalisées pour votre niveau (${course.level}).
-
-## 🌟 Objectifs du cours
-Dans ce cours axé sur **${course.subject}**, nous allons explorer en profondeur les concepts clés, en s'assurant d'une base théorique solide combinée à des applications concrètes :
-- Maîtriser les fondations de *${course.title}*.
-- Connecter les théories académiques à des perspectives concrètes et historiques.
-- Développer un esprit d'analyse critique et une intuition profonde.
-
-## 📚 Structure du Module
-1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
-2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
-3. **Études de Cas et Applications** : Mettre la théorie en pratique.
-`;
-          } else {
-            mdxContent = `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Introduction"
----
-
-# ${course.title} - ${pageTitle}
-
-Welcome to the sovereign module of **${course.title}**, dynamically synthesized by our pedagogical artificial intelligence engine.
-
-> This course was generated on demand to meet your unique learning objectives. All sections are fully personalized for your level (${course.level}).
-
-## 🌟 Learning Objectives
-In this course focused on **${course.subject}**, we will dive deep into key concepts, ensuring a solid theoretical foundation combined with concrete applications:
-- Master the foundations of *${course.title}*.
-- Connect academic theories with concrete and historical perspectives.
-- Develop critical analysis and deep intuition.
-
-## 📚 Module Structure
-1. **Introduction and Contextualization**: Understanding the "why" and the origins.
-2. **Fundamental Principles**: Conceptual formulation and rigor.
-3. **Case Studies and Applications**: Putting theory into practice.
-`;
-          }
+          const mdxContent = getLocalizedDefaultTemplate(course, pageTitle, lang);
 
           const { data, content: bodyContent } = matter(mdxContent);
           return {
             meta: data,
-            content: preprocessMdx(bodyContent)
+            content: preprocessMdx(bodyContent, lang)
           };
         }
       } catch (err) {
@@ -351,7 +610,7 @@ In this course focused on **${course.subject}**, we will dive deep into key conc
 
   return {
     meta: data,
-    content: preprocessMdx(content)
+    content: preprocessMdx(content, lang)
   };
 }
 
@@ -475,8 +734,275 @@ function healGlossaryTags(mdx: string): string {
   return processed;
 }
 
-export function preprocessMdx(content: string): string {
-  let processed = healGlossaryTags(content);
+function healBlockquoteContiguity(content: string): string {
+  const lines = content.split(/\r?\n/);
+  let insideBlockquoteList = false;
+  let blockquoteIndent = '';
+  let lastNum: number | null = null;
+  let listType: 'ol' | 'ul' | null = null;
+  let lastBullet: string | null = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const isBQ = /^\s*>\s*/.test(line);
+    
+    // Check if line is a blockquote list item
+    const bqListMatch = line.match(/^(\s*>\s*)(\d+\.|\*|-|\+)\s+/);
+    const plainListMatch = line.match(/^(\s*)(\d+\.|\*|-|\+)\s+/);
+    
+    if (bqListMatch) {
+      insideBlockquoteList = true;
+      blockquoteIndent = bqListMatch[1];
+      const marker = bqListMatch[2];
+      if (/^\d+\./.test(marker)) {
+        listType = 'ol';
+        lastNum = parseInt(marker);
+      } else {
+        listType = 'ul';
+        lastBullet = marker;
+      }
+    } else if (plainListMatch && insideBlockquoteList) {
+      const marker = plainListMatch[2];
+      let shouldHeal = false;
+      
+      if (listType === 'ol' && /^\d+\./.test(marker)) {
+        const currentNum = parseInt(marker);
+        if (lastNum !== null && currentNum === lastNum + 1) {
+          shouldHeal = true;
+          lastNum = currentNum;
+        }
+      } else if (listType === 'ul' && !/^\d+\./.test(marker)) {
+        // For unordered lists, check if there is a blockquote line later in the file
+        let hasLaterBQ = false;
+        for (let j = i + 1; j < Math.min(lines.length, i + 10); j++) {
+          if (/^\s*>\s*/.test(lines[j])) {
+            hasLaterBQ = true;
+            break;
+          }
+        }
+        if (hasLaterBQ || marker === lastBullet) {
+          shouldHeal = true;
+        }
+      }
+      
+      if (shouldHeal) {
+        lines[i] = blockquoteIndent + line.trimStart();
+      } else {
+        insideBlockquoteList = false;
+        listType = null;
+      }
+    } else if (line.trim() === '') {
+      if (insideBlockquoteList) {
+        // Check if there is a continuation of the blockquote list after the empty line(s)
+        let k = i + 1;
+        while (k < lines.length && lines[k].trim() === '') {
+          k++;
+        }
+        if (k < lines.length) {
+          const nextLine = lines[k];
+          const nextIsBQ = /^\s*>\s*/.test(nextLine);
+          const nextListMatch = nextLine.match(/^(\s*)(\d+\.|\*|-|\+)\s+/);
+          
+          let nextIsContinualList = false;
+          if (nextListMatch && listType !== null) {
+            const nextMarker = nextListMatch[2];
+            if (listType === 'ol' && /^\d+\./.test(nextMarker)) {
+              const nextNum = parseInt(nextMarker);
+              if (lastNum !== null && nextNum === lastNum + 1) {
+                nextIsContinualList = true;
+              }
+            } else if (listType === 'ul' && !/^\d+\./.test(nextMarker)) {
+              nextIsContinualList = true;
+            }
+          }
+          
+          if (nextIsBQ || nextIsContinualList) {
+            if (!/^\s*>\s*/.test(line)) {
+              lines[i] = blockquoteIndent.trimEnd();
+            }
+          } else {
+            insideBlockquoteList = false;
+            listType = null;
+          }
+        }
+      }
+    } else if (!isBQ) {
+      if (insideBlockquoteList && /^\s{2,}/.test(line)) {
+        lines[i] = blockquoteIndent + line.trimStart();
+      } else {
+        insideBlockquoteList = false;
+        listType = null;
+      }
+    }
+  }
+  
+  return lines.join('\n');
+}
+
+function indentNestedBlockquotes(content: string): string {
+  const lines = content.split(/\r?\n/);
+  
+  for (let i = 0; i < lines.length; i++) {
+    // Check if current line is a list item (ordered or unordered)
+    const listMatch = lines[i].match(/^(\s*)(?:\d+\.|\*|-|\+)\s+/);
+    if (listMatch) {
+      const baseIndent = listMatch[1];
+      // Check if subsequent lines are blockquotes that are not indented enough
+      let j = i + 1;
+      const blockquoteLines: number[] = [];
+      while (j < lines.length) {
+        const nextLine = lines[j];
+        if (nextLine.trim() === '') {
+          // Allow empty lines within a blockquote if they are followed by more blockquote lines
+          let k = j + 1;
+          while (k < lines.length && lines[k].trim() === '') {
+            k++;
+          }
+          if (k < lines.length && lines[k].trim().startsWith('>')) {
+            j = k;
+            continue;
+          } else {
+            break;
+          }
+        }
+        if (nextLine.trim().startsWith('>')) {
+          blockquoteLines.push(j);
+          j++;
+        } else {
+          break;
+        }
+      }
+      
+      if (blockquoteLines.length > 0) {
+        // Indent these blockquote lines by 3 spaces relative to list item
+        for (const idx of blockquoteLines) {
+          lines[idx] = baseIndent + '   ' + lines[idx].trimStart();
+        }
+      }
+    }
+  }
+  
+  return lines.join('\n');
+}
+
+function parseMdxAlerts(content: string): string {
+  const lines = content.split(/\r?\n/);
+  const result: string[] = [];
+  let i = 0;
+  
+  const quoteMap: Record<string, string> = {
+    '"': '"',
+    "'": "'",
+    '“': '”',
+    '‘': '’'
+  };
+
+  while (i < lines.length) {
+    const line = lines[i];
+    // Match line that starts with > [!TYPE] or > "[!TYPE] (possibly with spaces/indents beforehand)
+    // We capture optional leading quotes (including escaped double quotes \")
+    const match = line.match(/^(\s*)>\s*(\\"|["'“]?)\s*\[!(NOTE|WARNING|IMPORTANT|TIP|CAUTION)\](?:\s*(.*))?$/i);
+    
+    if (match) {
+      const baseIndent = match[1];
+      const leadingQuote = match[2];
+      const type = match[3].toUpperCase();
+      const firstLineText = match[4] || '';
+      
+      const alertLines: string[] = [];
+      if (firstLineText.trim() !== '') {
+        alertLines.push(firstLineText);
+      }
+      
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextLine = lines[j];
+        const blockquoteMatch = nextLine.match(/^\s*>\s*(.*)$/);
+        if (blockquoteMatch) {
+          const contentText = blockquoteMatch[1];
+          // Stop if we hit a new alert tag (optionally wrapped in a quote)
+          if (contentText.trim().match(/^(\\"|["'“]?)\s*\[!/)) {
+            break;
+          }
+          alertLines.push(contentText);
+          j++;
+        } else if (nextLine.trim() === '') {
+          let k = j + 1;
+          while (k < lines.length && lines[k].trim() === '') {
+            k++;
+          }
+          if (k < lines.length && lines[k].match(/^\s*>\s*(.*)$/)) {
+            alertLines.push('');
+            j = k;
+            continue;
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
+      }
+      
+      // Clean up wrapping and extra quotes from the assembled alert body
+      let bodyText = alertLines.join('\n').trim();
+      
+      // If we found a leading quote in the matched header line, strip its matching trailing quote from bodyText
+      if (leadingQuote) {
+        let trailingQuote = leadingQuote;
+        if (leadingQuote === '“') trailingQuote = '”';
+        else if (leadingQuote === '‘') trailingQuote = '’';
+        
+        if (bodyText.endsWith(trailingQuote)) {
+          bodyText = bodyText.slice(0, -trailingQuote.length).trim();
+        }
+      }
+      
+      // Safety pass to clean any fully redundant outer quotes (e.g. added by translation engines)
+      while (
+        (bodyText.startsWith('"') && bodyText.endsWith('"')) ||
+        (bodyText.startsWith('\\"') && bodyText.endsWith('\\"')) ||
+        (bodyText.startsWith('“') && bodyText.endsWith('”'))
+      ) {
+        if (bodyText.startsWith('"') && bodyText.endsWith('"')) {
+          bodyText = bodyText.slice(1, -1).trim();
+        } else if (bodyText.startsWith('\\"') && bodyText.endsWith('\\"')) {
+          bodyText = bodyText.slice(2, -2).trim();
+        } else if (bodyText.startsWith('“') && bodyText.endsWith('”')) {
+          bodyText = bodyText.slice(1, -1).trim();
+        }
+      }
+      
+      // Remove any stray unclosed starting or ending double-quote at the extreme boundaries
+      if (bodyText.startsWith('"') && !bodyText.slice(1).includes('"')) {
+        bodyText = bodyText.slice(1).trim();
+      } else if (bodyText.endsWith('"') && !bodyText.slice(0, -1).includes('"')) {
+        bodyText = bodyText.slice(0, -1).trim();
+      }
+      
+      const finalAlertLines = bodyText.split('\n');
+      const alertBodyWithIndent = finalAlertLines.map(line => baseIndent + line).join('\n');
+      const alertHtml = `${baseIndent}<Alert type="${type}">\n${alertBodyWithIndent}\n${baseIndent}</Alert>`;
+      result.push(alertHtml);
+      i = j;
+    } else {
+      result.push(line);
+      i++;
+    }
+  }
+  
+  return result.join('\n');
+}
+
+export function preprocessMdx(content: string, lang: string = 'en'): string {
+  let processed = content.replace(/<!--[\s\S]*?-->/g, '');
+  processed = healGlossaryTags(processed);
+  
+  // Pre-pass: heal broken blockquotes in lists
+  processed = healBlockquoteContiguity(processed);
+  // Pre-pass: auto-indent nested blockquotes inside lists to avoid layout issues
+  processed = indentNestedBlockquotes(processed);
+  // Parse GFM-style [!NOTE]/[!WARNING] blockquotes into styled <Alert> components
+  processed = parseMdxAlerts(processed);
   
   // Strip any raw [Spacer] brackets
   processed = processed.replace(/\[Spacer\]\s*/gi, '');
@@ -496,8 +1022,8 @@ export function preprocessMdx(content: string): string {
     return `$$${unescapedMath}$$`;
   });
 
-  // 2. Inline math ($ ... $)
-  processed = processed.replace(/(?<!\\)\$([^\$\n]+?)(?<!\\)\$/g, (match, mathContent) => {
+  // 2. Inline math ($ ... $) spanning multiple lines but not crossing paragraphs
+  processed = processed.replace(/(?<!\\)\$((?:[^\$]|\n(?!\n))+?)(?<!\\)\$/g, (match, mathContent) => {
     const unescapedMath = mathContent
       .replace(/&#123;/g, '{')
       .replace(/&#125;/g, '}');
@@ -548,6 +1074,21 @@ export function preprocessMdx(content: string): string {
     }
   });
 
+  // 3b. Process Summary items to itemsString
+  processed = processed.replace(/<Summary([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const jsonValid = arrStr.replace(/'/g, '"');
+      const parsedArray = JSON.parse(jsonValid);
+      const joined = parsedArray.join('|||');
+      return `<Summary${p1}itemsString="${joined}"${p3}${p4}`;
+    } catch (e) {
+      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+      const joined = items.join('|||');
+      return `<Summary${p1}itemsString="${joined}"${p3}${p4}`;
+    }
+  });
+
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
     return `<sup id="cite-${num}"><a href="#ref-${num}">[${num}]</a></sup>`;
@@ -570,7 +1111,7 @@ export function preprocessMdx(content: string): string {
   const refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
   if (refIndex !== -1) {
     const preRef = processed.slice(0, refIndex);
-    let refContent = processed.slice(refIndex);
+    let refContent = processed.slice(refIndex) + '\n\n';
 
     // Remove any existing back-links to avoid duplicates
     refContent = refContent.replace(/\[↩\]\(#cite-\d+\)/g, '').replace(/\[↩\]/g, '');
@@ -579,7 +1120,56 @@ export function preprocessMdx(content: string): string {
     refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
       const activeNum = num || anchorId;
       const trimmedRest = rest.trim();
-      return `<span id="ref-${activeNum}"></span><a href="#cite-${activeNum}" class="no-underline hover:text-indigo-400 transition-colors">**[${activeNum}]**</a> ${trimmedRest}\n\n`;
+      
+      // Format link text and rewrite unstable links to Google Scholar
+      const processedRest = trimmedRest.replace(/\[([^\]]+)\]\(([^)]+)\)/gi, (linkMatch: string, linkText: string, url: string) => {
+        let cleanLinkText = linkText.trim();
+        if (!cleanLinkText.endsWith('.')) {
+          cleanLinkText += '.';
+        }
+
+        const isAbsolute = /^https?:\/\//i.test(url) || url.startsWith('//');
+        const isStable = isAbsolute && /doi\.org|ncbi\.nlm\.nih\.gov|google\..*?\/books|books\.google|sciencedirect/i.test(url);
+        let targetUrl = url;
+
+        if (!isStable) {
+          let queryText = trimmedRest
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/gi, '')
+            .replace(/\*\*\[\d+\]\*\*/g, '')
+            .trim();
+          if (queryText.length > 150) {
+            queryText = queryText.substring(0, 150);
+          }
+          targetUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+        }
+        return `[${cleanLinkText}](${targetUrl})`;
+      });
+
+      // Extract search query text to search on Google Scholar
+      let queryTextForScholar = trimmedRest
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // remove link syntax but keep text
+        .replace(/[*_`~]/g, '') // remove formatting markdown
+        .replace(/<[^>]*>/g, '') // remove HTML tags
+        .replace(/\b\d+\b/g, '') // remove isolated reference numbers
+        .trim();
+      if (queryTextForScholar.length > 150) {
+        queryTextForScholar = queryTextForScholar.substring(0, 150);
+      }
+
+      const scholarUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryTextForScholar)}`;
+      const scholarLinkTexts: Record<string, string> = {
+        fr: "Rechercher sur Google Scholar",
+        es: "Buscar en Google Scholar",
+        de: "Auf Google Scholar suchen",
+        zh: "在 Google 学术搜索",
+        en: "Search on Google Scholar"
+      };
+      const currentLang = (lang || 'en').toLowerCase();
+      const scholarLinkText = scholarLinkTexts[currentLang] || scholarLinkTexts['en'];
+      
+      const scholarLinkTextHtml = ` <span class="text-xs text-slate-400 font-normal">| <a href="${scholarUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors inline-flex items-center gap-1">🔍 ${scholarLinkText}</a></span>`;
+
+      return `<span id="ref-${activeNum}"></span><a href="#cite-${activeNum}" class="no-underline hover:text-indigo-400 transition-colors">**[${activeNum}]**</a> ${processedRest}${scholarLinkTextHtml}\n\n`;
     });
     
     processed = preRef + refContent;

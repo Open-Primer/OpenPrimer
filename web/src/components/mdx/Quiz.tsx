@@ -143,7 +143,9 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
   const [showAnswers, setShowAnswers] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const questions = React.Children.toArray(children) as React.ReactElement[];
+  const questions = (React.Children.toArray(children) as React.ReactElement[]).filter(
+    (child) => React.isValidElement(child) && (child.props as any) && 'q' in (child.props as any)
+  );
   const totalQuestions = questions.length;
   const totalAnswered = Object.keys(answers).length;
   const totalCorrect = Object.values(answers).filter(Boolean).length;
@@ -463,7 +465,7 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
 
           {/* Tutor Comment block */}
           {(isTutorLoading || tutorComment) && (
-            <div className="p-6 bg-violet-950/20 border border-violet-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-lg space-y-3">
+            <div className="p-6 bg-violet-500/10 border border-violet-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-lg space-y-3">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400">
                   <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
@@ -507,7 +509,9 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const options = React.Children.toArray(children) as React.ReactElement[];
+  const options = (React.Children.toArray(children) as React.ReactElement[]).filter(
+    (child) => React.isValidElement(child) && (child.props as any) && ('text' in (child.props as any) || 'children' in (child.props as any))
+  );
   const isReadOnly = isParentReadOnly || selected !== null;
 
   useEffect(() => {
@@ -553,14 +557,14 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
                   ? isSelectedOption
                     ? isCorrect
                       ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default" 
-                      : "bg-rose-500/10 border-rose-500/50 text-rose-400 cursor-default"
+                      : "bg-red-500/10 border-red-500/50 text-red-400 cursor-default"
                     : isOptionCorrect
                       ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default"
                       : "bg-slate-800/30 border-slate-700 opacity-50 cursor-default"
                   : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
               )}
             >
-              <span className="font-medium">{option.props.text}</span>
+              <span className="font-medium">{option.props.text || option.props.children}</span>
               {selected === null && !isParentReadOnly ? (
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400" />
               ) : isSelectedOption ? (
@@ -574,22 +578,22 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
       </div>
       
       {isReadOnly && (
-        <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-2 mt-2 text-xs">
+        <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2 mt-2 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
             {selected !== null ? (
-              <span className={isCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                {(options[selected] as any)?.props?.text}
+              <span className={isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                {(options[selected] as any)?.props?.text || (options[selected] as any)?.props?.children}
               </span>
             ) : (
-              <span className="text-rose-400 font-bold italic">{language === 'FR' ? 'Aucune réponse (temps écoulé)' : 'No answer (time out)'}</span>
+              <span className="text-red-400 font-bold italic">{language === 'FR' ? 'Aucune réponse (temps écoulé)' : 'No answer (time out)'}</span>
             )}
           </div>
           {!isCorrect && (
             <div className="flex items-center gap-2 border-t border-slate-800/40 pt-2">
               <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
               <span className="text-emerald-400 font-bold">
-                {(options.find((o: any) => o.props.correct === true) as any)?.props?.text}
+                {(options.find((o: any) => o.props.correct === true) as any)?.props?.text || (options.find((o: any) => o.props.correct === true) as any)?.props?.children}
               </span>
             </div>
           )}
@@ -597,7 +601,7 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
       )}
 
       {selected !== null && !isCorrect && explanation && (
-        <div className="p-4 bg-violet-950/40 border border-violet-500/20 rounded-2xl space-y-2 mt-2">
+        <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-2xl space-y-2 mt-2">
           <div className="flex items-center gap-1.5 text-violet-400 text-[10px] font-black uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
             <span>{t.tutor_explanation}</span>

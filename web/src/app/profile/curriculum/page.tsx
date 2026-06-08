@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer, getLocalizedLabel, formatCourseLevel } from '@/components/RefinedUI';
@@ -768,7 +768,7 @@ export default function CurriculumPage() {
                             className={`p-8 bg-slate-900/40 border ${isCurr ? 'border-violet-500/30 hover:border-violet-400/50 shadow-violet-500/5 bg-gradient-to-br from-violet-955/5 via-slate-900/40 to-slate-955/20' : 'border-blue-500/20 shadow-blue-500/5 bg-gradient-to-br from-blue-955/5 via-slate-900/40 to-slate-950/20'} rounded-[40px] shadow-2xl flex flex-col h-full group relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1`}
                           >
                               <div className="flex justify-between items-center mb-6 gap-2 w-full">
-                                 <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 flex-shrink-0">
+                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isCurr ? 'bg-violet-600/10 text-violet-400' : 'bg-blue-600/10 text-blue-400'}`}>
                                     {isCurr ? <GraduationCap className="w-6 h-6 text-violet-400" /> : <Book className="w-6 h-6" />}
                                  </div>
                                  <div className="flex gap-2 items-center flex-1 justify-end flex-wrap">

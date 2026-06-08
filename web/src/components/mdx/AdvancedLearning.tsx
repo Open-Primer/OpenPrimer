@@ -85,10 +85,16 @@ export const SolvedProblem = ({ title, children }: { title: string, children: Re
 };
 
 // Résumé de Section
-export const Summary = ({ items }: { items?: string[] }) => {
+export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?: string }) => {
   const { language } = useLanguage();
   const t = ADVANCED_STRINGS[language as keyof typeof ADVANCED_STRINGS] || ADVANCED_STRINGS.EN;
-  const safeItems = Array.isArray(items) ? items : [];
+  
+  let safeItems: string[] = [];
+  if (itemsString) {
+    safeItems = itemsString.split('|||').map(s => s.trim()).filter(Boolean);
+  } else if (Array.isArray(items)) {
+    safeItems = items;
+  }
 
   return (
     <div className="my-12 p-10 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl">

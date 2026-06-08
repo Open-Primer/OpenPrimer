@@ -39,7 +39,7 @@ const missingCourses = [
   {
     id: 102,
     title: "Introduction à la Psychologie",
-    slug: "introduction_à_la_psychologie",
+    slug: "introduction_a_la_psychologie",
     level: "Beginner",
     subject: "Social",
     description: "Découvrez les bases scientifiques du comportement humain, les processus sensoriels et les grandes écoles de pensée.",
@@ -138,6 +138,38 @@ const missingCourses = [
 const userId = '26d54efe-6f14-4e36-9fcf-3fcf684a4444'; // Vanguard Admin
 
 async function run() {
+  console.log("🧹 Cleaning up old psychology course references (ID: 102 or slug: 'introduction_à_la_psychologie')...");
+  
+  const { error: delLessonsErr } = await supabase
+    .from('lessons')
+    .delete()
+    .eq('course_slug', 'introduction_à_la_psychologie');
+  if (delLessonsErr) {
+    console.error("Error deleting old lessons:", delLessonsErr.message);
+  } else {
+    console.log("✅ Deleted old lessons for 'introduction_à_la_psychologie'");
+  }
+
+  const { error: delProgressErr } = await supabase
+    .from('progress')
+    .delete()
+    .eq('course_id', 102);
+  if (delProgressErr) {
+    console.error("Error deleting old progress:", delProgressErr.message);
+  } else {
+    console.log("✅ Deleted old progress for course 102");
+  }
+
+  const { error: delCourseErr } = await supabase
+    .from('courses')
+    .delete()
+    .eq('id', 102);
+  if (delCourseErr) {
+    console.error("Error deleting old course:", delCourseErr.message);
+  } else {
+    console.log("✅ Deleted old course with ID 102");
+  }
+
   console.log("🚀 Upserting missing courses into Supabase 'courses' table...");
   for (const course of missingCourses) {
     const { data, error } = await supabase

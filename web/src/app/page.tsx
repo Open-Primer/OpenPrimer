@@ -755,13 +755,13 @@ export default function Home() {
               className="relative flex items-center bg-slate-900/80 border border-slate-800 p-2 rounded-[32px] backdrop-blur-xl focus-within:border-blue-500/50 transition-all shadow-2xl"
             >
               <div className="pl-6 pr-4">
-                <Search className="w-6 h-6 text-slate-600" />
+                <Search className="w-6 h-6 text-slate-400" />
               </div>
               <input 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={s.search}
-                className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-700 font-medium"
+                className="flex-1 bg-transparent border-none py-4 text-lg text-white focus:outline-none placeholder:text-slate-500 font-medium"
               />
               <button 
                 type="submit"
@@ -942,13 +942,13 @@ export default function Home() {
                             {a.first_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
                           </label>
                           <div className="relative">
-                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                             <input 
                               value={firstName}
                               onChange={(e) => { setFirstName(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                               maxLength={60}
                               placeholder={a.first_name_placeholder}
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                             />
                           </div>
                         </div>
@@ -958,13 +958,13 @@ export default function Home() {
                             {a.last_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
                           </label>
                           <div className="relative">
-                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                             <input 
                               value={lastName}
                               onChange={(e) => { setLastName(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                               maxLength={60}
                               placeholder={a.last_name_placeholder}
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                             />
                           </div>
                         </div>
@@ -975,7 +975,7 @@ export default function Home() {
                           {a.email_address}
                         </label>
                         <div className="relative">
-                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type="email"
                             required
@@ -983,7 +983,7 @@ export default function Home() {
                             onChange={(e) => { setEmail(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
                             placeholder={s.email_placeholder || "john.doe@email.com"}
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                           />
                         </div>
                       </div>
@@ -993,7 +993,7 @@ export default function Home() {
                           {a.password}
                         </label>
                         <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type={showPassword ? 'text' : 'password'}
                             required
@@ -1003,7 +1003,7 @@ export default function Home() {
                             onBlur={() => setIsPasswordFocused(false)}
                             maxLength={60}
                             placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                           />
                           <button
                             type="button"
@@ -1025,7 +1025,7 @@ export default function Home() {
                           {a.confirm_password}
                         </label>
                         <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type={showConfirmPassword ? 'text' : 'password'}
                             required
@@ -1033,7 +1033,7 @@ export default function Home() {
                             onChange={(e) => { setConfirmPassword(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
                             placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                           />
                           <button
                             type="button"
@@ -1125,14 +1125,14 @@ export default function Home() {
                           {a.email_address}
                         </label>
                         <div className="relative">
-                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type="email"
                             required
                             value={email}
                             onChange={(e) => { setEmail(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="name@email.com"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                           />
                         </div>
                       </div>
@@ -1142,14 +1142,14 @@ export default function Home() {
                           {a.password}
                         </label>
                         <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="••••••••••••"
-                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                            className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                           />
                           <button
                             type="button"
@@ -1293,14 +1293,14 @@ export default function Home() {
                             {a.email_address}
                           </label>
                           <div className="relative">
-                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-700" />
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                             <input 
                               type="email"
                               required
                               value={email}
                               onChange={(e) => { setEmail(e.target.value); if (errorMsg) setErrorMsg(''); }}
                               placeholder="name@email.com"
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800" 
+                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3.5 pl-10 pr-3 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-500" 
                             />
                           </div>
                         </div>

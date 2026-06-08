@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 const GLOSSARY_DATA: Record<string, string> = {
   "cell theory": "The fundamental scientific theory that all living organisms are made of cells, and that cells are the basic unit of structure and function in living things.",
@@ -25,12 +27,16 @@ export const Glossary = ({
   definition?: string; 
   children: React.ReactNode; 
 }) => {
+  const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const finalTerm = term || word || (typeof children === 'string' ? children.toLowerCase() : '');
   const glossaryKey = finalTerm.toLowerCase().trim();
   const finalDefinition = definition || GLOSSARY_DATA[glossaryKey];
+
+  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const glossaryHeader = t.glossary_definition || "Glossary Definition";
 
   if (!finalDefinition) return <>{children}</>;
 
@@ -73,7 +79,7 @@ export const Glossary = ({
               <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-400">
                 <BookOpen className="w-3.5 h-3.5" />
               </div>
-              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">Glossary Definition</span>
+              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{glossaryHeader}</span>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed italic">
               "{finalDefinition}"

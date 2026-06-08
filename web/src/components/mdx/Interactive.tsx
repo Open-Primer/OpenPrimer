@@ -327,13 +327,13 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   };
 
   return (
-    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isCorrect === true || isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : isCorrect === false ? 'border-rose-500/30 bg-rose-500/5' : 'border-slate-800'} transition-all space-y-4`}>
+    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isCorrect === true || isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : isCorrect === false ? 'border-red-500/30 bg-red-500/5' : 'border-slate-800'} transition-all space-y-4`}>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-slate-300 font-medium">{sentence.split('[...]')[0]}</span>
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className={`bg-slate-950 border ${isCorrect === true || (isReadOnly && input) ? 'border-emerald-500' : isCorrect === false ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
+          className={`bg-slate-950 border ${isCorrect === true || (isReadOnly && input) ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
           placeholder={t.placeholder_answer}
           disabled={isReadOnly || isCorrect !== null}
         />
@@ -357,7 +357,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
 
       {isCorrect !== null && (
         <div className="border-t border-slate-800/80 pt-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800/50">
             <div className="flex items-center gap-3">
               <div className="flex flex-col items-center justify-center px-3 py-1 bg-blue-600/10 border border-blue-500/20 rounded-xl min-w-[80px]">
                 <span className="text-[8px] font-black uppercase text-blue-400 tracking-wider">Note</span>
@@ -366,7 +366,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
               <div className="text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
-                  <span className={isCorrect ? 'text-emerald-400 font-bold animate-pulse' : 'text-rose-400 font-bold'}>{input || '—'}</span>
+                  <span className={isCorrect ? 'text-emerald-400 font-bold animate-pulse' : 'text-red-400 font-bold'}>{input || '—'}</span>
                 </div>
                 {!isCorrect && (
                   <div className="flex items-center gap-1.5 mt-1 border-t border-slate-800/40 pt-1">
@@ -379,7 +379,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
           </div>
 
           {(isTutorLoading || tutorComment) && (
-            <div className="p-4 bg-violet-950/20 border border-violet-500/20 rounded-2xl relative overflow-hidden shadow-md space-y-2">
+            <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-2xl relative overflow-hidden shadow-md space-y-2">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
                 <h4 className="text-[10px] font-black uppercase text-violet-400 tracking-wider">

@@ -53,6 +53,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
+  const [currentCourse, setCurrentCourse] = useState<any | null>(null);
+  const [userId, setUserId] = useState('u1');
   const [isCompleted, setIsCompleted] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [userComment, setUserComment] = useState<string>('');
@@ -67,27 +71,35 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     setIsLoggedIn(loggedIn);
 
     const savedProfile = localStorage.getItem('op_user_profile');
-    let userId = 'u1';
+    let uId = 'u1';
     if (savedProfile) {
       try {
         const profile = JSON.parse(savedProfile);
-        if (profile.id) userId = profile.id;
+        if (profile.id) {
+          uId = profile.id;
+          setUserId(profile.id);
+        }
       } catch (e) {}
     }
 
     if (loggedIn) {
       // Check user curriculum progress
-      dbService.getUserProgress(userId).then((res) => {
+      dbService.getUserProgress(uId).then((res) => {
         const matchingModule = res.data?.activeModules?.find(
           (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
         );
-        if (matchingModule && matchingModule.progress === 100) {
-          setIsCompleted(true);
+        if (matchingModule) {
+          setIsEnrolled(true);
+          if (matchingModule.progress === 100) {
+            setIsCompleted(true);
+          }
+        } else {
+          setIsEnrolled(false);
         }
       });
 
       // 1. Dual-read: try reading from local storage first (instant responsiveness)
-      const localFeedbackKey = `op_feedback_${userId}_${courseId}`;
+      const localFeedbackKey = `op_feedback_${uId}_${courseId}`;
       const savedLocalFeedback = localStorage.getItem(localFeedbackKey);
       if (savedLocalFeedback) {
         try {
@@ -100,10 +112,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       }
 
       // 2. Fetch existing course feedback from remote DB to synchronize
-      dbService.getCourseFeedbacks(courseId, userId).then((res) => {
+      dbService.getCourseFeedbacks(courseId, uId).then((res) => {
         if (res.data && res.data.length > 0) {
           // Find if there is feedback explicitly associated with this user
-          const fb = res.data.find((f: any) => f.user_id === userId || f.userId === userId) || res.data[0];
+          const fb = res.data.find((f: any) => f.user_id === uId || f.userId === uId) || res.data[0];
           setUserRating(fb.rating);
           setUserComment(fb.comment || '');
           setRating(fb.rating);
@@ -129,12 +141,13 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     dbService.getAllCourses().then(async (res) => {
       if (!res || !res.data) return;
       const courses = res.data;
-      const currentCourse = courses.find(
+      const currentCourseObj = courses.find(
         (c: any) => c.slug.toLowerCase() === courseId.toLowerCase() || c.id.toString() === courseId.toString()
       );
-      if (!currentCourse) return;
+      if (!currentCourseObj) return;
+      setCurrentCourse(currentCourseObj);
 
-      const currentCourseId = currentCourse.id;
+      const currentCourseId = currentCourseObj.id;
 
       // Find if this course is part of any curriculum
       const parentCurriculum = courses.find(
@@ -179,7 +192,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       // If not in a curriculum or last course, and logged in, find any other active incomplete course
       if (loggedIn) {
         try {
-          const { data: progressData } = await dbService.getUserProgress(userId);
+          const { data: progressData } = await dbService.getUserProgress(uId);
           if (progressData && progressData.activeModules) {
             const nextActiveModule = progressData.activeModules.find(
               (m: any) => !m.isCurriculum && m.id !== currentCourseId && m.progress < 100
@@ -238,6 +251,24 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     setUserComment(comment);
     setSubmitted(true);
     setShowSuccessToast(true);
+  };
+
+  const handleEnroll = async () => {
+    if (!currentCourse || !userId) return;
+    setEnrollLoading(true);
+    try {
+      await dbService.enrollInCourse(userId, currentCourse.id);
+      const enrollKey = 'op_enroll_date_' + currentCourse.id;
+      if (!localStorage.getItem(enrollKey)) {
+        localStorage.setItem(enrollKey, new Date().toISOString());
+      }
+      setIsEnrolled(true);
+      window.dispatchEvent(new Event('op_progress_updated'));
+    } catch (err) {
+      console.error("Failed to enroll:", err);
+    } finally {
+      setEnrollLoading(false);
+    }
   };
 
   const getCourseEarnedAchievements = () => {
@@ -316,6 +347,44 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           >
             {isFr ? "Créer un Compte" : "Create an Account"}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoggedIn && !isEnrolled) {
+    return (
+      <div className="mt-32 pt-12 border-t border-slate-900 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+          <Icons.Bookmark className="w-8 h-8" />
+        </div>
+        <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+          {isFr ? "Inscription Requise" : "Enrollment Required"}
+        </h3>
+        <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
+          {isFr 
+            ? "Vous devez être inscrit à ce cours pour pouvoir le noter et laisser un commentaire. Cela permet de lier solidement votre progression académique à vos retours d'expérience et d'éviter toute perte de progression."
+            : "You must be enrolled in this course to rate and comment on it. This ensures your academic progress is securely linked to your feedback and prevents loss of completion history."}
+        </p>
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button 
+            onClick={handleEnroll}
+            disabled={enrollLoading}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {enrollLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Icons.PlusCircle className="w-4 h-4" />
+            )}
+            {isFr ? "S'inscrire à ce cours" : "Enroll in this Course"}
+          </button>
+          <Link 
+            href="/profile/curriculum" 
+            className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
+          >
+            {isFr ? "Mon Cursus" : "My Curriculum"}
+          </Link>
         </div>
       </div>
     );

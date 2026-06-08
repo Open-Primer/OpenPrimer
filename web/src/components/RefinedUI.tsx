@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import katex from 'katex';
+import { Mermaid } from './mdx/Mermaid';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
@@ -42,13 +44,329 @@ export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
 
 import { usePathname } from 'next/navigation';
 
+// --- UTILITY: LaTeX & Markdown Parsing ---
+const renderInlineContent = (text: string): React.ReactNode[] => {
+  const tokens: React.ReactNode[] = [];
+  let currentIndex = 0;
+  
+  // Regex matches: block math ($$...$$), inline math ($...$), bold (**...**), and italic (*...*)
+  const inlineRegex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$|\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
+  let match;
+  
+  while ((match = inlineRegex.exec(text)) !== null) {
+    const matchIndex = match.index;
+    const matchedStr = match[0];
+    
+    // Add text before the match
+    if (matchIndex > currentIndex) {
+      tokens.push(text.slice(currentIndex, matchIndex));
+    }
+    
+    // Process the match
+    if (matchedStr.startsWith('$$') && matchedStr.endsWith('$$')) {
+      const math = matchedStr.slice(2, -2);
+      try {
+        const html = katex.renderToString(math, { displayMode: true, throwOnError: false });
+        tokens.push(<span key={matchIndex} dangerouslySetInnerHTML={{ __html: html }} />);
+      } catch (e) {
+        tokens.push(<code key={matchIndex} className="text-rose-400 font-mono text-xs">{matchedStr}</code>);
+      }
+    } else if (matchedStr.startsWith('$') && matchedStr.endsWith('$')) {
+      const math = matchedStr.slice(1, -1);
+      try {
+        const html = katex.renderToString(math, { displayMode: false, throwOnError: false });
+        tokens.push(<span key={matchIndex} className="inline-block" dangerouslySetInnerHTML={{ __html: html }} />);
+      } catch (e) {
+        tokens.push(<code key={matchIndex} className="text-rose-400 font-mono text-xs">{matchedStr}</code>);
+      }
+    } else if (matchedStr.startsWith('**') && matchedStr.endsWith('**')) {
+      const boldText = matchedStr.slice(2, -2);
+      tokens.push(<strong key={matchIndex} className="font-extrabold text-white">{boldText}</strong>);
+    } else if (matchedStr.startsWith('*') && matchedStr.endsWith('*')) {
+      const italicText = matchedStr.slice(1, -1);
+      tokens.push(<em key={matchIndex} className="italic text-slate-300">{italicText}</em>);
+    }
+    
+    currentIndex = inlineRegex.lastIndex;
+  }
+  
+  if (currentIndex < text.length) {
+    tokens.push(text.slice(currentIndex));
+  }
+  
+  return tokens.length > 0 ? tokens : [text];
+};
+
+interface TutorMessageContentProps {
+  content: string;
+}
+
+const parseMarkdownTableRow = (row: string): string[] => {
+  let s = row.trim();
+  if (s.startsWith('|')) {
+    s = s.slice(1);
+  }
+  if (s.endsWith('|')) {
+    s = s.slice(0, -1);
+  }
+  return s.split('|').map(cell => cell.trim());
+};
+
+const TutorMessageContent = ({ content }: TutorMessageContentProps) => {
+  if (!content) return null;
+  if (content === '...') {
+    return (
+      <div className="flex items-center gap-1.5 py-1">
+        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+      </div>
+    );
+  }
+
+  const blocks: React.ReactNode[] = [];
+  const lines = content.split('\n');
+  let i = 0;
+  
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // 1. Code Block start
+    if (trimmed.startsWith('```')) {
+      const lang = trimmed.slice(3).trim();
+      let codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      
+      if (lang.toLowerCase() === 'mermaid') {
+        blocks.push(
+          <div key={`mermaid-${i}`} className="w-full my-3">
+            <Mermaid chart={codeLines.join('\n')} />
+          </div>
+        );
+      } else {
+        blocks.push(
+          <pre key={`code-${i}`} className="bg-slate-950 p-4 rounded-2xl border border-slate-800/85 font-mono text-xs overflow-x-auto text-slate-200 my-3">
+            {lang && <div className="text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">{lang}</div>}
+            <code>{codeLines.join('\n')}</code>
+          </pre>
+        );
+      }
+      continue;
+    }
+    
+    // 2. Block Math start
+    if (trimmed === '$$') {
+      let mathLines: string[] = [];
+      i++;
+      while (i < lines.length && lines[i].trim() !== '$$') {
+        mathLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing $$
+      const math = mathLines.join('\n');
+      try {
+        const html = katex.renderToString(math, { displayMode: true, throwOnError: false });
+        blocks.push(
+          <div key={`mathblk-${i}`} className="my-4 overflow-x-auto py-2 px-4 bg-slate-950/30 rounded-2xl border border-slate-800/20" dangerouslySetInnerHTML={{ __html: html }} />
+        );
+      } catch (e) {
+        blocks.push(
+          <pre key={`mathblk-err-${i}`} className="text-rose-400 text-xs font-mono p-2 bg-slate-950 rounded-xl my-2">
+            {math}
+          </pre>
+        );
+      }
+      continue;
+    }
+    
+    // Inline block math on its own line
+    if (trimmed.startsWith('$$') && trimmed.endsWith('$$') && trimmed.length > 4) {
+      const math = trimmed.slice(2, -2);
+      try {
+        const html = katex.renderToString(math, { displayMode: true, throwOnError: false });
+        blocks.push(
+          <div key={`mathblk-single-${i}`} className="my-4 overflow-x-auto py-2 px-4 bg-slate-950/30 rounded-2xl border border-slate-800/20" dangerouslySetInnerHTML={{ __html: html }} />
+        );
+      } catch (e) {
+        blocks.push(
+          <pre key={`mathblk-single-err-${i}`} className="text-rose-400 text-xs font-mono p-2 bg-slate-950 rounded-xl my-2">
+            {math}
+          </pre>
+        );
+      }
+      i++;
+      continue;
+    }
+
+    // 2b. Markdown Table
+    if (trimmed.startsWith('|') && i + 1 < lines.length && lines[i+1].trim().startsWith('|')) {
+      let tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      
+      if (tableLines.length >= 2) {
+        const headerRow = tableLines[0];
+        const headers = parseMarkdownTableRow(headerRow);
+        
+        const secondRow = tableLines[1];
+        const isDivider = /^\|?[\s-:\\|]+$/.test(secondRow);
+        
+        const startBodyIdx = isDivider ? 2 : 1;
+        const bodyRows = tableLines.slice(startBodyIdx).map(row => {
+          return parseMarkdownTableRow(row);
+        });
+        
+        blocks.push(
+          <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/20 shadow-lg">
+            <table className="min-w-full text-xs text-left text-slate-300">
+              {headers.length > 0 && (
+                <thead className="bg-slate-950/60 font-black uppercase text-slate-400 border-b border-slate-800/80">
+                  <tr>
+                    {headers.map((h, idx) => (
+                      <th key={idx} className="px-4 py-3 font-extrabold tracking-wider">{renderInlineContent(h)}</th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody className="divide-y divide-slate-800/40">
+                {bodyRows.map((cols, rowIdx) => (
+                  <tr key={rowIdx} className="hover:bg-slate-800/20 transition-colors">
+                    {cols.map((col, colIdx) => (
+                      <td key={colIdx} className="px-4 py-3 font-medium">{renderInlineContent(col)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+        continue;
+      }
+    }
+
+    // 3. Unordered List
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      let listItems: string[] = [];
+      while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
+        listItems.push(lines[i].trim().slice(2));
+        i++;
+      }
+      blocks.push(
+        <ul key={`ul-${i}`} className="list-disc pl-6 space-y-1.5 my-3 text-slate-300">
+          {listItems.map((item, idx) => (
+            <li key={idx} className="text-sm leading-relaxed">
+              {renderInlineContent(item)}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+    
+    // 4. Ordered List
+    if (/^\d+\.\s/.test(trimmed)) {
+      let listItems: string[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+        const itemTrim = lines[i].trim();
+        const match = itemTrim.match(/^(\d+)\.\s(.*)/);
+        if (match) {
+          listItems.push(match[2]);
+        } else {
+          listItems.push(itemTrim);
+        }
+        i++;
+      }
+      blocks.push(
+        <ol key={`ol-${i}`} className="list-decimal pl-6 space-y-1.5 my-3 text-slate-300">
+          {listItems.map((item, idx) => (
+            <li key={idx} className="text-sm leading-relaxed">
+              {renderInlineContent(item)}
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // 5. Header tags
+    if (trimmed.startsWith('#')) {
+      const match = trimmed.match(/^(#{1,6})\s+(.*)/);
+      if (match) {
+        const level = match[1].length;
+        const text = match[2];
+        const headingStyles = {
+          1: "text-lg font-black text-white mt-4 mb-2",
+          2: "text-base font-extrabold text-white mt-3 mb-1.5",
+          3: "text-sm font-bold text-slate-200 mt-2.5 mb-1",
+          4: "text-xs font-bold text-slate-300 mt-2 mb-1",
+          5: "text-xs font-bold text-slate-400 mt-2 mb-1",
+          6: "text-xs font-semibold text-slate-400 mt-2 mb-1",
+        };
+        const className = headingStyles[level as keyof typeof headingStyles] || headingStyles[3];
+        blocks.push(
+          <div key={`header-${i}`} className={className}>
+            {renderInlineContent(text)}
+          </div>
+        );
+        i++;
+        continue;
+      }
+    }
+
+    // 6. Plain paragraph
+    if (trimmed === '') {
+      i++;
+      continue;
+    }
+    
+    let paraLines: string[] = [];
+    while (i < lines.length && lines[i].trim() !== '' && 
+           !lines[i].trim().startsWith('```') && 
+           !lines[i].trim().startsWith('- ') && 
+           !lines[i].trim().startsWith('* ') && 
+           !/^\d+\.\s/.test(lines[i].trim()) &&
+           !lines[i].trim().startsWith('#') &&
+           !lines[i].trim().startsWith('|') &&
+           lines[i].trim() !== '$$') {
+      paraLines.push(lines[i]);
+      i++;
+    }
+    
+    const paraText = paraLines.join('\n');
+    blocks.push(
+      <p key={`p-${i}`} className="text-sm leading-relaxed text-slate-300 mb-3.5 last:mb-0">
+        {renderInlineContent(paraText)}
+      </p>
+    );
+  }
+  
+  return <div className="space-y-1">{blocks}</div>;
+};
+
 interface AITutorOverlayProps {
   lang?: string;
   pageContext?: string;
+  courseLevel?: string;
+  courseTitle?: string;
+  courseSubject?: string;
 }
 
 // --- COMPONENT: AI TUTOR OVERLAY ---
-export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayProps = {}) => {
+export const AITutorOverlay = ({ 
+  lang: propLang, 
+  pageContext,
+  courseLevel,
+  courseTitle,
+  courseSubject
+}: AITutorOverlayProps = {}) => {
   const { language: contextLang } = useLanguage();
   const lang = propLang || contextLang;
   const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
@@ -79,7 +397,48 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardMastery, setCardMastery] = useState<Record<string, string>>({});
+  const [isCoachingDismissed, setIsCoachingDismissed] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  const [selfEvalPre, setSelfEvalPre] = useState<number | null>(null);
+  const [selfEvalPost, setSelfEvalPost] = useState<number | null>(null);
+
+  // Sync self-evaluation scores when opening/closing or path changes
+  useEffect(() => {
+    if (isOpen && pathname) {
+      const getSelfEvalScores = () => {
+        if (typeof window === 'undefined') return { pre: null, post: null };
+        const storages = [localStorage, sessionStorage];
+        let preVal: number | null = null;
+        let postVal: number | null = null;
+        
+        for (const storage of storages) {
+          if (!storage) continue;
+          const pre = storage.getItem(`op_selfeval_pre_${pathname}`);
+          const post = storage.getItem(`op_selfeval_post_${pathname}`);
+          if (pre && preVal === null) preVal = parseInt(pre, 10);
+          if (post && postVal === null) postVal = parseInt(post, 10);
+        }
+        return { pre: preVal, post: postVal };
+      };
+      
+      const scores = getSelfEvalScores();
+      setSelfEvalPre(scores.pre);
+      setSelfEvalPost(scores.post);
+    }
+  }, [isOpen, pathname]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsCoachingDismissed(localStorage.getItem('op_dismiss_flashcard_coaching') === 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!tutorEnabled) {
+      setActiveTab('flashcards');
+    }
+  }, [tutorEnabled]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -232,7 +591,8 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
     }
   };
 
-  if (!isCurriculumPage || !tutorEnabled) return null;
+  const hasGlossaryInProp = pageContext && /<Glossary\s+term=/i.test(pageContext);
+  if (!isCurriculumPage || (!tutorEnabled && !hasGlossaryInProp)) return null;
 
   const QUICK_ACTIONS = [
     { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: t.give_example_prompt },
@@ -312,7 +672,13 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
           messages: newMessages,
           persona,
           pageContext: pageContext || '',
-          language: lang
+          language: lang,
+          srsMastery: cardMastery,
+          courseLevel,
+          courseTitle,
+          courseSubject,
+          selfEvalPre,
+          selfEvalPost
         })
       });
 
@@ -533,7 +899,7 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
-            {isLoggedIn && (
+            {isLoggedIn && tutorEnabled && (
               <div className="flex border-b border-slate-800/50 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500 shrink-0 select-none">
                 <button
                   onClick={() => setActiveTab('chat')}
@@ -590,8 +956,12 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                       {messages.map((msg, idx) => (
                         <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                          <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
-                            {msg.content}
+                          <div className={`p-4 rounded-3xl text-sm leading-relaxed ${msg.role === 'assistant' ? 'bg-slate-800/50 text-slate-300 rounded-tl-none w-full' : 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none'}`}>
+                            {msg.role === 'assistant' ? (
+                              <TutorMessageContent content={msg.content} />
+                            ) : (
+                              msg.content
+                            )}
                           </div>
                         </div>
                       ))}
@@ -761,17 +1131,29 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
                             </div>
                           </div>
                         ) : (
-                          <div className="p-4 rounded-2xl bg-blue-600/5 border border-blue-500/10 text-left">
-                            <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1 select-none">
-                              <Sparkles className="w-3 h-3 animate-pulse" />
-                              {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
-                            </p>
-                            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                              {lang === 'FR' 
-                                ? "Chaque évaluation entraîne directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
-                                : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
-                            </p>
-                          </div>
+                          !isCoachingDismissed && (
+                            <div className="p-4 rounded-2xl bg-blue-600/5 border border-blue-500/10 text-left relative">
+                              <button
+                                onClick={() => {
+                                  setIsCoachingDismissed(true);
+                                  localStorage.setItem('op_dismiss_flashcard_coaching', 'true');
+                                }}
+                                className="absolute top-3 right-3 p-1 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                                title={lang === 'FR' ? 'Masquer' : 'Dismiss'}
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                              <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1 select-none">
+                                <Sparkles className="w-3 h-3 animate-pulse" />
+                                {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
+                              </p>
+                              <p className="text-[10px] text-slate-400 leading-relaxed font-medium pr-6">
+                                {lang === 'FR' 
+                                  ? "Chaque évaluation entraînant directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
+                                  : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
+                              </p>
+                            </div>
+                          )
                         )}
                       </div>
                     )}
@@ -892,7 +1274,11 @@ export const AITutorOverlay = ({ lang: propLang, pageContext }: AITutorOverlayPr
         onClick={() => setIsOpen(!isOpen)}
         className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group cursor-pointer"
       >
-        <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+        {tutorEnabled ? (
+          <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+        ) : (
+          <Brain className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+        )}
       </motion.button>
     </div>
   );
@@ -964,6 +1350,22 @@ export const formatCourseLevel = (level: string | number, lang: string) => {
     if (isEs) return 'L3 (301)';
     if (isDe) return 'L3 (301)';
     return 'L3';
+  }
+  if (lvlStr === 'M1') {
+    if (isEn) return '501';
+    if (isZh) return '研一 (501)';
+    if (isEs) return 'M1 (501)';
+    if (isDe) return 'M1 (501)';
+    if (isFr) return 'M1 (501)';
+    return 'M1';
+  }
+  if (lvlStr === 'M2') {
+    if (isEn) return '502';
+    if (isZh) return '研二 (502)';
+    if (isEs) return 'M2 (502)';
+    if (isDe) return 'M2 (502)';
+    if (isFr) return 'M2 (502)';
+    return 'M2';
   }
 
   if (/^\d+$/.test(lvlStr)) {
@@ -1286,7 +1688,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       const parts = pathname.split('/').filter(Boolean);
-      const isCoursePath = parts.includes('L1') || parts.includes('L2') || parts.includes('L3');
+      const isCoursePath = parts.includes('L1') || parts.includes('L2') || parts.includes('L3') || parts.includes('M1') || parts.includes('M2');
 
       if (isCoursePath) {
         const langLower = code.toLowerCase();

@@ -1739,10 +1739,10 @@ let initialAgentMetrics: AgentMetric[] = [
     nameES: 'Agente de Generación de Cursos',
     nameDE: 'Kursgenerierungs-Agent',
     nameZH: '课程生成智能体',
-    totalCost: 245.80,
-    rolling30DaysCost: 48.50,
-    requests: 820,
-    avgResponseTime: '1420ms'
+    totalCost: 0.00,
+    rolling30DaysCost: 0.00,
+    requests: 0,
+    avgResponseTime: '0ms'
   },
   {
     id: 'translation',
@@ -1751,10 +1751,10 @@ let initialAgentMetrics: AgentMetric[] = [
     nameES: 'Agente de Traducción Multilingüe',
     nameDE: 'Übersetzungs-Agent',
     nameZH: '翻译智能体',
-    totalCost: 188.40,
-    rolling30DaysCost: 32.10,
-    requests: 1240,
-    avgResponseTime: '890ms'
+    totalCost: 0.00,
+    rolling30DaysCost: 0.00,
+    requests: 0,
+    avgResponseTime: '0ms'
   },
   {
     id: 'revision',
@@ -1763,10 +1763,10 @@ let initialAgentMetrics: AgentMetric[] = [
     nameES: 'Agente de Revisión Pedagógica',
     nameDE: 'Pädagogischer Revisions-Agent',
     nameZH: '教学修订智能体',
-    totalCost: 98.20,
-    rolling30DaysCost: 15.60,
-    requests: 450,
-    avgResponseTime: '1120ms'
+    totalCost: 0.00,
+    rolling30DaysCost: 0.00,
+    requests: 0,
+    avgResponseTime: '0ms'
   },
   {
     id: 'tutor',
@@ -1775,10 +1775,10 @@ let initialAgentMetrics: AgentMetric[] = [
     nameES: 'Agente de Tutoría IA y Personalidades',
     nameDE: 'KI-Tutor-Agent & Persönlichkeiten',
     nameZH: 'AI 智能体与个性化角色',
-    totalCost: 312.50,
-    rolling30DaysCost: 64.20,
-    requests: 3420,
-    avgResponseTime: '580ms'
+    totalCost: 0.00,
+    rolling30DaysCost: 0.00,
+    requests: 0,
+    avgResponseTime: '0ms'
   }
 ];
 
@@ -1955,6 +1955,12 @@ if (isBrowser) {
     
     tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
     agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
+    // Self-healing check for unrealistic cached mock agent metrics
+    const hasUnrealisticMetrics = agentMetricsList.some(m => m.totalCost > 150 || m.requests > 400);
+    if (hasUnrealisticMetrics) {
+      agentMetricsList = initialAgentMetrics;
+      setLocalStorageItem('openprimer_agent_metrics', agentMetricsList);
+    }
     availableLanguagesList = getLocalStorageItem('openprimer_languages', initialLanguages);
     // Self-healing check for master language English
     const hasEN = availableLanguagesList.some(l => l.code.toUpperCase() === 'EN');

@@ -247,8 +247,8 @@ Requirements:
    ${isPrimary ? `
    - Since this is a primary school level course, DO NOT include any bibliography or references section.` : `
    - Systematically include a bibliography/references section at the very end of the page (after the Glossary), using the heading \`### Références\` if writing in French, or \`### References\` if in English/other languages.
-   - All references in this section MUST be real, high-quality, clickable links (using Markdown link syntax \`[Title / Author / Source](URL)\` with real or realistic scholarly URLs, e.g. redirecting to a scientific article, database, or academic website).
-   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.`}
+   - All references in this section MUST be real, high-quality, clickable links (using Markdown link syntax \`[Title / Author / Source.](URL)\` with real or realistic scholarly URLs, e.g. redirecting to a scientific article, database, or academic website. The bracketed link text MUST end with a trailing period, e.g. \`[Lien vers la page de l'éditeur.](url)\`).
+   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher.](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.`}
  15. Short Audio and Video Duration Limits (Micro-learning):
      - To optimize student focus and prevent attention loss, all recommended or embedded videos (using \`<Video id="..." title="..." provider="..." duration="..." />\` or \`<Video url="..." title="..." duration="..." />\`) and audio tracks (using \`<Audio url="..." title="..." duration="..." />\`) MUST be short (maximum 2 to 3 minutes long).
      - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\` or \`duration="1:45"\`) and keep it within this short micro-learning boundary.
@@ -801,7 +801,10 @@ async function validateAndFixBibliography(mdx: string): Promise<string> {
           const realUrl = `https://doi.org/${item.DOI}`;
           const cleanTitle = item.title?.[0] || refText;
           const cleanAuthor = item.author?.[0]?.family ? `by ${item.author[0].family}` : '';
-          const replacementText = `${cleanTitle} ${cleanAuthor}`.trim();
+          let replacementText = `${cleanTitle} ${cleanAuthor}`.trim();
+          if (!replacementText.endsWith('.')) {
+            replacementText += '.';
+          }
           
           const originalRefId = fullMatch.match(/ref-\d+/)?.[0] || 'ref-1';
           const originalNum = fullMatch.match(/\[\d+\]/)?.[0] || '[1]';
@@ -826,7 +829,11 @@ async function validateAndFixBibliography(mdx: string): Promise<string> {
           const realUrl = book.previewLink || book.infoLink || `https://books.google.com?q=${encodeURIComponent(refText)}`;
           const originalRefId = fullMatch.match(/ref-\d+/)?.[0] || 'ref-1';
           const originalNum = fullMatch.match(/\[\d+\]/)?.[0] || '[1]';
-          const updatedRef = `<a id="${originalRefId}"></a>${originalNum} [${book.title} by ${book.authors?.join(', ') || 'Unknown'}](${realUrl})`;
+          let replacementText = `${book.title} by ${book.authors?.join(', ') || 'Unknown'}`.trim();
+          if (!replacementText.endsWith('.')) {
+            replacementText += '.';
+          }
+          const updatedRef = `<a id="${originalRefId}"></a>${originalNum} [${replacementText}](${realUrl})`;
           replacements.push({ original: fullMatch, replacement: updatedRef });
           console.log(`[BIBLIOGRAPHY VALIDATOR] Google Books validation successful. Resolved to: ${realUrl}`);
           continue;
@@ -1024,7 +1031,8 @@ function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
-    'Epistemology', 'Video', 'Audio'
+    'Epistemology', 'Video', 'Audio', 'Mermaid', 'ComparisonSlider',
+    'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem'
   ];
   const tagPattern = new RegExp(`<\\/?(${allowedTags.join('|')})\\b`, 'i');
   
