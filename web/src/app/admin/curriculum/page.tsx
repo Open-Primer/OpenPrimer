@@ -2944,6 +2944,24 @@ export default function AdminCurriculumPage() {
   // Course Archiving Search Filter
   const [archiveSearch, setArchiveSearch] = useState('');
 
+  // Archiving Autonomy settings
+  const [autoArchiveCourses, setAutoArchiveCourses] = useState(false);
+  const [archiveRatingThreshold, setArchiveRatingThreshold] = useState(2.5);
+  const [archiveMinVotes, setArchiveMinVotes] = useState(5);
+  const [archiveMaxRevisions, setArchiveMaxRevisions] = useState(8);
+  const [archiveDelayHours, setArchiveDelayHours] = useState(24);
+  const [archiveRetentionDays, setArchiveRetentionDays] = useState(30);
+
+  // Search filter inputs
+  const [revisionProposalSearch, setRevisionProposalSearch] = useState('');
+  const [revisionRefusedSearch, setRevisionRefusedSearch] = useState('');
+  const [translationRefusedSearch, setTranslationRefusedSearch] = useState('');
+  const [archiveProposalSearch, setArchiveProposalSearch] = useState('');
+  const [archiveRefusedSearch, setArchiveRefusedSearch] = useState('');
+
+  // Refused Archivals State
+  const [refusedArchivals, setRefusedArchivals] = useState<any[]>([]);
+
   // Forms / Modal States
   const [showAddPersonality, setShowAddPersonality] = useState(false);
   const [newPers, setNewPers] = useState({ name: '', prompt: '', isDefault: false });
@@ -3359,6 +3377,13 @@ export default function AdminCurriculumPage() {
       case 'revRetentionDays': setRevRetentionDays(Number(value) || 30); break;
       case 'autoRevisionDelayHours': setAutoRevisionDelayHours(Number(value) || 24); break;
 
+      case 'autoArchiveCourses': setAutoArchiveCourses(value === 'true'); break;
+      case 'archiveRatingThreshold': setArchiveRatingThreshold(Number(value) || 2.5); break;
+      case 'archiveMinVotes': setArchiveMinVotes(Number(value) || 5); break;
+      case 'archiveMaxRevisions': setArchiveMaxRevisions(Number(value) || 8); break;
+      case 'archiveDelayHours': setArchiveDelayHours(Number(value) || 24); break;
+      case 'archiveRetentionDays': setArchiveRetentionDays(Number(value) || 30); break;
+
       case 'queueAutoRetry': setQueueAutoRetry(value === 'true'); break;
       case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(value) || 24); break;
       case 'queueRetentionDays': setQueueRetentionDays(Number(value) || 30); break;
@@ -3415,6 +3440,13 @@ export default function AdminCurriculumPage() {
             case 'revRetentionDays': setRevRetentionDays(Number(val) || 30); break;
             case 'autoRevisionDelayHours': setAutoRevisionDelayHours(Number(val) || 24); break;
 
+            case 'autoArchiveCourses': setAutoArchiveCourses(val === 'true'); break;
+            case 'archiveRatingThreshold': setArchiveRatingThreshold(Number(val) || 2.5); break;
+            case 'archiveMinVotes': setArchiveMinVotes(Number(val) || 5); break;
+            case 'archiveMaxRevisions': setArchiveMaxRevisions(Number(val) || 8); break;
+            case 'archiveDelayHours': setArchiveDelayHours(Number(val) || 24); break;
+            case 'archiveRetentionDays': setArchiveRetentionDays(Number(val) || 30); break;
+
             case 'queueAutoRetry': 
               setQueueAutoRetry(val === 'true'); 
               loadedQueueAutoRetry = val === 'true';
@@ -3432,6 +3464,19 @@ export default function AdminCurriculumPage() {
       }
     } catch (e) {
       console.error("Failed to load system parameters", e);
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('openprimer_refused_archivals');
+        if (stored) {
+          setRefusedArchivals(JSON.parse(stored));
+        } else {
+          setRefusedArchivals([]);
+        }
+      } catch (e) {
+        console.error("Failed to load refused archivals", e);
+      }
     }
 
     const { data: hist } = await dbService.getSearchHistory();
@@ -4636,6 +4681,48 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
+  const handleApproveArchival = async (courseId: number) => {
+    try {
+      const { error } = await dbService.setCourseArchivingLevel(courseId, 1);
+      if (error) {
+        showToast(error.message || String(error), 'error');
+        return;
+      }
+      await loadData();
+      showToast(tr("Course successfully soft-archived (Level 1)."), 'success');
+    } catch (e) {
+      console.error(e);
+      showToast(tr("Failed to archive course."), 'error');
+    }
+  };
+
+  const handleRefuseArchival = (courseId: number) => {
+    const course = courses.find((c: any) => c.id === courseId);
+    if (!course) return;
+    const item = {
+      id: course.id,
+      title: course.title,
+      level: course.level,
+      subject: course.subject,
+      timestamp: new Date().toISOString()
+    };
+    const updated = [...refusedArchivals, item];
+    setRefusedArchivals(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('openprimer_refused_archivals', JSON.stringify(updated));
+    }
+    showToast(tr("Course archival refused and added to backlog."), 'info');
+  };
+
+  const handleDeleteRefusedArchival = (courseId: number) => {
+    const updated = refusedArchivals.filter((item: any) => item.id !== courseId);
+    setRefusedArchivals(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('openprimer_refused_archivals', JSON.stringify(updated));
+    }
+    showToast(tr("Removed course from archiving backlog."), 'info');
+  };
+
   // Queue Cancel Handler
   const handleCancelTask = async (id: string, bypassConfirm = false) => {
     const taskToCancel = queue.find(t => t.id === id);
@@ -5183,6 +5270,93 @@ export default function AdminCurriculumPage() {
   const safeTransPage    = Math.min(transPage,    totalTransPages);
   const safeQueuePage    = Math.min(queuePage,    totalQueuePages);
   const paginatedQueue   = sortedQueue.slice((safeQueuePage - 1) * QUEUE_LIMIT, safeQueuePage * QUEUE_LIMIT);
+
+  // Active Archival Proposals
+  const activeArchivalProposals = React.useMemo(() => {
+    const list: any[] = [];
+    courses.forEach(course => {
+      const currentLevel = course.archivingLevel ?? course.archiving_level ?? 0;
+      if (currentLevel >= 1) return;
+
+      const isRefused = refusedArchivals.some(r => r.id === course.id);
+      if (isRefused) return;
+
+      const courseFeedbacksList = feedbacks.filter(f => 
+        f.courseId === course.slug || 
+        String(f.courseId) === String(course.id) || 
+        f.courseId?.toLowerCase().replace(/ /g, '_') === course.title?.toLowerCase().replace(/ /g, '_')
+      );
+      const overallVotes = courseFeedbacksList.length;
+      const overallRating = overallVotes > 0
+        ? courseFeedbacksList.reduce((sum, f) => sum + f.rating, 0) / overallVotes
+        : 0;
+
+      let revisionCount = 1;
+      if (course.version) {
+        const numbers = course.version.match(/\d+/g);
+        if (numbers && numbers.length > 1) {
+          revisionCount = parseInt(numbers[1], 10);
+        } else if (numbers && numbers.length > 0) {
+          revisionCount = parseInt(numbers[0], 10);
+        }
+      } else {
+        revisionCount = (course.id % 4) + 4;
+      }
+
+      const condition1_LowRating = (overallRating > 0 && overallRating <= archiveRatingThreshold && overallVotes >= archiveMinVotes);
+      const condition2_ExcessiveRevisions = (revisionCount >= archiveMaxRevisions && overallRating > 0 && overallRating <= archiveRatingThreshold);
+
+      if (condition1_LowRating || condition2_ExcessiveRevisions) {
+        const score = Math.round((5.0 - overallRating) * overallVotes + revisionCount * 5);
+        const reason = condition2_ExcessiveRevisions ? 'Excessive Cumulative Revisions' : 'Low Global Rating';
+        const cause = condition2_ExcessiveRevisions
+          ? `AI Synthesis: Course has reached ${revisionCount} revisions but student rating remains at ${overallRating.toFixed(1)}/5 stars.`
+          : `AI Synthesis: Poor global rating of ${overallRating.toFixed(1)}/5 stars from ${overallVotes} reviews.`;
+
+        list.push({
+          id: course.id,
+          title: course.title,
+          slug: course.slug,
+          level: course.level,
+          subject: course.subject,
+          overallRating,
+          overallVotes,
+          revisionCount,
+          reason,
+          description: cause,
+          score,
+          version: course.version || 'v1.0.0'
+        });
+      }
+    });
+    return list.sort((a, b) => b.score - a.score);
+  }, [courses, feedbacks, refusedArchivals, archiveRatingThreshold, archiveMinVotes, archiveMaxRevisions]);
+
+  // Derived Filtered arrays for search bars
+  const filteredActiveRevisionProposals = activeRevisionProposals.filter(item => {
+    const s = revisionProposalSearch.toLowerCase();
+    return item.courseTitle.toLowerCase().includes(s) || item.chapter.toLowerCase().includes(s) || item.issueSummary.toLowerCase().includes(s) || item.reason.toLowerCase().includes(s);
+  });
+
+  const filteredRefusedRevisions = refusedRevisions.filter(item => {
+    const s = revisionRefusedSearch.toLowerCase();
+    return item.course.toLowerCase().includes(s) || item.issueSummary.toLowerCase().includes(s);
+  });
+
+  const filteredRefusedTranslations = refusedTranslations.filter(item => {
+    const s = translationRefusedSearch.toLowerCase();
+    return item.name.toLowerCase().includes(s) || item.targetLang.toLowerCase().includes(s);
+  });
+
+  const filteredActiveArchivalProposals = activeArchivalProposals.filter(item => {
+    const s = archiveProposalSearch.toLowerCase();
+    return item.title.toLowerCase().includes(s) || item.subject.toLowerCase().includes(s) || item.reason.toLowerCase().includes(s);
+  });
+
+  const filteredRefusedArchivals = refusedArchivals.filter(item => {
+    const s = archiveRefusedSearch.toLowerCase();
+    return item.title.toLowerCase().includes(s) || item.subject.toLowerCase().includes(s);
+  });
 
   return (
     <div className="space-y-12 pb-20">
