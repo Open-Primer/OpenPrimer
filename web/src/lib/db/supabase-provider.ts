@@ -616,13 +616,38 @@ export const supabaseDatabaseProvider: DatabaseService = {
           activeDates.add(lessonProgress[key].lastVisited.split('T')[0]);
         }
       }
-      const studyStreakDays = activeDates.size;
+      if (data) {
+        data.forEach(r => {
+          if (r.last_visited) {
+            activeDates.add(r.last_visited.split('T')[0]);
+          }
+        });
+      }
+      const studyStreakDays = Math.max(activeDates.size, completedCount);
 
       const quizEntries = Object.values(quizResults) as any[];
-      const masteryPoints = quizEntries.reduce(
+      const rawQuizPoints = quizEntries.reduce(
         (sum: number, q: any) => sum + (q.correctAnswers || 0),
         0
       );
+
+      let completedCoursePoints = 0;
+      activeModules.forEach((m: any) => {
+        if (m.progress === 100) {
+          const course = courses.find(c => c.id === m.id);
+          if (course) {
+            if (course.isCurriculum) {
+              completedCoursePoints += 100;
+            } else {
+              completedCoursePoints += Math.max(50, (course.ects || 6) * 10);
+            }
+          } else {
+            completedCoursePoints += 50;
+          }
+        }
+      });
+
+      const masteryPoints = rawQuizPoints + completedCoursePoints;
 
       let tutorId = 'socratic';
       const { data: profileData } = await supabase
