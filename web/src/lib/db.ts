@@ -2910,6 +2910,7 @@ export const progressService = {
       if (times[key].lastVisited) {
         activeDates.add(times[key].lastVisited.split('T')[0]);
       }
+    }
     const completedCount = enrolled.filter((id: number) => {
       const course = mockCourses.find(c => c.id === id);
       const slug = course?.slug || '';

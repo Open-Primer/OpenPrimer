@@ -812,7 +812,7 @@ export const CatalogPage = () => {
               progressPercent = activeModule ? activeModule.progress : localPercent;
             }
             
-            const hasStarted = isEnrolled || progressPercent > 0;
+            const hasStarted = course.isCurriculum ? isEnrolled : (isEnrolled || progressPercent > 0);
             return (
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
                 <div 

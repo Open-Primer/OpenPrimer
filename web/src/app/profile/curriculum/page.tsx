@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { TopNav, UI_STRINGS, Footer, getLocalizedLabel, formatCourseLevel } from '@/components/RefinedUI';
@@ -1072,9 +1072,10 @@ export default function CurriculumPage() {
                                        setSelectedEnrollCourse(courseDetails || course);
                                      }}
                                      title="Syllabus"
-                                     className="p-2 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                                      className="px-3 py-1.5 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
                                    >
-                                     <Icons.BookOpen className="w-4 h-4" />
+                                      <Icons.BookOpen className="w-3.5 h-3.5" />
+                                      Syllabus
                                    </button>
 
                                    {/* 6. Bookmark Toggle Button */}

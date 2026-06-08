@@ -241,6 +241,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   };
 
   const getCourseEarnedAchievements = () => {
+    if (typeof window === 'undefined') return [];
     const courseEarned: any[] = [];
     
     // 1. Fast Learner check
