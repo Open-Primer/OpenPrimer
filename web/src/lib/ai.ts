@@ -155,7 +155,6 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     for (let index = 0; index < lessonsList.length; index++) {
       const item = lessonsList[index];
       const isPrimary = level.toLowerCase().includes('primary') || level.toLowerCase().includes('primaire');
-      const isFrench = targetLang.toLowerCase() === 'fr';
       
       const promptContent = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
 Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome, exhaustif et immédiatement exploitable. L'évitement, la paresse textuelle et le résumé vague sont considérés comme des fautes critiques de génération.
@@ -207,19 +206,45 @@ Requirements:
      * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component.
      * A brief paragraph containing open reflection questions (questions ouvertes de réflexion) and an opening (ouverture) toward further study or neighboring fields.
 5. Conceptual framework, historical perspective, and concrete real-world applications in the body of the lesson.
+   - **Author Quotes (Citations d'auteurs)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes:
+     \`> "Quote text..." — Author name, *Source / Publication*\`
+     Ensure every quote is beautifully integrated, translated or kept in its original prestigious phrasing (with a translation in parentheses if helpful), and followed by a dedicated paragraph explaining its conceptual implications and context.
 6. Controlled Digressions (Encadrés Epistémologiques):
    - If the course level is university level (L1, L2, L3 / undergraduate_1, undergraduate_2, undergraduate_3), you MUST systematically insert at least one controlled digression box in the body of the lesson using the custom component:
      \`<Epistemology title="Title of Digression">...</Epistemology>\`
      This box must explore the history of the concept, past controversies, or current limits/criticisms, breaking the dogmatic tone of the AI-generated text.
 7. Include some math formulas in LaTeX (using $ or $$ wrappers) where appropriate for the level.
-8. Radical Accessibility: Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility.
-9. Glossary and Highlighted Terms:
+8. Radical Accessibility, Captions, Figuring & Failures (Accessibilité Radicale, Légendes, Numérotations et Secours) :
+   - Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility for screen readers and TTS (Text-To-Speech) voice synthesizers.
+   - **Systematic Proportional Visual Enrichment (Enrichissement Visuel Proportionnel)**: Visual impact is crucial for learner appeal and engagement. You MUST systematically enrich the course content with high-quality generated images depending on the chapter level, length, and subject context:
+     * *Minimum Baseline*: Include at least 2 to 3 high-impact illustrative images for abstract, formal, or symbolic courses (e.g., mathematics, logic, theoretical physics) to set the context or show direct visual applications of the concepts.
+     * *High Visual Density (5 to 10+ images)*: For visual, spatial, empirical, or historical subjects (e.g., visual arts, geography, history, biology, architecture, geology, cinema), you MUST systematically include a much larger density of illustrative images directly related to the local context (e.g., specific artworks, maps, geographical features, historical artifacts, biological structures).
+     * *Adaptation to Level*: For Primary levels (CP-CM2), maintain an extremely high illustration density (images every few paragraphs) to scaffold reading comprehension. For advanced levels (Lycée to L3), prioritize highly detailed visual figures illustrating specific, complex academic aspects.
+   - **Secure Pollinations.ai Image Generation**: All images must be securely loaded using the following markdown URL syntax:
+     \`![Alt Text](https://image.pollinations.ai/prompt/{descriptive_english_prompt_with_underscores}?width=800&height=600&nologo=true)\`
+     *The prompt inside the curly braces MUST be written in English (the image generator's native language) for high aesthetic quality, be highly specific and illustrative, and use ONLY underscores (\`_\`) or hyphens (\`-\`) instead of spaces. Do NOT include raw spaces, quotes, or special characters in the URL, as they break rendering.*
+   - **Systematic captions & sequential numbering (Légendage et Titrage)**: Every image/figure, video player, and audio player MUST be sequentially captioned and numbered directly below the element using italicized text:
+     * For an Image/Figure: \`*Figure X : [Titre explicite] - [Description détaillée de ce qu'affiche l'image].*\`
+     * For a Video: \`*Vidéo X : [Titre de la vidéo] - [Résumé structuré du contenu de la vidéo].*\`
+     * For an Audio track: \`*Audio X : [Titre de la piste audio] - [Transcription textuelle complète de ce qui est prononcé].*\`
+   - **Footnote referencing**: Link every major illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. \`<sup>[[1](#ref-1)]</sup>\`.
+   - **Failures and Redirect links**: Directly below the caption, systematically insert an alternative textual link letting the student access the original external resource directly if loading fails (e.g. \`[Accéder directement à la source / Access the resource directly](url)\`).
+9. Glossary and Highlighted Terms with Wikipedia integration :
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
-   - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically. Inside this bottom list, write them statically as plain text \`**Term** : Definition\` (do NOT wrap them in \`<Glossary>\` inside this bottom section).
-10. Historical Figures and Scientists:
-    - For every historical figure, scientist, or prominent person mentioned in the text (e.g., Napoleon, Isaac Newton, Albert Einstein, Marie Curie, etc.), you MUST wrap their name in the custom React component: \`<HistoricalPerson name="Exact_Wikipedia_Page_Title_In_Target_Language" lang="target_language_code">DisplayName</HistoricalPerson>\`.
-    - Examples (if writing in French): \`<HistoricalPerson name="Isaac_Newton" lang="fr">Isaac Newton</HistoricalPerson>\`, \`<HistoricalPerson name="Albert_Einstein" lang="fr">Albert Einstein</HistoricalPerson>\`, \`<HistoricalPerson name="Napoléon_Ier" lang="fr">Napoléon Bonaparte</HistoricalPerson>\`.
-    - Examples (if writing in English): \`<HistoricalPerson name="Isaac_Newton" lang="en">Isaac Newton</HistoricalPerson>\`, \`<HistoricalPerson name="Albert_Einstein" lang="en">Albert Einstein</HistoricalPerson>\`, \`<HistoricalPerson name="Napoleon" lang="en">Napoleon Bonaparte</HistoricalPerson>\`.
+   - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
+   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: \`**Term** : Definition. [[Wikipédia / Wikipedia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]\`. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
+10. Connected Entities: Historical Figures, Fictional Characters, and Key Geographic Places (Personnalités, Personnages Fictifs, et Lieux Clés) :
+    - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
+      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, or real person mentioned, you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component: \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code">DisplayName (Dates)</HistoricalPerson>\`.
+        - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr">Isaac Newton (1643 - 1727)</HistoricalPerson>\` or \`<HistoricalPerson name="Bob_Dylan" lang="fr">Bob Dylan (né en 1941)</HistoricalPerson>\`
+        - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en">Isaac Newton (1643 - 1727)</HistoricalPerson>\` or \`<HistoricalPerson name="Bob_Dylan" lang="en">Bob Dylan (born 1941)</HistoricalPerson>\`
+      * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed, 3 to 5 line mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\` or \`> [!NOTE] **Mini-Biography: DisplayName (Dates)**\`). This mini-biography must highlight their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson.
+      * **Fictional Characters**: For fictional characters (e.g., Mickey Mouse, Sherlock Holmes, Frodo Baggins, Hamlet) when relevant to the course content (e.g., literature, history, cinema, cultural/social studies), wrap them in the custom component: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code">CharacterName</FictionalCharacter>\`.
+        - Example (French): \`<FictionalCharacter name="Mickey_Mouse" lang="fr">Mickey Mouse</FictionalCharacter>\`
+        - Example (English): \`<FictionalCharacter name="Sherlock_Holmes" lang="en">Sherlock Holmes</FictionalCharacter>\`
+      * **Key Places and Locations**: For important locations, countries, monuments, or landmarks, you MUST wrap them in \`<Location>\` (or \`<Place>\`) *ONLY when they are of pedagogical or disciplinary importance* (e.g., in geography, geology, history, or architecture, but NOT for passive mentions like "Euler lived in Paris" in a mathematics course): \`<Location name="Exact_Wikipedia_Page_Title" lang="target_language_code">PlaceName</Location>\`.
+        - Example (French): \`<Location name="Mont_Blanc" lang="fr">Mont Blanc</Location>\` or \`<Location name="Château_de_Versailles" lang="fr">Château de Versailles</Location>\`
+        - Example (English): \`<Location name="Grand_Canyon" lang="en">Grand Canyon</Location>\` or \`<Location name="Palace_of_Versailles" lang="en">Palace of Versailles</Location>\`
     - Note: The \`name\` attribute must be the exact Wikipedia page title in the target language of the course (using underscores for spaces), and the \`lang\` attribute must be the language of the course ("${targetLang.toLowerCase()}").
 11. Intermediate Formative Scale-Based Evaluations (Évaluations formatives proportionnelles) :
     - Throughout the body of the lesson, place a custom \`<Quiz>\` block after each key sub-concept (every 5-10 minutes of reading).
@@ -227,17 +252,16 @@ Requirements:
     - For every question in these intermediate quizzes, you MUST provide a detailed, supportive, and alternative explanation using the \`explanation\` attribute on the \`<Question>\` component:
       \`<Question q="Question text" explanation="Detailed alternative explanation, using different analogies, breaking down the steps simply, to help learners who fail to understand.">...\`
       This acts as pedagogical rerouting: if the student fails the question, the tutor will spontaneously react by showing this custom rerouting explanation.
-12. Mandatory Proportional & Diversified End-of-Lesson Evaluation (Évaluation finale proportionnelle et diversifiée) :
+12. Mandatory Proportional, Long & Timed End-of-Lesson Evaluation (Évaluation finale proportionnelle, validante et chronométrée) :
     - You MUST systematically place an evaluation block at the very end of the main lesson content (after the Conclusion/Synthèse section, but before the Glossary and References sections).
-    - The size and length of the evaluation MUST scale proportionally to the chapter size (e.g. 3 to 5 questions for simple introductory lessons, but 8 to 10 comprehensive questions for deep, university-level chapters).
+    - **Enforce longer, validating evaluation**: The end-of-lesson/end-of-course evaluations must be comprehensive and fully validating. Provide a substantial set of questions or essay prompts (e.g. at least 4 to 6 questions for typical lessons, and 8 to 12 comprehensive questions for deep, university-level chapters) to thoroughly assess all key lesson concepts.
+    - **Mandatory Timed Challenges (\`durationLimit\` attribute)**: To break learning monotony and encourage focused self-assessment, you MUST systematically set a clear, reasonable duration limit on these final evaluations using the \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes, \`durationLimit={600}\` for 10 minutes, or \`durationLimit={900}\` for 15 minutes depending on the question count and complexity).
     - You MUST NOT limit evaluations to MCQ quizzes only! You MUST actively diversify the evaluation format based on the discipline, level, and context:
-      * MCQ Quizzes: Use the custom \`<Quiz>\` component. Best for scientific, math, or factual topics.
-        - You can optionally add a \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={180}\` for 3 minutes) to create a timed challenge.
-      * Essay & Written Evaluations (Manual Tutor Grading): Use the custom \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\` component. You MUST systematically select this format for humanities, literature, history, social sciences, philosophy, law, or any deep conceptual/theoretical discussions where students are expected to write a structured analysis or synthesis. This will be manually reviewed, critiqued, and graded by the AI tutor.
+      * MCQ Quizzes: Use the custom \`<Quiz durationLimit={seconds}>\` component with multiple \`<Question>\` elements inside. Excellent for scientific, math, or factual topics.
+      * Essay & Written Evaluations (Manual Tutor Grading): Use the custom \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." durationLimit={seconds} />\` component. You MUST systematically select this format for humanities, literature, history, social sciences, philosophy, law, or any deep conceptual/theoretical discussions where students are expected to write a structured analysis or synthesis. This will be manually reviewed, critiqued, and graded by the AI tutor.
         - The \`prompt\` must be the essay question/topic in "${targetLang.toUpperCase()}".
         - The \`gradingSystem\` attribute MUST be chosen based on the course's country/cultural context: use "0/20" for French/Francophone settings, "A-F" for US/UK/International settings, "0/10" for general European settings, or "pass-fail" for introductory courses.
         - The \`subject\` attribute must be the name of the subject (e.g. "Physics", "Biology", "Philosophy", "Law").
-        - You can optionally add a \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes) to enforce a writing time limit.
 13. Evaluation Matrix by Level (Matrice d'Évaluation par Niveau):
     You MUST strictly select the appropriate evaluation form and objectives depending on the target student level ("${level}"):
     - Primaire (CP-CM2): Gamification, visual identification, short fill-in-the-blanks (\`<FillInBlanks sentence="..." answer="..." />\`). Cognitive Objective: Recognition and simple retrieval (Reconnaissance et Restitution simple). Tutor Role: Immediate binary validation.
@@ -248,7 +272,15 @@ Requirements:
    - Since this is a primary school level course, DO NOT include any bibliography or references section.` : `
    - Systematically include a bibliography/references section at the very end of the page (after the Glossary), using the heading \`### Références\` if writing in French, or \`### References\` if in English/other languages.
    - All references in this section MUST be real, high-quality, clickable links (using Markdown link syntax \`[Title / Author / Source.](URL)\` with real or realistic scholarly URLs, e.g. redirecting to a scientific article, database, or academic website. The bracketed link text MUST end with a trailing period, e.g. \`[Lien vers la page de l'éditeur.](url)\`).
-   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher.](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.`}
+   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher.](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.
+   - Just before the References section, you CAN optionally include a "Pour aller plus loin" (Going Further) block to suggest deep-dive academic or research references (books, articles, videos, websites). Use the \`<GoingFurther>\` and \`<GoingFurtherItem>\` components as follows:
+     \`\`\`mdx
+     <GoingFurther title="Pour aller plus loin...">
+       <GoingFurtherItem title="Title of Book" type="book" description="Brief description of why this book is relevant and highly recommended." />
+       <GoingFurtherItem title="Academic Research Paper" type="research" url="https://doi.org/...or-real-url" description="Detailed description of this paper's advanced concepts." />
+       <GoingFurtherItem title="Recommended Video Explainer" type="video" url="https://youtube.com/..." description="Short summary of this excellent 2-minute video visual breakdown." />
+     </GoingFurther>
+     \`\`\``}
  15. Short Audio and Video Duration Limits (Micro-learning):
      - To optimize student focus and prevent attention loss, all recommended or embedded videos (using \`<Video id="..." title="..." provider="..." duration="..." />\` or \`<Video url="..." title="..." duration="..." />\`) and audio tracks (using \`<Audio url="..." title="..." duration="..." />\`) MUST be short (maximum 2 to 3 minutes long).
      - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\` or \`duration="1:45"\`) and keep it within this short micro-learning boundary.
@@ -273,8 +305,25 @@ Requirements:
              { id: "recepteur", name: "Récepteurs postsynaptiques", x: 75, y: 65, description: "Canaux ioniques ou RCPG s'ouvrant après liaison du neurotransmetteur." }
            ]} />\`
            Coordinates x and y are integer percentages from 0 to 100 on a 2D canvas. Choose locations logically matching the underlying animated SVG layout.
-        * Economics, Finance, Mathematics, or Physics: You MUST systematically insert at least one dynamic 2D graph simulator tag: \`<FunctionPlotter mode="linear|compound-interest|supply-demand" title="Graph Title" xLabel="X-Axis" yLabel="Y-Axis" />\` (plots supply-demand curves, compound interest, or linear growth, equipped with interactive parameter slider controls).
+        * Economics, Finance, Mathematics, or Physics: You MUST systematically insert at least one dynamic 2D graph simulator or interactive function coefficients manipulator tag:
+             - \`<FunctionPlotter mode="linear|compound-interest|supply-demand" title="Graph Title" xLabel="X-Axis" yLabel="Y-Axis" />\` (plots supply-demand curves, compound interest, or linear growth, equipped with interactive parameter slider controls) OR
+             - \`<FunctionManipulator />\` (stunning curves sandbox plotting linear, quadratic, sinusoidal wave, exponential, and logarithmic functions, equipped with interactive parameter sliders, explicit graduated linear/log axes, units, and zero origin point).
         * Step-by-Step Processes, Workflows, Chronological Events, Systems Pathways, or Logical Flows (All Disciplines): You MUST systematically include a visual flowchart written directly inside standard \`\`\`mermaid code blocks (parsed and rendered automatically in the client).
+        * Quantitative, Mathematical, Scientific, or Economic Exercises: For any lesson with calculation steps, numerical derivations, formula applications, or mathematical proofs, you MUST systematically include:
+             - At least one Solved Worked Example:
+               \`<SolvedExercise title="Name of Example" solution="Detailed multi-line step-by-step mathematical or scientific derivation resolution details...">Full problem statement/text here...</SolvedExercise>\`
+             - At least one Unsolved Interactive Calculation Challenge:
+               \`<UnsolvedExercise question="Calculated challenge question requiring a numeric value response" correctAnswer={5.2} tolerance={0.05} placeholder="Enter numerical result..." hint="Helpful formula/clue hint..." solution="Step-by-step worked resolution revealed after correct answer or no attempts left..." unit="m/s" />\`
+             - For lessons teaching chemistry (reaction balancing, chemical formulas) or algebraic mathematics (solving linear/rational equations, factoring, isolating variables), you MUST include:
+               \`<EquationManipulator />\` (an elegant sandbox supporting chemical stoichiometry balancing and interactive step-by-step algebraic equation solver pathways).
+        * Chemistry, Biology, Material Sciences, Crystallography, or Molecular Physics: You MUST systematically include at least one interactive 3D particle structure viewer:
+             - \`<StructureViewer3D presetId="h2o|co2|ch4|nacl|graphene" />\`
+             - Support presets: "h2o" (bent water structure), "co2" (linear double-bond carbon dioxide), "ch4" (tetrahedral methane), "nacl" (Alternating ionic salt FCC crystal grid), or "graphene" (rippled carbon hexagonal sheet).
+        * Physics, Biology, Optics, Thermodynamics, or Biochemical Reactions: You MUST systematically include at least one playable dynamic simulation with progress-scrubbing playback:
+             - \`<DynamicSimulation presetId="mitosis|carnot|waves|doubleslit|enzyme" />\`
+             - Support presets: "mitosis" (cell division phases), "carnot" (ideal heat engine PV cycle and piston), "waves" (sine wave traveling with sliders), "doubleslit" (diffraction wave interference fringes with laser wavelength slider), or "enzyme" (induced-fit lock-and-key substrate splitting).
+        * Statistical, Analytical, Financial, or Measurement Data (All Disciplines): To display distributions, proportions, or comparative statistics, you MUST systematically include an elegant, high-impact SVG gradient chart:
+             - \`<DataChart title="Chart Title" type="bar|donut" xAxisLabel="Label X" yAxisLabel="Label Y" unit="%" data={[{"label":"Name A","value":40},{"label":"Name B","value":60}]} />\`
         * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
         * Computer Science, Software Engineering, Coding, or Web Development: You MUST systematically insert at least one interactive client-side coding sandbox block: \`<CodeSandbox initialCode="..." title="Titre du Bac à Sable" language="html|javascript|css" />\` where students can edit and execute HTML/CSS/JS code in real-time right inside the page.
         * Auditory and Video Enrichment (All Disciplines): You MUST systematically recommend or embed at least one short, high-quality audio or video resource using \`<Video id="..." title="..." provider="..." duration="..." />\` (or using \`url="..."\`) or \`<Audio url="..." title="..." duration="..." />\` (always keep duration under the micro-learning limit of 2 to 3 minutes, e.g. \`duration="2 min"\`).
@@ -317,8 +366,9 @@ Requirements:
             vertexError = `HTTP Error ${status}: ${statusText}`;
             console.error(`[AI GENERATOR] Vertex AI response error. Status: ${status}`);
           }
-        } catch (err: any) {
-          vertexError = err.message || String(err);
+        } catch (err) {
+          const error = err as Error;
+          vertexError = error.message || String(err);
           console.warn(`[AI GENERATOR] Vertex AI lesson generation failed.`, err);
         }
       }
@@ -350,8 +400,9 @@ Requirements:
             studioError = `HTTP Error ${contentRes.status}: ${contentRes.statusText}`;
             console.error(`[AI GENERATOR] AI Studio response error. Status: ${contentRes.status}`);
           }
-        } catch (err: any) {
-          studioError = err.message || String(err);
+        } catch (err) {
+          const error = err as Error;
+          studioError = error.message || String(err);
           console.error(`[AI GENERATOR] AI Studio lesson content fetch exception:`, err);
         }
       }
@@ -939,7 +990,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
     }
 
     const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-    let parsedData: any;
+    let parsedData: unknown;
     try {
       parsedData = JSON.parse(cleanedJson);
     } catch (e) {
@@ -953,8 +1004,9 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
     if (Array.isArray(parsedData)) {
       coursesList = parsedData;
     } else if (parsedData && typeof parsedData === 'object') {
-      masterDescription = parsedData.description || masterDescription;
-      coursesList = parsedData.courses || [];
+      const dataObj = parsedData as Record<string, unknown>;
+      masterDescription = (dataObj.description as string) || masterDescription;
+      coursesList = (dataObj.courses as { title: string; subject: string; volume: string; type: string; description: string }[]) || [];
     }
 
     const curriculumId = `cur_${(Date.now() % 1000000000) + Math.floor(Math.random() * 1000)}`;
@@ -1038,8 +1090,9 @@ async function validateMdxContent(content: string): Promise<{ success: boolean; 
       },
     });
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message || String(err) };
+  } catch (err) {
+    const error = err as Error;
+    return { success: false, error: error.message || String(err) };
   }
 }
 

@@ -382,8 +382,26 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
   }
 
   // 2. Active Quiz State
+  const isTwentyPercentLeft = durationLimit ? (timeLeft <= durationLimit * 0.20) : false;
+  const isFifteenPercentLeft = durationLimit ? (timeLeft <= durationLimit * 0.15) : false;
+
   return (
-    <div className="my-10 p-6 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6">
+    <div className="my-10 p-6 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6 relative">
+      {/* Floating Sticky Countdown Corner */}
+      {isStarted && durationLimit && !isFinished && (
+        <div className={cn(
+          "fixed top-6 right-6 z-50 px-4 py-2.5 rounded-2xl border shadow-2xl backdrop-blur-md flex items-center gap-2 transition-all duration-300 select-none scale-100 active:scale-95",
+          isFifteenPercentLeft 
+            ? "bg-red-950/90 border-red-500 text-red-400 animate-pulse" 
+            : isTwentyPercentLeft 
+              ? "bg-amber-950/90 border-amber-500 text-amber-400 animate-pulse" 
+              : "bg-slate-950/90 border-slate-700 text-slate-200"
+        )}>
+          <Timer className="w-4 h-4" />
+          <span className="font-mono text-sm font-black">{formatTime(timeLeft)}</span>
+        </div>
+      )}
+
       {/* Quiz Header & Timer */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
         <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2">
@@ -393,15 +411,34 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
         {durationLimit && !isFinished && (
           <div className={cn(
             "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-colors border",
-            timeLeft < 30 
+            isFifteenPercentLeft 
               ? "bg-red-500/10 border-red-500/30 text-red-400 animate-pulse" 
-              : "bg-slate-950 border-slate-800 text-slate-300"
+              : isTwentyPercentLeft 
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse" 
+                : "bg-slate-950 border-slate-800 text-slate-300"
           )}>
             <Timer className="w-4 h-4" />
             <span>{t.time_remaining} {formatTime(timeLeft)}</span>
           </div>
         )}
       </div>
+
+      {/* 20% & 15% Dynamic Alert Warners */}
+      {durationLimit && isTwentyPercentLeft && timeLeft > 0 && !isFinished && (
+        <div className={cn(
+          "p-4 rounded-2xl text-xs font-bold flex items-center gap-2.5 border transition-all duration-300",
+          isFifteenPercentLeft 
+            ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse" 
+            : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+        )}>
+          <Timer className="w-4 h-4 text-current animate-pulse" />
+          <span>
+            {language === 'FR' 
+              ? `⏳ Attention ! Il reste moins de ${isFifteenPercentLeft ? '15%' : '20%'} du temps imparti (${formatTime(timeLeft)} restants). Hâtez-vous de répondre !`
+              : `⏳ Warning! Less than ${isFifteenPercentLeft ? '15%' : '20%'} of the allocated time is left (${formatTime(timeLeft)} remaining). Hurry up to answer!`}
+          </span>
+        </div>
+      )}
 
       {isTimeUp && (
         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-medium flex items-center gap-2">

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BookOpen, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 
@@ -30,13 +30,44 @@ export const Glossary = ({
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
 
-  const finalTerm = term || word || (typeof children === 'string' ? children.toLowerCase() : '');
+  const finalTerm = term || word || (typeof children === 'string' ? children : '');
   const glossaryKey = finalTerm.toLowerCase().trim();
   const finalDefinition = definition || GLOSSARY_DATA[glossaryKey];
 
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const glossaryHeader = t.glossary_definition || "Glossary Definition";
+  const readWikiLabel = language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia';
+
+  useEffect(() => {
+    if (!finalTerm || !language) return;
+
+    let isMounted = true;
+    const fetchWiki = async () => {
+      try {
+        const langCode = language.toLowerCase().trim();
+        // Replace spaces with underscores and capitalize first letter for standard Wikipedia titles
+        const formattedTerm = finalTerm.trim().replace(/ /g, '_');
+        const url = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedTerm)}`;
+        
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setWikiUrl(data.content_urls?.desktop?.page || null);
+          }
+        }
+      } catch (e) {
+        console.warn(`[GLOSSARY WIKIPEDIA] Failed to fetch Wikipedia page for ${finalTerm}:`, e);
+      }
+    };
+
+    fetchWiki();
+    return () => {
+      isMounted = false;
+    };
+  }, [finalTerm, language]);
 
   if (!finalDefinition) return <>{children}</>;
 
@@ -75,15 +106,36 @@ export const Glossary = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="w-72 p-5 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl backdrop-blur-2xl glass"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-400">
-                <BookOpen className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-400">
+                  <BookOpen className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{glossaryHeader}</span>
               </div>
-              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{glossaryHeader}</span>
+              {wikiUrl && (
+                <div 
+                  className="w-5 h-5 rounded bg-white/10 flex items-center justify-center font-serif font-black text-slate-200 text-xs border border-white/5 select-none" 
+                  title="Sourced from Wikipedia"
+                >
+                  W
+                </div>
+              )}
             </div>
-            <p className="text-sm text-slate-300 leading-relaxed italic">
-              "{finalDefinition}"
+            <p className="text-sm text-slate-300 leading-relaxed italic mb-3">
+              &ldquo;{finalDefinition}&rdquo;
             </p>
+            {wikiUrl && (
+              <a 
+                href={wikiUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider mt-1"
+              >
+                {readWikiLabel} ({language.toUpperCase()})
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
             <Popover.Arrow className="fill-slate-700" />
           </motion.div>
         </Popover.Content>

@@ -753,7 +753,34 @@ export const COCKPIT_DICTIONARY = {
     "Logs": "Logs",
     "Retry": "Retry",
     "Increase Priority": "Increase Priority",
-    "Decrease Priority": "Decrease Priority"},
+    "Decrease Priority": "Decrease Priority",
+    "Pedagogical Archiving Engine Overview": "Pedagogical Archiving Engine Overview",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).",
+    "Trigger 2: Excessive Cumulative Revisions": "Trigger 2: Excessive Cumulative Revisions",
+    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.",
+    "Archiving Control Parameters": "Archiving Control Parameters",
+    "Auto-Approve Archivals": "Auto-Approve Archivals",
+    "Enable to let the archiving engine automatically soft-archive qualified courses.": "Enable to let the archiving engine automatically soft-archive qualified courses.",
+    "Proposes archival if overall rating falls at or below this stars count.": "Proposes archival if overall rating falls at or below this stars count.",
+    "Max Revisions": "Max Revisions",
+    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.",
+    "Cooldown delay in hours before an archival proposal is automatically approved.": "Cooldown delay in hours before an archival proposal is automatically approved.",
+    "Retention period in days for historical archiving logs and stale refused proposals.": "Retention period in days for historical archiving logs and stale refused proposals.",
+    "Revisions": "Revisions",
+    "Proposed Archivals": "Proposed Archivals",
+    "Refused Archivals Backlog": "Refused Archivals Backlog",
+    "No pending course archival proposals. Core curriculum stable.": "No pending course archival proposals. Core curriculum stable.",
+    "No refused archivals in backlog.": "No refused archivals in backlog.",
+    "Approve & Archive": "Approve & Archive",
+    "Refuse & Backlog": "Refuse & Backlog",
+    "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.": "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.",
+    "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.": "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.",
+    "Course successfully soft-archived (Level 1).": "Course successfully soft-archived (Level 1).",
+    "Failed to archive course.": "Failed to archive course.",
+    "Course archival refused and added to backlog.": "Course archival refused and added to backlog.",
+    "Removed course from archiving backlog.": "Removed course from archiving backlog.",
+    "Excessive Cumulative Revisions": "Excessive Cumulative Revisions"},
   FR: {
     "Volume Preference": "Préférence de Volume",
     "Automatic": "Automatique",
@@ -1148,7 +1175,34 @@ export const COCKPIT_DICTIONARY = {
     "Logs": "Journaux",
     "Retry": "Relancer",
     "Increase Priority": "Augmenter la priorité",
-    "Decrease Priority": "Diminuer la priorité"},
+    "Decrease Priority": "Diminuer la priorité",
+    "Pedagogical Archiving Engine Overview": "Aperçu du Moteur d'Archivage Pédagogique",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "Le moteur d'archivage des cours surveille de manière autonome les mesures de qualité des cours pour proposer un archivage doux (niveau 1) ou un archivage complet. Deux déclencheurs principaux sont surveillés en temps réel :",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Déclenche une proposition d'archivage de cours si la note moyenne des étudiants tombe en dessous du seuil de note (≤ étoiles) et a rassemblé un échantillon significatif (≥ votes min).",
+    "Trigger 2: Excessive Cumulative Revisions": "Déclencheur 2 : Révisions Cumulées Excessives",
+    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Déclenche une proposition d'archivage de cours lorsqu'un cours a atteint un nombre élevé de révisions (≥ révisions max) mais que sa note d'étudiant reste inférieure ou égale au seuil de note.",
+    "Archiving Control Parameters": "Paramètres de Contrôle d'Archivage",
+    "Auto-Approve Archivals": "Approuver Automatiquement les Archivages",
+    "Enable to let the archiving engine automatically soft-archive qualified courses.": "Activer pour laisser le moteur d'archivage archiver doucement les cours qualifiés.",
+    "Proposes archival if overall rating falls at or below this stars count.": "Propose l'archivage si la note globale tombe à ou en dessous de ce nombre d'étoiles.",
+    "Max Revisions": "Révisions Max",
+    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Nombre maximum de révisions/versions qu'un cours peut subir avant de déclencher l'archivage en raison d'un manque de progression standard de la qualité.",
+    "Cooldown delay in hours before an archival proposal is automatically approved.": "Délai de récupération en heures avant qu'une proposition d'archivage ne soit automatiquement approuvée.",
+    "Retention period in days for historical archiving logs and stale refused proposals.": "Période de rétention en jours pour les journaux d'archivage historiques et les propositions refusées périmées.",
+    "Revisions": "Révisions",
+    "Proposed Archivals": "Archivages Proposés",
+    "Refused Archivals Backlog": "Backlog des Archivages Refusés",
+    "No pending course archival proposals. Core curriculum stable.": "Aucune proposition d'archivage de cours en attente. Tronc commun stable.",
+    "No refused archivals in backlog.": "Aucun archivage refusé dans le backlog.",
+    "Approve & Archive": "Approuver et Archiver",
+    "Refuse & Backlog": "Refuser et Archiver",
+    "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.": "Synthèse IA : Le cours a atteint {revisions} révisions mais la note des étudiants reste à {rating}/5 étoiles.",
+    "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.": "Synthèse IA : Mauvaise note globale de {rating}/5 étoiles sur {votes} avis.",
+    "Course successfully soft-archived (Level 1).": "Cours archivé avec succès (Niveau 1).",
+    "Failed to archive course.": "Échec de l'archivage du cours.",
+    "Course archival refused and added to backlog.": "Archivage du cours refusé et ajouté au backlog.",
+    "Removed course from archiving backlog.": "Cours retiré du backlog d'archivage.",
+    "Excessive Cumulative Revisions": "Révisions Cumulées Excessives"},
   ES: {
     "Volume Preference": "Preferencia de Volumen",
     "Automatic": "Automático",
@@ -1543,7 +1597,34 @@ export const COCKPIT_DICTIONARY = {
     "Logs": "Registros",
     "Retry": "Reintentar",
     "Increase Priority": "Aumentar prioridad",
-    "Decrease Priority": "Disminuir prioridad"},
+    "Decrease Priority": "Disminuir prioridad",
+    "Pedagogical Archiving Engine Overview": "Resumen del Motor de Archivo Pedagógico",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "El motor de archivo de cursos supervisa de forma autónoma las métricas de calidad de los cursos para proponer un archivo suave (nivel 1) o un archivo completo. Se supervisan dos activadores principales en tiempo real:",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Activa una propuesta de archivo de curso si la calificación promedio de los estudiantes cae por debajo del umbral de calificación (≤ estrellas) y ha recopilado un tamaño de muestra significativo (≥ votos mínimos).",
+    "Trigger 2: Excessive Cumulative Revisions": "Activador 2: Revisiones Acumuladas Excesivas",
+    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Activa una propuesta de archivo de curso cuando un curso ha alcanzado un alto número de revisiones (≥ revisiones máximas) pero la calificación de los estudiantes permanece en o por debajo del umbral de calificación.",
+    "Archiving Control Parameters": "Parámetros de Control de Archivo",
+    "Auto-Approve Archivals": "Aprobación Automática de Archivos",
+    "Enable to let the archiving engine automatically soft-archive qualified courses.": "Habilitar para permitir que el motor de archivo archive suavemente los cursos calificados.",
+    "Proposes archival if overall rating falls at or below this stars count.": "Propone archivo si la calificación global cae en o por debajo de este recuento de estrellas.",
+    "Max Revisions": "Revisiones Máximas",
+    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Número máximo de revisiones/versiones que puede tener un curso antes de activar el archivo debido a la falta de progreso de calidad estándar.",
+    "Cooldown delay in hours before an archival proposal is automatically approved.": "Retraso de enfriamiento en horas antes de que se apruebe automáticamente una propuesta de archivo.",
+    "Retention period in days for historical archiving logs and stale refused proposals.": "Período de retención en días para los registros de archivo históricos y las propuestas rechazadas obsoletas.",
+    "Revisions": "Revisiones",
+    "Proposed Archivals": "Archivos Propuestos",
+    "Refused Archivals Backlog": "Reserva de Archivos Rechazados",
+    "No pending course archival proposals. Core curriculum stable.": "No hay propuestas de archivo de cursos pendientes. Plan de estudios básico estable.",
+    "No refused archivals in backlog.": "No hay archivos rechazados en la reserva.",
+    "Approve & Archive": "Aprobar y Archivar",
+    "Refuse & Backlog": "Rechazar y Reservar",
+    "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.": "Síntesis de IA: El curso ha alcanzado {revisions} revisiones pero la calificación de los estudiantes sigue siendo de {rating}/5 estrellas.",
+    "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.": "Síntesis de IA: Calificación global deficiente de {rating}/5 estrellas de {votes} opiniones.",
+    "Course successfully soft-archived (Level 1).": "Curso archivado con éxito (Nivel 1).",
+    "Failed to archive course.": "No se pudo archivar el curso.",
+    "Course archival refused and added to backlog.": "Archivo del curso rechazado y agregado a la reserva.",
+    "Removed course from archiving backlog.": "Curso eliminado de la reserva de archivo.",
+    "Excessive Cumulative Revisions": "Revisiones Acumuladas Excesivas"},
   DE: {
     "AI Tutor Personalities": "KI-Tutor-Persönlichkeiten",
     "Seeded Achievements badges": "Standard-Errungenschaften",
@@ -1936,7 +2017,34 @@ export const COCKPIT_DICTIONARY = {
     "Logs": "Protokolle",
     "Retry": "Wiederholen",
     "Increase Priority": "Priorität erhöhen",
-    "Decrease Priority": "Priorität verringern"},
+    "Decrease Priority": "Priorität verringern",
+    "Pedagogical Archiving Engine Overview": "Überblick über die pädagogische Archivierungs-Engine",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "Die Kursarchivierungs-Engine überwacht autonom die Qualitätsmetriken der Kurse, um eine Soft-Archivierung (Ebene 1) oder eine vollständige Archivierung vorzuschlagen. Zwei primäre Auslöser werden in Echtzeit überwacht:",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "Löst einen Kursarchivierungsvorschlag aus, wenn die durchschnittliche Schülerbewertung unter den Bewertungsschwellenwert (≤ Sterne) fällt und eine signifikante Stichprobengröße (≥ Mindeststimmen) erreicht hat.",
+    "Trigger 2: Excessive Cumulative Revisions": "Auslöser 2: Übermäßige kumulative Revisionen",
+    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "Löst einen Kursarchivierungsvorschlag aus, wenn ein Kurs eine hohe Revisionsanzahl (≥ Maximale Revisionen) erreicht hat, seine Schülerbewertung jedoch auf oder unter dem Bewertungsschwellenwert bleibt.",
+    "Archiving Control Parameters": "Archivierungs-Steuerungsparameter",
+    "Auto-Approve Archivals": "Archivierungen automatisch genehmigen",
+    "Enable to let the archiving engine automatically soft-archive qualified courses.": "Aktivieren, damit die Archivierungs-Engine qualifizierte Kurse automatisch soft-archiviert.",
+    "Proposes archival if overall rating falls at or below this stars count.": "Schlägt Archivierung vor, wenn die Gesamtbewertung auf oder unter diese Sterneanzahl fällt.",
+    "Max Revisions": "Maximale Revisionen",
+    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "Maximale Revisions-/Versionsanzahl, die ein Kurs durchlaufen kann, bevor die Archivierung aufgrund mangelnden Standard-Qualitätsfortschritts ausgelöst wird.",
+    "Cooldown delay in hours before an archival proposal is automatically approved.": "Abkühlverzögerung in Stunden, bevor ein Archivierungsvorschlag automatisch genehmigt wird.",
+    "Retention period in days for historical archiving logs and stale refused proposals.": "Aufbewahrungszeitraum in Tagen für historische Archivierungsprotokolle und abgelaufene abgelehnte Vorschläge.",
+    "Revisions": "Revisionen",
+    "Proposed Archivals": "Vorgeschlagene Archivierungen",
+    "Refused Archivals Backlog": "Rückstand verweigerter Archivierungen",
+    "No pending course archival proposals. Core curriculum stable.": "Keine ausstehenden Kursarchivierungsvorschläge. Kerncurriculum stabil.",
+    "No refused archivals in backlog.": "Keine abgelehnten Archivierungen im Rückstand.",
+    "Approve & Archive": "Genehmigen & Archivieren",
+    "Refuse & Backlog": "Ablehnen & Zurückstellen",
+    "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.": "KI-Synthese: Der Kurs hat {revisions} Revisionen erreicht, aber die Schülerbewertung bleibt bei {rating}/5 Sternen.",
+    "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.": "KI-Synthese: Schlechte Gesamtbewertung von {rating}/5 Sternen aus {votes} Bewertungen.",
+    "Course successfully soft-archived (Level 1).": "Kurs erfolgreich soft-archiviert (Ebene 1).",
+    "Failed to archive course.": "Fehler beim Archivieren des Kurses.",
+    "Course archival refused and added to backlog.": "Kursarchivierung abgelehnt und dem Rückstand hinzugefügt.",
+    "Removed course from archiving backlog.": "Kurs aus dem Archivierungsrückstand entfernt.",
+    "Excessive Cumulative Revisions": "Übermäßige kumulative Revisionen"},
   ZH: {
     "AI Tutor Personalities": "AI 导师个性配置",
     "Seeded Achievements badges": "预设成就勋章",
@@ -2323,7 +2431,35 @@ export const COCKPIT_DICTIONARY = {
     "Logs": "日志",
     "Retry": "重试",
     "Increase Priority": "提高优先级",
-    "Decrease Priority": "降低优先级"}
+    "Decrease Priority": "降低优先级",
+    "Pedagogical Archiving Engine Overview": "教学归档引擎概览",
+    "The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:": "课程归档引擎自主监控课程质量指标，以提出软归档（级别 1）或完全归档。实时监控两个主要触发器：",
+    "Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).": "当平均学生评分低于评分阈值（≤ 星）且已累积足够的样本量（≥ 最小投票数）时，触发课程归档提案。",
+    "Trigger 2: Excessive Cumulative Revisions": "触发器 2：过度累积修订",
+    "Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.": "当课程达到高修订次数（≥ 最大修订数）但其学生评分仍等于或低于评分阈值时，触发课程归档提案。",
+    "Archiving Control Parameters": "归档控制参数",
+    "Auto-Approve Archivals": "自动批准归档",
+    "Enable to let the archiving engine automatically soft-archive qualified courses.": "启用后，归档引擎将自动对符合条件的课程进行软归档。",
+    "Proposes archival if overall rating falls at or below this stars count.": "如果总体评分降至或低于此星数，则提议归档。",
+    "Max Revisions": "最大修订数",
+    "Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.": "由于缺乏标准质量进展，在触发归档之前课程可以经受的最大修订/版本次数。",
+    "Cooldown delay in hours before an archival proposal is automatically approved.": "自动批准归档提案前的冷却延迟（小时）。",
+    "Retention period in days for historical archiving logs and stale refused proposals.": "历史归档日志和过期的已拒绝提案的保留期（天）。",
+    "Revisions": "修订次数",
+    "Proposed Archivals": "提议归档的项目",
+    "Refused Archivals Backlog": "已拒绝归档的积压",
+    "No pending course archival proposals. Core curriculum stable.": "没有待处理的课程归档提案。核心课程稳定。",
+    "No refused archivals in backlog.": "积压中没有已拒绝的归档。",
+    "Approve & Archive": "批准并归档",
+    "Refuse & Backlog": "拒绝并放入积压",
+    "AI Synthesis: Course has reached {revisions} revisions but student rating remains at {rating}/5 stars.": "AI 综合分析：课程已达到 {revisions} 次修订，但学生评分仍为 {rating}/5 星。",
+    "AI Synthesis: Poor global rating of {rating}/5 stars from {votes} reviews.": "AI 综合分析：来自 {votes} 条评价的全局评分仅为 {rating}/5 星。",
+    "Course successfully soft-archived (Level 1).": "课程已成功软归档（级别 1）。",
+    "Failed to archive course.": "归档课程失败。",
+    "Course archival refused and added to backlog.": "已拒绝课程归档并添加到积压中。",
+    "Removed course from archiving backlog.": "已从归档积压中移除课程。",
+    "Excessive Cumulative Revisions": "过度累积修订"
+  }
 };
 
 export const LOCALIZED_POPUPS = {
@@ -6632,249 +6768,561 @@ export default function AdminCurriculumPage() {
                 const displayedCourses = allFilteredCourses.slice(0, 30);
 
                 return (
-                  <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      <div className="space-y-1">
-                        <h3 className="text-xl font-black text-slate-200">
-                          {tr("Curriculum Registry and Archival Control")}
-                          {allFilteredCourses.length > 30 && (
-                            <span className="text-xs font-semibold text-amber-500 ml-3 normal-case tracking-normal">
-                              ({allFilteredCourses.length} results, displaying only 30)
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-xs text-slate-400">{tr("Search courses and archive/unarchive specific languages or entire courses instantly.")}</p>
+                  <div className="space-y-8 animate-fadeIn">
+                    {/* A. CONSOLIDATED GLASSMORPHIC CARD */}
+                    <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-8 hover:border-slate-700/50 transition-all">
+                      {/* Header and Pedagogical Description */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Database className="w-6 h-6 text-pink-500" />
+                          <h2 className="text-xl font-extrabold text-white">{tr("Pedagogical Archiving Engine Overview")}</h2>
+                        </div>
+                        <p className="text-sm text-slate-400 leading-relaxed">
+                          {tr("The Course Archiving Engine autonomously monitors course quality metrics to propose soft-archiving (Level 1) or complete archival. Two primary triggers are monitored in real-time:")}
+                        </p>
+                        
+                        {/* Dynamic Archiving Conditions */}
+                        <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-pink-400 uppercase tracking-wider">
+                              <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> {tr("Trigger 1: Low Global Rating")}
+                            </div>
+                            <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                              {tr("Triggers a course archival proposal if the average student rating drops below the Rating Threshold (≤ Stars) and has gathered a significant sample size (≥ Min Votes).")}
+                            </p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {tr("Trigger 2: Excessive Cumulative Revisions")}
+                            </div>
+                            <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                              {tr("Triggers a course archival proposal when a course has reached a high revision count (≥ Max Revisions) but its student rating remains at or below the Rating Threshold.")}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      {/* Search Bar */}
-                      <div className="relative w-full md:w-80">
-                        <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
-                        <input 
-                          type="text"
-                          placeholder={tr("Search courses...")}
-                          value={archiveSearch}
-                          onChange={(e) => setArchiveSearch(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
-                        />
+
+                      <div className="h-px bg-slate-800/60" />
+
+                      {/* Archiving Control Parameters Grid */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Archiving Control Parameters")}</h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {/* 1. Auto-Approve Archivals */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Archivals")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Enable to let the archiving engine automatically soft-archive qualified courses.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                              <button 
+                                type="button"
+                                onClick={() => updateParameter('autoArchiveCourses', String(!autoArchiveCourses))}
+                                className={`w-10 h-5 rounded-full relative transition-all ${autoArchiveCourses ? 'bg-pink-600' : 'bg-slate-800'}`}
+                              >
+                                <motion.div animate={{ x: autoArchiveCourses ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                              </button>
+                              <span className="text-xs font-bold text-slate-300">{tr(autoArchiveCourses ? 'ON' : 'OFF')}</span>
+                            </div>
+                          </div>
+
+                          {/* 2. Rating Threshold */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Rating Threshold")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Proposes archival if overall rating falls at or below this stars count.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                              <input 
+                                type="number" 
+                                step="0.1"
+                                min="1.0"
+                                max="5.0"
+                                value={archiveRatingThreshold} 
+                                onChange={(e) => updateParameter('archiveRatingThreshold', String(Number(e.target.value)))}
+                                className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                              />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Stars")}</span>
+                            </div>
+                          </div>
+
+                          {/* 3. Min Votes */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Votes")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Minimum reviews required to activate the low rating trigger.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                              <input 
+                                type="number" 
+                                min="1"
+                                value={archiveMinVotes} 
+                                onChange={(e) => updateParameter('archiveMinVotes', String(Math.max(1, Number(e.target.value))))}
+                                className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                              />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Votes")}</span>
+                            </div>
+                          </div>
+
+                          {/* 4. Max Revisions */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Max Revisions")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Maximum revision/version count a course can undergo before triggering archival due to lack of standard quality progress.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                              <input 
+                                type="number" 
+                                min="1"
+                                value={archiveMaxRevisions} 
+                                onChange={(e) => updateParameter('archiveMaxRevisions', String(Math.max(1, Number(e.target.value))))}
+                                className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                              />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Revisions")}</span>
+                            </div>
+                          </div>
+
+                          {/* 5. Auto-Approve Delay */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Delay")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Cooldown delay in hours before an archival proposal is automatically approved.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                              <input 
+                                type="number" 
+                                min="1"
+                                value={archiveDelayHours} 
+                                onChange={(e) => updateParameter('archiveDelayHours', String(Math.max(1, Number(e.target.value))))}
+                                className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                              />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Hours")}</span>
+                            </div>
+                          </div>
+
+                          {/* 6. Log Retention Cooldown */}
+                          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                            <div>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Log Retention Cooldown")}</span>
+                              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                                {tr("Retention period in days for historical archiving logs and stale refused proposals.")}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                              <input 
+                                type="number" 
+                                min="1"
+                                value={archiveRetentionDays} 
+                                onChange={(e) => updateParameter('archiveRetentionDays', String(Math.max(1, Number(e.target.value))))}
+                                className="bg-transparent border-none text-pink-400 text-sm font-black focus:outline-none w-20 text-right"
+                              />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Days")}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'title') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('title');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Title")} {renderSortIndicator('title', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'isCurriculum') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('isCurriculum');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Classification")} {renderSortIndicator('isCurriculum', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'averageRating') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('averageRating');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Note (Rating)")} {renderSortIndicator('averageRating', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'completions') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('completions');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Validations (Completions)")} {renderSortIndicator('completions', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'versions') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('versions');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Versions (Revisions)")} {renderSortIndicator('versions', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'languages') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('languages');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Languages")} {renderSortIndicator('languages', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'level') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('level');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Level")} {renderSortIndicator('level', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'archivingLevel') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('archivingLevel');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Archival Level Control")} {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
-                            </th>
-                            <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
-                              if (courseSortField === 'is_active') {
-                                setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setCourseSortField('is_active');
-                                setCourseSortDir('asc');
-                              }
-                            }}>
-                              {tr("Status")} {renderSortIndicator('is_active', courseSortField, courseSortDir)}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-850/50">
-                          {displayedCourses.map(course => {
-                            const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
-                            const isCurriculum = course.isCurriculum || false;
-                            const containingCurricula = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)));
-                            const isInCurriculum = containingCurricula.length > 0;
+                    {/* B. SIDE-BY-SIDE ACTIVE PROPOSALS & BACKLOG LISTS */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* B1. PROPOSED ARCHIVALS */}
+                      <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col hover:border-slate-700/50 transition-all">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="space-y-1">
+                            <h3 className="text-base font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                              {tr("Proposed Archivals")}
+                              <span className="text-[10px] px-2 py-0.5 bg-pink-500/10 border border-pink-500/20 text-pink-400 rounded-lg font-black">
+                                {filteredActiveArchivalProposals.length}
+                              </span>
+                            </h3>
+                          </div>
+                          {/* Search Box */}
+                          <div className="relative w-full sm:w-48">
+                            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                            <input 
+                              type="text"
+                              placeholder={tr("Search proposals...")}
+                              value={archiveProposalSearch}
+                              onChange={(e) => setArchiveProposalSearch(e.target.value)}
+                              className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-3 py-2 text-[11px] focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-600"
+                            />
+                          </div>
+                        </div>
 
-                            // Label and color definitions based on dynamic level
-                            let statusLabel = tr('Active');
-                            let statusColor = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-                            
-                            if (currentLevel === 1) {
-                              statusLabel = tr('Partial');
-                              statusColor = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
-                            } else if (currentLevel === 2) {
-                              statusLabel = tr('Read-Only');
-                              statusColor = 'bg-blue-500/10 border-blue-500/20 text-blue-400';
-                            } else if (currentLevel === 3) {
-                              statusLabel = tr('Archived');
-                              statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
-                            }
-
-                            return (
-                              <tr key={course.id} className="hover:bg-slate-900/20 transition-colors">
-                                <td className="px-6 py-4 font-bold text-slate-200">
-                                  <div className="space-y-0.5">
-                                    <p className="text-sm">{course.title}</p>
-                                    <p className="text-[9.5px] text-slate-500 font-mono">ID: {course.id}</p>
+                        <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                          {filteredActiveArchivalProposals.map((item) => (
+                            <div key={item.id} className="p-5 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition-all space-y-4">
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-bold text-white">{item.title}</h4>
+                                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
+                                    <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded font-bold uppercase">{item.subject}</span>
+                                    <span className="font-mono font-semibold">{item.version}</span>
+                                    <span className="text-slate-600">•</span>
+                                    <span className="flex items-center text-yellow-500">⭐ {Number(item.overallRating).toFixed(1)}/5 ({item.overallVotes})</span>
+                                    <span className="text-slate-600">•</span>
+                                    <span>{item.revisionCount} {tr("Revisions")}</span>
                                   </div>
-                                </td>
-                                <td className="px-6 py-4 text-slate-300 font-medium">
-                                  {isCurriculum ? (
-                                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
-                                      {tr("Curriculum")}
-                                    </span>
-                                  ) : isInCurriculum ? (
-                                    <div className="space-y-1">
-                                      <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
-                                        {tr("In Curriculum")}
-                                      </span>
-                                      <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
-                                        {containingCurricula.map(cc => cc.title).join(', ')}
-                                      </p>
+                                </div>
+                                <span className={`px-2 py-0.5 border text-[8px] font-black rounded-lg uppercase tracking-wider ${item.reason === 'Excessive Cumulative Revisions' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-pink-500/10 border-pink-500/20 text-pink-400'}`}>
+                                  {tr(item.reason)}
+                                </span>
+                              </div>
+
+                              <p className="text-[11px] text-slate-400 leading-normal bg-slate-900/40 p-3 rounded-xl border border-slate-900/60 font-medium">
+                                {item.description}
+                              </p>
+
+                              <div className="flex items-center gap-3 pt-1">
+                                <button 
+                                  onClick={() => handleApproveArchival(item.id)}
+                                  className="flex-1 py-2 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-500/30 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  {tr("Approve & Archive")}
+                                </button>
+                                <button 
+                                  onClick={() => handleRefuseArchival(item.id)}
+                                  className="py-2 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                >
+                                  <X className="w-3.5 h-3.5 text-slate-500" />
+                                  {tr("Refuse & Backlog")}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {filteredActiveArchivalProposals.length === 0 && (
+                            <div className="p-8 text-center bg-slate-950/40 border border-dashed border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-3">
+                              <CheckCircle className="w-8 h-8 text-emerald-500/50" />
+                              <p className="text-xs text-slate-500 font-medium italic">{tr("No pending course archival proposals. Core curriculum stable.")}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* B2. REFUSED ARCHIVALS BACKLOG */}
+                      <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col hover:border-slate-700/50 transition-all">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="space-y-1">
+                            <h3 className="text-base font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                              {tr("Refused Archivals Backlog")}
+                              <span className="text-[10px] px-2 py-0.5 bg-slate-800 border border-slate-700 text-slate-400 rounded-lg font-black">
+                                {filteredRefusedArchivals.length}
+                              </span>
+                            </h3>
+                          </div>
+                          {/* Search Box */}
+                          <div className="relative w-full sm:w-48">
+                            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                            <input 
+                              type="text"
+                              placeholder={tr("Search backlog...")}
+                              value={archiveRefusedSearch}
+                              onChange={(e) => setArchiveRefusedSearch(e.target.value)}
+                              className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-3 py-2 text-[11px] focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-600"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                          {filteredRefusedArchivals.map((item) => (
+                            <div key={item.id} className="p-5 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition-all space-y-3">
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-bold text-white">{item.title}</h4>
+                                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded font-bold uppercase">{item.subject}</span>
+                                    <span className="text-slate-600">•</span>
+                                    <span>{tr("Refused on:")} <span className="font-mono font-medium">{new Date(item.timestamp).toLocaleDateString(lang === 'ZH' ? 'zh-CN' : 'en-US')}</span></span>
+                                  </div>
+                                </div>
+                                <button 
+                                  onClick={() => handleDeleteRefusedArchival(item.id)}
+                                  title={tr("Removed course from archiving backlog.")}
+                                  className="p-1.5 bg-slate-900 hover:bg-red-950/30 border border-slate-800 hover:border-red-900/30 text-slate-500 hover:text-red-400 rounded-lg transition-all active:scale-95"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <button 
+                                onClick={() => handleDeleteRefusedArchival(item.id)}
+                                className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                                {tr("Un-Refuse / Re-propose")}
+                              </button>
+                            </div>
+                          ))}
+
+                          {filteredRefusedArchivals.length === 0 && (
+                            <div className="p-8 text-center bg-slate-950/40 border border-dashed border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-3">
+                              <AlertCircle className="w-8 h-8 text-slate-600" />
+                              <p className="text-xs text-slate-500 font-medium italic">{tr("No refused archivals in backlog.")}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* C. RELOCATED CATALOG REGISTRY */}
+                    <div className="space-y-6 pt-6">
+                      <div className="h-px bg-slate-800/45" />
+                      
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-black text-slate-200">
+                            {tr("Curriculum Registry and Archival Control")}
+                            {allFilteredCourses.length > 30 && (
+                              <span className="text-xs font-semibold text-amber-500 ml-3 normal-case tracking-normal">
+                                ({allFilteredCourses.length} results, displaying only 30)
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-xs text-slate-400">{tr("Search courses and archive/unarchive specific languages or entire courses instantly.")}</p>
+                        </div>
+                        {/* Search Bar */}
+                        <div className="relative w-full md:w-80">
+                          <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                          <input 
+                            type="text"
+                            placeholder={tr("Search courses...")}
+                            value={archiveSearch}
+                            onChange={(e) => setArchiveSearch(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'title') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('title');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Title")} {renderSortIndicator('title', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'isCurriculum') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('isCurriculum');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Classification")} {renderSortIndicator('isCurriculum', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'averageRating') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('averageRating');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Note (Rating)")} {renderSortIndicator('averageRating', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'completions') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('completions');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Validations (Completions)")} {renderSortIndicator('completions', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'versions') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('versions');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Versions (Revisions)")} {renderSortIndicator('versions', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'languages') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('languages');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Languages")} {renderSortIndicator('languages', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'level') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('level');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Level")} {renderSortIndicator('level', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'archivingLevel') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('archivingLevel');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Archival Level Control")} {renderSortIndicator('archivingLevel', courseSortField, courseSortDir)}
+                              </th>
+                              <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
+                                if (courseSortField === 'is_active') {
+                                  setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setCourseSortField('is_active');
+                                  setCourseSortDir('asc');
+                                }
+                              }}>
+                                {tr("Status")} {renderSortIndicator('is_active', courseSortField, courseSortDir)}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-850/50">
+                            {displayedCourses.map(course => {
+                              const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
+                              const isCurriculum = course.isCurriculum || false;
+                              const containingCurricula = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)));
+                              const isInCurriculum = containingCurricula.length > 0;
+
+                              // Label and color definitions based on dynamic level
+                              let statusLabel = tr('Active');
+                              let statusColor = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+                              
+                              if (currentLevel === 1) {
+                                statusLabel = tr('Partial');
+                                statusColor = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+                              } else if (currentLevel === 2) {
+                                statusLabel = tr('Read-Only');
+                                statusColor = 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+                              } else if (currentLevel === 3) {
+                                statusLabel = tr('Archived');
+                                statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
+                              }
+
+                              return (
+                                <tr key={course.id} className="hover:bg-slate-900/20 transition-colors">
+                                  <td className="px-6 py-4 font-bold text-slate-200">
+                                    <div className="space-y-0.5">
+                                      <p className="text-sm">{course.title}</p>
+                                      <p className="text-[9.5px] text-slate-500 font-mono">ID: {course.id}</p>
                                     </div>
-                                  ) : (
-                                    <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
-                                      {tr("Standalone")}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
-                                  {course.averageRating ? `⭐ ${Number(course.averageRating).toFixed(1)}/5` : '⭐ N/A'}
-                                  {course.ratingCount ? ` (${course.ratingCount})` : ''}
-                                </td>
-                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
-                                  {completions.filter(comp => 
-                                    comp.courseId.toLowerCase() === String(course.id).toLowerCase() || 
-                                    comp.courseId.toLowerCase() === course.slug.toLowerCase() || 
-                                    comp.courseId.toLowerCase() === course.title.toLowerCase()
-                                  ).length}
-                                </td>
-                                <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
-                                  {courses.filter(c => c.slug.replace(/_v\d+$/, '') === course.slug.replace(/_v\d+$/, '')).length}
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex flex-wrap gap-1">
-                                    {(course.languages || course.langs || []).map((l: string) => (
-                                      <span key={l} className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[8px] font-black uppercase text-slate-400">{l}</span>
-                                    ))}
-                                    {!(course.languages || course.langs || []).length && <span className="text-slate-700 font-black">--</span>}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-slate-400 font-mono font-bold">
-                                  {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : (course.level === 'M1' ? '501' : (course.level === 'M2' ? '502' : course.level))))}
-                                </td>
-                                <td className="px-6 py-4">
-                                  <ArchivingLevelButtons 
-                                    currentLevel={currentLevel}
-                                    lang={lang}
-                                    onChange={async (nextLvl) => {
-                                      // 1. If it IS a curriculum, offer to optional cascade to child courses
-                                      if (isCurriculum) {
-                                        const targetChilds = courses.filter(c => course.childCourses?.some(cid => String(cid) === String(c.id)) && (c.archivingLevel || 0) < nextLvl);
-                                        if (targetChilds.length > 0) {
-                                          setCurriculumCascadePending({ curriculum: course, nextLevel: nextLvl, childCourses: targetChilds });
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-300 font-medium">
+                                    {isCurriculum ? (
+                                      <span className="px-2 py-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 border border-violet-500 rounded-lg text-[9px] font-black uppercase text-white w-fit shadow-md shadow-violet-500/20">
+                                        {tr("Curriculum")}
+                                      </span>
+                                    ) : isInCurriculum ? (
+                                      <div className="space-y-1">
+                                        <span className="px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-[9px] font-black uppercase text-blue-400 w-fit">
+                                          {tr("In Curriculum")}
+                                        </span>
+                                        <p className="text-[9.5px] text-slate-400 font-medium leading-relaxed">
+                                          {containingCurricula.map(cc => cc.title).join(', ')}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[9px] font-black uppercase text-slate-500 w-fit">
+                                        {tr("Standalone")}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                    {course.averageRating ? `⭐ ${Number(course.averageRating).toFixed(1)}/5` : '⭐ N/A'}
+                                    {course.ratingCount ? ` (${course.ratingCount})` : ''}
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                    {completions.filter(comp => 
+                                      comp.courseId.toLowerCase() === String(course.id).toLowerCase() || 
+                                      comp.courseId.toLowerCase() === course.slug.toLowerCase() || 
+                                      comp.courseId.toLowerCase() === course.title.toLowerCase()
+                                    ).length}
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-300 font-medium font-mono text-center">
+                                    {courses.filter(c => c.slug.replace(/_v\d+$/, '') === course.slug.replace(/_v\d+$/, '')).length}
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <div className="flex flex-wrap gap-1">
+                                      {(course.languages || course.langs || []).map((l: string) => (
+                                        <span key={l} className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded-lg text-[8px] font-black uppercase text-slate-400">{l}</span>
+                                      ))}
+                                      {!(course.languages || course.langs || []).length && <span className="text-slate-700 font-black">--</span>}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-400 font-mono font-bold">
+                                    {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : (course.level === 'M1' ? '501' : (course.level === 'M2' ? '502' : course.level))))}
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <ArchivingLevelButtons 
+                                      currentLevel={currentLevel}
+                                      lang={lang}
+                                      onChange={async (nextLvl) => {
+                                        // 1. If it IS a curriculum, offer to optional cascade to child courses
+                                        if (isCurriculum) {
+                                          const targetChilds = courses.filter(c => course.childCourses?.some(cid => String(cid) === String(c.id)) && (c.archivingLevel || 0) < nextLvl);
+                                          if (targetChilds.length > 0) {
+                                            setCurriculumCascadePending({ curriculum: course, nextLevel: nextLvl, childCourses: targetChilds });
+                                            return;
+                                          }
+                                        }
+
+                                        // 2. If it is NOT a curriculum, enforce standard parent validation
+                                        const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)) && (c.archivingLevel || 0) < nextLvl);
+                                        if (activeParents.length > 0) {
+                                          setCurriculumArchivalPending({ course, nextLevel: nextLvl, parentCurricula: activeParents });
                                           return;
                                         }
-                                      }
 
-                                      // 2. If it is NOT a curriculum, enforce standard parent validation
-                                      const activeParents = courses.filter(c => c.isCurriculum && c.childCourses?.some(cid => String(cid) === String(course.id)) && (c.archivingLevel || 0) < nextLvl);
-                                      if (activeParents.length > 0) {
-                                        setCurriculumArchivalPending({ course, nextLevel: nextLvl, parentCurricula: activeParents });
-                                        return;
-                                      }
-
-                                      if (nextLvl === 3) { setCourseArchiveTarget({ course }); return; }
-                                      const { error } = await dbService.setCourseArchivingLevel(course.id, nextLvl);
-                                      if (error) {
-                                        showToast(error.message || String(error), 'error');
-                                      } else {
-                                        loadData();
-                                      }
-                                    }}
-                                  />
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
-                                    {statusLabel}
-                                  </span>
-                                </td>
+                                        if (nextLvl === 3) { setCourseArchiveTarget({ course }); return; }
+                                        const { error } = await dbService.setCourseArchivingLevel(course.id, nextLvl);
+                                        if (error) {
+                                          showToast(error.message || String(error), 'error');
+                                        } else {
+                                          loadData();
+                                        }
+                                      }}
+                                    />
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
+                                      {statusLabel}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            {allFilteredCourses.length === 0 && (
+                              <tr>
+                                <td colSpan={9} className="px-6 py-12 text-center text-slate-655 italic">{tr("No courses found matching your query.")}</td>
                               </tr>
-                            );
-                          })}
-                          {allFilteredCourses.length === 0 && (
-                            <tr>
-                              <td colSpan={9} className="px-6 py-12 text-center text-slate-655 italic">{tr("No courses found matching your query.")}</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 );

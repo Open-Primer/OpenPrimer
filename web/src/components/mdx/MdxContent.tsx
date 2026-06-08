@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
 import { SolvedProblem, Summary, SelfEval } from './AdvancedLearning';
-import { HistoricalPerson } from './HistoricalPerson';
+import { HistoricalPerson, FictionalCharacter, Location, EntityLink } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -21,6 +21,13 @@ import { FunctionPlotter } from './FunctionPlotter';
 import { InteractiveDiagram } from './InteractiveDiagram';
 import { ComparisonSlider } from './ComparisonSlider';
 import { CodeSandbox } from './CodeSandbox';
+import { SolvedExercise, UnsolvedExercise } from './InteractiveExercises';
+import { DataChart } from './DataChart';
+import { StructureViewer3D } from './StructureViewer3D';
+import { DynamicSimulation } from './DynamicSimulation';
+import { GoingFurther, GoingFurtherItem } from './GoingFurther';
+import { FunctionManipulator } from './FunctionManipulator';
+import { EquationManipulator } from './EquationManipulator';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon } from 'lucide-react';
 
 const Alert = ({ type, children }: { type: string; children: React.ReactNode }) => {
@@ -98,6 +105,10 @@ const components = {
   Summary,
   SelfEval,
   HistoricalPerson,
+  FictionalCharacter,
+  Location,
+  Place: Location, // alias for Place
+  EntityLink,
   EssayEvaluation,
   Prerequisites,
   Epistemology,
@@ -110,6 +121,15 @@ const components = {
   InteractiveDiagram,
   ComparisonSlider,
   CodeSandbox,
+  SolvedExercise,
+  UnsolvedExercise,
+  DataChart,
+  StructureViewer3D,
+  DynamicSimulation,
+  GoingFurther,
+  GoingFurtherItem,
+  FunctionManipulator,
+  EquationManipulator,
   pre: PreCodeInterceptor,
 };
 

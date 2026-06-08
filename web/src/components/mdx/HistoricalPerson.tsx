@@ -3,32 +3,38 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { User, ExternalLink } from 'lucide-react';
+import { User, Sparkles, MapPin, Globe, ExternalLink } from 'lucide-react';
 
-interface HistoricalPersonProps {
+export interface EntityLinkProps {
   name: string;
   lang: string;
   children: React.ReactNode;
+  type?: 'person' | 'character' | 'location' | 'entity';
 }
 
-export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps) => {
+export const EntityLink = ({ name, lang, children, type = 'entity' }: EntityLinkProps) => {
+  const [prevLang, setPrevLang] = useState(lang);
+  const [activeLang, setActiveLang] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return lang || window.localStorage.getItem('openprimer_lang') || 'en';
+    }
+    return lang || 'en';
+  });
+
+  // Render-phase prop synchronization (React recommended pattern)
+  if (lang !== prevLang) {
+    setPrevLang(lang);
+    setActiveLang(lang);
+  }
+
   const [summary, setSummary] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
-  const [exists, setExists] = useState<boolean | null>(null);
+  const [exists, setExists] = useState<boolean | null>(name && activeLang ? null : false);
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-  const [activeLang, setActiveLang] = useState(lang || 'en');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem('openprimer_lang') || 'en';
-      setActiveLang(lang || stored);
-    }
-  }, [lang]);
 
   useEffect(() => {
     if (!name || !activeLang) {
-      setExists(false);
       return;
     }
 
@@ -79,10 +85,37 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
     setTimeoutId(id);
   };
 
+  const resolvedType = type || 'entity';
   const isFr = activeLang.toLowerCase().trim() === 'fr';
+
+  let Icon = Globe;
+  let headerLabel = isFr ? 'Encyclopédie' : 'Encyclopedia';
+  let borderClass = "border-sky-400 text-sky-300 hover:text-sky-200";
+  let iconBoxClass = "bg-sky-600/20 text-sky-400";
+  let linkClass = "text-sky-400 hover:text-sky-300";
+
+  if (resolvedType === 'person') {
+    Icon = User;
+    headerLabel = isFr ? 'Biographie' : 'Biography';
+    borderClass = "border-violet-400 text-violet-300 hover:text-violet-200";
+    iconBoxClass = "bg-violet-600/20 text-violet-400";
+    linkClass = "text-violet-400 hover:text-violet-300";
+  } else if (resolvedType === 'character') {
+    Icon = Sparkles;
+    headerLabel = isFr ? 'Personnage' : 'Character';
+    borderClass = "border-fuchsia-400 text-fuchsia-300 hover:text-fuchsia-200";
+    iconBoxClass = "bg-fuchsia-600/20 text-fuchsia-400";
+    linkClass = "text-fuchsia-400 hover:text-fuchsia-300";
+  } else if (resolvedType === 'location') {
+    Icon = MapPin;
+    headerLabel = isFr ? 'Lieu' : 'Location';
+    borderClass = "border-emerald-400 text-emerald-300 hover:text-emerald-200";
+    iconBoxClass = "bg-emerald-600/20 text-emerald-400";
+    linkClass = "text-emerald-400 hover:text-emerald-300";
+  }
+
   const t = {
-    biography: isFr ? 'Biographie' : 'Biography',
-    loading: isFr ? 'Chargement de la biographie...' : 'Loading biography...',
+    loading: isFr ? 'Chargement des informations...' : 'Loading summary...',
     readWiki: isFr ? 'Lire sur Wikipédia' : 'Read on Wikipedia'
   };
 
@@ -90,7 +123,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
     <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>
         <span 
-          className="cursor-help border-b border-dotted border-violet-400 text-violet-300 hover:text-violet-200 transition-colors"
+          className={`cursor-help border-b border-dotted transition-colors ${borderClass}`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -109,15 +142,23 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="w-80 p-5 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl backdrop-blur-2xl glass"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg bg-violet-600/20 flex items-center justify-center text-violet-400">
-                <User className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${iconBoxClass}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{headerLabel}</span>
               </div>
-              <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{t.biography}</span>
+              <div 
+                className="w-5 h-5 rounded bg-white/10 flex items-center justify-center font-serif font-black text-slate-200 text-xs border border-white/5 select-none" 
+                title="Sourced from Wikipedia"
+              >
+                W
+              </div>
             </div>
             {summary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4">
-                "{summary}"
+                &ldquo;{summary}&rdquo;
               </p>
             ) : (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
@@ -129,7 +170,7 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-wider"
+                className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
               >
                 {t.readWiki} ({activeLang.toUpperCase()})
                 <ExternalLink className="w-3 h-3" />
@@ -142,3 +183,16 @@ export const HistoricalPerson = ({ name, lang, children }: HistoricalPersonProps
     </Popover.Root>
   );
 };
+
+// Backward-compatible alias components
+export const HistoricalPerson = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="person" />
+);
+
+export const FictionalCharacter = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="character" />
+);
+
+export const Location = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="location" />
+);
