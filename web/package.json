@@ -14,7 +14,7 @@
     "db:export-mdx": "node export_mdx.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.500.0",
+    "@aws-sdk/client-s3": "^3.1063.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.6",
