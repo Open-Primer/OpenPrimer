@@ -52,6 +52,7 @@ export const TASK_MODELS: Record<string, ModelId> = {
   batch_translate:    'gemini-2.5-flash',     // Batch field translation
   analytics:          'gemini-2.5-flash',     // Simple report generation
   badge_expand:       'gemini-2.5-flash',     // Simple prompt expansion
+  badge_compile:      'gemini-2.0-flash-lite',// AI compiler for dynamic rules & localization
 };
 
 /**
@@ -77,6 +78,7 @@ export const TASK_TOKEN_ESTIMATES: Record<string, { inputTokens: number; outputT
   batch_translate:    { inputTokens: 1_500,  outputTokens: 1_200  }, // per batch
   analytics:          { inputTokens: 2_000,  outputTokens: 1_000  }, // per report
   badge_expand:       { inputTokens: 300,    outputTokens: 150    }, // per badge
+  badge_compile:      { inputTokens: 1_200,  outputTokens: 800    }, // per compile
 };
 
 /** Cost per task call in USD (pre-computed) */

@@ -129,34 +129,7 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
   }
 
   if (status === 'unavailable') {
-    const searchQuery = `${title} audio`;
-    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-    return (
-      <div className="my-6 p-6 rounded-[24px] bg-slate-950/40 border border-slate-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-sans distraction-free-hide">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-500 shrink-0">
-            <VolumeX className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-550 mb-0.5">
-              Resource Unavailable / Indisponible
-            </p>
-            <p className="text-xs text-slate-400 font-bold leading-normal">
-              The audio track "{title}" is offline. You can find equivalent material on the web.
-            </p>
-          </div>
-        </div>
-        <a
-          href={searchUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-4 py-2 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer select-none"
-        >
-          <Search className="w-3.5 h-3.5" />
-          Search on Google
-        </a>
-      </div>
-    );
+    return null;
   }
 
   return (

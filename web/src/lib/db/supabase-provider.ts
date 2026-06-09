@@ -153,6 +153,27 @@ export const supabaseDatabaseProvider: DatabaseService = {
           version: c.version || 'v1.0.0',
           last_revision_date: c.last_revision_date || c.created_at || null
         };
+
+        // Option A (Strict Barrier) Filter for single curriculum syllabus fetch:
+        if (mapped.isCurriculum) {
+          const children = mapped.childCourses || [];
+          if (children.length === 0) {
+            return { data: null, error: new Error("Curriculum has no active courses") as any };
+          }
+          const { data: activeChildren, error: actErr } = await supabase
+            .from('courses')
+            .select('id')
+            .in('id', children)
+            .eq('is_active', true);
+          
+          if (actErr) throw actErr;
+          const activeIds = new Set((activeChildren || []).map((ac: any) => ac.id));
+          const allActive = children.every(childId => activeIds.has(childId));
+          if (!allActive) {
+            return { data: null, error: new Error("Curriculum contains incomplete/inactive child courses") as any };
+          }
+        }
+
         return { data: mapped, error: null };
       }
       return { data: null, error: null };
@@ -193,8 +214,20 @@ export const supabaseDatabaseProvider: DatabaseService = {
           version: c.version || 'v1.0.0',
           last_revision_date: c.last_revision_date || c.created_at || null
         })).filter((c: MockCourse) => !/test/i.test(c.slug));
-        setMockCourses(dbCourses);
-        return { data: dbCourses, error: null };
+
+        // Option A (Strict Barrier): Filter out Curriculums where any child course is not present/active
+        const activeCourseIds = new Set(dbCourses.filter(c => !c.isCurriculum).map(c => c.id));
+        const filteredCourses = dbCourses.filter((c: MockCourse) => {
+          if (c.isCurriculum) {
+            const children = c.childCourses || [];
+            if (children.length === 0) return false;
+            return children.every((childId: number) => activeCourseIds.has(childId));
+          }
+          return true;
+        });
+
+        setMockCourses(filteredCourses);
+        return { data: filteredCourses, error: null };
       }
       return { data: [], error: null };
     } catch (e) {

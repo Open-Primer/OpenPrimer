@@ -594,7 +594,7 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
 
       // De-hallucinate bibliography links against Crossref / Google Books
       let validatedMdx = await validateAndFixBibliography(currentMdx);
-      validatedMdx = await validateAndFixImages(validatedMdx);
+      validatedMdx = await validateAndFixExternalResources(validatedMdx);
 
       let mdxWithFrontmatter = `---
 title: "${item.title}"
@@ -838,7 +838,7 @@ ${lesson.content}`;
 
       // De-hallucinate translated references
       let validatedMdx = await validateAndFixBibliography(translatedMdx);
-      validatedMdx = await validateAndFixImages(validatedMdx);
+      validatedMdx = await validateAndFixExternalResources(validatedMdx);
 
       // Pre-validate translated MDX compilation
       const mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
@@ -1007,6 +1007,168 @@ async function validateAndFixImages(mdx: string): Promise<string> {
     }
   }
   
+  return updatedMdx;
+}
+
+async function isUrlReachable(url: string, timeoutMs: number = 3500): Promise<boolean> {
+  const controller = new AbortController();
+  const id = setTimeout(() => {
+    try { controller.abort(); } catch {}
+  }, timeoutMs);
+
+  const fetchPromise = fetch(url, {
+    method: 'GET',
+    signal: controller.signal,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    }
+  }).then(res => {
+    clearTimeout(id);
+    return res.ok;
+  }).catch(() => {
+    clearTimeout(id);
+    return false;
+  });
+
+  const timeoutPromise = new Promise<boolean>((resolve) => {
+    setTimeout(() => {
+      resolve(false);
+    }, timeoutMs + 100);
+  });
+
+  return Promise.race([fetchPromise, timeoutPromise]);
+}
+
+async function isVideoReachable(videoTagContent: string): Promise<boolean> {
+  const idMatch = videoTagContent.match(/id="([^"]+)"/) || videoTagContent.match(/id='([^']+)'/);
+  const urlMatch = videoTagContent.match(/url="([^"]+)"/) || videoTagContent.match(/url='([^']+)'/);
+  const providerMatch = videoTagContent.match(/provider="([^"]+)"/) || videoTagContent.match(/provider='([^']+)'/);
+
+  const id = idMatch ? idMatch[1] : '';
+  const url = urlMatch ? urlMatch[1] : '';
+  let provider = providerMatch ? providerMatch[1].toLowerCase() : '';
+
+  if (url) {
+    if (/youtube\.com|youtu\.be/i.test(url)) provider = 'youtube';
+    else if (/vimeo\.com/i.test(url)) provider = 'vimeo';
+  }
+
+  if (provider === 'youtube' || (!provider && id && id.length === 11)) {
+    const videoId = id || (url ? (url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/i)?.[1] || '') : '');
+    if (!videoId) return false;
+    const checkUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&format=json`;
+    return isUrlReachable(checkUrl);
+  }
+
+  if (provider === 'vimeo') {
+    const videoId = id || (url ? (url.match(/(?:vimeo\.com|player\.vimeo\.com)\/(\d+)/i)?.[1] || '') : '');
+    if (!videoId) return false;
+    const checkUrl = `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${encodeURIComponent(videoId)}`;
+    return isUrlReachable(checkUrl);
+  }
+
+  const targetUrl = url || id;
+  if (!targetUrl || !targetUrl.startsWith('http')) return false;
+  return isUrlReachable(targetUrl);
+}
+
+async function isAudioReachable(audioTagContent: string): Promise<boolean> {
+  const urlMatch = audioTagContent.match(/url="([^"]+)"/) || audioTagContent.match(/url='([^']+)'/);
+  const url = urlMatch ? urlMatch[1] : '';
+  if (!url || !url.startsWith('http')) return false;
+  return isUrlReachable(url);
+}
+
+async function isLinkReachable(url: string): Promise<boolean> {
+  if (!url || !url.startsWith('http')) return true; // Keep local / relative links safe
+  return isUrlReachable(url);
+}
+
+async function validateAndFixExternalResources(mdx: string): Promise<string> {
+  let updatedMdx = await validateAndFixImages(mdx);
+
+  // Validate and fix Video tags
+  const videoRegex = /<Video\s+([^>]*?)\/>/gi;
+  let videoMatch;
+  const videoBlocks: { fullBlock: string; attributes: string }[] = [];
+  while ((videoMatch = videoRegex.exec(updatedMdx)) !== null) {
+    videoBlocks.push({
+      fullBlock: videoMatch[0],
+      attributes: videoMatch[1]
+    });
+  }
+
+  if (videoBlocks.length > 0) {
+    console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${videoBlocks.length} video elements...`);
+    const videoResults = await Promise.all(
+      videoBlocks.map(async (block) => {
+        const isValid = await isVideoReachable(block.fullBlock);
+        return { fullBlock: block.fullBlock, isValid };
+      })
+    );
+    for (const res of videoResults) {
+      if (!res.isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing dead/unavailable video element: ${res.fullBlock}`);
+        updatedMdx = updatedMdx.replace(res.fullBlock, '');
+      }
+    }
+  }
+
+  // Validate and fix Audio components
+  const audioRegex = /<(?:Audio|AudioPlayer)\s+([^>]*?)\/>/gi;
+  let audioMatch;
+  const audioBlocks: { fullBlock: string }[] = [];
+  while ((audioMatch = audioRegex.exec(updatedMdx)) !== null) {
+    audioBlocks.push({ fullBlock: audioMatch[0] });
+  }
+
+  if (audioBlocks.length > 0) {
+    console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${audioBlocks.length} audio elements...`);
+    const audioResults = await Promise.all(
+      audioBlocks.map(async (block) => {
+        const isValid = await isAudioReachable(block.fullBlock);
+        return { fullBlock: block.fullBlock, isValid };
+      })
+    );
+    for (const res of audioResults) {
+      if (!res.isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing dead/unavailable audio element: ${res.fullBlock}`);
+        updatedMdx = updatedMdx.replace(res.fullBlock, '');
+      }
+    }
+  }
+
+  // Validate and fix Markdown links: [text](url)
+  const linkRegex = /\[([^\]]+)\]\(((?:https?:\/\/|\/\/)[^\s)]+)\)/gi;
+  let linkMatch;
+  const links: { fullMatch: string; text: string; url: string }[] = [];
+  while ((linkMatch = linkRegex.exec(updatedMdx)) !== null) {
+    if (linkMatch[0].includes('id="ref-') || linkMatch[0].includes('ref-')) {
+      continue;
+    }
+    links.push({
+      fullMatch: linkMatch[0],
+      text: linkMatch[1],
+      url: linkMatch[2]
+    });
+  }
+
+  if (links.length > 0) {
+    console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${links.length} markdown links...`);
+    const linkResults = await Promise.all(
+      links.map(async (link) => {
+        const isValid = await isLinkReachable(link.url);
+        return { ...link, isValid };
+      })
+    );
+    for (const res of linkResults) {
+      if (!res.isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Replacing dead link with plain text: ${res.url}`);
+        updatedMdx = updatedMdx.replace(res.fullMatch, res.text);
+      }
+    }
+  }
+
   return updatedMdx;
 }
 

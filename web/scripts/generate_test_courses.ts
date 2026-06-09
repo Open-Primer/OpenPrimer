@@ -113,9 +113,14 @@ async function run() {
   for (const course of coursesToGenerate) {
     const slug = course.name.toLowerCase().replace(/ /g, '_');
     const isCompleted = existingSlugs.has(slug);
-    const initialStatus = isCompleted ? 'completed' : 'queued';
-    const initialProgress = isCompleted ? 100 : 0;
-    const taskLogs = isCompleted ? ['Course already exists in database. Skipped generation.'] : ['Queued via CLI generator script.'];
+    const existingTask = taskMap[course.name];
+    const initialStatus = isCompleted ? 'completed' : (existingTask && existingTask.status === 'paused' ? 'paused' : 'queued');
+    const initialProgress = isCompleted ? 100 : (existingTask && existingTask.status === 'paused' ? (existingTask.progress || 0) : 0);
+    const taskLogs = isCompleted 
+      ? ['Course already exists in database. Skipped generation.'] 
+      : (existingTask && existingTask.status === 'paused' 
+          ? (existingTask.logs || ['Paused in queue.']) 
+          : ['Queued via CLI generator script.']);
 
     const extra = {
       level: course.level,
@@ -196,6 +201,7 @@ async function run() {
       }
     }
 
+    const localLogs: string[] = ['Starting content generation via Vertex AI...'];
     try {
       console.log(`[GENERATOR] Starting generation. Updating task status to 'processing' (ID: ${taskId})...`);
       
@@ -206,7 +212,7 @@ async function run() {
           .update({
             status: 'processing',
             progress: 15,
-            logs: ['Starting content generation via Vertex AI...']
+            logs: localLogs
           })
           .eq('id', taskId);
       }
@@ -228,7 +234,17 @@ async function run() {
           await generateCourseContent(course.name, course.level, targetLang);
           success = true;
         } catch (genErr: any) {
-          console.warn(`⚠️ [GENERATOR] Attempt ${attempts} failed: ${genErr.message || genErr}`);
+          const errMsg = genErr.message || genErr;
+          console.warn(`⚠️ [GENERATOR] Attempt ${attempts} failed: ${errMsg}`);
+          localLogs.push(`Attempt ${attempts}/${maxAttempts} failed: ${errMsg}`);
+          if (taskId) {
+            await supabaseAdmin
+              .from('task_queue')
+              .update({
+                logs: [...localLogs]
+              })
+              .eq('id', taskId);
+          }
           if (attempts < maxAttempts) {
             console.log(`Waiting ${delayMs / 1000}s before retry...`);
             await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -253,14 +269,14 @@ async function run() {
           description: course.description,
           completedAt: new Date().toISOString()
         };
-        
+        localLogs.push(`Course content and course card successfully generated and saved in ${generationDurationS}s.`);
         await supabaseAdmin
           .from('task_queue')
           .update({
             status: 'completed',
             progress: 100,
             description: JSON.stringify(extra),
-            logs: [`Course content and course card successfully generated and saved in ${generationDurationS}s.`]
+            logs: localLogs
           })
           .eq('id', taskId);
       }
@@ -269,14 +285,14 @@ async function run() {
     } catch (err: any) {
       const errMsg = err.message || err;
       console.error(`❌ [CRITICAL ERROR] Generation failed for course "${course.name}":`, errMsg);
-      
+      localLogs.push(`Critical Error during generation: ${errMsg}`);
       if (taskId) {
         await supabaseAdmin
           .from('task_queue')
           .update({
             status: 'failed',
             progress: 0,
-            logs: [`Critical Error during generation: ${errMsg}`]
+            logs: localLogs
           })
           .eq('id', taskId);
       }

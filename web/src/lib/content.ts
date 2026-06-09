@@ -1173,6 +1173,10 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     // Remove any existing back-links to avoid duplicates
     refContent = refContent.replace(/\[↩\]\(#cite-\d+\)/g, '').replace(/\[↩\]/g, '');
     
+    // Clean up pre-existing complex/corrupted anchor structures to a simple standard [X] format for reliable parsing
+    refContent = refContent.replace(/<sup>\s*<a[^>]*id="ref-src-\d+"[^>]*>.*?<\/a>\s*<\/sup>\s*/gi, '');
+    refContent = refContent.replace(/<a[^>]*id="ref-(\d+)"[^>]*>[\s\S]*?\[\1\][\s\S]*?<\/a>\s*/gi, '[$1] ');
+    
     // Structure references as clean separate blocks with proper IDs and back-links
     refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
       const activeNum = num || anchorId;
