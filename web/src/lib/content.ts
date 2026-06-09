@@ -180,6 +180,44 @@ export function getTranslatedSubject(subject: string, lang: string): string {
   return subject || '';
 }
 
+export function formatModuleStructure(course: any, lang: string): string {
+  const currentLang = (lang || 'en').toLowerCase();
+  
+  if (course?.units && Array.isArray(course.units) && course.units.length > 0) {
+    return course.units.map((unit: any, idx: number) => {
+      const title = unit.title || '';
+      const modulesStr = Array.isArray(unit.modules) ? unit.modules.join(', ') : '';
+      return `${idx + 1}. **${title}** : ${modulesStr}`;
+    }).join('\n');
+  }
+
+  // Fallbacks
+  if (currentLang === 'fr') {
+    return `1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
+2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
+3. **Études de Cas et Applications** : Mettre la théorie en pratique.`;
+  }
+  if (currentLang === 'es') {
+    return `1. **Introducción y Contextualización** : Comprender el "por qué" y los orígenes.
+2. **Principios Fundamentales** : Formulación y rigor conceptual.
+3. **Estudios de Caso y Aplicaciones** : Poner la teoría en práctica.`;
+  }
+  if (currentLang === 'de') {
+    return `1. **Einführung und Kontextualisierung** : Das "Warum" und die Urspruenge verstehen.
+2. **Grundlegende Prinzipien** : Begriffliche Formulierung und Strenge.
+3. **Fallstudien und Anwendungen** : Theorie in die Praxis umsetzen.`;
+  }
+  if (currentLang === 'zh') {
+    return `1. **引入与情境化** : 理解“为什么”以及其起源。
+2. **基本原理** : 概念构建与严谨性。
+3. **案例研究与应用** : 将理论付诸实践。`;
+  }
+
+  return `1. **Introduction and Contextualization** : Understanding the "why" and the origins.
+2. **Fundamental Principles** : Conceptual formulation and rigor.
+3. **Case Studies and Applications** : Putting theory into practice.`;
+}
+
 export function getLocalizedDefaultTemplate(course: any, pageTitle: string, lang: string): string {
   const currentLang = (lang || 'en').toLowerCase();
   const subjectTranslated = getTranslatedSubject(course.subject, currentLang);
@@ -205,9 +243,7 @@ Dans ce cours axé sur **${subjectTranslated}**, nous allons explorer en profond
 - Développer un esprit d'analyse critique et une intuition profonde.
 
 ## 📚 Structure du Module
-1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
-2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
-3. **Études de Cas et Applications** : Mettre la théorie en pratique.
+${formatModuleStructure(course, 'fr')}
 `;
   }
   
@@ -232,9 +268,7 @@ En este curso centrado en **${subjectTranslated}**, profundizaremos en conceptos
 - Desarrollar el análisis crítico y una intuición profunda.
 
 ## 📚 Estructura del Módulo
-1. **Introducción y Contextualización**: Comprender el "por qué" y los orígenes.
-2. **Principios Fundamentales**: Formulación y rigor conceptual.
-3. **Estudios de Caso y Aplicaciones**: Poner la teoría en práctica.
+${formatModuleStructure(course, 'es')}
 `;
   }
   
@@ -259,9 +293,7 @@ In diesem Kurs, der sich auf **${subjectTranslated}** konzentriert, werden wir t
 - Entwickeln Sie kritische Analysen und tiefe Intuition.
 
 ## 📚 Modulstruktur
-1. **Einführung und Kontextualisierung**: Das "Warum" und die Ursprünge verstehen.
-2. **Grundlegende Prinzipien**: Begriffliche Formulierung und Strenge.
-3. **Fallstudien und Anwendungen**: Theorie in die Praxis umsetzen.
+${formatModuleStructure(course, 'de')}
 `;
   }
   
@@ -286,9 +318,7 @@ module: "介绍"
 - 培养批判性分析和深刻的直觉。
 
 ## 📚 模块结构
-1. **引入与情境化**：理解“为什么”以及其起源。
-2. **基本原理**：概念构建与严谨性。
-3. **案例研究与应用**：将理论付诸实践。
+${formatModuleStructure(course, 'zh')}
 `;
   }
   
@@ -312,9 +342,7 @@ In this course focused on **${subjectTranslated}**, we will dive deep into key c
 - Develop critical analysis and deep intuition.
 
 ## 📚 Module Structure
-1. **Introduction and Contextualization**: Understanding the "why" and the origins.
-2. **Fundamental Principles**: Conceptual formulation and rigor.
-3. **Case Studies and Applications**: Putting theory into practice.
+${formatModuleStructure(course, 'en')}
 `;
 }
 
@@ -901,7 +929,7 @@ function parseMdxAlerts(content: string): string {
     const line = lines[i];
     // Match line that starts with > [!TYPE] or > "[!TYPE] (possibly with spaces/indents beforehand)
     // We capture optional leading quotes (including escaped double quotes \")
-    const match = line.match(/^(\s*)>\s*(\\"|["'“]?)\s*\[!(NOTE|WARNING|IMPORTANT|TIP|CAUTION)\](?:\s*(.*))?$/i);
+    const match = line.match(/^(\s*)>\s*(\\"|["'“]?)\s*\[!(NOTE|INFO|WARNING|IMPORTANT|TIP|CAUTION)\](?:\s*(.*))?$/i);
     
     if (match) {
       const baseIndent = match[1];
@@ -993,8 +1021,28 @@ function parseMdxAlerts(content: string): string {
   return result.join('\n');
 }
 
+function stripJsxComments(mdx: string): string {
+  const tagRegex = /<([A-Z][a-zA-Z0-9]*)([\s\S]*?)(\/?>)/g;
+  return mdx.replace(tagRegex, (match, tagName, tagBody, closing) => {
+    let cleanedBody = tagBody.replace(/\/\*[\s\S]*?\*\//g, '');
+    const lines = cleanedBody.split('\n');
+    const cleanedLines = lines.map((line: string) => {
+      const commentIndex = line.indexOf('//');
+      if (commentIndex !== -1) {
+        const prefix = line.substring(0, commentIndex);
+        if (!prefix.endsWith('http:') && !prefix.endsWith('https:')) {
+          return prefix;
+        }
+      }
+      return line;
+    });
+    return `<${tagName}${cleanedLines.join('\n')}${closing}`;
+  });
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
   let processed = content.replace(/<!--[\s\S]*?-->/g, '');
+  processed = stripJsxComments(processed);
   processed = healGlossaryTags(processed);
   
   // Pre-pass: heal broken blockquotes in lists
@@ -1003,6 +1051,15 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = indentNestedBlockquotes(processed);
   // Parse GFM-style [!NOTE]/[!WARNING] blockquotes into styled <Alert> components
   processed = parseMdxAlerts(processed);
+  
+  // Group images, captions, and fallback links into a single <CustomFigure> component
+  const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/).*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
+  processed = processed.replace(figureRegex, (match, alt, imgUrl, caption, fallbackText, fallbackUrl) => {
+    const cleanAlt = (alt || '').replace(/"/g, '&quot;');
+    const cleanCaption = (caption || '').replace(/"/g, '&quot;');
+    const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
+    return `<CustomFigure src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
+  });
   
   // Strip any raw [Spacer] brackets
   processed = processed.replace(/\[Spacer\]\s*/gi, '');
@@ -1158,16 +1215,16 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
 
       const scholarUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryTextForScholar)}`;
       const scholarLinkTexts: Record<string, string> = {
-        fr: "Rechercher sur Google Scholar",
-        es: "Buscar en Google Scholar",
-        de: "Auf Google Scholar suchen",
-        zh: "在 Google 学术搜索",
-        en: "Search on Google Scholar"
+        fr: "Google Scholar",
+        es: "Google Scholar",
+        de: "Google Scholar",
+        zh: "Google Scholar",
+        en: "Google Scholar"
       };
       const currentLang = (lang || 'en').toLowerCase();
       const scholarLinkText = scholarLinkTexts[currentLang] || scholarLinkTexts['en'];
       
-      const scholarLinkTextHtml = ` <span class="text-xs text-slate-400 font-normal">| <a href="${scholarUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors inline-flex items-center gap-1">🔍 ${scholarLinkText}</a></span>`;
+      const scholarLinkTextHtml = ` <span class="text-xs text-slate-400 font-normal">| <a href="${scholarUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors inline-flex items-center gap-1">${scholarLinkText}</a></span>`;
 
       return `<span id="ref-${activeNum}"></span><a href="#cite-${activeNum}" class="no-underline hover:text-indigo-400 transition-colors">**[${activeNum}]**</a> ${processedRest}${scholarLinkTextHtml}\n\n`;
     });

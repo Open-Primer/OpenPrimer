@@ -203,7 +203,7 @@ Requirements:
    - Immediately after the introduction section, you MUST systematically insert the explicit learning objectives following the KSA (Knowledge, Skills, Attitudes) model. Segment the learning targets into three distinct axes: Knowledge (Savoir - concepts), Skills (Savoir-faire - application), and Attitudes (Posture/Analyse). If the course level is L3 (Bachelor 3ème année or Senior Undergraduate), you MUST use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer) for these objectives.
    - You MUST conclude the lesson content (immediately before the evaluation) with a "Summary & Conclusion" or "Synthèse & Ouverture" section (using a heading like "## Conclusion" or "## Synthèse & Discussion").
    - This concluding section must contain:
-     * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component.
+     * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component. Each item in the array MUST be a complete, grammatically whole, and self-contained sentence in the course's language. Under NO circumstances should you split a single sentence, clause, or paragraph across multiple items or artificial bullet points. Provide exactly 3 to 4 points, each representing a distinct, complete educational takeaway.
      * A brief paragraph containing open reflection questions (questions ouvertes de réflexion) and an opening (ouverture) toward further study or neighboring fields.
 5. Conceptual framework, historical perspective, and concrete real-world applications in the body of the lesson.
    - **Author Quotes (Citations d'auteurs)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes:
@@ -227,17 +227,18 @@ Requirements:
      * For an Image/Figure: \`*Figure X : [Titre explicite] - [Description détaillée de ce qu'affiche l'image].*\`
      * For a Video: \`*Vidéo X : [Titre de la vidéo] - [Résumé structuré du contenu de la vidéo].*\`
      * For an Audio track: \`*Audio X : [Titre de la piste audio] - [Transcription textuelle complète de ce qui est prononcé].*\`
-   - **Footnote referencing**: Link every major illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. \`<sup>[[1](#ref-1)]</sup>\`.
-   - **Failures and Redirect links**: Directly below the caption, systematically insert an alternative textual link letting the student access the original external resource directly if loading fails (e.g. \`[Accéder directement à la source / Access the resource directly](url)\`).
+    - **Footnote referencing**: Link every major actual external illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. <sup><a id="ref-src-1" href="#ref-1">1</a></sup>. Do NOT add footnotes or source references for system-generated flowcharts, interactive diagrams, sandboxes, equation solvers, or simulators, as they are constructed programmatically on the fly.
+    - **Failures and Redirect links**: Directly below the caption of actual external resources (e.g. external images, audio, or video files), systematically insert an alternative textual link letting the student access the original external resource directly if loading fails. This link MUST be written ONLY in the course's target language (e.g., [Accéder directement à la ressource](url) in French, or [Access the resource directly](url) in English). Under NO circumstances should you combine multiple languages or use bilingual/slashed links like [Accéder... / Access...]. Never add redirect/source links for system-generated flowcharts (like mermaid), interactive diagrams, or simulators, as they do not have external source URLs.
 9. Glossary and Highlighted Terms with Wikipedia integration :
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
    - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
-   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: \`**Term** : Definition. [[Wikipédia / Wikipedia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]\`. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
+   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: **Term** : Definition. [[Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]. Crucial: the Wikipedia redirect link at the end of each glossary definition MUST NOT be in bold (it should be standard normal text weight, not wrapped in any double asterisks \`**\`). For example: **Term** : Definition. [[Wikipédia](url)] and NOT **Term** : Definition. **[[Wikipédia](url)]**. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
 10. Connected Entities: Historical Figures, Fictional Characters, and Key Geographic Places (Personnalités, Personnages Fictifs, et Lieux Clés) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
-      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, or real person mentioned, you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component: \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code">DisplayName (Dates)</HistoricalPerson>\`.
-        - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr">Isaac Newton (1643 - 1727)</HistoricalPerson>\` or \`<HistoricalPerson name="Bob_Dylan" lang="fr">Bob Dylan (né en 1941)</HistoricalPerson>\`
-        - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en">Isaac Newton (1643 - 1727)</HistoricalPerson>\` or \`<HistoricalPerson name="Bob_Dylan" lang="en">Bob Dylan (born 1941)</HistoricalPerson>\`
+      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned, you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
+        \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
+        - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
+        - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
       * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed, 3 to 5 line mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\` or \`> [!NOTE] **Mini-Biography: DisplayName (Dates)**\`). This mini-biography must highlight their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson.
       * **Fictional Characters**: For fictional characters (e.g., Mickey Mouse, Sherlock Holmes, Frodo Baggins, Hamlet) when relevant to the course content (e.g., literature, history, cinema, cultural/social studies), wrap them in the custom component: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code">CharacterName</FictionalCharacter>\`.
         - Example (French): \`<FictionalCharacter name="Mickey_Mouse" lang="fr">Mickey Mouse</FictionalCharacter>\`
@@ -271,8 +272,24 @@ Requirements:
    ${isPrimary ? `
    - Since this is a primary school level course, DO NOT include any bibliography or references section.` : `
    - Systematically include a bibliography/references section at the very end of the page (after the Glossary), using the heading \`### Références\` if writing in French, or \`### References\` if in English/other languages.
-   - All references in this section MUST be real, high-quality, clickable links (using Markdown link syntax \`[Title / Author / Source.](URL)\` with real or realistic scholarly URLs, e.g. redirecting to a scientific article, database, or academic website. The bracketed link text MUST end with a trailing period, e.g. \`[Lien vers la page de l'éditeur.](url)\`).
-   - Each reference MUST be its own distinct paragraph separated by a double newline to prevent layout run-ons. Link these references to the body text using a standard footnote numbering system. Inline in the body text, cite references as superscript/link style: \`<sup>[[1](#ref-1)]</sup>\`. In the References section at the bottom, prefix each reference item with the corresponding anchor tag, e.g. \`<a id="ref-1"></a>[1] [Reference Title / Author / Publisher.](https://example.org/article-url)\`, so that clicking the inline note redirects the user to the reference at the bottom.
+   
+   - **Academic Level Scaling for Reference Counts**:
+     The number of references must scale proportionally with the academic depth of the course level ("${level}"):
+     * *Collège / Lycée (Secondary school)*: Must systematically include exactly 3 to 5 references.
+     * *University Level (L1, L2, L3, Master, Doctorat, undergraduate_1, undergraduate_2, undergraduate_3, graduate)*: Must systematically include at least 8 to 12 references (une bonne dizaine). Since this course level is "${level}", you must STRICTLY respect this reference count requirement.
+   
+   - **Citation Completeness and Standard Academic Formatting**:
+     Do NOT generate simple titles or placeholders. All bibliographical references MUST be complete, formal, and structured standard academic citations containing:
+     * *For Books*: Authors (Lastname Initial.), "Book Title", Publisher, City of publication, Year of publication.
+     * *For Research Articles*: Authors (Lastname Initial.), "Article Title", *Journal Name*, Volume, Issue, Year of publication, Pages.
+     * *For Websites*: Authors/Organization, "Page Title", Website name, Year/Date of publication.
+     Every reference MUST contain a real, high-quality, clickable link (using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, Google Scholar, DOIs, publisher pages, or academic websites. The bracketed link text MUST end with a trailing period, e.g., \`[Authors, "Title", Journal, Year.](url)\`).
+   
+   - **Active Bidirectional Links**:
+     Every reference in the bibliography section MUST correspond to a footnote citation in the text.
+     * *In the Body Text*: Place inline superscript/link citations exactly like this: \`<sup><a id="ref-src-X" href="#ref-X">X</a></sup>\` where X is the sequential footnote number starting at 1.
+     * *In the References Section*: Each reference item must be its own distinct paragraph separated by a double newline. Prefix each item with its return-link anchor: \`<a id="ref-X" href="#ref-src-X">**[X]**</a> [Complete Academic Citation.](https://example.org/article-url)\`, so that clicking the inline superscript number smoothly scrolls down to the reference at the bottom, and clicking the \`**[X]**\` in the reference at the bottom smoothly scrolls back up to the exact footnote position in the body text.
+   
    - Just before the References section, you CAN optionally include a "Pour aller plus loin" (Going Further) block to suggest deep-dive academic or research references (books, articles, videos, websites). Use the \`<GoingFurther>\` and \`<GoingFurtherItem>\` components as follows:
      \`\`\`mdx
      <GoingFurther title="Pour aller plus loin...">
@@ -434,6 +451,9 @@ Your Checkpoints:
 1. "Zero-Placeholder": Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
 3. "Structural Completeness": Ensure the presence of prerequisites, diagnostic quizzes, learning objectives, epistemological boxes (if university level), formative quizzes, and end-of-lesson evaluation.
+4. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
+5. "Historical Person Biography Overlays": Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">' and that the 'bio' prop contains a non-empty 2-3 line biography generated on the fly.
+6. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
 
 You must return a valid JSON object with the following keys:
 - "approved": boolean (true if it perfectly complies with the policies; false if there are violations).
@@ -572,7 +592,8 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
       }
 
       // De-hallucinate bibliography links against Crossref / Google Books
-      const validatedMdx = await validateAndFixBibliography(currentMdx);
+      let validatedMdx = await validateAndFixBibliography(currentMdx);
+      validatedMdx = await validateAndFixImages(validatedMdx);
 
       let mdxWithFrontmatter = `---
 title: "${item.title}"
@@ -811,6 +832,7 @@ ${lesson.content}`;
 
       // De-hallucinate translated references
       let validatedMdx = await validateAndFixBibliography(translatedMdx);
+      validatedMdx = await validateAndFixImages(validatedMdx);
 
       // Pre-validate translated MDX compilation
       const mdxCheck = await validateMdxContent(validatedMdx);
@@ -916,6 +938,65 @@ async function validateAndFixBibliography(mdx: string): Promise<string> {
     updatedMdx = updatedMdx.replace(rep.original, rep.replacement);
   }
 
+  return updatedMdx;
+}
+
+async function validateAndFixImages(mdx: string): Promise<string> {
+  const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/).*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
+  
+  let match;
+  const blocks: { fullBlock: string; url: string }[] = [];
+  
+  while ((match = figureRegex.exec(mdx)) !== null) {
+    blocks.push({
+      fullBlock: match[0],
+      url: match[2]
+    });
+  }
+  
+  if (blocks.length === 0) {
+    return mdx;
+  }
+  
+  console.log(`[IMAGE VALIDATOR] Found ${blocks.length} images to validate.`);
+  
+  const validationResults = await Promise.all(
+    blocks.map(async (block) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 3500);
+      try {
+        const response = await fetch(block.url, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        if (!response.ok) {
+          console.warn(`[IMAGE VALIDATOR] Image failed with status ${response.status}: ${block.url}`);
+          return { fullBlock: block.fullBlock, isValid: false };
+        }
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          console.warn(`[IMAGE VALIDATOR] Image URL returned a JSON error payload: ${block.url}`);
+          return { fullBlock: block.fullBlock, isValid: false };
+        }
+        console.log(`[IMAGE VALIDATOR] Image validated successfully: ${block.url}`);
+        return { fullBlock: block.fullBlock, isValid: true };
+      } catch (err) {
+        clearTimeout(id);
+        console.warn(`[IMAGE VALIDATOR] Error checking image ${block.url}:`, err);
+        return { fullBlock: block.fullBlock, isValid: false };
+      }
+    })
+  );
+  
+  let updatedMdx = mdx;
+  for (const res of validationResults) {
+    if (!res.isValid) {
+      console.log(`[IMAGE VALIDATOR] Removing failed image block.`);
+      updatedMdx = updatedMdx.replace(res.fullBlock, '');
+    }
+  }
+  
   return updatedMdx;
 }
 
@@ -1075,14 +1156,34 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
   }
 }
 
+function stripJsxComments(mdx: string): string {
+  const tagRegex = /<([A-Z][a-zA-Z0-9]*)([\s\S]*?)(\/?>)/g;
+  return mdx.replace(tagRegex, (match, tagName, tagBody, closing) => {
+    let cleanedBody = tagBody.replace(/\/\*[\s\S]*?\*\//g, '');
+    const lines = cleanedBody.split('\n');
+    const cleanedLines = lines.map((line: string) => {
+      const commentIndex = line.indexOf('//');
+      if (commentIndex !== -1) {
+        const prefix = line.substring(0, commentIndex);
+        if (!prefix.endsWith('http:') && !prefix.endsWith('https:')) {
+          return prefix;
+        }
+      }
+      return line;
+    });
+    return `<${tagName}${cleanedLines.join('\n')}${closing}`;
+  });
+}
+
 async function validateMdxContent(content: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const cleanedContent = stripJsxComments(content);
     const { serialize } = await import('next-mdx-remote/serialize');
     const remarkMath = (await import('remark-math')).default;
     const remarkGfm = (await import('remark-gfm')).default;
     const rehypeKatex = (await import('rehype-katex')).default;
     
-    await serialize(content, {
+    await serialize(cleanedContent, {
       mdxOptions: {
         remarkPlugins: [remarkMath, remarkGfm],
         rehypePlugins: [rehypeKatex],
@@ -1095,6 +1196,7 @@ async function validateMdxContent(content: string): Promise<{ success: boolean; 
     return { success: false, error: error.message || String(err) };
   }
 }
+
 
 function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [

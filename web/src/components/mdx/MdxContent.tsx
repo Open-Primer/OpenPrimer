@@ -43,6 +43,11 @@ const Alert = ({ type, children }: { type: string; children: React.ReactNode }) 
     title = "Warning";
     borderClass = "border-l-amber-500 bg-amber-500/5 dark:bg-amber-500/[0.04] border-amber-500/20";
     titleColor = "text-amber-500 dark:text-amber-400";
+  } else if (t === 'info') {
+    icon = <Info className="w-4 h-4 text-blue-500 dark:text-blue-400" />;
+    title = "Info";
+    borderClass = "border-l-blue-500 bg-blue-500/5 dark:bg-blue-500/[0.04] border-blue-500/20";
+    titleColor = "text-blue-500 dark:text-blue-400";
   } else if (t === 'important') {
     icon = <ShieldAlert className="w-4 h-4 text-rose-500" />;
     title = "Important";
@@ -90,8 +95,36 @@ const PreCodeInterceptor = (props: any) => {
   return <pre {...props} />;
 };
 
+const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
+  const [failed, setFailed] = React.useState(false);
+  React.useEffect(() => {
+    if (!src) return;
+    const img = new Image();
+    img.onerror = () => setFailed(true);
+    img.src = src;
+  }, [src]);
+  if (failed) return null;
+  return (
+    <div className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300">
+      <img 
+        src={src} 
+        alt={alt} 
+        className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50" 
+        onError={() => setFailed(true)} 
+      />
+      {caption && <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4 select-none">{caption}</p>}
+      {fallbackText && fallbackUrl && (
+        <p className="text-center text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors select-none">
+          <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">{fallbackText}</a>
+        </p>
+      )}
+    </div>
+  );
+};
+
 const components = {
   Alert,
+  CustomFigure,
   Quiz,
   Question,
   Option,

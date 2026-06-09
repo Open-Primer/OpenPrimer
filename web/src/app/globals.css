@@ -886,6 +886,16 @@ body:not(.theme-paper):not(.theme-focus) footer {
   color: #0369a1 !important;
 }
 
+.theme-paper .custom-alert.alert-info {
+  background-color: #f0f9ff !important;
+  border-color: #dbd5be !important;
+  border-left-color: #0284c7 !important;
+}
+.theme-paper .custom-alert.alert-info .alert-title,
+.theme-paper .custom-alert.alert-info svg {
+  color: #0369a1 !important;
+}
+
 .theme-paper .custom-alert.alert-warning {
   background-color: #fffbeb !important;
   border-color: #dbd5be !important;
@@ -943,6 +953,15 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-focus .custom-alert .alert-content {
   color: #a3a3a3 !important;
 }
+
+/* Disable automatic quotation marks on blockquotes inside prose */
+.prose blockquote::before,
+.prose blockquote::after,
+.prose blockquote p::before,
+.prose blockquote p::after {
+  content: "" !important;
+}
+
 
 
 
