@@ -11,7 +11,7 @@ import {
   Upload, BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage, isDatabaseConfigured } from '@/lib/db';
+import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage, isDatabaseConfigured, compileRuleLocally } from '@/lib/db';
 
 export const CURRICULUM_STRINGS = {
   EN: {
@@ -5178,12 +5178,41 @@ export default function AdminCurriculumPage() {
       return;
     }
 
-    // 3. Compile high-fidelity translations silently
-    const translationsList = getCompiledTranslations(newAch.name, newAch.description);
-    const transMap: Record<string, { name: string; description: string }> = {};
-    translationsList.forEach(t => {
-      transMap[t.code] = { name: t.name, description: t.desc };
-    });
+    // 3. Compile dynamic logical rules & localization translations
+    let rule = null;
+    let transMap: Record<string, { name: string; description: string }> = {};
+
+    try {
+      const compileRes = await fetch('/api/badges/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAch.name,
+          description: newAch.description,
+          threshold: newAch.threshold
+        })
+      });
+      if (compileRes.ok) {
+        const compiled = await compileRes.json();
+        rule = compiled.evaluationRule;
+        if (compiled.translations && Object.keys(compiled.translations).length > 0) {
+          transMap = compiled.translations;
+        }
+      }
+    } catch (err) {
+      console.warn("Vertex AI badge compiler failed/offline, utilizing offline fallback engine:", err);
+    }
+
+    // Offline compilation fallback
+    if (!rule) {
+      rule = compileRuleLocally(newAch.description, newAch.threshold);
+    }
+    if (Object.keys(transMap).length === 0) {
+      const translationsList = getCompiledTranslations(newAch.name, newAch.description);
+      translationsList.forEach(t => {
+        transMap[t.code] = { name: t.name, description: t.desc };
+      });
+    }
 
     const finalIcon = await resolveBadgeIconToBase64(badgeIcon);
 
@@ -5198,7 +5227,8 @@ export default function AdminCurriculumPage() {
       startDate: badgeStartDate || null,
       endDate: badgeEndDate || null,
       icon: finalIcon,
-      translations: transMap
+      translations: transMap,
+      evaluationRule: rule
     });
 
     setShowAddAchievement(false);
@@ -5211,6 +5241,7 @@ export default function AdminCurriculumPage() {
   };
 
   const handleOpenEditAchievement = (ach: Achievement) => {
+    setBadgeError(null);
     setSelectedAchievement(ach);
     setEditName(ach.name);
     setEditDesc(ach.description);
@@ -5227,31 +5258,109 @@ export default function AdminCurriculumPage() {
 
   const handleUpdateAchievement = async () => {
     if (!selectedAchievement) return;
+    setBadgeError(null);
 
-    // Compile translations silently
-    const translationsList = getCompiledTranslations(editName, editDesc);
-    const transMap: Record<string, { name: string; description: string }> = {};
-    translationsList.forEach(t => {
-      transMap[t.code] = { name: t.name, description: t.desc };
-    });
+    try {
+      const crucialFieldsChanged = 
+        editName !== selectedAchievement.name || 
+        editDesc !== selectedAchievement.description || 
+        editThreshold !== selectedAchievement.threshold;
 
-    const finalIcon = await resolveBadgeIconToBase64(editIcon);
+      if (crucialFieldsChanged) {
+        // Strict Empty Fields Validation for edits
+        if (!editName || !editDesc || !editThreshold) {
+          setBadgeError(tr("Strict Parameter Error: All fields are required!"));
+          return;
+        }
 
-    await dbService.saveAchievement({
-      ...selectedAchievement,
-      name: editName,
-      description: editDesc,
-      threshold: editThreshold,
-      icon: finalIcon,
-      startDate: editStartDate || null,
-      endDate: editEndDate || null,
-      translations: transMap
-    });
-    setSelectedAchievement(null);
-    setEditStartDate('');
-    setEditEndDate('');
-    setEditCustomBadgeImage(null);
-    loadData();
+        // Strict Positive Threshold Validation for edits
+        const numeric = Number(editThreshold);
+        const hasNumber = /\d+/.test(editThreshold);
+        if ((hasNumber && numeric <= 0) || (editThreshold.startsWith('-'))) {
+          setBadgeError(tr("Strict Validation Reject: Threshold must be positive!"));
+          return;
+        }
+
+        // 1. Soft-archive the old badge (status = 'inactive')
+        await dbService.saveAchievement({
+          ...selectedAchievement,
+          status: 'inactive'
+        });
+
+        // 2. Compile dynamic logical rules & localization translations for the NEW badge
+        let rule = null;
+        let transMap: Record<string, { name: string; description: string }> = {};
+
+        try {
+          const compileRes = await fetch('/api/badges/compile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: editName,
+              description: editDesc,
+              threshold: editThreshold
+            })
+          });
+          if (compileRes.ok) {
+            const compiled = await compileRes.json();
+            rule = compiled.evaluationRule;
+            if (compiled.translations && Object.keys(compiled.translations).length > 0) {
+              transMap = compiled.translations;
+            }
+          }
+        } catch (err) {
+          console.warn("Vertex AI badge compiler failed/offline, utilizing offline fallback engine:", err);
+        }
+
+        // Offline compilation fallback
+        if (!rule) {
+          rule = compileRuleLocally(editDesc, editThreshold);
+        }
+        if (Object.keys(transMap).length === 0) {
+          const translationsList = getCompiledTranslations(editName, editDesc);
+          translationsList.forEach(t => {
+            transMap[t.code] = { name: t.name, description: t.desc };
+          });
+        }
+
+        const finalIcon = await resolveBadgeIconToBase64(editIcon);
+        const newId = achievements.length > 0 ? Math.max(...achievements.map(a => a.id)) + 1 : 1;
+
+        // 3. Save as a newly compiled active badge under a new incremented ID
+        await dbService.saveAchievement({
+          id: newId,
+          name: editName,
+          description: editDesc,
+          threshold: editThreshold.includes(' ') ? editThreshold : `${editThreshold} streak`,
+          count: 0,
+          status: 'active',
+          startDate: editStartDate || null,
+          endDate: editEndDate || null,
+          icon: finalIcon,
+          translations: transMap,
+          evaluationRule: rule
+        });
+      } else {
+        // If no crucial fields changed (only icon, date or non-rule properties are updated), save in-place
+        const finalIcon = await resolveBadgeIconToBase64(editIcon);
+        
+        await dbService.saveAchievement({
+          ...selectedAchievement,
+          icon: finalIcon,
+          startDate: editStartDate || null,
+          endDate: editEndDate || null
+        });
+      }
+
+      setSelectedAchievement(null);
+      setEditStartDate('');
+      setEditEndDate('');
+      setEditCustomBadgeImage(null);
+      loadData();
+    } catch (err: any) {
+      console.error("Error updating achievement:", err);
+      setBadgeError(tr("Error updating achievement: ") + err.message);
+    }
   };
 
   const handleOpenPurge = (ach: Achievement) => {
@@ -7060,144 +7169,141 @@ export default function AdminCurriculumPage() {
                       </div>
                     </div>
 
-                    {/* B. SIDE-BY-SIDE ACTIVE PROPOSALS & BACKLOG LISTS */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* B. FULL-WIDTH ACTIVE PROPOSALS & BACKLOG LISTS */}
+                    <div className="space-y-8">
                       {/* B1. PROPOSED ARCHIVALS */}
-                      <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col hover:border-slate-700/50 transition-all">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div className="space-y-1">
-                            <h3 className="text-base font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                              {tr("Proposed Archivals")}
-                              <span className="text-[10px] px-2 py-0.5 bg-pink-500/10 border border-pink-500/20 text-pink-400 rounded-lg font-black">
-                                {filteredActiveArchivalProposals.length}
-                              </span>
-                            </h3>
-                          </div>
-                          {/* Search Box */}
-                          <div className="relative w-full sm:w-48">
-                            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
-                            <input 
+                      <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <h3 className="text-xl font-black text-slate-200">{tr("Active Proposed Archivals")}</h3>
+                          <div className="flex items-center gap-3">
+                            <input
                               type="text"
-                              placeholder={tr("Search proposals...")}
                               value={archiveProposalSearch}
                               onChange={(e) => setArchiveProposalSearch(e.target.value)}
-                              className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-3 py-2 text-[11px] focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-600"
+                              placeholder={"🔍 " + tr("Search proposals...")}
+                              className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-pink-500/50 outline-none text-white w-56"
                             />
+                            {activeArchivalProposals.length > 0 && (
+                              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                                {filteredActiveArchivalProposals.length}/{activeArchivalProposals.length}
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
-                          {filteredActiveArchivalProposals.map((item) => (
-                            <div key={item.id} className="p-5 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition-all space-y-4">
-                              <div className="flex justify-between items-start gap-4">
-                                <div className="space-y-1">
-                                  <h4 className="text-sm font-bold text-white">{item.title}</h4>
-                                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
-                                    <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded font-bold uppercase">{item.subject}</span>
-                                    <span className="font-mono font-semibold">{item.version}</span>
-                                    <span className="text-slate-600">•</span>
-                                    <span className="flex items-center text-yellow-500">⭐ {Number(item.overallRating).toFixed(1)}/5 ({item.overallVotes})</span>
-                                    <span className="text-slate-600">•</span>
-                                    <span>{item.revisionCount} {tr("Revisions")}</span>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {filteredActiveArchivalProposals.map((item, idx) => (
+                            <div key={idx} className="p-6 bg-slate-900/40 border border-slate-850 hover:border-pink-500/30 rounded-[32px] flex justify-between items-start gap-4 transition-all relative overflow-hidden group">
+                              {/* Background Glow */}
+                              <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/5 blur-xl rounded-full pointer-events-none" />
+                              
+                              <div className="space-y-3 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase border ${
+                                    item.reason === 'Excessive Cumulative Revisions'
+                                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                      : 'bg-pink-500/10 border-pink-500/20 text-pink-400'
+                                  }`}>
+                                    {tr(item.reason)}
+                                  </span>
+                                  <span className="px-2 py-0.5 text-[8px] font-black rounded uppercase border bg-slate-950 border-slate-800 text-slate-400 font-mono">
+                                    Version: {item.version}
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <h4 className="text-base font-bold text-white flex items-center gap-1.5">
+                                    {item.title} 
+                                  </h4>
+                                  <p className="text-[11px] font-bold text-pink-500 mt-0.5">{item.subject}</p>
+                                </div>
+
+                                <p className="text-xs text-slate-400 leading-normal bg-slate-950/40 border border-slate-900 p-3 rounded-2xl italic">
+                                  "{item.description}"
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-3 pt-1">
+                                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                                    <span>Rating:</span>
+                                    <span className="text-yellow-400 font-black">⭐ {Number(item.overallRating).toFixed(1)}/5</span>
+                                    <span className="text-slate-600">({item.overallVotes} reviews)</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                                    <span>Revisions:</span>
+                                    <span className="text-blue-400 font-black">{item.revisionCount}</span>
                                   </div>
                                 </div>
-                                <span className={`px-2 py-0.5 border text-[8px] font-black rounded-lg uppercase tracking-wider ${item.reason === 'Excessive Cumulative Revisions' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-pink-500/10 border-pink-500/20 text-pink-400'}`}>
-                                  {tr(item.reason)}
-                                </span>
                               </div>
 
-                              <p className="text-[11px] text-slate-400 leading-normal bg-slate-900/40 p-3 rounded-xl border border-slate-900/60 font-medium">
-                                {item.description}
-                              </p>
-
-                              <div className="flex items-center gap-3 pt-1">
+                              <div className="flex gap-2 shrink-0 z-10">
                                 <button 
-                                  onClick={() => handleApproveArchival(item.id)}
-                                  className="flex-1 py-2 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-500/30 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                  type="button" 
+                                  title={tr("Approve & Archive")}
+                                  onClick={() => handleApproveArchival(item.id)} 
+                                  className="p-3 bg-pink-600 text-white rounded-xl hover:bg-pink-500 transition-all shadow-md shadow-pink-600/10"
                                 >
-                                  <Check className="w-3.5 h-3.5" />
-                                  {tr("Approve & Archive")}
+                                  <Check className="w-4 h-4" />
                                 </button>
                                 <button 
-                                  onClick={() => handleRefuseArchival(item.id)}
-                                  className="py-2 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                  type="button" 
+                                  title={tr("Refuse & Backlog")}
+                                  onClick={() => handleRefuseArchival(item.id)} 
+                                  className="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all shadow-md"
                                 >
-                                  <X className="w-3.5 h-3.5 text-slate-500" />
-                                  {tr("Refuse & Backlog")}
+                                  <X className="w-4 h-4" />
                                 </button>
                               </div>
                             </div>
                           ))}
-
                           {filteredActiveArchivalProposals.length === 0 && (
-                            <div className="p-8 text-center bg-slate-950/40 border border-dashed border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-3">
-                              <CheckCircle className="w-8 h-8 text-emerald-500/50" />
-                              <p className="text-xs text-slate-500 font-medium italic">{tr("No pending course archival proposals. Core curriculum stable.")}</p>
-                            </div>
+                            <p className="col-span-2 text-sm text-slate-600 italic py-8 text-center bg-slate-950/20 border border-slate-900 rounded-[32px] w-full">
+                              {tr("No pending course archival proposals. Core curriculum stable.")}
+                            </p>
                           )}
                         </div>
                       </div>
 
                       {/* B2. REFUSED ARCHIVALS BACKLOG */}
-                      <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[40px] space-y-6 flex flex-col hover:border-slate-700/50 transition-all">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="pt-8 border-t border-slate-900 space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="space-y-1">
-                            <h3 className="text-base font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                              {tr("Refused Archivals Backlog")}
-                              <span className="text-[10px] px-2 py-0.5 bg-slate-800 border border-slate-700 text-slate-400 rounded-lg font-black">
-                                {filteredRefusedArchivals.length}
-                              </span>
-                            </h3>
+                            <h4 className="text-sm font-black text-slate-200 uppercase tracking-widest">{tr("Refused Archivals Backlog")}</h4>
+                            <p className="text-xs text-slate-500">{tr("Rejected proposals are temporarily stored here, preventing auto-triggering during cooldown period.")}</p>
                           </div>
-                          {/* Search Box */}
-                          <div className="relative w-full sm:w-48">
-                            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
-                            <input 
+                          <div className="flex items-center gap-3">
+                            <input
                               type="text"
-                              placeholder={tr("Search backlog...")}
                               value={archiveRefusedSearch}
                               onChange={(e) => setArchiveRefusedSearch(e.target.value)}
-                              className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-3 py-2 text-[11px] focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-600"
+                              placeholder={"🔍 " + tr("Search backlog...")}
+                              className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-pink-500/50 outline-none text-white w-56"
                             />
+                            {refusedArchivals.length > 0 && (
+                              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
+                                {filteredRefusedArchivals.length}/{refusedArchivals.length}
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                        <div className="grid md:grid-cols-3 gap-6">
                           {filteredRefusedArchivals.map((item) => (
-                            <div key={item.id} className="p-5 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition-all space-y-3">
-                              <div className="flex justify-between items-start gap-4">
-                                <div className="space-y-1">
-                                  <h4 className="text-sm font-bold text-white">{item.title}</h4>
-                                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                                    <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded font-bold uppercase">{item.subject}</span>
-                                    <span className="text-slate-600">•</span>
-                                    <span>{tr("Refused on:")} <span className="font-mono font-medium">{new Date(item.timestamp).toLocaleDateString(lang === 'ZH' ? 'zh-CN' : 'en-US')}</span></span>
-                                  </div>
-                                </div>
-                                <button 
-                                  onClick={() => handleDeleteRefusedArchival(item.id)}
-                                  title={tr("Removed course from archiving backlog.")}
-                                  className="p-1.5 bg-slate-900 hover:bg-red-950/30 border border-slate-800 hover:border-red-900/30 text-slate-500 hover:text-red-400 rounded-lg transition-all active:scale-95"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                            <div key={item.id} className="p-5 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-slate-700/30 transition-all">
+                              <div>
+                                <p className="text-xs font-bold text-slate-200">{item.title}</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase truncate max-w-[200px] mt-1">{item.subject}</p>
                               </div>
-
                               <button 
-                                onClick={() => handleDeleteRefusedArchival(item.id)}
-                                className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                type="button"
+                                onClick={() => handleDeleteRefusedArchival(item.id)} 
+                                className="px-3 py-1.5 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
                               >
-                                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-                                {tr("Un-Refuse / Re-propose")}
+                                {tr("Re-Propose")}
                               </button>
                             </div>
                           ))}
-
                           {filteredRefusedArchivals.length === 0 && (
-                            <div className="p-8 text-center bg-slate-950/40 border border-dashed border-slate-850 rounded-2xl flex flex-col items-center justify-center gap-3">
-                              <AlertCircle className="w-8 h-8 text-slate-600" />
-                              <p className="text-xs text-slate-500 font-medium italic">{tr("No refused archivals in backlog.")}</p>
-                            </div>
+                            <p className="col-span-3 text-xs text-slate-600 italic py-4 text-center">{tr("No refused archivals in backlog.")}</p>
                           )}
                         </div>
                       </div>
@@ -8286,7 +8392,7 @@ export default function AdminCurriculumPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedAchievement(null)}
+              onClick={() => { setSelectedAchievement(null); setBadgeError(null); }}
               className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-885 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
@@ -8294,10 +8400,15 @@ export default function AdminCurriculumPage() {
                   <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                      <Award className="w-6 h-6 text-violet-500" /> {tr("Edit Achievement Badge")}
                   </h3>
-                  <button onClick={() => setSelectedAchievement(null)} className="text-slate-650 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+                  <button onClick={() => { setSelectedAchievement(null); setBadgeError(null); }} className="text-slate-650 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
                
                <div className="p-10 space-y-6 overflow-y-auto flex-1 pr-4">
+                  {badgeError && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl">
+                      {badgeError}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Left Column: Form Fields */}
                     <div className="space-y-6">

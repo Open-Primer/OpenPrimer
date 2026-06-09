@@ -243,17 +243,14 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             <MdxContent source={mdxSource} />
           </article>
 
-          {/* Course Footer Metadata */}
-          <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 distraction-free-hide">
-            <div className="flex items-center gap-6">
-            </div>
-          </div>
-
           {/* Footer Navigation */}
           {nextPage ? (
-            <Link href={nextPage.path} className="mt-32 pt-12 border-t border-slate-900 flex justify-between items-center group cursor-pointer">
+            <Link href={nextPage.path} className="mt-16 pt-8 border-t border-slate-900/30 flex justify-between items-center group cursor-pointer distraction-free-hide">
                <div>
-                 <p className="text-lg font-black text-slate-500 group-hover:text-blue-400 transition-colors">
+                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1 group-hover:text-blue-400/80 transition-colors">
+                   {lang.toLowerCase() === 'fr' ? 'Chapitre Suivant' : 'Next Chapter'}
+                 </span>
+                 <p className="text-lg font-black text-slate-300 group-hover:text-blue-400 transition-colors">
                    {nextPage.name}
                  </p>
                </div>

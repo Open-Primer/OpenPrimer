@@ -1053,6 +1053,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         endDate: a.end_date,
         icon: a.icon,
         translations: a.translations,
+        evaluationRule: a.evaluation_rule,
         archivingLevel: a.archiving_level
       }));
       return { data: mapped || [], error: null };
@@ -1074,6 +1075,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         end_date: ach.endDate,
         icon: ach.icon,
         translations: ach.translations,
+        evaluation_rule: ach.evaluationRule,
         archiving_level: ach.archivingLevel || 0
       };
 

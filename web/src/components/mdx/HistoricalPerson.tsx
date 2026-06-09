@@ -10,9 +10,18 @@ export interface EntityLinkProps {
   lang: string;
   children: React.ReactNode;
   type?: 'person' | 'character' | 'location' | 'entity';
+  bio?: string;
+  description?: string;
 }
 
-export const EntityLink = ({ name, lang, children, type = 'entity' }: EntityLinkProps) => {
+export const EntityLink = ({ 
+  name, 
+  lang, 
+  children, 
+  type = 'entity',
+  bio,
+  description
+}: EntityLinkProps) => {
   const [prevLang, setPrevLang] = useState(lang);
   const [activeLang, setActiveLang] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -32,6 +41,11 @@ export const EntityLink = ({ name, lang, children, type = 'entity' }: EntityLink
   const [exists, setExists] = useState<boolean | null>(name && activeLang ? null : false);
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  const fallbackUrl = `https://${activeLang.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
+  const resolvedUrl = url || fallbackUrl;
+  const staticBio = bio || description;
+  const resolvedSummary = summary || staticBio;
 
   useEffect(() => {
     if (!name || !activeLang) {
@@ -69,7 +83,8 @@ export const EntityLink = ({ name, lang, children, type = 'entity' }: EntityLink
     };
   }, [name, activeLang]);
 
-  if (exists === false || exists === null) {
+  const showOverlay = exists === true || !!staticBio;
+  if (!showOverlay) {
     return <>{children}</>;
   }
 
@@ -149,25 +164,45 @@ export const EntityLink = ({ name, lang, children, type = 'entity' }: EntityLink
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{headerLabel}</span>
               </div>
-              <div 
-                className="w-5 h-5 rounded bg-white/10 flex items-center justify-center font-serif font-black text-slate-200 text-xs border border-white/5 select-none" 
-                title="Sourced from Wikipedia"
-              >
-                W
-              </div>
+              {resolvedUrl && (
+                <a 
+                  href={resolvedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center font-serif font-black text-slate-200 hover:text-white text-xs border border-white/5 select-none transition-colors cursor-pointer" 
+                  title="Sourced from Wikipedia"
+                >
+                  W
+                </a>
+              )}
             </div>
-            {summary ? (
+            {resolvedSummary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4">
-                &ldquo;{summary}&rdquo;
+                &ldquo;{resolvedSummary}&rdquo;
+                {resolvedUrl && (
+                  <span className="not-italic inline-block ml-1.5 select-none">
+                    [
+                    <a 
+                      href={resolvedUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`font-serif font-black ${linkClass} transition-colors`}
+                      title="Wikipédia"
+                    >
+                      W
+                    </a>
+                    ]
+                  </span>
+                )}
               </p>
             ) : (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
                 {t.loading}
               </p>
             )}
-            {url && (
+            {resolvedUrl && (
               <a 
-                href={url} 
+                href={resolvedUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}

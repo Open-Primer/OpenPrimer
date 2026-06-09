@@ -1,6 +1,7 @@
 import { dbService } from './db';
 import { supabase } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
+import { preprocessMdx } from './content';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
@@ -606,14 +607,14 @@ order: ${index + 1}
 ${validatedMdx}`;
 
       // Pre-validate MDX compilation to avoid 404 or compilation crashes
-      const mdxCheck = await validateMdxContent(mdxWithFrontmatter);
+      const mdxCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
       if (!mdxCheck.success) {
         console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
         mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
         
-        const retryCheck = await validateMdxContent(mdxWithFrontmatter);
+        const retryCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
         if (!retryCheck.success) {
-          console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}. Auto-logging to DB.`);
+          console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
           try {
             await dbService.submitReport(
               courseName.toLowerCase().replace(/ /g, '_'),
@@ -623,8 +624,13 @@ ${validatedMdx}`;
           } catch (reportErr) {
             console.error("Failed to auto-submit generation error report:", reportErr);
           }
+          // Throw compile exception to abort generation of this course and trigger CLI automatic retry
+          throw new Error(`[MDX COMPILATION CRITICAL ERROR] Lesson "${item.title}" failed compilation check: ${retryCheck.error}`);
         }
       }
+
+      // Preprocess and heal MDX before writing to DB so the DB stores 100% clean, compilable, ready-to-render records
+      const healedMdx = preprocessMdx(mdxWithFrontmatter, targetLang.toLowerCase());
 
       // Save to Supabase
       await dbService.saveLesson({
@@ -632,7 +638,7 @@ ${validatedMdx}`;
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
         title: item.title,
-        content: mdxWithFrontmatter,
+        content: healedMdx,
         order: index + 1
       });
     }
@@ -835,14 +841,14 @@ ${lesson.content}`;
       validatedMdx = await validateAndFixImages(validatedMdx);
 
       // Pre-validate translated MDX compilation
-      const mdxCheck = await validateMdxContent(validatedMdx);
+      const mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
       if (!mdxCheck.success) {
         console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
         validatedMdx = sanitizeMdxFallback(validatedMdx);
 
-        const retryCheck = await validateMdxContent(validatedMdx);
+        const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
         if (!retryCheck.success) {
-          console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}. Auto-logging to DB.`);
+          console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
           try {
             await dbService.submitReport(
               courseSlug,
@@ -852,8 +858,12 @@ ${lesson.content}`;
           } catch (reportErr) {
             console.error("Failed to auto-submit translation error report:", reportErr);
           }
+          throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
         }
       }
+
+      // Preprocess and heal translated MDX before writing to DB
+      const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
 
       // Save translated lesson to Supabase
       await dbService.saveLesson({
@@ -861,7 +871,7 @@ ${lesson.content}`;
         lesson_slug: lesson.lesson_slug,
         lang: targetLang.toLowerCase(),
         title: transTitle,
-        content: validatedMdx,
+        content: healedMdx,
         order: lesson.order
       });
     }
@@ -1175,9 +1185,9 @@ function stripJsxComments(mdx: string): string {
   });
 }
 
-async function validateMdxContent(content: string): Promise<{ success: boolean; error?: string }> {
+async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
   try {
-    const cleanedContent = stripJsxComments(content);
+    const cleanedContent = preprocessMdx(content, lang);
     const { serialize } = await import('next-mdx-remote/serialize');
     const remarkMath = (await import('remark-math')).default;
     const remarkGfm = (await import('remark-gfm')).default;

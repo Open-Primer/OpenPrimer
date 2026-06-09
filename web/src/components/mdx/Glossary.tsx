@@ -36,6 +36,9 @@ export const Glossary = ({
   const glossaryKey = finalTerm.toLowerCase().trim();
   const finalDefinition = definition || GLOSSARY_DATA[glossaryKey];
 
+  const fallbackWikiUrl = language ? `https://${language.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(finalTerm.trim().replace(/ /g, '_'))}` : null;
+  const resolvedWikiUrl = wikiUrl || fallbackWikiUrl;
+
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const glossaryHeader = t.glossary_definition || "Glossary Definition";
   const readWikiLabel = language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia';
@@ -113,21 +116,39 @@ export const Glossary = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{glossaryHeader}</span>
               </div>
-              {wikiUrl && (
-                <div 
-                  className="w-5 h-5 rounded bg-white/10 flex items-center justify-center font-serif font-black text-slate-200 text-xs border border-white/5 select-none" 
+              {resolvedWikiUrl && (
+                <a 
+                  href={resolvedWikiUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center font-serif font-black text-slate-200 hover:text-white text-xs border border-white/5 select-none transition-colors cursor-pointer" 
                   title="Sourced from Wikipedia"
                 >
                   W
-                </div>
+                </a>
               )}
             </div>
             <p className="text-sm text-slate-300 leading-relaxed italic mb-3">
               &ldquo;{finalDefinition}&rdquo;
+              {resolvedWikiUrl && (
+                <span className="not-italic inline-block ml-1.5 select-none">
+                  [
+                  <a 
+                    href={resolvedWikiUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-serif font-black text-blue-400 hover:text-blue-300 transition-colors"
+                    title="Wikipédia"
+                  >
+                    W
+                  </a>
+                  ]
+                </span>
+              )}
             </p>
-            {wikiUrl && (
+            {resolvedWikiUrl && (
               <a 
-                href={wikiUrl} 
+                href={resolvedWikiUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider mt-1"

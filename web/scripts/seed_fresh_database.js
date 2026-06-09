@@ -90,6 +90,7 @@ async function main() {
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
       "ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS archived_languages TEXT[] DEFAULT '{}'::text[]",
       "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS translations JSONB DEFAULT '{}'::jsonb",
+      "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS evaluation_rule JSONB DEFAULT NULL",
       "ALTER TABLE public.achievements ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
       "ALTER TABLE public.languages ADD COLUMN IF NOT EXISTS archiving_level INTEGER DEFAULT 0",
       "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password VARCHAR(255)",

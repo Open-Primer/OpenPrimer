@@ -12,6 +12,30 @@ interface ResourceItemProps {
 }
 
 export const GoingFurtherItem = ({ title, type, url, description }: ResourceItemProps) => {
+  const [isValid, setIsValid] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    if (!url) {
+      setIsValid(true);
+      return;
+    }
+
+    // Dynamic, on-the-fly check via server route to bypass CORS
+    fetch(`/api/check-link?url=${encodeURIComponent(url)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.valid === false) {
+          setIsValid(false);
+        } else {
+          setIsValid(true);
+        }
+      })
+      .catch(() => {
+        // Fallback to true on network error so we don't aggressively hide items due to transient checker failures
+        setIsValid(true);
+      });
+  }, [url]);
+
   const getIcon = () => {
     switch (type) {
       case 'book':
@@ -42,6 +66,10 @@ export const GoingFurtherItem = ({ title, type, url, description }: ResourceItem
   };
 
   const { language } = useLanguage();
+
+  if (isValid === false) {
+    return null; // Automatically suppress/remove the entire block if the link is not valid or broken
+  }
 
   const CardWrapper = url ? 'a' : 'div';
   const extraProps = url ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {};

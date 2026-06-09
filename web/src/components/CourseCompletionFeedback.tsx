@@ -45,6 +45,172 @@ const BADGE_LIBRARY = [
   { id: 'img_30', iconName: 'Trophy', gradient: 'from-orange-400 to-pink-500' }
 ];
 
+interface TranslationSet {
+  courseCompleted: string;
+  courseCompletedDesc: string;
+  browseCatalog: string;
+  createAccount: string;
+  enrollTitle: string;
+  enrollDesc: string;
+  buttonEnroll: string;
+  buttonCurriculum: string;
+  badgesEarned: string;
+  achievementsTitle: string;
+  achievementsDesc: string;
+  completedReadOnly: string;
+  congrats: string;
+  completedCourse: string;
+  refineCurriculum: string;
+  rateCourse: string;
+  commentsSuggestions: string;
+  textareaPlaceholder: string;
+  submitComplete: string;
+  ratingSaved: string;
+  ratingSavedDesc: string;
+  nextChapter: string;
+  goToNext: string;
+  backToCurriculum: string;
+  finishLearning: string;
+}
+
+const FEEDBACK_TRANSLATIONS: Record<string, TranslationSet> = {
+  fr: {
+    courseCompleted: "Cours Terminé !",
+    courseCompletedDesc: "Vous avez fini de lire ce cours en accès libre-service. Connectez-vous ou créez un compte pour sauvegarder votre progression, poser des questions au Tuteur IA, et passer des évaluations.",
+    browseCatalog: "Parcourir le Catalogue",
+    createAccount: "Créer un Compte",
+    enrollTitle: "Noter & Commenter",
+    enrollDesc: "Si vous souhaitez évaluer ce cours et partager vos suggestions, vous devez d'abord vous y inscrire. Cela permet de lier solidement votre progression académique à vos retours d'expérience et d'éviter toute perte de progression.",
+    buttonEnroll: "S'inscrire à ce cours",
+    buttonCurriculum: "Mon Cursus",
+    badgesEarned: "🏆 Badges Académiques Gagnés !",
+    achievementsTitle: "Vos accomplissements sur ce cours",
+    achievementsDesc: "Vous avez débloqué ces distinctions prestigieuses en complétant ce module avec succès.",
+    completedReadOnly: "CURRICULUM COMPLÉTÉ • LECTURE SEULE",
+    congrats: "✨ Félicitations !",
+    completedCourse: "Vous avez complété ce cours !",
+    refineCurriculum: "Aidez-nous à améliorer le cursus académique en partageant votre expérience d'apprentissage.",
+    rateCourse: "Évaluez ce cours",
+    commentsSuggestions: "Commentaires ou Suggestions",
+    textareaPlaceholder: "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions...",
+    submitComplete: "Soumettre et Terminer",
+    ratingSaved: "Évaluation Enregistrée",
+    ratingSavedDesc: "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !",
+    nextChapter: "Chapitre Suivant • Continuer mon Cursus",
+    goToNext: "Passer au chapitre suivant",
+    backToCurriculum: "Retourner au Curriculum",
+    finishLearning: "Terminer l'apprentissage"
+  },
+  en: {
+    courseCompleted: "Course Completed!",
+    courseCompletedDesc: "You have completed this self-service read-only course. Log in or create an account to save your progress, ask questions to the AI Tutor, and take assessments.",
+    browseCatalog: "Browse Catalog",
+    createAccount: "Create an Account",
+    enrollTitle: "Rate & Comment",
+    enrollDesc: "If you wish to rate this course and share your suggestions, you must first enroll in it. This ensures your academic progress is securely linked to your feedback and prevents loss of completion history.",
+    buttonEnroll: "Enroll in this Course",
+    buttonCurriculum: "My Curriculum",
+    badgesEarned: "🏆 Academic Badges Earned!",
+    achievementsTitle: "Your Achievements on This Course",
+    achievementsDesc: "You unlocked these prestigious accolades by successfully completing this learning module.",
+    completedReadOnly: "CURRICULUM COMPLETED • READ ONLY",
+    congrats: "✨ Congratulations!",
+    completedCourse: "You have completed this course!",
+    refineCurriculum: "Help us refine the academic curriculum by sharing your learning experience.",
+    rateCourse: "Rate this course",
+    commentsSuggestions: "Comments or Suggestions",
+    textareaPlaceholder: "What did you think of the pacing, clarity, or explanations? Suggest revisions...",
+    submitComplete: "Submit & Complete",
+    ratingSaved: "Rating Saved",
+    ratingSavedDesc: "Your rating has been successfully saved. Thank you for sharing your feedback!",
+    nextChapter: "Next Chapter • Continue My Journey",
+    goToNext: "Go to next chapter",
+    backToCurriculum: "Back to My Curriculum",
+    finishLearning: "Finish Learning"
+  },
+  es: {
+    courseCompleted: "¡Curso Completado!",
+    courseCompletedDesc: "Ha terminado de leer este curso autoguiado de solo lectura. Inicie sesión o cree una cuenta para guardar su progreso, hacer preguntas al Tutor de IA y realizar evaluaciones.",
+    browseCatalog: "Buscar en el Catálogo",
+    createAccount: "Crear una Cuenta",
+    enrollTitle: "Calificar y Comentar",
+    enrollDesc: "Si desea calificar este curso y compartir sus sugerencias, primero debe inscribirse en él. Esto garantiza que su progreso académico esté vinculado de forma segura a sus comentarios y evita la pérdida del historial de finalización.",
+    buttonEnroll: "Inscribirse en este Curso",
+    buttonCurriculum: "Mi Plan de Estudios",
+    badgesEarned: "🏆 ¡Insignias Académicas Ganadas!",
+    achievementsTitle: "Sus Logros en este Curso",
+    achievementsDesc: "Ha desbloqueado estos prestigiosos reconocimientos al completar con éxito este módulo de aprendizaje.",
+    completedReadOnly: "PLAN DE ESTUDIOS COMPLETADO • SOLO LECTURA",
+    congrats: "✨ ¡Felicitaciones!",
+    completedCourse: "¡Ha completado este curso!",
+    refineCurriculum: "Ayúdenos a mejorar el plan de estudios académico compartiendo su experiencia de aprendizaje.",
+    rateCourse: "Califique este curso",
+    commentsSuggestions: "Comentarios o Sugerencias",
+    textareaPlaceholder: "¿Qué le pareció el ritmo, la claridad o las explicaciones? Sugiera revisiones...",
+    submitComplete: "Enviar y Completar",
+    ratingSaved: "Calificación Guardada",
+    ratingSavedDesc: "Su calificación se ha guardado correctamente. ¡Gracias por compartir sus comentarios!",
+    nextChapter: "Siguiente Capítulo • Continuar mi Viaje",
+    goToNext: "Ir al siguiente capítulo",
+    backToCurriculum: "Volver al Plan de Estudios",
+    finishLearning: "Finalizar Aprendizaje"
+  },
+  de: {
+    courseCompleted: "Kurs Abgeschlossen!",
+    courseCompletedDesc: "Sie haben diesen Kurs im Selbststudium (nur Lesezugriff) abgeschlossen. Melden Sie sich an oder erstellen Sie ein Konto, um Ihren Fortschritt zu speichern, dem KI-Tutor Fragen zu stellen und Tests abzulegen.",
+    browseCatalog: "Katalog Durchsuchen",
+    createAccount: "Konto Erstellen",
+    enrollTitle: "Bewerten & Kommentieren",
+    enrollDesc: "Wenn Sie diesen Kurs bewerten und Ihre Vorschläge teilen möchten, müssen Sie sich zuerst dafür anmelden. Dies stellt sicher, dass Ihr akademischer Fortschritt sicher mit Ihrem Feedback verknüpft ist und verhindert den loss Ihres Abschlussverlaufs.",
+    buttonEnroll: "Für diesen Kurs anmelden",
+    buttonCurriculum: "Mein Lehrplan",
+    badgesEarned: "🏆 Akademische Abzeichen Verdient!",
+    achievementsTitle: "Ihre Leistungen in diesem Kurs",
+    achievementsDesc: "Sie haben diese prestigeträchtigen Auszeichnungen durch den erfolgreichen Abschluss dieses Lernmoduls freigeschaltet.",
+    completedReadOnly: "LEHRPLAN ABGESCHLOSSEN • NUR LESEN",
+    congrats: "✨ Herzlichen Glückwunsch!",
+    completedCourse: "Sie haben diesen Kurs abgeschlossen!",
+    refineCurriculum: "Helfen Sie uns, den akademischen Lehrplan zu verbessern, indem Sie Ihre Lernerfahrung teilen.",
+    rateCourse: "Bewerten Sie diesen Kurs",
+    commentsSuggestions: "Kommentare oder Vorschläge",
+    textareaPlaceholder: "Wie fanden Sie das Tempo, die Klarheit oder die Erklärungen? Schlagen Sie Überarbeitungen vor...",
+    submitComplete: "Senden & Abschließen",
+    ratingSaved: "Bewertung Gespeichert",
+    ratingSavedDesc: "Ihre Bewertung wurde erfolgreich gespeichert. Vielen Dank für Ihr Feedback!",
+    nextChapter: "Nächstes Kapitel • Meinen Weg Fortsetzen",
+    goToNext: "Zum nächsten Kapitel wechseln",
+    backToCurriculum: "Zurück zum Lehrplan",
+    finishLearning: "Lernen Beenden"
+  },
+  zh: {
+    courseCompleted: "课程已完成！",
+    courseCompletedDesc: "您已完成了该自助只读课程的学习。请登录或创建账户以保存您的进度、向 AI 导师提问并进行评估。",
+    browseCatalog: "浏览课程目录",
+    createAccount: "创建账户",
+    enrollTitle: "评分与评论",
+    enrollDesc: "如果您希望对本课程进行评分并分享您的建议，您必须先加入该课程。这可以确保您的学业进度与您的反馈安全地关联，并防止完成记录丢失。",
+    buttonEnroll: "加入此课程",
+    buttonCurriculum: "我的课程大纲",
+    badgesEarned: "🏆 荣获学术徽章！",
+    achievementsTitle: "您在本课程中取得的成就",
+    achievementsDesc: "您已成功完成本学习模块，解锁了这些珍贵的荣誉。",
+    completedReadOnly: "课程已完成 • 只读模式",
+    congrats: "✨ 恭喜！",
+    completedCourse: "您已完成本课程！",
+    refineCurriculum: "分享您的学习体验，帮助我们改进学术课程。",
+    rateCourse: "为此课程评分",
+    commentsSuggestions: "意见与建议",
+    textareaPlaceholder: "您觉得进度、条理或讲解如何？请提出修改建议...",
+    submitComplete: "提交并完成",
+    ratingSaved: "评分已保存",
+    ratingSavedDesc: "您的评分已成功保存。感谢您分享反馈意见！",
+    nextChapter: "下一章节 • 继续我的学习之旅",
+    goToNext: "前往下一章节",
+    backToCurriculum: "返回课程大纲",
+    finishLearning: "结束学习"
+  }
+};
+
 export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: CourseCompletionFeedbackProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -316,7 +482,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     return Array.from(new Set(courseEarned));
   };
 
-  const isFr = lang.toLowerCase() === 'fr';
+  const t = FEEDBACK_TRANSLATIONS[lang.toLowerCase()] || FEEDBACK_TRANSLATIONS.en;
   const isEvaluationCompleted = submitted || userRating !== null;
   const courseEarnedBadges = getCourseEarnedAchievements();
 
@@ -327,25 +493,23 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           <CheckCircle className="w-8 h-8" />
         </div>
         <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-          {isFr ? "Cours Terminé !" : "Course Completed!"}
+          {t.courseCompleted}
         </h3>
         <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
-          {isFr 
-            ? "Vous avez fini de lire ce cours en accès libre-service. Connectez-vous ou créez un compte pour sauvegarder votre progression, poser des questions au Tuteur IA, et passer des évaluations."
-            : "You have completed this self-service read-only course. Log in or create an account to save your progress, ask questions to the AI Tutor, and take assessments."}
+          {t.courseCompletedDesc}
         </p>
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link 
             href="/catalog" 
             className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20"
           >
-            {isFr ? "Parcourir le Catalogue" : "Browse Catalog"} <ChevronRight className="w-4 h-4" />
+            {t.browseCatalog} <ChevronRight className="w-4 h-4" />
           </Link>
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
             className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
           >
-            {isFr ? "Créer un Compte" : "Create an Account"}
+            {t.createAccount}
           </button>
         </div>
       </div>
@@ -359,12 +523,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           <Icons.Bookmark className="w-8 h-8" />
         </div>
         <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-          {isFr ? "Inscription Requise" : "Enrollment Required"}
+          {t.enrollTitle}
         </h3>
         <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
-          {isFr 
-            ? "Vous devez être inscrit à ce cours pour pouvoir le noter et laisser un commentaire. Cela permet de lier solidement votre progression académique à vos retours d'expérience et d'éviter toute perte de progression."
-            : "You must be enrolled in this course to rate and comment on it. This ensures your academic progress is securely linked to your feedback and prevents loss of completion history."}
+          {t.enrollDesc}
         </p>
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <button 
@@ -377,13 +539,13 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             ) : (
               <Icons.PlusCircle className="w-4 h-4" />
             )}
-            {isFr ? "S'inscrire à ce cours" : "Enroll in this Course"}
+            {t.buttonEnroll}
           </button>
           <Link 
             href="/profile/curriculum" 
             className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
           >
-            {isFr ? "Mon Cursus" : "My Curriculum"}
+            {t.buttonCurriculum}
           </Link>
         </div>
       </div>
@@ -397,15 +559,13 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         <div className="bg-slate-900/10 border border-slate-800/60 rounded-[36px] p-8 md:p-10 space-y-6 backdrop-blur-md animate-fade-in">
           <div>
             <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">
-              🏆 {isFr ? "Badges Académiques Gagnés !" : "Academic Badges Earned!"}
+              {t.badgesEarned}
             </span>
             <h3 className="text-lg md:text-xl font-black text-white leading-tight">
-              {isFr ? "Vos accomplissements sur ce cours" : "Your Achievements on This Course"}
+              {t.achievementsTitle}
             </h3>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              {isFr 
-                ? "Vous avez débloqué ces distinctions prestigieuses en complétant ce module avec succès." 
-                : "You unlocked these prestigious accolades by successfully completing this learning module."}
+              {t.achievementsDesc}
             </p>
           </div>
           
@@ -441,21 +601,19 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       <div className="bg-slate-900/20 border border-slate-800 rounded-[36px] p-8 md:p-10 space-y-8 backdrop-blur-md relative overflow-hidden">
         {isEvaluationCompleted && (
           <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-600/10 text-emerald-400 border-l border-b border-emerald-500/20 rounded-bl-2xl text-[8px] font-black uppercase tracking-wider animate-pulse z-10">
-            {isFr ? "CURRICULUM COMPLÉTÉ • LECTURE SEULE" : "CURRICULUM COMPLETED • READ ONLY"}
+            {t.completedReadOnly}
           </div>
         )}
 
         <div>
           <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">
-            ✨ {isFr ? "Félicitations !" : "Congratulations!"}
+            {t.congrats}
           </span>
           <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
-            {isFr ? "Vous avez complété ce cours !" : "You have completed this course!"}
+            {t.completedCourse}
           </h3>
           <p className="text-xs text-slate-500 mt-2">
-            {isFr 
-              ? "Aidez-nous à améliorer le cursus académique en partageant votre expérience d'apprentissage." 
-              : "Help us refine the academic curriculum by sharing your learning experience."}
+            {t.refineCurriculum}
           </p>
         </div>
 
@@ -464,7 +622,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             {/* Stars Selection */}
             <div className="space-y-3">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                {isFr ? "Évaluez ce cours" : "Rate this course"} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
+                {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
               </span>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -492,17 +650,13 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             {/* Comment Input */}
             <div className="space-y-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                {isFr ? "Commentaires ou Suggestions" : "Comments or Suggestions"}
+                {t.commentsSuggestions}
               </span>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 disabled={isEvaluationCompleted}
-                placeholder={
-                  isFr 
-                    ? "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions..."
-                    : "What did you think of the pacing, clarity, or explanations? Suggest revisions..."
-                }
+                placeholder={t.textareaPlaceholder}
                 rows={4}
                 className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isEvaluationCompleted ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
               />
@@ -521,7 +675,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                       : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  {isFr ? "Soumettre et Terminer" : "Submit & Complete"}
+                  {t.submitComplete}
                 </button>
               )}
             </div>
@@ -537,12 +691,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-              {isFr ? "Évaluation Enregistrée" : "Rating Saved"}
+              {t.ratingSaved}
             </p>
             <p className="text-[11px] font-medium text-slate-300 leading-normal">
-              {isFr 
-                ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
-                : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
+              {t.ratingSavedDesc}
             </p>
           </div>
         </div>
@@ -559,10 +711,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             >
               <div className="space-y-1">
                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block">
-                  {isFr ? "Chapitre Suivant • Continuer mon Cursus" : "Next Chapter • Continue My Journey"}
+                  {t.nextChapter}
                 </span>
                 <span className="text-base font-black text-slate-300 group-hover:text-emerald-400 transition-colors block">
-                  {isFr ? "Passer au chapitre suivant" : "Go to next chapter"}
+                  {t.goToNext}
                 </span>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all shadow-md shrink-0">
@@ -575,7 +727,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               href="/profile/curriculum" 
               className="px-6 py-4 rounded-2xl border border-slate-850 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all text-center shrink-0 cursor-pointer"
             >
-              {isFr ? "Retourner au Curriculum" : "Back to My Curriculum"}
+              {t.backToCurriculum}
             </Link>
           </>
         ) : (
@@ -586,10 +738,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           >
             <div className="space-y-1">
               <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block">
-                {isFr ? "Terminer l'apprentissage" : "Finish Learning"}
+                {t.finishLearning}
               </span>
               <span className="text-base font-black text-slate-300 group-hover:text-blue-400 transition-colors block">
-                {isFr ? "Retourner au Curriculum" : "Back to My Curriculum"}
+                {t.backToCurriculum}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all shadow-md shrink-0">
@@ -601,3 +753,4 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     </div>
   );
 };
+
