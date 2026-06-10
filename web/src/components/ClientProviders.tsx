@@ -317,7 +317,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
             targetPath = "/catalog";
             break;
           case "p":
-            targetPath = "/profile/settings";
+            window.dispatchEvent(new Event('op_trigger_settings'));
             break;
           case "a":
             targetPath = "/admin/curriculum";

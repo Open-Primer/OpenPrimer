@@ -238,15 +238,22 @@ export const EnrollmentModal = ({
   }, [activeCourse, dynamicLessons, lang, fetchedChildCourses, isLoadingLessons]);
 
   return (
-    <div 
-      onClick={onClose} 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xl cursor-pointer"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
         className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative max-h-[85vh] overflow-y-auto custom-scrollbar cursor-default"
       >
 
@@ -486,17 +493,10 @@ export const EnrollmentModal = ({
                 <span>{bookmarks.includes(activeCourse.id) ? (t.saved || 'Saved') : (t.save_course || 'Save')}</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
-            >
-              {lang.toUpperCase() === 'FR' ? 'Fermer' : 'Close'}
-            </button>
           </div>
         )}
 
       </motion.div>
-    </div>
+    </motion.div>
   );
 };

@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
 import { EnrollmentModal } from './modals/EnrollmentModal';
+import { SettingsModal } from './modals/SettingsModal';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 
@@ -1742,6 +1743,19 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('settings') === 'true') {
+        setIsSettingsOpen(true);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('settings');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const loadEnrollments = async () => {
@@ -1906,6 +1920,11 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     fetchLanguages();
     window.addEventListener('op_languages_changed', fetchLanguages);
 
+    const handleTriggerSettings = () => {
+      setIsSettingsOpen(true);
+    };
+    window.addEventListener('op_trigger_settings', handleTriggerSettings);
+
     return () => {
       window.removeEventListener('op_reading_mode_changed', handleGlobalModeChange);
       window.removeEventListener('op_trigger_auth_state', handleGlobalTriggerAuth);
@@ -1913,6 +1932,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
       window.removeEventListener('op_auth_state_changed', handleAuthStateChange);
       window.removeEventListener('op_accessibility_preferences_changed', handleAuthStateChange);
       window.removeEventListener('op_languages_changed', fetchLanguages);
+      window.removeEventListener('op_trigger_settings', handleTriggerSettings);
     };
   }, []);
 
@@ -2150,16 +2170,19 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       <Brain className="w-4 h-4" /> {t.catalog}
                     </Link>
                     
-                    <Link 
-                      href="/profile/settings" 
-                      className={`flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all ${
+                    <button 
+                      onClick={() => {
+                        setIsSettingsOpen(true);
+                        setActiveDropdown(null);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-left ${
                         userProfile?.role === 'admin'
                           ? 'border-b border-slate-800/50' 
                           : ''
                       }`}
                     >
                       <Settings className="w-4 h-4" /> {t.settings}
-                    </Link>
+                    </button>
 
                     {userProfile?.role === 'admin' && (
                       <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
@@ -2326,6 +2349,10 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           />
         )}
       </AnimatePresence>
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
 
       <AnimatePresence>
         {enrollmentSuccess && (

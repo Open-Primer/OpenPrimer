@@ -528,6 +528,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const rateChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const sentenceMetaRef = useRef<SentenceMeta[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const highlightedElementRef = useRef<HTMLElement | null>(null);
@@ -946,6 +947,28 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       }
     };
   }, [lang, isLoggedIn]);
+
+  // Click outside to close speech settings, speed slider, or volume popups
+  useEffect(() => {
+    const handleClickOutside = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        !target.closest('select') &&
+        !target.closest('option')
+      ) {
+        setShowVolumePopup(false);
+        setShowSpeedPopup(false);
+        setShowSettings(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+    };
+  }, []);
 
   // 2. Parse and clean the MDX content into read-friendly sentences
   useEffect(() => {
@@ -1606,7 +1629,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       `}</style>
 
       {/* Main glassmorphic player pill (strictly aligned to sidebar width) */}
-      <div className="w-full flex items-center justify-between bg-slate-900/95 border border-slate-800/80 p-2.5 px-3 rounded-full shadow-2xl backdrop-blur-xl transition-all hover:border-slate-700/80">
+      <div ref={containerRef} className="w-full flex items-center justify-between bg-slate-900/95 border border-slate-800/80 p-2.5 px-3 rounded-full shadow-2xl backdrop-blur-xl transition-all hover:border-slate-700/80">
         
         {/* Center Part: Playback Controls */}
         <div className="flex items-center gap-0.5">
