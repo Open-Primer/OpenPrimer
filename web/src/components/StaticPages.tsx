@@ -16,6 +16,7 @@ import { dbService, progressService, isDatabaseConfigured, syncLocalStorageToSup
 import { CourseKiosk } from './CourseKiosk';
 import { EnrollmentModal } from './modals/EnrollmentModal';
 import { getLocalizedDiscipline, translateDisciplineQuery } from '@/lib/translations';
+import { validateEmail, detectPromptInjection, isSpam } from '@/lib/security';
 
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
@@ -126,18 +127,37 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(es.email_required); return; }
-    // Persist notification request in localStorage (mock backend)
-    if (typeof window !== 'undefined') {
-      const key = 'op_course_notifications';
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.push({ query: searchQuery, email: email.trim(), timestamp: new Date().toISOString() });
-      localStorage.setItem(key, JSON.stringify(existing));
+    const trimmedEmail = email.trim();
+
+    // 1. Email validation
+    const emailCheck = validateEmail(trimmedEmail);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.reason || es.email_required);
+      return;
     }
-    setSubmitted(true);
+
+    // 2. Content spam verification
+    if (isSpam(searchQuery) || isSpam(trimmedEmail)) {
+      setError(lang === 'FR' ? "Votre demande a été signalée comme spam." : "Your request has been flagged as spam.");
+      return;
+    }
+
+    // 3. Prompt injection detection
+    if (detectPromptInjection(searchQuery) || detectPromptInjection(trimmedEmail)) {
+      setError(lang === 'FR' ? "Contenu non autorisé détecté." : "Unauthorized content detected.");
+      return;
+    }
+
+    try {
+      // Persist notification request in permanent database (Supabase backed)
+      await dbService.saveCourseNotification(searchQuery, trimmedEmail);
+      setSubmitted(true);
+    } catch (err) {
+      setError(lang === 'FR' ? "Une erreur est survenue. Veuillez réessayer." : "An error occurred. Please try again.");
+    }
   };
 
   return (
@@ -1369,6 +1389,7 @@ export const ContactPage = () => {
       name: formData.get('name'),
       email: formData.get('email'),
       message: formData.get('message'),
+      website: formData.get('website'),
       lang: lang
     };
 
@@ -1418,6 +1439,8 @@ export const ContactPage = () => {
               ) : (
                 <form className="space-y-6" onSubmit={handleSubmit}>
                    <div className="flex flex-col gap-4">
+                      {/* Honeypot field to trap spambots */}
+                      <input name="website" type="text" className="hidden" tabIndex={-1} autoComplete="off" style={{ display: 'none' }} />
                       <input name="name" type="text" placeholder={c.name_placeholder} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                       <input name="email" type="email" placeholder={c.email_placeholder} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all" required />
                    </div>

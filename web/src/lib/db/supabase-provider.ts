@@ -28,6 +28,7 @@ import {
   mockDatabaseProviderHash,
   progressService
 } from '../db';
+import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
 export const supabaseDatabaseProvider: DatabaseService = {
   getSystemParameters: async () => {
@@ -989,14 +990,23 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   submitReport: async (course: string, page: string, comment: string) => {
-    const issueSummary = comment ? `Page: ${page}. Comment: ${comment}` : `Page: ${page}. General report.`;
+    if (comment && comment.trim()) {
+      if (isSpam(comment) || detectPromptInjection(comment)) {
+        return { data: null, error: new Error('Flagged as spam or unsafe content') };
+      }
+    }
+    const cleanComment = sanitizeString(comment);
+    const cleanCourse = sanitizeString(course);
+    const cleanPage = sanitizeString(page);
+
+    const issueSummary = cleanComment ? `Page: ${cleanPage}. Comment: ${cleanComment}` : `Page: ${cleanPage}. General report.`;
     try {
       const { data, error } = await supabase.from('report_clusters').insert({
-        course,
+        course: cleanCourse,
         issue_summary: issueSummary,
         count: 1,
         status: 'Pending',
-        ai_proposal: `Address issue reported on page "${page}"`,
+        ai_proposal: `Address issue reported on page "${cleanPage}"`,
         priority: 'Medium'
       });
       return { data, error };
@@ -1214,11 +1224,25 @@ export const supabaseDatabaseProvider: DatabaseService = {
         list = list.filter((f: any) => f.user_id === userId || f.userId === userId || !f.user_id);
       }
       
+      const mapped = list.map((f: any) => ({
+        id: f.id,
+        courseId: f.course_id,
+        course_id: f.course_id,
+        rating: f.rating,
+        comment: f.comment,
+        timestamp: f.created_at,
+        created_at: f.created_at,
+        isTreated: f.is_treated,
+        is_treated: f.is_treated,
+        userId: f.user_id,
+        user_id: f.user_id
+      }));
+
       if (courseId) {
         const canonicalId = getCanonicalCourseId(courseId);
-        return { data: list.filter((f: any) => getCanonicalCourseId(f.course_id) === canonicalId), error: null };
+        return { data: mapped.filter((f: any) => getCanonicalCourseId(f.courseId) === canonicalId), error: null };
       }
-      return { data: list, error: null };
+      return { data: mapped, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: [], error: e as any };
@@ -1724,6 +1748,33 @@ export const supabaseDatabaseProvider: DatabaseService = {
     } catch (e) {
       handleDatabaseError(e);
       return { data: null, error: e as any };
+    }
+  },
+
+  saveCourseNotification: async (query: string, email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('course_generation_requests')
+        .insert([{ query, email }])
+        .select()
+        .single();
+      return { data, error };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
+  },
+
+  getCourseNotifications: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('course_generation_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return { data: data || [], error };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
     }
   }
 };

@@ -1,5 +1,5 @@
 import { dbService } from './db';
-import { supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx } from './content';
 
@@ -247,6 +247,9 @@ Requirements:
       * **Key Places and Locations**: For important locations, countries, monuments, or landmarks, you MUST wrap them in \`<Location>\` (or \`<Place>\`) *ONLY when they are of pedagogical or disciplinary importance* (e.g., in geography, geology, history, or architecture, but NOT for passive mentions like "Euler lived in Paris" in a mathematics course): \`<Location name="Exact_Wikipedia_Page_Title" lang="target_language_code">PlaceName</Location>\`.
         - Example (French): \`<Location name="Mont_Blanc" lang="fr">Mont Blanc</Location>\` or \`<Location name="Château_de_Versailles" lang="fr">Château de Versailles</Location>\`
         - Example (English): \`<Location name="Grand_Canyon" lang="en">Grand Canyon</Location>\` or \`<Location name="Palace_of_Versailles" lang="en">Palace of Versailles</Location>\`
+      * **Historical Events**: For major historical events, conflicts, treaties, or milestones (e.g., French Revolution, World War I, Treaty of Versailles) when relevant to the course content, wrap them in the custom component: \`<HistoricalEvent name="Exact_Wikipedia_Page_Title" lang="target_language_code">EventName</HistoricalEvent>\` (or \`<EvenementHistorique>\`).
+        - Example (French): \`<HistoricalEvent name="Prise_de_la_Bastille" lang="fr">Prise de la Bastille</HistoricalEvent>\`
+        - Example (English): \`<HistoricalEvent name="Storming_of_the_Bastille" lang="en">Storming of the Bastille</HistoricalEvent>\`
     - Note: The \`name\` attribute must be the exact Wikipedia page title in the target language of the course (using underscores for spaces), and the \`lang\` attribute must be the language of the course ("${targetLang.toLowerCase()}").
 11. Intermediate Formative Scale-Based Evaluations (Évaluations formatives proportionnelles) :
     - Throughout the body of the lesson, place a custom \`<Quiz>\` block after each key sub-concept (every 5-10 minutes of reading).
@@ -345,7 +348,17 @@ Requirements:
         * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
         * Computer Science, Software Engineering, Coding, or Web Development: You MUST systematically insert at least one interactive client-side coding sandbox block: \`<CodeSandbox initialCode="..." title="Titre du Bac à Sable" language="html|javascript|css" />\` where students can edit and execute HTML/CSS/JS code in real-time right inside the page.
         * Auditory and Video Enrichment (All Disciplines): You MUST systematically recommend or embed at least one short, high-quality audio or video resource using \`<Video id="..." title="..." provider="..." duration="..." />\` (or using \`url="..."\`) or \`<Audio url="..." title="..." duration="..." />\` (always keep duration under the micro-learning limit of 2 to 3 minutes, e.g. \`duration="2 min"\`).
- 18. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
+        * Geometry/Mathematics/Physics Chapters (Draggable 2D Sandbox): For any chapter teaching coordinate systems, triangle trigonometry, vectors, or trigonometric circles, you MUST systematically insert at least one 2D Geometry sandbox widget:
+             - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\` (or \`<Geometrie2D>\`). Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
+        * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
+ 18. Special Pedagogical Enrichment Blocks (Balises JSX d'Enrichissement) :
+      You MUST dynamically and contextually enrich the lesson body using the following custom tags:
+      - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\` or \`<EspritCritique>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
+      - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\` or \`<LeSaviezVous>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
+      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\` or \`<AnecdoteHistorique>\`): Add a 2-4 sentence historical narrative detailing the genèse of a discovery.
+      - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\` or \`<PointDeVue>\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
+      - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\` or \`<EtApres>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
+ 19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
      - The following features are completely OPTIONAL. You should organically choose to use just one or two of them if they fit the level and subject, to avoid drowning the content:
        * L'Ancre Problématique (The Hook): A real-world story, scene, or case study demonstrating the necessity of the concept.
        * Le Guide des Idées Reçues (Debunking Grid): 3 to 5 common misconceptions dismantled by the lesson.
@@ -353,8 +366,8 @@ Requirements:
        * Analogies Transversales: Creative cross-discipline analogies to explain abstract concepts.
        * Bac à Sable Interactif (Sandbox / Simulator): Simulation guides or interactive parameter manipulation cues.
        * L'Invite de Journalisation Métacognitive: A short metacognitive journal prompt encouraging self-reflection.
- 19. Write the response in "${targetLang.toUpperCase()}".
- 20. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
+ 20. Write the response in "${targetLang.toUpperCase()}".
+ 21. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
       let rawMdx = '';
       let contentSuccess = false;
@@ -593,8 +606,8 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
       }
 
       // De-hallucinate bibliography links against Crossref / Google Books
-      let validatedMdx = await validateAndFixBibliography(currentMdx);
-      validatedMdx = await validateAndFixExternalResources(validatedMdx);
+      let validatedMdx = await validateAndFixBibliography(currentMdx, targetLang.toLowerCase());
+      validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
 
       let mdxWithFrontmatter = `---
 title: "${item.title}"
@@ -607,25 +620,41 @@ order: ${index + 1}
 ${validatedMdx}`;
 
       // Pre-validate MDX compilation to avoid 404 or compilation crashes
-      const mdxCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
+      let mdxCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
       if (!mdxCheck.success) {
-        console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
-        mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
-        
-        const retryCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
-        if (!retryCheck.success) {
-          console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
-          try {
-            await dbService.submitReport(
-              courseName.toLowerCase().replace(/ /g, '_'),
-              `${courseName.toLowerCase().replace(/ /g, '_')}/${item.slug}`,
-              `[GENERATION MDX EXCEPTION] ${retryCheck.error}`
-            );
-          } catch (reportErr) {
-            console.error("Failed to auto-submit generation error report:", reportErr);
+        console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
+        let healedResult = mdxWithFrontmatter;
+        let healAttempt = 0;
+        const maxHealAttempts = 3;
+        while (!mdxCheck.success && healAttempt < maxHealAttempts) {
+          healAttempt++;
+          console.log(`[SELF-HEALING] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
+          healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+          mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
+        }
+
+        if (mdxCheck.success) {
+          console.log(`[SELF-HEALING] Successfully healed MDX content on attempt ${healAttempt}!`);
+          mdxWithFrontmatter = healedResult;
+        } else {
+          console.warn(`[SELF-HEALING] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
+          mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
+          
+          const retryCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
+          if (!retryCheck.success) {
+            console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
+            try {
+              await dbService.submitReport(
+                courseName.toLowerCase().replace(/ /g, '_'),
+                `${courseName.toLowerCase().replace(/ /g, '_')}/${item.slug}`,
+                `[GENERATION MDX EXCEPTION] ${retryCheck.error}`
+              );
+            } catch (reportErr) {
+              console.error("Failed to auto-submit generation error report:", reportErr);
+            }
+            // Throw compile exception to abort generation of this course and trigger CLI automatic retry
+            throw new Error(`[MDX COMPILATION CRITICAL ERROR] Lesson "${item.title}" failed compilation check: ${retryCheck.error}`);
           }
-          // Throw compile exception to abort generation of this course and trigger CLI automatic retry
-          throw new Error(`[MDX COMPILATION CRITICAL ERROR] Lesson "${item.title}" failed compilation check: ${retryCheck.error}`);
         }
       }
 
@@ -783,6 +812,169 @@ ${lesson.content}`;
         translatedMdx = lesson.content.replace('lang: "en"', `lang: "${targetLang}"`);
       }
 
+      // === TRANSLATION CRITIC PIPELINE ===
+      let approved = false;
+      let critique = '';
+      let currentTranslation = translatedMdx;
+      let critiqueIteration = 0;
+      const maxCritiqueIterations = 3;
+
+      while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
+        critiqueIteration++;
+        console.log(`[AI GENERATOR - TRANSLATION CRITIC] Reviewing translation for "${lesson.title}" to "${targetLang}" (Attempt ${critiqueIteration}/${maxCritiqueIterations})...`);
+
+        const promptCritic = `You are the Translation Critic Agent (Agent 4 - Specialized in Translation Quality Assurance). Your job is to strictly validate the translated academic MDX content against the original source content.
+Source Language: English
+Target Language: "${targetLang.toUpperCase()}"
+
+Original MDX Content:
+${lesson.content}
+
+Translated MDX Content:
+${currentTranslation}
+
+Your validation checklist:
+1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
+2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact?
+3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs) preserved exactly as in the original?
+4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
+5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
+6. Zero placeholders: Are there any placeholders or unfinished sections?
+
+You must output ONLY a valid JSON object matching this structure:
+{
+  "approved": true or false,
+  "critique": "If not approved, explain exactly what is wrong/missing/broken so the translator can correct it. If approved, keep this empty."
+}
+Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
+
+        let criticResText = '';
+        let criticSuccess = false;
+
+        if (isVertexConfigured()) {
+          try {
+            const res = await callVertexAI({
+              task: 'course_generation', // Using pro model for critique reasoning
+              contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
+              generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+            });
+            if (res && res.ok) {
+              const resJson = await res.json();
+              criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              criticSuccess = true;
+            }
+          } catch (err) {
+            console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex critique call failed:", err);
+          }
+        }
+
+        if (!criticSuccess && apiKey) {
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptCritic }] }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            });
+            if (res.ok) {
+              const resJson = await res.json();
+              criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              criticSuccess = true;
+            }
+          } catch (err) {
+            console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback critique call failed:", err);
+          }
+        }
+
+        if (criticSuccess && criticResText) {
+          try {
+            const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const criticObj = JSON.parse(cleanedCritic);
+            approved = !!criticObj.approved;
+            critique = criticObj.critique || '';
+          } catch (e) {
+            console.error("[AI GENERATOR - TRANSLATION CRITIC] Failed to parse critic JSON response:", e);
+            approved = true; // Avoid infinite loop or blocks if AI returns malformed JSON
+          }
+        } else {
+          approved = true; // Bypass critique loop if service is unavailable
+        }
+
+        if (approved) {
+          console.log(`[AI GENERATOR - TRANSLATION CRITIC] Translation approved for "${lesson.title}"!`);
+          translatedMdx = currentTranslation;
+        } else {
+          console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
+          // Refine translation
+          const promptRefine = `You are a professional academic translator. The Translation Critic Agent has rejected your previous translation with the following critique:
+
+CRITIQUE FROM TRANSLATION CRITIC:
+${critique}
+
+Original MDX Content to Translate:
+${lesson.content}
+
+Previous Rejected Translation:
+${currentTranslation}
+
+Please re-translate the Original MDX Content to "${targetLang.toUpperCase()}", correcting all issues highlighted by the critic.
+Follow all initial translation rules:
+1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
+2. Keep all Math equations (wrapped in $ or $$) completely untouched.
+3. Do NOT translate technical code blocks. For JSX React tags:
+   - For \`<Glossary term="..." definition="...">\`, translate the values of the \`term\` and \`definition\` attributes to the target language, as well as the text content inside the tag.
+   - For \`<HistoricalPerson name="..." lang="...">\`, translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Napoleon" to "Napoléon_Ier" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
+   - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
+   - Keep other tag names and syntax untouched.
+4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
+
+          let refineSuccess = false;
+          if (isVertexConfigured()) {
+            try {
+              const resRefine = await callVertexAI({
+                task: 'course_translation',
+                contents: [{ role: 'user', parts: [{ text: promptRefine }] }],
+                generationConfig: { temperature: 0.1 }
+              });
+              if (resRefine && resRefine.ok) {
+                const resJson = await resRefine.json();
+                currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                refineSuccess = true;
+              }
+            } catch (err) {
+              console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex translation refinement call failed:", err);
+            }
+          }
+
+          if (!refineSuccess && apiKey) {
+            try {
+              const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: promptRefine }] }]
+                })
+              });
+              if (resRefine.ok) {
+                const resJson = await resRefine.json();
+                currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                refineSuccess = true;
+              }
+            } catch (err) {
+              console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
+            }
+          }
+
+          if (!refineSuccess) {
+            console.warn("[AI GENERATOR - TRANSLATION CRITIC] Refinement failed to respond, continuing with current translation.");
+            translatedMdx = currentTranslation;
+            break;
+          }
+        }
+      }
+
       // Translate title
       let transTitle = lesson.title;
       try {
@@ -837,28 +1029,44 @@ ${lesson.content}`;
       }
 
       // De-hallucinate translated references
-      let validatedMdx = await validateAndFixBibliography(translatedMdx);
-      validatedMdx = await validateAndFixExternalResources(validatedMdx);
+      let validatedMdx = await validateAndFixBibliography(translatedMdx, targetLang.toLowerCase());
+      validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
 
       // Pre-validate translated MDX compilation
-      const mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+      let mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
       if (!mdxCheck.success) {
-        console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Applying fallback sanitization.`);
-        validatedMdx = sanitizeMdxFallback(validatedMdx);
+        console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
+        let healedResult = validatedMdx;
+        let healAttempt = 0;
+        const maxHealAttempts = 3;
+        while (!mdxCheck.success && healAttempt < maxHealAttempts) {
+          healAttempt++;
+          console.log(`[SELF-HEALING-TRANSLATION] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
+          healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+          mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
+        }
 
-        const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
-        if (!retryCheck.success) {
-          console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
-          try {
-            await dbService.submitReport(
-              courseSlug,
-              `${courseSlug}/${lesson.lesson_slug}`,
-              `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
-            );
-          } catch (reportErr) {
-            console.error("Failed to auto-submit translation error report:", reportErr);
+        if (mdxCheck.success) {
+          console.log(`[SELF-HEALING-TRANSLATION] Successfully healed MDX content on attempt ${healAttempt}!`);
+          validatedMdx = healedResult;
+        } else {
+          console.warn(`[SELF-HEALING-TRANSLATION] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
+          validatedMdx = sanitizeMdxFallback(validatedMdx);
+
+          const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+          if (!retryCheck.success) {
+            console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
+            try {
+              await dbService.submitReport(
+                courseSlug,
+                `${courseSlug}/${lesson.lesson_slug}`,
+                `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
+              );
+            } catch (reportErr) {
+              console.error("Failed to auto-submit translation error report:", reportErr);
+            }
+            throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
           }
-          throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
         }
       }
 
@@ -875,77 +1083,961 @@ ${lesson.content}`;
         order: lesson.order
       });
     }
+
+    // 3. Translate the course metadata (Syllabus/Curriculum Card) to targetLang
+    try {
+      const { data: allCourses } = await dbService.getAllCourses();
+      const course = allCourses?.find(c => c.slug === courseSlug);
+      
+      if (course) {
+        let translatedCourseTitle = course.title;
+        let translatedCourseDescription = course.description;
+
+        console.log(`[TRANSLATOR - CARD] Translating course card metadata for "${courseSlug}" to "${targetLang}"...`);
+
+        // Translate Title
+        try {
+          const promptCourseTitle = `Translate the course title "${course.title}" to target language code: "${targetLang.toUpperCase()}". Return only the translated string.`;
+          let titleSuccess = false;
+          if (isVertexConfigured()) {
+            try {
+              const res = await callVertexAI({
+                task: 'course_translation',
+                contents: [{ role: 'user', parts: [{ text: promptCourseTitle }] }],
+                generationConfig: { temperature: 0.1 }
+              });
+              if (res && res.ok) {
+                const resJson = await res.json();
+                translatedCourseTitle = (resJson.candidates?.[0]?.content?.parts?.[0]?.text || course.title).trim();
+                titleSuccess = true;
+              }
+            } catch (e) {
+              console.warn("[TRANSLATOR] Vertex course title translation failed:", e);
+            }
+          }
+          if (!titleSuccess && apiKey) {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptCourseTitle }] }]
+              })
+            });
+            if (res.ok) {
+              const resJson = await res.json();
+              translatedCourseTitle = (resJson.candidates?.[0]?.content?.parts?.[0]?.text || course.title).trim();
+            }
+          }
+        } catch (err) {
+          console.error("[TRANSLATOR] Failed to translate course title:", err);
+        }
+
+        // Translate Description
+        try {
+          const promptCourseDesc = `Translate the course description "${course.description}" to target language code: "${targetLang.toUpperCase()}". Return only the translated string.`;
+          let descSuccess = false;
+          if (isVertexConfigured()) {
+            try {
+              const res = await callVertexAI({
+                task: 'course_translation',
+                contents: [{ role: 'user', parts: [{ text: promptCourseDesc }] }],
+                generationConfig: { temperature: 0.1 }
+              });
+              if (res && res.ok) {
+                const resJson = await res.json();
+                translatedCourseDescription = (resJson.candidates?.[0]?.content?.parts?.[0]?.text || course.description).trim();
+                descSuccess = true;
+              }
+            } catch (e) {
+              console.warn("[TRANSLATOR] Vertex course description translation failed:", e);
+            }
+          }
+          if (!descSuccess && apiKey) {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptCourseDesc }] }]
+              })
+            });
+            if (res.ok) {
+              const resJson = await res.json();
+              translatedCourseDescription = (resJson.candidates?.[0]?.content?.parts?.[0]?.text || course.description).trim();
+            }
+          }
+        } catch (err) {
+          console.error("[TRANSLATOR] Failed to translate course description:", err);
+        }
+
+        // Update Course metadata
+        const originalLanguages = course.languages || [];
+        const updatedLanguages = originalLanguages.includes(targetLang.toLowerCase())
+          ? originalLanguages
+          : [...originalLanguages, targetLang.toLowerCase()];
+
+        const originalLangsUpper = course.langs || [];
+        const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
+          ? originalLangsUpper
+          : [...originalLangsUpper, targetLang.toUpperCase()];
+
+        const translations = course.translations || {};
+        translations[targetLang.toUpperCase()] = {
+          title: translatedCourseTitle,
+          description: translatedCourseDescription
+        };
+
+        await dbService.saveCourse({
+          ...course,
+          languages: updatedLanguages,
+          langs: updatedLangsUpper,
+          translations: translations
+        });
+        console.log(`[TRANSLATOR - CARD] Successfully saved updated course card translations for "${courseSlug}".`);
+      }
+    } catch (metaErr) {
+      console.error("[TRANSLATOR - CARD] Error during course card metadata translation:", metaErr);
+    }
   } catch (err) {
     console.error("AI Translation failed:", err);
     throw err;
   }
 }
 
-async function validateAndFixBibliography(mdx: string): Promise<string> {
-  const refRegex = /<a id="ref-\d+"><\/a>\[\d+\]\s*\[(.*?)\]\((.*?)\)/g;
+export async function reviseCourseContent(courseSlug: string, revisionDetails: string, targetLang: string = 'en') {
+  console.log(`[REVISION AGENT] Starting revision for course: "${courseSlug}" (Lang: ${targetLang})`);
+  console.log(`[REVISION AGENT] Original Details: "${revisionDetails}"`);
+
+  // 1. Fetch untreated feedbacks for this course slug to compile and evaluate them
+  let untreatedFeedbacks: any[] = [];
+  try {
+    const { data: fdb, error: fdbError } = await supabaseAdmin
+      .from('course_feedbacks')
+      .select('*')
+      .eq('is_treated', false);
+      
+    if (!fdbError && fdb) {
+      const targetCanonical = courseSlug.toLowerCase().replace(/_/g, '-');
+      untreatedFeedbacks = fdb.filter((f: any) => {
+        const fCanonical = (f.course_id || '').toLowerCase().replace(/_/g, '-');
+        return fCanonical === targetCanonical;
+      });
+    }
+  } catch (err) {
+    console.warn("[REVISION AGENT] Failed to fetch untreated feedbacks:", err);
+  }
+
+  const feedbackText = untreatedFeedbacks.length > 0
+    ? `Original Trigger: ${revisionDetails}\n\nAll Untreated Feedbacks to address:\n` + 
+      untreatedFeedbacks.map((f, i) => `${i + 1}. [Rating: ${f.rating} stars] comment: "${f.comment}"`).join('\n')
+    : revisionDetails;
+
+  console.log(`[REVISION AGENT] Compiled feedback to address:\n${feedbackText}`);
+
+  // 2. Clean up report clusters and mark course feedbacks as resolved immediately
+  console.log(`[REVISION AGENT] Marking course feedbacks as resolved and cleaning up report clusters for course "${courseSlug}"...`);
+  try {
+    if (untreatedFeedbacks.length > 0) {
+      const idsToUpdate = untreatedFeedbacks.map(f => f.id);
+      const { error: updateFeedbacksErr } = await supabaseAdmin
+        .from('course_feedbacks')
+        .update({ is_treated: true })
+        .in('id', idsToUpdate);
+        
+      if (updateFeedbacksErr) {
+        console.warn(`[REVISION AGENT] Warning updating course_feedbacks status:`, updateFeedbacksErr.message);
+      }
+    } else {
+      const { error: updateFeedbacksErr } = await supabaseAdmin
+        .from('course_feedbacks')
+        .update({ is_treated: true })
+        .eq('course_id', courseSlug);
+        
+      if (updateFeedbacksErr) {
+        console.warn(`[REVISION AGENT] Warning updating course_feedbacks status (fallback):`, updateFeedbacksErr.message);
+      }
+    }
+    
+    // Fetch and delete matching report clusters case-insensitively
+    const { data: clusters, error: fetchErr } = await supabaseAdmin
+      .from('report_clusters')
+      .select('id, course');
+      
+    if (fetchErr) {
+      console.warn(`[REVISION AGENT] Warning fetching report_clusters for deletion:`, fetchErr.message);
+    } else if (clusters) {
+      const targetSlugLower = courseSlug.toLowerCase();
+      const targetTitleLower = courseSlug.replace(/_/g, ' ').toLowerCase();
+      
+      const idsToDelete = clusters
+        .filter((c: any) => {
+          if (!c.course) return false;
+          const courseLower = c.course.toLowerCase();
+          const courseSlugLower = c.course.toLowerCase().replace(/ /g, '_');
+          return courseLower === targetTitleLower || 
+                 courseSlugLower === targetSlugLower ||
+                 courseLower === targetSlugLower;
+        })
+        .map((c: any) => c.id);
+        
+      if (idsToDelete.length > 0) {
+        console.log(`[REVISION AGENT] Deleting report clusters with IDs:`, idsToDelete);
+        const { error: deleteErr } = await supabaseAdmin
+          .from('report_clusters')
+          .delete()
+          .in('id', idsToDelete);
+          
+        if (deleteErr) {
+          console.warn(`[REVISION AGENT] Warning deleting report_clusters by ID:`, deleteErr.message);
+        }
+      }
+    }
+    console.log(`[REVISION AGENT] Cleaned up all report clusters and feedbacks for "${courseSlug}".`);
+  } catch (cleanErr) {
+    console.error(`[REVISION AGENT] Error cleaning up feedbacks/reports:`, cleanErr);
+  }
+
+  // 2. Fetch lessons for this course slug
+  const { data: lessons, error: lessonsError } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('course_slug', courseSlug)
+    .eq('lang', targetLang.toLowerCase());
+
+  if (lessonsError) {
+    console.error(`[REVISION AGENT] Failed to fetch lessons:`, lessonsError.message);
+    throw lessonsError;
+  }
+
+  if (!lessons || lessons.length === 0) {
+    console.warn(`[REVISION AGENT] No lessons found for course "${courseSlug}" in language "${targetLang}".`);
+    return;
+  }
+
+  console.log(`[REVISION AGENT] Found ${lessons.length} lessons. Analyzing which lessons are affected...`);
+
+  // 3. Ask AI to analyze which lessons are affected
+  const promptIdentify = `You are a Pedagogical Architect/Revision Planner.
+We have a course "${courseSlug}" with the following lessons:
+${lessons.map(l => `- Slug: "${l.lesson_slug}", Title: "${l.title}"`).join('\n')}
+
+Feedback / Bug report to address:
+"${feedbackText}"
+
+Please analyze which of these lessons need to be revised to fix this issue.
+Return a valid JSON array of lesson slugs that should be revised. For example: ["lesson_slug_1", "lesson_slug_2"].
+If the feedback is general or you are not sure, or if it applies to multiple lessons, return all affected lesson slugs.
+If no lesson is affected, return an empty array [].
+Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`;
+
+  let identifyRaw = '[]';
+  let identifySuccess = false;
+
+  if (isVertexConfigured()) {
+    try {
+      const res = await callVertexAI({
+        task: 'course_generation',
+        contents: [{ role: 'user', parts: [{ text: promptIdentify }] }],
+        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+      });
+      if (res && res.ok) {
+        const jsonRes = await res.json();
+        identifyRaw = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        identifySuccess = true;
+      }
+    } catch (e) {
+      console.warn(`[REVISION AGENT] Vertex AI identify failed:`, e);
+    }
+  }
+
+  if (!identifySuccess && apiKey) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptIdentify }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      if (res.ok) {
+        const jsonRes = await res.json();
+        identifyRaw = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        identifySuccess = true;
+      }
+    } catch (e) {
+      console.error(`[REVISION AGENT] AI Studio identify failed:`, e);
+    }
+  }
+
+  let affectedSlugs: string[] = [];
+  try {
+    const cleaned = identifyRaw.replace(/```json/g, '').replace(/```/g, '').trim();
+    affectedSlugs = JSON.parse(cleaned);
+  } catch (e) {
+    console.error(`[REVISION AGENT] Failed to parse affected slugs JSON: "${identifyRaw}". Defaulting to all lessons.`, e);
+    affectedSlugs = lessons.map(l => l.lesson_slug);
+  }
+
+  if (affectedSlugs.length === 0) {
+    console.log(`[REVISION AGENT] No lessons identified for revision.`);
+    return;
+  }
+
+  console.log(`[REVISION AGENT] Lessons identified for revision: ${affectedSlugs.join(', ')}`);
+
+  // 4. For each affected lesson, revise it
+  for (const slug of affectedSlugs) {
+    const lesson = lessons.find(l => l.lesson_slug === slug);
+    if (!lesson) continue;
+
+    console.log(`[REVISION AGENT] Revising lesson: "${lesson.title}" (${slug})...`);
+
+    const promptRevise = `You are a Pedagogical Revision Agent (Agent de Révision).
+Your mission is to revise and correct a specific course lesson (written in MDX) based on the feedback/reports below.
+
+COURSE: ${courseSlug}
+LESSON TITLE: "${lesson.title}"
+REVISION DETAILS / FEEDBACK:
+"${feedbackText}"
+
+CURRENT MDX CONTENT:
+---
+${lesson.content}
+---
+
+INSTRUCTIONS:
+1. Revise the content to address the issues specified in the feedback.
+2. Maintain high academic density, rigor, and the target language of the lesson.
+3. Preserve all MDX custom React components (<Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Location>, <DataChart>, <DynamicSimulation>, etc.) exactly as they are, including all their attributes, unless the feedback specifically requests to change/fix them.
+4. Keep the frontmatter block at the top intact.
+5. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your output. Return ONLY the raw revised MDX content.
+6. Make precise edits. Do not lose other parts of the lesson.`;
+
+    let revisedMdx = '';
+    let reviseSuccess = false;
+
+    if (isVertexConfigured()) {
+      try {
+        const res = await callVertexAI({
+          task: 'course_generation',
+          contents: [{ role: 'user', parts: [{ text: promptRevise }] }],
+          generationConfig: { temperature: 0.3 }
+        });
+        if (res && res.ok) {
+          const jsonRes = await res.json();
+          revisedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          reviseSuccess = true;
+        }
+      } catch (e) {
+        console.warn(`[REVISION AGENT] Vertex AI revision failed for "${slug}":`, e);
+      }
+    }
+
+    if (!reviseSuccess && apiKey) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptRevise }] }]
+          })
+        });
+        if (res.ok) {
+          const jsonRes = await res.json();
+          revisedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          reviseSuccess = true;
+        }
+      } catch (e) {
+        console.error(`[REVISION AGENT] AI Studio revision failed for "${slug}":`, e);
+      }
+    }
+
+    if (!revisedMdx) {
+      console.warn(`[REVISION AGENT] Could not revise lesson "${lesson.title}", skipping.`);
+      continue;
+    }
+
+    // === REVISION CRITIC PIPELINE (Agent 4) ===
+    let approved = false;
+    let critique = '';
+    let currentMdx = revisedMdx;
+    let critiqueIteration = 0;
+    const maxCritiqueIterations = 3;
+
+    while (!approved && critiqueIteration < maxCritiqueIterations && currentMdx) {
+      critiqueIteration++;
+      console.log(`[REVISION AGENT - AGENT 4] Reviewing revised content for "${lesson.title}" (Attempt ${critiqueIteration}/${maxCritiqueIterations})...`);
+
+      const promptCritic = `You are the Revision Critic Agent (Agent 4 - Specialized in Revision Quality Assurance). Your job is to strictly validate the revised academic MDX content against the revision instructions and the original content.
+Source Language: English
+Target Language: "${targetLang.toUpperCase()}"
+
+Revision Instructions/Feedbacks:
+${feedbackText}
+
+Original MDX Content:
+${lesson.content}
+
+Revised MDX Content:
+${currentMdx}
+
+Your validation checklist:
+1. Did the revision fully address the student concerns and instructions in the revision instructions list?
+2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
+3. Zero placeholders: Are there any placeholders, skeletal sentences, or unfinished sections?
+4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
+
+You must output ONLY a valid JSON object matching this structure:
+{
+  "approved": true or false,
+  "critique": "If not approved, explain exactly what is wrong/missing/broken so the writer can correct it. If approved, keep this empty."
+}
+Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
+
+      let criticResText = '';
+      let criticSuccess = false;
+
+      if (isVertexConfigured()) {
+        try {
+          const res = await callVertexAI({
+            task: 'course_generation', // Using pro model configuration
+            contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
+            generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+          });
+          if (res && res.ok) {
+            const resJson = await res.json();
+            criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            criticSuccess = true;
+          }
+        } catch (err) {
+          console.warn("[REVISION AGENT - AGENT 4] Vertex critique call failed:", err);
+        }
+      }
+
+      if (!criticSuccess && apiKey) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptCritic }] }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+          if (res.ok) {
+            const resJson = await res.json();
+            criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            criticSuccess = true;
+          }
+        } catch (err) {
+          console.error("[REVISION AGENT - AGENT 4] AI Studio fallback critique call failed:", err);
+        }
+      }
+
+      if (criticSuccess && criticResText) {
+        try {
+          const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
+          const criticObj = JSON.parse(cleanedCritic);
+          approved = !!criticObj.approved;
+          critique = criticObj.critique || '';
+        } catch (e) {
+          console.error("[REVISION AGENT - AGENT 4] Failed to parse critic JSON response:", e);
+          approved = true; // Avoid blocking loop on parse failure
+        }
+      } else {
+        approved = true; // Bypass critic loop if services are unavailable
+      }
+
+      if (approved) {
+        console.log(`[REVISION AGENT - AGENT 4] Revision approved for "${lesson.title}"!`);
+        revisedMdx = currentMdx;
+      } else {
+        console.warn(`[REVISION AGENT - AGENT 4] Revision REJECTED for "${lesson.title}". Critique: ${critique}`);
+        // Refine revision
+        const promptRefine = `You are a professional academic writer. The Revision Critic Agent has rejected your previous revised MDX with the following critique:
+
+CRITIQUE FROM REVISION CRITIC:
+${critique}
+
+Original MDX Content:
+${lesson.content}
+
+Previous Revised Content:
+${currentMdx}
+
+Revision Instructions:
+${feedbackText}
+
+Please re-generate the revised MDX content for "${lesson.title}", fully addressing the critic's critique and incorporating all original revision instructions.
+Return ONLY the revised MDX content. Do not include markdown code block wrappers.`;
+
+        let refineSuccess = false;
+        if (isVertexConfigured()) {
+          try {
+            const resRefine = await callVertexAI({
+              task: 'course_generation',
+              contents: [{ role: 'user', parts: [{ text: promptRefine }] }],
+              generationConfig: { temperature: 0.3 }
+            });
+            if (resRefine && resRefine.ok) {
+              const resJson = await resRefine.json();
+              currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              refineSuccess = true;
+            }
+          } catch (err) {
+            console.warn("[REVISION AGENT - AGENT 4] Vertex refinement call failed:", err);
+          }
+        }
+
+        if (!refineSuccess && apiKey) {
+          try {
+            const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptRefine }] }]
+              })
+            });
+            if (resRefine.ok) {
+              const resJson = await resRefine.json();
+              currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              refineSuccess = true;
+            }
+          } catch (err) {
+            console.error("[REVISION AGENT - AGENT 4] AI Studio fallback refinement call failed:", err);
+          }
+        }
+
+        if (!refineSuccess) {
+          console.warn("[REVISION AGENT - AGENT 4] Refinement failed, continuing with current content.");
+          revisedMdx = currentMdx;
+          break;
+        }
+      }
+    }
+
+    // Run verification/validation and self-healing loop
+    let validatedMdx = await validateAndFixBibliography(revisedMdx, targetLang.toLowerCase());
+    validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
+
+    // Pre-validate MDX compilation
+    let mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+    if (!mdxCheck.success) {
+      console.warn(`[REVISION AGENT - MDX ERROR] Revised content for "${lesson.title}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
+      let healedResult = validatedMdx;
+      let healAttempt = 0;
+      const maxHealAttempts = 3;
+      while (!mdxCheck.success && healAttempt < maxHealAttempts) {
+        healAttempt++;
+        console.log(`[SELF-HEALING-REVISION] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
+        healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+        mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
+      }
+
+      if (mdxCheck.success) {
+        console.log(`[SELF-HEALING-REVISION] Successfully healed MDX content on attempt ${healAttempt}!`);
+        validatedMdx = healedResult;
+      } else {
+        console.warn(`[SELF-HEALING-REVISION] Self-healing failed. Applying fallback sanitization.`);
+        validatedMdx = sanitizeMdxFallback(validatedMdx);
+        const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+        if (!retryCheck.success) {
+          console.error(`[REVISION AGENT - MDX CRITICAL ERROR] Sanitized content for "${lesson.title}" still failed MDX validation: ${retryCheck.error}.`);
+          try {
+            await dbService.submitReport(
+              courseSlug,
+              `${courseSlug}/${slug}`,
+              `[REVISION MDX EXCEPTION] ${retryCheck.error}`
+            );
+          } catch (reportErr) {
+            console.error("Failed to auto-submit revision error report:", reportErr);
+          }
+          throw new Error(`[MDX REVISION CRITICAL ERROR] Lesson "${lesson.title}" failed compilation check: ${retryCheck.error}`);
+        }
+      }
+    }
+
+    // Preprocess and heal MDX before writing to DB
+    const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+
+    // Save back to DB
+    await dbService.saveLesson({
+      course_slug: courseSlug,
+      lesson_slug: slug,
+      lang: targetLang.toLowerCase(),
+      title: lesson.title,
+      content: healedMdx,
+      order: lesson.order
+    });
+
+    console.log(`[REVISION AGENT] Successfully revised and saved lesson: "${lesson.title}" (${slug})`);
+  }
+
+  // 5. Update the course version/governance
+  try {
+    const { data: allCourses } = await dbService.getAllCourses();
+    const course = allCourses?.find(c => c.slug === courseSlug);
+    if (course) {
+      const currentVersion = course.version || 'v1.0.0';
+      let nextVersion = 'v1.0.1';
+      const match = currentVersion.match(/v?(\d+)\.(\d+)\.(\d+)/);
+      if (match) {
+        const major = parseInt(match[1], 10);
+        const minor = parseInt(match[2], 10);
+        const patch = parseInt(match[3], 10) + 1;
+        nextVersion = `v${major}.${minor}.${patch}`;
+      }
+      await dbService.saveCourse({
+        ...course,
+        version: nextVersion,
+        last_revision_date: new Date().toISOString()
+      });
+      console.log(`[REVISION AGENT] Updated course "${courseSlug}" version to ${nextVersion}`);
+    }
+  } catch (err) {
+    console.error(`[REVISION AGENT] Failed to update course version card:`, err);
+  }
+}
+
+export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr'): Promise<string> {
+  const promptHealer = `You are a Self-Healing MDX Compiler Agent (Agent B).
+Your task is to fix syntax errors or invalid tags in MDX content so it compiles successfully.
+Below is the compilation error message and the faulty MDX content.
+
+COMPILATION ERROR:
+${mdxError}
+
+FAULTY MDX CONTENT:
+---
+${content}
+---
+
+INSTRUCTIONS:
+1. Fix the tags that are unclosed, incorrectly nested, or contain invalid syntax.
+2. For unclosed JSX/HTML tags, either close them properly or wrap the content correctly. For example, if it says "Expected a closing tag for <a>", make sure all <a> tags are closed with </a>.
+3. Make sure custom components like <Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Epistemology>, etc. are well-formed and closed.
+4. Do NOT change the learning objectives, pedagogical content, or text substance. Just repair the MDX structure so that Acorn or the MDX parser doesn't crash.
+5. Return ONLY the repaired MDX content. Do NOT wrap the response in markdown code blocks (\`\`\`).
+6. Do NOT add any conversational explanation before or after the code. Just output the clean, fixed MDX.`;
+
+  let repairedMdx = '';
+  let success = false;
+
+  if (isVertexConfigured()) {
+    console.log(`[SELF-HEALING] Healing MDX content via Vertex AI (gemini-2.5-flash)...`);
+    try {
+      const res = await callVertexAI({
+        task: 'course_generation',
+        contents: [{ role: 'user', parts: [{ text: promptHealer }] }],
+        generationConfig: { temperature: 0.1 }
+      });
+      if (res && res.ok) {
+        const jsonRes = await res.json();
+        repairedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (repairedMdx) success = true;
+      }
+    } catch (err) {
+      console.warn(`[SELF-HEALING] Vertex AI healer exception:`, err);
+    }
+  }
+
+  if (!success && apiKey) {
+    console.log(`[SELF-HEALING] Healing MDX content via AI Studio fallback (gemini-2.5-flash)...`);
+    try {
+      const startTime = Date.now();
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptHealer }] }]
+        })
+      });
+      if (res.ok) {
+        const jsonRes = await res.json();
+        repairedMdx = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        success = true;
+        
+        const durationMs = Date.now() - startTime;
+        const usage = jsonRes.usageMetadata || {};
+        const promptTokens = usage.promptTokenCount || 0;
+        const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+        await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptHealer);
+      }
+    } catch (err) {
+      console.error(`[SELF-HEALING] AI Studio healer exception:`, err);
+    }
+  }
+
+  if (!repairedMdx) {
+    console.warn("[SELF-HEALING] Healer failed to produce content, returning original.");
+    return content;
+  }
+
+  return repairedMdx;
+}
+
+async function findAlternativeVideo(title: string, lang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
+  console.log(`[ALTERNATIVE SEARCH] Searching alternative video for title: "${title}" (${lang})...`);
+  const queries = [
+    title,
+    `${title} educational video`,
+    `${title} lecture`
+  ];
+  
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const query = queries[attempt];
+    console.log(`[ALTERNATIVE SEARCH] Video Search Attempt ${attempt + 1}/3 with query: "${query}"`);
+    
+    const prompt = `You are a Research Agent (Agent C).
+Find a real, public, educational YouTube or Vimeo video about: "${query}".
+The video must be in language: "${lang}".
+It must be a real video ID that exists. Do not invent video IDs.
+If you know a real, highly popular video, output its ID (11 characters for YouTube) or URL.
+Output JSON only:
+{
+  "provider": "youtube",
+  "id": "11-character-id-here"
+}
+If you cannot find any real video, output: {}`;
+
+    try {
+      let rawJson = '';
+      if (isVertexConfigured()) {
+        const res = await callVertexAI({
+          task: 'course_generation',
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+        });
+        if (res && res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        }
+      } else if (apiKey) {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+        if (res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        }
+      }
+
+      if (rawJson) {
+        const cleaned = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        if (data.id || data.url) {
+          const providerStr = data.provider || 'youtube';
+          const videoTag = `<Video id="${data.id || ''}" url="${data.url || ''}" provider="${providerStr}" />`;
+          const isReachable = await isVideoReachable(videoTag);
+          if (isReachable) {
+            console.log(`[ALTERNATIVE SEARCH] Found valid alternative video: ID=${data.id}, URL=${data.url}`);
+            return { id: data.id, url: data.url, provider: providerStr };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[ALTERNATIVE SEARCH] Video search exception on attempt ${attempt + 1}:`, err);
+    }
+  }
+  
+  return null;
+}
+
+async function findAlternativeVideoWithFallback(title: string, targetLang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
+  // 1. Try local language
+  const localVideo = await findAlternativeVideo(title, targetLang);
+  if (localVideo) {
+    return localVideo;
+  }
+
+  // 2. Try English if not already English
+  if (targetLang.toLowerCase() !== 'en') {
+    console.log(`[ALTERNATIVE VIDEO FALLBACK] Falling back to English for video title: "${title}"`);
+    return await findAlternativeVideo(title, 'en');
+  }
+
+  return null;
+}
+
+async function findAlternativeAudio(title: string, lang: string): Promise<string | null> {
+  console.log(`[ALTERNATIVE SEARCH] Searching alternative audio for title: "${title}" (${lang})...`);
+  const queries = [
+    title,
+    `${title} podcast`,
+    `${title} audio guide`
+  ];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const query = queries[attempt];
+    console.log(`[ALTERNATIVE SEARCH] Audio Search Attempt ${attempt + 1}/3 with query: "${query}"`);
+    
+    const prompt = `You are a Research Agent (Agent C).
+Find a real, public, educational MP3 or audio URL about: "${query}".
+The audio must be in language: "${lang}".
+Output JSON only:
+{
+  "url": "https://example.com/real-audio-file.mp3"
+}
+If you cannot find any real audio, output: {}`;
+
+    try {
+      let rawJson = '';
+      if (isVertexConfigured()) {
+        const res = await callVertexAI({
+          task: 'course_generation',
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+        });
+        if (res && res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        }
+      } else if (apiKey) {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+        if (res.ok) {
+          const jsonRes = await res.json();
+          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        }
+      }
+
+      if (rawJson) {
+        const cleaned = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        if (data.url) {
+          const audioTag = `<Audio url="${data.url}" />`;
+          const isReachable = await isAudioReachable(audioTag);
+          if (isReachable) {
+            console.log(`[ALTERNATIVE SEARCH] Found valid alternative audio: URL=${data.url}`);
+            return data.url;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[ALTERNATIVE SEARCH] Audio search exception on attempt ${attempt + 1}:`, err);
+    }
+  }
+  return null;
+}
+
+async function findAlternativeAudioWithFallback(title: string, targetLang: string): Promise<string | null> {
+  // 1. Try local language
+  const localAudio = await findAlternativeAudio(title, targetLang);
+  if (localAudio) {
+    return localAudio;
+  }
+
+  // 2. Try English if not already English
+  if (targetLang.toLowerCase() !== 'en') {
+    console.log(`[ALTERNATIVE AUDIO FALLBACK] Falling back to English for audio title: "${title}"`);
+    return await findAlternativeAudio(title, 'en');
+  }
+
+  return null;
+}
+
+async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'): Promise<string> {
+  const refRegex = /<a id="ref-(\d+)"><\/a>\[(\d+)\]\s*\[(.*?)\]\((.*?)\)/g;
   let match;
-  const replacements: { original: string; replacement: string }[] = [];
+  const replacements: { original: string; replacement: string; refId: string }[] = [];
 
   while ((match = refRegex.exec(mdx)) !== null) {
     const fullMatch = match[0];
-    const refText = match[1];
+    const refId = match[1];
+    const refNum = match[2];
+    const refText = match[3];
+    const refUrl = match[4];
 
-    try {
-      console.log(`[BIBLIOGRAPHY VALIDATOR] Verifying Reference: "${refText}"`);
-      const searchRes = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(refText)}&rows=1`);
-      if (searchRes.ok) {
-        const data = await searchRes.json();
-        const item = data.message?.items?.[0];
-        if (item && item.DOI) {
-          const realUrl = `https://doi.org/${item.DOI}`;
-          const cleanTitle = item.title?.[0] || refText;
-          const cleanAuthor = item.author?.[0]?.family ? `by ${item.author[0].family}` : '';
-          let replacementText = `${cleanTitle} ${cleanAuthor}`.trim();
-          if (!replacementText.endsWith('.')) {
-            replacementText += '.';
-          }
-          
-          const originalRefId = fullMatch.match(/ref-\d+/)?.[0] || 'ref-1';
-          const originalNum = fullMatch.match(/\[\d+\]/)?.[0] || '[1]';
-          const updatedRef = `<a id="${originalRefId}"></a>${originalNum} [${replacementText}](${realUrl})`;
-          
-          replacements.push({ original: fullMatch, replacement: updatedRef });
-          console.log(`[BIBLIOGRAPHY VALIDATOR] Crossref validation successful. Resolved to: ${realUrl}`);
-          continue;
-        }
-      }
-    } catch (e) {
-      console.warn(`[BIBLIOGRAPHY VALIDATOR] Crossref check failed for "${refText}":`, e);
+    console.log(`[BIBLIOGRAPHY VALIDATOR] Verifying Reference #${refId}: "${refText}" with URL "${refUrl}"`);
+
+    let isReachable = false;
+    if (refUrl && refUrl.startsWith('http')) {
+      isReachable = await isUrlReachable(refUrl);
     }
 
-    // Google Books fallback
-    try {
-      const gBooksRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(refText)}&maxResults=1`);
-      if (gBooksRes.ok) {
-        const data = await gBooksRes.json();
-        const book = data.items?.[0]?.volumeInfo;
-        if (book) {
-          const realUrl = book.previewLink || book.infoLink || `https://books.google.com?q=${encodeURIComponent(refText)}`;
-          const originalRefId = fullMatch.match(/ref-\d+/)?.[0] || 'ref-1';
-          const originalNum = fullMatch.match(/\[\d+\]/)?.[0] || '[1]';
-          let replacementText = `${book.title} by ${book.authors?.join(', ') || 'Unknown'}`.trim();
-          if (!replacementText.endsWith('.')) {
-            replacementText += '.';
+    if (isReachable) {
+      console.log(`[BIBLIOGRAPHY VALIDATOR] Existing URL is reachable: ${refUrl}`);
+      continue;
+    }
+
+    let resolvedUrl = '';
+    let resolvedTitle = '';
+    
+    const queries = [
+      refText,
+      refText.split('by')[0].replace(/"/g, '').trim(),
+      (targetLang.toLowerCase() !== 'en') 
+        ? `${refText.split('by')[0].replace(/"/g, '').trim()} english edition` 
+        : refText.replace(/[^\w\s-]/g, '').split(/\s+/).slice(0, 8).join(' ')
+    ];
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const query = queries[attempt];
+      if (!query) continue;
+      console.log(`[BIBLIOGRAPHY VALIDATOR] Attempt ${attempt + 1}/3 with query: "${query}"`);
+
+      try {
+        const searchRes = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=1`);
+        if (searchRes.ok) {
+          const data = await searchRes.json();
+          const item = data.message?.items?.[0];
+          if (item && item.DOI) {
+            resolvedUrl = `https://doi.org/${item.DOI}`;
+            const cleanTitle = item.title?.[0] || refText;
+            const cleanAuthor = item.author?.[0]?.family ? `by ${item.author[0].family}` : '';
+            resolvedTitle = `${cleanTitle} ${cleanAuthor}`.trim();
+            if (!resolvedTitle.endsWith('.')) resolvedTitle += '.';
+            break;
           }
-          const updatedRef = `<a id="${originalRefId}"></a>${originalNum} [${replacementText}](${realUrl})`;
-          replacements.push({ original: fullMatch, replacement: updatedRef });
-          console.log(`[BIBLIOGRAPHY VALIDATOR] Google Books validation successful. Resolved to: ${realUrl}`);
-          continue;
         }
+      } catch (e) {
+        console.warn(`[BIBLIOGRAPHY VALIDATOR] Crossref attempt ${attempt + 1} failed:`, e);
       }
-    } catch (e) {
-      console.warn(`[BIBLIOGRAPHY VALIDATOR] Google Books check failed for "${refText}":`, e);
+
+      try {
+        const gBooksRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`);
+        if (gBooksRes.ok) {
+          const data = await gBooksRes.json();
+          const book = data.items?.[0]?.volumeInfo;
+          if (book) {
+            resolvedUrl = book.previewLink || book.infoLink || `https://books.google.com?q=${encodeURIComponent(query)}`;
+            resolvedTitle = `${book.title} by ${book.authors?.join(', ') || 'Unknown'}`.trim();
+            if (!resolvedTitle.endsWith('.')) resolvedTitle += '.';
+            break;
+          }
+        }
+      } catch (e) {
+        console.warn(`[BIBLIOGRAPHY VALIDATOR] Google Books attempt ${attempt + 1} failed:`, e);
+      }
+    }
+
+    if (resolvedUrl) {
+      const updatedRef = `<a id="ref-${refId}"></a>[${refNum}] [${resolvedTitle}](${resolvedUrl})`;
+      replacements.push({ original: fullMatch, replacement: updatedRef, refId });
+      console.log(`[BIBLIOGRAPHY VALIDATOR] Successfully resolved to alternative URL: ${resolvedUrl}`);
+    } else {
+      replacements.push({ original: fullMatch, replacement: '', refId });
+      console.warn(`[BIBLIOGRAPHY VALIDATOR] Failed to resolve Reference #${refId} after 3 attempts. Marking for removal.`);
     }
   }
 
   let updatedMdx = mdx;
   for (const rep of replacements) {
     updatedMdx = updatedMdx.replace(rep.original, rep.replacement);
+    if (rep.replacement === '') {
+      const footnoteRegex = new RegExp(`<sup><a\\b[^>]*href=["']#ref-${rep.refId}["'][^>]*>.*?</a></sup>`, 'g');
+      updatedMdx = updatedMdx.replace(footnoteRegex, '');
+    }
   }
 
   return updatedMdx;
@@ -1080,11 +2172,11 @@ async function isAudioReachable(audioTagContent: string): Promise<boolean> {
 }
 
 async function isLinkReachable(url: string): Promise<boolean> {
-  if (!url || !url.startsWith('http')) return true; // Keep local / relative links safe
+  if (!url || !url.startsWith('http')) return true;
   return isUrlReachable(url);
 }
 
-async function validateAndFixExternalResources(mdx: string): Promise<string> {
+async function validateAndFixExternalResources(mdx: string, targetLang: string = 'fr'): Promise<string> {
   let updatedMdx = await validateAndFixImages(mdx);
 
   // Validate and fix Video tags
@@ -1100,16 +2192,28 @@ async function validateAndFixExternalResources(mdx: string): Promise<string> {
 
   if (videoBlocks.length > 0) {
     console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${videoBlocks.length} video elements...`);
-    const videoResults = await Promise.all(
-      videoBlocks.map(async (block) => {
-        const isValid = await isVideoReachable(block.fullBlock);
-        return { fullBlock: block.fullBlock, isValid };
-      })
-    );
-    for (const res of videoResults) {
-      if (!res.isValid) {
-        console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing dead/unavailable video element: ${res.fullBlock}`);
-        updatedMdx = updatedMdx.replace(res.fullBlock, '');
+    for (const block of videoBlocks) {
+      const isValid = await isVideoReachable(block.fullBlock);
+      if (!isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Video is dead: ${block.fullBlock}`);
+        const titleMatch = block.attributes.match(/title="([^"]+)"/) || block.attributes.match(/title='([^']+)'/);
+        const title = titleMatch ? titleMatch[1] : '';
+        
+        let alternativeFound = false;
+        if (title) {
+          const alternative = await findAlternativeVideoWithFallback(title, targetLang);
+          if (alternative) {
+            const newTag = `<Video id="${alternative.id || ''}" url="${alternative.url || ''}" provider="${alternative.provider || 'youtube'}" title="${title}" />`;
+            updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
+            alternativeFound = true;
+            console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead video with alternative: ${newTag}`);
+          }
+        }
+        
+        if (!alternativeFound) {
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] No alternative video found. Cleanly removing: ${block.fullBlock}`);
+          updatedMdx = updatedMdx.replace(block.fullBlock, '');
+        }
       }
     }
   }
@@ -1117,23 +2221,35 @@ async function validateAndFixExternalResources(mdx: string): Promise<string> {
   // Validate and fix Audio components
   const audioRegex = /<(?:Audio|AudioPlayer)\s+([^>]*?)\/>/gi;
   let audioMatch;
-  const audioBlocks: { fullBlock: string }[] = [];
+  const audioBlocks: { fullBlock: string; attributes: string }[] = [];
   while ((audioMatch = audioRegex.exec(updatedMdx)) !== null) {
-    audioBlocks.push({ fullBlock: audioMatch[0] });
+    audioBlocks.push({ fullBlock: audioMatch[0], attributes: audioMatch[1] });
   }
 
   if (audioBlocks.length > 0) {
     console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${audioBlocks.length} audio elements...`);
-    const audioResults = await Promise.all(
-      audioBlocks.map(async (block) => {
-        const isValid = await isAudioReachable(block.fullBlock);
-        return { fullBlock: block.fullBlock, isValid };
-      })
-    );
-    for (const res of audioResults) {
-      if (!res.isValid) {
-        console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing dead/unavailable audio element: ${res.fullBlock}`);
-        updatedMdx = updatedMdx.replace(res.fullBlock, '');
+    for (const block of audioBlocks) {
+      const isValid = await isAudioReachable(block.fullBlock);
+      if (!isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Audio is dead: ${block.fullBlock}`);
+        const titleMatch = block.attributes.match(/title="([^"]+)"/) || block.attributes.match(/title='([^']+)'/);
+        const title = titleMatch ? titleMatch[1] : '';
+        
+        let alternativeFound = false;
+        if (title) {
+          const altUrl = await findAlternativeAudioWithFallback(title, targetLang);
+          if (altUrl) {
+            const newTag = `<AudioPlayer url="${altUrl}" title="${title}" />`;
+            updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
+            alternativeFound = true;
+            console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead audio with alternative: ${newTag}`);
+          }
+        }
+        
+        if (!alternativeFound) {
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] No alternative audio found. Cleanly removing: ${block.fullBlock}`);
+          updatedMdx = updatedMdx.replace(block.fullBlock, '');
+        }
       }
     }
   }
@@ -1155,16 +2271,47 @@ async function validateAndFixExternalResources(mdx: string): Promise<string> {
 
   if (links.length > 0) {
     console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${links.length} markdown links...`);
-    const linkResults = await Promise.all(
-      links.map(async (link) => {
-        const isValid = await isLinkReachable(link.url);
-        return { ...link, isValid };
-      })
-    );
-    for (const res of linkResults) {
-      if (!res.isValid) {
-        console.log(`[EXTERNAL RESOURCE VALIDATOR] Replacing dead link with plain text: ${res.url}`);
-        updatedMdx = updatedMdx.replace(res.fullMatch, res.text);
+    for (const link of links) {
+      const isValid = await isLinkReachable(link.url);
+      if (!isValid) {
+        console.log(`[EXTERNAL RESOURCE VALIDATOR] Link is dead: ${link.url}`);
+        let resolvedUrl = '';
+        const queries = [
+          link.text,
+          `${link.text} wikipedia`,
+          `${link.text} official site`
+        ];
+        
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const query = queries[attempt];
+          const queryLang = (attempt === 2 && targetLang.toLowerCase() !== 'en') ? 'en' : targetLang.toLowerCase();
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] Link retry ${attempt + 1}/3 with query: "${query}" in language "${queryLang}"`);
+          
+          try {
+            const wikiRes = await fetch(`https://${queryLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
+            if (wikiRes.ok) {
+              const data = await wikiRes.json();
+              if (data && data[3] && data[3][0]) {
+                const wikiUrl = data[3][0];
+                if (await isUrlReachable(wikiUrl)) {
+                  resolvedUrl = wikiUrl;
+                  break;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`[EXTERNAL RESOURCE VALIDATOR] Wiki search attempt failed:`, e);
+          }
+        }
+        
+        if (resolvedUrl) {
+          const newLink = `[${link.text}](${resolvedUrl})`;
+          updatedMdx = updatedMdx.replace(link.fullMatch, newLink);
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead link with Wikipedia alternative: ${newLink}`);
+        } else {
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] Replacing dead link with plain text: ${link.url}`);
+          updatedMdx = updatedMdx.replace(link.fullMatch, link.text);
+        }
       }
     }
   }

@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
 import { SolvedProblem, Summary, SelfEval } from './AdvancedLearning';
-import { HistoricalPerson, FictionalCharacter, Location, EntityLink } from './HistoricalPerson';
+import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -29,6 +29,14 @@ import { GoingFurther, GoingFurtherItem } from './GoingFurther';
 import { FunctionManipulator } from './FunctionManipulator';
 import { EquationManipulator } from './EquationManipulator';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { CriticalThinking } from './CriticalThinking';
+import { DidYouKnow } from './DidYouKnow';
+import { HistoricalAnecdote } from './HistoricalAnecdote';
+import { ScientificMethod } from './ScientificMethod';
+import { WhatsNext } from './WhatsNext';
+import { PointOfView } from './PointOfView';
+import { DynamicTableChart } from './DynamicTableChart';
+import { Geometry2D } from './Geometry2D';
 
 const Alert = ({ type, children }: { type: string; children: React.ReactNode }) => {
   const t = (type || 'note').toLowerCase();
@@ -141,6 +149,8 @@ const components = {
   FictionalCharacter,
   Location,
   Place: Location, // alias for Place
+  HistoricalEvent,
+  EvenementHistorique: HistoricalEvent,
   EntityLink,
   EssayEvaluation,
   Prerequisites,
@@ -164,6 +174,25 @@ const components = {
   FunctionManipulator,
   EquationManipulator,
   pre: PreCodeInterceptor,
+
+  // New Custom Pedagogical Blocks
+  CriticalThinking,
+  EspritCritique: CriticalThinking,
+  DidYouKnow,
+  LeSaviezVous: DidYouKnow,
+  HistoricalAnecdote,
+  AnecdoteHistorique: HistoricalAnecdote,
+  ScientificMethod,
+  MethodeScientifique: ScientificMethod,
+  WhatsNext,
+  EtApres: WhatsNext,
+  PointOfView,
+  PointDeVue: PointOfView,
+  Geometry2D,
+  Geometrie2D: Geometry2D,
+
+  // Overriding standard table to render dynamic graphs on toggle
+  table: DynamicTableChart,
 };
 
 interface MdxContentProps {

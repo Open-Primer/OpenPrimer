@@ -4,6 +4,7 @@ import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
 import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
 import { TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES, estimateCost } from '@/lib/ai-config';
+import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 
 const chatSchema = z.object({
   messages: z.array(
@@ -20,7 +21,13 @@ const chatSchema = z.object({
   courseTitle: z.string().optional(),
   courseSubject: z.string().optional(),
   selfEvalPre: z.number().nullable().optional(),
-  selfEvalPost: z.number().nullable().optional()
+  selfEvalPost: z.number().nullable().optional(),
+  personalTutor: z.object({
+    enabled: z.boolean(),
+    provider: z.enum(['openai', 'anthropic', 'gemini']),
+    apiKey: z.string().min(1),
+    model: z.string().min(1)
+  }).optional()
 });
 
 export async function POST(request: Request) {
@@ -51,9 +58,28 @@ export async function POST(request: Request) {
       courseTitle,
       courseSubject,
       selfEvalPre,
-      selfEvalPost
+      selfEvalPost,
+      personalTutor
     } = parsed.data;
     const langUpper = (language || 'EN').toUpperCase();
+
+    const lastMsgIndex = messages.length - 1;
+    const userMessage = messages[lastMsgIndex]?.content || '';
+
+    // Anti-Spam Check
+    if (isSpam(userMessage)) {
+      console.warn(`[SPAM BLOCK] Tutor chat message flagged as spam.`);
+      return NextResponse.json({ success: false, error: 'Message blocked: flagged as spam.' }, { status: 400 });
+    }
+
+    // Prompt Injection Check
+    if (detectPromptInjection(userMessage)) {
+      console.warn(`[SECURITY BLOCK] Tutor chat prompt injection detected.`);
+      return NextResponse.json({ success: false, error: 'Message blocked: prompt injection patterns detected.' }, { status: 400 });
+    }
+
+    // Input Sanitization
+    messages[lastMsgIndex].content = sanitizeString(userMessage);
 
     // Fetch persona system prompt from DB
     let systemPrompt = "You are a helpful academic tutor.";
@@ -174,6 +200,117 @@ export async function POST(request: Request) {
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     }));
+
+    // === PRIVATE PROVIDER: OpenAI, Anthropic, Gemini AI Studio ===
+    if (personalTutor && personalTutor.enabled && personalTutor.apiKey) {
+      const { provider, apiKey, model } = personalTutor;
+      console.log(`[TUTOR CHAT] Dispatching to Personal Provider "${provider}" (Model: "${model}") for persona "${persona}"...`);
+
+      let url = '';
+      let headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      let body: any = {};
+
+      if (provider === 'openai') {
+        url = 'https://api.openai.com/v1/chat/completions';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = {
+          model: model || 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+          ],
+          stream: true
+        };
+      } else if (provider === 'anthropic') {
+        url = 'https://api.anthropic.com/v1/messages';
+        headers['x-api-key'] = apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+        body = {
+          model: model || 'claude-3-5-haiku-20241022',
+          max_tokens: 1024,
+          system: systemInstruction,
+          messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
+          stream: true
+        };
+      } else if (provider === 'gemini') {
+        const geminiModel = model || 'gemini-2.5-flash';
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        body = {
+          contents: messages.map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+          })),
+          systemInstruction: {
+            parts: [{ text: systemInstruction }]
+          }
+        };
+      }
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error(`[TUTOR CHAT] Personal Provider "${provider}" failed:`, errText);
+          return NextResponse.json({ success: false, error: `Personal provider error: ${errText.slice(0, 200)}` }, { status: res.status });
+        }
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            const reader = res.body?.getReader();
+            const decoder = new TextDecoder('utf-8');
+            if (!reader) { controller.close(); return; }
+            try {
+              let buffer = '';
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (trimmed.startsWith('data:')) {
+                    const dataStr = trimmed.slice(5).trim();
+                    if (!dataStr || dataStr === '[DONE]') continue;
+                    try {
+                      const parsed = JSON.parse(dataStr);
+                      let chunkText = '';
+                      if (provider === 'openai') {
+                        chunkText = parsed.choices?.[0]?.delta?.content || '';
+                      } else if (provider === 'anthropic') {
+                        chunkText = parsed.delta?.text || '';
+                      } else if (provider === 'gemini') {
+                        chunkText = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      }
+                      if (chunkText) {
+                        controller.enqueue(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+                      }
+                    } catch {}
+                  }
+                }
+              }
+            } catch (err: any) {
+              controller.error(err);
+            } finally {
+              controller.close();
+            }
+          }
+        });
+
+        return new Response(stream, {
+          headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' }
+        });
+
+      } catch (err: any) {
+        console.error(`[TUTOR CHAT] Personal Provider "${provider}" request exception:`, err);
+        return NextResponse.json({ success: false, error: `Failed to call personal provider: ${err.message}` }, { status: 500 });
+      }
+    }
 
     // === PRIMARY: Vertex AI ===
     if (isVertexConfigured()) {

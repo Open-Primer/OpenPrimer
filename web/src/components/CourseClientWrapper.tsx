@@ -31,9 +31,82 @@ export const CourseClientWrapper = ({
   const [isEnrolled, setIsEnrolled] = useState<boolean>(true);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [tutorStep, setTutorStep] = useState<1 | 2>(1);
+  const [selectedAction, setSelectedAction] = useState<'explain' | 'illustrate' | 'evaluate' | null>(null);
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
   const [tutorEnabled, setTutorEnabled] = useState(true);
+
+  // Reset step & action when selection changes or is closed
+  useEffect(() => {
+    if (!selection) {
+      setTutorStep(1);
+      setSelectedAction(null);
+    }
+  }, [selection]);
+
+  const triggerTutor = (action: 'explain' | 'illustrate' | 'evaluate', level: 'beginner' | 'intermediate' | 'expert') => {
+    if (!selection) return;
+    
+    let prompt = '';
+    if (language === 'FR') {
+      if (action === 'explain') {
+        if (level === 'beginner') {
+          prompt = `Explique-moi ce concept comme si j'avais 5 ans (avec des analogies très simples et imagées) :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Explique-moi ce concept de manière claire avec des modèles conceptuels équilibrés :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Donne-moi une explication scientifique approfondie, rigoureuse et détaillée de ce concept :\n\n"${selection.text}"`;
+        }
+      } else if (action === 'illustrate') {
+        if (level === 'beginner') {
+          prompt = `Donne-moi des exemples extrêmement simples, imagés et concrets du quotidien pour illustrer ce passage :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Donne-moi des exemples pratiques, clairs et concrets pour illustrer ce concept :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Donne-moi des cas d'application industriels, complexes ou avancés pour illustrer ce concept :\n\n"${selection.text}"`;
+        }
+      } else if (action === 'evaluate') {
+        if (level === 'beginner') {
+          prompt = `Pose-moi une question de cours très simple pour évaluer ma compréhension de ce passage :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Pose-moi une question conceptuelle de niveau intermédiaire pour tester ma compréhension de ce passage :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Pose-moi une question technique pointue ou un problème rigoureux pour évaluer ma maîtrise de ce passage :\n\n"${selection.text}"`;
+        }
+      }
+    } else {
+      if (action === 'explain') {
+        if (level === 'beginner') {
+          prompt = `Explain this concept to me as if I were 5 years old (using very simple and colorful analogies) :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Explain this concept to me clearly with balanced conceptual models :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Give me an in-depth, rigorous, and detailed scientific explanation of this concept :\n\n"${selection.text}"`;
+        }
+      } else if (action === 'illustrate') {
+        if (level === 'beginner') {
+          prompt = `Give me extremely simple, everyday, and colorful examples to illustrate this passage :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Give me clear, concrete, and practical examples to illustrate this concept :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Give me advanced, technical, or complex industrial application cases to illustrate this concept :\n\n"${selection.text}"`;
+        }
+      } else if (action === 'evaluate') {
+        if (level === 'beginner') {
+          prompt = `Ask me a very simple question to evaluate my understanding of this passage :\n\n"${selection.text}"`;
+        } else if (level === 'intermediate') {
+          prompt = `Ask me an intermediate conceptual question to test my understanding of this passage :\n\n"${selection.text}"`;
+        } else {
+          prompt = `Ask me a sharp technical question or a rigorous problem to evaluate my mastery of this passage :\n\n"${selection.text}"`;
+        }
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
+    setSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
 
   // Sync tutor preference from localStorage
   useEffect(() => {
@@ -513,50 +586,96 @@ export const CourseClientWrapper = ({
             transform: 'translateX(-50%)',
             zIndex: 9999 
           }}
-          className="flex items-center gap-1.5 p-1.5 bg-slate-900/90 border border-slate-800/80 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-md animate-fade-in text-[10px] font-black uppercase tracking-wider text-slate-100"
+          className="flex flex-col gap-2 p-2.5 bg-slate-900/95 border border-slate-800/80 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-md animate-fade-in text-slate-100 min-w-[280px]"
         >
-          <span className="text-slate-400 px-2 select-none normal-case font-bold text-xs">
-            {language === 'FR' ? 'Demander en tant que :' : 'Ask as:'}
-          </span>
-          <button
-            onClick={() => {
-              const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe au niveau Débutant (concept ultra-simplifié avec des analogies simples et vivantes) :\n\n"${selection.text}"`
-                : `Explain this paragraph to me at a Beginner level (ultra-simplified concept with simple, vivid analogies) :\n\n"${selection.text}"`;
-              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
-              setSelection(null);
-              window.getSelection()?.removeAllRanges();
-            }}
-            className="px-3 py-1.5 bg-slate-950/60 hover:bg-blue-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-blue-500/50 flex items-center gap-1 font-bold text-xs normal-case"
-          >
-            👶 {language === 'FR' ? 'Débutant' : 'Beginner'}
-          </button>
-          <button
-            onClick={() => {
-              const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe au niveau Intermédiaire (explication claire avec des modèles conceptuels équilibrés) :\n\n"${selection.text}"`
-                : `Explain this paragraph to me at an Intermediate level (clear explanation with balanced conceptual models) :\n\n"${selection.text}"`;
-              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
-              setSelection(null);
-              window.getSelection()?.removeAllRanges();
-            }}
-            className="px-3 py-1.5 bg-slate-950/60 hover:bg-indigo-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-indigo-500/50 flex items-center gap-1 font-bold text-xs normal-case"
-          >
-            👦 {language === 'FR' ? 'Intermédiaire' : 'Intermediate'}
-          </button>
-          <button
-            onClick={() => {
-              const prompt = language === 'FR'
-                ? `Explique-moi ce paragraphe au niveau Expert (avec un formalisme scientifique/mathématique rigoureux et précis) :\n\n"${selection.text}"`
-                : `Explain this paragraph to me at an Expert level (using rigorous and precise scientific/mathematical formalism) :\n\n"${selection.text}"`;
-              window.dispatchEvent(new CustomEvent('op_trigger_tutor_feynman', { detail: prompt }));
-              setSelection(null);
-              window.getSelection()?.removeAllRanges();
-            }}
-            className="px-3 py-1.5 bg-slate-950/60 hover:bg-violet-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-violet-500/50 flex items-center gap-1 font-bold text-xs normal-case"
-          >
-            🎓 {language === 'FR' ? 'Expert' : 'Expert'}
-          </button>
+          {tutorStep === 1 ? (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between px-1.5 pb-1 border-b border-slate-800/50">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 select-none">
+                  {language === 'FR' ? 'Que souhaitez-vous faire ?' : 'What do you want to do?'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  onClick={() => {
+                    setSelectedAction('explain');
+                    setTutorStep(2);
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-blue-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-blue-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">📖</span>
+                  <span>{language === 'FR' ? 'Expliquer' : 'Explain'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedAction('illustrate');
+                    setTutorStep(2);
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-emerald-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-emerald-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">💡</span>
+                  <span>{language === 'FR' ? 'Illustrer' : 'Illustrate'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedAction('evaluate');
+                    setTutorStep(2);
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-rose-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-rose-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">❓</span>
+                  <span>{language === 'FR' ? 'Évaluer' : 'Evaluate'}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2 px-1 pb-1 border-b border-slate-800/50">
+                <button
+                  onClick={() => {
+                    setTutorStep(1);
+                    setSelectedAction(null);
+                  }}
+                  className="px-1.5 py-0.5 bg-slate-950/40 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs cursor-pointer font-bold"
+                  title={language === 'FR' ? 'Retour' : 'Back'}
+                >
+                  ←
+                </button>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 select-none">
+                  {language === 'FR' ? 'Niveau de réponse :' : 'Response level:'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  onClick={() => {
+                    if (selectedAction) triggerTutor(selectedAction, 'beginner');
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-amber-600/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-amber-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">👶</span>
+                  <span>{language === 'FR' ? 'Simple' : 'Simple'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedAction) triggerTutor(selectedAction, 'intermediate');
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-indigo-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-indigo-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">👦</span>
+                  <span>{language === 'FR' ? 'Moyen' : 'Medium'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedAction) triggerTutor(selectedAction, 'expert');
+                  }}
+                  className="px-2 py-2.5 bg-slate-950/60 hover:bg-violet-650/90 hover:text-white rounded-xl transition-all duration-300 cursor-pointer border border-slate-800/50 hover:border-violet-500/50 flex flex-col items-center gap-1 font-bold text-xs normal-case text-center"
+                >
+                  <span className="text-lg">🎓</span>
+                  <span>{language === 'FR' ? 'Expert' : 'Expert'}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

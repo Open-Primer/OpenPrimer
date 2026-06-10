@@ -201,6 +201,49 @@ const ACC_TRANSLATIONS = {
   }
 };
 
+const PERSONAL_TUTOR_TRANSLATIONS = {
+  EN: {
+    title: "AI Tutor Engine",
+    desc: "Choose between using the platform's default built-in AI tutor or your own personal API keys.",
+    type_internal: "Built-in Tutor (Gemini - Free)",
+    type_personal: "Personal Tutor (Your own API Key)",
+    advantages: "Advantages: Absolute privacy, access to advanced models (GPT-4o, Claude 3.5 Sonnet), and no rate limits.",
+    disadvantages: "Disadvantages: You pay for your own API usage (token consumption). Requires generating a developer API key.",
+    provider: "Select Provider",
+    model: "Select Model",
+    api_key: "API Key",
+    api_key_placeholder: "Enter your personal API Key",
+    test_connection: "Test Connection",
+    test_loading: "Testing connection...",
+    test_success: "Connection successful!",
+    test_error: "Connection failed. Please check your key and credits.",
+    get_key: "Get your API Key:",
+    gemini_studio: "Google AI Studio (Gemini)",
+    openai_platform: "OpenAI Platform",
+    anthropic_console: "Anthropic Console (Claude)"
+  },
+  FR: {
+    title: "Moteur du Tuteur IA",
+    desc: "Choisissez d'utiliser le tuteur IA intégré par défaut ou configurez vos propres clés API personnelles.",
+    type_internal: "Tuteur Intégré (Gemini - Gratuit)",
+    type_personal: "Tuteur Personnel (Votre propre clé API)",
+    advantages: "Avantages : Confidentialité absolue, accès aux modèles avancés (GPT-4o, Claude 3.5 Sonnet) et aucune limite de requêtes.",
+    disadvantages: "Inconvénients : Vous payez votre propre consommation de jetons (tokens). Nécessite de générer une clé API développeur.",
+    provider: "Sélectionnez le fournisseur",
+    model: "Sélectionnez le modèle",
+    api_key: "Clé API",
+    api_key_placeholder: "Saisissez votre clé API personnelle",
+    test_connection: "Tester la connexion",
+    test_loading: "Test en cours...",
+    test_success: "Connexion réussie !",
+    test_error: "Échec de connexion. Vérifiez votre clé et vos crédits.",
+    get_key: "Obtenir votre clé API :",
+    gemini_studio: "Google AI Studio (Gemini)",
+    openai_platform: "Plateforme OpenAI",
+    anthropic_console: "Console Anthropic (Claude)"
+  }
+};
+
 const PWD_TRANSLATIONS = {
   EN: {
     section_title: "Change Password",
@@ -294,6 +337,11 @@ export default function ProfileSettingsPage() {
   const [tutorEnabled, setTutorEnabled] = useState(true);
   const [colorblindTheme, setColorblindTheme] = useState('none');
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [tutorType, setTutorType] = useState<'internal' | 'personal'>('internal');
+  const [personalTutorProvider, setPersonalTutorProvider] = useState<'openai' | 'anthropic' | 'gemini'>('openai');
+  const [personalTutorApiKey, setPersonalTutorApiKey] = useState('');
+  const [personalTutorModel, setPersonalTutorModel] = useState('gpt-4o-mini');
+  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -378,6 +426,10 @@ export default function ProfileSettingsPage() {
         setTutorEnabled(p.tutorEnabled !== false);
         setTtsEnabled(p.ttsEnabled !== false);
         setColorblindTheme(p.colorblindTheme || 'none');
+        setTutorType(p.tutorType || 'internal');
+        setPersonalTutorProvider(p.personalTutorProvider || 'openai');
+        setPersonalTutorApiKey(p.personalTutorApiKey || '');
+        setPersonalTutorModel(p.personalTutorModel || 'gpt-4o-mini');
       } catch (err) {}
     }
 
@@ -482,6 +534,10 @@ export default function ProfileSettingsPage() {
       tutorEnabled: tutorEnabled,
       ttsEnabled: ttsEnabled,
       colorblindTheme: colorblindTheme,
+      tutorType: tutorType,
+      personalTutorProvider: personalTutorProvider,
+      personalTutorApiKey: personalTutorApiKey,
+      personalTutorModel: personalTutorModel,
       isVerified: true
     };
     localStorage.setItem('op_user_profile', JSON.stringify(profile));
@@ -924,6 +980,227 @@ export default function ProfileSettingsPage() {
                         <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${tutorEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
                      </button>
                   </div>
+
+                  {/* Personal Tutor Custom Configuration Block */}
+                  {tutorEnabled && (
+                    <div className="flex flex-col gap-6 p-6 bg-slate-950/20 border border-slate-850/85 rounded-3xl mt-4 text-left">
+                      {/* Explanatory header & Type Selector */}
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                            {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.title || PERSONAL_TUTOR_TRANSLATIONS.EN.title}
+                          </span>
+                          <p className="text-[11px] text-slate-550 leading-normal">
+                            {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.desc || PERSONAL_TUTOR_TRANSLATIONS.EN.desc}
+                          </p>
+                        </div>
+
+                        {/* Pros and Cons Card */}
+                        <div className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl text-[10px] space-y-2">
+                          <p className="text-emerald-400 font-bold leading-normal">
+                            ✓ {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.advantages || PERSONAL_TUTOR_TRANSLATIONS.EN.advantages}
+                          </p>
+                          <p className="text-amber-400 font-bold leading-normal">
+                            ⚠ {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.disadvantages || PERSONAL_TUTOR_TRANSLATIONS.EN.disadvantages}
+                          </p>
+                        </div>
+
+                        {/* Choice Radio Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                          <label className="flex-1 flex items-center gap-3 p-4 bg-slate-950/50 border border-slate-850 rounded-2xl cursor-pointer hover:border-slate-700 transition-colors">
+                            <input
+                              type="radio"
+                              name="tutorType"
+                              value="internal"
+                              checked={tutorType === 'internal'}
+                              onChange={() => setTutorType('internal')}
+                              className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-850 bg-slate-900 cursor-pointer"
+                            />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                                {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.type_internal || PERSONAL_TUTOR_TRANSLATIONS.EN.type_internal}
+                              </span>
+                            </div>
+                          </label>
+
+                          <label className="flex-1 flex items-center gap-3 p-4 bg-slate-950/50 border border-slate-850 rounded-2xl cursor-pointer hover:border-slate-700 transition-colors">
+                            <input
+                              type="radio"
+                              name="tutorType"
+                              value="personal"
+                              checked={tutorType === 'personal'}
+                              onChange={() => setTutorType('personal')}
+                              className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-850 bg-slate-900 cursor-pointer"
+                            />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                                {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.type_personal || PERSONAL_TUTOR_TRANSLATIONS.EN.type_personal}
+                              </span>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Config panel when personal option is active */}
+                      {tutorType === 'personal' && (
+                        <div className="space-y-4 pt-2 border-t border-slate-900">
+                          {/* Provider Selection */}
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                              {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.provider || PERSONAL_TUTOR_TRANSLATIONS.EN.provider}
+                            </label>
+                            <div className="grid grid-cols-3 gap-3">
+                              {(['openai', 'anthropic', 'gemini'] as const).map((prov) => (
+                                <button
+                                  key={prov}
+                                  type="button"
+                                  onClick={() => {
+                                    setPersonalTutorProvider(prov);
+                                    setTestStatus('idle');
+                                    // Set default models per provider
+                                    if (prov === 'openai') setPersonalTutorModel('gpt-4o-mini');
+                                    if (prov === 'anthropic') setPersonalTutorModel('claude-3-5-haiku-20241022');
+                                    if (prov === 'gemini') setPersonalTutorModel('gemini-2.5-flash');
+                                  }}
+                                  className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${personalTutorProvider === prov ? 'bg-blue-600/10 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-850 text-slate-400 hover:border-slate-700'}`}
+                                >
+                                  {prov === 'openai' ? 'OpenAI' : prov === 'anthropic' ? 'Anthropic' : 'Gemini'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Model selection */}
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                              {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.model || PERSONAL_TUTOR_TRANSLATIONS.EN.model}
+                            </label>
+                            <select
+                              value={personalTutorModel}
+                              onChange={(e) => {
+                                setPersonalTutorModel(e.target.value);
+                                setTestStatus('idle');
+                              }}
+                              className="bg-slate-900 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none w-full"
+                            >
+                              {personalTutorProvider === 'openai' && (
+                                <>
+                                  <option value="gpt-4o-mini">GPT-4o Mini (Recommandé - Économique)</option>
+                                  <option value="gpt-4o">GPT-4o (Créatif - Plus coûteux)</option>
+                                </>
+                              )}
+                              {personalTutorProvider === 'anthropic' && (
+                                <>
+                                  <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Rapide & Précis)</option>
+                                  <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Qualité maximale)</option>
+                                </>
+                              )}
+                              {personalTutorProvider === 'gemini' && (
+                                <>
+                                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Équilibré)</option>
+                                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement poussé)</option>
+                                </>
+                              )}
+                            </select>
+                          </div>
+
+                          {/* API Key field */}
+                          <div className="flex flex-col gap-2">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.api_key || PERSONAL_TUTOR_TRANSLATIONS.EN.api_key}
+                              </label>
+                              <div className="text-[10px] font-medium text-slate-500">
+                                {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.get_key || PERSONAL_TUTOR_TRANSLATIONS.EN.get_key}{' '}
+                                {personalTutorProvider === 'openai' && (
+                                  <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.openai_platform || PERSONAL_TUTOR_TRANSLATIONS.EN.openai_platform} ↗
+                                  </a>
+                                )}
+                                {personalTutorProvider === 'anthropic' && (
+                                  <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.anthropic_console || PERSONAL_TUTOR_TRANSLATIONS.EN.anthropic_console} ↗
+                                  </a>
+                                )}
+                                {personalTutorProvider === 'gemini' && (
+                                  <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.gemini_studio || PERSONAL_TUTOR_TRANSLATIONS.EN.gemini_studio} ↗
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            <input
+                              type="password"
+                              value={personalTutorApiKey}
+                              onChange={(e) => {
+                                setPersonalTutorApiKey(e.target.value);
+                                setTestStatus('idle');
+                              }}
+                              placeholder={PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.api_key_placeholder || PERSONAL_TUTOR_TRANSLATIONS.EN.api_key_placeholder}
+                              className="bg-slate-900 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none w-full"
+                            />
+                          </div>
+
+                          {/* Test connection & Feedback */}
+                          <div className="flex items-center gap-4 pt-2">
+                            <button
+                              type="button"
+                              disabled={testStatus === 'loading' || !personalTutorApiKey}
+                              onClick={async () => {
+                                setTestStatus('loading');
+                                try {
+                                  let token: string | undefined;
+                                  try {
+                                    const { supabase } = await import("@/lib/supabase");
+                                    const { data: { session } } = await supabase.auth.getSession();
+                                    token = session?.access_token;
+                                  } catch (err) {}
+
+                                  const res = await fetch('/api/tutor/test-connection', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                    },
+                                    body: JSON.stringify({
+                                      provider: personalTutorProvider,
+                                      apiKey: personalTutorApiKey,
+                                      model: personalTutorModel
+                                    })
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok && data.success) {
+                                    setTestStatus('success');
+                                  } else {
+                                    setTestStatus('error');
+                                  }
+                                } catch (e) {
+                                  setTestStatus('error');
+                                }
+                              }}
+                              className={`py-2 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${testStatus === 'loading' ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed' : !personalTutorApiKey ? 'bg-slate-900 border-slate-850 text-slate-600 cursor-not-allowed' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white cursor-pointer'}`}
+                            >
+                              {testStatus === 'loading'
+                                ? (PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.test_loading || PERSONAL_TUTOR_TRANSLATIONS.EN.test_loading)
+                                : (PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.test_connection || PERSONAL_TUTOR_TRANSLATIONS.EN.test_connection)}
+                            </button>
+
+                            {testStatus === 'success' && (
+                              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 animate-fade-in">
+                                ✓ {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.test_success || PERSONAL_TUTOR_TRANSLATIONS.EN.test_success}
+                              </span>
+                            )}
+
+                            {testStatus === 'error' && (
+                              <span className="text-xs font-bold text-red-400 flex items-center gap-1.5 animate-fade-in">
+                                ⚠ {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.test_error || PERSONAL_TUTOR_TRANSLATIONS.EN.test_error}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Enable Text-to-Speech (TTS) */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-950/40 border border-slate-850 rounded-3xl">

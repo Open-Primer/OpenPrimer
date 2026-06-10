@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Award, PenTool, CheckCircle2, AlertCircle, RefreshCw, Play, Timer, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { progressService } from '@/lib/db';
+import { progressService, dbService } from '@/lib/db';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -150,6 +150,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isCourseCompleted, setIsCourseCompleted] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const [level, setLevel] = useState('L1');
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const answerRef = useRef(answer);
@@ -165,6 +166,17 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     const pathname = window.location.pathname;
     const parts = pathname.split('/');
     const courseSlug = parts[3] || 'Classical_Mechanics';
+
+    // Fetch the level directly from the course data
+    dbService.getSyllabus(courseSlug).then(({ data }) => {
+      if (data && data.level) {
+        setLevel(data.level);
+      } else {
+        setLevel(parts[1] || 'L1');
+      }
+    }).catch(() => {
+      setLevel(parts[1] || 'L1');
+    });
 
     const handleAuthChange = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -250,7 +262,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           prompt,
           answer: answerRef.current,
           gradingSystem,
-          subject
+          subject,
+          level
         }),
       });
 
@@ -337,7 +350,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           prompt,
           answer,
           gradingSystem,
-          subject
+          subject,
+          level
         }),
       });
 

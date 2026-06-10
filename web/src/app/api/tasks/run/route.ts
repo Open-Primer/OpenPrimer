@@ -3,6 +3,20 @@ import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { generateCourseContent, translateCourseContent } from '@/lib/ai';
 
+// ============================================================
+// PROPOSITION A — Auto-Retry Natif dans la Task Queue (API)
+// Les métadonnées de tentatives sont stockées dans le champ
+// JSON `description` : { current_attempt, max_attempts, ... }
+// Si current_attempt < max_attempts après une erreur, la tâche
+// est remise en statut 'queued' pour être reprise par un worker.
+//
+// PROPOSITION B — Agent d'Auto-Correction IA pour le MDX
+// est intégré côté ai.ts (healMdxWithAI) et branché sur
+// validateMdxContent dans generateCourseContent.
+// ============================================================
+
+const MAX_ATTEMPTS_DEFAULT = 3;
+
 export async function POST(request: Request) {
   const logs: string[] = [];
   logs.push(`[${new Date().toISOString()}] Cloud Run Serverless Task worker triggered.`);
@@ -40,13 +54,34 @@ export async function POST(request: Request) {
     const nextTask = claimedTasks[0];
     logs.push(`[CLAIMED] Task ID: ${nextTask.id} | Name: "${nextTask.name}" | Priority: ${nextTask.priority}`);
 
-    // Parse task extra variables
+    // Parse task extra variables (includes attempt tracking)
     let extra: any = {};
     try {
       extra = JSON.parse(nextTask.description || '{}');
     } catch (e) {
       console.warn("Failed to parse task description JSON:", e);
     }
+
+    const currentAttempt: number = (extra.current_attempt || 0) + 1;
+    const maxAttempts: number = extra.max_attempts || MAX_ATTEMPTS_DEFAULT;
+
+    logs.push(`[RETRY] Attempt ${currentAttempt}/${maxAttempts} for task "${nextTask.name}"`);
+
+    // Update attempt counter immediately so it's visible in the dashboard
+    extra.current_attempt = currentAttempt;
+    extra.max_attempts = maxAttempts;
+    extra.last_attempt_at = new Date().toISOString();
+
+    await supabase
+      .from('task_queue')
+      .update({
+        description: JSON.stringify(extra),
+        logs: [
+          ...(nextTask.logs || []),
+          `[${new Date().toISOString()}] Attempt ${currentAttempt}/${maxAttempts} started (Cloud Run worker).`
+        ]
+      })
+      .eq('id', nextTask.id);
 
     const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
     const level = extra.level || nextTask.level || 'Beginner';
@@ -121,7 +156,7 @@ export async function POST(request: Request) {
         }
       }
 
-      // 4. Update status to completed
+      // 4. SUCCESS: Update status to completed
       extra.completedAt = new Date().toISOString();
       await supabase
         .from('task_queue')
@@ -129,30 +164,84 @@ export async function POST(request: Request) {
           status: 'completed',
           progress: 100,
           description: JSON.stringify(extra),
-          logs: [...(nextTask.logs || []), 'Successfully completed course content generation via Cloud Run Serverless worker.']
+          logs: [
+            ...(nextTask.logs || []),
+            `[${new Date().toISOString()}] ✅ Attempt ${currentAttempt}/${maxAttempts} succeeded. Task completed via Cloud Run Serverless worker.`
+          ]
         })
         .eq('id', nextTask.id);
 
-      logs.push(`[SUCCESS] Completed task "${nextTask.name}" successfully.`);
-      return NextResponse.json({ success: true, taskId: nextTask.id, logs });
+      logs.push(`[SUCCESS] Completed task "${nextTask.name}" on attempt ${currentAttempt}/${maxAttempts}`);
+      return NextResponse.json({ success: true, taskId: nextTask.id, attempt: currentAttempt, maxAttempts, logs });
 
     } catch (taskError: any) {
-      console.error(`[TASK ERROR] Execution failed for task ${nextTask.id}:`, taskError);
-      
-      // Update status to failed
-      extra.completedAt = new Date().toISOString();
-      await supabase
-        .from('task_queue')
-        .update({
-          status: 'failed',
-          progress: 0,
-          description: JSON.stringify(extra),
-          logs: [...(nextTask.logs || []), `Failed: ${taskError.message || String(taskError)}`]
-        })
-        .eq('id', nextTask.id);
+      const errMsg = taskError.message || String(taskError);
+      const errStack = taskError.stack || errMsg;
+      console.error(`[TASK ERROR] Execution failed for task ${nextTask.id} on attempt ${currentAttempt}/${maxAttempts}:`, errMsg);
 
-      logs.push(`[ERROR] Task failed: ${taskError.message || String(taskError)}`);
-      return NextResponse.json({ success: false, taskId: nextTask.id, error: taskError.message || String(taskError), logs }, { status: 500 });
+      const updatedLogs = [
+        ...(nextTask.logs || []),
+        `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
+        `Stack: ${errStack}`
+      ];
+
+      if (currentAttempt < maxAttempts) {
+        // RETRY: Re-queue the task for another worker
+        console.log(`[RETRY] Re-queuing task "${nextTask.name}" for attempt ${currentAttempt + 1}/${maxAttempts}...`);
+        extra.last_error = errMsg;
+        await supabase
+          .from('task_queue')
+          .update({
+            status: 'queued',
+            progress: 0,
+            description: JSON.stringify(extra),
+            logs: [
+              ...updatedLogs,
+              `[${new Date().toISOString()}] ⏳ Re-queued for retry (attempt ${currentAttempt + 1}/${maxAttempts}).`
+            ]
+          })
+          .eq('id', nextTask.id);
+
+        logs.push(`[RETRY] Task re-queued for attempt ${currentAttempt + 1}/${maxAttempts}: ${errMsg}`);
+        return NextResponse.json({
+          success: false,
+          retrying: true,
+          taskId: nextTask.id,
+          attempt: currentAttempt,
+          maxAttempts,
+          nextAttempt: currentAttempt + 1,
+          error: errMsg,
+          logs
+        }, { status: 202 }); // 202 Accepted — retry is in progress
+      } else {
+        // FINAL FAILURE: All attempts exhausted
+        console.error(`[FAILED] Task "${nextTask.name}" exhausted all ${maxAttempts} attempts.`);
+        extra.completedAt = new Date().toISOString();
+        extra.last_error = errMsg;
+        await supabase
+          .from('task_queue')
+          .update({
+            status: 'failed',
+            progress: 0,
+            description: JSON.stringify(extra),
+            logs: [
+              ...updatedLogs,
+              `[${new Date().toISOString()}] 🔴 PERMANENTLY FAILED after ${maxAttempts} attempts. No more retries.`
+            ]
+          })
+          .eq('id', nextTask.id);
+
+        logs.push(`[ERROR] Task permanently failed after ${maxAttempts} attempts: ${errMsg}`);
+        return NextResponse.json({
+          success: false,
+          retrying: false,
+          taskId: nextTask.id,
+          attempt: currentAttempt,
+          maxAttempts,
+          error: errMsg,
+          logs
+        }, { status: 500 });
+      }
     }
 
   } catch (error: any) {

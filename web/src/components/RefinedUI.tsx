@@ -402,6 +402,56 @@ export const AITutorOverlay = ({
 
   const [selfEvalPre, setSelfEvalPre] = useState<number | null>(null);
   const [selfEvalPost, setSelfEvalPost] = useState<number | null>(null);
+  const [coachAdvice, setCoachAdvice] = useState<string>('');
+  const [showCoachPopover, setShowCoachPopover] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchAdvice() {
+      if (!isCurriculumPage) return;
+      const savedProfile = localStorage.getItem('op_user_profile');
+      const loggedIn = localStorage.getItem('op_session') === 'true';
+      let userId = 'u1';
+      if (loggedIn && savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.id) userId = p.id;
+        } catch (e) {}
+      }
+      
+      try {
+        const { data: progressData } = await dbService.getUserProgress(userId, lang);
+        if (progressData && progressData.aiSummary && active) {
+          setCoachAdvice(progressData.aiSummary);
+          
+          const dismissed = sessionStorage.getItem('op_dismiss_resumption_coach_advice');
+          if (!dismissed) {
+            const timer = setTimeout(() => {
+              setShowCoachPopover(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching coach advice in overlay:", e);
+      }
+    }
+    fetchAdvice();
+    return () => {
+      active = false;
+    };
+  }, [lang, isCurriculumPage]);
+
+  const handleDismissCoachPopover = () => {
+    setShowCoachPopover(false);
+    sessionStorage.setItem('op_dismiss_resumption_coach_advice', 'true');
+  };
+
+  const handleOpenChatFromCoach = () => {
+    setShowCoachPopover(false);
+    sessionStorage.setItem('op_dismiss_resumption_coach_advice', 'true');
+    setIsOpen(true);
+  };
 
   // Sync self-evaluation scores when opening/closing or path changes
   useEffect(() => {
@@ -660,6 +710,22 @@ export const AITutorOverlay = ({
         console.warn("[TUTOR CHAT] Failed to retrieve client auth session token:", err);
       }
 
+      let personalTutorParam = undefined;
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          if (p.tutorEnabled && p.tutorType === 'personal' && p.personalTutorApiKey) {
+            personalTutorParam = {
+              enabled: true,
+              provider: p.personalTutorProvider || 'openai',
+              apiKey: p.personalTutorApiKey,
+              model: p.personalTutorModel || 'gpt-4o-mini'
+            };
+          }
+        } catch (e) {}
+      }
+
       const response = await fetch('/api/tutor/chat', {
         method: 'POST',
         signal: controller.signal,
@@ -677,7 +743,8 @@ export const AITutorOverlay = ({
           courseTitle,
           courseSubject,
           selfEvalPre,
-          selfEvalPost
+          selfEvalPost,
+          personalTutor: personalTutorParam
         })
       });
 
@@ -1297,6 +1364,68 @@ export const AITutorOverlay = ({
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {!isOpen && showCoachPopover && coachAdvice && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 15 }}
+            className="w-[320px] bg-slate-900/95 border border-blue-500/30 rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl relative overflow-hidden flex flex-col gap-3 mr-2 mb-2 select-none"
+          >
+            {/* Ambient background glow */}
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <button
+              onClick={handleDismissCoachPopover}
+              className="absolute top-4 right-4 p-1 text-slate-500 hover:text-white rounded-lg hover:bg-slate-800/40 transition-all cursor-pointer"
+              title={lang.toUpperCase() === 'FR' ? 'Masquer' : 'Dismiss'}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-lg">
+                {((): string => {
+                  const EMOJI_MAP: Record<string, string> = {
+                    socratic: '💬', direct: '⚡', gamified: '🚀', historical: '📚',
+                    feynman: '💡', proof: '📐', engineer: '🔧', debater: '🗣️',
+                    analogy_alchemist: '🧪', cognitive_catalyst: '🧠',
+                    heuristic_explorer: '🔭', diamond_age: '💎',
+                  };
+                  return EMOJI_MAP[persona] || '🤖';
+                })()}
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">
+                  {lang.toUpperCase() === 'FR' ? 'Conseil du Tuteur' :
+                   lang.toUpperCase() === 'ES' ? 'Consejo del Tutor' :
+                   lang.toUpperCase() === 'DE' ? 'Tutor-Rat' :
+                   lang.toUpperCase() === 'ZH' ? '导师建议' : 'Tutor Advice'}
+                </p>
+                <h4 className="text-xs font-black text-white leading-none">
+                  {getPersonaName(persona)}
+                </h4>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-350 leading-relaxed font-medium pr-6 mt-1">
+              {coachAdvice}
+            </p>
+
+            <button
+              onClick={handleOpenChatFromCoach}
+              className="w-full mt-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 shadow-[0_4px_12px_rgba(37,99,235,0.2)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              {lang.toUpperCase() === 'FR' ? 'Discuter avec le tuteur' :
+               lang.toUpperCase() === 'ES' ? 'Hablar con el tutor' :
+               lang.toUpperCase() === 'DE' ? 'Mit Tutor sprechen' :
+               lang.toUpperCase() === 'ZH' ? '与导师交流' : 'Discuss with tutor'}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.button 
         whileHover={{ scale: 1.1 }} 
         whileTap={{ scale: 0.9 }} 
@@ -1849,7 +1978,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
 
 
 
-        {isCoursePage && (
+        {isCoursePage && isLoggedIn && (
           <button 
             onClick={() => setIsReportModalOpen(true)}
             className="report-bug-btn p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all flex items-center gap-2 group"

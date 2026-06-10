@@ -3,12 +3,14 @@ import { verifySession } from '@/lib/authHelper';
 import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
 import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 
 const evaluationSchema = z.object({
   prompt: z.string().min(5),
   answer: z.string().min(5),
   gradingSystem: z.enum(['0/10', '0/20', 'A-F', 'pass-fail']),
-  subject: z.string().optional()
+  subject: z.string().optional(),
+  level: z.string().optional()
 });
 
 export async function POST(request: Request) {
@@ -29,15 +31,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid payload structure.', details: parsed.error.format() }, { status: 400 });
     }
 
-    const { prompt, answer, gradingSystem, subject } = parsed.data;
+    const { prompt, answer, gradingSystem, subject, level } = parsed.data;
+
+    // Anti-Spam Check on student's response
+    if (isSpam(answer)) {
+      console.warn(`[SPAM BLOCK] Tutor evaluation answer flagged as spam.`);
+      return NextResponse.json({ success: false, error: 'Submission blocked: flagged as spam.' }, { status: 400 });
+    }
+
+    // Prompt Injection Check on student's response
+    if (detectPromptInjection(answer)) {
+      console.warn(`[SECURITY BLOCK] Tutor evaluation prompt injection detected.`);
+      return NextResponse.json({ success: false, error: 'Submission blocked: prompt injection patterns detected.' }, { status: 400 });
+    }
+
+    // Input Sanitization
+    const cleanAnswer = sanitizeString(answer);
+    const cleanPrompt = sanitizeString(prompt);
+    const cleanSubject = subject ? sanitizeString(subject) : undefined;
+    const cleanLevel = level ? sanitizeString(level) : undefined;
 
     const systemInstruction = `You are an elite academic examiner. Your job is to grade the student's essay/response to the essay prompt.
-Subject context: ${subject || 'General Education'}
+Subject context: ${cleanSubject || ''}
+Academic level context: ${cleanLevel || 'L1'}
 Grading System constraints: Graded strictly on the "${gradingSystem}" scale.
 - For "0/20": Grade out of 20 (e.g. "14/20"). Commonly used in France.
 - For "0/10": Grade out of 10 (e.g. "7.5/10").
 - For "A-F": US letter grading (e.g. "A-", "B", "C+", "F").
 - For "pass-fail": Output either "Pass" or "Fail".
+
+You must adapt your strictness, grading expectations, and feedback tone to the specified academic level context. For lower school/primary levels, grade leniently, focus on conceptual intuition, and use encouraging language. For advanced university levels (e.g. L3/master/301), grade with high academic strictness, requiring rigorous arguments, formal correctness, and analytical depth.
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -46,8 +69,8 @@ You must output ONLY a valid JSON object matching this structure:
 }
 Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
 
-    const userPrompt = `Essay Prompt: "${prompt}"
-Student's Response: "${answer}"
+    const userPrompt = `Essay Prompt: "${cleanPrompt}"
+Student's Response: "${cleanAnswer}"
 
 Analyze and grade the response now.`;
 

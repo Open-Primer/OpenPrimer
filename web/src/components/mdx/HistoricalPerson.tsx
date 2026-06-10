@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { User, Sparkles, MapPin, Globe, ExternalLink } from 'lucide-react';
+import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar } from 'lucide-react';
 
 export interface EntityLinkProps {
   name: string;
   lang: string;
   children: React.ReactNode;
-  type?: 'person' | 'character' | 'location' | 'entity';
+  type?: 'person' | 'character' | 'location' | 'event' | 'entity';
   bio?: string;
   description?: string;
 }
@@ -127,6 +127,12 @@ export const EntityLink = ({
     borderClass = "border-emerald-400 text-emerald-300 hover:text-emerald-200";
     iconBoxClass = "bg-emerald-600/20 text-emerald-400";
     linkClass = "text-emerald-400 hover:text-emerald-300";
+  } else if (resolvedType === 'event') {
+    Icon = Calendar;
+    headerLabel = isFr ? 'Événement' : 'Event';
+    borderClass = "border-amber-400 text-amber-300 hover:text-amber-200";
+    iconBoxClass = "bg-amber-600/20 text-amber-400";
+    linkClass = "text-amber-400 hover:text-amber-300";
   }
 
   const t = {
@@ -230,4 +236,8 @@ export const FictionalCharacter = (props: Omit<EntityLinkProps, 'type'>) => (
 
 export const Location = (props: Omit<EntityLinkProps, 'type'>) => (
   <EntityLink {...props} type="location" />
+);
+
+export const HistoricalEvent = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="event" />
 );

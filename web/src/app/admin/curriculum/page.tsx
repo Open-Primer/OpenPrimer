@@ -4603,11 +4603,64 @@ export default function AdminCurriculumPage() {
       let updatedQueue = [...queue];
       let promoted = false;
 
+      // Group untreated feedbacks by courseId
+      const courseFeedbacksMap: Record<string, any[]> = {};
       feedbacks.forEach(f => {
-        if (f.rating <= revThreshold) {
-          const taskTitle = `${f.courseId.replace(/_/g, ' ')} - Revise: ${f.comment}`;
-          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
-          const isRefused = refusedRevisions.some(r => r.course.toLowerCase() === f.courseId.toLowerCase() && r.issueSummary.toLowerCase() === f.comment.toLowerCase());
+        // Skip treated feedbacks
+        if (f.isTreated || f.is_treated) return;
+
+        // Skip feedbacks older than last_revision_date (Version Governance)
+        const course = courses.find(c => 
+          c.slug === f.courseId || 
+          String(c.id) === f.courseId || 
+          c.title.toLowerCase().replace(/ /g, '_') === f.courseId.toLowerCase()
+        );
+        
+        if (course) {
+          if (course.last_revision_date && new Date(f.timestamp).getTime() < new Date(course.last_revision_date).getTime()) {
+            return;
+          }
+        }
+
+        const key = f.courseId;
+        if (!courseFeedbacksMap[key]) {
+          courseFeedbacksMap[key] = [];
+        }
+        courseFeedbacksMap[key].push(f);
+      });
+
+      Object.entries(courseFeedbacksMap).forEach(([courseId, list]) => {
+        const course = courses.find(c => 
+          c.slug === courseId || 
+          String(c.id) === courseId || 
+          c.title.toLowerCase().replace(/ /g, '_') === courseId.toLowerCase()
+        );
+        if (!course) return;
+
+        // Get all feedbacks to compute average rating and total votes for the course
+        const allCourseFeedbacks = feedbacks.filter(f => f.courseId === courseId);
+        const overallVotes = allCourseFeedbacks.length;
+        const overallRating = overallVotes > 0
+          ? allCourseFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / overallVotes
+          : 0;
+
+        // Condition 1: Low average rating (overallRating <= revThreshold AND total votes >= revMinVotes)
+        const condition1_LowRating = (overallRating > 0 && overallRating <= revThreshold && overallVotes >= revMinVotes);
+
+        // Condition 2: Concordant reports (Untreated count >= revMinReports)
+        const untreatedCount = list.length;
+        const condition2_Concordance = (untreatedCount >= revMinReports);
+
+        if (condition1_LowRating || condition2_Concordance) {
+          const mainIssues = list.slice(0, 3).map(f => f.comment).join('; ');
+          const taskTitle = `${course.title} - Revise: Batch revision for issues (${mainIssues})`;
+
+          const isInQueue = updatedQueue.some(t => 
+            t.type === 'revision' && 
+            t.title.toLowerCase().startsWith(course.title.toLowerCase() + ' - revise')
+          );
+          const isRefused = refusedRevisions.some(r => r.course.toLowerCase() === course.title.toLowerCase());
+
           if (!isInQueue && !isRefused) {
             updatedQueue.push({
               id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -4615,7 +4668,7 @@ export default function AdminCurriculumPage() {
               type: 'revision',
               status: 'queued',
               progress: 0,
-              priority: 'High',
+              priority: condition1_LowRating ? 'High' : 'Medium',
               timestamp: new Date().toISOString()
             });
             promoted = true;
@@ -4629,7 +4682,7 @@ export default function AdminCurriculumPage() {
         loadData();
       }
     }
-  }, [feedbacks, autoRevision, revThreshold, queue, refusedRevisions]);
+  }, [feedbacks, autoRevision, revThreshold, revMinVotes, revMinReports, queue, refusedRevisions, courses]);
 
   // REACTIVE REFUSED REVISIONS CLEANUP LOOP (Purges expired refused revisions based on revRetentionDays)
   useEffect(() => {
@@ -5494,6 +5547,11 @@ export default function AdminCurriculumPage() {
     }> = {};
 
     parsedFeedbacks.forEach(f => {
+      // Skip already treated/resolved feedbacks
+      if (f.isTreated || f.is_treated) {
+        return;
+      }
+
       // Find the corresponding course object to check Version Governance
       const course = courses.find(c => c.slug === f.courseId || String(c.id) === f.courseId || c.title.toLowerCase().replace(/ /g, '_') === f.courseId.toLowerCase());
       if (course) {

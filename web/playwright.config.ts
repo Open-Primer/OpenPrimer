@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnvConfig } from '@next/env';
+
+// Load env variables from .env.local
+loadEnvConfig(process.cwd());
+
 
 export default defineConfig({
   testDir: './tests',

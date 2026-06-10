@@ -58,6 +58,7 @@ import {
   getCanonicalCourseId,
   purgePipelineAndRequestsForCourseOrCurriculum
 } from '../db';
+import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
 export const mockDatabaseProvider: DatabaseService = {
   getSystemParameters: async () => {
@@ -665,20 +666,29 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   submitReport: async (course: string, page: string, comment: string) => {
-    const issueSummary = comment ? `Page: ${page}. Comment: ${comment}` : `Page: ${page}. General report.`;
+    if (comment && comment.trim()) {
+      if (isSpam(comment) || detectPromptInjection(comment)) {
+        return { data: null, error: new Error('Flagged as spam or unsafe content') };
+      }
+    }
+    const cleanComment = sanitizeString(comment);
+    const cleanCourse = sanitizeString(course);
+    const cleanPage = sanitizeString(page);
+
+    const issueSummary = cleanComment ? `Page: ${cleanPage}. Comment: ${cleanComment}` : `Page: ${cleanPage}. General report.`;
     const reports = [...getReportClusters()];
-    const existing = reports.find(c => c.course === course && c.issueSummary === issueSummary);
+    const existing = reports.find(c => c.course === cleanCourse && c.issueSummary === issueSummary);
     if (existing) {
       existing.count += 1;
     } else {
       const id = 'cl_' + (reports.length + 1);
       reports.push({
         id,
-        course,
+        course: cleanCourse,
         issueSummary,
         count: 1,
         status: 'Pending',
-        aiProposal: `Address issue reported on page "${page}" with feedback: "${comment || 'None'}"`,
+        aiProposal: `Address issue reported on page "${cleanPage}" with feedback: "${cleanComment || 'None'}"`,
         priority: 'Medium'
       });
     }
@@ -1198,5 +1208,22 @@ export const mockDatabaseProvider: DatabaseService = {
     setUsersList(list);
     setLocalStorageItem('openprimer_users', list);
     return { data: null, error: null };
+  },
+
+  saveCourseNotification: async (query: string, email: string) => {
+    if (typeof window === 'undefined') return { data: null, error: 'Window not defined' };
+    const key = 'op_course_notifications';
+    const existing = JSON.parse(window.localStorage.getItem(key) || '[]');
+    const newRequest = { query, email, timestamp: new Date().toISOString() };
+    existing.push(newRequest);
+    window.localStorage.setItem(key, JSON.stringify(existing));
+    return { data: newRequest, error: null };
+  },
+
+  getCourseNotifications: async () => {
+    if (typeof window === 'undefined') return { data: [], error: 'Window not defined' };
+    const key = 'op_course_notifications';
+    const existing = JSON.parse(window.localStorage.getItem(key) || '[]');
+    return { data: existing, error: null };
   }
 };

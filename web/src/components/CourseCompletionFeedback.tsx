@@ -5,6 +5,7 @@ import { Star, CheckCircle, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import Link from 'next/link';
 import { dbService } from '@/lib/db';
+import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 
 interface CourseCompletionFeedbackProps {
   courseId: string;
@@ -390,6 +391,15 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     e.preventDefault();
     if (rating === 0) return;
 
+    if (comment.trim()) {
+      if (isSpam(comment) || detectPromptInjection(comment)) {
+        alert(lang === 'FR' ? "Votre commentaire contient du spam ou du contenu inapproprié." : "Your comment contains spam or inappropriate content.");
+        return;
+      }
+    }
+
+    const cleanComment = sanitizeString(comment);
+
     const savedProfile = localStorage.getItem('op_user_profile');
     let userId = 'u1';
     if (savedProfile) {
@@ -402,19 +412,19 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     // 1. Write to local storage immediately as source of truth
     localStorage.setItem(`op_feedback_${userId}_${courseId}`, JSON.stringify({
       rating,
-      comment
+      comment: cleanComment
     }));
 
     // 2. Dual-write to database asynchronously
     await dbService.addCourseFeedback({
       courseId,
       rating,
-      comment,
+      comment: cleanComment,
       userId
     });
 
     setUserRating(rating);
-    setUserComment(comment);
+    setUserComment(cleanComment);
     setSubmitted(true);
     setShowSuccessToast(true);
   };

@@ -2031,14 +2031,14 @@ const handleDatabaseErrorLegacy = (error: any) => {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   if (isLocalhost) {
-    console.warn("� [DATABASE FALLBACK] Supabase query failed. Falling back to LocalStorage mock provider on localhost:", error);
+    console.warn("  [DATABASE FALLBACK] Supabase query failed. Falling back to LocalStorage mock provider on localhost:", error);
     dynamicOffline = true;
     return;
   }
 
   // Only log in the console when a real DB connection is expected (production/configured env)
   if (isDatabaseConfigured) {
-    console.error("=� [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
+    console.error("= [DATABASE CONNECTION FAILURE] Supabase query failed:", error);
   }
   if (typeof window !== 'undefined') {
     const errMsg = (error?.message || String(error)).toLowerCase();
@@ -2111,6 +2111,51 @@ export function generatePedagogicalSummary(
   const isEs = activeLang === 'ES';
   const isDe = activeLang === 'DE';
   const isZh = activeLang === 'ZH';
+
+  // First connection welcome messages when activeModules is empty (0 courses enrolled)
+  if (!activeModules || activeModules.length === 0) {
+    if (tutorId === 'direct') {
+      if (isFr) return `Bonjour. Je suis votre tuteur. Bienvenue sur OpenPrimer. Votre cursus est actuellement vide. Pour démarrer efficacement, parcourez le catalogue et inscrivez-vous à un cours ou créez un cursus personnalisé. Optimisez votre temps dès maintenant.`;
+      if (isEs) return `Hola. Soy tu tutor. Bienvenido a OpenPrimer. Tu plan de estudios está actualmente vacío. Para comenzar de manera eficiente, explora el catálogo e inscríbete en un curso o crea un plan de estudios personalizado. Optimiza tu tiempo ahora.`;
+      if (isDe) return `Hallo. Ich bin Ihr Tutor. Willkommen bei OpenPrimer. Ihr Lehrplan ist derzeit leer. Um effizient zu starten, durchsuchen Sie den Katalog und melden Sie sich für einen Kurs an oder erstellen Sie einen personalisierten Lehrplan. Optimieren Sie jetzt Ihre Zeit.`;
+      if (isZh) return `你好。我是你的导师。欢迎来到 OpenPrimer。你的课表目前是空的。为了高效开始，请浏览课程目录并注册课程，或者创建个性化学习计划。现在就开始优化你的时间吧。`;
+      return `Hello. I am your tutor. Welcome to OpenPrimer. Your curriculum is currently empty. To start efficiently, browse the catalog and enroll in a course or create a custom curriculum. Optimize your time now.`;
+    }
+    if (tutorId === 'gamified') {
+      if (isFr) return `Salut l'ami ! 🚀 Je suis ton tuteur IA ! Bienvenue dans l'aventure OpenPrimer ! 🎮 Prêt à relever des défis et accumuler des points ? Pour commencer, va vite sur le catalogue pour débloquer ton tout premier cours ou créer ton programme ! C'est parti ! ⭐`;
+      if (isEs) return `¡Hola, amigo! 🚀 ¡Soy tu tutor de IA! ¡Bienvenido a la aventura de OpenPrimer! 🎮 ¿Listo para asumir desafíos y acumular puntos? Para comenzar, ¡ve rápido al catálogo para desbloquear tu primer curso o crear tu programa! ¡Vamos! ⭐`;
+      if (isDe) return `Hallo, Kumpel! 🚀 Ich bin dein KI-Tutor! Willkommen beim OpenPrimer-Abenteuer! 🎮 Bereit, Herausforderungen anzunehmen und Punkte zu sammeln? Geh zuerst zum Katalog, um deinen allerersten Kurs freizuschalten oder dein Programm zu erstellen! Los geht's! ⭐`;
+      if (isZh) return `嘿，朋友！🚀 我是你的 AI 导师！欢迎来到 OpenPrimer 的探索冒险！🎮 准备好接受挑战并累积点数了吗？要开始的话，赶快去课程目录解锁你的第一门课程，或者创建你的学习计划吧！出发！⭐`;
+      return `Hey there! 🚀 I am your AI Tutor! Welcome to the OpenPrimer adventure! 🎮 Ready to take on challenges and rack up points? To start, head over to the catalog to unlock your very first course or create your program! Let's go! ⭐`;
+    }
+    if (tutorId === 'historical') {
+      if (isFr) return `Salutations, cher chercheur. Je suis votre tuteur historique. Bienvenue dans ce temple du savoir qu'est OpenPrimer. Votre table d'étude est encore vide. Je vous invite à explorer les chroniques de notre catalogue pour y inscrire votre premier sujet d'étude et poursuivre la quête de la vérité.`;
+      if (isEs) return `Saludos, estimado erudito. Soy tu tutor histórico. Bienvenido a este templo del saber que es OpenPrimer. Tu mesa de estudio aún está vacía. Te invito a explorar las crónicas de nuestro catálogo para registrar tu primer tema de estudio y continuar la búsqueda de la verdad.`;
+      if (isDe) return `Grüße, werter Gelehrter. Ich bin Ihr historischer Tutor. Willkommen in diesem Tempel des Wissens namens OpenPrimer. Ihr Studiertisch ist noch leer. Ich lade Sie ein, die Chroniken unseres Katalogs zu erkunden, um Ihr erstes Studienfach einzutragen und die Suche nach der Wahrheit fortzusetzen.`;
+      if (isZh) return `你好，亲爱的学者。我是你的历史导师。欢迎来到 OpenPrimer 这座知识殿堂。你的书桌 intellectuelle 目前还是空的。我邀请你探索课程目录的篇章，注册你的第一个 research subject，并开展你的真理探求。`;
+      return `Greetings, fellow scholar. I am your historical tutor. Welcome to OpenPrimer, a sanctuary of knowledge. Your study table is currently empty. I invite you to explore our catalog to select your first subject of study and join the quest for truth.`;
+    }
+    if (tutorId === 'feynman') {
+      if (isFr) return `Salut ! Je suis votre tuteur Feynman. Bienvenue sur OpenPrimer ! L'apprentissage commence par la curiosité. Pour l'instant, vous n'avez aucun cours d'actif. Faisons simple : allez faire un tour sur le catalogue, choisissez un sujet qui vous passionne et on commencera à le déconstruire ensemble !`;
+      if (isEs) return `¡Hola! Soy tu tutor Feynman. ¡Bienvenido a OpenPrimer! El aprendizaje comienza con la curiosidad. Por ahora, no tienes ningún curso activo. Hagámoslo simple: date una vuelta por el catálogo, elige un tema que te apasione y ¡empezaremos a desglosarlo juntos!`;
+      if (isDe) return `Hallo! Ich bin Ihr Feynman-Tutor. Willkommen bei OpenPrimer! Lernen beginnt mit Neugier. Momentan haben Sie keine aktiven Kurse. Machen wir es einfach: Schauen Sie sich im Katalog um, wählen Sie ein Thema, das Sie fasziniert, und wir fangen an, es gemeinsam zu zerlegen!`;
+      if (isZh) return `嗨！我是你的费曼导师。欢迎来到 OpenPrimer！学习源于好奇心。目前你还没有任何活跃的课程。简单来说：去课程目录转转，选一个让你充满好奇的主题，然后我们一起开始把它拆解透彻！`;
+      return `Hey! I am your Feynman tutor. Welcome to OpenPrimer! Learning starts with curiosity. Right now, you don't have any active courses. Let's keep it simple: take a look at the catalog, choose a topic you are curious about, and we'll start breaking it down together!`;
+    }
+    if (tutorId === 'proof') {
+      if (isFr) return `Bonjour. Tuteur logique activé. Bienvenue sur OpenPrimer. État initial : aucun cours inscrit (ensemble vide). Pour initier le processus d'apprentissage, veuillez sélectionner un cours dans le catalogue ou générer un programme formel. Prêt pour la rigueur démonstrative.`;
+      if (isEs) return `Hola. Tutor lógico activado. Bienvenido a OpenPrimer. Estado inicial: ningún curso inscrito (conjunto vacío). Para iniciar el proceso de aprendizaje, selecciona un curso del catálogo o genera un programa formal. Listo para el rigor de la demostración.`;
+      if (isDe) return `Hallo. Logik-Tutor aktiviert. Willkommen bei OpenPrimer. Anfangszustand: kein Kurs eingetragen (leere Menge). Um den Lernprozess zu initiieren, wählen Sie bitte einen Kurs aus dem Katalog oder erstellen Sie einen formalen Lehrplan. Bereit für formale Strenge.`;
+      if (isZh) return `你好。逻辑导师已启用。欢迎来到 OpenPrimer。初始状态：未注册任何课程（空集）。为了启动学习过程，请从课程目录中选择一门课程或生成一个形式化学习大纲。已准备好进行严密的推导。`;
+      return `Hello. Logic tutor activated. Welcome to OpenPrimer. Initial state: zero enrolled courses (empty set). To initiate the learning process, please select a course from the catalog or generate a formal program. Ready for demonstrative rigor.`;
+    }
+    // Default / Socratic
+    if (isFr) return `Bienvenue sur OpenPrimer. Je suis votre guide pédagogique. Pour l'instant, aucun cours ne figure dans votre cursus. Quel domaine de la connaissance éveillerait votre curiosité aujourd'hui ? Je vous invite à parcourir le catalogue ou à configurer un programme pour commencer à explorer ces questions avec moi.`;
+    if (isEs) return `Bienvenido a OpenPrimer. Soy tu guía pedagógico. Por ahora, no hay ningún curso en tu plan de estudios. ¿Qué área del conocimiento despertaría tu curiosidad hoy? Te invito a explorar el catálogo o configurar un programa para comenzar a indagar en estas preguntas conmigo.`;
+    if (isDe) return `Willkommen bei OpenPrimer. Ich bin Ihr pädagogischer Wegbegleiter. Derzeit befindet sich kein Kurs in Ihrem Lehrplan. Welches Wissensgebiet weckt heute Ihre Neugier? Ich lade Sie ein, den Katalog zu durchsuchen oder ein Programm zu konfigurieren, um diese Fragen gemeinsam mit mir zu erkunden.`;
+    if (isZh) return `欢迎来到 OpenPrimer。我是你的学习向导。目前你的课表里还没有任何课程。今天有什么知识领域能唤醒你的好奇心呢？我邀请你浏览课程目录或配置一个学习计划，开始与我一起探讨这些问题。`;
+    return `Welcome to OpenPrimer. I am your pedagogical guide. Currently, there are no courses in your curriculum. What domain of knowledge would awaken your curiosity today? I invite you to browse the catalog or configure a program to begin exploring these questions with me.`;
+  }
 
   // Find most active / highest progress course that is not 100% yet
   let focusModule = activeModules.find((m: any) => !m.isCurriculum && m.progress > 0 && m.progress < 100);
@@ -2426,6 +2471,8 @@ export interface DatabaseService {
   archiveAllCourseLanguages(courseId: number, archive: boolean): Promise<{ data: any; error: any }>;
   purgeCourse(courseId: number): Promise<{ data: any; error: any }>;
   submitReport(course: string, page: string, comment: string): Promise<{ data: any; error: any }>;
+  saveCourseNotification(query: string, email: string): Promise<{ data: any; error: any }>;
+  getCourseNotifications(): Promise<{ data: any[]; error: any }>;
   getAvailableLanguages(): Promise<{ data: LanguageInfo[]; error: any }>;
   getLanguagesAdmin(): Promise<{ data: LanguageInfo[]; error: any }>;
   registerLanguage(lang: LanguageInfo): Promise<{ data: LanguageInfo; error: any }>;
