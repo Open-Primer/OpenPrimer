@@ -9,9 +9,14 @@ export async function POST(request: Request) {
       console.warn('[BADGE-COMPILE WARNING] Session verification failed, running under custom admin/preview bypass.');
     }
 
-    const { name, description, threshold } = await request.json();
+    const { name, description, threshold, sandbox } = await request.json();
     if (!name || !description) {
       return NextResponse.json({ success: false, error: 'Name and description are required.' }, { status: 400 });
+    }
+
+    if (sandbox) {
+      console.log('[BADGE-COMPILE] Sandbox mode bypass, utilizing offline fallback engine.');
+      return NextResponse.json({ success: true, evaluationRule: null, translations: null });
     }
 
     if (!isVertexConfigured()) {

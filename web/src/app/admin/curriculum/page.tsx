@@ -3476,6 +3476,14 @@ export default function AdminCurriculumPage() {
       return;
     }
 
+    if (typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true') {
+      const opt1 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhiNWNmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VjNDg5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cxKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUwIDIyIEw1OSAzOCBMNzcgNDAgTDYzIDUyIEw2NyA3MCBMNTAgNjAgTDMzIDcwIEwzNyA1MiBMMjMgNDAgTDQxIDM4IFoiIGZpbGw9IiNmNTllMGIiLz48L3N2Zz4=';
+      const opt2 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2YjZkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cyKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUyIDIyIEwzNSA0OCBMNDggNDggTDQ0IDc0IEw2NSA0NCBMNTAgNDQgWiIgZmlsbD0iI2VhYjMwOCIvPjwvc3ZnPg==';
+      const opt3 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y5NzMxNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VhYjMwOCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2czKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTM1IDMwIEw2NSAzMCBMNjUgNDIgQzY1IDUwIDU4IDU4IDUwIDU4IEM0MiA1OCAzNSA1MCAzNSA0MiBaIE01MCA1OCBMNTAgNjggTTQwIDY4IEw2MCA2OCIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==';
+      setGeneratedBadges([opt1, opt2, opt3]);
+      return;
+    }
+
     const timer = setTimeout(async () => {
       setIsGeneratingBadges(true);
       try {
@@ -3550,6 +3558,14 @@ export default function AdminCurriculumPage() {
     }
     if (!editName || !editDesc) {
       setEditGeneratedBadges([]);
+      return;
+    }
+
+    if (typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true') {
+      const opt1 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhiNWNmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VjNDg5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cxKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUwIDIyIEw1OSAzOCBMNzcgNDAgTDYzIDUyIEw2NyA3MCBMNTAgNjAgTDMzIDcwIEwzNyA1MiBMMjMgNDAgTDQxIDM4IFoiIGZpbGw9IiNmNTllMGIiLz48L3N2Zz4=';
+      const opt2 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2YjZkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2cyKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTUyIDIyIEwzNSA0OCBMNDggNDggTDQ0IDc0IEw2NSA0NCBMNTAgNDQgWiIgZmlsbD0iI2VhYjMwOCIvPjwvc3ZnPg==';
+      const opt3 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y5NzMxNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VhYjMwOCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ2IiBmaWxsPSJ1cmwoI2czKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM4IiBmaWxsPSIjMGYxNzJhIi8+PHBhdGggZD0iTTM1IDMwIEw2NSAzMCBMNjUgNDIgQzY1IDUwIDU4IDU4IDUwIDU4IEM0MiA1OCAzNSA1MCAzNSA0MiBaIE01MCA1OCBMNTAgNjggTTQwIDY4IEw2MCA2OCIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==';
+      setEditGeneratedBadges([opt1, opt2, opt3]);
       return;
     }
 
@@ -5112,6 +5128,27 @@ export default function AdminCurriculumPage() {
     await loadData();
   };
 
+  // Queue Force Reset Handler
+  const handleForceResetTask = async (id: string) => {
+    const updated = queue.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          status: 'failed',
+          progress: 0,
+          completedAt: new Date().toISOString(),
+          logs: [...(t.logs || []), `[${new Date().toISOString()}] 🔴 Reset: Task forced to failed state by Administrator.`]
+        };
+      }
+      return t;
+    });
+    setQueue(updated);
+    triggeredTaskIds.current.delete(id);
+    await dbService.savePipelineQueue(updated);
+    await loadData();
+    showToast(tr("Task forced to failed state."), "info");
+  };
+
   // Change Priority Handler
   const handleChangePriority = async (id: string, direction: 'up' | 'down') => {
     const priorityOrder = ['Low', 'Medium', 'High'];
@@ -5242,7 +5279,8 @@ export default function AdminCurriculumPage() {
         body: JSON.stringify({
           name: newAch.name,
           description: newAch.description,
-          threshold: newAch.threshold
+          threshold: newAch.threshold,
+          sandbox: typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true'
         })
       });
       if (compileRes.ok) {
@@ -5261,7 +5299,7 @@ export default function AdminCurriculumPage() {
       rule = compileRuleLocally(newAch.description, newAch.threshold);
     }
     if (Object.keys(transMap).length === 0) {
-      const translationsList = getCompiledTranslations(newAch.name, newAch.description);
+      const translationsList = getCompiledTranslations(newAch.name, newAch.description, newAch.threshold);
       translationsList.forEach(t => {
         transMap[t.code] = { name: t.name, description: t.desc };
       });
@@ -5351,7 +5389,8 @@ export default function AdminCurriculumPage() {
             body: JSON.stringify({
               name: editName,
               description: editDesc,
-              threshold: editThreshold
+              threshold: editThreshold,
+              sandbox: typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true'
             })
           });
           if (compileRes.ok) {
@@ -5370,7 +5409,7 @@ export default function AdminCurriculumPage() {
           rule = compileRuleLocally(editDesc, editThreshold);
         }
         if (Object.keys(transMap).length === 0) {
-          const translationsList = getCompiledTranslations(editName, editDesc);
+          const translationsList = getCompiledTranslations(editName, editDesc, editThreshold);
           translationsList.forEach(t => {
             transMap[t.code] = { name: t.name, description: t.desc };
           });
@@ -5466,7 +5505,7 @@ export default function AdminCurriculumPage() {
   };
 
   // Compile real-time Multi-Language Translation Preview
-  const getCompiledTranslations = (name: string, desc: string) => {
+  const getCompiledTranslations = (name: string, desc: string, threshold?: string) => {
     if (!name) return [];
     
     // Simulating advanced deep translations compiled by AI localization engine
@@ -5488,13 +5527,14 @@ export default function AdminCurriculumPage() {
     };
 
     const key = name.toLowerCase();
+    const cleanThreshold = threshold ? threshold.replace(/[^\d]/g, '') : '10';
     if (matches[key]) {
       return [
-        { code: 'EN', name: matches[key].en, desc: `Achieve a ${newAch.threshold || '10'} day streak` },
-        { code: 'FR', name: matches[key].fr, desc: `Atteignez une série d'apprentissage de ${newAch.threshold || '10'} jours` },
-        { code: 'ES', name: matches[key].es, desc: `Logra una racha de ${newAch.threshold || '10'} días` },
-        { code: 'DE', name: matches[key].de, desc: `Erreiche eine Serie von ${newAch.threshold || '10'} Tagen` },
-        { code: 'ZH', name: matches[key].zh, desc: `实现连续学习 ${newAch.threshold || '10'} 天` }
+        { code: 'EN', name: matches[key].en, desc: `Achieve a ${cleanThreshold} day streak` },
+        { code: 'FR', name: matches[key].fr, desc: `Atteignez une série d'apprentissage de ${cleanThreshold} jours` },
+        { code: 'ES', name: matches[key].es, desc: `Logra una racha de ${cleanThreshold} días` },
+        { code: 'DE', name: matches[key].de, desc: `Erreiche eine Serie von ${cleanThreshold} Tagen` },
+        { code: 'ZH', name: matches[key].zh, desc: `实现连续学习 ${cleanThreshold} 天` }
       ];
     }
 
@@ -7944,6 +7984,13 @@ export default function AdminCurriculumPage() {
                                           onClick={() => handleTogglePauseTask(task.id)}
                                           className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                                         >{tr('Pause')}</button>
+                                      )}
+                                      
+                                      {(task.status === 'running' || task.status === 'processing') && (
+                                        <button 
+                                          onClick={() => handleForceResetTask(task.id)}
+                                          className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                        >{tr('Force Reset')}</button>
                                       )}
                                       
                                       {isTranslation ? (

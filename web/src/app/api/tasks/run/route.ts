@@ -1,21 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import { generateCourseContent, translateCourseContent } from '@/lib/ai';
+import { executeTask, cleanupStuckTasks } from '@/lib/tasks';
 
-// ============================================================
-// PROPOSITION A — Auto-Retry Natif dans la Task Queue (API)
-// Les métadonnées de tentatives sont stockées dans le champ
-// JSON `description` : { current_attempt, max_attempts, ... }
-// Si current_attempt < max_attempts après une erreur, la tâche
-// est remise en statut 'queued' pour être reprise par un worker.
-//
-// PROPOSITION B — Agent d'Auto-Correction IA pour le MDX
-// est intégré côté ai.ts (healMdxWithAI) et branché sur
-// validateMdxContent dans generateCourseContent.
-// ============================================================
-
-const MAX_ATTEMPTS_DEFAULT = 3;
+export const maxDuration = 300; // Let Next.js / Vercel allow up to 5 minutes (300 seconds)
 
 export async function POST(request: Request) {
   const logs: string[] = [];
@@ -36,6 +23,9 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Run status normalization on zombie tasks first
+    await cleanupStuckTasks();
+
     // 2. Atomically claim next task in queue via SKIP LOCKED RPC
     logs.push(`[SYSTEM] Claiming next task from queue atomically via claim_next_task RPC...`);
     const { data: claimedTasks, error: claimError } = await supabase
@@ -54,194 +44,12 @@ export async function POST(request: Request) {
     const nextTask = claimedTasks[0];
     logs.push(`[CLAIMED] Task ID: ${nextTask.id} | Name: "${nextTask.name}" | Priority: ${nextTask.priority}`);
 
-    // Parse task extra variables (includes attempt tracking)
-    let extra: any = {};
-    try {
-      extra = JSON.parse(nextTask.description || '{}');
-    } catch (e) {
-      console.warn("Failed to parse task description JSON:", e);
-    }
+    const res = await executeTask(nextTask, logs);
 
-    const currentAttempt: number = (extra.current_attempt || 0) + 1;
-    const maxAttempts: number = extra.max_attempts || MAX_ATTEMPTS_DEFAULT;
-
-    logs.push(`[RETRY] Attempt ${currentAttempt}/${maxAttempts} for task "${nextTask.name}"`);
-
-    // Update attempt counter immediately so it's visible in the dashboard
-    extra.current_attempt = currentAttempt;
-    extra.max_attempts = maxAttempts;
-    extra.last_attempt_at = new Date().toISOString();
-
-    await supabase
-      .from('task_queue')
-      .update({
-        description: JSON.stringify(extra),
-        logs: [
-          ...(nextTask.logs || []),
-          `[${new Date().toISOString()}] Attempt ${currentAttempt}/${maxAttempts} started (Cloud Run worker).`
-        ]
-      })
-      .eq('id', nextTask.id);
-
-    const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
-    const level = extra.level || nextTask.level || 'Beginner';
-    const subject = extra.subject || 'General';
-
-    // 3. Process task
-    try {
-      if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
-        // Translation task
-        logs.push(`[TRANSLATOR] Starting academic translation of course "${nextTask.target}" to "${targetLang}"...`);
-        await translateCourseContent(nextTask.target, targetLang);
-
-        const allCrs = await dbService.getAllCourses();
-        const foundCourse = allCrs.data?.find(c => c.slug === nextTask.target);
-        if (foundCourse) {
-          const originalLanguages = foundCourse.languages || [];
-          const updatedLanguages = originalLanguages.includes(targetLang)
-            ? originalLanguages
-            : [...originalLanguages, targetLang];
-
-          const originalLangsUpper = foundCourse.langs || [];
-          const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
-            ? originalLangsUpper
-            : [...originalLangsUpper, targetLang.toUpperCase()];
-
-          await dbService.saveCourse({
-            ...foundCourse,
-            languages: updatedLanguages,
-            langs: updatedLangsUpper
-          });
-          logs.push(`[TRANSLATOR] Successfully verified course card updated for "${foundCourse.slug}".`);
-        }
-      } else {
-        // Content Generation task
-        logs.push(`[GENERATOR] Starting AI course content generation for "${nextTask.name}" (${level}, ${targetLang})...`);
-        await generateCourseContent(nextTask.name, level, targetLang);
-
-        const newId = `crs_${Date.now()}`;
-        const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
-        
-        logs.push(`[GENERATOR] Saving newly generated course card: ${slug}`);
-        const saveRes = await dbService.saveCourse({
-          id: newId,
-          title: nextTask.name,
-          slug: slug,
-          subject: subject,
-          description: extra.description || `Dynamic sovereign course on "${nextTask.name}". Synthesized autonomously by Gemini.`,
-          level: level,
-          archivingLevel: 0,
-          is_active: true,
-          languages: [targetLang],
-          langs: [targetLang.toUpperCase()]
-        });
-
-        // Link to parent curriculum if specified
-        if (saveRes && saveRes.data && extra.parentCurriculumSlug) {
-          const childCourseId = saveRes.data.id;
-          logs.push(`[SCHEDULER] Linking child course "${nextTask.name}" to parent curriculum "${extra.parentCurriculumSlug}"`);
-          const allCourses = await dbService.getAllCourses();
-          const parent = allCourses.data?.find(c => c.slug === extra.parentCurriculumSlug);
-          if (parent) {
-            const updatedChildren = Array.from(new Set([...(parent.childCourses || []), childCourseId]));
-            await dbService.saveCourse({
-              ...parent,
-              childCourses: updatedChildren
-            });
-            logs.push(`[SCHEDULER] Successfully linked to parent curriculum: ${parent.title}`);
-          } else {
-            console.error(`[SCHEDULER] Parent curriculum "${extra.parentCurriculumSlug}" not found in database.`);
-            logs.push(`[WARNING] Parent curriculum "${extra.parentCurriculumSlug}" not found.`);
-          }
-        }
-      }
-
-      // 4. SUCCESS: Update status to completed
-      extra.completedAt = new Date().toISOString();
-      await supabase
-        .from('task_queue')
-        .update({
-          status: 'completed',
-          progress: 100,
-          description: JSON.stringify(extra),
-          logs: [
-            ...(nextTask.logs || []),
-            `[${new Date().toISOString()}] ✅ Attempt ${currentAttempt}/${maxAttempts} succeeded. Task completed via Cloud Run Serverless worker.`
-          ]
-        })
-        .eq('id', nextTask.id);
-
-      logs.push(`[SUCCESS] Completed task "${nextTask.name}" on attempt ${currentAttempt}/${maxAttempts}`);
-      return NextResponse.json({ success: true, taskId: nextTask.id, attempt: currentAttempt, maxAttempts, logs });
-
-    } catch (taskError: any) {
-      const errMsg = taskError.message || String(taskError);
-      const errStack = taskError.stack || errMsg;
-      console.error(`[TASK ERROR] Execution failed for task ${nextTask.id} on attempt ${currentAttempt}/${maxAttempts}:`, errMsg);
-
-      const updatedLogs = [
-        ...(nextTask.logs || []),
-        `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
-        `Stack: ${errStack}`
-      ];
-
-      if (currentAttempt < maxAttempts) {
-        // RETRY: Re-queue the task for another worker
-        console.log(`[RETRY] Re-queuing task "${nextTask.name}" for attempt ${currentAttempt + 1}/${maxAttempts}...`);
-        extra.last_error = errMsg;
-        await supabase
-          .from('task_queue')
-          .update({
-            status: 'queued',
-            progress: 0,
-            description: JSON.stringify(extra),
-            logs: [
-              ...updatedLogs,
-              `[${new Date().toISOString()}] ⏳ Re-queued for retry (attempt ${currentAttempt + 1}/${maxAttempts}).`
-            ]
-          })
-          .eq('id', nextTask.id);
-
-        logs.push(`[RETRY] Task re-queued for attempt ${currentAttempt + 1}/${maxAttempts}: ${errMsg}`);
-        return NextResponse.json({
-          success: false,
-          retrying: true,
-          taskId: nextTask.id,
-          attempt: currentAttempt,
-          maxAttempts,
-          nextAttempt: currentAttempt + 1,
-          error: errMsg,
-          logs
-        }, { status: 202 }); // 202 Accepted — retry is in progress
-      } else {
-        // FINAL FAILURE: All attempts exhausted
-        console.error(`[FAILED] Task "${nextTask.name}" exhausted all ${maxAttempts} attempts.`);
-        extra.completedAt = new Date().toISOString();
-        extra.last_error = errMsg;
-        await supabase
-          .from('task_queue')
-          .update({
-            status: 'failed',
-            progress: 0,
-            description: JSON.stringify(extra),
-            logs: [
-              ...updatedLogs,
-              `[${new Date().toISOString()}] 🔴 PERMANENTLY FAILED after ${maxAttempts} attempts. No more retries.`
-            ]
-          })
-          .eq('id', nextTask.id);
-
-        logs.push(`[ERROR] Task permanently failed after ${maxAttempts} attempts: ${errMsg}`);
-        return NextResponse.json({
-          success: false,
-          retrying: false,
-          taskId: nextTask.id,
-          attempt: currentAttempt,
-          maxAttempts,
-          error: errMsg,
-          logs
-        }, { status: 500 });
-      }
+    if (res.success) {
+      return NextResponse.json({ success: true, taskId: nextTask.id, logs });
+    } else {
+      return NextResponse.json({ success: false, taskId: nextTask.id, error: res.error, logs }, { status: 500 });
     }
 
   } catch (error: any) {

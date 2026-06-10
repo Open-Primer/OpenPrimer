@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useServiceStatus, ServiceHealth } from '../../../lib/serviceStatus';
 import { dbService, progressService } from '../../../lib/db';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const HEALTH_STRINGS = {
@@ -508,12 +509,8 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ServerHealthPage() {
-  const [lang, setLang] = useState<'EN' | 'FR' | 'ES' | 'DE' | 'ZH'>('EN');
-  // Sync with global language stored by TopNav
-  if (typeof window !== 'undefined') {
-    const stored = window.localStorage.getItem('openprimer_lang');
-    if (stored && stored !== lang) setLang(stored.toUpperCase() as any);
-  }
+  const { language } = useLanguage();
+  const lang = (language || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
   const t = HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN;
   const { health, isChecking, refresh } = useServiceStatus(10_000);
 
