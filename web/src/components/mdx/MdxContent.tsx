@@ -38,40 +38,92 @@ import { PointOfView } from './PointOfView';
 import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
 
+import { useLanguage } from '@/context/LanguageContext';
+
+const ALERT_TITLES: Record<string, Record<string, string>> = {
+  note: {
+    EN: "Note",
+    FR: "Note",
+    ES: "Nota",
+    DE: "Hinweis",
+    ZH: "提示"
+  },
+  warning: {
+    EN: "Warning",
+    FR: "Avertissement",
+    ES: "Advertencia",
+    DE: "Warnung",
+    ZH: "警告"
+  },
+  info: {
+    EN: "Info",
+    FR: "Info",
+    ES: "Información",
+    DE: "Info",
+    ZH: "信息"
+  },
+  important: {
+    EN: "Important",
+    FR: "Important",
+    ES: "Importante",
+    DE: "Importante",
+    ZH: "重要"
+  },
+  tip: {
+    EN: "Tip",
+    FR: "Conseil",
+    ES: "Consejo",
+    DE: "Tipp",
+    ZH: "建议"
+  },
+  caution: {
+    EN: "Caution",
+    FR: "Attention",
+    ES: "Precaución",
+    DE: "Achtung",
+    ZH: "注意"
+  }
+};
+
 const Alert = ({ type, children }: { type: string; children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const langKey = (language || 'EN').toUpperCase();
   const t = (type || 'note').toLowerCase();
   
   let icon = <Info className="w-4 h-4 text-blue-400" />;
-  let title = "Note";
+  let titleKey = "note";
   let borderClass = "border-l-blue-500 bg-blue-500/5 dark:bg-blue-500/[0.04] border-blue-500/20";
   let titleColor = "text-blue-500 dark:text-blue-400";
 
   if (t === 'warning') {
     icon = <AlertTriangle className="w-4 h-4 text-amber-500" />;
-    title = "Warning";
+    titleKey = "warning";
     borderClass = "border-l-amber-500 bg-amber-500/5 dark:bg-amber-500/[0.04] border-amber-500/20";
     titleColor = "text-amber-500 dark:text-amber-400";
   } else if (t === 'info') {
     icon = <Info className="w-4 h-4 text-blue-500 dark:text-blue-400" />;
-    title = "Info";
+    titleKey = "info";
     borderClass = "border-l-blue-500 bg-blue-500/5 dark:bg-blue-500/[0.04] border-blue-500/20";
     titleColor = "text-blue-500 dark:text-blue-400";
   } else if (t === 'important') {
     icon = <ShieldAlert className="w-4 h-4 text-rose-500" />;
-    title = "Important";
+    titleKey = "important";
     borderClass = "border-l-rose-500 bg-rose-500/5 dark:bg-rose-500/[0.04] border-rose-500/20";
     titleColor = "text-rose-500 dark:text-rose-400";
   } else if (t === 'tip') {
     icon = <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-    title = "Tip";
+    titleKey = "tip";
     borderClass = "border-l-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/[0.04] border-emerald-500/20";
     titleColor = "text-emerald-500 dark:text-emerald-400";
   } else if (t === 'caution') {
     icon = <AlertOctagon className="w-4 h-4 text-red-500" />;
-    title = "Caution";
+    titleKey = "caution";
     borderClass = "border-l-red-500 bg-red-500/5 dark:bg-red-500/[0.04] border-red-500/20";
     titleColor = "text-red-500 dark:text-red-400";
   }
+
+  const title = (ALERT_TITLES[titleKey] && ALERT_TITLES[titleKey][langKey]) || ALERT_TITLES[titleKey]?.EN || "Note";
+
 
   return (
     <div className={`my-6 p-5 rounded-2xl border-l-4 ${borderClass} shadow-sm custom-alert alert-${t} transition-all duration-300`}>
