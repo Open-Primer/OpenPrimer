@@ -1621,6 +1621,119 @@ export const getLocalizedLabel = (key: string, lang: string) => {
   return labels[key]?.[l] || labels[key]?.EN || '';
 };
 
+// Helper to detect current visible section and element for diagnostic feedback
+const getProbableLocationOnPage = (): string => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return '';
+  }
+  
+  try {
+    const viewportHeight = window.innerHeight;
+    const article = document.querySelector('article');
+    
+    // 1. Get the current active heading
+    const headings = article
+      ? Array.from(article.querySelectorAll('h1, h2, h3, h4'))
+      : Array.from(document.querySelectorAll('h1, h2, h3, h4'));
+      
+    let activeHeading = '';
+    if (headings.length > 0) {
+      const candidates = headings.map(h => ({
+        element: h,
+        top: h.getBoundingClientRect().top,
+        text: h.textContent?.trim() || ''
+      }));
+      // Filter headings that are above 60% of the viewport height (meaning user scrolled past it)
+      const aboveThreshold = candidates.filter(c => c.top <= viewportHeight * 0.6);
+      if (aboveThreshold.length > 0) {
+        activeHeading = aboveThreshold[aboveThreshold.length - 1].text;
+      } else {
+        activeHeading = candidates[0].text;
+      }
+    }
+    
+    // 2. Find the child block inside <article> with the largest visible area in the viewport
+    let visibleElementInfo = '';
+    if (article) {
+      const children = Array.from(article.children);
+      let maxVisibleHeight = 0;
+      let mostVisibleElement: Element | null = null;
+      
+      children.forEach(child => {
+        const rect = child.getBoundingClientRect();
+        const visibleTop = Math.max(0, rect.top);
+        const visibleBottom = Math.min(viewportHeight, rect.bottom);
+        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+        
+        if (visibleHeight > maxVisibleHeight) {
+          maxVisibleHeight = visibleHeight;
+          mostVisibleElement = child;
+        }
+      });
+      
+      if (mostVisibleElement) {
+        const el = mostVisibleElement as HTMLElement;
+        const tagName = el.tagName.toLowerCase();
+        
+        if (tagName.startsWith('h') && tagName.length === 2) {
+          visibleElementInfo = `heading "${el.textContent?.trim()}"`;
+        } else if (tagName === 'p') {
+          const text = el.textContent?.trim() || '';
+          const preview = text.length > 60 ? text.substring(0, 60) + '...' : text;
+          visibleElementInfo = `paragraph ("${preview}")`;
+        } else if (tagName === 'blockquote') {
+          const text = el.textContent?.trim() || '';
+          const preview = text.length > 40 ? text.substring(0, 40) + '...' : text;
+          visibleElementInfo = `blockquote ("${preview}")`;
+        } else if (tagName === 'pre') {
+          visibleElementInfo = 'code block';
+        } else if (tagName === 'table') {
+          visibleElementInfo = 'table/chart';
+        } else {
+          // Check for specific interactive widgets / components
+          const textContent = el.textContent?.trim() || '';
+          let componentType = '';
+          
+          if (el.className.includes('quiz') || el.querySelector('.quiz-container')) {
+            componentType = 'Quiz';
+          } else if (el.querySelector('svg') && textContent.includes('Mermaid')) {
+            componentType = 'Mermaid Diagram';
+          } else if (el.className.includes('custom-alert') || el.querySelector('.custom-alert')) {
+            componentType = 'Alert/Note';
+          } else {
+            // Find uppercase/widest span as a label indicator
+            const spans = Array.from(el.querySelectorAll('span'));
+            const labelSpan = spans.find(s => s.className.includes('tracking-widest') || s.className.includes('uppercase'));
+            if (labelSpan) {
+              componentType = labelSpan.textContent?.trim() || '';
+            }
+          }
+          
+          if (componentType) {
+            visibleElementInfo = `interactive block: ${componentType}`;
+          } else {
+            const preview = textContent.length > 50 ? textContent.substring(0, 50) + '...' : textContent;
+            visibleElementInfo = `section block ("${preview}")`;
+          }
+        }
+      }
+    }
+    
+    let parts = [];
+    if (activeHeading) {
+      parts.push(`Active Section: "${activeHeading}"`);
+    }
+    if (visibleElementInfo) {
+      parts.push(`Most Visible Element: ${visibleElementInfo}`);
+    }
+    
+    return parts.length > 0 ? `[Probable Location: ${parts.join(' | ')}]` : '';
+  } catch (e) {
+    console.warn("Failed to detect probable viewport location:", e);
+    return '';
+  }
+};
+
 // --- COMPONENT: TOP NAVIGATION ---
 export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSelector = false, onLangChange }: { toggleSidebar?: () => void, isCoursePage?: boolean, showReadingModeSelector?: boolean, onLangChange?: (lang: string) => void }) => {
   const { language: lang, setLanguage: setLang } = useLanguage();
@@ -2146,7 +2259,14 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                       setSubmittingReport(true);
                       const pathParts = window.location.pathname.split('/');
                       const courseName = pathParts[3] ? pathParts[3].replace(/_/g, ' ') : "General";
-                      await dbService.submitReport(courseName, window.location.pathname, reportComment);
+                      
+                      // Append visual location context if available
+                      const locationHint = getProbableLocationOnPage();
+                      const finalComment = locationHint 
+                        ? `${reportComment}\n\n${locationHint}` 
+                        : reportComment;
+                      
+                      await dbService.submitReport(courseName, window.location.pathname, finalComment);
                       setSubmittingReport(false);
                       setIsReportModalOpen(false);
                       setReportComment('');

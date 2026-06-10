@@ -535,37 +535,116 @@ export default function Home() {
 
     const emailLower = email.toLowerCase().trim();
 
-    // 2. Query dbService asynchronously to retrieve the user list and find a match
+    if (isDatabaseConfigured) {
+      try {
+        const { supabase: sClient } = await import("@/lib/supabase");
+        const { data: authData, error: authError } = await sClient.auth.signInWithPassword({
+          email: emailLower,
+          password: password
+        });
+
+        if (authError) {
+          setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+          return;
+        }
+
+        const user = authData.user;
+        if (user) {
+          const { data: profileData, error: profileError } = await sClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (profileData) {
+            const isVerified = localStorage.getItem('op_registration_verified') === 'true';
+            const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
+
+            if (isVerified && !hasLoggedInBefore) {
+              const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+              if (!redirectUrl) {
+                localStorage.setItem('op_show_welcome_catalog_popup', 'true');
+              }
+              localStorage.setItem('op_logged_in_before', 'true');
+            }
+
+            const profile: Record<string, any> = {
+              id: profileData.id,
+              firstName: (profileData.name || '').split(' ')[0],
+              lastName: (profileData.name || '').split(' ').slice(1).join(' '),
+              email: profileData.email,
+              preferredLang: profileData.preferred_lang || lang,
+              role: profileData.role || 'student',
+              isVerified: profileData.is_email_verified
+            };
+
+            // ---- Guest → Authenticated settings migration ----
+            const GUEST_KEYS = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course', 'op_guest_tts_enabled'] as const;
+            const guestVolume    = sessionStorage.getItem('op_guest_audio_volume');
+            const guestRate      = sessionStorage.getItem('op_guest_audio_rate');
+            const guestVoiceId   = sessionStorage.getItem('op_guest_audio_voice_id');
+            const guestReadCourse = sessionStorage.getItem('op_guest_audio_read_course');
+            const guestTtsEnabled = sessionStorage.getItem('op_guest_tts_enabled');
+            const hasGuestPrefs  = GUEST_KEYS.some(k => sessionStorage.getItem(k) !== null);
+
+            if (hasGuestPrefs) {
+              if (guestVolume !== null)    profile.audioVolume    = Number(guestVolume);
+              if (guestRate !== null)      profile.audioRate      = Number(guestRate);
+              if (guestVoiceId !== null)   profile.audioVoiceId   = guestVoiceId;
+              if (guestReadCourse !== null) profile.audioReadCourse = guestReadCourse === 'true';
+              if (guestTtsEnabled !== null) profile.ttsEnabled = guestTtsEnabled === 'true';
+              profile.audioReadTutor = true;
+
+              import('@/lib/db').then(async ({ dbService }) => {
+                const settingsToSync: Record<string, any> = {};
+                if (guestVolume !== null)    settingsToSync.audioVolume    = Number(guestVolume);
+                if (guestRate !== null)      settingsToSync.audioRate      = Number(guestRate);
+                if (guestVoiceId !== null)   settingsToSync.audioVoiceId   = guestVoiceId;
+                if (guestReadCourse !== null) settingsToSync.audioReadCourse = guestReadCourse === 'true';
+                if (guestTtsEnabled !== null) settingsToSync.ttsEnabled = guestTtsEnabled === 'true';
+                await dbService.updateUserSettings(profile.id, settingsToSync);
+              }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud:', e));
+
+              GUEST_KEYS.forEach(k => sessionStorage.removeItem(k));
+              sessionStorage.removeItem('op_guest_audio_read_tutor');
+            }
+
+            localStorage.setItem('op_user_profile', JSON.stringify(profile));
+            localStorage.setItem('op_session', 'true');
+
+            window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
+
+            setIsLoggedIn(true);
+            setAuthModal(null);
+
+            const redirectUrl = sessionStorage.getItem('op_auth_redirect');
+            if (redirectUrl) {
+              sessionStorage.removeItem('op_auth_redirect');
+              window.location.href = redirectUrl;
+            } else {
+              router.push(profile.role === 'admin' ? '/admin' : '/catalog');
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Direct Supabase login exception", err);
+      }
+      setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+      return;
+    }
+
+    // Fallback logic for mock database mode
     try {
       const { data: userList } = await dbService.getUsers();
       const matchedUser = userList?.find((u: any) => u.email.toLowerCase() === emailLower) as any;
 
       if (matchedUser) {
-        // Enforce strict password validation via SHA-256 hash comparison
         const inputHash = dbService.hashPassword(password);
-        
-        // If a password is set, retrieve it. Otherwise, fall back to the default hash of 'OpenPrimer2026!' (832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80)
         const expectedPassword = matchedUser.password || '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80';
-        
         const isPasswordCorrect = expectedPassword === inputHash || expectedPassword === password;
 
         if (isPasswordCorrect) {
-          // Asynchronously sign in to Supabase Auth to establish a real session
-          try {
-            const { supabase: sClient } = await import("@/lib/supabase");
-            const { error: authError } = await sClient.auth.signInWithPassword({
-              email: emailLower,
-              password: password
-            });
-            if (authError) {
-              console.warn("[Auth] Supabase auth sign-in failed:", authError.message);
-            } else {
-              console.log("[Auth] Supabase auth sign-in successful!");
-            }
-          } catch (authException) {
-            console.warn("[Auth] Supabase auth sign-in exception:", authException);
-          }
-
           const isVerified = localStorage.getItem('op_registration_verified') === 'true';
           const hasLoggedInBefore = localStorage.getItem('op_logged_in_before') === 'true';
 
@@ -587,9 +666,6 @@ export default function Home() {
             isVerified: matchedUser.isEmailVerified
           };
 
-          // ---- Guest → Authenticated settings migration ----
-          // If the user had modified audio preferences as a guest, migrate them
-          // into their profile (localStorage + cloud sync) upon first login.
           const GUEST_KEYS = ['op_guest_audio_volume', 'op_guest_audio_rate', 'op_guest_audio_voice_id', 'op_guest_audio_read_course', 'op_guest_tts_enabled'] as const;
           const guestVolume    = sessionStorage.getItem('op_guest_audio_volume');
           const guestRate      = sessionStorage.getItem('op_guest_audio_rate');
@@ -599,36 +675,20 @@ export default function Home() {
           const hasGuestPrefs  = GUEST_KEYS.some(k => sessionStorage.getItem(k) !== null);
 
           if (hasGuestPrefs) {
-            // Merge guest prefs into profile — they take precedence over DB defaults
             if (guestVolume !== null)    profile.audioVolume    = Number(guestVolume);
             if (guestRate !== null)      profile.audioRate      = Number(guestRate);
             if (guestVoiceId !== null)   profile.audioVoiceId   = guestVoiceId;
             if (guestReadCourse !== null) profile.audioReadCourse = guestReadCourse === 'true';
             if (guestTtsEnabled !== null) profile.ttsEnabled = guestTtsEnabled === 'true';
-            profile.audioReadTutor = true; // always active; guest cannot have changed it
+            profile.audioReadTutor = true;
 
-            // Async cloud sync — fire and forget
-            import('@/lib/db').then(async ({ dbService }) => {
-              const settingsToSync: Record<string, any> = {};
-              if (guestVolume !== null)    settingsToSync.audioVolume    = Number(guestVolume);
-              if (guestRate !== null)      settingsToSync.audioRate      = Number(guestRate);
-              if (guestVoiceId !== null)   settingsToSync.audioVoiceId   = guestVoiceId;
-              if (guestReadCourse !== null) settingsToSync.audioReadCourse = guestReadCourse === 'true';
-              if (guestTtsEnabled !== null) settingsToSync.ttsEnabled = guestTtsEnabled === 'true';
-              await dbService.updateUserSettings(matchedUser.id, settingsToSync);
-              console.log('[Auth] Guest audio preferences migrated to cloud:', settingsToSync);
-            }).catch(e => console.warn('[Auth] Could not sync guest audio prefs to cloud:', e));
-
-            // Clear guest sessionStorage keys
             GUEST_KEYS.forEach(k => sessionStorage.removeItem(k));
             sessionStorage.removeItem('op_guest_audio_read_tutor');
           }
-          // ---- End migration ----
 
           localStorage.setItem('op_user_profile', JSON.stringify(profile));
           localStorage.setItem('op_session', 'true');
 
-          // Dispatch reactive auth state event
           window.dispatchEvent(new CustomEvent('op_auth_state_change', { detail: { isLoggedIn: true } }));
 
           setIsLoggedIn(true);
@@ -648,7 +708,6 @@ export default function Home() {
       console.error("Authentication check exception", err);
     }
 
-    // 3. Otherwise, reject access
     setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
   };
 

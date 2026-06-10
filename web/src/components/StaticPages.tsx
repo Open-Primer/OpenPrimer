@@ -620,6 +620,31 @@ export const CatalogPage = () => {
         }
       }
     }
+
+    // Strict Availability: Curricula only exist in a language if all mandatory child courses also support that language.
+    if (matchesLang && c.isCurriculum) {
+      const childIds = c.childCourses || [];
+      const activeLangCode = (lang || 'EN').toUpperCase();
+      const allChildrenSupport = childIds.every((childId: number) => {
+        const childCourse = courses.find((x: any) => x.id === childId);
+        if (!childCourse) return false;
+        
+        const childSupportsLang = childCourse.languages && childCourse.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
+        if (!childSupportsLang) return false;
+        
+        if (activeLangCode === 'EN') {
+          return true;
+        } else {
+          const hasTrans = childCourse.translations && childCourse.translations[activeLangCode];
+          if (hasTrans) return true;
+          const isEngPrimary = childCourse.languages.some((l: string) => l.toLowerCase() === 'en') && (!childCourse.id || childCourse.id < 13);
+          return !isEngPrimary;
+        }
+      });
+      if (!allChildrenSupport) {
+        matchesLang = false;
+      }
+    }
     const isNew = isCourseNew(c);
     const localizedTitle = getLocalizedCourseTitle(c);
     

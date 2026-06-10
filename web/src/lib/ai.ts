@@ -731,19 +731,41 @@ ${validatedMdx}`;
 
 export async function translateCourseContent(courseSlug: string, targetLang: string) {
   try {
-    // 1. Fetch all existing lessons for this course
-    const { data: sourceLessons } = await supabase
-      .from('lessons')
-      .select('*')
-      .eq('course_slug', courseSlug);
+    // 1. Check if the course is a curriculum
+    const { data: allCourses } = await dbService.getAllCourses();
+    const course = allCourses?.find(c => c.slug === courseSlug);
+    
+    if (course?.isCurriculum) {
+      console.log(`[TRANSLATOR] Target "${courseSlug}" is a curriculum. Cascading translation to all child courses first...`);
+      const childIds = course.childCourses || [];
+      for (const childId of childIds) {
+        const childCourse = allCourses?.find(c => c.id === childId);
+        if (childCourse && childCourse.slug) {
+          console.log(`[TRANSLATOR] Translating curriculum child course: "${childCourse.slug}" to "${targetLang}"...`);
+          await translateCourseContent(childCourse.slug, targetLang);
+        }
+      }
+      
+      const optionalIds = course.optionalCourses || [];
+      for (const optId of optionalIds) {
+        const optCourse = allCourses?.find(c => c.id === optId);
+        if (optCourse && optCourse.slug) {
+          console.log(`[TRANSLATOR] Translating curriculum optional course: "${optCourse.slug}" to "${targetLang}"...`);
+          await translateCourseContent(optCourse.slug, targetLang);
+        }
+      }
+    } else {
+      // 1. Fetch all existing lessons for this course
+      const { data: sourceLessons } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('course_slug', courseSlug);
 
-    if (!sourceLessons || sourceLessons.length === 0) {
-      console.warn(`No source lessons found in database for course ${courseSlug} to translate.`);
-      return;
-    }
-
-    // 2. For each lesson, translate
-    for (const lesson of sourceLessons) {
+      if (!sourceLessons || sourceLessons.length === 0) {
+        console.warn(`No source lessons found in database for course ${courseSlug} to translate.`);
+      } else {
+        // 2. For each lesson, translate
+        for (const lesson of sourceLessons) {
       const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
 Rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
@@ -1083,6 +1105,8 @@ Follow all initial translation rules:
         order: lesson.order
       });
     }
+  }
+}
 
     // 3. Translate the course metadata (Syllabus/Curriculum Card) to targetLang
     try {
