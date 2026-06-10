@@ -1,4 +1,5 @@
 import './env-loader';
+process.env.CLI_WORKER = 'true';
 import { supabase } from '../src/lib/supabase';
 import { executeTask, cleanupStuckTasks } from '../src/lib/tasks';
 

@@ -3,7 +3,7 @@ import { dbService } from './db';
 import { generateCourseContent, translateCourseContent } from './ai';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
-const EXECUTION_TIMEOUT_MS = 260000; // 4 minutes 20 seconds (well within standard 5-min serverless timeout)
+const EXECUTION_TIMEOUT_MS = process.env.CLI_WORKER === 'true' ? 900000 : 260000; // 15 mins for CLI, 4m20s for serverless
 
 export async function cleanupStuckTasks() {
   console.log("[CLEANUP] Scanning for stuck/zombie tasks in task_queue...");

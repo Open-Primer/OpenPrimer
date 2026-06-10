@@ -507,6 +507,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [volume, setVolume] = useState(1.0);
   const [lastVolume, setLastVolume] = useState(1.0);
   const [showVolumePopup, setShowVolumePopup] = useState(false);
+  const [showSpeedPopup, setShowSpeedPopup] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -526,6 +527,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const [currentTutorSentenceIndex, setCurrentTutorSentenceIndex] = useState(-1);
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const rateChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const sentenceMetaRef = useRef<SentenceMeta[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const highlightedElementRef = useRef<HTMLElement | null>(null);
@@ -579,6 +581,31 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   }, [readTutor, isReadingTutor]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleRateChange = (newRate: number) => {
+    setRate(newRate);
+    rateRef.current = newRate;
+
+    if (rateChangeTimeoutRef.current) {
+      clearTimeout(rateChangeTimeoutRef.current);
+    }
+
+    rateChangeTimeoutRef.current = setTimeout(() => {
+      saveSettingsToCloud({ rate: newRate });
+
+      if (isPlayingRef.current && !isPausedRef.current) {
+        if (isReadingTutorRef.current) {
+          if (currentTutorSentenceIndexRef.current >= 0) {
+            speakTutorSentence(currentTutorSentenceIndexRef.current, tutorSentencesRef.current);
+          }
+        } else {
+          if (currentSentenceIndexRef.current >= 0) {
+            speakSentence(currentSentenceIndexRef.current);
+          }
+        }
+      }
+    }, 250);
+  };
 
   const saveSettingsToCloud = (updates: { volume?: number; rate?: number; voiceId?: string; readCourse?: boolean; readTutor?: boolean; ttsEnabled?: boolean }) => {
     if (typeof window === 'undefined') return;
@@ -913,6 +940,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       }
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
+      }
+      if (rateChangeTimeoutRef.current) {
+        clearTimeout(rateChangeTimeoutRef.current);
       }
     };
   }, [lang, isLoggedIn]);
@@ -1340,6 +1370,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setIsReadingTutor(false);
     setTutorSentences([]);
     setCurrentTutorSentenceIndex(-1);
+    setShowSpeedPopup(false);
+    setShowVolumePopup(false);
+    setShowSettings(false);
     if (synthRef.current) {
       synthRef.current.cancel();
     }
@@ -1633,6 +1666,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
               onClick={() => {
                 setShowVolumePopup(!showVolumePopup);
                 setShowSettings(false); // Close settings if open
+                setShowSpeedPopup(false); // Close speed if open
               }}
               className={`p-1 rounded-lg text-slate-400 hover:text-white transition-colors ${showVolumePopup ? 'text-blue-400' : ''}`}
               title="Volume"
@@ -1695,34 +1729,54 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             )}
           </div>
 
-          {/* Reading Speed Select */}
-          <select
-            value={rate}
-            onChange={(e) => {
-              const r = parseFloat(e.target.value);
-              setRate(r);
-              if (isPlaying && !isPaused) {
-                if (isReadingTutor) {
-                  if (currentTutorSentenceIndex >= 0) {
-                    speakTutorSentence(currentTutorSentenceIndex, tutorSentences);
-                  }
-                } else {
-                  if (currentSentenceIndex >= 0) {
-                    speakSentence(currentSentenceIndex);
-                  }
-                }
-              }
-              saveSettingsToCloud({ rate: r });
-            }}
-            className="bg-transparent text-[10px] font-bold text-slate-300 hover:text-white border-none focus:outline-none focus:ring-0 cursor-pointer p-0 pr-3"
-            aria-label="Reading speed"
-          >
-            <option value="0.8" className="bg-slate-900 text-xs">0.8x</option>
-            <option value="1.0" className="bg-slate-900 text-xs">1.0x</option>
-            <option value="1.2" className="bg-slate-900 text-xs">1.2x</option>
-            <option value="1.5" className="bg-slate-900 text-xs">1.5x</option>
-            <option value="2.0" className="bg-slate-900 text-xs">2.0x</option>
-          </select>
+          {/* Reading Speed Slider Control */}
+          <div className="relative flex items-center">
+            <button
+              onClick={() => {
+                setShowSpeedPopup(!showSpeedPopup);
+                setShowVolumePopup(false);
+                setShowSettings(false); // Close other popups
+              }}
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-slate-300 hover:text-white transition-colors cursor-pointer select-none ${
+                showSpeedPopup ? 'text-blue-400' : ''
+              }`}
+              title="Reading Speed"
+              aria-label="Reading speed control"
+            >
+              {rate.toFixed(1)}x
+            </button>
+
+            {showSpeedPopup && (
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800/80 p-2.5 rounded-xl shadow-2xl backdrop-blur-xl w-8 h-32 flex flex-col items-center justify-between z-50 animate-fade-in">
+                <div className="h-20 w-full flex items-center justify-center relative">
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.5"
+                    step="0.1"
+                    value={rate}
+                    {...{ orient: "vertical" }}
+                    onChange={(e) => {
+                      const r = parseFloat(e.target.value);
+                      handleRateChange(r);
+                    }}
+                    className="accent-blue-500 cursor-pointer focus:outline-none"
+                    style={{
+                      WebkitAppearance: 'slider-vertical',
+                      width: '4px',
+                      height: '70px',
+                      background: '#1e293b',
+                      borderRadius: '2px',
+                      padding: 0,
+                      margin: 0
+                    }}
+                    aria-label="Speed slider"
+                  />
+                </div>
+                <span className="text-[8px] font-bold text-slate-400 select-none">{rate.toFixed(1)}x</span>
+              </div>
+            )}
+          </div>
 
           {/* Cog settings button */}
           <div className="relative flex items-center">
@@ -1730,6 +1784,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
               onClick={() => {
                 setShowSettings(!showSettings);
                 setShowVolumePopup(false); // Close volume if open
+                setShowSpeedPopup(false); // Close speed if open
               }}
               className={`p-1 rounded-lg text-slate-400 hover:text-white transition-colors ${showSettings ? 'text-blue-400' : ''}`}
               title="Speech Settings"

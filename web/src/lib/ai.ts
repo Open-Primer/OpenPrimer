@@ -236,8 +236,9 @@ Requirements:
    - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: **Term** : Definition. [[Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]. Crucial: the Wikipedia redirect link at the end of each glossary definition MUST NOT be in bold (it should be standard normal text weight, not wrapped in any double asterisks \`**\`). For example: **Term** : Definition. [[Wikipédia](url)] and NOT **Term** : Definition. **[[Wikipédia](url)]**. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
 10. Connected Entities: Historical Figures, Fictional Characters, and Key Geographic Places (Personnalités, Personnages Fictifs, et Lieux Clés) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
-      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned, you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
+      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
         \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
+        *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes.
         - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
         - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
       * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed, 3 to 5 line mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\` or \`> [!NOTE] **Mini-Biography: DisplayName (Dates)**\`). This mini-biography must highlight their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson.
@@ -466,7 +467,7 @@ Your Checkpoints:
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
 3. "Structural Completeness": Ensure the presence of prerequisites, diagnostic quizzes, learning objectives, epistemological boxes (if university level), formative quizzes, and end-of-lesson evaluation.
 4. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
-5. "Historical Person Biography Overlays": Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">' and that the 'bio' prop contains a non-empty 2-3 line biography generated on the fly.
+5. "Historical Person Biography Overlays": Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
 6. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
 
 You must return a valid JSON object with the following keys:
@@ -622,6 +623,14 @@ ${validatedMdx}`;
       // Pre-validate MDX compilation to avoid 404 or compilation crashes
       let mdxCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
       if (!mdxCheck.success) {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          fs.writeFileSync(path.resolve(process.cwd(), 'failed_mdx.md'), mdxWithFrontmatter, 'utf8');
+          console.log("[DEBUG] Wrote failed MDX to failed_mdx.md");
+        } catch (debugErr) {
+          console.error("Failed to write debug MDX file:", debugErr);
+        }
         console.warn(`[AI GENERATOR - MDX VALIDATION ERROR] Content for "${item.title}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
         let healedResult = mdxWithFrontmatter;
         let healAttempt = 0;
