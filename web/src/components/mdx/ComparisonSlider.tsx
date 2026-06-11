@@ -96,7 +96,8 @@ export const ComparisonSlider = ({
 
   const renderSliderContent = (content: React.ReactNode, isBefore: boolean) => {
     if (typeof content === 'string' || content === null || content === undefined) {
-      const text = typeof content === 'string' ? content : '';
+      const rawText = typeof content === 'string' ? content : '';
+      const text = rawText.replace(/<[^>]+>/g, '').trim();
       const gradientClass = isBefore 
         ? "bg-gradient-to-br from-blue-950/40 via-indigo-950/30 to-slate-950" 
         : "bg-gradient-to-br from-emerald-950/30 via-slate-900/40 to-slate-950";

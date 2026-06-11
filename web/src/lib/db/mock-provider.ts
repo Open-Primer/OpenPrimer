@@ -56,7 +56,9 @@ import {
   progressService,
   mockDatabaseProviderHash,
   getCanonicalCourseId,
-  purgePipelineAndRequestsForCourseOrCurriculum
+  purgePipelineAndRequestsForCourseOrCurriculum,
+  addCourseTombstone,
+  removeCourseTombstone
 } from '../db';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
@@ -127,7 +129,17 @@ export const mockDatabaseProvider: DatabaseService = {
       }
     }
 
-    const computedCourses = getMockCourses().filter(c => !/test/i.test(c.slug)).map(c => {
+    let tombstoneIds: number[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+      } catch (e) {}
+    }
+
+    const computedCourses = getMockCourses()
+      .filter(c => !tombstoneIds.includes(c.id))
+      .filter(c => !/test/i.test(c.slug))
+      .map(c => {
       const feedbacks = getCourseFeedbacks().filter(f => {
         const fId = String(f.courseId).toLowerCase();
         const currentSlug = c.slug.toLowerCase();
@@ -420,7 +432,8 @@ export const mockDatabaseProvider: DatabaseService = {
       studyStreakDays,
       totalMinutes,
       activeLang,
-      tutorId
+      tutorId,
+      quizResults
     );
 
     return {
@@ -603,6 +616,7 @@ export const mockDatabaseProvider: DatabaseService = {
     }
 
     if (level === 3) {
+      addCourseTombstone(courseId);
       courses = courses.filter(c => c.id !== courseId);
     } else {
       courses = courses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
@@ -659,6 +673,7 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   purgeCourse: async (courseId: number) => {
+    addCourseTombstone(courseId);
     const courses = getMockCourses().filter(c => c.id !== courseId);
     setMockCourses(courses);
     setLocalStorageItem('openprimer_courses', courses);
@@ -815,8 +830,8 @@ export const mockDatabaseProvider: DatabaseService = {
 
   getCourseFeedbacks: async (courseId?: string, userId?: string) => {
     let list = getCourseFeedbacks();
-    if (userId) {
-      list = list.filter(f => f.userId === userId || !f.userId);
+    if (userId && userId !== 'undefined') {
+      list = list.filter(f => f.userId === userId);
     }
     if (courseId) {
       const canonicalId = getCanonicalCourseId(courseId);
@@ -902,6 +917,7 @@ export const mockDatabaseProvider: DatabaseService = {
 
     setMockCourses(updated);
     setLocalStorageItem('openprimer_courses', updated);
+    removeCourseTombstone(newCourse.id);
     return { data: newCourse, error: null };
   },
 
@@ -982,6 +998,7 @@ export const mockDatabaseProvider: DatabaseService = {
 
     setMockCourses(updated);
     setLocalStorageItem('openprimer_courses', updated);
+    removeCourseTombstone(finalCourse.id);
     return { data: finalCourse, error: null };
   },
 
@@ -1165,6 +1182,7 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   deleteCourse: async (courseId: number) => {
+    addCourseTombstone(courseId);
     const list = getMockCourses().filter(c => c.id !== courseId);
     setMockCourses(list);
     setLocalStorageItem('openprimer_courses', list);
@@ -1225,5 +1243,23 @@ export const mockDatabaseProvider: DatabaseService = {
     const key = 'op_course_notifications';
     const existing = JSON.parse(window.localStorage.getItem(key) || '[]');
     return { data: existing, error: null };
+  },
+
+  flushLocalCaches: async () => {
+    if (typeof window !== 'undefined') {
+      const keysToClear = [
+        'openprimer_courses',
+        'op_enrolled_courses',
+        'op_course_progress',
+        'op_lesson_scroll_progress',
+        'openprimer_lesson_progress',
+        'op_quiz_results',
+        'openprimer_search_history',
+        'op_mastery_floor',
+        'openprimer_pipeline_queue'
+      ];
+      keysToClear.forEach(key => window.localStorage.removeItem(key));
+    }
+    return { data: null, error: null };
   }
 };

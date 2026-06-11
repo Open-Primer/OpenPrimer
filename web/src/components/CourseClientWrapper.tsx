@@ -153,7 +153,7 @@ export const CourseClientWrapper = ({
       }
       
       const text = sel.toString().trim();
-      if (text.length < 15 || text.length > 800) {
+      if (text.length < 3 || text.length > 800) {
         setSelection(null);
         return;
       }

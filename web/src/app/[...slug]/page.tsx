@@ -74,7 +74,16 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     const title = pageData.meta.title || 'Untitled Module';
     const subject = pageData.meta.subject || 'Academic Content';
-    const moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
+    
+    let moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
+    if (moduleName.toLowerCase() === 'core module') {
+      const lUpper = lang.toUpperCase();
+      if (lUpper === 'FR') moduleName = "Module Principal";
+      else if (lUpper === 'ES') moduleName = "Módulo Principal";
+      else if (lUpper === 'DE') moduleName = "Kernmodul";
+      else if (lUpper === 'ZH') moduleName = "核心模块";
+    }
+    
     const level = pageData.meta.level || 'L1';
     const courseSlug = slug[2];
     const { data: courseData } = await dbService.getSyllabus(courseSlug);
@@ -125,6 +134,28 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const getLocalizedSubject = (currentLang: string, sub: string) => {
       const lUpper = currentLang.toUpperCase();
       const subLower = sub.toLowerCase().trim();
+
+      const formatSubjectName = (str: string): string => {
+        if (!str) return '';
+        if (str.includes('_') || str === str.toUpperCase()) {
+          return str
+            .split('_')
+            .map(word => {
+              if (word.length <= 3 && !['ET', 'DE', 'LA', 'LE', 'UN', 'UNE', 'DU', 'AU', 'AUX', 'EN', 'SUR', 'DES'].includes(word.toUpperCase())) {
+                return word.toUpperCase();
+              }
+              const lower = word.toLowerCase();
+              if (['et', 'de', 'la', 'le', 'un', 'une', 'du', 'au', 'aux', 'en', 'sur', 'pour', 'des'].includes(lower)) {
+                return lower;
+              }
+              // Preserve accents if already present, but capitalize first letter
+              return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            })
+            .join(' ')
+            .replace(/^\w/, c => c.toUpperCase());
+        }
+        return str;
+      };
 
       const dict: Record<string, Record<string, string>> = {
         physics: {
@@ -202,7 +233,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       if (dict[subLower] && dict[subLower][lUpper]) {
         return dict[subLower][lUpper];
       }
-      return sub;
+      return formatSubjectName(sub);
     };
 
     return (
@@ -253,7 +284,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             <Link href={nextPage.path} className="mt-16 pt-8 border-t border-slate-900/30 flex justify-between items-center group cursor-pointer distraction-free-hide">
                <div>
                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1 group-hover:text-blue-400/80 transition-colors">
-                   {lang.toLowerCase() === 'fr' ? 'Chapitre Suivant' : 'Next Chapter'}
+                   {t.next_chapter || 'Next Chapter'}
                  </span>
                  <p className="text-lg font-black text-slate-300 group-hover:text-blue-400 transition-colors">
                    {nextPage.name}

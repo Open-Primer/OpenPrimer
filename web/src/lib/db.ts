@@ -1918,29 +1918,33 @@ if (isBrowser) {
     const defaultCourseCompletions = generatePreseededCourseCompletions();
     const defaultContactFeedbacks = initialContactFeedbacks;
 
-    const storedCourses = getLocalStorageItem('openprimer_courses', defaultCourses);
-    const filteredStoredCourses = storedCourses.filter((c: any) => {
-      const slug = (c.slug || '').toLowerCase();
-      const level = (c.level || '').toLowerCase();
-      if (slug === 'introduction_à_la_sociologie' || slug === 'introduction_a_la_sociologie') return false;
-      if (slug === 'classical_mechanics' && (level === 'beginner' || level === 'general')) return false;
-      if (slug === 'maths_test' && (level === 'beginner' || level === 'general')) return false;
-      if (slug === 'chimie_test' && (level === 'beginner' || level === 'general')) return false;
-      return true;
-    });
-    const mergedCourses = [...filteredStoredCourses];
-    mockCourses.forEach(initialC => {
-      const slug = (initialC.slug || '').toLowerCase();
-      const level = (initialC.level || '').toLowerCase();
-      if (slug === 'introduction_à_la_sociologie' || slug === 'introduction_a_la_sociologie') return;
-      if (slug === 'classical_mechanics' && (level === 'beginner' || level === 'general')) return;
-      if (slug === 'maths_test' && (level === 'beginner' || level === 'general')) return;
-      if (slug === 'chimie_test' && (level === 'beginner' || level === 'general')) return;
-      if (!mergedCourses.some(c => c.id === initialC.id)) {
-        mergedCourses.push(initialC);
+    const rawStoredCourses = window.localStorage.getItem('openprimer_courses');
+    let mergedCourses: MockCourse[] = [];
+    if (!rawStoredCourses) {
+      // First-time seeding: use the filtered default courses list
+      const filteredDefaults = defaultCourses.filter((c: any) => {
+        const slug = (c.slug || '').toLowerCase();
+        const level = (c.level || '').toLowerCase();
+        if (slug === 'introduction_à_la_sociologie' || slug === 'introduction_a_la_sociologie') return false;
+        if (slug === 'classical_mechanics' && (level === 'beginner' || level === 'general')) return false;
+        if (slug === 'maths_test' && (level === 'beginner' || level === 'general')) return false;
+        if (slug === 'chimie_test' && (level === 'beginner' || level === 'general')) return false;
+        return true;
+      });
+      mergedCourses = filteredDefaults;
+    } else {
+      // Respect the existing storage as the absolute source of truth (never auto-inject default courses again)
+      try {
+        mergedCourses = JSON.parse(rawStoredCourses);
+      } catch (e) {
+        mergedCourses = defaultCourses;
       }
-    });
-    mockCourses = mergedCourses;
+    }
+    let tombstoneIds: number[] = [];
+    try {
+      tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+    } catch (e) {}
+    mockCourses = mergedCourses.filter(c => !tombstoneIds.includes(c.id));
     setLocalStorageItem('openprimer_courses', mockCourses);
     
     reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
@@ -2105,59 +2109,60 @@ export function generatePedagogicalSummary(
   studyStreakDays: number, 
   totalMinutes: number, 
   activeLang: string, 
-  tutorId: string
+  tutorId: string,
+  quizResults?: any
 ): string {
   const isFr = activeLang === 'FR';
   const isEs = activeLang === 'ES';
   const isDe = activeLang === 'DE';
   const isZh = activeLang === 'ZH';
 
-  // First connection welcome messages when activeModules is empty (0 courses enrolled)
+  // Condition 1: Empty Curriculum
   if (!activeModules || activeModules.length === 0) {
     if (tutorId === 'direct') {
-      if (isFr) return `Bonjour. Je suis votre tuteur. Bienvenue sur OpenPrimer. Votre cursus est actuellement vide. Pour démarrer efficacement, parcourez le catalogue et inscrivez-vous à un cours ou créez un cursus personnalisé. Optimisez votre temps dès maintenant.`;
-      if (isEs) return `Hola. Soy tu tutor. Bienvenido a OpenPrimer. Tu plan de estudios está actualmente vacío. Para comenzar de manera eficiente, explora el catálogo e inscríbete en un curso o crea un plan de estudios personalizado. Optimiza tu tiempo ahora.`;
-      if (isDe) return `Hallo. Ich bin Ihr Tutor. Willkommen bei OpenPrimer. Ihr Lehrplan ist derzeit leer. Um effizient zu starten, durchsuchen Sie den Katalog und melden Sie sich für einen Kurs an oder erstellen Sie einen personalisierten Lehrplan. Optimieren Sie jetzt Ihre Zeit.`;
-      if (isZh) return `你好。我是你的导师。欢迎来到 OpenPrimer。你的课表目前是空的。为了高效开始，请浏览课程目录并注册课程，或者创建个性化学习计划。现在就开始优化你的时间吧。`;
-      return `Hello. I am your tutor. Welcome to OpenPrimer. Your curriculum is currently empty. To start efficiently, browse the catalog and enroll in a course or create a custom curriculum. Optimize your time now.`;
+      if (isFr) return `🎯 Votre cursus est actuellement vide. Pour démarrer, veuillez vous inscrire à un cours depuis le catalogue afin d'initier votre parcours d'apprentissage.`;
+      if (isEs) return `🎯 Tu plan de estudios está vacío. Para comenzar, inscríbete en un curso desde el catálogo para iniciar tu aprendizaje.`;
+      if (isDe) return `🎯 Ihr Lehrplan ist derzeit leer. Bitte melden Sie sich im Katalog für einen Kurs an, um Ihren Lernpfad zu beginnen.`;
+      if (isZh) return `🎯 您的课程表目前为空。请在目录中选择并注册一门课程以开启学习之旅。`;
+      return `🎯 Your curriculum is currently empty. Please enroll in a course from the catalog to start your learning path.`;
     }
     if (tutorId === 'gamified') {
-      if (isFr) return `Salut l'ami ! 🚀 Je suis ton tuteur IA ! Bienvenue dans l'aventure OpenPrimer ! 🎮 Prêt à relever des défis et accumuler des points ? Pour commencer, va vite sur le catalogue pour débloquer ton tout premier cours ou créer ton programme ! C'est parti ! ⭐`;
-      if (isEs) return `¡Hola, amigo! 🚀 ¡Soy tu tutor de IA! ¡Bienvenido a la aventura de OpenPrimer! 🎮 ¿Listo para asumir desafíos y acumular puntos? Para comenzar, ¡ve rápido al catálogo para desbloquear tu primer curso o crear tu programa! ¡Vamos! ⭐`;
-      if (isDe) return `Hallo, Kumpel! 🚀 Ich bin dein KI-Tutor! Willkommen beim OpenPrimer-Abenteuer! 🎮 Bereit, Herausforderungen anzunehmen und Punkte zu sammeln? Geh zuerst zum Katalog, um deinen allerersten Kurs freizuschalten oder dein Programm zu erstellen! Los geht's! ⭐`;
-      if (isZh) return `嘿，朋友！🚀 我是你的 AI 导师！欢迎来到 OpenPrimer 的探索冒险！🎮 准备好接受挑战并累积点数了吗？要开始的话，赶快去课程目录解锁你的第一门课程，或者创建你的学习计划吧！出发！⭐`;
-      return `Hey there! 🚀 I am your AI Tutor! Welcome to the OpenPrimer adventure! 🎮 Ready to take on challenges and rack up points? To start, head over to the catalog to unlock your very first course or create your program! Let's go! ⭐`;
+      if (isFr) return `🚀 Bienvenue dans l'aventure OpenPrimer ! 🎮 Prêt à relever des défis et accumuler des points ? Allez vite sur le catalogue pour débloquer votre tout premier cours ! ⭐`;
+      if (isEs) return `🚀 ¡Bienvenido a la aventura de OpenPrimer! 🎮 ¿Listo para asumir desafíos y acumular puntos? ¡Ve al catálogo para desbloquear tu primer curso! ⭐`;
+      if (isDe) return `🚀 Willkommen beim OpenPrimer-Abenteuer! 🎮 Bereit, Herausforderungen anzunehmen und Punkte zu sammeln? Geh zum Katalog, um deinen ersten cours freizuschalten! ⭐`;
+      if (isZh) return `🚀 欢迎来到 OpenPrimer 的探索冒险！🎮 准备好接受挑战并累积点数了吗？快去课程目录解锁你的第一门课程吧！⭐`;
+      return `🚀 Welcome to the OpenPrimer adventure! 🎮 Ready to take on challenges and rack up points? Head over to the catalog to unlock your very first course! ⭐`;
     }
     if (tutorId === 'historical') {
-      if (isFr) return `Salutations, cher chercheur. Je suis votre tuteur historique. Bienvenue dans ce temple du savoir qu'est OpenPrimer. Votre table d'étude est encore vide. Je vous invite à explorer les chroniques de notre catalogue pour y inscrire votre premier sujet d'étude et poursuivre la quête de la vérité.`;
-      if (isEs) return `Saludos, estimado erudito. Soy tu tutor histórico. Bienvenido a este templo del saber que es OpenPrimer. Tu mesa de estudio aún está vacía. Te invito a explorar las crónicas de nuestro catálogo para registrar tu primer tema de estudio y continuar la búsqueda de la verdad.`;
-      if (isDe) return `Grüße, werter Gelehrter. Ich bin Ihr historischer Tutor. Willkommen in diesem Tempel des Wissens namens OpenPrimer. Ihr Studiertisch ist noch leer. Ich lade Sie ein, die Chroniken unseres Katalogs zu erkunden, um Ihr erstes Studienfach einzutragen und die Suche nach der Wahrheit fortzusetzen.`;
-      if (isZh) return `你好，亲爱的学者。我是你的历史导师。欢迎来到 OpenPrimer 这座知识殿堂。你的书桌 intellectuelle 目前还是空的。我邀请你探索课程目录的篇章，注册你的第一个 research subject，并开展你的真理探求。`;
-      return `Greetings, fellow scholar. I am your historical tutor. Welcome to OpenPrimer, a sanctuary of knowledge. Your study table is currently empty. I invite you to explore our catalog to select your first subject of study and join the quest for truth.`;
+      if (isFr) return `🏛️ Salutations, cher chercheur. Bienvenue dans ce temple du savoir. Votre table d'étude est encore vide. Je vous invite à explorer les chroniques de notre catalogue pour y inscrire votre premier sujet d'étude.`;
+      if (isEs) return `🏛️ Saludos, estimado erudito. Bienvenido a este templo del saber. Tu mesa de estudio aún está vacía. Te invito a explorar las crónicas de nuestro catálogo para registrar tu primer tema de estudio.`;
+      if (isDe) return `🏛️ Grüße, werter Gelehrter. Willkommen in diesem Tempel des Wissens. Ihr Studiertisch ist noch leer. Ich lade Sie ein, die Chroniken unseres Katalogs zu erkunden, um Ihr erstes Studienfach einzutragen.`;
+      if (isZh) return `🏛️ 您好，学者。欢迎来到知识殿堂。您的书桌 intellectuelle 目前还是空的。请在课程目录中选择并注册您的第一个研究主题。`;
+      return `🏛️ Greetings, fellow scholar. Welcome to this sanctuary of knowledge. Your study table is currently empty. I invite you to explore our catalog to select your first subject of study.`;
     }
     if (tutorId === 'feynman') {
-      if (isFr) return `Salut ! Je suis votre tuteur Feynman. Bienvenue sur OpenPrimer ! L'apprentissage commence par la curiosité. Pour l'instant, vous n'avez aucun cours d'actif. Faisons simple : allez faire un tour sur le catalogue, choisissez un sujet qui vous passionne et on commencera à le déconstruire ensemble !`;
-      if (isEs) return `¡Hola! Soy tu tutor Feynman. ¡Bienvenido a OpenPrimer! El aprendizaje comienza con la curiosidad. Por ahora, no tienes ningún curso activo. Hagámoslo simple: date una vuelta por el catálogo, elige un tema que te apasione y ¡empezaremos a desglosarlo juntos!`;
-      if (isDe) return `Hallo! Ich bin Ihr Feynman-Tutor. Willkommen bei OpenPrimer! Lernen beginnt mit Neugier. Momentan haben Sie keine aktiven Kurse. Machen wir es einfach: Schauen Sie sich im Katalog um, wählen Sie ein Thema, das Sie fasziniert, und wir fangen an, es gemeinsam zu zerlegen!`;
-      if (isZh) return `嗨！我是你的费曼导师。欢迎来到 OpenPrimer！学习源于好奇心。目前你还没有任何活跃的课程。简单来说：去课程目录转转，选一个让你充满好奇的主题，然后我们一起开始把它拆解透彻！`;
-      return `Hey! I am your Feynman tutor. Welcome to OpenPrimer! Learning starts with curiosity. Right now, you don't have any active courses. Let's keep it simple: take a look at the catalog, choose a topic you are curious about, and we'll start breaking it down together!`;
+      if (isFr) return `💡 Salut ! Bienvenue sur OpenPrimer ! Pour l'instant, vous n'avez aucun cours actif. Faisons simple : allez faire un tour sur le catalogue, choisissez un sujet qui vous passionne et on commencera à le déconstruire ensemble !`;
+      if (isEs) return `💡 ¡Hola! ¡Bienvenido a OpenPrimer! Por ahora, no tienes ningún cours actif. Hagámoslo simple: date una vuelta por el catálogo, elige un tema que te apasione y ¡empezaremos a desglosarlo juntos!`;
+      if (isDe) return `💡 Hallo! Willkommen bei OpenPrimer! Momentan haben Sie keine aktiven Kurse. Machen wir es einfach: Schauen Sie sich im Katalog um, wählen Sie ein Thema, das Sie fasziniert, und wir zerlegen es gemeinsam!`;
+      if (isZh) return `💡 嗨！欢迎来到 OpenPrimer！目前你还没有任何活跃的课程。简单来说：去目录选一个你感兴趣的主题，我们一起开始把它拆解透彻！`;
+      return `💡 Hey! Welcome to OpenPrimer! Right now, you don't have any active courses. Let's keep it simple: take a look at the catalog, choose a topic you are curious about, and we'll start breaking it down together!`;
     }
     if (tutorId === 'proof') {
-      if (isFr) return `Bonjour. Tuteur logique activé. Bienvenue sur OpenPrimer. État initial : aucun cours inscrit (ensemble vide). Pour initier le processus d'apprentissage, veuillez sélectionner un cours dans le catalogue ou générer un programme formel. Prêt pour la rigueur démonstrative.`;
-      if (isEs) return `Hola. Tutor lógico activado. Bienvenido a OpenPrimer. Estado inicial: ningún curso inscrito (conjunto vacío). Para iniciar el proceso de aprendizaje, selecciona un curso del catálogo o genera un programa formal. Listo para el rigor de la demostración.`;
-      if (isDe) return `Hallo. Logik-Tutor aktiviert. Willkommen bei OpenPrimer. Anfangszustand: kein Kurs eingetragen (leere Menge). Um den Lernprozess zu initiieren, wählen Sie bitte einen Kurs aus dem Katalog oder erstellen Sie einen formalen Lehrplan. Bereit für formale Strenge.`;
-      if (isZh) return `你好。逻辑导师已启用。欢迎来到 OpenPrimer。初始状态：未注册任何课程（空集）。为了启动学习过程，请从课程目录中选择一门课程或生成一个形式化学习大纲。已准备好进行严密的推导。`;
-      return `Hello. Logic tutor activated. Welcome to OpenPrimer. Initial state: zero enrolled courses (empty set). To initiate the learning process, please select a course from the catalog or generate a formal program. Ready for demonstrative rigor.`;
+      if (isFr) return `📐 Tuteur logique activé. Bienvenue sur OpenPrimer. État initial : aucun cours inscrit (ensemble vide). Pour initier le processus d'apprentissage, veuillez sélectionner un cours dans le catalogue.`;
+      if (isEs) return `📐 Tutor lógico activado. Bienvenido a OpenPrimer. Estado inicial: ningún curso inscrito (conjunto vacío). Para iniciar el proceso de aprendizaje, selecciona un curso del catálogo.`;
+      if (isDe) return `📐 Logik-Tutor aktiviert. Willkommen bei OpenPrimer. Anfangszustand: kein Kurs eingetragen (leere Menge). Um den Lernprozess zu initiieren, wählen Sie einen Kurs aus dem Katalog.`;
+      if (isZh) return `📐 逻辑导师已启用。欢迎来到 OpenPrimer。初始状态：未注册任何课程（空集）。请从课程目录中选择一门课程开始。`;
+      return `📐 Logic tutor activated. Welcome to OpenPrimer. Initial state: zero enrolled courses (empty set). To initiate the learning process, please select a course from the catalog.`;
     }
     // Default / Socratic
-    if (isFr) return `Bienvenue sur OpenPrimer. Je suis votre guide pédagogique. Pour l'instant, aucun cours ne figure dans votre cursus. Quel domaine de la connaissance éveillerait votre curiosité aujourd'hui ? Je vous invite à parcourir le catalogue ou à configurer un programme pour commencer à explorer ces questions avec moi.`;
-    if (isEs) return `Bienvenido a OpenPrimer. Soy tu guía pedagógico. Por ahora, no hay ningún curso en tu plan de estudios. ¿Qué área del conocimiento despertaría tu curiosidad hoy? Te invito a explorar el catálogo o configurar un programa para comenzar a indagar en estas preguntas conmigo.`;
-    if (isDe) return `Willkommen bei OpenPrimer. Ich bin Ihr pädagogischer Wegbegleiter. Derzeit befindet sich kein Kurs in Ihrem Lehrplan. Welches Wissensgebiet weckt heute Ihre Neugier? Ich lade Sie ein, den Katalog zu durchsuchen oder ein Programm zu konfigurieren, um diese Fragen gemeinsam mit mir zu erkunden.`;
-    if (isZh) return `欢迎来到 OpenPrimer。我是你的学习向导。目前你的课表里还没有任何课程。今天有什么知识领域能唤醒你的好奇心呢？我邀请你浏览课程目录或配置一个学习计划，开始与我一起探讨这些问题。`;
-    return `Welcome to OpenPrimer. I am your pedagogical guide. Currently, there are no courses in your curriculum. What domain of knowledge would awaken your curiosity today? I invite you to browse the catalog or configure a program to begin exploring these questions with me.`;
+    if (isFr) return `💬 Bienvenue sur OpenPrimer. Je suis votre guide pédagogique. Pour l'instant, aucun cours ne figure dans votre cursus. Quel domaine de la connaissance éveille votre curiosité aujourd'hui ? Parcourez le catalogue pour commencer.`;
+    if (isEs) return `💬 Bienvenido a OpenPrimer. Soy tu guía pedagógico. Por ahora, no hay ningún curso en tu plan de estudios. ¿Qué área del conocimiento despierta tu curiosidad hoy? Explora el catálogo para comenzar.`;
+    if (isDe) return `💬 Willkommen bei OpenPrimer. Ich bin Ihr pédagogischer Wegbegleiter. Derzeit befindet sich kein Kurs in Ihrem Lehrplan. Welches Wissensgebiet weckt heute Ihre Neugier? Durchsuchen Sie den Katalog, um zu beginnen.`;
+    if (isZh) return `💬 欢迎来到 OpenPrimer。我是你的学习向导。目前你的课表里还没有任何课程。今天有什么知识领域能唤醒你的好奇心呢？浏览课程目录以开始。`;
+    return `💬 Welcome to OpenPrimer. I am your pedagogical guide. Currently, there are no courses in your curriculum. What domain of knowledge awakens your curiosity today? Browse the catalog to begin.`;
   }
 
-  // Find most active / highest progress course that is not 100% yet
+  // Find focus module: most active/highest progress course that is not 100% yet
   let focusModule = activeModules.find((m: any) => !m.isCurriculum && m.progress > 0 && m.progress < 100);
   if (!focusModule) {
     focusModule = activeModules.find((m: any) => !m.isCurriculum && m.progress > 0);
@@ -2174,104 +2179,217 @@ export function generatePedagogicalSummary(
        : isZh ? "物理" 
        : "Physics");
   
-  const progVal = focusModule ? focusModule.progress : 12;
-  const streakVal = studyStreakDays || 1;
+  const progVal = focusModule ? focusModule.progress : 0;
+  const streakVal = studyStreakDays || 0;
 
-  if (tutorId === 'direct') {
-    if (isFr) {
-      return `Bilan : ${moduleName} complété à ${progVal}%. Série d'étude de ${streakVal} jours. Points de Maîtrise : ${masteryPoints}. Prochain objectif : consolider l'emplacement actuel de lecture et finaliser les défis restants. Ciblez l'efficacité active.`;
-    }
-    if (isEs) {
-      return `Resumen: ${moduleName} completado al ${progVal}%. Racha de estudio de ${streakVal} días. Puntos de Maestría: ${masteryPoints}. Próximo objetivo: consolidar la lectura actual y finalizar los desafíos. Apunta a la eficiencia.`;
-    }
-    if (isDe) {
-      return `Zusammenfassung: ${moduleName} zu ${progVal}% abgeschlossen. Lernserie von ${streakVal} Tagen. Meisterpunkte: ${masteryPoints}. Nächstes Ziel: aktuellen Lesestand festigen und verbleibende Aufgaben lösen.`;
-    }
-    if (isZh) {
-      return `报告：${moduleName}已完成 ${progVal}%。连续学习 ${streakVal} 天。掌握点数：${masteryPoints}。下一步目标：巩固当前阅读进度，并完成余下的知识挑战。注重高效。`;
-    }
-    return `Summary: ${moduleName} completed at ${progVal}%. ${streakVal}-day study streak active. Mastery Points: ${masteryPoints}. Next target: consolidate active reading location and complete remaining challenges. Focus on efficiency.`;
-  }
+  // Let's analyze quizResults for difficulties
+  let hasDifficulties = false;
+  let lowestScoreQuiz: any = null;
+  let lowestRatio = 1.0;
 
-  if (tutorId === 'gamified') {
-    if (isFr) {
-      return `🚀 Incroyable travail ! Tu as accumulé ${masteryPoints} Points de Maîtrise et ta série est de ${streakVal} jours ! Tu es déjà à ${progVal}% sur ${moduleName}. Prochaine étape : continuer à lire et à surmonter les obstacles ! C'est parti ! ⭐`;
+  if (quizResults) {
+    for (const key in quizResults) {
+      const q = quizResults[key];
+      if (q && q.totalQuestions > 0) {
+        const ratio = q.correctAnswers / q.totalQuestions;
+        if (ratio < 1.0 && ratio < lowestRatio) {
+          lowestRatio = ratio;
+          lowestScoreQuiz = q;
+          hasDifficulties = true;
+        }
+      }
     }
-    if (isEs) {
-      return `🚀 ¡Trabajo increíble! ¡Has acumulado ${masteryPoints} Puntos de Maestría y tu racha es de ${streakVal} días! Ya estás al ${progVal}% en ${moduleName}. ¡Próximo paso: sigue leyendo y supera los retos! ¡Vamos! ⭐`;
-    }
-    if (isDe) {
-      return `🚀 Fantastisch! Du hast ${masteryPoints} Meisterpunkte gesammelt und deine Serie beträgt ${streakVal} Tage! Du bist bereits zu ${progVal}% fertig mit ${moduleName}. Nächster Schritt: Weiterlesen und die nächste Stufe zünden! ⭐`;
-    }
-    if (isZh) {
-      return `🚀 太棒了！你已累积 ${masteryPoints} 掌握点数，连续学习了 ${streakVal} 天！你的${moduleName}进度已达 ${progVal}%。下一步：继续翻阅新篇章，突破自我！加油！⭐`;
-    }
-    return `🚀 Awesome work! You have accumulated ${masteryPoints} Mastery Points and your study streak is at ${streakVal} days! You are already at ${progVal}% on ${moduleName}. Next step: keep reading and crush the remaining milestones! Let's go! ⭐`;
   }
 
-  if (tutorId === 'historical') {
-    if (isFr) {
-      return `📚 À l'instar des grands savants de l'histoire, vous progressez noblement dans ${moduleName} (complété à ${progVal}%). Avec ${masteryPoints} Points de Maîtrise et ${streakVal} jours d'assiduité, vous tracez votre propre voie. Poursuivez cette quête intellectuelle.`;
+  // Condition 2: Quiz Difficulties (lowest correct ratio < 1.0)
+  if (hasDifficulties && lowestScoreQuiz) {
+    const correctAnswers = lowestScoreQuiz.correctAnswers;
+    const totalQuestions = lowestScoreQuiz.totalQuestions;
+    const courseTitle = lowestScoreQuiz.title || moduleName;
+
+    if (tutorId === 'direct') {
+      if (isFr) return `📈 Bilan : Difficultés détectées dans ${courseTitle} (${correctAnswers}/${totalQuestions} correctes). Cible : revoir le cours et refaire le quiz pour atteindre 100%.`;
+      if (isEs) return `📈 Resumen: Dificultades en ${courseTitle} (${correctAnswers}/${totalQuestions} correctas). Objetivo: revisar el material y repetir el cuestionario al 100%.`;
+      if (isDe) return `📈 Status: Schwierigkeiten in ${courseTitle} (${correctAnswers}/${totalQuestions} richtig). Ziel: Kurs wiederholen und Quiz auf 100% bringen.`;
+      if (isZh) return `📈 报告：在《${courseTitle}》中遇到部分困难（答对 ${correctAnswers}/${totalQuestions}）。目标：重温课程并重新尝试测试以达到 100% 掌握。`;
+      return `📈 Status: Difficulties detected in ${courseTitle} (${correctAnswers}/${totalQuestions} correct). Target: review the course material and retry the quiz to achieve 100% mastery.`;
     }
-    if (isEs) {
-      return `📚 Al igual que los grandes pensadores de la historia, estás progresando con nobleza en ${moduleName} (completado al ${progVal}%). Con ${masteryPoints} Puntos de Maestría y ${streakVal} días de estudio, forjas tu propio camino. Continúa.`;
+    if (tutorId === 'gamified') {
+      if (isFr) return `🚀 Ne lâche rien ! Le quiz de ${courseTitle} t'a donné du fil à retordre (${correctAnswers}/${totalQuestions} correctes). Relis un coup les notions et va décrocher tous les points ! ⭐`;
+      if (isEs) return `🚀 ¡No te rindas! El cuestionario de ${courseTitle} fue difícil (${correctAnswers}/${totalQuestions} correctas). ¡Repasa los conceptos y ve a ganar todos los points ! ⭐`;
+      if (isDe) return `🚀 Bleib dran! Das Quiz in ${courseTitle} war knifflig (${correctAnswers}/${totalQuestions} richtig). Lies die Konzepte nochmal durch und hol dir die volle Punktzahl! ⭐`;
+      if (isZh) return `🚀 不要气馁！《${courseTitle}》的测试有点挑战性（答对 ${correctAnswers}/${totalQuestions}）。重温一下概念，去赢取属于你的满分点数吧！⭐`;
+      return `🚀 Don't give up! The quiz in ${courseTitle} was a bit tough (${correctAnswers}/${totalQuestions} correct). Review the concepts and go grab those points! ⭐`;
     }
-    if (isDe) {
-      return `📚 Wie die großen Geister der Geschichte machst du edle Fortschritte in ${moduleName} (${progVal}% abgeschlossen). Mit ${masteryPoints} Meisterpunkten und einer Serie von ${streakVal} Tagen baust du dein Fundament auf.`;
+    if (tutorId === 'historical') {
+      if (isFr) return `🏛️ Cher chercheur, l'erreur fait partie du cheminement scientifique. Vos difficultés passées dans ${courseTitle} (${correctAnswers}/${totalQuestions} correctes) sont une invitation à approfondir vos lectures historiques pour mieux éclairer votre esprit.`;
+      if (isEs) return `🏛️ Estimado erudito, el error es parte del camino científico. Tus dificultades en ${courseTitle} (${correctAnswers}/${totalQuestions} correctas) son una invitation a profundizar tus lecturas para iluminar tu mente.`;
+      if (isDe) return `🏛️ Werter Gelehrter, Fehler sind Teil des wissenschaftlichen Weges. Ihre Schwierigkeiten in ${courseTitle} (${correctAnswers}/${totalQuestions} richtig) sind eine Einladung, Ihre Lektüre zu vertiefen.`;
+      if (isZh) return `🏛️ 学者，错误是求知之路的必经阶段。您在《${courseTitle}》中的测试（答对 ${correctAnswers}/${totalQuestions}）正是加深阅读、解惑释疑的契机。`;
+      return `🏛️ Fellow scholar, error is a natural step in the pursuit of truth. Your past challenges in ${courseTitle} (${correctAnswers}/${totalQuestions} correct) are an invitation to deepen your reading and illuminate your understanding.`;
     }
-    if (isZh) {
-      return `📚 如同历史上的伟大先贤一般，你在${moduleName}的求知之路上稳步前行（进度 ${progVal}%）。目前已获得 ${masteryPoints} 掌握点数与连续 learning ${streakVal} 天的成就。继续探寻真理.`;
+    if (tutorId === 'feynman') {
+      if (isFr) return `💡 Aucun problème pour les erreurs sur ${courseTitle} (${correctAnswers}/${totalQuestions} correctes). C'est le moment d'identifier exactement ce qui cloche. Essayez d'expliquer ces concepts par écrit avec des mots simples, cela vous montrera ce qu'il faut retravailler !`;
+      if (isEs) return `💡 No hay problema con los errores en ${courseTitle} (${correctAnswers}/${totalQuestions} correctas). Es el momento de ver qué falló. Intenta explicar estos concepts con palabras muy simples para notar qué necesitas repasar.`;
+      if (isDe) return `💡 Kein Problem mit Fehlern in ${courseTitle} (${correctAnswers}/${totalQuestions} richtig). Jetzt können wir sehen, wo es hakt. Versuchen Sie, diese Konzepte mit einfachen Worten zu erklären, um Lücken zu finden!`;
+      if (isZh) return `💡 在《${courseTitle}》的测试中答错没关系（答对 ${correctAnswers}/${totalQuestions}）。这正是查漏补缺的绝佳时机。试着用最通俗的话写下这些概念，您就会发现需要复习哪里！`;
+      return `💡 No worries about the mistakes in ${courseTitle} (${correctAnswers}/${totalQuestions} correct). It's the perfect opportunity to pinpoint the gaps. Try explaining these concepts in simple terms to see what needs work!`;
     }
-    return `📚 Like the great scholars of history, you are progressing nobly in ${moduleName} (completed at ${progVal}%). With ${masteryPoints} Mastery Points and a ${streakVal}-day streak, you are carving your own legacy. Continue this intellectual quest.`;
+    if (tutorId === 'proof') {
+      if (isFr) return `📐 Rigueur formelle. Incohérences détectées lors de la résolution de ${courseTitle} (${correctAnswers}/${totalQuestions} validées). Proposition : analyser les contre-exemples des questions erronées et ré-établir la démonstration.`;
+      if (isEs) return `📐 Rigor formal. Inconsistencias detectadas en ${courseTitle} (${correctAnswers}/${totalQuestions} validadas). Propuesta: analizar las preguntas incorrectas y reconstruir la deducción.`;
+      if (isDe) return `📐 Formale Strenge. Inkonsistenzen in ${courseTitle} festgestellt (${correctAnswers}/${totalQuestions} richtig). Vorschlag: Analysieren Sie die fehlerhaften Fragen und wiederholen Sie die Herleitung.`;
+      if (isZh) return `📐 严格证明。在《${courseTitle}》的逻辑验证中检测到不一致性（答对 ${correctAnswers}/${totalQuestions}）。命题：分析答错题目的反例，并重新构建逻辑推导。`;
+      return `📐 Formal rigor. Inconsistencies detected in ${courseTitle} (${correctAnswers}/${totalQuestions} validated). Proposition: analyze the counterexamples from the incorrect questions and re-establish the logical proof.`;
+    }
+    // Default / Socratic
+    if (isFr) return `💬 Bon retour. Votre parcours dans ${courseTitle} a rencontré quelques obstacles sur les quiz (${correctAnswers}/${totalQuestions} correctes). Quelles notions vous ont semblé les moins évidentes lors de cette validation ? Commençons par les clarifier ensemble.`;
+    if (isEs) return `💬 Bienvenido de nuevo. Tu estudio en ${courseTitle} tuvo algunos obstáculos (${correctAnswers}/${totalQuestions} correctas). ¿Qué conceptos te resultaron menos claros? Empecemos por aclararlos juntos.`;
+    if (isDe) return `💬 Willkommen zurück. Ihr Studium in ${courseTitle} stieß auf einige Hindernisse (${correctAnswers}/${totalQuestions} richtig). Welche Konzepte erschienen Ihnen am unklarsten? Lassen Sie uns diese gemeinsam klären.`;
+    if (isZh) return `💬 欢迎回来。您在《${courseTitle}》的学习中遇到了一些小障碍（测试答对 ${correctAnswers}/${totalQuestions}）。在这次验证中，哪些概念让您觉得最不容易理解？让我们一起先来澄清它们。`;
+    return `💬 Welcome back. Your progress in ${courseTitle} encountered a few obstacles on the quizzes (${correctAnswers}/${totalQuestions} correct). Which concepts felt least clear during this validation? Let us begin by clarifying them together.`;
   }
 
-  if (tutorId === 'feynman') {
-    if (isFr) {
-      return `💡 Simplifions les choses ! Vous êtes à ${progVal}% sur ${moduleName}. Avec une série d'étude de ${streakVal} jours et ${masteryPoints} points cumulés, vous avancez bien. Pouvez-vous expliquer le dernier chapitre lu à un novice ? C'est la clé de la maîtrise !`;
+  // Condition 3: Skipped Quizzes (progVal > 20 && masteryPoints === 0)
+  if (progVal > 20 && masteryPoints === 0) {
+    if (tutorId === 'direct') {
+      if (isFr) return `🎯 Progression actuelle : ${progVal}% sur ${moduleName}, mais 0 Points de Maîtrise. Recommandation : effectuez les quiz de fin de chapitre pour valider vos acquis et acquérir vos points.`;
+      if (isEs) return `🎯 Progreso: ${progVal}% en ${moduleName}, pero 0 Puntos de Maestría. Recomendación: realiza los cuestionarios de fin de capítulo para validar tus conocimientos.`;
+      if (isDe) return `🎯 Fortschritt: ${progVal}% in ${moduleName}, aber 0 Meisterpunkte. Empfehlung: Absolvieren Sie die Quizzes am Kapitelende, um Ihr Wissen zu validieren.`;
+      if (isZh) return `🎯 当前进度：《${moduleName}》已达 ${progVal}%，但掌握点数为 0。建议：完成章节末尾的测试以验证所学并获得点数。`;
+      return `🎯 Current progress: ${progVal}% in ${moduleName}, but 0 Mastery Points. Recommendation: complete the chapter-end quizzes to validate your learning and earn points.`;
     }
-    if (isEs) {
-      return `💡 ¡Simplifiquemos las cosas! Estás al ${progVal}% en ${moduleName}. Con una racha de ${streakVal} días y ${masteryPoints} puntos, vas muy bien. ¿Puedes explicar lo último que leíste a un novato? ¡Esa es la clave!`;
+    if (tutorId === 'gamified') {
+      if (isFr) return `🚀 Super avancée sur ${moduleName} (${progVal}%) ! Mais ton compteur de Points de Maîtrise est encore à 0. Relève le défi des quiz pour débloquer tes premiers points ! ⭐`;
+      if (isEs) return `🚀 ¡Gran avance en ${moduleName} (${progVal}%)! Pero tus Puntos de Maestría siguen en 0. ¡Acepta el desafío de los cuestionarios para ganar tus primeros puntos! ⭐`;
+      if (isDe) return `🚀 Toller Fortschritt in ${moduleName} (${progVal}%)! Aber deine Meisterpunkte stehen noch bei 0. Stell dich den Quizzes, um deine ersten Punkte freizuschalten! ⭐`;
+      if (isZh) return `🚀 在《${moduleName}》中的进度很棒（已达 ${progVal}%）！但你的掌握点数还是 0。快去接受测试挑战，解锁你的第一批掌握点数吧！⭐`;
+      return `🚀 Great progress in ${moduleName} (${progVal}%)! However, your Mastery Points are still at 0. Take on the quizzes to unlock your very first points! ⭐`;
     }
-    if (isDe) {
-      return `💡 Lass es uns einfach machen! Du bist zu ${progVal}% fertig mit ${moduleName}. Mit einer Serie von ${streakVal} Tagen und ${masteryPoints} Punkten bist du auf einem super Weg. Erkläre das Gelernte einem Anfänger, um es zu festigen!`;
+    if (tutorId === 'historical') {
+      if (isFr) return `🏛️ Vous avez beaucoup lu dans ${moduleName} (${progVal}% complété), mais votre savoir n'a pas encore été éprouvé par les quiz (0 Points de Maîtrise). Soumettez vos connaissances à l'épreuve des questionnaires historiques.`;
+      if (isEs) return `🏛️ Has leído bastante en ${moduleName} (${progVal}% completado), pero tus conocimientos aún no han sido probados (0 Puntos de Maestría). Somete tu saber a la prueba de los cuestionarios.`;
+      if (isDe) return `🏛️ Sie haben viel in ${moduleName} gelesen (${progVal}% abgeschlossen), aber Ihr Wissen wurde noch nicht geprüft (0 Meisterpunkte). Stellen Sie Ihr Wissen bei den Quizzes auf die Probe.`;
+      if (isZh) return `🏛️ 您在《${moduleName}》中阅读了许多篇章（已完成 ${progVal}%），但您的知识尚未通过测试得到印证（掌握点数为 0）。请尝试进行章节测试以检验所学。`;
+      return `🏛️ You have read extensively in ${moduleName} (${progVal}% completed), but your knowledge has not yet been verified by quizzes (0 Mastery Points). Put your understanding to the test.`;
     }
-    if (isZh) {
-      return `💡 让我们用最简单的话来说！你的${moduleName}进度已达 ${progVal}%。连续学习 ${streakVal} 天，获得 ${masteryPoints} 掌握点数。试着用最浅显的话向他人解释你刚阅读의知识，这才是彻底掌握的秘诀！`;
+    if (tutorId === 'feynman') {
+      if (isFr) return `💡 Vous avancez bien dans ${moduleName} (${progVal}%), mais vous avez sauté les quiz (0 points). Prenez quelques minutes pour les faire, c'est le meilleur moyen de vérifier si vous avez vraiment compris le fond du sujet !`;
+      if (isEs) return `💡 Vas muy bien en ${moduleName} (${progVal}%), pero te saltaste los cuestionarios (0 puntos). ¡Hazlos ahora para comprobar si de verdad entendiste el tema a fondo!`;
+      if (isDe) return `💡 Sie kommen in ${moduleName} gut voran (${progVal}%), haben aber die Quizzes übersprungen (0 Punkte). Nehmen Sie sich kurz Zeit dafür, um zu prüfen, ob Sie den Kern vraiment verstanden haben!`;
+      if (isZh) return `💡 您在《${moduleName}》中进展顺利（已达 ${progVal}%），但跳过了测试（0 点数）。花几分钟做一下测试，这是检验您是否真正理解核心概念的最佳方式！`;
+      return `💡 You are progressing nicely in ${moduleName} (${progVal}%), but you skipped the quizzes (0 points). Take a few minutes to complete them—it's the best way to verify if you've truly grasped the core ideas!`;
     }
-    return `💡 Let's keep it simple! You are at ${progVal}% on ${moduleName}. With a ${streakVal}-day study streak and ${masteryPoints} points, you are building solid intuition. Try explaining your last read concept to a beginner to lock it in!`;
+    if (tutorId === 'proof') {
+      if (isFr) return `📐 État de la base : Lecture effectuée à ${progVal}% pour ${moduleName}. Assertion non vérifiée (Mastery Points = 0). Nécessité d'exécuter les quiz pour valider formellement les propositions.`;
+      if (isEs) return `📐 Estado: Lectura al ${progVal}% en ${moduleName}. Aseveración no verificada (Puntos de Maestría = 0). Necesidad de ejecutar los cuestionarios para validar formalmente las proposiciones.`;
+      if (isDe) return `📐 Systemzustand: Lektüre zu ${progVal}% für ${moduleName} abgeschlossen. Aussage nicht verifiziert (Meisterpunkte = 0). Durchführung der Quizzes zur formalen Validierung erforderlich.`;
+      if (isZh) return `📐 证明状态：已阅读《${moduleName}》的 ${progVal}%。命题尚未经验证（掌握点数为 0）。需要完成章节测试以进行形式化确认。`;
+      return `📐 System state: Reading completed at ${progVal}% for ${moduleName}. Propositions unverified (Mastery Points = 0). Completion of quizzes is required to formally validate your understanding.`;
+    }
+    // Default / Socratic
+    if (isFr) return `💬 Vous avez parcouru ${progVal}% de ${moduleName}. Pourtant, vos acquis n'ont pas encore été validés par les quiz (0 Points de Maîtrise). Souhaitez-vous évaluer votre compréhension actuelle en répondant à quelques questions ?`;
+    if (isEs) return `💬 Has recorrido el ${progVal}% de ${moduleName}. Sin embargo, tus conocimientos no han sido validados por cuestionarios (0 Puntos de Maestría). ¿Deseas evaluar tu comprensión respondiendo algunas preguntas?`;
+    if (isDe) return `💬 Sie haben ${progVal}% von ${moduleName} gelesen. Dennoch wurde Ihr Wissen nicht durch Quizzes validiert (0 Meisterpunkte). Möchten Sie Ihr Verständnis durch einige Fragen auf die Probe stellen?`;
+    if (isZh) return `💬 您已经阅读了《${moduleName}》的 ${progVal}%。然而，您的学习成果尚未通过测试得到确认（掌握点数为 0）。您是否愿意通过回答几个问题 to 评估一下自己当前的理解？`;
+    return `💬 You have covered ${progVal}% of ${moduleName}. However, your understanding has not yet been validated by quizzes (0 Mastery Points). Would you like to assess your current comprehension by answering a few questions?`;
   }
 
-  if (tutorId === 'proof') {
-    if (isFr) {
-      return `📐 Rigueur formelle activée. ${moduleName} est validé à ${progVal}%. Vos ${masteryPoints} Points de Maîtrise démontrent l'exactitude de vos déductions formelles sur ${streakVal} jours. Prochaine proposition : formaliser la suite de votre lecture et démontrer chaque théorème.`;
+  // Condition 4: Study Streak (streakVal >= 3)
+  if (streakVal >= 3) {
+    if (tutorId === 'direct') {
+      if (isFr) return `🎯 Performance : Série d'étude de ${streakVal} jours active. Continuez sur votre lancée dans ${moduleName} pour maintenir la régularité.`;
+      if (isEs) return `🎯 Rendimiento: Racha de estudio de ${streakVal} días activa. Continúa con ${moduleName} para mantener la constancia.`;
+      if (isDe) return `🎯 Leistung: Lernserie von ${streakVal} Tagen aktiv. Bleiben Sie in ${moduleName} dran, um die Regelmäßigkeit zu wahren.`;
+      if (isZh) return `🎯 学习状态：已连续学习 ${streakVal} 天。继续保持在《${moduleName}》中的节奏以巩固这一习惯。`;
+      return `🎯 Performance: ${streakVal}-day study streak active. Continue your progress in ${moduleName} to maintain consistency.`;
     }
-    if (isEs) {
-      return `📐 Rigor formal activado. ${moduleName} está al ${progVal}%. Tus ${masteryPoints} Puntos de Maestría validan el rigor analítico de tus deducciones a lo largo de ${streakVal} días. Siguiente paso: formalizar el resto de las lecturas.`;
+    if (tutorId === 'gamified') {
+      if (isFr) return `🚀 En feu ! 🔥 Déjà ${streakVal} jours de série consécutifs ! Ne t'arrête pas en si bon chemin sur ${moduleName}, tu gères grave ! ⭐`;
+      if (isEs) return `🚀 ¡En racha! 🔥 ¡Llevas ${streakVal} días de estudio consecutivos! No te detengas ahora en ${moduleName}, ¡lo estás haciendo genial! ⭐`;
+      if (isDe) return `🚀 Läuft bei dir! 🔥 Bereits ${streakVal} Tage in Folge gelernt! Mach weiter so in ${moduleName}, du bist auf einem super weg! ⭐`;
+      if (isZh) return `🚀 势不可挡！🔥 已经连续学习 ${streakVal} 天了！在《${moduleName}》的学习中继续保持，你太棒了！⭐`;
+      return `🚀 You are on fire! 🔥 ${streakVal} days of consecutive study streak! Keep up the amazing work in ${moduleName}! ⭐`;
     }
-    if (isDe) {
-      return `📐 Formale Strenge aktiv. ${moduleName} ist zu ${progVal}% abgeschlossen. Deine ${masteryPoints} Meisterpunkte beweisen die präzise Deduktion über ${streakVal} Tage hinweg. Nächster Satz: Den verbleibenden Stoff formal verifizieren.`;
+    if (tutorId === 'historical') {
+      if (isFr) return `🏛️ Comme les grands érudits d'autrefois, vous faites preuve d'une assiduité remarquable avec ${streakVal} jours d'étude consécutifs. Poursuivez noblement votre quête du savoir dans ${moduleName}.`;
+      if (isEs) return `🏛️ Al igual que los grandes eruditos del pasado, demuestras una constancia admirable con ${streakVal} días de estudio consecutivos. Continúa con nobleza tu búsqueda del saber en ${moduleName}.`;
+      if (isDe) return `🏛️ Wie die großen Gelehrten vergangener Zeiten zeigen Sie mit ${streakVal} Studientagen in Folge eine bemerkenswerte Ausdauer. Setzen Sie Ihre Suche nach Wissen in ${moduleName} fort.`;
+      if (isZh) return `🏛️ 如同昔日的学者一般，您展现出了非凡的毅力，已连续 learning ${streakVal} 天。继续在《${moduleName}》中前行，探索真理吧。`;
+      return `🏛️ Like the great scholars of history, you show remarkable dedication with ${streakVal} consecutive days of study. Continue your noble quest for knowledge in ${moduleName}.`;
     }
-    if (isZh) {
-      return `📐 严谨逻辑验证中。${moduleName}完成度 ${progVal}%。你在 ${streakVal} 天内获得的 ${masteryPoints} 掌握点数验证了你的推导准确度。下一个命题：形式化后续阅读的理论，并严格论证每一个定理。`;
+    if (tutorId === 'feynman') {
+      if (isFr) return `💡 Incroyable ! Une série de ${streakVal} jours d'apprentissage. Apprendre un peu tous les jours est le meilleur moyen d'ancrer les concepts. Continuez sur ${moduleName} !`;
+      if (isEs) return `💡 ¡Increíble! Una racha de ${streakVal} jours de aprendizaje. Estudiar un poco todos los días es ideal para fijar los conceptos. ¡Sigue así en ${moduleName}!`;
+      if (isDe) return `💡 Großartig! Eine Serie von ${streakVal} Lerntagen. Jeden Tag ein bisschen zu lernen ist der beste weg, um Konzepte zu verankern. Machen Sie weiter in ${moduleName}!`;
+      if (isZh) return `💡 太棒了！连续学习了 ${streakVal} 天。每天学习一点点是巩固概念的最佳方式。在《${moduleName}》中继续保持吧！`;
+      return `💡 Amazing! You have built a ${streakVal}-day study streak. Learning a little bit every day is the best way to make the concepts stick. Keep going with ${moduleName}!`;
     }
-    return `📐 Formal rigor activated. ${moduleName} is validated at ${progVal}%. Your ${masteryPoints} Mastery Points demonstrate analytical precision over a ${streakVal}-day period. Next proposition: formalize your reading progression and verify each theorem.`;
+    if (tutorId === 'proof') {
+      if (isFr) return `📐 Constante d'apprentissage validée : série de ${streakVal} jours de travail continu. Rigueur démontrée. Poursuite de la séquence ordonnée dans ${moduleName}.`;
+      if (isEs) return `📐 Constante de aprendizaje validada: racha de ${streakVal} días de estudio continuo. Rigor demostrado. Continuación de la secuencia en ${moduleName}.`;
+      if (isDe) return `📐 Lernkonstante verifiziert: Serie von ${streakVal} Tagen kontinuierlicher Arbeit. Ausdauer bewiesen. Fortsetzung der geordneten Sequenz in ${moduleName}.`;
+      if (isZh) return `📐 学习常数验证：已连续学习 ${streakVal} 天。严谨度已获证实。在《${moduleName}》中继续按序推進。`;
+      return `📐 Learning constant validated: streak of ${streakVal} consecutive days of study. Consistency proven. Continuing the ordered sequence in ${moduleName}.`;
+    }
+    // Default / Socratic
+    if (isFr) return `💬 Vous montrez une belle régularité avec ${streakVal} jours d'activité constante. Comment ressentez-vous votre progression sur ${moduleName} à ce stade de votre réflexion ? Poursuivons sur cette voie.`;
+    if (isEs) return `💬 Demuestras una constancia admirable con ${streakVal} días de actividad. ¿Cómo valoras tu progreso en ${moduleName} en esta etapa de tu reflexión? Sigamos por este camino.`;
+    if (isDe) return `💬 Sie zeigen eine bemerkenswerte Regelmäßigkeit mit ${streakVal} Tagen Aktivität. Wie schätzen Sie Ihren Fortschritt in ${moduleName} an diesem Point ein? Lassen Sie uns diesen Weg fortsetzen.`;
+    if (isZh) return `💬 您展现出了极佳的规律性，已连续学习 ${streakVal} 天。在现阶段 of 思考中，您如何感受自己在《${moduleName}》中的进展？让我们继续前行。`;
+    return `💬 You have shown excellent consistency with ${streakVal} days of active learning. How do you feel about your progress in ${moduleName} at this stage of your study? Let us continue along this path.`;
   }
 
-  // DEFAULT (Socratic Coach):
-  if (isFr) {
-    return `💬 Vous montrez une rigueur exemplaire sur ${moduleName} (progression : ${progVal}%). Avec ${streakVal} jours d'activité constante et ${masteryPoints} points, comment l'emplacement de lecture actuel résonne-t-il avec les principes fondateurs ? Interrogez-vous là-dessus.`;
+  // Condition 5: Return to session (progVal > 0 && progVal < 100)
+  if (progVal > 0 && progVal < 100) {
+    if (tutorId === 'direct') {
+      if (isFr) return `🎯 Reprise : Cours "${moduleName}" en cours (${progVal}%). Objectif : finaliser les chapitres restants.`;
+      if (isEs) return `🎯 Reanudación: Curso "${moduleName}" en progreso (${progVal}%). Objetivo: finalizar los capítulos restantes.`;
+      if (isDe) return `🎯 Fortsetzung: Kurs "${moduleName}" läuft (${progVal}%). Ziel: Verbleibende Kapitel abschließen.`;
+      if (isZh) return `🎯 课程恢复：正在学习《${moduleName}》（进度为 ${progVal}%）。目标：完成余下的章节。`;
+      return `🎯 Resuming: Course "${moduleName}" is in progress (${progVal}%). Target: complete the remaining chapters.`;
+    }
+    if (tutorId === 'gamified') {
+      if (isFr) return `🚀 Bon retour ! Prêt à continuer ${moduleName} ? Tu en étais à ${progVal}% de progression, c'est reparti ! ⭐`;
+      if (isEs) return `🚀 ¡Bienvenido de nuevo! ¿Listo para continuar con ${moduleName}? Te quedaste en el ${progVal}%, ¡vamos! ⭐`;
+      if (isDe) return `🚀 Schön, dass du wieder da bist! Bereit, ${moduleName} fortzusetzen? Du warst bei ${progVal}% Fortschritt, los geht's! ⭐`;
+      if (isZh) return `🚀 欢迎回来！准备好继续学习《${moduleName}》了吗？你之前的进度是 ${progVal}%，让我们继续前进！⭐`;
+      return `🚀 Welcome back! Ready to continue with ${moduleName}? You were at ${progVal}% progress, let's keep going! ⭐`;
+    }
+    if (tutorId === 'historical') {
+      if (isFr) return `🏛️ Salutations. Poursuivons l'étude de "${moduleName}", dont vous avez déjà assimilé ${progVal}%. Le chemin de la connaissance vous attend.`;
+      if (isEs) return `🏛️ Saludos. Continuemos con el estudio de "${moduleName}", del cual ya has asimilado el ${progVal}%. El camino del saber te espera.`;
+      if (isDe) return `🏛️ Seien Sie gegrüßt. Setzen wir das Studium von "${moduleName}" fort, von dem Sie bereits ${progVal}% erlernt haben. Der Weg des Wissens erwartet Sie.`;
+      if (isZh) return `🏛️ 您好。让我们继续学习《${moduleName}》，您此前已掌握了 ${progVal}%。求知之路在前方延伸。`;
+      return `🏛️ Greetings. Let us resume the study of "${moduleName}", of which you have already assimilated ${progVal}%. The path of knowledge awaits you.`;
+    }
+    if (tutorId === 'feynman') {
+      if (isFr) return `💡 Ravi de vous revoir ! On continue à décortiquer ${moduleName} ? Vous en étiez à ${progVal}%, allons-y !`;
+      if (isEs) return `💡 ¡Qué bueno verte! ¿Seguimos desglosando ${moduleName}? Te quedaste en el ${progVal}%, ¡vamos allá!`;
+      if (isDe) return `💡 Schön, Sie wiederzusehen! Wollen wir ${moduleName} weiter zerlegen? Sie waren bei ${progVal}%, packen wir es an!`;
+      if (isZh) return `💡 很高兴再次见到您！我们继续拆解《${moduleName}》吧？您之前的进度是 ${progVal}%，让我们开始吧！`;
+      return `💡 Good to see you again! Ready to break down more of ${moduleName}? You were at ${progVal}% progress, let's go!`;
+    }
+    if (tutorId === 'proof') {
+      if (isFr) return `📐 État de la démonstration : progression à ${progVal}% pour "${moduleName}". Reprise de la séquence logique.`;
+      if (isEs) return `📐 Estado de la prueba: progreso al ${progVal}% para "${moduleName}". Reanudación de la secuencia lógica.`;
+      if (isDe) return `📐 Beweisstatus: Fortschritt bei ${progVal}% für "${moduleName}". Fortsetzung der logischen Sequenz.`;
+      if (isZh) return `📐 证明状态：正在进行《${moduleName}》（完成度 ${progVal}%）。恢复逻辑序列。`;
+      return `📐 Proof state: progression at ${progVal}% for "${moduleName}". Resuming the logical sequence.`;
+    }
+    // Default / Socratic
+    if (isFr) return `💬 Bon retour. Prêt à poursuivre votre réflexion sur ${moduleName} ? Vous aviez validé ${progVal}% du parcours.`;
+    if (isEs) return `💬 Bienvenido de nuevo. ¿Listo para continuar tu reflexión sobre ${moduleName}? Habías completado el ${progVal}% del camino.`;
+    if (isDe) return `💬 Willkommen zurück. Bereit, Ihre Überlegungen zu ${moduleName} fortzusetzen? Sie hatten bereits ${progVal}% des Weges geschafft.`;
+    if (isZh) return `💬 欢迎回来。准备好继续思考关于《${moduleName}》的内容了吗？您此前已完成了 ${progVal}% 的学习。`;
+    return `💬 Welcome back. Ready to resume your study of ${moduleName}? You had completed ${progVal}% of the course.`;
   }
-  if (isEs) {
-    return `💬 Demuestras un rigor ejemplar en ${moduleName} (progreso: ${progVal}%). Con ${streakVal} días de actividad constante y ${masteryPoints} puntos, ¿cómo resuona tu lectura actual con los principios fundamentales? Reflexiona sobre ello.`;
-  }
-  if (isDe) {
-    return `💬 Du zeigst vorbildliche Strenge bei ${moduleName} (Fortschritt: ${progVal}%). Wie verbindet sich dein aktueller Lesestand mit den Grundprinzipien des Fachs? Reflektiere über diese tiefere Frage.`;
-  }
-  if (isZh) {
-    return `💬 你在${moduleName}（进度：${progVal}%）的学习中展现了极佳 of 严谨度。连续 ${streakVal} 天坚持学习并累积 ${masteryPoints} 点数。思考一下：你当前阅读的内容与核心基本原理之间有着怎样的内在关联？`;
-  }
-  return `💬 You have shown exceptional rigor in ${moduleName} (progress: ${progVal}%). With ${streakVal} days of consistent activity and ${masteryPoints} mastery points, how does your current reading location connect to the fundamental axioms? Inquire deeper.`;
+
+  // Otherwise, return empty string so no popover is displayed
+  return '';
 }
+
+
 
 export const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) => {
   const course = mockCourses.find(c => c.id === courseId);
@@ -2342,6 +2460,30 @@ export const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) 
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('openprimer_translation_requests', JSON.stringify(translationRequestsList));
     }
+  }
+};
+
+export const addCourseTombstone = (courseId: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const tombstones = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+    if (!tombstones.includes(courseId)) {
+      tombstones.push(courseId);
+      window.localStorage.setItem('openprimer_deleted_courses', JSON.stringify(tombstones));
+    }
+  } catch (e) {
+    console.error('Error adding course tombstone:', e);
+  }
+};
+
+export const removeCourseTombstone = (courseId: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const tombstones = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+    const filtered = tombstones.filter((id: number) => id !== courseId);
+    window.localStorage.setItem('openprimer_deleted_courses', JSON.stringify(filtered));
+  } catch (e) {
+    console.error('Error removing course tombstone:', e);
   }
 };
 export interface SystemParameter {
@@ -2512,6 +2654,7 @@ export interface DatabaseService {
   getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
   saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;
   updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }): Promise<{ data: any; error: any }>;
+  flushLocalCaches(): Promise<{ data: null; error: any }>;
 }
 
 export function mockDatabaseProviderHash(password: string): string {
@@ -2654,10 +2797,34 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
         return value.bind(activeProvider);
       }
       return async function (...args: any[]) {
+        const propStr = String(prop);
+        const isWriteMethod = (name: string): boolean => {
+          const n = name.toLowerCase();
+          return n.startsWith('save') || 
+                 n.startsWith('delete') || 
+                 n.startsWith('toggle') || 
+                 n.startsWith('purge') || 
+                 n.startsWith('add') || 
+                 n.startsWith('update') || 
+                 n.startsWith('submit') || 
+                 n.startsWith('register') || 
+                 n.startsWith('mark') ||
+                 n.startsWith('approve') ||
+                 n.startsWith('autoapprove') ||
+                 n.startsWith('enroll') ||
+                 n.startsWith('abandon');
+        };
+
+        const blockFallback = isWriteMethod(propStr);
+
 
         try {
           const res = await value.apply(activeProvider, args);
           if (useSupabase && isLocalhost && sandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
+            if (blockFallback) {
+              console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' failed on remote database. Fallback is disabled to preserve data integrity.`, res.error);
+              return res;
+            }
             console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost due to connection failure. Falling back to Mock/LocalStorage provider.`, res.error);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
@@ -2668,6 +2835,10 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
           return res;
         } catch (err) {
           if (useSupabase && isLocalhost && sandboxAllowed && isConnectionFailure(err)) {
+            if (blockFallback) {
+              console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' threw an error on remote database. Fallback is disabled to preserve data integrity.`, err);
+              throw err;
+            }
             console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw a connection error on localhost. Falling back to Mock/LocalStorage provider.`, err);
             dynamicOffline = true;
             const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
@@ -3509,6 +3680,36 @@ export async function syncLocalStorageToSupabase(userId: string): Promise<{ succ
     // 1. Sync Courses (Disabled: custom courses should never be auto-uploaded from client local storage to Supabase)
     const localCoursesStr = window.localStorage.getItem('openprimer_courses');
 
+    // Fetch active courses from Supabase to prevent syncing deleted items and clean up local caches
+    const { data: dbCourses, error: dbCoursesError } = await supabase.from('courses').select('id');
+    const dbCourseIds = (!dbCoursesError && dbCourses) ? new Set(dbCourses.map((c: any) => c.id)) : null;
+
+    if (dbCourseIds) {
+      // Clean up deleted courses from localStorage 'openprimer_courses' cache
+      if (localCoursesStr) {
+        try {
+          const localCourses = JSON.parse(localCoursesStr) as any[];
+          const validLocalCourses = localCourses.filter(c => dbCourseIds.has(c.id));
+          if (validLocalCourses.length !== localCourses.length) {
+            window.localStorage.setItem('openprimer_courses', JSON.stringify(validLocalCourses));
+            setMockCourses(validLocalCourses);
+          }
+        } catch (e) {}
+      }
+
+      // Clean up deleted courses from localStorage 'op_enrolled_courses' cache
+      const enrolledStrTemp = window.localStorage.getItem('op_enrolled_courses');
+      if (enrolledStrTemp) {
+        try {
+          const enrolledIds = JSON.parse(enrolledStrTemp) as number[];
+          const validEnrolledIds = enrolledIds.filter(id => dbCourseIds.has(id));
+          if (validEnrolledIds.length !== enrolledIds.length) {
+            window.localStorage.setItem('op_enrolled_courses', JSON.stringify(validEnrolledIds));
+          }
+        } catch (e) {}
+      }
+    }
+
     // 2. Sync Enrolled Courses & Progress
     const enrolledStr = window.localStorage.getItem('op_enrolled_courses');
     if (enrolledStr && userId !== 'u1') {
@@ -3517,10 +3718,14 @@ export async function syncLocalStorageToSupabase(userId: string): Promise<{ succ
       const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') as Record<string, any>;
       const quizResults = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}') as Record<string, any>;
 
-      // Get all current courses (both seeded and synced ones)
-      const localCourses = JSON.parse(localCoursesStr || '[]') as any[];
+      // Get all current courses
+      const localCoursesStrUpdated = window.localStorage.getItem('openprimer_courses');
+      const localCourses = JSON.parse(localCoursesStrUpdated || '[]') as any[];
 
       for (const enrolledId of enrolledIds) {
+        // Double check course exists in db
+        if (dbCourseIds && !dbCourseIds.has(enrolledId)) continue;
+
         // Find the course in our local list to get its slug
         const course = localCourses.find(c => c.id === enrolledId);
         if (!course) continue;

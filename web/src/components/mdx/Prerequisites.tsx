@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import { usePathname } from 'next/navigation';
+import { dbService } from '@/lib/db';
 
 interface PrerequisiteItem {
   title: string;
@@ -64,19 +66,9 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
   const { language } = useLanguage();
   const t = TRANS[language as keyof typeof TRANS] || TRANS.EN;
 
-  console.log("Prerequisites Received Props:", { items, itemsBase64 });
-
-  // Resolve items
-  let resolvedItems = items || [];
-  if (itemsBase64) {
-    try {
-      resolvedItems = JSON.parse(decodeURIComponent(escape(atob(itemsBase64))));
-    } catch (e) {
-      console.error("Failed to decode itemsBase64 in Prerequisites:", e);
-    }
-  }
-
+  const pathname = usePathname();
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  const [existingSlugs, setExistingSlugs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -89,6 +81,34 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
       console.error("Failed to parse course progress maps:", e);
     }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    dbService.getAllCourses().then(({ data }) => {
+      if (active && data) {
+        const slugs = new Set(data.map((c: any) => (c.slug || '').toLowerCase()));
+        setExistingSlugs(slugs);
+      }
+    }).catch(err => {
+      console.warn("Failed to load courses for prerequisites validation:", err);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const isIntroPage = pathname ? (pathname.toLowerCase().endsWith('/introduction') || pathname.toLowerCase().endsWith('/introduction/')) : false;
+  if (!isIntroPage) return null;
+
+  // Resolve items
+  let resolvedItems = items || [];
+  if (itemsBase64) {
+    try {
+      resolvedItems = JSON.parse(decodeURIComponent(escape(atob(itemsBase64))));
+    } catch (e) {
+      console.error("Failed to decode itemsBase64 in Prerequisites:", e);
+    }
+  }
 
   if (!resolvedItems || resolvedItems.length === 0) return null;
 
@@ -133,14 +153,17 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
 
           // Format course link
           const path = `/${level}/${subject}/${item.slug || ''}/introduction`;
+          const exists = existingSlugs.has((item.slug || '').toLowerCase());
 
           return (
             <div
               key={index}
               className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-all duration-200 ${
-                isMastered
-                  ? "bg-emerald-500/5 border-emerald-500/20"
-                  : "bg-amber-500/5 border-amber-500/20"
+                exists
+                  ? isMastered
+                    ? "bg-emerald-500/5 border-emerald-500/20"
+                    : "bg-amber-500/5 border-amber-500/20"
+                  : "bg-slate-950/20 border-slate-850/60"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -150,20 +173,27 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
                   </span>
                   <h5 className="text-sm font-bold text-white">{title}</h5>
                 </div>
-                {isMastered ? (
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400 flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    {t.mastered}
-                  </span>
+                {exists ? (
+                  isMastered ? (
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      {t.mastered}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      {t.not_started}
+                    </span>
+                  )
                 ) : (
-                  <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    {t.not_started}
+                  <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[9px] font-bold text-blue-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    {t.recommended}
                   </span>
                 )}
               </div>
 
-              {!isMastered && (
+              {exists && !isMastered && (
                 <Link
                   href={path}
                   className="mt-1 text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group self-start transition-colors"

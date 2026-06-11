@@ -162,11 +162,13 @@ Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome,
 
 Zéro Placeholder (Interdiction des squelettes) : Il est strictement interdit d'utiliser des formulations de type "Dans cette section, nous aborderons...", "Exemple à compléter...", ou "etc.". Tout concept introduit doit être intégralement développé, expliqué et illustré dans le corps du texte.
 
+Interdiction absolue des balises de composants vides : Il est strictement proscrit de générer des balises de composants vides ou squelettiques (comme <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Assignment></Assignment>, <Objectives></Objectives>, <Callout></Callout>, <CalloutContainer></CalloutContainer>, etc.). Si tu utilises l'un de ces composants, tu dois impérativement rédiger de manière détaillée et complète tout son contenu interne (questions, critères, textes, instructions). Tout composant vide ou partiellement rédigé sera rejeté.
+
 Rigueur Factuelle et Précision Scientifique : Le ton doit être académique, précis et pédagogique. Utilisez les termes techniques exacts, immédiatement suivis de leur vulgarisation ou de leur ancrage dans le glossaire. Pas de généralités floues.
 
 Profondeur Pédagogique : Si un cours nécessite 3 000 mots pour être traité avec la rigueur d'un niveau L3 (ou la clarté adaptée à un niveau Primaire), générez l'intégralité du contenu requis. Ne sacrifiez jamais la substance pour la concision.
 
-Critère de Rejet (Quality Gate) : Tout cours comportant des sections vides, des listes à puces non développées, des approximations factuelles ou des conclusions hâtives sera détecté par le script de validation, immédiatement rejeté sans paiement/crédit, et détruira la réputation de l'infrastructure. Tu agis ici en tant qu'expert académique mondial.
+Critère de Rejet (Quality Gate) : Tout cours comportant des sections ou balises vides, des listes à puces non développées, des approximations factuelles ou des conclusions hâtives sera détecté par le script de validation, immédiatement rejeté sans paiement/crédit, et détruira la réputation de l'infrastructure. Tu agis ici en tant qu'expert académique mondial.
 
 ---
 
@@ -207,8 +209,8 @@ Requirements:
      * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component. Each item in the array MUST be a complete, grammatically whole, and self-contained sentence in the course's language. Under NO circumstances should you split a single sentence, clause, or paragraph across multiple items or artificial bullet points. Provide exactly 3 to 4 points, each representing a distinct, complete educational takeaway.
      * A brief paragraph containing open reflection questions (questions ouvertes de réflexion) and an opening (ouverture) toward further study or neighboring fields.
 5. Conceptual framework, historical perspective, and concrete real-world applications in the body of the lesson.
-   - **Author Quotes (Citations d'auteurs)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes:
-     \`> "Quote text..." — Author name, *Source / Publication*\`
+   - **Author Quotes (Citations d'auteurs, complete academic citations required)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes, providing a complete bibliographic citation as the source (author, book title, publishing house, city, year, and page numbers):
+     \`> "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. PageNumber\`
      Ensure every quote is beautifully integrated, translated or kept in its original prestigious phrasing (with a translation in parentheses if helpful), and followed by a dedicated paragraph explaining its conceptual implications and context.
 6. Controlled Digressions (Encadrés Epistémologiques):
    - If the course level is university level (L1, L2, L3 / undergraduate_1, undergraduate_2, undergraduate_3), you MUST systematically insert at least one controlled digression box in the body of the lesson using the custom component:
@@ -234,13 +236,17 @@ Requirements:
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
    - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
    - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: **Term** : Definition. [[Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]. Crucial: the Wikipedia redirect link at the end of each glossary definition MUST NOT be in bold (it should be standard normal text weight, not wrapped in any double asterisks \`**\`). For example: **Term** : Definition. [[Wikipédia](url)] and NOT **Term** : Definition. **[[Wikipédia](url)]**. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
-10. Connected Entities: Historical Figures, Fictional Characters, and Key Geographic Places (Personnalités, Personnages Fictifs, et Lieux Clés) :
+10. Connected Entities: Historical Figures, Fictional Characters, Key Geographic Places, and Artworks (Personnalités, Personnages Fictifs, Lieux Clés, et Œuvres d'art) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
       * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
         \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
         *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes.
         - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
         - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
+      * **Artworks and Works of Art (Œuvres d'art)**: For notable artworks mentioned in the text (e.g. paintings, sculptures, literary works, monuments like "L'Homme de Vitruve", "La Joconde", "La Cène", "La Nuit étoilée"), you MUST wrap them in:
+        \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code">DisplayName</Artwork>\` (or the French alias \`<Oeuvre>\`).
+        - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr">l'Homme de Vitruve</Artwork>\` or \`<Oeuvre name="La_Joconde" lang="fr">La Joconde</Oeuvre>\`
+        - Example (English): \`<Artwork name="Vitruvian_Man" lang="en">Vitruvian Man</Artwork>\`
       * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed, 3 to 5 line mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\` or \`> [!NOTE] **Mini-Biography: DisplayName (Dates)**\`). This mini-biography must highlight their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson.
       * **Fictional Characters**: For fictional characters (e.g., Mickey Mouse, Sherlock Holmes, Frodo Baggins, Hamlet) when relevant to the course content (e.g., literature, history, cinema, cultural/social studies), wrap them in the custom component: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code">CharacterName</FictionalCharacter>\`.
         - Example (French): \`<FictionalCharacter name="Mickey_Mouse" lang="fr">Mickey Mouse</FictionalCharacter>\`
@@ -254,13 +260,14 @@ Requirements:
     - Note: The \`name\` attribute must be the exact Wikipedia page title in the target language of the course (using underscores for spaces), and the \`lang\` attribute must be the language of the course ("${targetLang.toLowerCase()}").
 11. Intermediate Formative Scale-Based Evaluations (Évaluations formatives proportionnelles) :
     - Throughout the body of the lesson, place a custom \`<Quiz>\` block after each key sub-concept (every 5-10 minutes of reading).
+    - Crucially, every single quiz and question generated MUST be fully filled and contains quality questions and options/answers directly related to the target course level, the length, and the complexity of the subject. There should be absolutely no empty, generic, or trivial quizzes.
     - The size of these quizzes MUST scale and be proportional to the complexity and length of the concept: use 1 to 2 \`<Question>\` elements for simple introductory sections, but 3 to 4 \`<Question>\` elements for deep, dense academic sections.
     - For every question in these intermediate quizzes, you MUST provide a detailed, supportive, and alternative explanation using the \`explanation\` attribute on the \`<Question>\` component:
       \`<Question q="Question text" explanation="Detailed alternative explanation, using different analogies, breaking down the steps simply, to help learners who fail to understand.">...\`
       This acts as pedagogical rerouting: if the student fails the question, the tutor will spontaneously react by showing this custom rerouting explanation.
 12. Mandatory Proportional, Long & Timed End-of-Lesson Evaluation (Évaluation finale proportionnelle, validante et chronométrée) :
     - You MUST systematically place an evaluation block at the very end of the main lesson content (after the Conclusion/Synthèse section, but before the Glossary and References sections).
-    - **Enforce longer, validating evaluation**: The end-of-lesson/end-of-course evaluations must be comprehensive and fully validating. Provide a substantial set of questions or essay prompts (e.g. at least 4 to 6 questions for typical lessons, and 8 to 12 comprehensive questions for deep, university-level chapters) to thoroughly assess all key lesson concepts.
+    - **Enforce longer, validating evaluation**: The end-of-lesson/end-of-course evaluations must be comprehensive, fully validating, and high-quality. Provide a substantial set of questions or essay prompts (e.g. at least 4 to 6 questions for typical lessons, and 8 to 12 comprehensive questions for deep, university-level chapters) to thoroughly assess all key lesson concepts.
     - **Mandatory Timed Challenges (\`durationLimit\` attribute)**: To break learning monotony and encourage focused self-assessment, you MUST systematically set a clear, reasonable duration limit on these final evaluations using the \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes, \`durationLimit={600}\` for 10 minutes, or \`durationLimit={900}\` for 15 minutes depending on the question count and complexity).
     - You MUST NOT limit evaluations to MCQ quizzes only! You MUST actively diversify the evaluation format based on the discipline, level, and context:
       * MCQ Quizzes: Use the custom \`<Quiz durationLimit={seconds}>\` component with multiple \`<Question>\` elements inside. Excellent for scientific, math, or factual topics.
@@ -285,10 +292,10 @@ Requirements:
    
    - **Citation Completeness and Standard Academic Formatting**:
      Do NOT generate simple titles or placeholders. All bibliographical references MUST be complete, formal, and structured standard academic citations containing:
-     * *For Books*: Authors (Lastname Initial.), "Book Title", Publisher, City of publication, Year of publication.
+     * *For Books*: Authors (Lastname Initial.), "Book Title", Publisher, City of publication, Year of publication, Page numbers (e.g., p. 45-67).
      * *For Research Articles*: Authors (Lastname Initial.), "Article Title", *Journal Name*, Volume, Issue, Year of publication, Pages.
      * *For Websites*: Authors/Organization, "Page Title", Website name, Year/Date of publication.
-     Every reference MUST contain a real, high-quality, clickable link (using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, Google Scholar, DOIs, publisher pages, or academic websites. The bracketed link text MUST end with a trailing period, e.g., \`[Authors, "Title", Journal, Year.](url)\`).
+     Every reference MUST contain a real, high-quality, clickable link (using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, Google Scholar, DOIs, publisher pages, or academic websites. The bracketed link text MUST end with a trailing period, e.g., \`[Authors, "Title", Journal, Year.](url)\`). Ensure all citations include complete bibliographic details (publishing house, publication city, and page references) for academic credibility.
    
    - **Active Bidirectional Links**:
      Every reference in the bibliography section MUST correspond to a footnote citation in the text.
@@ -463,12 +470,28 @@ ${currentMdx}
 ---
 
 Your Checkpoints:
-1. "Zero-Placeholder": Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
+1. "Zero-Placeholder & Prohibited Empty Tags":
+   - Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
+   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Assignment></Assignment>, <Objectives></Objectives>, <Callout></Callout>, etc.). If ANY tag is present but empty or lacks significant children/content, you MUST reject the content (set "approved": false) and demand a detailed, complete writing of its contents.
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
-3. "Structural Completeness": Ensure the presence of prerequisites, diagnostic quizzes, learning objectives, epistemological boxes (if university level), formative quizzes, and end-of-lesson evaluation.
+3. "Structural Completeness & Mandated Sections": Ensure the presence of prerequisites, diagnostic quizzes, learning objectives, epistemological boxes (if university level), formative quizzes, and end-of-lesson evaluation.
+   Crucially, you MUST verify that the content contains:
+   - A concluding section (titled "## Conclusion" or "## Synthèse & Discussion" or "## Synthèse & Ouverture") containing the <Summary> component.
+   - A glossary section (titled "### Glossaire" or "### Glossary").
+   - A bibliography/references section (titled "### Références" or "### References"). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
+   If any of these required sections (Conclusion, Glossary, References where applicable) are missing, you MUST reject the content (set "approved": false) and request the writer to add them.
 4. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
-5. "Historical Person Biography Overlays": Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
+5. "Historical Person & Artwork Overlays":
+   - Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
+   - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">' or '<Oeuvre name="..." lang="...">'.
 6. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
+7. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
+   - You critique the work of the writer (Agent 3) and architect (Agent 2) to ensure that every <Quiz> (knowledge check) is indeed fully filled, not empty, and contains high-quality questions and options/answers.
+   - The questions, answers, and explanations must be of high academic quality and directly in line with the target course level ("${level}"), as well as the length and complexity of the subject. Reject any quiz that contains generic, trivial, simplified, or low-effort questions/answers.
+   - Every <Quiz> contains at least one <Question> element, and every <Question> contains at least two <Option> elements.
+   - Every <Option> tag has a "correct" boolean attribute (set to true or false) indicating whether it is the correct answer. Systematically reject any quiz question that does not define options or where no option has correct={true}.
+   - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
+   - All text content and attributes inside these assessment tags are fully written, meaningful, and not empty or skeletal. Reject any empty or placeholder assessments.
 
 You must return a valid JSON object with the following keys:
 - "approved": boolean (true if it perfectly complies with the policies; false if there are violations).
@@ -781,7 +804,7 @@ Rules:
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
 3. Do NOT translate technical code blocks. For JSX React tags:
    - For \`<Glossary term="..." definition="...">\`, translate the values of the \`term\` and \`definition\` attributes to the target language, as well as the text content inside the tag.
-   - For \`<HistoricalPerson name="..." lang="...">\`, translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Napoleon" to "Napoléon_Ier" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
+   - For \`<HistoricalPerson name="..." lang="...">\` and \`<Artwork name="..." lang="...">\` (or \`<Oeuvre>\`), translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Vitruvian_Man" to "Homme_de_Vitruve" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
    - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
    - Keep other tag names and syntax untouched.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
@@ -871,6 +894,7 @@ Your validation checklist:
 4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
 6. Zero placeholders: Are there any placeholders or unfinished sections?
+7. Assessment Integrity: Ensure all translated interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) are complete, fully populated with high-quality, non-empty text matching the target course level, length, and complexity of the subject, and verify that the translation has not broken correct option attributes (e.g. "correct" prop on <Option>, or "correctIndex" on <DiagnosticQuiz>).
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -1519,6 +1543,12 @@ Your validation checklist:
 2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
 3. Zero placeholders: Are there any placeholders, skeletal sentences, or unfinished sections?
 4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
+5. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
+6. Mandated Sections Integrity: Verify that the revised MDX content still contains:
+   - A concluding section (titled "## Conclusion" or "## Synthèse & Discussion" or "## Synthèse & Ouverture") containing the <Summary> component.
+   - A glossary section (titled "### Glossaire" or "### Glossary").
+   - A bibliography/references section (titled "### Références" or "### References"), unless the original course is a primary school level course.
+   If any of these required sections (Conclusion, Glossary, References where applicable) are missing, you MUST reject the revision (set "approved": false).
 
 You must output ONLY a valid JSON object matching this structure:
 {

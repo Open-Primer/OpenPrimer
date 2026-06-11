@@ -16,7 +16,7 @@ const STRINGS = {
   EN: {
     badge: "Adaptive Diagnostic Check",
     prompt: "Test your knowledge to skip this section:",
-    success: "🏆 Mastered! You scored 100% on this diagnostic check. You can safely skip this section.",
+    success: "🏆 Topic validated! You have mastered the prerequisites. You can continue reading or progress directly to the next section.",
     fail: "❌ Recommended: We advise reading this section to build a solid foundation.",
     skip_btn: "Skip directly to",
     submit: "Check Answer",
@@ -25,7 +25,7 @@ const STRINGS = {
   FR: {
     badge: "Test Diagnostique Adaptatif",
     prompt: "Testez vos connaissances pour passer directement à la suite :",
-    success: "🏆 Notion Maîtrisée ! Vous avez réussi le test diagnostique. Vous pouvez sauter cette section en toute sécurité.",
+    success: "🏆 Notion validée ! Vous maîtrisez les prérequis de cette section. Vous pouvez continuer la lecture ou accéder directement à la section suivante.",
     fail: "❌ Recommandation : Nous vous conseillons de lire cette section pour acquérir les bases nécessaires.",
     skip_btn: "Passer directement à",
     submit: "Vérifier",
@@ -34,7 +34,7 @@ const STRINGS = {
   ES: {
     badge: "Prueba de Diagnóstico Adaptativa",
     prompt: "Pon a prueba tus conocimientos para omitir esta sección:",
-    success: "🏆 ¡Dominado! Obtuviste un 100% en esta prueba de diagnóstico. Puedes omitir esta sección de manera segura.",
+    success: "🏆 ¡Tema validado! Dominas los prerrequisitos de esta sección. Puedes continuar leyendo o ir directamente a la siguiente sección.",
     fail: "❌ Recomendado: Te aconsejamos leer esta sección para construir una base sólida.",
     skip_btn: "Omitir e ir a",
     submit: "Comprobar",
@@ -43,7 +43,7 @@ const STRINGS = {
   DE: {
     badge: "Adaptiver Diagnosetest",
     prompt: "Testen Sie Ihr Wissen, um diesen Abschnitt zu überspringen:",
-    success: "🏆 Meisterhaft! Sie haben 100 % in diesem Diagnosetest erreicht. Sie können diesen Abschnitt sicher überspringen.",
+    success: "🏆 Thema bestätigt! Sie beherrschen die Voraussetzungen für diesen Abschnitt. Sie können weiterlesen oder direkt zum nächsten Abschnitt springen.",
     fail: "❌ Empfohlen: Wir empfehlen Ihnen, diesen Abschnitt zu lesen, um eine solide Grundlage zu schaffen.",
     skip_btn: "Direkt springen zu",
     submit: "Prüfen",
@@ -52,7 +52,7 @@ const STRINGS = {
   ZH: {
     badge: "自适应诊断测试",
     prompt: "测试您的知识以跳过此部分：",
-    success: "🏆 已掌握！您在此诊断测试中获得了 100% 的分数。您可以安全地跳过此部分。",
+    success: "🏆 知识点已验证！您已掌握本节的先决条件。您可以继续阅读或直接跳过至下一节。",
     fail: "❌ 建议：我们建议您阅读此部分以建立坚实的基础。",
     skip_btn: "直接跳过至",
     submit: "检查答案",
@@ -101,11 +101,39 @@ export const DiagnosticQuiz = ({
   };
 
   const handleSkip = () => {
-    const el = document.getElementById(targetSectionId);
+    let el = document.getElementById(targetSectionId);
+    if (!el) {
+      // Search by id with heading slug fallback
+      const slugify = (text: string) => {
+        return text
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9 -]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .trim();
+      };
+      const slug = slugify(sectionTitle);
+      el = document.getElementById(slug);
+      
+      if (!el) {
+        // Search headings by text content
+        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        const normalizedTitle = sectionTitle.toLowerCase().trim();
+        for (let i = 0; i < headings.length; i++) {
+          const hText = headings[i].textContent?.toLowerCase().trim() || '';
+          if (hText.includes(normalizedTitle) || normalizedTitle.includes(hText)) {
+            el = headings[i] as HTMLElement;
+            break;
+          }
+        }
+      }
+    }
+    
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      // Fallback scroll to hash
       window.location.hash = targetSectionId;
     }
   };

@@ -18,105 +18,14 @@ const getProgressionStorage = (): Storage | null => {
   return loggedIn ? localStorage : sessionStorage;
 };
 
-const QUIZ_STRINGS = {
-  EN: {
-    title: "Knowledge Check",
-    start: "Start Quiz",
-    desc: "Answer the following questions to assess your understanding of this lesson.",
-    time_limit: "Time limit:",
-    time_remaining: "Time remaining:",
-    time_expired: "Time's up! Your answers have been locked.",
-    score: "Score",
-    retry: "Restart Quiz",
-    completed: "Saved to curriculum",
-    guest_alert: "💡 In guest mode, your score is temporary. Sign up to save it permanently!",
-    minutes: "minutes",
-    seconds: "seconds",
-    prep_advice: "Make sure you have reviewed the course material, sit in a quiet place, and take a short break if needed to refresh your mind.",
-    time_focus: "Ensure you have about {time} of uninterrupted focus ahead of you to complete the test.",
-    time_focus_default: "Ensure you have a few minutes of uninterrupted focus ahead of you to complete the test.",
-    tutor_explanation: "Tutor Explanation (Rerouting)"
-  },
-  FR: {
-    title: "Vérification des Connaissances",
-    start: "Démarrer le Quiz",
-    desc: "Répondez aux questions suivantes pour évaluer votre compréhension de la leçon.",
-    time_limit: "Temps limité :",
-    time_remaining: "Temps restant :",
-    time_expired: "Temps écoulé ! Vos réponses actuelles ont été verrouillées.",
-    score: "Score",
-    retry: "Recommencer le Quiz",
-    completed: "Enregistré dans le curriculum",
-    guest_alert: "💡 En mode invité, votre score est temporaire. Créez un compte pour le sauvegarder !",
-    minutes: "minutes",
-    seconds: "secondes",
-    prep_advice: "Assurez-vous d'avoir bien révisé le cours, installez-vous dans un endroit calme, et prenez éventuellement une courte pause pour vous vider l'esprit avant de commencer.",
-    time_focus: "Assurez-vous d'avoir environ {time} devant vous de concentration ininterrompue pour réaliser ce test.",
-    time_focus_default: "Assurez-vous d'avoir quelques minutes devant vous de concentration ininterrompue pour réaliser ce test.",
-    tutor_explanation: "Explication du Tuteur (Rerouting Pédagogique)"
-  },
-  ES: {
-    title: "Control de Conocimientos",
-    start: "Iniciar Cuestionario",
-    desc: "Responde a las siguientes preguntas para evaluar tu comprensión de esta lección.",
-    time_limit: "Límite de tiempo:",
-    time_remaining: "Tiempo restante:",
-    time_expired: "¡Tiempo agotado! Tus respuestas han sido bloqueadas.",
-    score: "Puntuación",
-    retry: "Reiniciar Cuestionario",
-    completed: "Guardado en el currículo",
-    guest_alert: "💡 En modo invitado, tu puntuación es temporal. ¡Regístrate para guardarla!",
-    minutes: "minutos",
-    seconds: "segundos",
-    prep_advice: "Asegúrate de haber repasado la lección, siéntate en un lugar tranquilo y tómate un breve descanso para refrescar la mente antes de comenzar.",
-    time_focus: "Asegúrate de tener aproximadamente {time} por delante de concentración ininterrumpida para completar la prueba.",
-    time_focus_default: "Asegúrate de tener unos minutos por delante de concentración ininterrumpida para completar la prueba.",
-    tutor_explanation: "Explicación del Tutor (Rerouting Pedagógico)"
-  },
-  DE: {
-    title: "Wissensüberprüfung",
-    start: "Quiz starten",
-    desc: "Beantworten Sie die folgenden Fragen, um Ihr Verständnis dieser Lektion zu überprüfen.",
-    time_limit: "Zeitlimit:",
-    time_remaining: "Verbleibende Zeit:",
-    time_expired: "Zeit abgelaufen! Ihre Antworten wurden gesperrt.",
-    score: "Ergebnis",
-    retry: "Quiz neu starten",
-    completed: "Im Lehrplan gespeichert",
-    guest_alert: "💡 Im Gastmodus ist Ihr Ergebnis vorübergehend. Registrieren Sie sich, um es zu speichern!",
-    minutes: "Minuten",
-    seconds: "Sekunden",
-    prep_advice: "Stellen Sie sicher, dass Sie den Kursstoff wiederholt haben, setzen Sie sich an einen ruhigen Ort und machen Sie bei Bedarf eine kurze Pause, um den Kopf frei zu bekommen.",
-    time_focus: "Stellen Sie sicher, dass Sie etwa {time} ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
-    time_focus_default: "Stellen Sie sicher, dass Sie einige Minuten ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
-    tutor_explanation: "Tutor-Erklärung (Pädagogisches Rerouting)"
-  },
-  ZH: {
-    title: "知识检测",
-    start: "开始测验",
-    desc: "回答以下问题以评估您对本课的理解。",
-    time_limit: "时间限制：",
-    time_remaining: "剩余时间：",
-    time_expired: "时间到！您的回答已被锁定。",
-    score: "得分",
-    retry: "重新开始测验",
-    completed: "已保存至课程档案",
-    guest_alert: "💡 在游客模式下，您的得分是暂时的。注册以永久保存！",
-    minutes: "分钟",
-    seconds: "秒",
-    prep_advice: "请确保您已经复习了课程内容，坐在安静的地方，并在开始前稍微休息一下以清醒头脑。",
-    time_focus: "请确保您有大约 {time} 无打扰的专注时间来完成测试。",
-    time_focus_default: "请确保您有几分钟无打扰的专注时间来完成测试。",
-    tutor_explanation: "导师解释 (教学重定向)"
-  }
-};
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 const GuestFootnote = () => {
   const { language } = useLanguage();
-  const t = QUIZ_STRINGS[language as keyof typeof QUIZ_STRINGS] || QUIZ_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   return (
     <span className="text-[10px] font-medium text-slate-400 block w-full mt-2 border-t border-slate-800/40 pt-2 select-none leading-relaxed">
-      {t.guest_alert}
+      {dict.quiz_guest_alert}
     </span>
   );
 };
@@ -128,7 +37,25 @@ interface QuizProps {
 
 export const Quiz = ({ children, durationLimit }: QuizProps) => {
   const { language } = useLanguage();
-  const t = QUIZ_STRINGS[language as keyof typeof QUIZ_STRINGS] || QUIZ_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const t = {
+    title: dict.quiz_title,
+    start: dict.quiz_start,
+    desc: dict.quiz_desc,
+    time_limit: dict.quiz_time_limit,
+    time_remaining: dict.quiz_time_remaining,
+    time_expired: dict.quiz_time_expired,
+    score: dict.quiz_score,
+    retry: dict.quiz_retry,
+    completed: dict.quiz_completed,
+    guest_alert: dict.quiz_guest_alert,
+    minutes: dict.quiz_minutes,
+    seconds: dict.quiz_seconds,
+    prep_advice: dict.quiz_prep_advice,
+    time_focus: dict.quiz_time_focus,
+    time_focus_default: dict.quiz_time_focus_default,
+    tutor_explanation: dict.quiz_tutor_explanation
+  };
 
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationLimit || 0);
@@ -275,6 +202,8 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isStarted, durationLimit, isFinished]);
+
+  if (totalQuestions === 0) return null;
 
   const handleStart = () => {
     setIsStarted(true);
@@ -540,7 +469,10 @@ interface QuestionProps {
 
 export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect, explanation }: QuestionProps) => {
   const { language } = useLanguage();
-  const t = QUIZ_STRINGS[language as keyof typeof QUIZ_STRINGS] || QUIZ_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const t = {
+    tutor_explanation: dict.quiz_tutor_explanation
+  };
 
   const [selected, setSelected] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);

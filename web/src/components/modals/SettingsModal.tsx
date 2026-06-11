@@ -310,6 +310,39 @@ const PWD_TRANSLATIONS = {
   }
 };
 
+const DANGER_ZONE_TRANSLATIONS = {
+  EN: {
+    flush_title: "Reset Local Cache",
+    flush_desc: "Clears local storage course data, search history, and student progress cache to resolve potential data synchronization issues. This will reinitialize all stores and reload the page.",
+    flush_btn: "Reset Cache",
+    flush_success: "Caches cleared successfully!"
+  },
+  FR: {
+    flush_title: "Réinitialiser le Cache Local",
+    flush_desc: "Efface les données des cours du stockage local, l'historique de recherche et le cache de progression pour résoudre les problèmes potentiels de synchronisation. Cela réinitialisera les magasins et rechargera la page.",
+    flush_btn: "Réinitialiser le Cache",
+    flush_success: "Caches vidés avec succès !"
+  },
+  ES: {
+    flush_title: "Restablecer Caché Local",
+    flush_desc: "Limpia los datos del curso del almacenamiento local, el historial de búsqueda y la caché de progreso para resolver posibles problemas de sincronización. Esto reiniciará las tiendas y recargará la página.",
+    flush_btn: "Restablecer Caché",
+    flush_success: "¡Caché vaciada con éxito!"
+  },
+  DE: {
+    flush_title: "Lokalen Cache zurücksetzen",
+    flush_desc: "Löscht lokale Kursdaten, Suchverlauf und Fortschritts-Cache, um potenzielle Synchronisierungsprobleme zu beheben. Dies setzt alle Speicher zurück und lädt die Seite neu.",
+    flush_btn: "Cache zurücksetzen",
+    flush_success: "Caches erfolgreich geleert!"
+  },
+  ZH: {
+    flush_title: "重置本地缓存",
+    flush_desc: "清除本地存储的课程数据、搜索历史和学生进度缓存，以解决潜在的数据同步问题。这将重新初始化所有存储并重新加载页面。",
+    flush_btn: "重置缓存",
+    flush_success: "缓存清除成功！"
+  }
+};
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -482,6 +515,38 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       } catch (err) {}
     }
   }, [isOpen, lang]);
+
+  // Autosave personal tutor key, provider, model, and tutor type changes to localStorage
+  useEffect(() => {
+    if (!isOpen) return;
+    const savedProfile = localStorage.getItem('op_user_profile');
+    if (savedProfile) {
+      try {
+        const p = JSON.parse(savedProfile);
+        let changed = false;
+        if (p.personalTutorProvider !== personalTutorProvider) {
+          p.personalTutorProvider = personalTutorProvider;
+          changed = true;
+        }
+        if (p.personalTutorApiKey !== personalTutorApiKey) {
+          p.personalTutorApiKey = personalTutorApiKey;
+          changed = true;
+        }
+        if (p.personalTutorModel !== personalTutorModel) {
+          p.personalTutorModel = personalTutorModel;
+          changed = true;
+        }
+        if (p.tutorType !== tutorType) {
+          p.tutorType = tutorType;
+          changed = true;
+        }
+        if (changed) {
+          localStorage.setItem('op_user_profile', JSON.stringify(p));
+          window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+        }
+      } catch (err) {}
+    }
+  }, [personalTutorProvider, personalTutorApiKey, personalTutorModel, tutorType, isOpen]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1033,25 +1098,25 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
                     <div className="grid md:grid-cols-2 gap-6 pt-2">
                       <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Eye className="w-3.5 h-3.5 text-violet-500" /> {guide.visual}
                         </span>
-                        <p className="text-[11px] text-slate-500 leading-relaxed">{guide.visual_desc}</p>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">{guide.visual_desc}</p>
                       </div>
 
                       <div className="p-5 bg-slate-955/40 border border-slate-850 rounded-2xl space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> {guide.auditory}
                         </span>
-                        <p className="text-[11px] text-slate-500 leading-relaxed">{guide.auditory_desc}</p>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">{guide.auditory_desc}</p>
                       </div>
 
                       <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-350 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Keyboard className="w-3.5 h-3.5 text-blue-500" /> {guide.keyboard}
                         </span>
-                        <p className="text-[11px] text-slate-500 leading-relaxed mb-2">{guide.keyboard_desc}</p>
-                        <ul className="text-[9px] font-bold text-slate-400 space-y-1.5 list-none pl-1">
+                        <p className="text-[11px] text-slate-300 leading-relaxed mb-2">{guide.keyboard_desc}</p>
+                        <ul className="text-[9px] font-bold text-slate-300 space-y-1.5 list-none pl-1">
                           <li className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_home}</li>
                           <li className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_catalog}</li>
                           <li className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-lg border border-slate-900"><span className="text-blue-500 font-mono">⌘</span> {guide.key_settings}</li>
@@ -1061,10 +1126,10 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                       </div>
 
                       <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-355 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <BrainIcon className="w-3.5 h-3.5 text-amber-500" /> {guide.cognitive}
                         </span>
-                        <p className="text-[11px] text-slate-550 leading-relaxed">{guide.cognitive_desc}</p>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">{guide.cognitive_desc}</p>
                       </div>
                     </div>
                   </div>
@@ -1332,31 +1397,6 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                 </span>
                               )}
                             </div>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const savedProfile = localStorage.getItem('op_user_profile');
-                                if (savedProfile) {
-                                  try {
-                                    const p = JSON.parse(savedProfile);
-                                    p.tutorType = tutorType;
-                                    p.personalTutorProvider = personalTutorProvider;
-                                    p.personalTutorApiKey = personalTutorApiKey;
-                                    p.personalTutorModel = personalTutorModel;
-                                    localStorage.setItem('op_user_profile', JSON.stringify(p));
-                                    window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
-                                    
-                                    setShowToast(true);
-                                    setTimeout(() => setShowToast(false), 3000);
-                                  } catch (err) {}
-                                }
-                              }}
-                              className="py-2.5 px-6 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-900/10"
-                            >
-                              <Save className="w-3.5 h-3.5" />
-                              <span>{t.save_changes || "Sauvegarder"}</span>
-                            </button>
                           </div>
                         </div>
                       )}
@@ -1371,6 +1411,30 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     <ShieldAlert className="w-4 h-4" /> {t.danger_zone || "Zone de Danger"}
                   </h3>
                   
+                  {/* Reset Local Cache Card */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-red-500/5 border border-red-500/10 rounded-3xl">
+                    <div>
+                      <p className="font-black text-white uppercase tracking-widest text-xs">
+                        {DANGER_ZONE_TRANSLATIONS[lang.toUpperCase() as keyof typeof DANGER_ZONE_TRANSLATIONS]?.flush_title || DANGER_ZONE_TRANSLATIONS.EN.flush_title}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1 italic">
+                        {DANGER_ZONE_TRANSLATIONS[lang.toUpperCase() as keyof typeof DANGER_ZONE_TRANSLATIONS]?.flush_desc || DANGER_ZONE_TRANSLATIONS.EN.flush_desc}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        await dbService.flushLocalCaches();
+                        if (typeof window !== 'undefined') {
+                          window.location.reload();
+                        }
+                      }} 
+                      className="flex items-center gap-3 px-6 py-3 bg-red-600/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" /> 
+                      {DANGER_ZONE_TRANSLATIONS[lang.toUpperCase() as keyof typeof DANGER_ZONE_TRANSLATIONS]?.flush_btn || DANGER_ZONE_TRANSLATIONS.EN.flush_btn}
+                    </button>
+                  </div>
+
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-red-500/5 border border-red-500/10 rounded-3xl">
                     <div>
                       <p className="font-black text-white uppercase tracking-widest text-xs">{t.delete_account || "Supprimer le compte"}</p>

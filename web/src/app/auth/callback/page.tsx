@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { Loader, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { OpenPrimerIcon } from "@/components/OpenPrimerIcon";
+import { useLanguage } from "@/context/LanguageContext";
+import { STATIC_UI_STRINGS } from "@/lib/translations";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const { language } = useLanguage();
   const [status, setStatus] = useState<"processing" | "error">("processing");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const t = STATIC_UI_STRINGS[language as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -123,10 +128,10 @@ export default function AuthCallbackPage() {
               <Loader className="w-8 h-8 animate-spin" />
             </div>
             <h1 className="text-2xl font-black tracking-tight mb-2 text-white">
-              AUTHENTICATING...
+              {t.auth_authenticating || "AUTHENTICATING..."}
             </h1>
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black leading-relaxed">
-              Securing Google credentials with Supabase network
+              {t.auth_securing || "Securing Google credentials with Supabase network"}
             </p>
           </>
         ) : (
@@ -135,13 +140,13 @@ export default function AuthCallbackPage() {
               <AlertCircle className="w-8 h-8" />
             </div>
             <h1 className="text-2xl font-black tracking-tight mb-2 text-white">
-              AUTH FAILURE
+              {t.auth_failure || "AUTH FAILURE"}
             </h1>
             <p className="text-red-400/80 text-[10px] uppercase tracking-widest font-black leading-relaxed mb-4">
               {errorMsg}
             </p>
             <p className="text-slate-500 text-[9px] uppercase tracking-widest font-bold">
-              Redirecting you to login page...
+              {t.auth_redirecting || "Redirecting you to login page..."}
             </p>
           </>
         )}

@@ -4,74 +4,7 @@ import React, { useState } from 'react';
 import { Lightbulb, ChevronDown, ChevronUp, CheckCircle2, XCircle, HelpCircle, ArrowRight, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-
-const EX_STRINGS = {
-  EN: {
-    solved_title: "Worked Example",
-    unsolved_title: "Quick Calculation Challenge",
-    check: "Verify Answer",
-    hint_btn: "Need a Hint?",
-    show_sol: "Show Step-by-Step Solution",
-    hide_sol: "Hide Step-by-Step Solution",
-    correct: "Correct! Outstanding calculation.",
-    incorrect: "Incorrect. Try re-evaluating the formula or steps.",
-    attempts: "Attempts left:",
-    unlocked_sol: "💡 Solution unlocked!",
-    placeholder: "Enter numerical value..."
-  },
-  FR: {
-    solved_title: "Exemple Corrigé",
-    unsolved_title: "Calcul d'Application Rapide",
-    check: "Vérifier ma réponse",
-    hint_btn: "Besoin d'un indice ?",
-    show_sol: "Afficher la résolution détaillée",
-    hide_sol: "Masquer la résolution détaillée",
-    correct: "Correct ! Calcul impeccable.",
-    incorrect: "Incorrect. Essayez de réévaluer la formule ou les étapes.",
-    attempts: "Tentatives restantes :",
-    unlocked_sol: "💡 Résolution débloquée !",
-    placeholder: "Entrez la valeur numérique..."
-  },
-  ES: {
-    solved_title: "Ejemplo Resuelto",
-    unsolved_title: "Desafío de Cálculo Rápido",
-    check: "Verificar respuesta",
-    hint_btn: "¿Necesitas una pista?",
-    show_sol: "Mostrar resolución detallada",
-    hide_sol: "Ocultar resolución detallada",
-    correct: "¡Correcto! Cálculo impecable.",
-    incorrect: "Incorrecto. Intenta volver a evaluar la fórmula.",
-    attempts: "Intentos restantes:",
-    unlocked_sol: "💡 ¡Resolución desbloqueada!",
-    placeholder: "Ingresa el valor numérico..."
-  },
-  DE: {
-    solved_title: "Gelöstes Beispiel",
-    unsolved_title: "Schnelle Rechenaufgabe",
-    check: "Antwort überprüfen",
-    hint_btn: "Benötigen Sie einen Hinweis?",
-    show_sol: "Detaillierte Lösung anzeigen",
-    hide_sol: "Detaillierte Lösung ausblenden",
-    correct: "Richtig! Hervorragende Berechnung.",
-    incorrect: "Falsch. Überprüfen Sie die Formel oder die Schritte.",
-    attempts: "Verbleibende Versuche:",
-    unlocked_sol: "💡 Lösung freigeschaltet!",
-    placeholder: "Geben Sie den numerischen Wert ein..."
-  },
-  ZH: {
-    solved_title: "已解答示例",
-    unsolved_title: "快速计算挑战",
-    check: "验证答案",
-    hint_btn: "需要提示吗？",
-    show_sol: "显示详细解题步骤",
-    hide_sol: "隐藏详细解题步骤",
-    correct: "正确！计算无误。",
-    incorrect: "不正确。请尝试重新评估公式或步骤。",
-    attempts: "剩余尝试次数：",
-    unlocked_sol: "💡 解题步骤已解锁！",
-    placeholder: "输入数值..."
-  }
-};
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface SolvedExerciseProps {
   title: string;
@@ -81,7 +14,20 @@ interface SolvedExerciseProps {
 
 export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProps) => {
   const { language } = useLanguage();
-  const t = EX_STRINGS[language as keyof typeof EX_STRINGS] || EX_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const t = {
+    solved_title: dict.ex_solved_title,
+    unsolved_title: dict.ex_unsolved_title,
+    check: dict.ex_check,
+    hint_btn: dict.ex_hint_btn,
+    show_sol: dict.ex_show_sol,
+    hide_sol: dict.ex_hide_sol,
+    correct: dict.ex_correct,
+    incorrect: dict.ex_incorrect,
+    attempts: dict.ex_attempts,
+    unlocked_sol: dict.ex_unlocked_sol,
+    placeholder: dict.ex_placeholder
+  };
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -150,7 +96,20 @@ export const UnsolvedExercise = ({
   unit
 }: UnsolvedExerciseProps) => {
   const { language } = useLanguage();
-  const t = EX_STRINGS[language as keyof typeof EX_STRINGS] || EX_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const t = {
+    solved_title: dict.ex_solved_title,
+    unsolved_title: dict.ex_unsolved_title,
+    check: dict.ex_check,
+    hint_btn: dict.ex_hint_btn,
+    show_sol: dict.ex_show_sol,
+    hide_sol: dict.ex_hide_sol,
+    correct: dict.ex_correct,
+    incorrect: dict.ex_incorrect,
+    attempts: dict.ex_attempts,
+    unlocked_sol: dict.ex_unlocked_sol,
+    placeholder: dict.ex_placeholder
+  };
 
   const [inputVal, setInputVal] = useState('');
   const [showHint, setShowHint] = useState(false);

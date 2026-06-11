@@ -6,6 +6,7 @@ import * as Icons from 'lucide-react';
 import Link from 'next/link';
 import { dbService } from '@/lib/db';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface CourseCompletionFeedbackProps {
   courseId: string;
@@ -46,171 +47,7 @@ const BADGE_LIBRARY = [
   { id: 'img_30', iconName: 'Trophy', gradient: 'from-orange-400 to-pink-500' }
 ];
 
-interface TranslationSet {
-  courseCompleted: string;
-  courseCompletedDesc: string;
-  browseCatalog: string;
-  createAccount: string;
-  enrollTitle: string;
-  enrollDesc: string;
-  buttonEnroll: string;
-  buttonCurriculum: string;
-  badgesEarned: string;
-  achievementsTitle: string;
-  achievementsDesc: string;
-  completedReadOnly: string;
-  congrats: string;
-  completedCourse: string;
-  refineCurriculum: string;
-  rateCourse: string;
-  commentsSuggestions: string;
-  textareaPlaceholder: string;
-  submitComplete: string;
-  ratingSaved: string;
-  ratingSavedDesc: string;
-  nextChapter: string;
-  goToNext: string;
-  backToCurriculum: string;
-  finishLearning: string;
-}
 
-const FEEDBACK_TRANSLATIONS: Record<string, TranslationSet> = {
-  fr: {
-    courseCompleted: "Cours Terminé !",
-    courseCompletedDesc: "Vous avez fini de lire ce cours en accès libre-service. Connectez-vous ou créez un compte pour sauvegarder votre progression, poser des questions au Tuteur IA, et passer des évaluations.",
-    browseCatalog: "Parcourir le Catalogue",
-    createAccount: "Créer un Compte",
-    enrollTitle: "Noter & Commenter",
-    enrollDesc: "Si vous souhaitez évaluer ce cours et partager vos suggestions, vous devez d'abord vous y inscrire. Cela permet de lier solidement votre progression académique à vos retours d'expérience et d'éviter toute perte de progression.",
-    buttonEnroll: "S'inscrire à ce cours",
-    buttonCurriculum: "Mon Cursus",
-    badgesEarned: "🏆 Badges Académiques Gagnés !",
-    achievementsTitle: "Vos accomplissements sur ce cours",
-    achievementsDesc: "Vous avez débloqué ces distinctions prestigieuses en complétant ce module avec succès.",
-    completedReadOnly: "CURRICULUM COMPLÉTÉ • LECTURE SEULE",
-    congrats: "✨ Félicitations !",
-    completedCourse: "Vous avez complété ce cours !",
-    refineCurriculum: "Aidez-nous à améliorer le cursus académique en partageant votre expérience d'apprentissage.",
-    rateCourse: "Évaluez ce cours",
-    commentsSuggestions: "Commentaires ou Suggestions",
-    textareaPlaceholder: "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions...",
-    submitComplete: "Soumettre et Terminer",
-    ratingSaved: "Évaluation Enregistrée",
-    ratingSavedDesc: "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !",
-    nextChapter: "Chapitre Suivant • Continuer mon Cursus",
-    goToNext: "Passer au chapitre suivant",
-    backToCurriculum: "Retourner au Curriculum",
-    finishLearning: "Terminer l'apprentissage"
-  },
-  en: {
-    courseCompleted: "Course Completed!",
-    courseCompletedDesc: "You have completed this self-service read-only course. Log in or create an account to save your progress, ask questions to the AI Tutor, and take assessments.",
-    browseCatalog: "Browse Catalog",
-    createAccount: "Create an Account",
-    enrollTitle: "Rate & Comment",
-    enrollDesc: "If you wish to rate this course and share your suggestions, you must first enroll in it. This ensures your academic progress is securely linked to your feedback and prevents loss of completion history.",
-    buttonEnroll: "Enroll in this Course",
-    buttonCurriculum: "My Curriculum",
-    badgesEarned: "🏆 Academic Badges Earned!",
-    achievementsTitle: "Your Achievements on This Course",
-    achievementsDesc: "You unlocked these prestigious accolades by successfully completing this learning module.",
-    completedReadOnly: "CURRICULUM COMPLETED • READ ONLY",
-    congrats: "✨ Congratulations!",
-    completedCourse: "You have completed this course!",
-    refineCurriculum: "Help us refine the academic curriculum by sharing your learning experience.",
-    rateCourse: "Rate this course",
-    commentsSuggestions: "Comments or Suggestions",
-    textareaPlaceholder: "What did you think of the pacing, clarity, or explanations? Suggest revisions...",
-    submitComplete: "Submit & Complete",
-    ratingSaved: "Rating Saved",
-    ratingSavedDesc: "Your rating has been successfully saved. Thank you for sharing your feedback!",
-    nextChapter: "Next Chapter • Continue My Journey",
-    goToNext: "Go to next chapter",
-    backToCurriculum: "Back to My Curriculum",
-    finishLearning: "Finish Learning"
-  },
-  es: {
-    courseCompleted: "¡Curso Completado!",
-    courseCompletedDesc: "Ha terminado de leer este curso autoguiado de solo lectura. Inicie sesión o cree una cuenta para guardar su progreso, hacer preguntas al Tutor de IA y realizar evaluaciones.",
-    browseCatalog: "Buscar en el Catálogo",
-    createAccount: "Crear una Cuenta",
-    enrollTitle: "Calificar y Comentar",
-    enrollDesc: "Si desea calificar este curso y compartir sus sugerencias, primero debe inscribirse en él. Esto garantiza que su progreso académico esté vinculado de forma segura a sus comentarios y evita la pérdida del historial de finalización.",
-    buttonEnroll: "Inscribirse en este Curso",
-    buttonCurriculum: "Mi Plan de Estudios",
-    badgesEarned: "🏆 ¡Insignias Académicas Ganadas!",
-    achievementsTitle: "Sus Logros en este Curso",
-    achievementsDesc: "Ha desbloqueado estos prestigiosos reconocimientos al completar con éxito este módulo de aprendizaje.",
-    completedReadOnly: "PLAN DE ESTUDIOS COMPLETADO • SOLO LECTURA",
-    congrats: "✨ ¡Felicitaciones!",
-    completedCourse: "¡Ha completado este curso!",
-    refineCurriculum: "Ayúdenos a mejorar el plan de estudios académico compartiendo su experiencia de aprendizaje.",
-    rateCourse: "Califique este curso",
-    commentsSuggestions: "Comentarios o Sugerencias",
-    textareaPlaceholder: "¿Qué le pareció el ritmo, la claridad o las explicaciones? Sugiera revisiones...",
-    submitComplete: "Enviar y Completar",
-    ratingSaved: "Calificación Guardada",
-    ratingSavedDesc: "Su calificación se ha guardado correctamente. ¡Gracias por compartir sus comentarios!",
-    nextChapter: "Siguiente Capítulo • Continuar mi Viaje",
-    goToNext: "Ir al siguiente capítulo",
-    backToCurriculum: "Volver al Plan de Estudios",
-    finishLearning: "Finalizar Aprendizaje"
-  },
-  de: {
-    courseCompleted: "Kurs Abgeschlossen!",
-    courseCompletedDesc: "Sie haben diesen Kurs im Selbststudium (nur Lesezugriff) abgeschlossen. Melden Sie sich an oder erstellen Sie ein Konto, um Ihren Fortschritt zu speichern, dem KI-Tutor Fragen zu stellen und Tests abzulegen.",
-    browseCatalog: "Katalog Durchsuchen",
-    createAccount: "Konto Erstellen",
-    enrollTitle: "Bewerten & Kommentieren",
-    enrollDesc: "Wenn Sie diesen Kurs bewerten und Ihre Vorschläge teilen möchten, müssen Sie sich zuerst dafür anmelden. Dies stellt sicher, dass Ihr akademischer Fortschritt sicher mit Ihrem Feedback verknüpft ist und verhindert den loss Ihres Abschlussverlaufs.",
-    buttonEnroll: "Für diesen Kurs anmelden",
-    buttonCurriculum: "Mein Lehrplan",
-    badgesEarned: "🏆 Akademische Abzeichen Verdient!",
-    achievementsTitle: "Ihre Leistungen in diesem Kurs",
-    achievementsDesc: "Sie haben diese prestigeträchtigen Auszeichnungen durch den erfolgreichen Abschluss dieses Lernmoduls freigeschaltet.",
-    completedReadOnly: "LEHRPLAN ABGESCHLOSSEN • NUR LESEN",
-    congrats: "✨ Herzlichen Glückwunsch!",
-    completedCourse: "Sie haben diesen Kurs abgeschlossen!",
-    refineCurriculum: "Helfen Sie uns, den akademischen Lehrplan zu verbessern, indem Sie Ihre Lernerfahrung teilen.",
-    rateCourse: "Bewerten Sie diesen Kurs",
-    commentsSuggestions: "Kommentare oder Vorschläge",
-    textareaPlaceholder: "Wie fanden Sie das Tempo, die Klarheit oder die Erklärungen? Schlagen Sie Überarbeitungen vor...",
-    submitComplete: "Senden & Abschließen",
-    ratingSaved: "Bewertung Gespeichert",
-    ratingSavedDesc: "Ihre Bewertung wurde erfolgreich gespeichert. Vielen Dank für Ihr Feedback!",
-    nextChapter: "Nächstes Kapitel • Meinen Weg Fortsetzen",
-    goToNext: "Zum nächsten Kapitel wechseln",
-    backToCurriculum: "Zurück zum Lehrplan",
-    finishLearning: "Lernen Beenden"
-  },
-  zh: {
-    courseCompleted: "课程已完成！",
-    courseCompletedDesc: "您已完成了该自助只读课程的学习。请登录或创建账户以保存您的进度、向 AI 导师提问并进行评估。",
-    browseCatalog: "浏览课程目录",
-    createAccount: "创建账户",
-    enrollTitle: "评分与评论",
-    enrollDesc: "如果您希望对本课程进行评分并分享您的建议，您必须先加入该课程。这可以确保您的学业进度与您的反馈安全地关联，并防止完成记录丢失。",
-    buttonEnroll: "加入此课程",
-    buttonCurriculum: "我的课程大纲",
-    badgesEarned: "🏆 荣获学术徽章！",
-    achievementsTitle: "您在本课程中取得的成就",
-    achievementsDesc: "您已成功完成本学习模块，解锁了这些珍贵的荣誉。",
-    completedReadOnly: "课程已完成 • 只读模式",
-    congrats: "✨ 恭喜！",
-    completedCourse: "您已完成本课程！",
-    refineCurriculum: "分享您的学习体验，帮助我们改进学术课程。",
-    rateCourse: "为此课程评分",
-    commentsSuggestions: "意见与建议",
-    textareaPlaceholder: "您觉得进度、条理或讲解如何？请提出修改建议...",
-    submitComplete: "提交并完成",
-    ratingSaved: "评分已保存",
-    ratingSavedDesc: "您的评分已成功保存。感谢您分享反馈意见！",
-    nextChapter: "下一章节 • 继续我的学习之旅",
-    goToNext: "前往下一章节",
-    backToCurriculum: "返回课程大纲",
-    finishLearning: "结束学习"
-  }
-};
 
 export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: CourseCompletionFeedbackProps) => {
   const [rating, setRating] = useState(0);
@@ -228,6 +65,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [userRating, setUserRating] = useState<number | null>(null);
   const [userComment, setUserComment] = useState<string>('');
   const [nextCoursePath, setNextCoursePath] = useState<string | null>(null);
+  const [nextCourseTitle, setNextCourseTitle] = useState<string | null>(null);
 
   const [achievements, setAchievements] = useState<any[]>([]);
   const [earnedIds, setEarnedIds] = useState<number[]>([]);
@@ -282,17 +120,22 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       dbService.getCourseFeedbacks(courseId, uId).then((res) => {
         if (res.data && res.data.length > 0) {
           // Find if there is feedback explicitly associated with this user
-          const fb = res.data.find((f: any) => f.user_id === uId || f.userId === uId) || res.data[0];
-          setUserRating(fb.rating);
-          setUserComment(fb.comment || '');
-          setRating(fb.rating);
-          setComment(fb.comment || '');
-          
-          // Write back to local storage to sync
-          localStorage.setItem(localFeedbackKey, JSON.stringify({
-            rating: fb.rating,
-            comment: fb.comment || ''
-          }));
+          const fb = res.data.find((f: any) => {
+            const fUserId = f.user_id || f.userId;
+            return fUserId && uId && fUserId !== 'undefined' && uId !== 'undefined' && fUserId === uId;
+          });
+          if (fb) {
+            setUserRating(fb.rating);
+            setUserComment(fb.comment || '');
+            setRating(fb.rating);
+            setComment(fb.comment || '');
+            
+            // Write back to local storage to sync
+            localStorage.setItem(localFeedbackKey, JSON.stringify({
+              rating: fb.rating,
+              comment: fb.comment || ''
+            }));
+          }
         }
       });
 
@@ -337,6 +180,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                   const prog = progressMap[nextChildCourse.slug] ?? progressMap[nextChildId] ?? 0;
                   if (prog < 100) {
                     setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+                    setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
                     return;
                   }
                 }
@@ -351,29 +195,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
           if (nextChildCourse) {
             setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+            setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
             return;
           }
-        }
-      }
-
-      // If not in a curriculum or last course, and logged in, find any other active incomplete course
-      if (loggedIn) {
-        try {
-          const { data: progressData } = await dbService.getUserProgress(uId);
-          if (progressData && progressData.activeModules) {
-            const nextActiveModule = progressData.activeModules.find(
-              (m: any) => !m.isCurriculum && m.id !== currentCourseId && m.progress < 100
-            );
-            if (nextActiveModule) {
-              const matchedCourse = courses.find((c: any) => c.id === nextActiveModule.id);
-              if (matchedCourse) {
-                setNextCoursePath(`/${matchedCourse.level}/${matchedCourse.subject}/${matchedCourse.slug}/introduction`);
-                return;
-              }
-            }
-          }
-        } catch (e) {
-          console.error(e);
         }
       }
     });
@@ -492,7 +316,37 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     return Array.from(new Set(courseEarned));
   };
 
-  const t = FEEDBACK_TRANSLATIONS[lang.toLowerCase()] || FEEDBACK_TRANSLATIONS.en;
+  const langKey = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
+  const staticT = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+  const t = {
+    courseCompleted: staticT.fb_courseCompleted,
+    courseCompletedDesc: staticT.fb_courseCompletedDesc,
+    browseCatalog: staticT.fb_browseCatalog,
+    createAccount: staticT.fb_createAccount,
+    enrollTitle: staticT.fb_enrollTitle,
+    enrollDesc: staticT.fb_enrollDesc,
+    buttonEnroll: staticT.fb_buttonEnroll,
+    buttonCurriculum: staticT.fb_buttonCurriculum,
+    badgesEarned: staticT.fb_badgesEarned,
+    achievementsTitle: staticT.fb_achievementsTitle,
+    achievementsDesc: staticT.fb_achievementsDesc,
+    completedReadOnly: staticT.fb_completedReadOnly,
+    congrats: staticT.fb_congrats,
+    completedCourse: staticT.fb_completedCourse,
+    refineCurriculum: staticT.fb_refineCurriculum,
+    rateCourse: staticT.fb_rateCourse,
+    commentsSuggestions: staticT.fb_commentsSuggestions,
+    textareaPlaceholder: staticT.fb_textareaPlaceholder,
+    submitComplete: staticT.fb_submitComplete,
+    ratingSaved: staticT.fb_ratingSaved,
+    ratingSavedDesc: staticT.fb_ratingSavedDesc,
+    nextChapter: staticT.fb_nextChapter,
+    goToNext: staticT.fb_goToNext,
+    nextCourse: staticT.fb_nextCourse,
+    goToNextCourse: staticT.fb_goToNextCourse,
+    backToCurriculum: staticT.fb_backToCurriculum,
+    finishLearning: staticT.fb_finishLearning
+  };
   const isEvaluationCompleted = submitted || userRating !== null;
   const courseEarnedBadges = getCourseEarnedAchievements();
 
@@ -714,17 +568,17 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       <div className="mt-12 pt-12 border-t border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-6">
         {nextCoursePath ? (
           <>
-            {/* Main call-to-action: Continue on to the next subsequent chapter in the curriculum */}
+            {/* Main call-to-action: Continue on to the next subsequent course in the curriculum */}
             <Link 
               href={nextCoursePath} 
               className="flex-1 max-w-md p-6 bg-slate-900/20 hover:bg-emerald-500/10 border border-slate-850 hover:border-emerald-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
             >
               <div className="space-y-1">
                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block">
-                  {t.nextChapter}
+                  {t.nextCourse}
                 </span>
                 <span className="text-base font-black text-slate-300 group-hover:text-emerald-400 transition-colors block">
-                  {t.goToNext}
+                  {nextCourseTitle || t.goToNextCourse}
                 </span>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all shadow-md shrink-0">

@@ -25,6 +25,8 @@ import {
   getAvailableLanguagesList,
   getCanonicalCourseId,
   purgePipelineAndRequestsForCourseOrCurriculum,
+  addCourseTombstone,
+  removeCourseTombstone,
   mockDatabaseProviderHash,
   progressService
 } from '../db';
@@ -228,6 +230,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
         });
 
         setMockCourses(filteredCourses);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('openprimer_courses', JSON.stringify(filteredCourses));
+        }
         return { data: filteredCourses, error: null };
       }
       return { data: [], error: null };
@@ -699,7 +704,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
         studyStreakDays,
         totalMinutes,
         activeLang,
-        tutorId
+        tutorId,
+        quizResults
       );
 
       try {
@@ -957,12 +963,29 @@ export const supabaseDatabaseProvider: DatabaseService = {
       }
       
       if (level === 3) {
+        addCourseTombstone(courseId);
         const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
         if (error) throw error;
+
+        // Also update local cache
+        const localCourses = getMockCourses().filter(c => c.id !== courseId);
+        setMockCourses(localCourses);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
+        }
+
         return { data, error };
       }
       const { data, error } = await supabase.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
       if (error) throw error;
+
+      // Also update local cache
+      const localCourses = getMockCourses().map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0, isActive: level === 0 } : c);
+      setMockCourses(localCourses);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
+      }
+
       return { data, error };
     } catch (e) {
       handleDatabaseError(e);
@@ -980,8 +1003,17 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   purgeCourse: async (courseId: number) => {
     try {
+      addCourseTombstone(courseId);
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw error;
+
+      // Also update local cache
+      const localCourses = getMockCourses().filter(c => c.id !== courseId);
+      setMockCourses(localCourses);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
+      }
+
       return { data, error };
     } catch (e) {
       handleDatabaseError(e);
@@ -1220,8 +1252,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (error) throw error;
       
       let list = data || [];
-      if (userId) {
-        list = list.filter((f: any) => f.user_id === userId || f.userId === userId || !f.user_id);
+      if (userId && userId !== 'undefined') {
+        list = list.filter((f: any) => f.user_id === userId || f.userId === userId);
       }
       
       const mapped = list.map((f: any) => ({
@@ -1334,6 +1366,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         archiving_level: 0
       }).select().single();
       if (error) throw error;
+      removeCourseTombstone(data.id);
       return { data: error ? null : {
         id: data.id,
         title: data.title,
@@ -1413,6 +1446,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
         ? currentMock.map(c => c.id === savedCourse.id ? savedCourse : c)
         : [...currentMock, savedCourse];
       setMockCourses(updatedMock);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_courses', JSON.stringify(updatedMock));
+      }
 
       // Automatically demote older versions to Level 2
       if (savedCourse.archivingLevel === 0 && savedCourse.is_active) {
@@ -1462,6 +1498,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         }
       }
 
+      removeCourseTombstone(savedCourse.id);
       return { data: savedCourse, error: null };
     } catch (e) {
       handleDatabaseError(e);
@@ -1676,8 +1713,17 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   deleteCourse: async (courseId: number) => {
     try {
+      addCourseTombstone(courseId);
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw error;
+
+      // Also update local cache
+      const localCourses = getMockCourses().filter(c => c.id !== courseId);
+      setMockCourses(localCourses);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
+      }
+
       return { data, error };
     } catch (e) {
       handleDatabaseError(e);
@@ -1776,5 +1822,23 @@ export const supabaseDatabaseProvider: DatabaseService = {
       handleDatabaseError(e);
       return { data: [], error: e as any };
     }
+  },
+
+  flushLocalCaches: async () => {
+    if (typeof window !== 'undefined') {
+      const keysToClear = [
+        'openprimer_courses',
+        'op_enrolled_courses',
+        'op_course_progress',
+        'op_lesson_scroll_progress',
+        'openprimer_lesson_progress',
+        'op_quiz_results',
+        'openprimer_search_history',
+        'op_mastery_floor',
+        'openprimer_pipeline_queue'
+      ];
+      keysToClear.forEach(key => window.localStorage.removeItem(key));
+    }
+    return { data: null, error: null };
   }
 };

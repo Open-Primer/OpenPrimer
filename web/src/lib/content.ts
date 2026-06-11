@@ -7,6 +7,62 @@ const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
   ? path.join(process.cwd(), 'content')
   : path.join(process.cwd(), '../content');
 
+export function parseAndStripFrontmatter(content: string) {
+  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
+  const match = content.match(frontmatterRegex);
+  
+  const meta: Record<string, any> = {};
+  let body = content;
+  
+  if (match) {
+    body = content.substring(match[0].length);
+    const yamlContent = match[1];
+    const lines = yamlContent.split(/\r?\n/);
+    for (const line of lines) {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex !== -1) {
+        const key = line.substring(0, colonIndex).trim();
+        let val = line.substring(colonIndex + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.substring(1, val.length - 1);
+        }
+        meta[key] = val;
+      }
+    }
+  } else {
+    // Try relaxed matching if line endings are different or missing final newline
+    const relaxedRegex = /^---\r?\n([\s\S]*?)\r?\n---/;
+    const relaxedMatch = content.match(relaxedRegex);
+    if (relaxedMatch) {
+      body = content.substring(relaxedMatch[0].length);
+      const yamlContent = relaxedMatch[1];
+      const lines = yamlContent.split(/\r?\n/);
+      for (const line of lines) {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex !== -1) {
+          const key = line.substring(0, colonIndex).trim();
+          let val = line.substring(colonIndex + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.substring(1, val.length - 1);
+          }
+          meta[key] = val;
+        }
+      }
+    }
+  }
+  
+  return { meta, body };
+}
+
+export function getLocalizedCoreModuleText(currentLang: string) {
+  const l = (currentLang || 'en').toLowerCase();
+  if (l === 'fr') return "Module Principal";
+  if (l === 'es') return "Módulo Principal";
+  if (l === 'de') return "Kernmodul";
+  if (l === 'zh') return "核心模块";
+  return "Core Module";
+}
+
 export const SUBJECT_TRANSLATIONS: Record<string, Record<string, string>> = {
   mathematics: {
     en: "mathematics",
@@ -192,37 +248,16 @@ export function formatModuleStructure(course: any, lang: string): string {
   }
 
   // Fallbacks
-  if (currentLang === 'fr') {
-    return `1. **Introduction et Contextualisation** : Comprendre le "pourquoi" et les origines.
-2. **Principes Fondamentaux** : Formulation et rigueur conceptuelle.
-3. **Études de Cas et Applications** : Mettre la théorie en pratique.`;
-  }
-  if (currentLang === 'es') {
-    return `1. **Introducción y Contextualización** : Comprender el "por qué" y los orígenes.
-2. **Principios Fundamentales** : Formulación y rigor conceptual.
-3. **Estudios de Caso y Aplicaciones** : Poner la teoría en práctica.`;
-  }
-  if (currentLang === 'de') {
-    return `1. **Einführung und Kontextualisierung** : Das "Warum" und die Urspruenge verstehen.
-2. **Grundlegende Prinzipien** : Begriffliche Formulierung und Strenge.
-3. **Fallstudien und Anwendungen** : Theorie in die Praxis umsetzen.`;
-  }
-  if (currentLang === 'zh') {
-    return `1. **引入与情境化** : 理解“为什么”以及其起源。
-2. **基本原理** : 概念构建与严谨性。
-3. **案例研究与应用** : 将理论付诸实践。`;
-  }
-
-  return `1. **Introduction and Contextualization** : Understanding the "why" and the origins.
-2. **Fundamental Principles** : Conceptual formulation and rigor.
-3. **Case Studies and Applications** : Putting theory into practice.`;
+  return '';
 }
 
 export function getLocalizedDefaultTemplate(course: any, pageTitle: string, lang: string): string {
   const currentLang = (lang || 'en').toLowerCase();
   const subjectTranslated = getTranslatedSubject(course.subject, currentLang);
+  const structure = formatModuleStructure(course, currentLang);
   
   if (currentLang === 'fr') {
+    const structureSection = structure ? `\n## 📚 Structure du Module\n${structure}\n` : '';
     return `---
 title: "${pageTitle}"
 subject: "${course.subject}"
@@ -239,13 +274,11 @@ Dans ce cours axé sur **${subjectTranslated}**, nous allons explorer en profond
 - Maîtriser les fondations de *${course.title}*.
 - Connecter les théories académiques à des perspectives concrètes et historiques.
 - Développer un esprit d'analyse critique et une intuition profonde.
-
-## 📚 Structure du Module
-${formatModuleStructure(course, 'fr')}
-`;
+${structureSection}`;
   }
   
   if (currentLang === 'es') {
+    const structureSection = structure ? `\n## 📚 Estructura del Módulo\n${structure}\n` : '';
     return `---
 title: "${pageTitle}"
 subject: "${course.subject}"
@@ -262,13 +295,11 @@ En este curso centrado en **${subjectTranslated}**, profundizaremos en conceptos
 - Dominar los fundamentos de *${course.title}*.
 - Conectar teorías académicas con perspectivas concretas e históricas.
 - Desarrollar el análisis crítico y una intuición profunda.
-
-## 📚 Estructura del Módulo
-${formatModuleStructure(course, 'es')}
-`;
+${structureSection}`;
   }
   
   if (currentLang === 'de') {
+    const structureSection = structure ? `\n## 📚 Modulstruktur\n${structure}\n` : '';
     return `---
 title: "${pageTitle}"
 subject: "${course.subject}"
@@ -285,13 +316,11 @@ In diesem Kurs, der sich auf **${subjectTranslated}** konzentriert, werden wir t
 - Beherrschen Sie die Grundlagen von *${course.title}*.
 - Verbinden Sie akademische Theorien mit konkreten und historischen Perspektiven.
 - Entwickeln Sie kritische Analysen und tiefe Intuition.
-
-## 📚 Modulstruktur
-${formatModuleStructure(course, 'de')}
-`;
+${structureSection}`;
   }
   
   if (currentLang === 'zh') {
+    const structureSection = structure ? `\n## 📚 模块结构\n${structure}\n` : '';
     return `---
 title: "${pageTitle}"
 subject: "${course.subject}"
@@ -308,12 +337,10 @@ module: "介绍"
 - 掌握*${course.title}*的核心基音。
 - 将学术理论与具体和历史视角相联系。
 - 培养批判性分析和深刻的直觉。
-
-## 📚 模块结构
-${formatModuleStructure(course, 'zh')}
-`;
+${structureSection}`;
   }
   
+  const structureSection = structure ? `\n## 📚 Module Structure\n${structure}\n` : '';
   return `---
 title: "${pageTitle}"
 subject: "${course.subject}"
@@ -330,10 +357,7 @@ In this course focused on **${subjectTranslated}**, we will dive deep into key c
 - Master the foundations of *${course.title}*.
 - Connect academic theories with concrete and historical perspectives.
 - Develop critical analysis and deep intuition.
-
-## 📚 Module Structure
-${formatModuleStructure(course, 'en')}
-`;
+${structureSection}`;
 }
 
 export interface NavItem {
@@ -510,15 +534,16 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
       // 1. Try exact language match
       const { data: dbLesson } = await dbService.getLesson(courseSlug, lessonSlug, lang);
       if (dbLesson) {
+        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(dbLesson.content);
         const { data: meta, content: bodyContent } = matter(dbLesson.content);
         return {
           meta: {
-            title: dbLesson.title || meta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || slug[1],
-            level: meta.level || slug[0],
-            module: meta.module || "Core Module"
+            title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            subject: meta.subject || manualMeta.subject || slug[1],
+            level: meta.level || manualMeta.level || slug[0],
+            module: meta.module || manualMeta.module || getLocalizedCoreModuleText(lang)
           },
-          content: preprocessMdx(bodyContent, lang)
+          content: preprocessMdx(bodyContent.startsWith('---') ? cleanBody : bodyContent, lang)
         };
       }
 
@@ -534,15 +559,16 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 
       if (fallbackLesson) {
         console.log(`[Page Content DB] Falling back to lang '${fallbackLesson.lang}' for ${courseSlug}/${lessonSlug} (requested: ${lang})`);
+        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(fallbackLesson.content);
         const { data: meta, content: bodyContent } = matter(fallbackLesson.content);
         return {
           meta: {
-            title: fallbackLesson.title || meta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || slug[1],
-            level: meta.level || slug[0],
-            module: meta.module || "Core Module"
+            title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            subject: meta.subject || manualMeta.subject || slug[1],
+            level: meta.level || manualMeta.level || slug[0],
+            module: meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang)
           },
-          content: preprocessMdx(bodyContent, fallbackLesson.lang || lang)
+          content: preprocessMdx(bodyContent.startsWith('---') ? cleanBody : bodyContent, fallbackLesson.lang || lang)
         };
       }
     } catch (err) {
@@ -643,11 +669,17 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
   }
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(fileContent);
   const { data, content } = matter(fileContent);
 
   return {
-    meta: data,
-    content: preprocessMdx(content, lang)
+    meta: {
+      title: data.title || manualMeta.title || slug[3] || 'Untitled',
+      subject: data.subject || manualMeta.subject || slug[1],
+      level: data.level || manualMeta.level || slug[0],
+      module: data.module || manualMeta.module || getLocalizedCoreModuleText(lang)
+    },
+    content: preprocessMdx(content.startsWith('---') ? cleanBody : content, lang)
   };
 }
 
@@ -1060,10 +1092,92 @@ function parseJsonLikeArray(arrStr: string): any[] {
   return JSON.parse(jsonValid);
 }
 
+function healObjectivesTags(mdx: string): string {
+  const objectivesBlockRegex = /<Objectives>([\s\S]*?)(?:<\/Objectives>|$)/gi;
+  
+  return mdx.replace(objectivesBlockRegex, (match, body) => {
+    const extractContent = (tagName: string) => {
+      const tagStartRegex = new RegExp(`<${tagName}>`, 'i');
+      const startMatch = body.match(tagStartRegex);
+      if (!startMatch) return '';
+      
+      const startIndex = startMatch.index! + startMatch[0].length;
+      const subBody = body.substring(startIndex);
+      
+      const nextTagRegex = /<\/?(Knowledge|Skills|Attitudes|Objectives)\b/i;
+      const endMatch = subBody.match(nextTagRegex);
+      
+      let content = subBody;
+      if (endMatch) {
+        content = subBody.substring(0, endMatch.index);
+      }
+      
+      content = content.replace(new RegExp(`</${tagName}>`, 'gi'), '');
+      return content.trim();
+    };
+
+    const knowledge = extractContent('Knowledge');
+    const skills = extractContent('Skills');
+    const attitudes = extractContent('Attitudes');
+
+    if (!knowledge && !skills && !attitudes) {
+      return match;
+    }
+
+    return `<Objectives>
+  <Knowledge>
+    ${knowledge}
+  </Knowledge>
+  <Skills>
+    ${skills}
+  </Skills>
+  <Attitudes>
+    ${attitudes}
+  </Attitudes>
+</Objectives>`;
+  });
+}
+
+function escapeCurlyBracesAndLessThanInText(mdx: string): string {
+  const allowedTags = [
+    'a', 'span', 'sup', 'sub', 'strong', 'em', 'img', 'br', 'code', 'pre', 'p', 'ul', 'ol', 'li', 'div', 'blockquote',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'iframe',
+    'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
+    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
+    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
+    'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
+    'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
+    'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
+    'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer', 'Description',
+    'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer', 'Image', 'CustomFigure',
+    'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
+    'AnecdoteHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
+    'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
+    'FunctionManipulator', 'EquationManipulator'
+  ];
+
+  const splitRegex = new RegExp(`(\\$\\$[\\s\\S]*?\\$\\$|\\$(?:[^\\$]|\\n(?!\\n))+?\\$|<\\/?(?:${allowedTags.join('|')})\\b[^>]*>)`, 'gi');
+  const parts = mdx.split(splitRegex);
+  
+  const processed = parts.map((part, index) => {
+    if (index % 2 === 0) {
+      return part
+        .replace(/\{/g, '&#123;')
+        .replace(/\}/g, '&#125;')
+        .replace(/<(?=[a-zA-Z\/])/g, '&lt;');
+    }
+    return part;
+  });
+
+  return processed.join('');
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
-  let processed = content.replace(/<!--[\s\S]*?-->/g, '');
+  let processed = escapeCurlyBracesAndLessThanInText(content);
+  processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
   processed = healGlossaryTags(processed);
+  processed = healObjectivesTags(processed);
   
   // Pre-pass: heal broken blockquotes in lists
   processed = healBlockquoteContiguity(processed);

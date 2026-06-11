@@ -116,35 +116,9 @@ export const Glossary = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{glossaryHeader}</span>
               </div>
-              {resolvedWikiUrl && (
-                <a 
-                  href={resolvedWikiUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center font-serif font-black text-slate-200 hover:text-white text-xs border border-white/5 select-none transition-colors cursor-pointer" 
-                  title="Sourced from Wikipedia"
-                >
-                  W
-                </a>
-              )}
             </div>
             <p className="text-sm text-slate-300 leading-relaxed italic mb-3">
               &ldquo;{finalDefinition}&rdquo;
-              {resolvedWikiUrl && (
-                <span className="not-italic inline-block ml-1.5 select-none">
-                  [
-                  <a 
-                    href={resolvedWikiUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="font-serif font-black text-blue-400 hover:text-blue-300 transition-colors"
-                    title="Wikipédia"
-                  >
-                    W
-                  </a>
-                  ]
-                </span>
-              )}
             </p>
             {resolvedWikiUrl && (
               <a 

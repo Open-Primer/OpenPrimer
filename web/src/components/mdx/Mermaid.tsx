@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface MermaidProps {
   chart: string;
@@ -90,18 +92,12 @@ const parseMermaidFallbackNodes = (chartText: string): { id: string; label: stri
 };
 
 const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
+  const { language } = useLanguage();
+  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const nodes = parseMermaidFallbackNodes(chartText);
 
   if (nodes.length === 0) {
-    return (
-      <div className="w-full p-8 rounded-3xl bg-slate-900/60 border border-slate-800 text-center space-y-3 backdrop-blur-xl my-6">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-git-branch"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-        </div>
-        <h4 className="text-slate-200 text-sm font-black uppercase tracking-wider">Concept Graph</h4>
-        <p className="text-slate-400 text-xs italic">Cognitive flow diagram is loaded. Double tap to expand details.</p>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -115,8 +111,8 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-route"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
         </div>
         <div>
-          <h4 className="text-slate-200 text-xs font-black uppercase tracking-[0.2em]">Séquence d'Apprentissage</h4>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Cheminement logique des concepts clés</p>
+          <h4 className="text-slate-200 text-xs font-black uppercase tracking-[0.2em]">{t.learning_sequence}</h4>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t.logical_flow}</p>
         </div>
       </div>
 
@@ -134,7 +130,7 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
             {/* Content Card */}
             <div className="flex-1 p-5 rounded-2xl border border-slate-900/60 bg-slate-900/10 hover:bg-slate-900/30 hover:border-slate-800/80 transition-all duration-300 backdrop-blur-md">
               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-1 select-none">
-                Concept {index + 1}
+                {t.concept_step} {index + 1}
               </span>
               <h5 className="text-slate-200 font-bold text-sm group-hover:text-white transition-colors">
                 {node.label}
@@ -148,6 +144,8 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
 };
 
 export const Mermaid = ({ chart }: MermaidProps) => {
+  const { language } = useLanguage();
+  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -243,7 +241,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
           fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
           themeVariables: {
             ...currentThemeConfig.themeVariables,
-            fontSize: '13px',
+            fontSize: '14px',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
           }
         });
@@ -264,7 +262,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
           const { svg: renderedSvg } = await mermaidInstance.render(containerId.current, cleanedChart, tempDiv);
           if (active) {
             setSvg(renderedSvg);
-            setLoading(false);
+            loading && setLoading(false);
           }
         } finally {
           tempDiv.remove();
@@ -273,7 +271,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
         console.error("Mermaid compilation error:", err);
         if (active) {
           setError(err.message || "Failed to render flowchart. Check syntax.");
-          setLoading(false);
+          loading && setLoading(false);
         }
         
         // Reset mermaid's internal error state in DOM if possible
@@ -304,7 +302,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
       <div className="my-6 w-full h-[200px] border border-slate-850 bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-          Génération du schéma cognito-visuel...
+          {t.generating_cognitive_map}
         </span>
       </div>
     );
@@ -326,7 +324,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
           fill: ${theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc'} !important;
           color: ${theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc'} !important;
           font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-          font-size: 13px !important;
+          font-size: 11px !important;
         }
         #${containerId.current} .node rect,
         #${containerId.current} .node circle,
@@ -342,7 +340,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
         #${containerId.current} .edgeLabel span {
           fill: ${theme === 'paper' ? '#475569' : theme === 'focus' ? '#a3a3a3' : '#94a3b8'} !important;
           font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-          font-size: 11px !important;
+          font-size: 10px !important;
         }
       ` }} />
       <div 

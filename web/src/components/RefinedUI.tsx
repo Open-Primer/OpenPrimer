@@ -6,7 +6,7 @@ import { Mermaid } from './mdx/Mermaid';
 import Link from 'next/link';
 import { 
   Send, Sparkles, User, Bot, X, MessageSquare, AlertTriangle, Share2, 
-  Bookmark, Menu, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2, Lock, Mic, MicOff, Check
+  Bookmark, Menu, ChevronLeft, ChevronRight, CheckCircle, ChevronDown, LogOut, Trash2, Globe, Settings, ShieldAlert, GraduationCap, Brain, Loader2, Lock, Mic, MicOff, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OpenPrimerIcon } from './OpenPrimerIcon';
@@ -907,6 +907,35 @@ export const AITutorOverlay = ({
     };
   }, [messages, persona, lang]);
 
+  // Keyboard navigation for Spaced Repetition flashcards
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'flashcards' || flashcards.length === 0) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setIsFlipped(false);
+        setTimeout(() => {
+          setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+        }, 150);
+      } else if (e.key === 'ArrowRight') {
+        setIsFlipped(false);
+        setTimeout(() => {
+          setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+        }, 150);
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        const activeEl = document.activeElement;
+        if (activeEl?.tagName === 'BUTTON' || activeEl?.tagName === 'INPUT') return;
+        
+        setIsFlipped(prev => !prev);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, activeTab, flashcards.length]);
+
   const handleSelectTutor = async (id: string) => {
     localStorage.setItem('op_active_tutor_personality', id);
     setPersona(id);
@@ -1129,50 +1158,84 @@ export const AITutorOverlay = ({
                             : 'No glossary terms available in this lesson to generate flashcards.'}
                         </div>
                       ) : (
-                        <div className="perspective-1000 my-6">
-                          <motion.div
-                            animate={{ rotateY: isFlipped ? 180 : 0 }}
-                            transition={{ duration: 0.4 }}
-                            onClick={() => setIsFlipped(!isFlipped)}
-                            className="w-full min-h-[220px] rounded-3xl bg-slate-900 border border-slate-850 p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-xl relative preserve-3d"
+                        <div className="flex items-center gap-2 my-6 select-none">
+                          {/* Previous card button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsFlipped(false);
+                              setTimeout(() => {
+                                setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+                              }, 150);
+                            }}
+                            className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
+                            aria-label={lang === 'FR' ? 'Carte précédente' : 'Previous card'}
                           >
-                            {/* Card Front */}
-                            <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                              <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest mb-3">
-                                {lang === 'FR' ? 'CONCEPT' : 'TERM'}
-                              </span>
-                              <h3 className="text-base font-extrabold text-white leading-tight">
-                                {flashcards[currentCardIndex]?.term}
-                              </h3>
-                              {cardMastery[flashcards[currentCardIndex]?.term] && (
-                                <span className={`mt-4 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${
-                                  cardMastery[flashcards[currentCardIndex]?.term] === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                  cardMastery[flashcards[currentCardIndex]?.term] === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                                  'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                                }`}>
-                                  {cardMastery[flashcards[currentCardIndex]?.term]}
-                                </span>
-                              )}
-                              <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
-                                {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
-                              </p>
-                            </div>
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
 
-                            {/* Card Back */}
-                            <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden transform rotateY-180 ${!isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                              <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest mb-3">
-                                {lang === 'FR' ? 'DÉFINITION' : 'DEFINITION'}
-                              </span>
-                              <div className="overflow-y-auto max-h-[140px] px-2 custom-scrollbar my-2 text-center w-full">
-                                <p className="text-xs text-slate-300 leading-relaxed font-semibold">
-                                  {flashcards[currentCardIndex]?.definition}
+                          <div className="perspective-1000 flex-1">
+                            <motion.div
+                              animate={{ rotateY: isFlipped ? 180 : 0 }}
+                              transition={{ duration: 0.4 }}
+                              onClick={() => setIsFlipped(!isFlipped)}
+                              className="w-full min-h-[220px] rounded-3xl bg-slate-900 border border-slate-850 p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-xl relative preserve-3d"
+                            >
+                              {/* Card Front */}
+                              <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                                <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest mb-3">
+                                  {lang === 'FR' ? 'CONCEPT' : 'TERM'}
+                                </span>
+                                <h3 className="text-base font-extrabold text-white leading-tight">
+                                  {flashcards[currentCardIndex]?.term}
+                                </h3>
+                                {cardMastery[flashcards[currentCardIndex]?.term] && (
+                                  <span className={`mt-4 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${
+                                    cardMastery[flashcards[currentCardIndex]?.term] === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                    cardMastery[flashcards[currentCardIndex]?.term] === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                    'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                  }`}>
+                                    {cardMastery[flashcards[currentCardIndex]?.term]}
+                                  </span>
+                                )}
+                                <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
+                                  {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
                                 </p>
                               </div>
-                              <p className="text-[9px] text-slate-500 mt-4 italic font-bold tracking-wider uppercase select-none">
-                                {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
-                              </p>
-                            </div>
-                          </motion.div>
+
+                              {/* Card Back */}
+                              <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden transform rotateY-180 ${!isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest mb-3">
+                                  {lang === 'FR' ? 'DÉFINITION' : 'DEFINITION'}
+                                </span>
+                                <div className="overflow-y-auto max-h-[140px] px-2 custom-scrollbar my-2 text-center w-full">
+                                  <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    {flashcards[currentCardIndex]?.definition}
+                                  </p>
+                                </div>
+                                <p className="text-[9px] text-slate-500 mt-4 italic font-bold tracking-wider uppercase select-none">
+                                  {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
+                                </p>
+                              </div>
+                            </motion.div>
+                          </div>
+
+                          {/* Next card button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsFlipped(false);
+                              setTimeout(() => {
+                                setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+                              }, 150);
+                            }}
+                            className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
+                            aria-label={lang === 'FR' ? 'Carte suivante' : 'Next card'}
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1205,30 +1268,42 @@ export const AITutorOverlay = ({
                               </button>
                             </div>
                           </div>
-                        ) : (
-                          !isCoachingDismissed && (
-                            <div className="p-4 rounded-2xl bg-blue-600/5 border border-blue-500/10 text-left relative">
-                              <button
-                                onClick={() => {
-                                  setIsCoachingDismissed(true);
-                                  localStorage.setItem('op_dismiss_flashcard_coaching', 'true');
-                                }}
-                                className="absolute top-3 right-3 p-1 text-slate-500 hover:text-white transition-colors cursor-pointer"
-                                title={lang === 'FR' ? 'Masquer' : 'Dismiss'}
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                              <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1 select-none">
-                                <Sparkles className="w-3 h-3 animate-pulse" />
-                                {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
-                              </p>
-                              <p className="text-[10px] text-slate-400 leading-relaxed font-medium pr-6">
-                                {lang === 'FR' 
-                                  ? "Chaque évaluation entraînant directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
-                                  : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
-                              </p>
-                            </div>
-                          )
+                        ) : null}
+
+                        <button
+                          onClick={() => {
+                            setIsFlipped(false);
+                            setTimeout(() => {
+                              setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+                            }, 200);
+                          }}
+                          className="w-full py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700/80 hover:text-white text-slate-300 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                        >
+                          ➡️ {lang === 'FR' ? 'Passer à la suivante' : 'Skip / Next Card'}
+                        </button>
+
+                        {!isFlipped && !isCoachingDismissed && (
+                          <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-500/20 text-left relative overflow-hidden">
+                            <button
+                              onClick={() => {
+                                setIsCoachingDismissed(true);
+                                localStorage.setItem('op_dismiss_flashcard_coaching', 'true');
+                              }}
+                              className="absolute top-3 right-3 w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white flex items-center justify-center border border-slate-700 transition-all cursor-pointer z-10"
+                              title={lang === 'FR' ? 'Masquer' : 'Dismiss'}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1.5 pr-8 select-none">
+                              <Sparkles className="w-3 h-3 animate-pulse" />
+                              {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
+                            </p>
+                            <p className="text-[10px] text-slate-300 leading-relaxed font-medium pr-8">
+                              {lang === 'FR' 
+                                ? "Chaque évaluation entraînant directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
+                                : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
+                            </p>
+                          </div>
                         )}
                       </div>
                     )}

@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar } from 'lucide-react';
+import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar, Palette } from 'lucide-react';
 
 export interface EntityLinkProps {
   name: string;
   lang: string;
   children: React.ReactNode;
-  type?: 'person' | 'character' | 'location' | 'event' | 'entity';
+  type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork';
   bio?: string;
   description?: string;
 }
@@ -133,6 +133,12 @@ export const EntityLink = ({
     borderClass = "border-amber-400 text-amber-300 hover:text-amber-200";
     iconBoxClass = "bg-amber-600/20 text-amber-400";
     linkClass = "text-amber-400 hover:text-amber-300";
+  } else if (resolvedType === 'artwork') {
+    Icon = Palette;
+    headerLabel = isFr ? 'Œuvre d\'art' : 'Artwork';
+    borderClass = "border-pink-400 text-pink-300 hover:text-pink-200";
+    iconBoxClass = "bg-pink-600/20 text-pink-400";
+    linkClass = "text-pink-400 hover:text-pink-300";
   }
 
   const t = {
@@ -170,36 +176,10 @@ export const EntityLink = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest">{headerLabel}</span>
               </div>
-              {resolvedUrl && (
-                <a 
-                  href={resolvedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center font-serif font-black text-slate-200 hover:text-white text-xs border border-white/5 select-none transition-colors cursor-pointer" 
-                  title="Sourced from Wikipedia"
-                >
-                  W
-                </a>
-              )}
             </div>
             {resolvedSummary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4">
                 &ldquo;{resolvedSummary}&rdquo;
-                {resolvedUrl && (
-                  <span className="not-italic inline-block ml-1.5 select-none">
-                    [
-                    <a 
-                      href={resolvedUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`font-serif font-black ${linkClass} transition-colors`}
-                      title="Wikipédia"
-                    >
-                      W
-                    </a>
-                    ]
-                  </span>
-                )}
               </p>
             ) : (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
@@ -239,5 +219,9 @@ export const Location = (props: Omit<EntityLinkProps, 'type'>) => (
 );
 
 export const HistoricalEvent = (props: Omit<EntityLinkProps, 'type'>) => (
-  <EntityLink {...props} type="event" />
+    <EntityLink {...props} type="event" />
+  );
+
+export const Artwork = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="artwork" />
 );

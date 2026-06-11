@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
 import { SolvedProblem, Summary, SelfEval } from './AdvancedLearning';
-import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent } from './HistoricalPerson';
+import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -39,6 +39,33 @@ import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
 
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
+
+const isChildrenEmpty = (children: React.ReactNode): boolean => {
+  if (children === null || children === undefined) {
+    return true;
+  }
+  if (typeof children === 'string') {
+    return children.trim() === '';
+  }
+  if (typeof children === 'number') {
+    return false;
+  }
+  if (Array.isArray(children)) {
+    if (children.length === 0) return true;
+    return children.every(child => isChildrenEmpty(child));
+  }
+  if (React.isValidElement(children)) {
+    const props = children.props as any;
+    if (props && 'children' in props) {
+      return isChildrenEmpty(props.children);
+    }
+    return false;
+  }
+  return false;
+};
+
+
 
 const ALERT_TITLES: Record<string, Record<string, string>> = {
   note: {
@@ -86,6 +113,7 @@ const ALERT_TITLES: Record<string, Record<string, string>> = {
 };
 
 const Alert = ({ type, children }: { type: string; children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase();
   const t = (type || 'note').toLowerCase();
@@ -182,36 +210,22 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: s
   );
 };
 
-const Objectives = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="my-8 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
-      <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-600/5 rounded-full blur-[40px] pointer-events-none" />
-      <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
-        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
-          <Target className="w-5 h-5" />
-        </div>
-        <div>
-          <h3 className="text-lg font-black text-white leading-tight">Objectifs d'apprentissage</h3>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Ce que vous allez maîtriser</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {children}
-      </div>
-    </div>
-  );
-};
-
 const Objective = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="text-slate-300 font-medium text-sm leading-relaxed">{children}</div>;
 };
 
 const Knowledge = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  const { language } = useLanguage();
+  const langKey = (language || 'EN').toUpperCase() as keyof typeof STATIC_UI_STRINGS;
+  const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+
   return (
     <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
       <div className="flex items-center gap-2 text-blue-400 mb-1 select-none">
         <BookOpen className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Connaissances</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.obj_knowledge}</span>
       </div>
       <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
@@ -221,11 +235,16 @@ const Knowledge = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Skills = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  const { language } = useLanguage();
+  const langKey = (language || 'EN').toUpperCase() as keyof typeof STATIC_UI_STRINGS;
+  const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+
   return (
     <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
       <div className="flex items-center gap-2 text-emerald-400 mb-1 select-none">
         <Key className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Compétences</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.obj_skills}</span>
       </div>
       <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
@@ -235,11 +254,16 @@ const Skills = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Attitudes = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  const { language } = useLanguage();
+  const langKey = (language || 'EN').toUpperCase() as keyof typeof STATIC_UI_STRINGS;
+  const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+
   return (
     <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
       <div className="flex items-center gap-2 text-violet-400 mb-1 select-none">
         <Compass className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Attitudes</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.obj_attitudes}</span>
       </div>
       <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
@@ -248,7 +272,127 @@ const Attitudes = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const Objectives = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  const { language } = useLanguage();
+  const langKey = (language || 'EN').toUpperCase() as keyof typeof STATIC_UI_STRINGS;
+  const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
+
+  const childrenArray = React.Children.toArray(children);
+  const hasStructuredBoxes = childrenArray.some(
+    child => React.isValidElement(child) && (child.type === Knowledge || child.type === Skills || child.type === Attitudes)
+  );
+
+  let renderedContent: React.ReactNode;
+
+  if (hasStructuredBoxes) {
+    renderedContent = children;
+  } else {
+    // Distribute linear children into Knowledge, Skills, Attitudes boxes
+    const extractLinearItems = (node: React.ReactNode): React.ReactNode[] => {
+      if (!node) return [];
+      if (Array.isArray(node)) {
+        return node.flatMap(n => extractLinearItems(n));
+      }
+      if (React.isValidElement(node)) {
+        const props = node.props as any;
+        if (node.type === 'ul' || node.type === 'ol' || node.type === React.Fragment) {
+          return extractLinearItems(props.children);
+        }
+        if (node.type === 'li' || node.type === 'p' || node.type === Objective) {
+          return [node];
+        }
+        if (props && 'children' in props) {
+          const subItems = extractLinearItems(props.children);
+          if (subItems.length > 0) return subItems;
+        }
+      }
+      if (typeof node === 'string' || typeof node === 'number') {
+        return [node];
+      }
+      return [node];
+    };
+
+    const items = extractLinearItems(children).filter(item => !isChildrenEmpty(item));
+
+    const knowledgeItems: React.ReactNode[] = [];
+    const skillsItems: React.ReactNode[] = [];
+    const attitudesItems: React.ReactNode[] = [];
+
+    items.forEach((item, index) => {
+      if (index % 3 === 0) {
+        knowledgeItems.push(item);
+      } else if (index % 3 === 1) {
+        skillsItems.push(item);
+      } else {
+        attitudesItems.push(item);
+      }
+    });
+
+    const getItemContent = (item: React.ReactNode): React.ReactNode => {
+      if (React.isValidElement(item)) {
+        const props = item.props as any;
+        if ((item.type === 'li' || item.type === 'p' || item.type === Objective) && props && 'children' in props) {
+          return props.children;
+        }
+      }
+      return item;
+    };
+
+    renderedContent = (
+      <>
+        {knowledgeItems.length > 0 && (
+          <Knowledge>
+            <ul className="list-disc pl-4 space-y-1">
+              {knowledgeItems.map((item, idx) => (
+                <li key={idx}>{getItemContent(item)}</li>
+              ))}
+            </ul>
+          </Knowledge>
+        )}
+        {skillsItems.length > 0 && (
+          <Skills>
+            <ul className="list-disc pl-4 space-y-1">
+              {skillsItems.map((item, idx) => (
+                <li key={idx}>{getItemContent(item)}</li>
+              ))}
+            </ul>
+          </Skills>
+        )}
+        {attitudesItems.length > 0 && (
+          <Attitudes>
+            <ul className="list-disc pl-4 space-y-1">
+              {attitudesItems.map((item, idx) => (
+                <li key={idx}>{getItemContent(item)}</li>
+              ))}
+            </ul>
+          </Attitudes>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <div className="my-8 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
+      <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-600/5 rounded-full blur-[40px] pointer-events-none" />
+      <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
+        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
+          <Target className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white leading-tight">{t.obj_title}</h3>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.obj_subtitle}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {renderedContent}
+      </div>
+    </div>
+  );
+};
+
 const SummativeEvaluation = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-amber-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-amber-500/5 rounded-full blur-[40px] pointer-events-none" />
@@ -269,10 +413,12 @@ const SummativeEvaluation = ({ children }: { children: React.ReactNode }) => {
 };
 
 const EvaluationSection = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="space-y-4 border-t border-slate-800/30 pt-4 first:border-0 first:pt-0">{children}</div>;
 };
 
 const Assignment = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
       <div className="flex items-center gap-2 text-amber-400 mb-2 select-none">
@@ -285,6 +431,7 @@ const Assignment = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Deadline = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-bold my-2 select-none">
       <Calendar className="w-3.5 h-3.5" />
@@ -294,6 +441,7 @@ const Deadline = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Submission = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/20 border border-dashed border-slate-800/80 rounded-2xl my-4">
       <div className="flex items-center gap-2 text-slate-400 mb-2 select-none">
@@ -306,6 +454,7 @@ const Submission = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Evaluation = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/20 border border-slate-800 rounded-2xl my-4">
       <div className="flex items-center gap-2 text-blue-400 mb-2 select-none">
@@ -318,6 +467,7 @@ const Evaluation = ({ children }: { children: React.ReactNode }) => {
 };
 
 const FinalProject = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/50 border border-blue-500/25 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-blue-400 mb-3 select-none">
@@ -330,10 +480,12 @@ const FinalProject = ({ children }: { children: React.ReactNode }) => {
 };
 
 const FinalWork = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="space-y-4">{children}</div>;
 };
 
 const Format = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="text-xs text-slate-400 border-l-2 border-slate-700 pl-3 my-2">
       <strong className="text-slate-300">Format : </strong>{children}
@@ -342,6 +494,7 @@ const Format = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Instructions = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="space-y-2 my-3">
       <span className="text-xs font-bold text-slate-400 select-none">Instructions :</span>
@@ -351,6 +504,7 @@ const Instructions = ({ children }: { children: React.ReactNode }) => {
 };
 
 const FinalQuiz = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-violet-400 mb-3 select-none">
@@ -363,22 +517,27 @@ const FinalQuiz = ({ children }: { children: React.ReactNode }) => {
 };
 
 const QuizQuestion = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="font-semibold text-slate-200 text-sm leading-relaxed mb-2">{children}</div>;
 };
 
 const Answer = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="text-slate-300 text-xs pl-4 my-1">• {children}</div>;
 };
 
 const Description = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="text-slate-400 text-xs mb-3 italic">{children}</div>;
 };
 
 const Title = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <h4 className="text-sm font-black text-white uppercase tracking-wider mb-2">{children}</h4>;
 };
 
 const FormativeQuiz = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-emerald-400 mb-3 select-none">
@@ -391,10 +550,12 @@ const FormativeQuiz = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Callout = ({ type, children }: { type?: string; children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <Alert type={type || 'info'}>{children}</Alert>;
 };
 
 const CalloutContainer = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
   return <div className="my-4">{children}</div>;
 };
 
@@ -424,6 +585,9 @@ const components = {
   HistoricalEvent,
   EvenementHistorique: HistoricalEvent,
   EntityLink,
+  Artwork,
+  Oeuvre: Artwork,
+  OeuvreArt: Artwork,
   EssayEvaluation,
   Prerequisites,
   Epistemology,
@@ -465,6 +629,8 @@ const components = {
 
   // Overriding standard table to render dynamic graphs on toggle
   table: DynamicTableChart,
+
+
 
   // Learning Objectives
   Objectives,

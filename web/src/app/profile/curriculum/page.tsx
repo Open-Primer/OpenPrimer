@@ -345,9 +345,9 @@ export default function CurriculumPage() {
       const feedbacksMap: Record<number, any> = {};
       await Promise.all(completedModules.map(async (m: any) => {
         try {
-          const res = await dbService.getCourseFeedbacks(m.id.toString());
+          const res = await dbService.getCourseFeedbacks(m.id.toString(), userId);
           if (res.data && res.data.length > 0) {
-            feedbacksMap[m.id] = res.data[0];
+            feedbacksMap[m.id] = res.data.find((f: any) => f.user_id === userId || f.userId === userId);
           }
         } catch (err) {
           console.error("Error fetching feedback for course:", m.id, err);
