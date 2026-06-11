@@ -830,6 +830,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                       <div className="relative">
                         <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
                         <input 
+                          id="current-password-input"
                           type={showCurrentPassword ? "text" : "password"} 
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
@@ -854,6 +855,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         <div className="relative">
                           <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
                           <input 
+                            id="new-password-input"
                             type={showNewPassword ? "text" : "password"} 
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
@@ -878,6 +880,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         <div className="relative">
                           <Lock className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
                           <input 
+                            id="confirm-password-input"
                             type={showConfirmNewPassword ? "text" : "password"} 
                             value={confirmNewPassword}
                             onChange={(e) => setConfirmNewPassword(e.target.value)}
@@ -907,6 +910,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
                     <div className="pt-2 flex justify-end">
                       <button 
+                        id="update-password-btn"
                         type="submit" 
                         disabled={pwdLoading}
                         className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 cursor-pointer"

@@ -359,10 +359,10 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                     <Link
                       key={result.path}
                       href={result.path}
-                      className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl transition-all group ${
+                      className={`flex flex-col gap-1 px-3 py-2.5 transition-all group ${
                         isActive
-                          ? 'bg-blue-600/10 text-blue-400'
-                          : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                          ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                          : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -373,7 +373,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                         ) : (
                           <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
                         )}
-                        <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-slate-200' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-blue-400 font-extrabold' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
                           {highlightText(result.name, searchQuery)}
                         </span>
                       </div>
@@ -407,10 +407,10 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                   <Link
                     key={page.name}
                     href={page.path || '#'}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
                       isActive
-                        ? 'bg-blue-600/10 text-blue-400'
-                        : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                        ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                        : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
                     }`}
                   >
                     {isCompleted ? (
@@ -420,7 +420,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                     ) : (
                       <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
                     )}
-                    <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-slate-200' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-blue-400 font-extrabold' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
                       {page.name}
                     </span>
                   </Link>

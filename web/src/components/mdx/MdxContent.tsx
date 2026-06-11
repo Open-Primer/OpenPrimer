@@ -586,8 +586,6 @@ const components = {
   EvenementHistorique: HistoricalEvent,
   EntityLink,
   Artwork,
-  Oeuvre: Artwork,
-  OeuvreArt: Artwork,
   EssayEvaluation,
   Prerequisites,
   Epistemology,

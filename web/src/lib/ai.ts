@@ -2,6 +2,8 @@ import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx } from './content';
+import { resolveAndPersistMedia } from './media-resolver';
+
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
@@ -244,8 +246,8 @@ Requirements:
         - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
         - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
       * **Artworks and Works of Art (Œuvres d'art)**: For notable artworks mentioned in the text (e.g. paintings, sculptures, literary works, monuments like "L'Homme de Vitruve", "La Joconde", "La Cène", "La Nuit étoilée"), you MUST wrap them in:
-        \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code">DisplayName</Artwork>\` (or the French alias \`<Oeuvre>\`).
-        - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr">l'Homme de Vitruve</Artwork>\` or \`<Oeuvre name="La_Joconde" lang="fr">La Joconde</Oeuvre>\`
+        \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code">DisplayName</Artwork>\`.
+        - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr">l'Homme de Vitruve</Artwork>\` or \`<Artwork name="La_Joconde" lang="fr">La Joconde</Artwork>\`
         - Example (English): \`<Artwork name="Vitruvian_Man" lang="en">Vitruvian Man</Artwork>\`
       * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed, 3 to 5 line mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\` or \`> [!NOTE] **Mini-Biography: DisplayName (Dates)**\`). This mini-biography must highlight their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson.
       * **Fictional Characters**: For fictional characters (e.g., Mickey Mouse, Sherlock Holmes, Frodo Baggins, Hamlet) when relevant to the course content (e.g., literature, history, cinema, cultural/social studies), wrap them in the custom component: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code">CharacterName</FictionalCharacter>\`.
@@ -355,7 +357,16 @@ Requirements:
              - \`<DataChart title="Chart Title" type="bar|donut" xAxisLabel="Label X" yAxisLabel="Label Y" unit="%" data={[{"label":"Name A","value":40},{"label":"Name B","value":60}]} />\`
         * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
         * Computer Science, Software Engineering, Coding, or Web Development: You MUST systematically insert at least one interactive client-side coding sandbox block: \`<CodeSandbox initialCode="..." title="Titre du Bac à Sable" language="html|javascript|css" />\` where students can edit and execute HTML/CSS/JS code in real-time right inside the page.
-        * Auditory and Video Enrichment (All Disciplines): You MUST systematically recommend or embed at least one short, high-quality audio or video resource using \`<Video id="..." title="..." provider="..." duration="..." />\` (or using \`url="..."\`) or \`<Audio url="..." title="..." duration="..." />\` (always keep duration under the micro-learning limit of 2 to 3 minutes, e.g. \`duration="2 min"\`).
+         * Auditory and Video Enrichment (All Disciplines): You MUST systematically embed at least one short audio or video resource:
+              - For **video**: use \`<Video id="" title="..." provider="YouTube" duration="..." />\`. Leave \`id\` empty — it will be auto-resolved from YouTube search.
+              - For **audio**: use \`<Audio url="" title="..." duration="..." />\`. Leave \`url\` empty — the system will search Wikimedia Commons for a real CC-licensed file matching the title, or fall back to TTS synthesis.
+              - The \`title\` is CRITICAL for audio resolution. It MUST be precise and searchable:
+                * Music: exact instrument + work (e.g. \`title="Bach Prelude BWV 846 harpsichord"\`, \`title="Piano note Middle C"\`, \`title="Beethoven Symphony 5 opening"\`)
+                * Languages: exact phrase to hear (e.g. \`title="French pronunciation Bonjour comment allez-vous"\`, \`title="Spanish Buenos dias")\`)
+                * Natural sciences: taxonomy or event names (e.g. \`title="Nightingale Luscinia megarhynchos song"\`, \`title="Thunderstorm rain"\`, \`title="Wolf howling"\`)
+                * History: speaker + event (e.g. \`title="Charles de Gaulle appel 18 juin 1940"\`, \`title="Martin Luther King I have a dream 1963"\`)
+                * Other: most specific English/French description (e.g. \`title="Normal heartbeat sinus rhythm stethoscope"\`)
+              - Keep duration under 2-3 minutes (e.g. \`duration="2 min"\`).
         * Geometry/Mathematics/Physics Chapters (Draggable 2D Sandbox): For any chapter teaching coordinate systems, triangle trigonometry, vectors, or trigonometric circles, you MUST systematically insert at least one 2D Geometry sandbox widget:
              - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\` (or \`<Geometrie2D>\`). Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
         * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
@@ -474,18 +485,41 @@ Your Checkpoints:
    - Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
    - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Assignment></Assignment>, <Objectives></Objectives>, <Callout></Callout>, etc.). If ANY tag is present but empty or lacks significant children/content, you MUST reject the content (set "approved": false) and demand a detailed, complete writing of its contents.
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
-3. "Structural Completeness & Mandated Sections": Ensure the presence of prerequisites, diagnostic quizzes, learning objectives, epistemological boxes (if university level), formative quizzes, and end-of-lesson evaluation.
-   Crucially, you MUST verify that the content contains:
-   - A concluding section (titled "## Conclusion" or "## Synthèse & Discussion" or "## Synthèse & Ouverture") containing the <Summary> component.
-   - A glossary section (titled "### Glossaire" or "### Glossary").
-   - A bibliography/references section (titled "### Références" or "### References"). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
-   If any of these required sections (Conclusion, Glossary, References where applicable) are missing, you MUST reject the content (set "approved": false) and request the writer to add them.
-4. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
-5. "Historical Person & Artwork Overlays":
+3. "Structural Completeness & Mandated Sections":
+   - Ensure the presence of prerequisites at the very beginning (using '<Prerequisites items={[...]} />').
+   - Ensure the presence of diagnostic quizzes (using '<DiagnosticQuiz ... />') before the introduction.
+   - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading like '## Présentation').
+   - Ensure the presence of learning objectives (using '<Objectives>' containing '<Knowledge>', '<Skills>', and '<Attitudes>' sub-components).
+   - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' or '<EtApres>' component) before the final evaluation.
+   - Ensure the presence of a concluding section (using a heading like '## Conclusion' or '## Synthèse & Discussion' or '## Synthèse & Ouverture') containing the '<Summary items={[...]} />' component.
+   - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>', '<SummativeEvaluation>', or '<EssayEvaluation ... />').
+   - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
+   - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
+   If any of these required structural sections/components are missing, you MUST reject the content (set "approved": false) and request the writer to add them.
+4. "Multimedia, Illustrations, & Non-Text Media Density":
+   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${courseName}"):
+   - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
+   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', or '<StructureViewer3D />'. Reject if NONE of these are present.
+   - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
+   - "Audio/Video Integrity": When '<AudioPlayer />', '<Audio />', or '<Video />' components are present in the content, verify that:
+     * Each has a non-empty 'src' or 'url' attribute (not a placeholder like "url_here" or "").
+     * Each specifies a 'duration' attribute (e.g. duration="2 min" or duration="1:45") and that this duration does NOT exceed 3 minutes, in line with the micro-learning constraint.
+     * Each has a caption line directly below it (italicized, e.g. *Audio 1 : Title - Description.*) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
+   - Regardless of discipline: Verify that audio players ('<AudioPlayer />' / '<Audio />') or video players ('<Video />') are incorporated where spoken context or audio demonstrations are pedagogically valuable (e.g. listening comprehension for language courses, spoken philosophical lectures, or historical audio documents).
+5. "Section Interactivity and Sandboxes":
+   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', or '<DynamicSimulation />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
+   5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
+     * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' (for anatomical or cellular structures) or '<StructureViewer3D presetId="..." />' (for molecular/crystal structures). A lesson in these disciplines without either component MUST be rejected.
+     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph or equation component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', or '<Geometry2D />'. A lesson in these disciplines without any of these MUST be rejected.
+     * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />' for active code execution. A lesson without it MUST be rejected.
+     * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
+     * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />' (or '<EspritCritique />'), '<PointOfView />' (or '<PointDeVue />'), or '<HistoricalAnecdote />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
+6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
+7. "Historical Person & Artwork Overlays":
    - Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
-   - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">' or '<Oeuvre name="..." lang="...">'.
-6. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
-7. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
+   - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">'.
+8. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
+9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
    - You critique the work of the writer (Agent 3) and architect (Agent 2) to ensure that every <Quiz> (knowledge check) is indeed fully filled, not empty, and contains high-quality questions and options/answers.
    - The questions, answers, and explanations must be of high academic quality and directly in line with the target course level ("${level}"), as well as the length and complexity of the subject. Reject any quiz that contains generic, trivial, simplified, or low-effort questions/answers.
    - Every <Quiz> contains at least one <Question> element, and every <Question> contains at least two <Option> elements.
@@ -692,6 +726,7 @@ ${validatedMdx}`;
 
       // Preprocess and heal MDX before writing to DB so the DB stores 100% clean, compilable, ready-to-render records
       const healedMdx = preprocessMdx(mdxWithFrontmatter, targetLang.toLowerCase());
+      const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
 
       // Save to Supabase
       await dbService.saveLesson({
@@ -699,7 +734,7 @@ ${validatedMdx}`;
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
         title: item.title,
-        content: healedMdx,
+        content: resolvedMdx,
         order: index + 1
       });
     }
@@ -804,7 +839,7 @@ Rules:
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
 3. Do NOT translate technical code blocks. For JSX React tags:
    - For \`<Glossary term="..." definition="...">\`, translate the values of the \`term\` and \`definition\` attributes to the target language, as well as the text content inside the tag.
-   - For \`<HistoricalPerson name="..." lang="...">\` and \`<Artwork name="..." lang="...">\` (or \`<Oeuvre>\`), translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Vitruvian_Man" to "Homme_de_Vitruve" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
+   - For \`<HistoricalPerson name="..." lang="...">\` and \`<Artwork name="..." lang="...">\`, translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Vitruvian_Man" to "Homme_de_Vitruve" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
    - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
    - Keep other tag names and syntax untouched.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
@@ -1127,6 +1162,7 @@ Follow all initial translation rules:
 
       // Preprocess and heal translated MDX before writing to DB
       const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+      const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
 
       // Save translated lesson to Supabase
       await dbService.saveLesson({
@@ -1134,7 +1170,7 @@ Follow all initial translation rules:
         lesson_slug: lesson.lesson_slug,
         lang: targetLang.toLowerCase(),
         title: transTitle,
-        content: healedMdx,
+        content: resolvedMdx,
         order: lesson.order
       });
     }
@@ -1544,11 +1580,23 @@ Your validation checklist:
 3. Zero placeholders: Are there any placeholders, skeletal sentences, or unfinished sections?
 4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
 5. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
-6. Mandated Sections Integrity: Verify that the revised MDX content still contains:
-   - A concluding section (titled "## Conclusion" or "## Synthèse & Discussion" or "## Synthèse & Ouverture") containing the <Summary> component.
-   - A glossary section (titled "### Glossaire" or "### Glossary").
-   - A bibliography/references section (titled "### Références" or "### References"), unless the original course is a primary school level course.
-   If any of these required sections (Conclusion, Glossary, References where applicable) are missing, you MUST reject the revision (set "approved": false).
+6. Mandated Sections & Structural Integrity: Verify that the revised MDX content still contains:
+   - Prerequisites block ('<Prerequisites items={[...]} />') at the very beginning.
+   - Diagnostic quiz ('<DiagnosticQuiz ... />') before the introduction.
+   - Introduction heading (titled '## Introduction' or localized equivalent).
+   - Objectives block ('<Objectives>') containing '<Knowledge>', '<Skills>', and '<Attitudes>'.
+   - Forward-looking section ('<WhatsNext>' or '<EtApres>') before the final evaluation.
+   - Concluding section (titled '## Conclusion' or localized equivalent) containing the '<Summary>' component.
+   - Glossary section (titled '### Glossary' or localized equivalent).
+   - Bibliography/references section (titled '### References' or localized equivalent), unless the original course is a primary school level course.
+   If any of these required structural sections/components are missing, you MUST reject the revision (set "approved": false).
+7. Multimedia, Illustrations, & Non-Text Media Integrity (DISCIPLINE-AWARE):
+   - For VISUAL/SPATIAL/HISTORICAL/EMPIRICAL disciplines (visual arts, anatomy, architecture, history of art, cinema, geography, biology, etc.): Verify that the revision has not accidentally removed illustration elements. '<CustomFigure />' / '<Image />', '<Mermaid />', or '<InteractiveDiagram />' components that were present in the original MUST remain intact. Their removal constitutes a regression and must be rejected.
+   - For QUANTITATIVE/EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics): Verify that interactive visual components ('<Mermaid />', '<FunctionPlotter />', '<EquationManipulator />', '<DataChart />', etc.) are preserved.
+   - For TEXTUAL/PHILOSOPHICAL/LITERARY disciplines (philosophy, literature, law, ethics): Do not reject if illustration components are absent, but flag in the critique if they have been removed without reason — reducing visual enrichment unnecessarily is undesirable even in text-heavy disciplines.
+   - Regardless of discipline: Ensure any audio players ('<AudioPlayer />' or '<Audio />') or video players ('<Video />') from the original are preserved and not lost during revision.
+8. Section Interactivity and Interactive Sandboxes:
+   - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', or '<DynamicSimulation />').
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -1722,6 +1770,7 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
 
     // Preprocess and heal MDX before writing to DB
     const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+    const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
 
     // Save back to DB
     await dbService.saveLesson({
@@ -1729,7 +1778,7 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
       lesson_slug: slug,
       lang: targetLang.toLowerCase(),
       title: lesson.title,
-      content: healedMdx,
+      content: resolvedMdx,
       order: lesson.order
     });
 
