@@ -133,7 +133,10 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       logs.push(`[REVISION] Revision details: "${revisionDetails}"`);
       
       const { reviseCourseContent } = require('./ai');
-      await reviseCourseContent(courseSlug, revisionDetails, targetLang);
+      const revisedSlugs = await reviseCourseContent(courseSlug, revisionDetails, targetLang);
+      if (revisedSlugs && revisedSlugs.length > 0) {
+        extra.revisedSlugs = revisedSlugs;
+      }
       logs.push(`[REVISION] Revision completed successfully.`);
 
     } else if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {

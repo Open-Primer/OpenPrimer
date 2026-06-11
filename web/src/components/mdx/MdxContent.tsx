@@ -28,7 +28,7 @@ import { DynamicSimulation } from './DynamicSimulation';
 import { GoingFurther, GoingFurtherItem } from './GoingFurther';
 import { FunctionManipulator } from './FunctionManipulator';
 import { EquationManipulator } from './EquationManipulator';
-import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, BookOpen, Key, Compass, Award, FileText, Calendar, Send, HelpCircle } from 'lucide-react';
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
 import { HistoricalAnecdote } from './HistoricalAnecdote';
@@ -182,6 +182,226 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: s
   );
 };
 
+const Objectives = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="my-8 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
+      <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-600/5 rounded-full blur-[40px] pointer-events-none" />
+      <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
+        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
+          <Target className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white leading-tight">Objectifs d'apprentissage</h3>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Ce que vous allez maîtriser</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const Objective = ({ children }: { children: React.ReactNode }) => {
+  return <div className="text-slate-300 font-medium text-sm leading-relaxed">{children}</div>;
+};
+
+const Knowledge = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+      <div className="flex items-center gap-2 text-blue-400 mb-1 select-none">
+        <BookOpen className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Connaissances</span>
+      </div>
+      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const Skills = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+      <div className="flex items-center gap-2 text-emerald-400 mb-1 select-none">
+        <Key className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Compétences</span>
+      </div>
+      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const Attitudes = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+      <div className="flex items-center gap-2 text-violet-400 mb-1 select-none">
+        <Compass className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Attitudes</span>
+      </div>
+      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const SummativeEvaluation = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-amber-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
+      <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-amber-500/5 rounded-full blur-[40px] pointer-events-none" />
+      <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
+        <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400">
+          <Award className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white leading-tight">Évaluation sommative</h3>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Validation du module</p>
+        </div>
+      </div>
+      <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const EvaluationSection = ({ children }: { children: React.ReactNode }) => {
+  return <div className="space-y-4 border-t border-slate-800/30 pt-4 first:border-0 first:pt-0">{children}</div>;
+};
+
+const Assignment = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
+      <div className="flex items-center gap-2 text-amber-400 mb-2 select-none">
+        <FileText className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Travail à rendre</span>
+      </div>
+      <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
+    </div>
+  );
+};
+
+const Deadline = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-bold my-2 select-none">
+      <Calendar className="w-3.5 h-3.5" />
+      <span>Date limite : {children}</span>
+    </div>
+  );
+};
+
+const Submission = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-4 bg-slate-950/20 border border-dashed border-slate-800/80 rounded-2xl my-4">
+      <div className="flex items-center gap-2 text-slate-400 mb-2 select-none">
+        <Send className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Instructions de soumission</span>
+      </div>
+      <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
+    </div>
+  );
+};
+
+const Evaluation = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-4 bg-slate-950/20 border border-slate-800 rounded-2xl my-4">
+      <div className="flex items-center gap-2 text-blue-400 mb-2 select-none">
+        <Award className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Critères d'évaluation</span>
+      </div>
+      <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
+    </div>
+  );
+};
+
+const FinalProject = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-5 bg-slate-950/50 border border-blue-500/25 rounded-2xl my-6">
+      <div className="flex items-center gap-2 text-blue-400 mb-3 select-none">
+        <Award className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Projet final</span>
+      </div>
+      <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
+    </div>
+  );
+};
+
+const FinalWork = ({ children }: { children: React.ReactNode }) => {
+  return <div className="space-y-4">{children}</div>;
+};
+
+const Format = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="text-xs text-slate-400 border-l-2 border-slate-700 pl-3 my-2">
+      <strong className="text-slate-300">Format : </strong>{children}
+    </div>
+  );
+};
+
+const Instructions = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="space-y-2 my-3">
+      <span className="text-xs font-bold text-slate-400 select-none">Instructions :</span>
+      <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
+    </div>
+  );
+};
+
+const FinalQuiz = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
+      <div className="flex items-center gap-2 text-violet-400 mb-3 select-none">
+        <HelpCircle className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Quiz final d'évaluation</span>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+};
+
+const QuizQuestion = ({ children }: { children: React.ReactNode }) => {
+  return <div className="font-semibold text-slate-200 text-sm leading-relaxed mb-2">{children}</div>;
+};
+
+const Answer = ({ children }: { children: React.ReactNode }) => {
+  return <div className="text-slate-300 text-xs pl-4 my-1">• {children}</div>;
+};
+
+const Description = ({ children }: { children: React.ReactNode }) => {
+  return <div className="text-slate-400 text-xs mb-3 italic">{children}</div>;
+};
+
+const Title = ({ children }: { children: React.ReactNode }) => {
+  return <h4 className="text-sm font-black text-white uppercase tracking-wider mb-2">{children}</h4>;
+};
+
+const FormativeQuiz = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
+      <div className="flex items-center gap-2 text-emerald-400 mb-3 select-none">
+        <HelpCircle className="w-4 h-4" />
+        <span className="text-xs font-black uppercase tracking-wider">Auto-évaluation / Quiz formatif</span>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+};
+
+const Callout = ({ type, children }: { type?: string; children: React.ReactNode }) => {
+  return <Alert type={type || 'info'}>{children}</Alert>;
+};
+
+const CalloutContainer = ({ children }: { children: React.ReactNode }) => {
+  return <div className="my-4">{children}</div>;
+};
+
+const ImageAlias = (props: any) => {
+  return <CustomFigure {...props} />;
+};
+
 const components = {
   Alert,
   CustomFigure,
@@ -245,6 +465,36 @@ const components = {
 
   // Overriding standard table to render dynamic graphs on toggle
   table: DynamicTableChart,
+
+  // Learning Objectives
+  Objectives,
+  Objective,
+  Knowledge,
+  Skills,
+  Attitudes,
+
+  // Evaluation & Assignments
+  SummativeEvaluation,
+  EvaluationSection,
+  Assignment,
+  Deadline,
+  Submission,
+  Evaluation,
+  FinalProject,
+  FinalWork,
+  Format,
+  Instructions,
+  FinalQuiz,
+  QuizQuestion,
+  Answer,
+  Description,
+  Title,
+  FormativeQuiz,
+
+  // Callouts & Media aliases
+  Callout,
+  CalloutContainer,
+  Image: ImageAlias,
 };
 
 interface MdxContentProps {

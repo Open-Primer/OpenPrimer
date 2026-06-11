@@ -1028,28 +1028,6 @@ export const AITutorOverlay = ({
                 {activeTab === 'chat' ? (
                   <>
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                      {/* Premium Tutor Header Badge / Banner */}
-                      <div className="flex justify-center pb-2">
-                        <button
-                          onClick={() => setShowTutorModal(true)}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-slate-950/40 hover:bg-blue-600/10 border border-slate-800/50 hover:border-blue-500/30 rounded-2xl transition-all duration-300 group cursor-pointer shadow-lg w-full text-left"
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                            <Sparkles className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-400/80 transition-colors">
-                              {lang === 'FR' ? 'Tuteur Actif' : 'Active Tutor'}
-                            </p>
-                            <h4 className="text-xs font-black text-white group-hover:text-blue-300 transition-colors truncate">
-                              {getPersonaName(persona)}
-                            </h4>
-                          </div>
-                          <div className="text-[10px] font-black uppercase text-slate-500 group-hover:text-blue-400 transition-colors px-1 select-none">
-                            {lang === 'FR' ? 'Modifier ✎' : 'Change ✎'}
-                          </div>
-                        </button>
-                      </div>
 
                       {messages.map((msg, idx) => (
                         <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>

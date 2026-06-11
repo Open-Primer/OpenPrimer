@@ -227,6 +227,11 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           </div>
 
           <header className="mb-12 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-4 distraction-free-hide">
+              <span className="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-slate-900 border border-slate-800 text-slate-400 uppercase">
+                {level}
+              </span>
+            </div>
             <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {title}
             </h1>

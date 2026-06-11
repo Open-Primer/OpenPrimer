@@ -1413,7 +1413,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
 
   if (affectedSlugs.length === 0) {
     console.log(`[REVISION AGENT] No lessons identified for revision.`);
-    return;
+    return [];
   }
 
   console.log(`[REVISION AGENT] Lessons identified for revision: ${affectedSlugs.join(', ')}`);
@@ -1730,6 +1730,7 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
   } catch (err) {
     console.error(`[REVISION AGENT] Failed to update course version card:`, err);
   }
+  return affectedSlugs;
 }
 
 export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr'): Promise<string> {

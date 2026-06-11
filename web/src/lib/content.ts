@@ -187,7 +187,7 @@ export function formatModuleStructure(course: any, lang: string): string {
     return course.units.map((unit: any, idx: number) => {
       const title = unit.title || '';
       const modulesStr = Array.isArray(unit.modules) ? unit.modules.join(', ') : '';
-      return `${idx + 1}. **${title}** : ${modulesStr}`;
+      return modulesStr ? `${idx + 1}. **${title}** : ${modulesStr}` : `${idx + 1}. **${title}**`;
     }).join('\n');
   }
 
@@ -234,8 +234,6 @@ module: "Introduction"
 
 Bienvenue dans le module souverain de **${course.title}**, conçu et synthétisé de manière dynamique par notre moteur d'intelligence artificielle pédagogique.
 
-> Ce cours a été généré à la demande pour répondre à vos objectifs d'apprentissage uniques. Toutes les sections sont entièrement personnalisées pour votre niveau (${course.level}).
-
 ## 🌟 Objectifs du cours
 Dans ce cours axé sur **${subjectTranslated}**, nous allons explorer en profondeur les concepts clés, en s'assurant d'une base théorique solide combinée à des applications concrètes :
 - Maîtriser les fondations de *${course.title}*.
@@ -258,8 +256,6 @@ module: "Introducción"
 # ${course.title} - ${pageTitle}
 
 Bienvenido al módulo soberano de **${course.title}**, sintetizado dinámicamente por nuestro motor de inteligencia artificial pedagógica.
-
-> Este curso fue generado a pedido para cumplir con sus objetivos de aprendizaje únicos. Todas las secciones están completamente personalizadas para su nivel (${course.level}).
 
 ## 🌟 Objetivos de Aprendizaje
 En este curso centrado en **${subjectTranslated}**, profundizaremos en conceptos clave, asegurando una base teórica sólida combinada con aplicaciones concretas:
@@ -284,8 +280,6 @@ module: "Einführung"
 
 Willkommen im souveränen Modul von **${course.title}**, das von unserer pädagogischen künstlichen Intelligenz dynamisch synthetisiert wurde.
 
-> Dieser Kurs wurde auf Anfrage erstellt, um Ihre individuellen Lernziele zu erreichen. Alle Abschnitte sind vollständig auf Ihr Niveau (${course.level}) personalisiert.
-
 ## 🌟 Lernziele
 In diesem Kurs, der sich auf **${subjectTranslated}** konzentriert, werden wir tief in Schlüsselkonzepte eintauchen und eine solide theoretische Grundlage in Kombination mit konkreten Anwendungen sicherstellen:
 - Beherrschen Sie die Grundlagen von *${course.title}*.
@@ -309,11 +303,9 @@ module: "介绍"
 
 欢迎来到**${course.title}**主权模块，该模块由我们的教学人工智能引擎动态合成。
 
-> 本课程是根据您的独特学习目标按需生成的。所有部分均针对您的水平（${course.level}）进行了完全个性化定制。
-
 ## 🌟 学习目标
 在本门专注于**${subjectTranslated}**的课程中，我们将深入探讨核心概念，确保将坚实的理论基础与具体应用相结合：
-- 掌握*${course.title}*的核心基石。
+- 掌握*${course.title}*的核心基音。
 - 将学术理论与具体和历史视角相联系。
 - 培养批判性分析和深刻的直觉。
 
@@ -332,8 +324,6 @@ module: "Introduction"
 # ${course.title} - ${pageTitle}
 
 Welcome to the sovereign module of **${course.title}**, dynamically synthesized by our pedagogical artificial intelligence engine.
-
-> This course was generated on demand to meet your unique learning objectives. All sections are fully personalized for your level (${course.level}).
 
 ## 🌟 Learning Objectives
 In this course focused on **${subjectTranslated}**, we will dive deep into key concepts, ensuring a solid theoretical foundation combined with concrete applications:
@@ -609,6 +599,25 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const { data: courses } = await dbService.getAllCourses();
         const course = courses?.find((c: any) => c.slug?.toLowerCase() === courseSlug?.toLowerCase() || String(c.id) === courseSlug);
         if (course) {
+          try {
+            const { supabase } = require('./supabase');
+            const { data: dbLessons } = await supabase
+              .from('lessons')
+              .select('title')
+              .eq('course_slug', courseSlug)
+              .eq('lang', lang.toLowerCase())
+              .order('order', { ascending: true });
+            
+            if (dbLessons && dbLessons.length > 0) {
+              course.units = dbLessons.map((l: any) => ({
+                title: l.title,
+                modules: []
+              }));
+            }
+          } catch (dbErr) {
+            console.error("Failed to query lessons for formatModuleStructure dynamic rendering:", dbErr);
+          }
+
           const overviewMap: Record<string, string> = {
             en: "Overview",
             fr: "Vue d'ensemble",
@@ -1040,6 +1049,17 @@ function stripJsxComments(mdx: string): string {
   });
 }
 
+function parseJsonLikeArray(arrStr: string): any[] {
+  let jsonValid = arrStr.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":'); // Quote keys
+  // Replace opening single quotes
+  jsonValid = jsonValid.replace(/(:\s*|,\s*|\[\s*|\{\s*)'/g, '$1"');
+  // Replace closing single quotes
+  jsonValid = jsonValid.replace(/'(\s*,|\s*\}|\s*\])/g, '"$1');
+  // Replace escaped single quotes (which are invalid in JSON)
+  jsonValid = jsonValid.replace(/\\'/g, "'");
+  return JSON.parse(jsonValid);
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
   let processed = content.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
@@ -1118,11 +1138,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<Prerequisites([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
     try {
       const arrStr = `[${p2}]`;
-      const jsonValid = arrStr
-        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Quote keys
-        .replace(/'/g, '"'); // Replace single quotes with double quotes
-      
-      const parsed = JSON.parse(jsonValid);
+      const parsed = parseJsonLikeArray(arrStr);
       const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
       return `<Prerequisites${p1}itemsBase64="${base64}"${p3}/>`;
     } catch (e) {
@@ -1135,8 +1151,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<Summary([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
     try {
       const arrStr = `[${p2}]`;
-      const jsonValid = arrStr.replace(/'/g, '"');
-      const parsedArray = JSON.parse(jsonValid);
+      const parsedArray = parseJsonLikeArray(arrStr);
       const joined = parsedArray.join('|||');
       return `<Summary${p1}itemsString="${joined}"${p3}${p4}`;
     } catch (e) {
@@ -1183,7 +1198,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     refContent = refContent.replace(/\*\*\[(\d+)\]\*\*/g, '[$1]');
     
     // Structure references as clean separate blocks with proper IDs and back-links
-    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
+    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
       const activeNum = num || anchorId;
       const trimmedRest = rest.trim();
       
