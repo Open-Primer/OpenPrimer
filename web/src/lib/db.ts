@@ -3506,24 +3506,8 @@ export async function syncLocalStorageToSupabase(userId: string): Promise<{ succ
   let syncedTasks = 0;
 
   try {
-    // 1. Sync Courses
+    // 1. Sync Courses (Disabled: custom courses should never be auto-uploaded from client local storage to Supabase)
     const localCoursesStr = window.localStorage.getItem('openprimer_courses');
-    if (localCoursesStr) {
-      const localCourses = JSON.parse(localCoursesStr) as any[];
-      // We want to find any local custom courses (usually id >= 100)
-      const customCourses = localCourses.filter(c => c.id >= 100);
-      
-      for (const course of customCourses) {
-        // Check if the course already exists in Supabase
-        const { data: dbCourse } = await supabase.from('courses').select('*').eq('slug', course.slug).maybeSingle();
-        if (!dbCourse) {
-          console.log(`[SYNC] Course '${course.title}' (${course.slug}) is missing in Supabase. Uploading...`);
-          // Save the course to Supabase using supabaseDatabaseProvider.saveCourse
-          await supabaseDatabaseProvider.saveCourse(course);
-          syncedCourses++;
-        }
-      }
-    }
 
     // 2. Sync Enrolled Courses & Progress
     const enrolledStr = window.localStorage.getItem('op_enrolled_courses');

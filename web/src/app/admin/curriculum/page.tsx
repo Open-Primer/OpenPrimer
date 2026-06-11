@@ -632,6 +632,7 @@ export const COCKPIT_DICTIONARY = {
     "End Date (Optional)": "End Date (Optional)",
     "Edit": "Edit",
     "Locked (Done)": "Locked (Done)",
+    "Outdated (Done)": "Outdated (Done)",
     "Level 0 tooltip": "Level 0 (Active): Visible to all in the catalog.",
     "Level 2 tooltip": "Level 2 (Deep Archive): Hidden from all students, visible only in admin cockpit.",
     "Level 3 tooltip": "Level 3 (Purged): Fully disabled.",
@@ -665,6 +666,7 @@ export const COCKPIT_DICTIONARY = {
   ,
     "Create Achievement Badge": "Create Achievement Badge",
     "Go to Course": "Go to Course",
+    "Go to Chapter": "Go to Chapter",
     "Failed": "Failed",
     "GENERATION": "Generation",
     "REVISION": "Revision",
@@ -1053,6 +1055,7 @@ export const COCKPIT_DICTIONARY = {
     "End Date (Optional)": "Date de Fin (Optionnel)",
     "Edit": "Modifier",
     "Locked (Done)": "Verrouillé (Terminé)",
+    "Outdated (Done)": "Périmé (Terminé)",
     "Level 0 tooltip": "Niveau 0 (Actif) : Visible par tous dans le catalogue.",
     "Level 2 tooltip": "Niveau 2 (Archive Profonde) : Masqué pour tous les étudiants, visible uniquement dans le cockpit admin.",
     "Level 3 tooltip": "Niveau 3 (Purgé) : Totalement désactivé.",
@@ -1086,6 +1089,7 @@ export const COCKPIT_DICTIONARY = {
   ,
     "Create Achievement Badge": "Créer un badge d'exploit",
     "Go to Course": "Accéder au Cours",
+    "Go to Chapter": "Accéder au Chapitre",
     "Failed": "Échoué",
     "GENERATION": "Génération",
     "REVISION": "Révision",
@@ -1474,6 +1478,7 @@ export const COCKPIT_DICTIONARY = {
     "End Date (Optional)": "Fecha de Fin (Opcional)",
     "Edit": "Editar",
     "Locked (Done)": "Bloqueado (Terminado)",
+    "Outdated (Done)": "Obsoleto (Hecho)",
     "Level 0 tooltip": "Nivel 0 (Activo): Visible para todos en el catálogo.",
     "Level 2 tooltip": "Nivel 2 (Archivo Profundo): Oculto para todos los estudiantes, solo visible en el panel de administración.",
     "Level 3 tooltip": "Nivel 3 (Purgado): Completamente desactivado.",
@@ -1507,6 +1512,7 @@ export const COCKPIT_DICTIONARY = {
   ,
     "Create Achievement Badge": "Crear medalla de logro",
     "Go to Course": "Ir al curso",
+    "Go to Chapter": "Ir al capítulo",
     "Failed": "Fallido",
     "GENERATION": "Generación",
     "REVISION": "Revisión",
@@ -1893,6 +1899,7 @@ export const COCKPIT_DICTIONARY = {
     "End Date (Optional)": "Enddatum (Optional)",
     "Edit": "Bearbeiten",
     "Locked (Done)": "Gesperrt (Fertig)",
+    "Outdated (Done)": "Veraltet (Erledigt)",
     "Level 0 tooltip": "Stufe 0 (Aktiv): Für alle im Katalog sichtbar.",
     "Level 2 tooltip": "Stufe 2 (Tiefarchiv): Für alle Studenten versteckt, nur im Admin-Cockpit sichtbar.",
     "Level 3 tooltip": "Stufe 3 (Gelöscht): Vollständig deaktiviert.",
@@ -1926,6 +1933,7 @@ export const COCKPIT_DICTIONARY = {
   ,
     "Create Achievement Badge": "Errungenschafts-Badge erstellen",
     "Go to Course": "Zum Kurs gehen",
+    "Go to Chapter": "Zum Kapitel gehen",
     "Failed": "Fehlgeschlagen",
     "GENERATION": "Generierung",
     "REVISION": "Revision",
@@ -2306,6 +2314,7 @@ export const COCKPIT_DICTIONARY = {
     "End Date (Optional)": "结束日期 (可选)",
     "Edit": "编辑",
     "Locked (Done)": "已锁定 (完成)",
+    "Outdated (Done)": "已过期 (已完成)",
     "Level 0 tooltip": "级别 0（活跃）：对所有人可见。",
     "Level 2 tooltip": "级别 2（深度归档）：对所有学生隐藏，仅在管理员面板中可见。",
     "Level 3 tooltip": "级别 3（已清除）：完全禁用。",
@@ -2339,6 +2348,7 @@ export const COCKPIT_DICTIONARY = {
   ,
     "Create Achievement Badge": "创建成就勋章",
     "Go to Course": "去往课程",
+    "Go to Chapter": "去往章节",
     "Failed": "失败",
     "GENERATION": "生成",
     "REVISION": "修订",
@@ -4908,6 +4918,135 @@ export default function AdminCurriculumPage() {
       timestamp: new Date().toISOString()
     });
     loadData();
+  };
+
+  const getTaskTargetInfo = (t: any) => {
+    let courseTitle = t.title;
+    let chapterTitle = '';
+    const isRevision = t.type === 'revision' || t.title.includes(' - Revise');
+    
+    if (isRevision) {
+      const splitIdx = t.title.indexOf(' - Revise');
+      if (splitIdx !== -1) {
+        courseTitle = t.title.substring(0, splitIdx).trim();
+        const subStr = t.title.substring(splitIdx);
+        const colonIdx = subStr.indexOf(':');
+        if (colonIdx !== -1) {
+          chapterTitle = subStr.substring(colonIdx + 1).trim();
+        } else {
+          chapterTitle = subStr.replace('- Revise', '').trim();
+        }
+      }
+    }
+    return { courseTitle, chapterTitle, isRevision };
+  };
+
+  const checkIsTaskOutdated = (t: any) => {
+    const tInfo = getTaskTargetInfo(t);
+    const tTime = new Date(t.timestamp).getTime();
+    const cleanStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim();
+    
+    return queue.some(other => {
+      if (other.id === t.id) return false;
+      
+      const otherTime = new Date(other.timestamp).getTime();
+      if (otherTime <= tTime) return false;
+      
+      if (other.status === 'failed' || other.status === 'canceled') return false;
+      
+      const otherInfo = getTaskTargetInfo(other);
+      if (cleanStr(tInfo.courseTitle) !== cleanStr(otherInfo.courseTitle)) return false;
+      
+      if (other.type === 'generation') return true;
+      if (!tInfo.isRevision) return true;
+      
+      if (tInfo.isRevision && otherInfo.isRevision) {
+        return cleanStr(tInfo.chapterTitle) === cleanStr(otherInfo.chapterTitle);
+      }
+      
+      return false;
+    });
+  };
+
+  const handleGoToRevision = async (task: any, matchedCourse: any) => {
+    if (checkIsTaskOutdated(task)) {
+      showToast(tr("This task is outdated because a newer task has been scheduled or processed for this course/chapter."), "error");
+      return;
+    }
+
+    const safeSubject = (matchedCourse.subject || 'General').replace(/\s+/g, '_');
+    
+    // 1. If we have revisedSlugs stored on the task, navigate immediately
+    if (task.revisedSlugs && task.revisedSlugs.length > 0) {
+      const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${task.revisedSlugs[0]}`;
+      window.open(url, '_blank');
+      return;
+    }
+    
+    // 2. Parse chapter title from task title
+    let chapterPart = '';
+    const splitIdx = task.title.indexOf(' - Revise');
+    if (splitIdx !== -1) {
+      const subStr = task.title.substring(splitIdx);
+      const colonIdx = subStr.indexOf(':');
+      if (colonIdx !== -1) {
+        chapterPart = subStr.substring(colonIdx + 1).trim();
+      } else {
+        chapterPart = subStr.replace('- Revise', '').trim();
+      }
+    }
+    
+    if (!chapterPart) {
+      const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/introduction`;
+      window.open(url, '_blank');
+      return;
+    }
+    
+    // Helper to clean strings for comparison
+    const cleanStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim();
+    const cleanChapter = cleanStr(chapterPart);
+
+    // 3. Attempt to fetch lessons from DB to find a matching title
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: dbLessons } = await supabase
+        .from('lessons')
+        .select('lesson_slug, title')
+        .eq('course_slug', matchedCourse.slug);
+        
+      if (dbLessons && dbLessons.length > 0) {
+        // Find best match
+        let bestMatch = dbLessons.find((l: any) => cleanStr(l.title) === cleanChapter);
+        
+        if (!bestMatch) {
+          // Try substring match
+          bestMatch = dbLessons.find((l: any) => {
+            const cleanL = cleanStr(l.title);
+            return cleanL.includes(cleanChapter) || cleanChapter.includes(cleanL);
+          });
+        }
+        
+        if (bestMatch) {
+          const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${bestMatch.lesson_slug}`;
+          window.open(url, '_blank');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to find lesson slug from database, using fallback", err);
+    }
+    
+    // 4. Fallback slugify
+    const fallbackSlug = chapterPart
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s_-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+      
+    const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${fallbackSlug}`;
+    window.open(url, '_blank');
   };
 
   // Revision Handlers
@@ -7922,25 +8061,55 @@ export default function AdminCurriculumPage() {
                                           .replace(/[^a-z0-9]/g, '')
                                           .trim();
                                       };
+                                      const isOutdated = checkIsTaskOutdated(task);
+                                      if (isOutdated) {
+                                        return (
+                                          <span 
+                                            className="px-3 py-1.5 bg-slate-950 border border-slate-900/50 text-amber-500/80 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed flex items-center gap-1 shadow-lg shadow-amber-550/5"
+                                            title={tr("This action is outdated by a newer pipeline task.")}
+                                          >
+                                            ⚠️ {tr("Outdated (Done)")}
+                                          </span>
+                                        );
+                                      }
+                                      let taskTitleToMatch = task.title;
+                                      const isRevision = task.type === 'revision' || task.title.includes(' - Revise');
+                                      if (isRevision) {
+                                        const splitIdx = task.title.indexOf(' - Revise');
+                                        if (splitIdx !== -1) {
+                                          taskTitleToMatch = task.title.substring(0, splitIdx).trim();
+                                        }
+                                      }
+                                      const cleanTT = cleanForCompare(taskTitleToMatch);
                                       const matched = courses.find(c => {
                                         const cleanCT = cleanForCompare(c.title);
-                                        const cleanTT = cleanForCompare(task.title);
                                         const cleanCS = cleanForCompare(c.slug);
-                                        const cleanTS = cleanForCompare(task.title.replace(/\s+/g, '_'));
+                                        const cleanTS = cleanForCompare(taskTitleToMatch.replace(/\s+/g, '_'));
                                         return cleanCT === cleanTT || cleanCS === cleanTT || cleanCT === cleanTS || cleanCS === cleanTS;
                                       });
-                                      if (matched && task.type === 'generation') {
+                                      if (matched) {
                                         const safeSubject = (matched.subject || 'General').replace(/\s+/g, '_');
-                                        return (
-                                          <a 
-                                            href={`/${matched.level}/${safeSubject}/${matched.slug}/introduction`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
-                                          >
-                                            🚀 {tr('Go to Course')}
-                                          </a>
-                                        );
+                                        if (isRevision) {
+                                          return (
+                                            <button 
+                                              onClick={() => handleGoToRevision(task, matched)}
+                                              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-500 hover:to-teal-550 border border-emerald-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
+                                            >
+                                              📖 {tr('Go to Chapter')}
+                                            </button>
+                                          );
+                                        } else if (task.type === 'generation') {
+                                          return (
+                                            <a 
+                                              href={`/${matched.level}/${safeSubject}/${matched.slug}/introduction`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
+                                            >
+                                              🚀 {tr('Go to Course')}
+                                            </a>
+                                          );
+                                        }
                                       }
                                       return (
                                         <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
