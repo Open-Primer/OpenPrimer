@@ -6,13 +6,54 @@ import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface MermaidProps {
-  chart: string;
+  chart?: string;
+  children?: React.ReactNode;
 }
 
 let mermaidInstance: any = null;
 
-const sanitizeMermaidChart = (chartText: string): string => {
-  let sanitized = chartText;
+const decodeHtmlEntities = (text: any): string => {
+  if (typeof text !== 'string') return '';
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#123;/g, '{')
+    .replace(/&#125;/g, '}')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&apos;/g, "'");
+};
+
+const getTextFromChildren = (children: React.ReactNode): string => {
+  if (children === null || children === undefined) {
+    return '';
+  }
+  if (typeof children === 'string') {
+    return children;
+  }
+  if (typeof children === 'number') {
+    return String(children);
+  }
+  if (Array.isArray(children)) {
+    return children.map(getTextFromChildren).join('');
+  }
+  if (React.isValidElement(children)) {
+    const props = children.props as any;
+    if (props && props.children !== undefined) {
+      return getTextFromChildren(props.children);
+    }
+  }
+  return '';
+};
+
+const sanitizeMermaidChart = (chartText: any): string => {
+  let sanitized = typeof chartText === 'string' ? chartText : '';
+
+  // Decode HTML entities
+  sanitized = decodeHtmlEntities(sanitized);
 
   // 1. Remove standard markdown blocks if any
   sanitized = sanitized.replace(/```mermaid/g, '').replace(/```/g, '').trim();
@@ -28,6 +69,7 @@ const sanitizeMermaidChart = (chartText: string): string => {
   // 3. Replace '+' with '&' when connecting nodes, but not inside double quotes
   let parts = sanitized.split(/("[^"]*")/g);
   parts = parts.map((part, index) => {
+    if (!part) return '';
     if (index % 2 === 1) return part; // Inside quotes, do not replace
     return part.replace(/\+/g, '&');
   });
@@ -143,7 +185,7 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
   );
 };
 
-export const Mermaid = ({ chart }: MermaidProps) => {
+export const Mermaid = ({ chart, children }: MermaidProps) => {
   const { language } = useLanguage();
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const [svg, setSvg] = useState<string>('');
@@ -152,6 +194,8 @@ export const Mermaid = ({ chart }: MermaidProps) => {
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
   const containerId = useRef(`mermaid-${Math.floor(Math.random() * 1000000)}`);
   const elementRef = useRef<HTMLDivElement>(null);
+
+  const chartText = chart || getTextFromChildren(children) || '';
 
   // Theme detector MutationObserver
   useEffect(() => {
@@ -249,7 +293,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
         if (!active) return;
 
         // Sanitize chart structure & quotes
-        const cleanedChart = sanitizeMermaidChart(chart);
+        const cleanedChart = sanitizeMermaidChart(chartText);
 
         // Render diagram safely using a sandbox temporary div to prevent DOM query race conditions
         const tempDiv = document.createElement('div');
@@ -285,7 +329,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
     return () => {
       active = false;
     };
-  }, [chart, theme]);
+  }, [chartText, theme]);
 
   const getContainerClassName = () => {
     if (theme === 'paper') {
@@ -309,7 +353,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
   }
 
   if (error) {
-    return <MermaidFallbackTimeline chartText={chart} />;
+    return <MermaidFallbackTimeline chartText={chartText} />;
   }
 
   return (

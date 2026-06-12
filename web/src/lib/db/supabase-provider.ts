@@ -101,6 +101,12 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     try {
+      let cleanedContent = (lesson.content || '').trim();
+      if (cleanedContent.startsWith('```')) {
+        cleanedContent = cleanedContent.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');
+        cleanedContent = cleanedContent.replace(/\r?\n```$/, '');
+        cleanedContent = cleanedContent.trim();
+      }
       const { data, error } = await supabase
         .from('lessons')
         .upsert(
@@ -109,7 +115,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
             lesson_slug: lesson.lesson_slug,
             lang: lesson.lang.toLowerCase(),
             title: lesson.title,
-            content: lesson.content,
+            content: cleanedContent,
             order: lesson.order
           },
           { onConflict: 'course_slug,lesson_slug,lang' }

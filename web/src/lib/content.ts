@@ -7,35 +7,189 @@ const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
   ? path.join(process.cwd(), 'content')
   : path.join(process.cwd(), '../content');
 
+export function stripOuterCodeFences(content: string): string {
+  if (!content) return '';
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');
+    cleaned = cleaned.replace(/\r?\n```$/, '');
+    cleaned = cleaned.trim();
+  }
+  return cleaned;
+}
+
+let wikipediaCache: Record<string, string | null> = {};
+const cachePath = path.join(process.cwd(), 'src/lib/wikipedia-cache.json');
+
+function loadCache() {
+  try {
+    if (fs.existsSync(cachePath)) {
+      wikipediaCache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+    }
+  } catch (e) {
+    // If not found or error, default to empty object
+  }
+}
+
+function saveCache() {
+  try {
+    const dir = path.dirname(cachePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(cachePath, JSON.stringify(wikipediaCache, null, 2), 'utf8');
+  } catch (e) {
+    console.error("Failed to save Wikipedia cache:", e);
+  }
+}
+
+// Initialize cache
+loadCache();
+
+export async function checkWikipediaPage(term: string, lang: string): Promise<string | null> {
+  const cleanTerm = term.trim();
+  if (!cleanTerm) return null;
+  const cacheKey = `${lang.toLowerCase()}:${cleanTerm.toLowerCase()}`;
+  if (cacheKey in wikipediaCache) {
+    return wikipediaCache[cacheKey];
+  }
+
+  try {
+    const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(cleanTerm)}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.org)' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const pages = data.query?.pages;
+      if (pages) {
+        const pageId = Object.keys(pages)[0];
+        if (pageId && pageId !== '-1') {
+          const canonicalTitle = pages[pageId].title;
+          const wikiUrl = `https://${lang.toLowerCase()}.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/ /g, '_'))}`;
+          wikipediaCache[cacheKey] = wikiUrl;
+          saveCache();
+          return wikiUrl;
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Wikipedia API error:", e);
+  }
+
+  wikipediaCache[cacheKey] = null;
+  saveCache();
+  return null;
+}
+
+function getWikipediaLabel(lang: string): string {
+  const l = lang.toLowerCase();
+  if (l === 'fr') return 'Wikipédia';
+  if (l === 'zh') return '维基百科';
+  return 'Wikipedia';
+}
+
+export async function enrichGlossaryWithWikipediaLinks(content: string, lang: string): Promise<string> {
+  const glossaryIndex = content.search(/###\s*(Glossaire|Glossary)/i);
+  if (glossaryIndex === -1) return content;
+
+  const preGlossary = content.slice(0, glossaryIndex);
+  const glossarySection = content.slice(glossaryIndex);
+
+  const lines = glossarySection.split(/\r?\n/);
+  const processedLines = [];
+
+  for (const line of lines) {
+    const match = line.match(/^(\s*[-*]\s*\*\*)(.*?)\*\*\s*:\s*(.*)$/);
+    if (match) {
+      const prefix = match[1];
+      const term = match[2].trim();
+      const definition = match[3].trim();
+      
+      if (!definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
+        const wikiUrl = await checkWikipediaPage(term, lang);
+        if (wikiUrl) {
+          const wikiLabel = getWikipediaLabel(lang);
+          const separator = definition.endsWith('.') ? ' ' : '. ';
+          const updatedLine = `${prefix}${term}** : ${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
+          processedLines.push(updatedLine);
+          continue;
+        }
+      }
+    }
+    processedLines.push(line);
+  }
+
+  return preGlossary + processedLines.join('\n');
+}
+
+export function reorderMdxSections(mdx: string): string {
+  const sectionPatterns = [
+    { id: 'conclusion', regex: /^(##\s*(?:Conclusion|Synthèse|Discussion|Synthèse & Discussion|Synthèse &amp; Discussion|Summary & Conclusion)[^\n]*)/mi },
+    { id: 'et_apres', regex: /^(##\s*(?:Et Après|Et après\s*\??|What's Next\s*\??|What’s Next\s*\??|WhatsNext|Ouverture)[^\n]*)/mi },
+    { id: 'evaluation', regex: /^(##\s*(?:Évaluation|Evaluation|Évaluation Finale|Evaluation Finale|Summative Evaluation|Quiz)[^\n]*)/mi },
+    { id: 'glossaire', regex: /^(###\s*(?:Glossaire|Glossary|Lexique)[^\n]*)/mi },
+    { id: 'references', regex: /^(###\s*(?:Références|References|Réf\.|Réf|Bibliography)[^\n]*)/mi },
+  ];
+
+  const sections: { id: string; header: string; index: number }[] = [];
+  for (const pattern of sectionPatterns) {
+    const match = mdx.match(pattern.regex);
+    if (match) {
+      sections.push({
+        id: pattern.id,
+        header: match[0],
+        index: match.index!,
+      });
+    }
+  }
+
+  sections.sort((a, b) => a.index - b.index);
+
+  if (sections.length === 0) {
+    return mdx;
+  }
+
+  const firstSectionIndex = sections[0].index;
+  const coreContent = mdx.substring(0, firstSectionIndex).trim();
+
+  const sectionContents: Record<string, string> = {};
+  for (let i = 0; i < sections.length; i++) {
+    const current = sections[i];
+    const next = sections[i + 1];
+    const start = current.index;
+    const end = next ? next.index : mdx.length;
+    sectionContents[current.id] = mdx.substring(start, end).trim();
+  }
+
+  const desiredOrder = ['conclusion', 'et_apres', 'evaluation', 'glossaire', 'references'];
+  let rebuilt = coreContent;
+
+  for (const id of desiredOrder) {
+    if (sectionContents[id]) {
+      rebuilt += '\n\n' + sectionContents[id];
+    }
+  }
+
+  return rebuilt + '\n';
+}
+
 export function parseAndStripFrontmatter(content: string) {
-  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
-  const match = content.match(frontmatterRegex);
-  
+  content = stripOuterCodeFences(content);
   const meta: Record<string, any> = {};
   let body = content;
   
-  if (match) {
-    body = content.substring(match[0].length);
-    const yamlContent = match[1];
-    const lines = yamlContent.split(/\r?\n/);
-    for (const line of lines) {
-      const colonIndex = line.indexOf(':');
-      if (colonIndex !== -1) {
-        const key = line.substring(0, colonIndex).trim();
-        let val = line.substring(colonIndex + 1).trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          val = val.substring(1, val.length - 1);
-        }
-        meta[key] = val;
-      }
+  while (true) {
+    body = body.trim();
+    if (!body.startsWith('---')) {
+      break;
     }
-  } else {
-    // Try relaxed matching if line endings are different or missing final newline
-    const relaxedRegex = /^---\r?\n([\s\S]*?)\r?\n---/;
-    const relaxedMatch = content.match(relaxedRegex);
-    if (relaxedMatch) {
-      body = content.substring(relaxedMatch[0].length);
-      const yamlContent = relaxedMatch[1];
+    
+    const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
+    const match = body.match(frontmatterRegex);
+    if (match) {
+      body = body.substring(match[0].length);
+      const yamlContent = match[1];
       const lines = yamlContent.split(/\r?\n/);
       for (const line of lines) {
         const colonIndex = line.indexOf(':');
@@ -47,6 +201,30 @@ export function parseAndStripFrontmatter(content: string) {
           }
           meta[key] = val;
         }
+      }
+    } else {
+      const relaxedRegex = /^---\r?\n([\s\S]*?)\r?\n---/;
+      const relaxedMatch = body.match(relaxedRegex);
+      if (relaxedMatch) {
+        body = body.substring(relaxedMatch[0].length);
+        const yamlContent = relaxedMatch[1];
+        const lines = yamlContent.split(/\r?\n/);
+        for (const line of lines) {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex !== -1) {
+            const key = line.substring(0, colonIndex).trim();
+            let val = line.substring(colonIndex + 1).trim();
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+              val = val.substring(1, val.length - 1);
+            }
+            meta[key] = val;
+          }
+        }
+      } else {
+        if (body.startsWith('---') && (body.length === 3 || body[3] === '\n' || body[3] === '\r')) {
+          body = body.substring(3).trim();
+        }
+        break;
       }
     }
   }
@@ -534,8 +712,11 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
       // 1. Try exact language match
       const { data: dbLesson } = await dbService.getLesson(courseSlug, lessonSlug, lang);
       if (dbLesson) {
-        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(dbLesson.content);
-        const { data: meta, content: bodyContent } = matter(dbLesson.content);
+        const cleanedContent = stripOuterCodeFences(dbLesson.content);
+        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
+        const { data: meta } = matter(cleanedContent);
+        const processedContent = preprocessMdx(cleanBody, lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
         return {
           meta: {
             title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -543,7 +724,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || manualMeta.level || slug[0],
             module: meta.module || manualMeta.module || getLocalizedCoreModuleText(lang)
           },
-          content: preprocessMdx(bodyContent.startsWith('---') ? cleanBody : bodyContent, lang)
+          content: enriched
         };
       }
 
@@ -559,8 +740,11 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 
       if (fallbackLesson) {
         console.log(`[Page Content DB] Falling back to lang '${fallbackLesson.lang}' for ${courseSlug}/${lessonSlug} (requested: ${lang})`);
-        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(fallbackLesson.content);
-        const { data: meta, content: bodyContent } = matter(fallbackLesson.content);
+        const cleanedContent = stripOuterCodeFences(fallbackLesson.content);
+        const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
+        const { data: meta } = matter(cleanedContent);
+        const processedContent = preprocessMdx(cleanBody, fallbackLesson.lang || lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, fallbackLesson.lang || lang);
         return {
           meta: {
             title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -568,7 +752,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             level: meta.level || manualMeta.level || slug[0],
             module: meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang)
           },
-          content: preprocessMdx(bodyContent.startsWith('---') ? cleanBody : bodyContent, fallbackLesson.lang || lang)
+          content: enriched
         };
       }
     } catch (err) {
@@ -656,9 +840,11 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
           const mdxContent = getLocalizedDefaultTemplate(course, pageTitle, lang);
 
           const { data, content: bodyContent } = matter(mdxContent);
+          const processedContent = preprocessMdx(bodyContent, lang);
+          const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
           return {
             meta: data,
-            content: preprocessMdx(bodyContent, lang)
+            content: enriched
           };
         }
       } catch (err) {
@@ -670,7 +856,10 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(fileContent);
-  const { data, content } = matter(fileContent);
+  const { data } = matter(fileContent);
+
+  const processedContent = preprocessMdx(cleanBody, lang);
+  const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
 
   return {
     meta: {
@@ -679,7 +868,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
       level: data.level || manualMeta.level || slug[0],
       module: data.module || manualMeta.module || getLocalizedCoreModuleText(lang)
     },
-    content: preprocessMdx(content.startsWith('---') ? cleanBody : content, lang)
+    content: enriched
   };
 }
 
@@ -1153,18 +1342,39 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
     'AnecdoteHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
-    'FunctionManipulator', 'EquationManipulator'
+    'FunctionManipulator', 'EquationManipulator',
+    // Interactive/sandbox/widget components — must NOT have their JSX expression attributes escaped
+    'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
+    'ExternalSandbox', 'IframeWidget', 'FillInBlanks', 'MetaNote', 'FeynmanBox',
+    'PredictOutcome', 'BilingualText', 'SpeechButton', 'UnsolvedExercise', 'SolvedExercise',
+    'Artwork', 'Location', 'EntityLink', 'Place', 'FunctionGraph', 'DynamicSimulation',
+    'StructureViewer3D', 'GeochemicalChart', 'DataTable', 'PeriodicElement',
+    'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
+    // Alert-style components
+    'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
+    // Artwork and media annotation
+    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'AnnotatedImage',
+    // Catch-all: any unknown PascalCase JSX component will be in the allowedTags via the regex
   ];
 
-  const splitRegex = new RegExp(`(\\$\\$[\\s\\S]*?\\$\\$|\\$(?:[^\\$]|\\n(?!\\n))+?\\$|<\\/?(?:${allowedTags.join('|')})\\b[^>]*>)`, 'gi');
+  // Match: math blocks, known lowercase HTML tags, AND any PascalCase JSX component (<MyComponent ...>)
+  // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
+  const allowedTagsPattern = allowedTags.join('|');
+  const splitRegex = new RegExp(
+    `(\\$\\$[\\s\\S]*?\\$\\$|\\$(?:[^\\$]|\\n(?!\\n))+?\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b[^>]*>)`,
+    'gi'
+  );
   const parts = mdx.split(splitRegex);
   
   const processed = parts.map((part, index) => {
     if (index % 2 === 0) {
+      // Text node: escape JSX-illegal chars and bare & outside HTML entities
       return part
         .replace(/\{/g, '&#123;')
         .replace(/\}/g, '&#125;')
-        .replace(/<(?=[a-zA-Z\/])/g, '&lt;');
+        .replace(/<(?=[a-zA-Z\/])/g, '&lt;')
+        // Escape bare & in text content (e.g. "## Synthèse & Ouverture") to prevent acorn crash
+        .replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
     }
     return part;
   });
@@ -1172,12 +1382,187 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   return processed.join('');
 }
 
+/**
+ * Fixes bare `&` characters inside JSX attribute string values.
+ * In MDX/JSX, `&` inside a double-quoted attribute value must be written as `&amp;`.
+ * Example: title="Finance & Economics" → title="Finance &amp; Economics"
+ * This is the most common cause of the MDX parse error:
+ *   "Unexpected character `&` (U+0026) before attribute value"
+ */
+function sanitizeAmpersandInJsxAttributes(mdx: string): string {
+  // Match JSX attribute value strings: attrName="..."
+  // We replace bare & (not already &amp; or other valid HTML entity) with &amp;
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9]*[^>]*?\s[\w-]+=")([^"]*?)(")/g, (match, open, value, close) => {
+    // Encode bare & that is not already part of a valid HTML entity (e.g. &amp; &lt; &quot; &#123; etc.)
+    const fixedValue = value.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+    return `${open}${fixedValue}${close}`;
+  });
+}
+
+/**
+ * Fixes nesting errors in MDX wrapper components generated by AI.
+ * Pattern: <HistoricalAnecdote>...<HistoricalPerson>...</HistoricalPerson>...(missing </HistoricalAnecdote>)</HistoricalPerson>
+ * 
+ * Known wrapper components that can contain inner components like HistoricalPerson:
+ */
+const MDX_WRAPPER_TAGS = [
+  'HistoricalAnecdote', 'AnecdoteHistorique',
+  'CriticalThinking', 'EspritCritique',
+  'DidYouKnow', 'LeSaviezVous',
+  'ScientificMethod', 'MethodeScientifique',
+  'WhatsNext', 'EtApres',
+  'PointOfView', 'PointDeVue',
+  'GoingFurther', 'GoingFurtherItem',
+  'SolvedProblem',
+  'Callout', 'CalloutContainer',
+  'EssayEvaluation',
+  'SummativeEvaluation', 'FinalProject', 'FinalWork',
+  'Quiz', 'Question', 'DiagnosticQuiz', 'FormativeQuiz',
+];
+
+function healWrapperTagNesting(mdx: string): string {
+  const lines = mdx.split(/\r?\n/);
+  const stack: string[] = []; // open wrapper tags
+  const result: string[] = [];
+
+  const openPattern = new RegExp(`^\\s*<(${MDX_WRAPPER_TAGS.join('|')})\\b`, 'i');
+  const closePattern = new RegExp(`^\\s*</(${MDX_WRAPPER_TAGS.join('|')})\\s*>`, 'i');
+  // Inner component close tags that can incorrectly terminate a wrapper
+  const innerClosePattern = /^\s*<\/(HistoricalPerson|Glossary|Epistemology|Option|Summary|Prerequisites|Video|Audio|Mermaid)\s*>/i;
+  // Section boundaries that implicitly close any open wrapper
+  const sectionBoundary = /^#{1,4}\s+/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const openMatch = line.match(openPattern);
+    const closeMatch = line.match(closePattern);
+
+    if (openMatch) {
+      stack.push(openMatch[1]);
+      result.push(line);
+    } else if (closeMatch) {
+      const closingTag = closeMatch[1];
+      const index = stack.map(t => t.toLowerCase()).lastIndexOf(closingTag.toLowerCase());
+      if (index !== -1) {
+        // Close all nested wrappers above the matched one
+        while (stack.length > index + 1) {
+          const openTag = stack.pop()!;
+          result.push(`</${openTag}>`);
+        }
+        stack.pop(); // Pop the matched tag itself
+        result.push(line);
+      } else {
+        // This close tag doesn't match any currently open wrapper — just emit it
+        result.push(line);
+      }
+    } else if (innerClosePattern.test(line) && stack.length > 0) {
+      // Inner close tag seen while a wrapper is open — check if next non-empty line
+      // opens something new at the top-level (suggests wrapper was never properly closed)
+      let nextSignificant = '';
+      for (let j = i + 1; j < lines.length && j < i + 5; j++) {
+        if (lines[j].trim()) { nextSignificant = lines[j]; break; }
+      }
+      result.push(line);
+      // If the next line opens a new top-level section or JSX component, auto-close wrapper
+      if (nextSignificant && (sectionBoundary.test(nextSignificant) || /^<[A-Z]/.test(nextSignificant.trim()))) {
+        const openTag = stack.pop()!;
+        result.push(`</${openTag}>`);
+      }
+    } else if (sectionBoundary.test(line) && stack.length > 0) {
+      // A new heading section closes any unclosed wrapper automatically
+      while (stack.length > 0) {
+        const openTag = stack.pop()!;
+        result.push(`</${openTag}>`);
+      }
+      result.push(line);
+    } else {
+      result.push(line);
+    }
+  }
+
+  // Close any still-open wrappers at EOF
+  while (stack.length > 0) {
+    const openTag = stack.pop()!;
+    result.push(`</${openTag}>`);
+  }
+
+  return result.join('\n');
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
-  let processed = escapeCurlyBracesAndLessThanInText(content);
+  // Trim any outer markdown code block wrapper (e.g. ```mdx ... ``` or ``` ...)
+  let processed = stripOuterCodeFences(content);
+  processed = reorderMdxSections(processed);
+
+  // 0a. Restore HTML-encoded quotes in JSX attributes to prevent next-mdx-remote parse failures
+  processed = processed.replace(/=\s*&quot;([\s\S]*?)&quot;/gi, '="$1"');
+  processed = processed.replace(/=\s*&apos;([\s\S]*?)&apos;/gi, '=\'$1\'');
+  processed = processed.replace(/=\s*&#39;([\s\S]*?)&#39;/gi, '=\'$1\'');
+  processed = processed.replace(/=\s*&#x27;([\s\S]*?)&#x27;/gi, '=\'$1\'');
+
+  // 0b. Convert GlossaryList and GlossaryList.Item to standard markdown bulleted lists
+  processed = processed.replace(/<GlossaryList\.Item\s+term=["']([^"']+)["']\s+definition=["']([\s\S]*?)["']\s*\/?>/gi, (match, term, definition) => {
+    return `\n- **${term}** : ${definition}\n`;
+  });
+  processed = processed.replace(/<\/GlossaryList\.Item>/gi, '');
+  processed = processed.replace(/<\/?GlossaryList\b[^>]*>/gi, '');
+
+  // 0c. Normalize dot-notation Quiz components
+  processed = processed.replace(/<(Quiz\.)?Question\b([^>]*?)>([\s\S]*?)<\/\1?Question>/gi, (match, prefix, attrs, innerContent) => {
+    let newAttrs = attrs;
+
+    // Convert question= to q= if present
+    if (/\bquestion=/i.test(newAttrs)) {
+      newAttrs = newAttrs.replace(/\bquestion=/gi, 'q=');
+    }
+
+    // Extract explanation if present
+    let explanationText = '';
+    const explanationRegex = /<(?:Quiz\.)?Explanation>([\s\S]*?)<\/(?:Quiz\.)?Explanation>/gi;
+    const explanationMatch = explanationRegex.exec(innerContent);
+    if (explanationMatch) {
+      explanationText = explanationMatch[1].trim().replace(/"/g, '&quot;');
+    }
+    let cleanInner = innerContent.replace(explanationRegex, '');
+
+    // Convert Quiz.Choice or Choice to Option
+    cleanInner = cleanInner.replace(/<(?:Quiz\.)?Choice\b/gi, '<Option');
+    cleanInner = cleanInner.replace(/<\/(?:Quiz\.)?Choice>/gi, '</Option>');
+
+    // Inject explanation attribute
+    if (explanationText && !/\bexplanation=/i.test(newAttrs)) {
+      newAttrs += ` explanation="${explanationText}"`;
+    }
+
+    return `<Question${newAttrs}>${cleanInner}</Question>`;
+  });
+
+  // 0d. Normalize GoingFurther.Item and WhatsNext.Card / EtApres.Card
+  processed = processed.replace(/<GoingFurther\.Item\b/gi, '<GoingFurtherItem');
+  processed = processed.replace(/<\/GoingFurther\.Item>/gi, '</GoingFurtherItem>');
+
+  processed = processed.replace(/<(?:EtApres|WhatsNext)\.Card\s+title=["']([^"']+)["']\s+subject=["']([^"']+)["']\s+level=["']([^"']+)["']\s+slug=["']([^"']+)["']\s+description=["']([\s\S]*?)["']\s*\/?>/gi, (match, title, subject, level, slug, description) => {
+    return `\n**${title}** (${subject} - ${level}) : ${description}\n`;
+  });
+  processed = processed.replace(/<\/(?:EtApres|WhatsNext)\.Card>/gi, '');
+
+  // Convert invalid AI-generated <Figure [text]> ... </Figure> into standard markdown *Figure [text]*
+  processed = processed.replace(/<\/Figure>/gi, '');
+  processed = processed.replace(/<Figure\s+([^>]*?)(?:>|\/>)/gi, (match, captionText) => {
+    const cleanText = captionText.trim();
+    return `\n\n*Figure ${cleanText}*\n\n`;
+  });
+
+  processed = escapeCurlyBracesAndLessThanInText(processed);
+  // Fix bare & in JSX attribute string values (prevents MDX parse crash)
+  processed = sanitizeAmpersandInJsxAttributes(processed);
   processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
   processed = healGlossaryTags(processed);
   processed = healObjectivesTags(processed);
+  // Fix AI-generated nesting errors where wrapper tags are never properly closed
+  processed = healWrapperTagNesting(processed);
   
   // Pre-pass: heal broken blockquotes in lists
   processed = healBlockquoteContiguity(processed);
@@ -1247,6 +1632,38 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)correctIndex=\{\s*(\d+)\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
     return `<DiagnosticQuiz${p1}correctIndex="${p2}"${p3}/>`;
   });
+
+  // 2b. Process Question options={[...]} → options="a|||b|||c"
+  processed = processed.replace(/<Question([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(?=\n\s*(?:correctIndex|explanation|\/?>))/gi, (match, p1, p2, p3) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const parsedArray = JSON.parse(arrStr);
+      const joined = parsedArray.join('|||');
+      return `<Question${p1}options="${joined}"${p3}`;
+    } catch (e) {
+      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+      const joined = items.join('|||');
+      return `<Question${p1}options="${joined}"${p3}`;
+    }
+  });
+
+  // 2c. Process Question correctIndex={N} → correctIndex="N"
+  processed = processed.replace(/<Question([\s\S]*?)correctIndex=\{\s*(\d+)\s*\}([\s\S]*?)(?=\n\s*(?:explanation|\/?>))/gi, (match, p1, p2, p3) => {
+    return `<Question${p1}correctIndex="${p2}"${p3}`;
+  });
+
+  // 2d. Fix FillInBlanks — the component only accepts `sentence` and `answer` string props.
+  // Strip the block form <FillInBlanks>...</FillInBlanks> (AI-hallucinated wrapper syntax — not valid)
+  processed = processed.replace(/<FillInBlanks[\s\S]*?<\/FillInBlanks>/gi, '');
+  // Strip self-closing forms with complex `blanks={[...]}` prop (crashes acorn)
+  processed = processed.replace(/<FillInBlanks[^>]*?blanks=\{[\s\S]*?\}[^>]*?\/>/gi, '');
+  // Keep valid <FillInBlanks sentence="..." answer="..." /> forms untouched
+
+  // 2e. Normalize invalid [!CRITICAL THINKING] alert type to [!NOTE]
+  processed = processed.replace(/\[!CRITICAL THINKING\]/gi, '[!NOTE]');
+  processed = processed.replace(/\[!THINKING\]/gi, '[!NOTE]');
+  processed = processed.replace(/\[!REFLECTION\]/gi, '[!NOTE]');
+  processed = processed.replace(/\[!INFO\]/gi, '[!NOTE]');
 
   // 3. Process Prerequisites items
   processed = processed.replace(/<Prerequisites([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
@@ -1370,5 +1787,75 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     processed = preRef + refContent;
   }
 
+  // Final validation: balance tags and strip orphaned closing JSX tags
+  processed = removeOrphanedCloseTags(processed);
+
   return processed;
 }
+
+/**
+ * Parses all JSX tags in the MDX document and removes any closing tag that
+ * does not have a matching open tag. Mismatched closing tags (e.g. </HistoricalPerson>
+ * without a matching open tag) will crash the MDX compiler.
+ */
+function removeOrphanedCloseTags(mdx: string): string {
+  const HTML_SELF_CLOSING = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+  // Use non-greedy match to ensure capture group 4 correctly extracts the self-closing slash '/'
+  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b([^>]*?)(\/?)>/g;
+  
+  const stack: { name: string; start: number; end: number }[] = [];
+  const toRemove: { start: number; end: number }[] = [];
+  
+  let match;
+  while ((match = tagRegex.exec(mdx)) !== null) {
+    const isClose = match[1] === '/';
+    const tagName = match[2];
+    const isSelfClosing = match[4] === '/' || HTML_SELF_CLOSING.has(tagName.toLowerCase());
+    
+    if (isSelfClosing) {
+      continue;
+    }
+    
+    if (!isClose) {
+      stack.push({
+        name: tagName,
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    } else {
+      // Find matching open tag in stack (scanning from top down)
+      let foundIndex = -1;
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i].name.toLowerCase() === tagName.toLowerCase()) {
+          foundIndex = i;
+          break;
+        }
+      }
+      
+      if (foundIndex !== -1) {
+        // Pop matching tag and all unclosed tags nested inside it
+        stack.splice(foundIndex);
+      } else {
+        // Orphaned close tag! Mark for removal
+        toRemove.push({
+          start: match.index,
+          end: match.index + match[0].length
+        });
+      }
+    }
+  }
+  
+  if (toRemove.length === 0) {
+    return mdx;
+  }
+  
+  // Apply removals from back to front
+  let result = mdx;
+  for (let i = toRemove.length - 1; i >= 0; i--) {
+    const { start, end } = toRemove[i];
+    result = result.substring(0, start) + result.substring(end);
+  }
+  
+  return result;
+}
+

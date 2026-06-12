@@ -194,6 +194,94 @@ async function fetchWikimediaAudio(title: string): Promise<string | null> {
   }
 }
 
+
+// Google Lyria Music Generation (via Gemini API)
+// Generates a short musical/audio clip from a text prompt — the audio equivalent of Imagen.
+// Tier 2 fallback: used when Wikimedia Commons has no CC file for the requested sound.
+async function generateLyriaAudio(prompt: string, durationHint: string = '30s'): Promise<Buffer | null> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      console.warn('[MEDIA-RESOLVER] No GEMINI_API_KEY — skipping Lyria generation.');
+      return null;
+    }
+
+    // Use lyria-3-clip-preview for short clips (≤30s), lyria-3-pro-preview for longer ones
+    const usePro = durationHint.includes('min') || parseInt(durationHint) > 30;
+    const model = usePro ? 'lyria-3-pro-preview' : 'lyria-3-clip-preview';
+
+    const lyriaUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    console.log(`[MEDIA-RESOLVER] Generating audio via Lyria (${model}) for: "${prompt.substring(0, 60)}..."`);
+
+    const res = await fetch(lyriaUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { response_mime_type: 'audio/mpeg' }
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn(`[MEDIA-RESOLVER] Lyria API error (${res.status}): ${err.substring(0, 200)}`);
+      return null;
+    }
+
+    // Response may be JSON with base64 audio, or raw binary
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const json = await res.json();
+      // Try to extract base64 audio from candidates
+      const audioData = json?.candidates?.[0]?.content?.parts?.find(
+        (p: any) => p.inlineData?.mimeType?.startsWith('audio/')
+      )?.inlineData?.data;
+      if (audioData) {
+        console.log(`[MEDIA-RESOLVER] Lyria generated audio (base64 inline) for: "${prompt.substring(0, 40)}"`);
+        return Buffer.from(audioData, 'base64');
+      }
+      console.warn('[MEDIA-RESOLVER] Lyria returned JSON but no audio inline data found.');
+      return null;
+    }
+
+    // Raw binary audio response
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (buffer.length > 1000) {
+      console.log(`[MEDIA-RESOLVER] Lyria generated raw audio (${buffer.length} bytes) for: "${prompt.substring(0, 40)}"`);
+      return buffer;
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('[MEDIA-RESOLVER] Lyria generation exception:', err);
+    return null;
+  }
+}
+
+// Build a Lyria prompt from an audio title — adapts style based on content type
+function buildLyriaPrompt(title: string): string {
+  const t = title.toLowerCase();
+
+  // Music notation / instruments
+  if (t.includes('note') || t.includes('scale') || t.includes('chord') || t.includes('piano') || t.includes('guitar') || t.includes('violin') || t.includes('bach') || t.includes('beethoven') || t.includes('mozart') || t.includes('prelude') || t.includes('symphony')) {
+    return `Generate a short, high-fidelity musical audio clip: ${title}. Use acoustic instruments, clean studio quality, no vocals.`;
+  }
+
+  // Nature sounds
+  if (t.includes('bird') || t.includes('rain') || t.includes('thunder') || t.includes('wolf') || t.includes('ocean') || t.includes('wind') || t.includes('forest') || t.includes('nightingale') || t.includes('song') || t.includes('sound')) {
+    return `Generate a realistic ambient nature sound: ${title}. High fidelity, no music, no voice.`;
+  }
+
+  // Heartbeat / medical / science sounds
+  if (t.includes('heartbeat') || t.includes('heart') || t.includes('pulse') || t.includes('sinus') || t.includes('rhythm')) {
+    return `Generate a realistic medical auscultation sound: ${title}. Clinical quality, clear rhythm.`;
+  }
+
+  // Default: atmospheric/contextual music
+  return `Generate a short, atmospheric audio clip suitable for an educational course. Subject: ${title}. Calm, focused, no lyrics.`;
+}
+
 // Google Cloud Text-to-Speech API caller
 async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buffer | null> {
   try {
@@ -339,14 +427,26 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         }
       }
 
-      // Step B: Fallback to Text-to-Speech synthesis if no Wikimedia file was found
+      // Step B: Lyria music generation — the AI audio equivalent of Imagen/Pollinations.
+      // Triggered when no real CC file was found on Wikimedia Commons.
+      // Best suited for: musical clips, nature sounds, atmospheric audio, instrument notes.
+      const durationHint = attrsStr.match(/duration="([^"]+)"/)?.[1] || '30s';
+      if (!audioBuffer) {
+        const lyriaPrompt = buildLyriaPrompt(title);
+        audioBuffer = await generateLyriaAudio(lyriaPrompt, durationHint);
+        if (audioBuffer) mimeType = 'audio/mpeg';
+      }
+
+      // Step C: Fallback to Text-to-Speech synthesis (always available via GCP SA).
+      // Best suited for: spoken language phrases, pronunciation examples, lecture narration.
       if (!audioBuffer && (customText || title)) {
         const textToSynthesize = customText || title;
         audioBuffer = await synthesizeSpeech(textToSynthesize, targetLang);
         mimeType = 'audio/mpeg';
       }
 
-      // Step C: Upload to Supabase Storage and replace URL
+
+      // Step D: Upload whichever buffer we have to Supabase Storage and replace URL
       if (audioBuffer) {
         const hash = crypto.createHash('md5').update(customText || title).digest('hex');
         const ext = mimeType.split('/')[1] || 'mp3';

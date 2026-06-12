@@ -7,7 +7,7 @@ import { Quiz, Question, Option } from './Quiz';
 import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
-import { SolvedProblem, Summary, SelfEval } from './AdvancedLearning';
+import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
 import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
@@ -578,6 +578,7 @@ const components = {
   SolvedProblem,
   Summary,
   SelfEval,
+  SelfAssessment,
   HistoricalPerson,
   FictionalCharacter,
   Location,

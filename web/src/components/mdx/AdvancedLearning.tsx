@@ -302,3 +302,104 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
     </div>
   );
 };
+
+interface SelfAssessmentProps {
+  question: string;
+  options: string | string[];
+  feedback: string | string[];
+}
+
+export const SelfAssessment = ({ question, options, feedback }: SelfAssessmentProps) => {
+  const { language } = useLanguage();
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+
+  const resolvedOptions = Array.isArray(options)
+    ? options
+    : typeof options === 'string'
+      ? options.split('|||').map(s => s.trim())
+      : [];
+
+  const resolvedFeedback = Array.isArray(feedback)
+    ? feedback
+    : typeof feedback === 'string'
+      ? feedback.split('|||').map(s => s.trim())
+      : [];
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const pathname = window.location.pathname;
+    const saved = localStorage.getItem(`op_selfassess_${pathname}_${question.slice(0, 20)}`);
+    if (saved !== null) {
+      setSelectedIdx(parseInt(saved, 10));
+    }
+  }, [question]);
+
+  const handleSelect = (idx: number) => {
+    setSelectedIdx(idx);
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      localStorage.setItem(`op_selfassess_${pathname}_${question.slice(0, 20)}`, String(idx));
+    }
+  };
+
+  const badgeText = language === 'FR' ? 'Auto-Évaluation' : 'Self-Assessment';
+
+  return (
+    <div className="my-10 p-8 rounded-3xl bg-slate-900/40 border border-blue-500/20 backdrop-blur-xl shadow-xl space-y-6">
+      <div className="flex items-center gap-2 select-none">
+        <span className="px-2.5 py-1 bg-blue-600/10 border border-blue-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
+          <Target className="w-3.5 h-3.5 text-blue-400" />
+          {badgeText}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        <p className="text-white text-base font-bold leading-relaxed">{question}</p>
+
+        <div className="grid gap-3">
+          {resolvedOptions.map((opt, i) => (
+            <button
+              key={i}
+              onClick={() => handleSelect(i)}
+              className={`w-full p-4 rounded-2xl border text-left text-sm font-medium transition-all duration-300 cursor-pointer flex items-center justify-between group ${
+                selectedIdx === i
+                  ? "bg-blue-600/25 border-blue-500 text-white shadow-lg shadow-blue-500/10"
+                  : "bg-slate-950/40 border-slate-800 text-slate-400 hover:border-blue-500/50 hover:text-white"
+              }`}
+            >
+              <span>{opt}</span>
+              <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                selectedIdx === i
+                  ? "border-blue-400 bg-blue-500 text-white scale-110"
+                  : "border-slate-700 bg-slate-900 group-hover:border-blue-400"
+              }`}>
+                {selectedIdx === i && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {selectedIdx !== null && resolvedFeedback[selectedIdx] && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 p-5 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-slate-300 text-xs md:text-sm leading-relaxed flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                {resolvedFeedback[selectedIdx]}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};

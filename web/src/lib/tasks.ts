@@ -3,7 +3,6 @@ import { dbService } from './db';
 import { generateCourseContent, translateCourseContent } from './ai';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
-const EXECUTION_TIMEOUT_MS = process.env.CLI_WORKER === 'true' ? 2400000 : 260000; // 40 mins for CLI, 4m20s for serverless
 
 export async function cleanupStuckTasks() {
   console.log("[CLEANUP] Scanning for stuck/zombie tasks in task_queue...");
@@ -210,8 +209,9 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
   })();
 
   // Implement native timeout handling via Promise.race
+  const timeoutMs = process.env.CLI_WORKER === 'true' ? 2400000 : 260000;
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(`Task execution timed out (took > ${EXECUTION_TIMEOUT_MS / 1000} seconds).`)), EXECUTION_TIMEOUT_MS)
+    setTimeout(() => reject(new Error(`Task execution timed out (took > ${timeoutMs / 1000} seconds).`)), timeoutMs)
   );
 
   try {

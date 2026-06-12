@@ -15,6 +15,7 @@ import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
 import { ErrorModal } from '@/components/modals/ErrorModal';
 import { dbService } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
@@ -26,6 +27,29 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     slug = (resolvedParams?.slug || []).map(part => decodeURIComponent(part));
     const cookieStore = await cookies();
     lang = (cookieStore.get('openprimer_lang')?.value || 'EN').toLowerCase();
+
+    // Proactively switch language if the requested language has no lessons in the DB for this course
+    if (slug.length >= 3) {
+      const courseSlug = slug[2];
+      try {
+        const { count } = await supabase
+          .from('lessons')
+          .select('*', { count: 'exact', head: true })
+          .eq('course_slug', courseSlug)
+          .eq('lang', lang.toLowerCase());
+        
+        if (count === 0) {
+          const altLang = await getFirstAvailableLanguage(slug);
+          if (altLang && altLang.toLowerCase() !== lang.toLowerCase()) {
+            console.log(`[CoursePage] Auto-switching course language from '${lang}' to '${altLang}' because no lessons exist for '${lang}' in DB`);
+            lang = altLang.toLowerCase();
+            autoSwitched = true;
+          }
+        }
+      } catch (err) {
+        console.error("[CoursePage] Error checking available languages:", err);
+      }
+    }
 
     pageData = await getPageContent(slug, lang);
     if (!pageData) {
@@ -236,11 +260,48 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       return formatSubjectName(sub);
     };
 
+    const getLocalizedLevel = (currentLang: string, lvl: string) => {
+      const lUpper = currentLang.toUpperCase();
+      const lvlLower = (lvl || '').toLowerCase().trim();
+      
+      const dict: Record<string, Record<string, string>> = {
+        beginner: {
+          FR: "Débutant",
+          ES: "Principiante",
+          DE: "Anfänger",
+          ZH: "初学者"
+        },
+        intermediate: {
+          FR: "Intermédiaire",
+          ES: "Intermedio",
+          DE: "Mittelstufe",
+          ZH: "中级"
+        },
+        advanced: {
+          FR: "Avancé",
+          ES: "Avanzado",
+          DE: "Fortgeschritten",
+          ZH: "高级"
+        },
+        expert: {
+          FR: "Expert",
+          ES: "Experto",
+          DE: "Experte",
+          ZH: "专家"
+        }
+      };
+      
+      if (dict[lvlLower] && dict[lvlLower][lUpper]) {
+        return dict[lvlLower][lUpper];
+      }
+      return lvl;
+    };
+
     return (
       <CourseClientWrapper 
         navItems={navItems} 
         pageContext={pageData.content}
-        courseLevel={level}
+        courseLevel={getLocalizedLevel(lang, level)}
         courseTitle={title}
         courseSubject={subject}
       >
@@ -260,7 +321,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           <header className="mb-12 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-4 distraction-free-hide">
               <span className="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-slate-900 border border-slate-800 text-slate-400 uppercase">
-                {level}
+                {getLocalizedLevel(lang, level)}
               </span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">

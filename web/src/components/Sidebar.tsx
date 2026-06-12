@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { NavItem } from '@/lib/content';
+import type { NavItem } from '@/lib/content';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { UI_STRINGS } from '@/components/RefinedUI';
