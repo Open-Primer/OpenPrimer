@@ -139,19 +139,24 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
                 className="prose-strong:font-black prose-a:text-indigo-400 hover:prose-a:underline break-words" 
                 dangerouslySetInnerHTML={{ __html: item.text }} 
               />
-              {item.scholarUrl && (
-                <span className="text-xs text-slate-500 font-normal select-none">
-                  {' '}|{' '}
-                  <a 
-                    href={item.scholarUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-slate-400 hover:text-indigo-400 transition-colors inline-flex items-center gap-1 underline decoration-dotted"
-                  >
-                    {item.scholarText}
-                  </a>
-                </span>
-              )}
+              {item.scholarUrl && (() => {
+                // Sanitize scholarText: strip HTML tags, collapse whitespace, cap at 60 chars
+                const rawText = (item.scholarText || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+                const displayText = rawText.length > 60 ? rawText.slice(0, 57) + '…' : rawText || 'Google Scholar';
+                return (
+                  <span className="text-xs text-slate-500 font-normal select-none">
+                    {' '}|{' '}
+                    <a 
+                      href={item.scholarUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-slate-400 hover:text-indigo-400 transition-colors inline-flex items-center gap-1 underline decoration-dotted"
+                    >
+                      {displayText}
+                    </a>
+                  </span>
+                );
+              })()}
             </div>
           </div>
         ))}

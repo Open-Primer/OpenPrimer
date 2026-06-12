@@ -235,43 +235,36 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         setLoading(true);
         setError(null);
 
+        // Per-theme palette — prevents Mermaid from using its default pink/lavender nodes
+        const nodeBg       = theme === 'paper' ? '#e2e8f0' : theme === 'focus' ? '#171717' : '#1e293b';
+        const nodeBorder   = theme === 'paper' ? '#94a3b8' : theme === 'focus' ? '#404040' : '#475569';
+        const nodeText     = theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc';
+        const edgeColor    = theme === 'paper' ? '#64748b' : theme === 'focus' ? '#737373' : '#64748b';
+        const bgColor      = theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000000' : 'transparent';
+        const clusterBg    = theme === 'paper' ? '#f1f5f9' : theme === 'focus' ? '#0a0a0a' : '#0f172a';
+
         let currentThemeConfig = {
           theme: 'dark',
           themeVariables: {
-            background: '#020617',
-            primaryColor: '#1e293b',
-            primaryTextColor: '#f8fafc',
-            lineColor: '#475569',
-            secondaryColor: '#0f172a',
-            tertiaryColor: '#1e1b4b',
+            background:        bgColor,
+            mainBkg:           nodeBg,
+            nodeBorder:        nodeBorder,
+            clusterBkg:        clusterBg,
+            clusterBorder:     nodeBorder,
+            primaryColor:      nodeBg,
+            primaryTextColor:  nodeText,
+            primaryBorderColor:nodeBorder,
+            secondaryColor:    nodeBg,
+            secondaryTextColor:nodeText,
+            secondaryBorderColor:nodeBorder,
+            tertiaryColor:     nodeBg,
+            tertiaryTextColor: nodeText,
+            tertiaryBorderColor:nodeBorder,
+            lineColor:         edgeColor,
+            edgeLabelBackground: theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000000' : '#0f172a',
+            fontFamily:        'Inter, system-ui, -apple-system, sans-serif',
           }
         };
-
-        if (theme === 'paper') {
-          currentThemeConfig = {
-            theme: 'default',
-            themeVariables: {
-              background: '#fcfaf2',
-              primaryColor: '#f1f5f9',
-              primaryTextColor: '#0f172a',
-              lineColor: '#64748b',
-              secondaryColor: '#f8fafc',
-              tertiaryColor: '#e2e8f0',
-            }
-          };
-        } else if (theme === 'focus') {
-          currentThemeConfig = {
-            theme: 'neutral',
-            themeVariables: {
-              background: '#000000',
-              primaryColor: '#171717',
-              primaryTextColor: '#e5e5e5',
-              lineColor: '#737373',
-              secondaryColor: '#0a0a0a',
-              tertiaryColor: '#262626',
-            }
-          };
-        }
 
         if (!mermaidInstance) {
           const mermaid = (await import('mermaid')).default;
@@ -280,12 +273,20 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
 
         mermaidInstance.initialize({
           startOnLoad: false,
-          theme: currentThemeConfig.theme as any,
+          theme: 'base' as any,
           securityLevel: 'loose',
           fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+          flowchart: {
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 60,
+            wrappingWidth: 200,
+            padding: 15,
+          },
           themeVariables: {
             ...currentThemeConfig.themeVariables,
-            fontSize: '14px',
+            fontSize: '16px',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
           }
         });
@@ -356,38 +357,92 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     return <MermaidFallbackTimeline chartText={chartText} />;
   }
 
+  const nd  = theme === 'paper' ? '#e2e8f0' : theme === 'focus' ? '#171717' : '#1e293b';
+  const str = theme === 'paper' ? '#94a3b8' : theme === 'focus' ? '#404040' : '#475569';
+  const txt = theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc';
+  const edg = theme === 'paper' ? '#64748b' : theme === 'focus' ? '#525252' : '#64748b';
+  const eTxt= theme === 'paper' ? '#475569' : theme === 'focus' ? '#a3a3a3' : '#94a3b8';
+  const eBg = theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000' : '#0f172a';
+  const id  = containerId.current;
+
   return (
     <div className={getContainerClassName()}>
       <style dangerouslySetInnerHTML={{ __html: `
-        #${containerId.current} {
-          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+        /* ── Root SVG ── */
+        #${id} { font-family: 'Inter', system-ui, sans-serif !important; }
+        #${id} svg { background: transparent !important; }
+
+        /* ── All shape fills — catch every Mermaid v10 node variant ── */
+        #${id} .node rect,
+        #${id} .node circle,
+        #${id} .node ellipse,
+        #${id} .node polygon,
+        #${id} .node path,
+        #${id} .node .label-container,
+        #${id} .flowchart-label rect,
+        #${id} .flowchart-label polygon,
+        #${id} .flowchart-label ellipse,
+        #${id} .nodeLabel rect,
+        #${id} .cluster rect,
+        #${id} .cluster polygon {
+          fill:   ${nd}  !important;
+          stroke: ${str} !important;
+          stroke-width: 1.5px !important;
         }
-        #${containerId.current} text,
-        #${containerId.current} .node label,
-        #${containerId.current} .node span {
-          fill: ${theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc'} !important;
-          color: ${theme === 'paper' ? '#0f172a' : theme === 'focus' ? '#e5e5e5' : '#f8fafc'} !important;
-          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-          font-size: 11px !important;
+
+        /* ── All text / labels ── */
+        #${id} text,
+        #${id} span,
+        #${id} .node .nodeLabel,
+        #${id} .nodeLabel,
+        #${id} .label,
+        #${id} .label span,
+        #${id} .label div,
+        #${id} .flowchart-label,
+        #${id} foreignObject div,
+        #${id} foreignObject p,
+        #${id} foreignObject span {
+          fill:       ${txt} !important;
+          color:      ${txt} !important;
+          font-family:'Inter', system-ui, sans-serif !important;
+          font-size:  14px !important;
+          font-weight:500 !important;
         }
-        #${containerId.current} .node rect,
-        #${containerId.current} .node circle,
-        #${containerId.current} .node polygon,
-        #${containerId.current} .node path {
-          fill: ${theme === 'paper' ? '#f1f5f9' : theme === 'focus' ? '#171717' : '#1e293b'} !important;
-          stroke: ${theme === 'paper' ? '#94a3b8' : theme === 'focus' ? '#404040' : '#475569'} !important;
+
+        /* ── Edges / arrows ── */
+        #${id} .edgePath path,
+        #${id} .flowchart-link,
+        #${id} path.path,
+        #${id} .arrowhead path {
+          stroke:       ${edg} !important;
+          stroke-width: 1.5px !important;
+          fill:         none !important;
         }
-        #${containerId.current} .edgePath .path {
-          stroke: ${theme === 'paper' ? '#64748b' : theme === 'focus' ? '#737373' : '#64748b'} !important;
+        #${id} marker path,
+        #${id} .arrowheadPath {
+          fill:   ${edg} !important;
+          stroke: ${edg} !important;
         }
-        #${containerId.current} .edgeLabel text,
-        #${containerId.current} .edgeLabel span {
-          fill: ${theme === 'paper' ? '#475569' : theme === 'focus' ? '#a3a3a3' : '#94a3b8'} !important;
-          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-          font-size: 10px !important;
+
+        /* ── Edge labels ── */
+        #${id} .edgeLabel,
+        #${id} .edgeLabel span,
+        #${id} .edgeLabel text,
+        #${id} .edgeLabel rect {
+          fill:             ${eBg}  !important;
+          color:            ${eTxt} !important;
+          background-color: ${eBg}  !important;
+          font-size: 12px !important;
+        }
+
+        /* ── Cluster / subgraph ── */
+        #${id} .cluster-label text,
+        #${id} .cluster-label span {
+          fill:  ${txt} !important;
+          color: ${txt} !important;
         }
       ` }} />
-      <div 
+      <div
         ref={elementRef}
         className="w-full flex items-center justify-center overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: svg }}

@@ -165,7 +165,7 @@ const Alert = ({ type, children }: { type: string; children: React.ReactNode }) 
           {title}
         </span>
       </div>
-      <div className="text-[13px] leading-relaxed font-medium text-slate-800 dark:text-slate-200 alert-content">
+      <div className="text-[13px] leading-relaxed font-medium text-slate-200 alert-content">
         {children}
       </div>
     </div>

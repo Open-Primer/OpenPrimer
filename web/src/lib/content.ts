@@ -1809,6 +1809,14 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Strip heading custom identifiers like {#section-id} that crash MDX/acorn
   processed = processed.replace(/\s*{#[\w\-]+}/g, '');
 
+  // Remove AI-generated orphaned intro sentences that precede <Objectives> blocks.
+  // These phrases ("À la fin de cette leçon, vous serez capable de :", etc.) become
+  // floating paragraphs when <Objectives> is empty and returns null.
+  processed = processed.replace(
+    /[ \t]*(?:[Àa] la fin de (?:cette (?:leçon|lecon)|ce (?:chapitre|module))[,\s]*(?:vous serez capable de\s*[:;]?|vous serez en mesure de\s*[:;]?|vous pourrez\s*[:;]?)?|By the end of (?:this (?:lesson|chapter|module))[,\s]*(?:you (?:will (?:be able to|understand|know)|should be able to)\s*[:;]?)?|Al final de (?:esta (?:lección|leccion|unidad))[,\s]*(?:(?:usted |tú )?(?:podr[aá]s?|ser[aá]s? capaz de)\s*[:;]?)?|Am Ende (?:dieser (?:Lektion|Einheit|des Kapitels))[,\s]*(?:(?:werden Sie|wirst du) (?:in der Lage sein|können)\s*[:;]?)?|学完(?:本节课|本章|本模块)后[，,]\s*(?:你(?:将能够|将会|应该能够)\s*[:：]?)?)\s*\r?\n/gi,
+    '\n'
+  );
+
   // Restore curly braces inside math blocks ($...$ and $$...$$) so KaTeX can compile them
   // 1. Block math ($$ ... $$)
   processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, mathContent) => {

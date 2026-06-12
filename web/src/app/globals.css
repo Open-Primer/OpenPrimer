@@ -962,6 +962,31 @@ body:not(.theme-paper):not(.theme-focus) footer {
   content: "" !important;
 }
 
+/* Default dark theme: ensure alert body text is always readable */
+.custom-alert .alert-content {
+  color: #e2e8f0; /* slate-200 — readable on all dark alert backgrounds */
+}
 
+/* Ensure strong/bold text and inline links stay readable inside dark alerts */
+.custom-alert .alert-content strong {
+  color: #f8fafc !important;
+  font-weight: 700;
+}
+.custom-alert .alert-content a {
+  color: #93c5fd !important; /* blue-300 — readable on dark bg */
+  text-decoration: underline;
+}
+.custom-alert .alert-content a:hover {
+  color: #bfdbfe !important; /* blue-200 */
+}
 
-
+/* Lists inside alerts */
+.custom-alert .alert-content ul,
+.custom-alert .alert-content ol {
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.custom-alert .alert-content li {
+  margin-bottom: 0.25rem;
+}

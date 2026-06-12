@@ -14,6 +14,49 @@ import { ModelId, TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES } from './ai-
 const PROJECT_ID = process.env.VERTEX_PROJECT_ID || 'openprimer-free';
 const LOCATION   = process.env.VERTEX_LOCATION   || 'us-central1';
 
+// ─────────────────────────────────────────────────────────────────
+// RATE LIMITER — Token Bucket (module-level, shared across workers)
+// ─────────────────────────────────────────────────────────────────
+// Controls the maximum number of Vertex AI requests per minute.
+// Tune VERTEX_RATE_LIMIT_RPM via env var or system_parameters.
+// Default: 8 req/min — conservative baseline that avoids 429s
+// while running up to 2 concurrent course-generation workers.
+//
+// If you increase your Vertex AI quota in Google Cloud Console,
+// raise this value proportionally (e.g. 20 for 60 RPM quota).
+const VERTEX_RATE_LIMIT_RPM = Number(process.env.VERTEX_RATE_LIMIT_RPM) || 8;
+
+const _rateLimiter = {
+  tokens: VERTEX_RATE_LIMIT_RPM,
+  maxTokens: VERTEX_RATE_LIMIT_RPM,
+  refillRatePerMs: VERTEX_RATE_LIMIT_RPM / 60000, // tokens per millisecond
+  lastRefill: Date.now(),
+};
+
+/**
+ * Acquire one token from the bucket before making a Vertex AI call.
+ * If no tokens are available, waits until one is refilled.
+ */
+async function acquireRateLimitToken(): Promise<void> {
+  const now = Date.now();
+  const elapsed = now - _rateLimiter.lastRefill;
+  const refilled = elapsed * _rateLimiter.refillRatePerMs;
+  _rateLimiter.tokens = Math.min(_rateLimiter.maxTokens, _rateLimiter.tokens + refilled);
+  _rateLimiter.lastRefill = now;
+
+  if (_rateLimiter.tokens >= 1) {
+    _rateLimiter.tokens -= 1;
+    return;
+  }
+
+  // Calculate wait time to accumulate 1 token
+  const waitMs = Math.ceil((1 - _rateLimiter.tokens) / _rateLimiter.refillRatePerMs);
+  console.log(`[RATE LIMITER] Token bucket empty — throttling for ${Math.ceil(waitMs / 1000)}s (${VERTEX_RATE_LIMIT_RPM} RPM limit).`);
+  await new Promise(resolve => setTimeout(resolve, waitMs));
+  // Recurse to confirm token is now available
+  return acquireRateLimitToken();
+}
+
 interface ServiceAccountCredentials {
   type: string;
   project_id: string;
@@ -152,6 +195,9 @@ export interface VertexRequest {
  * Returns the raw fetch Response so callers can handle streaming or JSON.
  */
 export async function callVertexAI(req: VertexRequest): Promise<Response | null> {
+  // Acquire a rate-limit token before proceeding (blocks if bucket is empty)
+  await acquireRateLimitToken();
+
   const token = await getAccessToken();
   if (!token) return null;
 

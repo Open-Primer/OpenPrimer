@@ -184,9 +184,23 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       : (parsedSyllabus.lessons || []);
     const courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
 
+    // ─────────────────────────────────────────────────────────────────
+    // INTER-LESSON THROTTLE — prevents burst of Vertex AI calls within a run.
+    // Tune via INTER_LESSON_DELAY_MS env var (default: 5000ms = 5 seconds).
+    // Set to 0 to disable. Raise this value if you still hit 429 errors.
+    // ─────────────────────────────────────────────────────────────────
+    const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
+
     // 2. For each lesson, generate rich MDX content
     for (let index = 0; index < lessonsList.length; index++) {
       const item = lessonsList[index];
+
+      // Wait between lessons to smooth API request bursts (skip for first lesson)
+      if (index > 0 && INTER_LESSON_DELAY_MS > 0) {
+        console.log(`[THROTTLE] Inter-lesson delay: waiting ${INTER_LESSON_DELAY_MS / 1000}s before lesson ${index + 1}/${lessonsList.length}...`);
+        await new Promise(resolve => setTimeout(resolve, INTER_LESSON_DELAY_MS));
+      }
+
       const isPrimary = level.toLowerCase().includes('primary') || level.toLowerCase().includes('primaire');
       
       const promptContent = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
