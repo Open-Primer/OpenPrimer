@@ -7,6 +7,36 @@ import { resolveAndPersistMedia } from './media-resolver';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
+export function safeJsonParse(text: string, contextName: string = 'unknown'): any {
+  if (!text) return null;
+  const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    const startIdx = cleaned.indexOf('{');
+    const endIdx = cleaned.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      try {
+        const potentialJson = cleaned.substring(startIdx, endIdx + 1);
+        return JSON.parse(potentialJson);
+      } catch (innerErr) {}
+    }
+    const startArr = cleaned.indexOf('[');
+    const endArr = cleaned.lastIndexOf(']');
+    if (startArr !== -1 && endArr !== -1 && endArr > startArr) {
+      try {
+        const potentialJson = cleaned.substring(startArr, endArr + 1);
+        return JSON.parse(potentialJson);
+      } catch (innerErr) {}
+    }
+    
+    console.error(`[safeJsonParse] JSON parse failure in context "${contextName}". Raw length: ${cleaned.length}`);
+    console.error(`[safeJsonParse] Content snippet: "${cleaned.slice(0, 1000)}"`);
+    
+    throw new Error(`[JSON PARSE FAILED] The model returned an invalid JSON response (likely a natural language error or empty response). Context: "${contextName}". Error: ${(e as Error).message}. Snippet: "${cleaned.slice(0, 200)}"`);
+  }
+}
+
 export async function generateCourseContent(courseName: string, level: string, targetLang: string = 'en') {
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
@@ -148,7 +178,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     }
 
     const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsedSyllabus = JSON.parse(cleanedJson);
+    const parsedSyllabus = safeJsonParse(cleanedJson, 'generateCourseContent (Syllabus)');
     const lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = Array.isArray(parsedSyllabus)
       ? parsedSyllabus
       : (parsedSyllabus.lessons || []);
@@ -374,7 +404,8 @@ Requirements:
       You MUST dynamically and contextually enrich the lesson body using the following custom tags:
       - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\` or \`<EspritCritique>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
       - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\` or \`<LeSaviezVous>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
-      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\` or \`<AnecdoteHistorique>\`): Add a 2-4 sentence historical narrative detailing the genèse of a discovery.
+      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\` or \`<AnecdoteHistorique>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (NOT just a plain history event like the creation of a lab). Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
+      - **Idée Brillante** (\`<IdeeBrillante title="...">...</IdeeBrillante>\` or \`<BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
       - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\` or \`<PointDeVue>\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
       - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\` or \`<EtApres>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
  19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
@@ -481,9 +512,11 @@ ${currentMdx}
 ---
 
 Your Checkpoints:
-1. "Zero-Placeholder & Prohibited Empty Tags":
+1. "Zero-Placeholder & Prohibited Empty Tags & Nested Wrappers & Content Collisions":
    - Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
-   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Assignment></Assignment>, <Objectives></Objectives>, <Callout></Callout>, etc.). If ANY tag is present but empty or lacks significant children/content, you MUST reject the content (set "approved": false) and demand a detailed, complete writing of its contents.
+   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Objectives></Objectives>, <CriticalThinking />, <EtApres />, <WhatsNext />, <IdeeBrillante />, <BrilliantIdea />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
+   - Nested wrappers are strictly forbidden. You must NOT nest <WhatsNext> and <EtApres> inside each other (e.g. <WhatsNext><EtApres/></WhatsNext> is invalid). Use only one single tag for the block.
+   - Content collision: Ensure that <HistoricalAnecdote> (or <AnecdoteHistorique>) and <DidYouKnow> (or <LeSaviezVous>) do NOT cover the exact same subject, discovery, or event. If they overlap or duplicate information, reject the content (set "approved": false) so they are written on distinct, non-overlapping pedagogical hooks. Ensure that <HistoricalAnecdote> is truly anecdotal, quirky, unexpected or human (not just a dry historical timeline event).
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
 3. "Structural Completeness & Mandated Sections":
    - Ensure the presence of prerequisites at the very beginning (using '<Prerequisites items={[...]} />').
@@ -582,7 +615,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           }
 
           const cleanedVJson = verifierRaw.replace(/```json/g, '').replace(/```/g, '').trim();
-          const verificationResult = JSON.parse(cleanedVJson);
+          const verificationResult = safeJsonParse(cleanedVJson, 'generateCourseContent (Agent 4 Verification)');
 
           if (verificationResult.approved === true) {
             console.log(`[AI GENERATOR - AGENT 4] Content approved for "${item.title}" on attempt ${iteration}!`);
@@ -929,7 +962,7 @@ ${currentTranslation}
 
 Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
-2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact?
+2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking /> or <EtApres /> without text/children. Do NOT nest wrapper components (e.g. <WhatsNext><EtApres/></WhatsNext> is strictly forbidden).
 3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs) preserved exactly as in the original?
 4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
@@ -986,7 +1019,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
         if (criticSuccess && criticResText) {
           try {
             const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const criticObj = JSON.parse(cleanedCritic);
+            const criticObj = safeJsonParse(cleanedCritic, 'reviseCourseContent (Agent 4 Verification)');
             approved = !!criticObj.approved;
             critique = criticObj.critique || '';
           } catch (e) {
@@ -1470,7 +1503,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
   let affectedSlugs: string[] = [];
   try {
     const cleaned = identifyRaw.replace(/```json/g, '').replace(/```/g, '').trim();
-    affectedSlugs = JSON.parse(cleaned);
+    affectedSlugs = safeJsonParse(cleaned, 'translateCourseContent (Revision affected slugs)');
   } catch (e) {
     console.error(`[REVISION AGENT] Failed to parse affected slugs JSON: "${identifyRaw}". Defaulting to all lessons.`, e);
     affectedSlugs = lessons.map(l => l.lesson_slug);
@@ -1582,7 +1615,8 @@ ${currentMdx}
 Your validation checklist:
 1. Did the revision fully address the student concerns and instructions in the revision instructions list?
 2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
-3. Zero placeholders: Are there any placeholders, skeletal sentences, or unfinished sections?
+3. Zero placeholders and empty tags: Are there any placeholders, skeletal sentences, or unfinished sections? Do NOT generate empty components like <CriticalThinking /> or <EtApres /> without text/children. If a component is present, it must contain full text/children.
+4. No nested wrappers: Ensure you do NOT nest <WhatsNext> and <EtApres> inside each other (e.g. <WhatsNext><EtApres/></WhatsNext> is strictly forbidden).
 4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
 5. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
 6. Mandated Sections & Structural Integrity: Verify that the revised MDX content still contains:
@@ -1653,7 +1687,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
       if (criticSuccess && criticResText) {
         try {
           const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
-          const criticObj = JSON.parse(cleanedCritic);
+          const criticObj = safeJsonParse(cleanedCritic, 'translateCourseContent (Agent 4 Verification)');
           approved = !!criticObj.approved;
           critique = criticObj.critique || '';
         } catch (e) {
@@ -1947,7 +1981,7 @@ If you cannot find any real video, output: {}`;
 
       if (rawJson) {
         const cleaned = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(cleaned);
+        const data = safeJsonParse(cleaned, 'Video Search Alternative');
         if (data.id || data.url) {
           const providerStr = data.provider || 'youtube';
           const videoTag = `<Video id="${data.id || ''}" url="${data.url || ''}" provider="${providerStr}" />`;
@@ -2031,7 +2065,7 @@ If you cannot find any real audio, output: {}`;
 
       if (rawJson) {
         const cleaned = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(cleaned);
+        const data = safeJsonParse(cleaned, 'Audio Search Alternative');
         if (data.url) {
           const audioTag = `<Audio url="${data.url}" />`;
           const isReachable = await isAudioReachable(audioTag);
@@ -2316,12 +2350,14 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
         console.log(`[EXTERNAL RESOURCE VALIDATOR] Video is dead: ${block.fullBlock}`);
         const titleMatch = block.attributes.match(/title="([^"]+)"/) || block.attributes.match(/title='([^']+)'/);
         const title = titleMatch ? titleMatch[1] : '';
+        const durationMatch = block.attributes.match(/duration="([^"]+)"/) || block.attributes.match(/duration='([^']+)'/);
+        const duration = durationMatch ? durationMatch[1] : '2:00';
         
         let alternativeFound = false;
         if (title) {
           const alternative = await findAlternativeVideoWithFallback(title, targetLang);
           if (alternative) {
-            const newTag = `<Video id="${alternative.id || ''}" url="${alternative.url || ''}" provider="${alternative.provider || 'youtube'}" title="${title}" />`;
+            const newTag = `<Video id="${alternative.id || ''}" url="${alternative.url || ''}" provider="${alternative.provider || 'youtube'}" title="${title}" duration="${duration}" />`;
             updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
             alternativeFound = true;
             console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead video with alternative: ${newTag}`);
@@ -2352,12 +2388,14 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
         console.log(`[EXTERNAL RESOURCE VALIDATOR] Audio is dead: ${block.fullBlock}`);
         const titleMatch = block.attributes.match(/title="([^"]+)"/) || block.attributes.match(/title='([^']+)'/);
         const title = titleMatch ? titleMatch[1] : '';
+        const durationMatch = block.attributes.match(/duration="([^"]+)"/) || block.attributes.match(/duration='([^']+)'/);
+        const duration = durationMatch ? durationMatch[1] : '1:00';
         
         let alternativeFound = false;
         if (title) {
           const altUrl = await findAlternativeAudioWithFallback(title, targetLang);
           if (altUrl) {
-            const newTag = `<AudioPlayer url="${altUrl}" title="${title}" />`;
+            const newTag = `<AudioPlayer url="${altUrl}" title="${title}" duration="${duration}" />`;
             updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
             alternativeFound = true;
             console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead audio with alternative: ${newTag}`);
@@ -2510,7 +2548,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
     const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
     let parsedData: unknown;
     try {
-      parsedData = JSON.parse(cleanedJson);
+      parsedData = safeJsonParse(cleanedJson, 'getStructuredLessonContext (Curriculum Structure)');
     } catch (e) {
       console.warn("Failed to parse AI curriculum JSON, trying to recover standard array...");
       throw e;

@@ -57,6 +57,16 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
     tutor_explanation: dict.quiz_tutor_explanation
   };
 
+  const estTimeTexts: Record<string, string> = {
+    EN: "Estimated time:",
+    FR: "Temps estimé :",
+    ES: "Tiempo estimado:",
+    DE: "Geschätzte Zeit:",
+    ZH: "预计时间："
+  };
+  const langKey = language.toUpperCase();
+  const estTimeText = estTimeTexts[langKey] || estTimeTexts.EN;
+
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationLimit || 0);
   const [isTimeUp, setIsTimeUp] = useState(false);
@@ -271,6 +281,7 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
 
   // 1. Initial State: Start Screen Cover
   if (!isStarted && !isFinished) {
+    const estimatedSeconds = totalQuestions * 60;
     return (
       <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-6">
         <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/20">
@@ -286,16 +297,23 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
           <p className="font-black text-blue-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
           <ul className="list-disc list-inside space-y-2 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
-            <li>{durationLimit ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) : t.time_focus_default}</li>
+            <li>
+              {durationLimit 
+                ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) 
+                : t.time_focus.replace('{time}', formatDurationText(estimatedSeconds))}
+            </li>
           </ul>
         </div>
 
-        {durationLimit && (
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl text-xs font-bold">
-            <Timer className="w-4 h-4" />
-            <span>{t.time_limit} {formatDurationText(durationLimit)}</span>
-          </div>
-        )}
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl text-xs font-bold select-none">
+          <Timer className="w-4 h-4" />
+          <span>
+            {durationLimit 
+              ? `${t.time_limit} ${formatDurationText(durationLimit)}` 
+              : `${estTimeText} ${formatDurationText(estimatedSeconds)}`
+            }
+          </span>
+        </div>
 
         <div className="pt-2">
           <button
@@ -460,14 +478,25 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
 
 interface QuestionProps {
   q: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onAnswer?: (correct: boolean) => void;
   isParentReadOnly?: boolean;
   savedCorrect?: boolean | null;
   explanation?: string;
+  options?: string;
+  correctIndex?: string | number;
 }
 
-export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect, explanation }: QuestionProps) => {
+export const Question = ({
+  q,
+  children,
+  onAnswer,
+  isParentReadOnly,
+  savedCorrect,
+  explanation,
+  options: optionsProp,
+  correctIndex
+}: QuestionProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
@@ -478,9 +507,26 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const options = (React.Children.toArray(children) as React.ReactElement[]).filter(
-    (child) => React.isValidElement(child) && (child.props as any) && ('text' in (child.props as any) || 'children' in (child.props as any))
-  );
+  // Parse options either from children or from options prop
+  const finalOptions = React.useMemo(() => {
+    if (optionsProp) {
+      const optList = optionsProp.split('|||').map(s => s.trim());
+      const cIndex = typeof correctIndex === 'string' ? parseInt(correctIndex, 10) : Number(correctIndex || 0);
+      return optList.map((text, idx) => ({
+        text,
+        correct: idx === cIndex
+      }));
+    } else {
+      const childOptions = (React.Children.toArray(children) as React.ReactElement[]).filter(
+        (child) => React.isValidElement(child) && (child.props as any) && ('text' in (child.props as any) || 'children' in (child.props as any))
+      );
+      return childOptions.map((opt) => ({
+        text: String((opt.props as any).text || (opt.props as any).children || ''),
+        correct: (opt.props as any).correct === true
+      }));
+    }
+  }, [children, optionsProp, correctIndex]);
+
   const isReadOnly = isParentReadOnly || selected !== null;
 
   useEffect(() => {
@@ -491,12 +537,12 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
     if (savedCorrect !== null && savedCorrect !== undefined) {
       setIsCorrect(savedCorrect);
       // Auto-highlight correct choice
-      const correctIdx = options.findIndex((opt: any) => opt.props.correct === true);
+      const correctIdx = finalOptions.findIndex((opt) => opt.correct === true);
       if (correctIdx !== -1) {
         setSelected(correctIdx);
       }
     }
-  }, [savedCorrect, options]);
+  }, [savedCorrect, finalOptions]);
 
   const handleSelect = (index: number, correct: boolean) => {
     if (isReadOnly) return;
@@ -511,9 +557,9 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
     <div className="space-y-4">
       <p className="text-md font-bold text-slate-100">{q}</p>
       <div className="grid gap-3">
-        {options.map((option: any, index) => {
+        {finalOptions.map((option, index) => {
           const isSelectedOption = index === selected;
-          const isOptionCorrect = option.props.correct === true;
+          const isOptionCorrect = option.correct === true;
 
           return (
             <button
@@ -533,7 +579,7 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
                   : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
               )}
             >
-              <span className="font-medium">{option.props.text || option.props.children}</span>
+              <span className="font-medium">{option.text}</span>
               {selected === null && !isParentReadOnly ? (
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400" />
               ) : isSelectedOption ? (
@@ -552,7 +598,7 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
             <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
             {selected !== null ? (
               <span className={isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
-                {(options[selected] as any)?.props?.text || (options[selected] as any)?.props?.children}
+                {finalOptions[selected]?.text}
               </span>
             ) : (
               <span className="text-red-400 font-bold italic">{language === 'FR' ? 'Aucune réponse (temps écoulé)' : 'No answer (time out)'}</span>
@@ -562,7 +608,7 @@ export const Question = ({ q, children, onAnswer, isParentReadOnly, savedCorrect
             <div className="flex items-center gap-2 border-t border-slate-800/40 pt-2">
               <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
               <span className="text-emerald-400 font-bold">
-                {(options.find((o: any) => o.props.correct === true) as any)?.props?.text || (options.find((o: any) => o.props.correct === true) as any)?.props?.children}
+                {finalOptions.find((o) => o.correct === true)?.text}
               </span>
             </div>
           )}

@@ -38,6 +38,15 @@ const cleanMdxText = (text: string) => {
   cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
   cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');
   
+  // Clean footnote tags (e.g. <sup><a href="#ref-1">1</a></sup> or <sup>1</sup>)
+  cleaned = cleaned.replace(/<sup>\s*<a[^>]*href=["']#(?:ref|fn)[^"']*["'][^>]*>.*?<\/a>\s*<\/sup>/gi, '');
+  cleaned = cleaned.replace(/<sup>\s*(?:\[?\d+\]?)\s*<\/sup>/gi, '');
+  cleaned = cleaned.replace(/<sup>\s*<a[^>]*>.*?<\/a>\s*<\/sup>/gi, '');
+  
+  // Clean JSX/HTML tags (opening, closing, and self-closing), leaving inner text (e.g. <HistoricalPerson ...>Sigmund Freud</HistoricalPerson> -> Sigmund Freud)
+  cleaned = cleaned.replace(/<[a-zA-Z][a-zA-Z0-9.-]*(?:\s+[^>]*?)?\s*\/?>/g, '');
+  cleaned = cleaned.replace(/<\/[a-zA-Z][a-zA-Z0-9.-]*>/g, '');
+
   // Clean markdown headings, links, blockquotes
   cleaned = cleaned.replace(/#+\s+/g, '');
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
@@ -1214,15 +1223,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       if (!text || !readTutorRef.current) return;
 
       // Clean MDX/Markdown formatting from the tutor response
-      let cleaned = text;
-      cleaned = cleaned.replace(/\$\$[\s\S]*?\$\$/g, '');
-      cleaned = cleaned.replace(/\$[\s\S]*?\$/g, '');
-      cleaned = cleaned.replace(/#+\s+/g, '');
-      cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-      cleaned = cleaned.replace(/>\s+\[![^\]]+\]/g, ''); 
-      cleaned = cleaned.replace(/>+/g, '');
-      cleaned = cleaned.replace(/\*+/g, '');
-      cleaned = cleaned.replace(/`+/g, '');
+      let cleaned = cleanMdxText(text);
 
       const rawSentences = cleaned.split(/(?<=[.!?])\s+/);
       const list = rawSentences

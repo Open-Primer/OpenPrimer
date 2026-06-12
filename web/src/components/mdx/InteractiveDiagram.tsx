@@ -16,6 +16,7 @@ interface InteractiveDiagramProps {
   title?: string;
   hotspots?: Hotspot[];
   type?: 'cell' | 'neuron' | 'custom';
+  hotspotsBase64?: string;
 }
 
 const DEFAULT_CELL_HOTSPOTS: Hotspot[] = [
@@ -97,10 +98,34 @@ const DEFAULT_NEURON_HOTSPOTS: Hotspot[] = [
 export const InteractiveDiagram = ({
   title,
   hotspots,
-  type
+  type,
+  hotspotsBase64
 }: InteractiveDiagramProps) => {
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const [showLabels, setShowLabels] = useState(false);
+
+  // Decode hotspots from Base64 if provided
+  let resolvedHotspots = hotspots;
+  if (hotspotsBase64) {
+    try {
+      const decodeBase64Utf8 = (str: string): string => {
+        if (typeof window !== 'undefined') {
+          return decodeURIComponent(
+            window.atob(str)
+              .split('')
+              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+        } else {
+          return Buffer.from(str, 'base64').toString('utf-8');
+        }
+      };
+      const decoded = decodeBase64Utf8(hotspotsBase64);
+      resolvedHotspots = JSON.parse(decoded);
+    } catch (e) {
+      console.error("Failed to parse hotspotsBase64:", e);
+    }
+  }
 
   // Auto-detect Neuron diagrams based on type or containing keywords in title
   const isNeuron = type === 'neuron' || (title && (title.toLowerCase().includes('neurone') || title.toLowerCase().includes('neuron')));
@@ -108,9 +133,9 @@ export const InteractiveDiagram = ({
   
   const defaultHotspots = resolvedType === 'neuron' ? DEFAULT_NEURON_HOTSPOTS : DEFAULT_CELL_HOTSPOTS;
   // If hotspots are empty, omitted, or if they match DEFAULT_CELL_HOTSPOTS but it is a neuron, load default hotspots
-  const activeHotspots = (!hotspots || hotspots.length === 0 || (hotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
+  const activeHotspots = (!resolvedHotspots || resolvedHotspots.length === 0 || (resolvedHotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
     ? defaultHotspots 
-    : hotspots;
+    : resolvedHotspots;
   
   const resolvedTitle = title 
     ? title 

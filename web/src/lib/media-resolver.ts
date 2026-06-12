@@ -160,6 +160,18 @@ async function searchYouTubeVideo(query: string): Promise<string | null> {
   }
 }
 
+async function validateYouTubeVideo(videoId: string): Promise<boolean> {
+  if (!videoId || videoId.length !== 11 || videoId.startsWith('placeholder') || videoId.includes('example')) {
+    return false;
+  }
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' });
+    return res.ok;
+  } catch (err) {
+    return true; // Network/rate limit: assume OK
+  }
+}
+
 // Wikimedia Commons Audio Fetcher
 async function fetchWikimediaAudio(title: string): Promise<string | null> {
   try {
@@ -362,7 +374,16 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
     const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder');
     const hasDummyId = !originalId || originalId.startsWith('placeholder') || originalId.length !== 11;
     
-    if (title && (hasDummyUrl || hasDummyId)) {
+    let needsResolution = hasDummyUrl || hasDummyId;
+    if (!needsResolution && originalId) {
+      const exists = await validateYouTubeVideo(originalId);
+      if (!exists) {
+        console.log(`[MEDIA-RESOLVER] YouTube video ${originalId} does not exist. Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+    
+    if (title && needsResolution) {
       console.log(`[MEDIA-RESOLVER] Resolving video for: "${title}"`);
       const searchQuery = `${title} cours education ${targetLang === 'fr' ? 'français' : 'english'}`;
       const realId = await searchYouTubeVideo(searchQuery);
@@ -490,10 +511,35 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
       // Download and upload to Supabase Storage
       try {
-        const imageRes = await fetch(sourceUrl);
-        if (imageRes.ok) {
-          const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-          const buffer = Buffer.from(await imageRes.arrayBuffer());
+        let buffer: Buffer | null = null;
+        let contentType = 'image/jpeg';
+        const isLocal = !sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://') && !sourceUrl.startsWith('//');
+
+        if (isLocal) {
+          const localPath = path.join(process.cwd(), 'public', sourceUrl);
+          if (fs.existsSync(localPath)) {
+            try {
+              buffer = fs.readFileSync(localPath);
+              const ext = path.extname(localPath).toLowerCase();
+              if (ext === '.png') contentType = 'image/png';
+              else if (ext === '.gif') contentType = 'image/gif';
+              else if (ext === '.svg') contentType = 'image/svg+xml';
+              else if (ext === '.webp') contentType = 'image/webp';
+            } catch (err) {
+              console.warn(`[MEDIA-RESOLVER] Failed to read local image ${localPath}:`, err);
+            }
+          } else {
+            console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
+          }
+        } else {
+          const imageRes = await fetch(sourceUrl);
+          if (imageRes.ok) {
+            contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+            buffer = Buffer.from(await imageRes.arrayBuffer());
+          }
+        }
+
+        if (buffer) {
           const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
           const ext = contentType.split('/')[1] || 'jpg';
           const fileName = `img_${hash}.${ext}`;
@@ -539,10 +585,35 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
       // Download and upload to Supabase Storage
       try {
-        const imageRes = await fetch(sourceUrl);
-        if (imageRes.ok) {
-          const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-          const buffer = Buffer.from(await imageRes.arrayBuffer());
+        let buffer: Buffer | null = null;
+        let contentType = 'image/jpeg';
+        const isLocal = !sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://') && !sourceUrl.startsWith('//');
+
+        if (isLocal) {
+          const localPath = path.join(process.cwd(), 'public', sourceUrl);
+          if (fs.existsSync(localPath)) {
+            try {
+              buffer = fs.readFileSync(localPath);
+              const ext = path.extname(localPath).toLowerCase();
+              if (ext === '.png') contentType = 'image/png';
+              else if (ext === '.gif') contentType = 'image/gif';
+              else if (ext === '.svg') contentType = 'image/svg+xml';
+              else if (ext === '.webp') contentType = 'image/webp';
+            } catch (err) {
+              console.warn(`[MEDIA-RESOLVER] Failed to read local image ${localPath}:`, err);
+            }
+          } else {
+            console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
+          }
+        } else {
+          const imageRes = await fetch(sourceUrl);
+          if (imageRes.ok) {
+            contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+            buffer = Buffer.from(await imageRes.arrayBuffer());
+          }
+        }
+
+        if (buffer) {
           const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
           const ext = contentType.split('/')[1] || 'jpg';
           const fileName = `img_${hash}.${ext}`;

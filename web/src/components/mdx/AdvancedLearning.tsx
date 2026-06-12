@@ -298,6 +298,20 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
         ))}
       </div>
 
+      {type === "pre" && (
+        <span className="text-[10px] text-blue-400 font-bold block mt-4 select-none leading-relaxed">
+          {language === 'FR' 
+            ? "💡 Votre choix calibre instantanément le niveau d'explication et la pédagogie de votre Tuteur IA personnel."
+            : language === 'ES'
+              ? "💡 Tu elección calibra instantáneamente el nivel de explicación y la pedagogía de tu Tutor IA personal."
+              : language === 'DE'
+                ? "💡 Ihre Bewertung kalibriert sofort das Erklärungsniveau und die Pädagogik Ihres persönlichen KI-Tutors."
+                : language === 'ZH'
+                  ? "💡 您的评分将立即校准您的个人AI导师的解释难度与教学风格。"
+                  : "💡 Your rating instantly calibrates the explanation level and pedagogy of your personal AI Tutor."}
+        </span>
+      )}
+
       {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
   );

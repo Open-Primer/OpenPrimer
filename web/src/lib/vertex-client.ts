@@ -182,52 +182,67 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       body.generationConfig = req.generationConfig;
     }
 
-    try {
-      console.log(`[VERTEX] Attempting call with model "${model}"...`);
-      const startTime = Date.now();
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
+    const maxRetries = 3;
+    let delay = 2000;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[VERTEX] Attempting call with model "${model}" (attempt ${attempt}/${maxRetries})...`);
+        const startTime = Date.now();
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
 
-      if (response.ok) {
-        console.log(`[VERTEX] ✅ Call succeeded with model "${model}".`);
-        
-        const durationMs = Date.now() - startTime;
-        const clonedResponse = response.clone();
-        
-        // Track stats asynchronously in the background
-        (async () => {
-          try {
-            const json = await clonedResponse.json();
-            const usage = json.usageMetadata || {};
-            const promptTokens = usage.promptTokenCount || 0;
-            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
-            
-            await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
-          } catch (e) {
-            console.warn('[VERTEX] Failed to parse usage metadata from response clone:', e);
-            // Fallback: estimate tokens if parsing failed
-            const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
-            const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
-            await recordMetrics(req.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
+        if (response.ok) {
+          console.log(`[VERTEX] ✅ Call succeeded with model "${model}".`);
+          
+          const durationMs = Date.now() - startTime;
+          const clonedResponse = response.clone();
+          
+          // Track stats asynchronously in the background
+          (async () => {
+            try {
+              const json = await clonedResponse.json();
+              const usage = json.usageMetadata || {};
+              const promptTokens = usage.promptTokenCount || 0;
+              const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+              const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
+              
+              await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
+            } catch (e) {
+              console.warn('[VERTEX] Failed to parse usage metadata from response clone:', e);
+              // Fallback: estimate tokens if parsing failed
+              const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
+              const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
+              await recordMetrics(req.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
+            }
+          })();
+
+          return response;
+        } else if (response.status === 429) {
+          const errText = await response.text();
+          lastError = `[VERTEX] Model "${model}" failed (429 RESOURCE_EXHAUSTED): ${errText.slice(0, 300)}`;
+          console.warn(`${lastError}. Retrying in ${delay}ms...`);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2.5; // Exponential backoff (2s -> 5s -> 12.5s)
+            continue;
           }
-        })();
-
-        return response;
-      } else {
-        const errText = await response.text();
-        lastError = `[VERTEX] Model "${model}" failed (${response.status}): ${errText.slice(0, 300)}`;
+        } else {
+          const errText = await response.text();
+          lastError = `[VERTEX] Model "${model}" failed (${response.status}): ${errText.slice(0, 300)}`;
+          console.warn(lastError);
+          break;
+        }
+      } catch (e) {
+        lastError = `[VERTEX] Model "${model}" exception: ${e}`;
         console.warn(lastError);
+        break;
       }
-    } catch (e) {
-      lastError = `[VERTEX] Model "${model}" exception: ${e}`;
-      console.warn(lastError);
     }
   }
 

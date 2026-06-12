@@ -35,6 +35,7 @@ const highlightText = (text: string, query: string) => {
 
 export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const pathname = usePathname();
+  const cleanPath = (p: string) => p ? p.replace(/\/+$/, '').toLowerCase() : '';
   const [progress, setProgress] = useState<number>(0); // Default fallback
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState<boolean>(true);
@@ -138,7 +139,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
     let active = true;
     async function loadProgress() {
       const segments = pathname.split('/').filter(Boolean);
-      const activeSlug = segments.length >= 4 && 
+      const activeSlug = segments.length >= 3 && 
         !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]) ? segments[2] : null;
       if (!activeSlug) return;
       
@@ -165,7 +166,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         }
         const { data: progressData } = await dbService.getUserProgress(userId, lang);
         if (progressData && active) {
-          const activeModule = progressData.activeModules?.find((m: any) => m.slug === activeSlug);
+          const activeModule = progressData.activeModules?.find((m: any) => m.slug?.toLowerCase() === activeSlug.toLowerCase());
           if (activeModule) {
             dbProgress = activeModule.progress;
           }
@@ -182,12 +183,12 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         if (storage) {
           const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
           dbVisited = visited;
-          const visitedCount = flatPages.filter(p => visited.includes(p.path)).length;
+          const visitedCount = flatPages.filter(p => visited.some((v: string) => cleanPath(v) === cleanPath(p.path))).length;
           const totalPages = flatPages.length;
           dbProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 0;
 
           const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
-          progressMap[activeSlug] = dbProgress;
+          progressMap[activeSlug.toLowerCase()] = dbProgress;
           storage.setItem('op_course_progress', JSON.stringify(progressMap));
 
           if (activeCourse) {
@@ -352,8 +353,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
               </h4>
               <div className="space-y-2">
                 {searchResults.map((result) => {
-                  const isActive = pathname === result.path;
-                  const isCompleted = visitedPages.includes(result.path);
+                  const isActive = cleanPath(pathname) === cleanPath(result.path);
+                  const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(result.path));
 
                   return (
                     <Link
@@ -400,8 +401,8 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{module.name}</h4>
             <div className="space-y-1">
               {module.children?.map((page) => {
-                const isActive = pathname === page.path;
-                const isCompleted = visitedPages.includes(page.path);
+                const isActive = cleanPath(pathname) === cleanPath(page.path);
+                const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(page.path));
 
                 return (
                   <Link

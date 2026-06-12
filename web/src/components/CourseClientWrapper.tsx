@@ -321,6 +321,36 @@ export const CourseClientWrapper = ({
     }
   }, [pathname]);
 
+  // Intercept anchor clicks for #cite and #ref elements to scroll inside the main container
+  useEffect(() => {
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const id = href.substring(1);
+        const targetEl = document.getElementById(id);
+        if (targetEl) {
+          e.preventDefault();
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Update URL hash without reload
+          window.history.pushState(null, '', href);
+        }
+      }
+    };
+
+    const el = mainRef.current;
+    if (el) {
+      el.addEventListener('click', handleAnchorClick);
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('click', handleAnchorClick);
+      }
+    };
+  }, []);
+
   // Lesson session timer per page & scroll tracking
   useEffect(() => {
     if (typeof window === 'undefined') return;

@@ -100,30 +100,31 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
   const processedLines = [];
 
   for (const line of lines) {
-    const match = line.match(/^(\s*[-*]\s*\*\*)(.*?)\*\*\s*:\s*(.*)$/);
+    // Matches: optional bullets (- or *), optional bold tags (**), term, separator (: or -), definition
+    const match = line.match(/^\s*[-*]?\s*(?:\*\*)?([^*:\-\n]+?)(?:\*\*)?\s*[:\-]\s*(.*)$/);
     if (match) {
-      const prefix = match[1];
-      const term = match[2].trim();
-      const definition = match[3].trim();
+      const term = match[1].trim();
+      let definition = match[2].trim();
       
       if (!definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
         const wikiUrl = await checkWikipediaPage(term, lang);
         if (wikiUrl) {
           const wikiLabel = getWikipediaLabel(lang);
           const separator = definition.endsWith('.') ? ' ' : '. ';
-          const updatedLine = `${prefix}${term}** : ${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
-          processedLines.push(updatedLine);
-          continue;
+          definition = `${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
         }
       }
+      // Reconstruct line to be a clean bulleted list item
+      processedLines.push(`- **${term}** : ${definition}`);
+    } else {
+      processedLines.push(line);
     }
-    processedLines.push(line);
   }
 
   return preGlossary + processedLines.join('\n');
 }
 
-export function reorderMdxSections(mdx: string): string {
+export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
   const sectionPatterns = [
     { id: 'conclusion', regex: /^(##\s*(?:Conclusion|Synthèse|Discussion|Synthèse & Discussion|Synthèse &amp; Discussion|Summary & Conclusion)[^\n]*)/mi },
     { id: 'et_apres', regex: /^(##\s*(?:Et Après|Et après\s*\??|What's Next\s*\??|What’s Next\s*\??|WhatsNext|Ouverture)[^\n]*)/mi },
@@ -131,6 +132,44 @@ export function reorderMdxSections(mdx: string): string {
     { id: 'glossaire', regex: /^(###\s*(?:Glossaire|Glossary|Lexique)[^\n]*)/mi },
     { id: 'references', regex: /^(###\s*(?:Références|References|Réf\.|Réf|Bibliography)[^\n]*)/mi },
   ];
+
+  const LOCALIZED_HEADINGS: Record<string, Record<string, string>> = {
+    conclusion: {
+      fr: '## Conclusion : Synthèse & Discussion',
+      en: '## Conclusion: Summary & Discussion',
+      es: '## Conclusión: Síntesis y Discusión',
+      de: '## Fazit: Zusammenfassung & Diskussion',
+      zh: '## 结论：总结与讨论',
+    },
+    et_apres: {
+      fr: '## Et Après ?',
+      en: "## What's Next?",
+      es: '## ¿Y ahora qué?',
+      de: '## Wie geht es weiter?',
+      zh: '## 下一步是什么？',
+    },
+    evaluation: {
+      fr: '## Évaluation Finale',
+      en: '## Final Evaluation',
+      es: '## Evaluación Final',
+      de: '## Abschlussbewertung',
+      zh: '## 最终评估',
+    },
+    glossaire: {
+      fr: '### Glossaire',
+      en: '### Glossary',
+      es: '### Glosario',
+      de: '### Glossar',
+      zh: '### 词汇表',
+    },
+    references: {
+      fr: '### Références',
+      en: '### References',
+      es: '### Referencias',
+      de: '### Referenzen',
+      zh: '### 参考文献',
+    },
+  };
 
   const sections: { id: string; header: string; index: number }[] = [];
   for (const pattern of sectionPatterns) {
@@ -153,13 +192,21 @@ export function reorderMdxSections(mdx: string): string {
   const firstSectionIndex = sections[0].index;
   const coreContent = mdx.substring(0, firstSectionIndex).trim();
 
+  const normalizedLang = (lang || 'en').toLowerCase().split('-')[0];
   const sectionContents: Record<string, string> = {};
   for (let i = 0; i < sections.length; i++) {
     const current = sections[i];
     const next = sections[i + 1];
     const start = current.index;
     const end = next ? next.index : mdx.length;
-    sectionContents[current.id] = mdx.substring(start, end).trim();
+    let content = mdx.substring(start, end).trim();
+
+    // Dynamically replace the matched header with the localized version
+    const langKey = normalizedLang in LOCALIZED_HEADINGS[current.id] ? normalizedLang : 'en';
+    const canonicalHeader = LOCALIZED_HEADINGS[current.id][langKey];
+    content = content.replace(current.header, canonicalHeader);
+
+    sectionContents[current.id] = content;
   }
 
   const desiredOrder = ['conclusion', 'et_apres', 'evaluation', 'glossaire', 'references'];
@@ -702,6 +749,118 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
   return navItems.sort((a, b) => a.type === 'folder' ? -1 : 1);
 }
 
+async function validateYouTubeVideo(videoId: string): Promise<boolean> {
+  if (!videoId || videoId.length !== 11 || videoId.startsWith('placeholder') || videoId.includes('example')) {
+    return false;
+  }
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' });
+    if (res.status === 404 || res.status === 400) {
+      return false; // Definitively non-existent
+    }
+    return true; // Assume OK for any other status (e.g. 429, 500) to avoid false positives
+  } catch (err) {
+    return true; // Network error or rate limiting: assume OK
+  }
+}
+
+async function searchYouTubeVideo(query: string): Promise<string | null | 'network_error'> {
+  try {
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+      }
+    });
+    if (!res.ok) {
+      if (res.status === 429 || res.status >= 500) {
+        return 'network_error';
+      }
+      return null;
+    }
+    const html = await res.text();
+    const match = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+  } catch (err) {
+    return 'network_error';
+  }
+}
+
+export async function repairYouTubeVideos(content: string, lang: string): Promise<string> {
+  let updatedContent = content;
+  const videoRegex = /<Video\s+([^>]*?)\/>/g;
+  let match;
+  
+  const tagsToProcess: { fullTag: string; attrsStr: string }[] = [];
+  while ((match = videoRegex.exec(content)) !== null) {
+    tagsToProcess.push({ fullTag: match[0], attrsStr: match[1] });
+  }
+
+  let repairCount = 0;
+  for (const { fullTag, attrsStr } of tagsToProcess) {
+    // Limit to max 3 repairs/searches per page load to protect performance and avoid rate limiting
+    if (repairCount >= 3) break;
+
+    const titleMatch = attrsStr.match(/title="([^"]+)"/);
+    const urlMatch = attrsStr.match(/url="([^"]+)"/);
+    const idMatch = attrsStr.match(/id="([^"]+)"/);
+    
+    const title = titleMatch ? titleMatch[1] : '';
+    const originalUrl = urlMatch ? urlMatch[1] : '';
+    const originalId = idMatch ? idMatch[1] : '';
+    
+    const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder');
+    const hasDummyId = !originalId || originalId.startsWith('placeholder') || originalId.length !== 11;
+    
+    let needsResolution = hasDummyUrl || hasDummyId;
+    
+    if (!needsResolution && originalId) {
+      const exists = await validateYouTubeVideo(originalId);
+      if (!exists) {
+        console.log(`[YouTube Validation] Video ${originalId} does not exist. Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+    
+    if (needsResolution && title) {
+      repairCount++;
+      const searchQuery = `${title} cours education ${lang.toLowerCase() === 'fr' ? 'français' : 'english'}`;
+      const realId = await searchYouTubeVideo(searchQuery);
+      
+      if (realId === 'network_error') {
+        console.log(`[YouTube Validation] Network/rate-limit error during search for "${title}". Skipping repair to prevent accidental deletion.`);
+        continue;
+      }
+
+      if (realId) {
+        const newUrl = `https://www.youtube.com/watch?v=${realId}`;
+        let updatedAttrs = attrsStr;
+        if (attrsStr.includes('id=')) {
+          updatedAttrs = updatedAttrs.replace(/id="[^"]*"/, `id="${realId}"`);
+        } else {
+          updatedAttrs += ` id="${realId}"`;
+        }
+        if (attrsStr.includes('url=')) {
+          updatedAttrs = updatedAttrs.replace(/url="[^"]*"/, `url="${newUrl}"`);
+        } else {
+          updatedAttrs += ` url="${newUrl}"`;
+        }
+        
+        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
+        console.log(`[YouTube Validation] Successfully repaired video "${title}" to ID: ${realId}`);
+      } else {
+        console.log(`[YouTube Validation] Could not find a replacement for video "${title}". Removing broken <Video> tag.`);
+        updatedContent = updatedContent.replace(fullTag, '');
+      }
+    }
+  }
+  
+  return updatedContent;
+}
+
 export async function getPageContent(slug: string[], lang: string = 'en') {
   slug = slug.map(s => decodeURIComponent(s));
   if (slug.length >= 3) {
@@ -715,7 +874,28 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const cleanedContent = stripOuterCodeFences(dbLesson.content);
         const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
         const { data: meta } = matter(cleanedContent);
-        const processedContent = preprocessMdx(cleanBody, lang);
+        
+        // Dynamic YouTube Link Repair
+        const repairedBody = await repairYouTubeVideos(cleanBody, lang);
+        if (repairedBody !== cleanBody) {
+          const newDbContent = matter.stringify(repairedBody, meta || {});
+          const { supabase: supabaseClient } = require('./supabase');
+          supabaseClient
+            .from('lessons')
+            .update({ content: newDbContent })
+            .eq('course_slug', courseSlug)
+            .eq('lesson_slug', lessonSlug)
+            .eq('lang', lang.toLowerCase())
+            .then(({ error }: any) => {
+              if (error) {
+                console.error("[YouTube Repair] Failed to update lesson in database:", error);
+              } else {
+                console.log(`[YouTube Repair] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
+              }
+            });
+        }
+
+        const processedContent = preprocessMdx(repairedBody, lang);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
         return {
           meta: {
@@ -743,7 +923,27 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const cleanedContent = stripOuterCodeFences(fallbackLesson.content);
         const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
         const { data: meta } = matter(cleanedContent);
-        const processedContent = preprocessMdx(cleanBody, fallbackLesson.lang || lang);
+
+        // Dynamic YouTube Link Repair for fallback lang
+        const repairedBody = await repairYouTubeVideos(cleanBody, fallbackLesson.lang || lang);
+        if (repairedBody !== cleanBody) {
+          const newDbContent = matter.stringify(repairedBody, meta || {});
+          supabase
+            .from('lessons')
+            .update({ content: newDbContent })
+            .eq('course_slug', courseSlug)
+            .eq('lesson_slug', lessonSlug)
+            .eq('lang', fallbackLesson.lang)
+            .then(({ error }: any) => {
+              if (error) {
+                console.error("[YouTube Repair Fallback] Failed to update database:", error);
+              } else {
+                console.log(`[YouTube Repair Fallback] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
+              }
+            });
+        }
+
+        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, fallbackLesson.lang || lang);
         return {
           meta: {
@@ -1278,6 +1478,9 @@ function parseJsonLikeArray(arrStr: string): any[] {
   jsonValid = jsonValid.replace(/'(\s*,|\s*\}|\s*\])/g, '"$1');
   // Replace escaped single quotes (which are invalid in JSON)
   jsonValid = jsonValid.replace(/\\'/g, "'");
+  // Remove trailing commas inside arrays or objects
+  jsonValid = jsonValid.replace(/,\s*\]/g, ']');
+  jsonValid = jsonValid.replace(/,\s*\}/g, '}');
   return JSON.parse(jsonValid);
 }
 
@@ -1342,6 +1545,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
     'AnecdoteHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
+    'IdeeBrillante', 'BrilliantIdea',
     'FunctionManipulator', 'EquationManipulator',
     // Interactive/sandbox/widget components — must NOT have their JSX expression attributes escaped
     'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
@@ -1372,7 +1576,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
       return part
         .replace(/\{/g, '&#123;')
         .replace(/\}/g, '&#125;')
-        .replace(/<(?=[a-zA-Z\/])/g, '&lt;')
+        .replace(/</g, '&lt;')
         // Escape bare & in text content (e.g. "## Synthèse & Ouverture") to prevent acorn crash
         .replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
     }
@@ -1414,6 +1618,7 @@ const MDX_WRAPPER_TAGS = [
   'PointOfView', 'PointDeVue',
   'GoingFurther', 'GoingFurtherItem',
   'SolvedProblem',
+  'IdeeBrillante', 'BrilliantIdea',
   'Callout', 'CalloutContainer',
   'EssayEvaluation',
   'SummativeEvaluation', 'FinalProject', 'FinalWork',
@@ -1490,10 +1695,24 @@ function healWrapperTagNesting(mdx: string): string {
   return result.join('\n');
 }
 
+function healWhatsNextNesting(mdx: string): string {
+  // Case A: <WhatsNext> followed by <EtApres itemsBase64="..." /> and </WhatsNext>
+  let processed = mdx.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)\/?>\s*<\/\1>/gi, (match, outerTag, outerAttrs, innerTag, innerAttrs) => {
+    return `<WhatsNext${outerAttrs}${innerAttrs}/>`;
+  });
+
+  // Case B: <WhatsNext> <EtApres ...> children </EtApres> </WhatsNext>
+  processed = processed.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)>([\s\S]*?)<\/\3>\s*<\/\1>/gi, (match, outerTag, outerAttrs, innerTag, innerAttrs, innerContent) => {
+    return `<WhatsNext${outerAttrs}${innerAttrs}>${innerContent}</WhatsNext>`;
+  });
+
+  return processed;
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Trim any outer markdown code block wrapper (e.g. ```mdx ... ``` or ``` ...)
   let processed = stripOuterCodeFences(content);
-  processed = reorderMdxSections(processed);
+  processed = reorderMdxSections(processed, lang);
 
   // 0a. Restore HTML-encoded quotes in JSX attributes to prevent next-mdx-remote parse failures
   processed = processed.replace(/=\s*&quot;([\s\S]*?)&quot;/gi, '="$1"');
@@ -1563,6 +1782,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = healObjectivesTags(processed);
   // Fix AI-generated nesting errors where wrapper tags are never properly closed
   processed = healWrapperTagNesting(processed);
+  processed = healWhatsNextNesting(processed);
   
   // Pre-pass: heal broken blockquotes in lists
   processed = healBlockquoteContiguity(processed);
@@ -1678,6 +1898,19 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     }
   });
 
+  // 3a. Process InteractiveDiagram hotspots
+  processed = processed.replace(/<InteractiveDiagram([\s\S]*?)hotspots=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const parsed = parseJsonLikeArray(arrStr);
+      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+      return `<InteractiveDiagram${p1}hotspotsBase64="${base64}"${p3}${p4}`;
+    } catch (e) {
+      console.error("Failed to parse InteractiveDiagram hotspots in preprocessor:", e);
+      return match;
+    }
+  });
+
   // 3b. Process Summary items to itemsString
   processed = processed.replace(/<Summary([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
     try {
@@ -1694,7 +1927,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
 
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
-    return `<sup id="cite-${num}"><a href="#ref-${num}">[${num}]</a></sup>`;
+    return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
   });
 
   // 5. Render Glossary as static list at the bottom of the page
@@ -1703,7 +1936,13 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     const preGlossary = processed.slice(0, glossaryIndex);
     let glossaryContent = processed.slice(glossaryIndex);
     
-    glossaryContent = glossaryContent.replace(/<Glossary\s+term="([^"]+)"\s+definition="([\s\S]*?)">([\s\S]*?)<\/Glossary>/gi, (match, term, def, displayName) => {
+    // Robust replacement of <Glossary> tags supporting self-closing, attributes in any order, and single/double quotes
+    glossaryContent = glossaryContent.replace(/<Glossary\b([^>]*?)(?:>([\s\S]*?)<\/Glossary>|\/>)/gi, (match, attrs, content) => {
+      const termMatch = attrs.match(/term=["']([^"']+)["']/i);
+      const defMatch = attrs.match(/definition=["']([\s\S]*?)["']/i);
+      const term = termMatch ? termMatch[1] : '';
+      const def = defMatch ? defMatch[1] : '';
+      const displayName = (content || term || '').trim();
       return `\n- **${displayName}** : ${def}\n`;
     });
     
@@ -1729,8 +1968,15 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     refContent = refContent.replace(/\*\*\[(\d+)\]\*\*/g, '[$1]');
     
     // Structure references as clean separate blocks with proper IDs and back-links
-    refContent = refContent.replace(/(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi, (match, anchorId, num, rest) => {
-      const activeNum = num || anchorId;
+    const parsedItems: any[] = [];
+    const itemRegex = /(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
+    
+    let match;
+    while ((match = itemRegex.exec(refContent)) !== null) {
+      const num = match[2] || match[1];
+      const rest = match[3];
+      if (!num || !rest) continue;
+
       const trimmedRest = rest.trim();
       
       // Format link text and rewrite unstable links to Google Scholar
@@ -1754,7 +2000,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
           }
           targetUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
         }
-        return `[${cleanLinkText}](${targetUrl})`;
+        return `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline hover:text-indigo-300 transition-colors">${cleanLinkText}</a>`;
       });
 
       // Extract search query text to search on Google Scholar
@@ -1778,13 +2024,21 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
       };
       const currentLang = (lang || 'en').toLowerCase();
       const scholarLinkText = scholarLinkTexts[currentLang] || scholarLinkTexts['en'];
-      
-      const scholarLinkTextHtml = ` <span class="text-xs text-slate-400 font-normal">| <a href="${scholarUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors inline-flex items-center gap-1">${scholarLinkText}</a></span>`;
 
-      return `<span id="ref-${activeNum}"></span><a href="#cite-${activeNum}" class="no-underline hover:text-indigo-400 transition-colors">**[${activeNum}]**</a> ${processedRest}${scholarLinkTextHtml}\n\n`;
-    });
-    
-    processed = preRef + refContent;
+      parsedItems.push({
+        num: parseInt(num, 10),
+        text: processedRest,
+        scholarUrl: scholarUrl,
+        scholarText: scholarLinkText
+      });
+    }
+
+    if (parsedItems.length > 0) {
+      const base64 = Buffer.from(JSON.stringify(parsedItems)).toString('base64');
+      processed = preRef + `\n\n<References itemsBase64="${base64}" />\n\n`;
+    } else {
+      processed = preRef + refContent;
+    }
   }
 
   // Final validation: balance tags and strip orphaned closing JSX tags

@@ -14,6 +14,7 @@ import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
 import { DiagnosticQuiz } from './DiagnosticQuiz';
 import { AudioPlayer } from './AudioPlayer';
+import { References } from './References';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -35,6 +36,7 @@ import { HistoricalAnecdote } from './HistoricalAnecdote';
 import { ScientificMethod } from './ScientificMethod';
 import { WhatsNext } from './WhatsNext';
 import { PointOfView } from './PointOfView';
+import { IdeeBrillante } from './IdeeBrillante';
 import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
 
@@ -594,6 +596,7 @@ const components = {
   ExternalSandbox,
   
   // Registering New Interactivity Widgets
+  References,
   Mermaid,
   FunctionPlotter,
   InteractiveDiagram,
@@ -625,6 +628,8 @@ const components = {
   PointDeVue: PointOfView,
   Geometry2D,
   Geometrie2D: Geometry2D,
+  IdeeBrillante,
+  BrilliantIdea: IdeeBrillante,
 
   // Overriding standard table to render dynamic graphs on toggle
   table: DynamicTableChart,

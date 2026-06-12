@@ -42,7 +42,9 @@ export const EntityLink = ({
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  const fallbackUrl = `https://${activeLang.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
+  const fallbackUrl = exists === false
+    ? `https://${activeLang.toLowerCase().trim()}.wikipedia.org/w/index.php?search=${encodeURIComponent(name)}`
+    : `https://${activeLang.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
   const resolvedUrl = url || fallbackUrl;
   const staticBio = bio || description;
   const resolvedSummary = summary || staticBio;
@@ -83,7 +85,7 @@ export const EntityLink = ({
     };
   }, [name, activeLang]);
 
-  const showOverlay = exists === true || !!staticBio;
+  const showOverlay = !!name;
   if (!showOverlay) {
     return <>{children}</>;
   }
@@ -143,7 +145,10 @@ export const EntityLink = ({
 
   const t = {
     loading: isFr ? 'Chargement des informations...' : 'Loading summary...',
-    readWiki: isFr ? 'Lire sur Wikipédia' : 'Read on Wikipedia'
+    readWiki: isFr ? 'Lire sur Wikipédia' : 'Read on Wikipedia',
+    error: isFr 
+      ? `Nous n'avons pas pu charger le résumé de Wikipédia pour "${name}". Vous pouvez toujours faire une recherche en cliquant ci-dessous.`
+      : `We couldn't load the Wikipedia summary for "${name}". You can still search by clicking below.`
   };
 
   return (
@@ -180,6 +185,10 @@ export const EntityLink = ({
             {resolvedSummary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4">
                 &ldquo;{resolvedSummary}&rdquo;
+              </p>
+            ) : exists === false ? (
+              <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
+                {t.error}
               </p>
             ) : (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4">
