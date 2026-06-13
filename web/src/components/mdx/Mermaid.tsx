@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Maximize2, Minimize2, ZoomIn, ZoomOut, Move, X, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 
@@ -195,6 +195,12 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const containerId = useRef(`mermaid-${Math.floor(Math.random() * 1000000)}`);
   const elementRef = useRef<HTMLDivElement>(null);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+
   const chartText = chart || getTextFromChildren(children) || '';
 
   // Theme detector MutationObserver
@@ -342,6 +348,111 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     return "my-6 p-6 border border-slate-850 bg-slate-950/40 rounded-2xl flex flex-col items-center justify-center overflow-x-auto select-none backdrop-blur-md shadow-inner";
   };
 
+  // Move useEffect calls before early returns
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsFullscreen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    if (!elementRef.current || loading || error) return;
+    
+    const parseToRgb = (colorStr: string): { r: number; g: number; b: number } | null => {
+      const s = colorStr.trim().toLowerCase();
+      
+      const rgbMatch = s.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+      if (rgbMatch) {
+        return {
+          r: parseInt(rgbMatch[1], 10),
+          g: parseInt(rgbMatch[2], 10),
+          b: parseInt(rgbMatch[3], 10)
+        };
+      }
+      
+      const hexMatch = s.match(/^#([a-f0-9]{3,8})$/);
+      if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3 || hex.length === 4) {
+          hex = hex.split('').map(c => c + c).join('');
+        }
+        return {
+          r: parseInt(hex.substring(0, 2), 16),
+          g: parseInt(hex.substring(2, 4), 16),
+          b: parseInt(hex.substring(4, 6), 16)
+        };
+      }
+
+      const colors: Record<string, string> = {
+        white: '#ffffff',
+        black: '#000000',
+        red: '#ff0000',
+        green: '#00ff00',
+        blue: '#0000ff',
+        yellow: '#ffff00',
+        orange: '#ffa500',
+        purple: '#800080',
+        pink: '#ffc0cb',
+        cyan: '#00ffff',
+        magenta: '#ff00ff',
+        gray: '#808080',
+        grey: '#808080',
+        lightblue: '#add8e6',
+        lightgreen: '#90ee90',
+        lightyellow: '#ffffe0',
+        lightpink: '#ffb6c1',
+        lightcyan: '#e0ffff',
+        lavender: '#e6e6fa'
+      };
+
+      if (colors[s]) {
+        return parseToRgb(colors[s]);
+      }
+      
+      return null;
+    };
+
+    const adjustContrast = () => {
+      const nodes = elementRef.current?.querySelectorAll('.node');
+      nodes?.forEach(node => {
+        const shape = node.querySelector('.label-container, rect, circle, ellipse, polygon, path');
+        if (!shape) return;
+        
+        const style = window.getComputedStyle(shape);
+        const fill = shape.getAttribute('style')?.match(/fill:\s*([^;]+)/)?.[1] || style.fill;
+        
+        if (fill && fill !== 'none' && fill !== 'transparent') {
+          const rgb = parseToRgb(fill);
+          if (rgb) {
+            const opacity = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+            const luminance = opacity / 255;
+            if (luminance > 0.6) {
+              const labels = node.querySelectorAll('text, span, div, p, a');
+              labels.forEach(label => {
+                (label as HTMLElement).style.setProperty('color', '#0f172a', 'important');
+                (label as HTMLElement).style.setProperty('fill', '#0f172a', 'important');
+              });
+            }
+          }
+        }
+      });
+    };
+
+    adjustContrast();
+    const timeout = setTimeout(adjustContrast, 50);
+    return () => clearTimeout(timeout);
+  }, [svg, loading, error]);
+
   if (loading) {
     return (
       <div className="my-6 w-full h-[200px] border border-slate-850 bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center gap-3">
@@ -365,13 +476,46 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const eBg = theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000' : '#0f172a';
   const id  = containerId.current;
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !isFullscreen) return;
+    setOffset({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!isFullscreen) return;
+    e.preventDefault();
+    const zoomFactor = 1.1;
+    const nextScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
+    setScale(Math.max(0.1, Math.min(10, nextScale)));
+  };
+
+  const resetPanZoom = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  // Extracted and moved useEffects above early returns
+
   return (
-    <div className={getContainerClassName()}>
+    <div className={`${getContainerClassName()} relative group/mermaid`}>
       <style dangerouslySetInnerHTML={{ __html: `
         /* ── Root SVG ── */
         #${id} { font-family: 'Inter', system-ui, sans-serif !important; }
         #${id} svg { background: transparent !important; }
-
+ 
         /* ── All shape fills — catch every Mermaid v10 node variant ── */
         #${id} .node rect,
         #${id} .node circle,
@@ -389,7 +533,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           stroke: ${str} !important;
           stroke-width: 1.5px !important;
         }
-
+ 
         /* ── All text / labels ── */
         #${id} text,
         #${id} span,
@@ -408,7 +552,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           font-size:  14px !important;
           font-weight:500 !important;
         }
-
+ 
         /* ── Edges / arrows ── */
         #${id} .edgePath path,
         #${id} .flowchart-link,
@@ -423,7 +567,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           fill:   ${edg} !important;
           stroke: ${edg} !important;
         }
-
+ 
         /* ── Edge labels ── */
         #${id} .edgeLabel,
         #${id} .edgeLabel span,
@@ -434,7 +578,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           background-color: ${eBg}  !important;
           font-size: 12px !important;
         }
-
+ 
         /* ── Cluster / subgraph ── */
         #${id} .cluster-label text,
         #${id} .cluster-label span {
@@ -442,11 +586,99 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           color: ${txt} !important;
         }
       ` }} />
+      
+      <button
+        onClick={() => {
+          setIsFullscreen(true);
+          resetPanZoom();
+        }}
+        className="absolute top-3 right-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all opacity-100 md:opacity-0 md:group-hover/mermaid:opacity-100 z-10 cursor-pointer shadow-md"
+        title={language === 'FR' ? "Plein écran" : "Fullscreen"}
+      >
+        <Maximize2 className="w-4 h-4" />
+      </button>
+
       <div
         ref={elementRef}
         className="w-full flex items-center justify-center overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: svg }}
       />
+
+      {isFullscreen && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
+          onWheel={handleWheel}
+        >
+          {/* Top toolbar */}
+          <div className="absolute top-0 left-0 right-0 p-4 bg-slate-900/60 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-20">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <Move className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-white text-xs font-black uppercase tracking-wider">
+                  {language === 'FR' ? "Explorateur de Carte Cognitive" : "Cognitive Map Explorer"}
+                </h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                  {language === 'FR' ? "Glissez pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
+                </p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setScale(prev => Math.min(10, prev * 1.2))}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
+                title={language === 'FR' ? "Zoomer" : "Zoom In"}
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setScale(prev => Math.max(0.1, prev / 1.2))}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
+                title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <button
+                onClick={resetPanZoom}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
+                title={language === 'FR' ? "Réinitialiser" : "Reset View"}
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="p-2 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white rounded-lg border border-rose-500/30 transition-all cursor-pointer ml-4"
+                title={language === 'FR' ? "Fermer" : "Close (Esc)"}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Map canvas */}
+          <div 
+            className={`w-full h-full flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <div 
+              style={{
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                willChange: 'transform'
+              }}
+              className="max-w-[95vw] max-h-[90vh] flex items-center justify-center"
+              dangerouslySetInnerHTML={{ __html: svg }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

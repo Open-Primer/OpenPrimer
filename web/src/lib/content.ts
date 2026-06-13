@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { cleanPathSegment } from './translations';
 
 const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
   ? path.join(process.cwd(), 'content')
@@ -100,22 +101,46 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
   const processedLines = [];
 
   for (const line of lines) {
-    // Matches: optional bullets (- or *), optional bold tags (**), term, separator (: or -), definition
-    const match = line.match(/^\s*[-*]?\s*(?:\*\*)?([^*:\-\n]+?)(?:\*\*)?\s*[:\-]\s*(.*)$/);
-    if (match) {
-      const term = match[1].trim();
-      let definition = match[2].trim();
-      
-      if (!definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
-        const wikiUrl = await checkWikipediaPage(term, lang);
-        if (wikiUrl) {
-          const wikiLabel = getWikipediaLabel(lang);
-          const separator = definition.endsWith('.') ? ' ' : '. ';
-          definition = `${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
-        }
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('-') && !trimmed.startsWith('*')) {
+      processedLines.push(line);
+      continue;
+    }
+
+    const withoutBullet = trimmed.replace(/^[-*]\s*/, '').trim();
+    let sepIndex = withoutBullet.indexOf(':');
+    if (sepIndex === -1) {
+      const matchDash = withoutBullet.match(/\s+-\s+/);
+      if (matchDash) {
+        sepIndex = matchDash.index! + matchDash[0].indexOf('-');
+      } else {
+        sepIndex = withoutBullet.indexOf('-');
       }
-      // Reconstruct line to be a clean bulleted list item
-      processedLines.push(`- **${term}** : ${definition}`);
+    }
+
+    if (sepIndex !== -1) {
+      let term = withoutBullet.slice(0, sepIndex).trim();
+      let definition = withoutBullet.slice(sepIndex + 1).trim();
+
+      // Strip bold/italic markdown from term
+      term = term.replace(/^\*+/, '').replace(/\*+$/, '').trim();
+
+      // Strip leftover closing bold/italic from definition
+      definition = definition.replace(/^\*+\s*/, '').replace(/\*+\s*$/, '').trim();
+
+      if (term && definition) {
+        if (!definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
+          const wikiUrl = await checkWikipediaPage(term, lang);
+          if (wikiUrl) {
+            const wikiLabel = getWikipediaLabel(lang);
+            const separator = definition.endsWith('.') ? ' ' : '. ';
+            definition = `${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
+          }
+        }
+        processedLines.push(`- **${term}** : ${definition}`);
+      } else {
+        processedLines.push(line);
+      }
     } else {
       processedLines.push(line);
     }
@@ -209,7 +234,7 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     sectionContents[current.id] = content;
   }
 
-  const desiredOrder = ['conclusion', 'et_apres', 'evaluation', 'glossaire', 'references'];
+  const desiredOrder = ['conclusion', 'evaluation', 'et_apres', 'glossaire', 'references'];
   let rebuilt = coreContent;
 
   for (const id of desiredOrder) {
@@ -604,7 +629,7 @@ export function getSyllabus() {
 
 export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<NavItem[]> {
   dir = decodeURIComponent(dir);
-  const parts = dir.split('/');
+  const parts = dir.split('/').map(s => s ? cleanPathSegment(s) : s);
   
   if (parts.length === 3) {
     const [level, subject, courseSlug] = parts;
@@ -862,7 +887,7 @@ export async function repairYouTubeVideos(content: string, lang: string): Promis
 }
 
 export async function getPageContent(slug: string[], lang: string = 'en') {
-  slug = slug.map(s => decodeURIComponent(s));
+  slug = slug.map(s => cleanPathSegment(decodeURIComponent(s)));
   if (slug.length >= 3) {
     const courseSlug = slug[2];
     const lessonSlug = slug[3] || 'introduction';
@@ -1073,7 +1098,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 }
 
 export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
-  slug = slug.map(s => decodeURIComponent(s));
+  slug = slug.map(s => cleanPathSegment(decodeURIComponent(s)));
   // 1. Check the DB lessons table first (handles DB-only courses like 'revolution')
   if (slug.length >= 3) {
     const courseSlug = slug[2];
@@ -1485,36 +1510,98 @@ function parseJsonLikeArray(arrStr: string): any[] {
 }
 
 function healObjectivesTags(mdx: string): string {
+  // ── Pass 1: Normalize dot-notation <Objectives.Knowledge>, <Objectives.Skills>, <Objectives.Attitudes>
+  mdx = mdx
+    .replace(/<Objectives\.Knowledge(\b[^>]*?)>/gi, '<Knowledge$1>')
+    .replace(/<\/Objectives\.Knowledge>/gi, '</Knowledge>')
+    .replace(/<Objectives\.Skills(\b[^>]*?)>/gi, '<Skills$1>')
+    .replace(/<\/Objectives\.Skills>/gi, '</Skills>')
+    .replace(/<Objectives\.Attitudes(\b[^>]*?)>/gi, '<Attitudes$1>')
+    .replace(/<\/Objectives\.Attitudes>/gi, '</Attitudes>');
+
+  // ── Pass 2: Convert <Objective type="knowledge" goal="..." /> variants to structured blocks
+  mdx = mdx.replace(
+    /(<Objectives\b[^>]*?>)([\s\S]*?)(<\/Objectives>)/gi,
+    (full, openTag, body, closeTag) => {
+      // Already has structured children — leave untouched
+      if (/<(Knowledge|Skills|Attitudes)\b/i.test(body)) return full;
+      // No <Objective ...> variants — leave for isChildrenEmpty guard
+      if (!/<Objective\b/i.test(body)) return full;
+
+      const knowledgeItems: string[] = [];
+      const skillsItems:    string[] = [];
+      const attitudesItems: string[] = [];
+
+      const processEntry = (attrs: string, innerContent: string) => {
+        const typeMatch = attrs.match(/\btype=["']?([^"'\s>]+)["']?/i);
+        const goalMatch = attrs.match(/\bgoal=["']([^"']+)["']/i);
+        const itemsB64  = attrs.match(/\bitemsBase64=["']([^"']+)["']/i);
+        const rawType   = (typeMatch?.[1] || 'knowledge').toLowerCase();
+
+        let text = innerContent.trim() || goalMatch?.[1] || '';
+
+        if (itemsB64) {
+          try {
+            const decoded = JSON.parse(Buffer.from(itemsB64[1], 'base64').toString('utf8'));
+            if (Array.isArray(decoded)) {
+              text = decoded.map((s: string) => '- ' + s).join('\n');
+            }
+          } catch (_) { /* keep text as-is */ }
+        }
+
+        // Remove inline JSX props like knowledge={[...]}
+        text = text.replace(/\b(?:knowledge|skills|attitudes|items)\s*=\s*\{[\s\S]*?\}/gi, '').trim();
+
+        const line = text ? (text.startsWith('-') ? text : '- ' + text) : '';
+        if (!line) return;
+
+        if (rawType.includes('skill') || rawType.includes('comp')) skillsItems.push(line);
+        else if (rawType.includes('attitud'))                       attitudesItems.push(line);
+        else                                                        knowledgeItems.push(line);
+      };
+
+      // Self-closing: <Objective ... />  or  <Objective ...>
+      const scRe = /<Objective\b([^>]*?)\/?>/gi;
+      // Wrapping:    <Objective ...>content</Objective>
+      const wrRe = /<Objective\b([^>]*?)>([\s\S]*?)<\/Objective>/gi;
+      let m: RegExpExecArray | null;
+      while ((m = scRe.exec(body)) !== null) processEntry(m[1], '');
+      while ((m = wrRe.exec(body)) !== null) processEntry(m[1], m[2]);
+
+      if (!knowledgeItems.length && !skillsItems.length && !attitudesItems.length) return full;
+
+      const blocks: string[] = [];
+      if (knowledgeItems.length) blocks.push('  <Knowledge>\n' + knowledgeItems.map(i => '    ' + i).join('\n') + '\n  </Knowledge>');
+      if (skillsItems.length)    blocks.push('  <Skills>\n'    + skillsItems.map(i    => '    ' + i).join('\n') + '\n  </Skills>');
+      if (attitudesItems.length) blocks.push('  <Attitudes>\n' + attitudesItems.map(i => '    ' + i).join('\n') + '\n  </Attitudes>');
+
+      return '<Objectives>\n' + blocks.join('\n') + '\n</Objectives>';
+    }
+  );
+
+  // ── Pass 3: Original logic — heal raw <Knowledge>/<Skills>/<Attitudes> missing proper structure
   const objectivesBlockRegex = /<Objectives>([\s\S]*?)(?:<\/Objectives>|$)/gi;
-  
+
   return mdx.replace(objectivesBlockRegex, (match, body) => {
     const extractContent = (tagName: string) => {
-      const tagStartRegex = new RegExp(`<${tagName}>`, 'i');
+      const tagStartRegex = new RegExp('<' + tagName + '>', 'i');
       const startMatch = body.match(tagStartRegex);
       if (!startMatch) return '';
-      
       const startIndex = startMatch.index! + startMatch[0].length;
       const subBody = body.substring(startIndex);
-      
       const nextTagRegex = /<\/?(Knowledge|Skills|Attitudes|Objectives)\b/i;
       const endMatch = subBody.match(nextTagRegex);
-      
-      let content = subBody;
-      if (endMatch) {
-        content = subBody.substring(0, endMatch.index);
-      }
-      
-      content = content.replace(new RegExp(`</${tagName}>`, 'gi'), '');
-      return content.trim();
+      let ct = subBody;
+      if (endMatch) ct = subBody.substring(0, endMatch.index);
+      ct = ct.replace(new RegExp('</' + tagName + '>', 'gi'), '');
+      return ct.trim();
     };
 
     const knowledge = extractContent('Knowledge');
-    const skills = extractContent('Skills');
+    const skills    = extractContent('Skills');
     const attitudes = extractContent('Attitudes');
 
-    if (!knowledge && !skills && !attitudes) {
-      return match;
-    }
+    if (!knowledge && !skills && !attitudes) return match;
 
     return `<Objectives>
   <Knowledge>
@@ -1529,7 +1616,6 @@ function healObjectivesTags(mdx: string): string {
 </Objectives>`;
   });
 }
-
 function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   const allowedTags = [
     'a', 'span', 'sup', 'sub', 'strong', 'em', 'img', 'br', 'code', 'pre', 'p', 'ul', 'ol', 'li', 'div', 'blockquote',
@@ -1695,6 +1781,31 @@ function healWrapperTagNesting(mdx: string): string {
   return result.join('\n');
 }
 
+function normalizeFrenchPedagogicalTags(mdx: string): string {
+  const mapping: Record<string, string> = {
+    EtApres: 'WhatsNext',
+    AnecdoteHistorique: 'HistoricalAnecdote',
+    EspritCritique: 'CriticalThinking',
+    LeSaviezVous: 'DidYouKnow',
+    MethodeScientifique: 'ScientificMethod',
+    PointDeVue: 'PointOfView',
+    Geometrie2D: 'Geometry2D',
+    IdeeBrillante: 'BrilliantIdea',
+    QuestionOuverte: 'OpenQuestion',
+    DebatScientifique: 'ScientificDebate'
+  };
+
+  let processed = mdx;
+  for (const [french, english] of Object.entries(mapping)) {
+    const openRegex = new RegExp(`<${french}(\\b[^>]*?)>`, 'gi');
+    processed = processed.replace(openRegex, `<${english}$1>`);
+    
+    const closeRegex = new RegExp(`</${french}>`, 'gi');
+    processed = processed.replace(closeRegex, `</${english}>`);
+  }
+  return processed;
+}
+
 function healWhatsNextNesting(mdx: string): string {
   // Case A: <WhatsNext> followed by <EtApres itemsBase64="..." /> and </WhatsNext>
   let processed = mdx.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)\/?>\s*<\/\1>/gi, (match, outerTag, outerAttrs, innerTag, innerAttrs) => {
@@ -1709,9 +1820,143 @@ function healWhatsNextNesting(mdx: string): string {
   return processed;
 }
 
+function deduplicateHistoricalPersons(mdx: string): string {
+  const seenNames = new Set<string>();
+
+  // 1. First, strip HistoricalPerson tags from bold title blocks
+  // e.g. **Mini-Biographie : <HistoricalPerson name="Phineas_Gage" ...>Phineas Gage (1823 - 1860)</HistoricalPerson>**
+  let processed = mdx.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>\*\*/gi, (match, displayName) => {
+    return `**Mini-Biographie : ${displayName}**`;
+  });
+
+  // Also catch simple cases where there are spaces or different cases
+  processed = processed.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*([^]*?)\*\*/gi, (match, content) => {
+    const stripped = content.replace(/<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>/gi, '$1');
+    return `**Mini-Biographie : ${stripped}**`;
+  });
+
+  // Strip HistoricalPerson tags inside markdown headings (e.g. ### <HistoricalPerson ...>Name</HistoricalPerson> -> ### Name)
+  processed = processed.replace(/^(#{1,6}\s+)([\s\S]*?)$/gm, (match, prefix, content) => {
+    const stripped = content.replace(/<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>/gi, '$1');
+    return `${prefix}${stripped}`;
+  });
+
+  // 2. Now, handle duplicate HistoricalPerson tags in the MDX body
+  processed = processed.replace(/<HistoricalPerson\b([^>]*?)>([\s\S]*?)<\/HistoricalPerson>/gi, (match, attrs, innerText) => {
+    const nameMatch = attrs.match(/name=["']([^"']+)["']/i);
+    if (!nameMatch) {
+      return match;
+    }
+    const name = nameMatch[1].trim().toLowerCase();
+    
+    // If we've already seen this historical person in the document, replace the tag with its inner text
+    if (seenNames.has(name)) {
+      return innerText;
+    }
+    
+    seenNames.add(name);
+    return match;
+  });
+
+  return processed;
+}
+
+function balancePedagogicalTags(mdx: string): string {
+  const wrapperTags = [
+    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'WhatsNext', 'EtApres',
+    'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
+    'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate'
+  ];
+
+  let result = mdx;
+
+  for (const tag of wrapperTags) {
+    const regex = new RegExp(`<(\\/?)(${tag})\\b([^>]*?)(\\/?)>`, 'gi');
+    
+    interface Token {
+      index: number;
+      length: number;
+      type: 'open' | 'close' | 'self';
+      raw: string;
+      attrs: string;
+    }
+    
+    const tokens: Token[] = [];
+    let match;
+    
+    while ((match = regex.exec(result)) !== null) {
+      const isClose = match[1] === '/';
+      const isSelf = match[4] === '/';
+      
+      let type: 'open' | 'close' | 'self' = 'open';
+      if (isClose) {
+        type = 'close';
+      } else if (isSelf) {
+        type = 'self';
+      }
+      
+      tokens.push({
+        index: match.index,
+        length: match[0].length,
+        type,
+        raw: match[0],
+        attrs: match[3]
+      });
+    }
+    
+    if (tokens.length === 0) continue;
+    
+    const conversions = new Set<number>();
+    const openStack: number[] = [];
+    
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (tok.type === 'open') {
+        openStack.push(i);
+      } else if (tok.type === 'self') {
+        // self-closing
+      } else if (tok.type === 'close') {
+        if (openStack.length > 0) {
+          openStack.pop();
+        } else {
+          let foundSelf = -1;
+          for (let j = i - 1; j >= 0; j--) {
+            if (tokens[j].type === 'self' && !conversions.has(j)) {
+              foundSelf = j;
+              break;
+            }
+          }
+          if (foundSelf !== -1) {
+            conversions.add(foundSelf);
+          }
+        }
+      }
+    }
+    
+    if (conversions.size > 0) {
+      const sortedConversions = Array.from(conversions).sort((a, b) => b - a);
+      let tempResult = result;
+      for (const idx of sortedConversions) {
+        const tok = tokens[idx];
+        let newAttrs = tok.attrs.trim();
+        if (newAttrs.endsWith('/')) {
+          newAttrs = newAttrs.substring(0, newAttrs.length - 1).trim();
+        }
+        const replacement = `<${tag} ${newAttrs}>`.replace(/\s+>/g, '>');
+        tempResult = tempResult.substring(0, tok.index) + replacement + tempResult.substring(tok.index + tok.length);
+      }
+      result = tempResult;
+    }
+  }
+  
+  return result;
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Trim any outer markdown code block wrapper (e.g. ```mdx ... ``` or ``` ...)
   let processed = stripOuterCodeFences(content);
+  processed = normalizeFrenchPedagogicalTags(processed);
+  processed = balancePedagogicalTags(processed);
   processed = reorderMdxSections(processed, lang);
 
   // 0a. Restore HTML-encoded quotes in JSX attributes to prevent next-mdx-remote parse failures
@@ -1783,6 +2028,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Fix AI-generated nesting errors where wrapper tags are never properly closed
   processed = healWrapperTagNesting(processed);
   processed = healWhatsNextNesting(processed);
+  processed = deduplicateHistoricalPersons(processed);
   
   // Pre-pass: heal broken blockquotes in lists
   processed = healBlockquoteContiguity(processed);

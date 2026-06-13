@@ -57,7 +57,7 @@ export const CriticalThinking = ({ title, prompt, question, children }: Critical
           {displayTitle}
         </span>
       </div>
-      <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 font-medium italic pl-1">
+      <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200 font-medium italic pl-1">
         {content}
       </div>
     </div>

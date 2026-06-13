@@ -96,6 +96,10 @@ export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?
     safeItems = items;
   }
 
+  if (safeItems.length === 0) {
+    return null;
+  }
+
   return (
     <div className="my-12 p-10 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl">
       <h3 className="text-white text-xl font-black mb-8 flex items-center gap-3">

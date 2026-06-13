@@ -1504,6 +1504,35 @@ export const formatCourseLevel = (level: string | number, lang: string) => {
   const isDe = lang.toUpperCase() === 'DE';
   const isFr = lang.toUpperCase() === 'FR';
 
+  if (lvlStr === 'BEGINNER') {
+    if (isFr) return 'Débutant';
+    if (isEs) return 'Principiante';
+    if (isDe) return 'Anfänger';
+    if (isZh) return '初学者';
+    return 'Beginner';
+  }
+  if (lvlStr === 'INTERMEDIATE') {
+    if (isFr) return 'Intermédiaire';
+    if (isEs) return 'Intermedio';
+    if (isDe) return 'Mittelstufe';
+    if (isZh) return '中级';
+    return 'Intermediate';
+  }
+  if (lvlStr === 'ADVANCED') {
+    if (isFr) return 'Avancé';
+    if (isEs) return 'Avanzado';
+    if (isDe) return 'Fortgeschritten';
+    if (isZh) return '高级';
+    return 'Advanced';
+  }
+  if (lvlStr === 'EXPERT') {
+    if (isFr) return 'Expert';
+    if (isEs) return 'Experto';
+    if (isDe) return 'Experte';
+    if (isZh) return '专家';
+    return 'Expert';
+  }
+
   if (lvlStr === 'SECONDARY_1') {
     if (isFr) return 'Secondaire 1';
     if (isZh) return '高中一年级';

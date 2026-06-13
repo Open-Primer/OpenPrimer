@@ -15,7 +15,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService, isDatabaseConfigured, syncLocalStorageToSupabase } from '@/lib/db';
 import { CourseKiosk } from './CourseKiosk';
 import { EnrollmentModal } from './modals/EnrollmentModal';
-import { getLocalizedDiscipline, translateDisciplineQuery } from '@/lib/translations';
+import { getLocalizedDiscipline, translateDisciplineQuery, cleanPathSegment } from '@/lib/translations';
 import { validateEmail, detectPromptInjection, isSpam } from '@/lib/security';
 
 
@@ -865,7 +865,7 @@ export const CatalogPage = () => {
                     if (course.isCurriculum) {
                       setSelectedEnrollCourse(course);
                     } else {
-                      window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                      window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                     }
                   }}
                   className="group block h-full cursor-pointer"
@@ -1011,7 +1011,7 @@ export const CatalogPage = () => {
                           if (course.isCurriculum) {
                             setSelectedEnrollCourse(course);
                           } else {
-                            window.location.href = `/${course.level}/${course.subject}/${course.slug}/introduction`;
+                            window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                           }
                         }}
                         className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2"
@@ -1049,10 +1049,10 @@ export const CatalogPage = () => {
                               
                               setTimeout(() => {
                                 setEnrollmentSuccess(false);
-                                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+                                window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;
                               }, 2000);
                             } else {
-                              window.location.href = `/signup?redirect=/${course.level}/${course.subject}/${course.slug}/introduction`;
+                              window.location.href = `/signup?redirect=/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                             }
                           }}
                           className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
@@ -1138,7 +1138,7 @@ export const CatalogPage = () => {
             onEnroll={async (activeC) => {
               const targetCourse = activeC || selectedEnrollCourse;
               if (!isLoggedIn) {
-                window.location.href = `/signup?redirect=/${targetCourse.level}/${targetCourse.subject}/${targetCourse.slug}/introduction`;
+                window.location.href = `/signup?redirect=/${cleanPathSegment(targetCourse.level)}/${cleanPathSegment(targetCourse.subject)}/${targetCourse.slug}/introduction`;
                 return;
               }
               let userId = 'u1';
@@ -1159,7 +1159,7 @@ export const CatalogPage = () => {
               
               setTimeout(() => {
                 setEnrollmentSuccess(false);
-                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+                window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;
               }, 2000);
             }}
           />

@@ -249,7 +249,29 @@ export const STATIC_UI_STRINGS = {
     ex_incorrect: "Incorrect. Try re-evaluating the formula or steps.",
     ex_attempts: "Attempts left:",
     ex_unlocked_sol: "💡 Solution unlocked!",
-    ex_placeholder: "Enter numerical value..."
+    ex_placeholder: "Enter numerical value...",
+    essay_title: "Essay Evaluation",
+    essay_desc: "Write a short essay response to the prompt below. Your AI tutor will evaluate and grade your work.",
+    essay_start: "Start Assessment",
+    essay_grading_scale: "Grading system:",
+    essay_placeholder: "Write your essay here...",
+    essay_submit: "Submit Essay",
+    essay_evaluating: "AI Tutor is grading...",
+    essay_feedback_title: "AI Tutor Assessment",
+    essay_grade_label: "Grade",
+    essay_retry: "Rewrite Essay",
+    essay_saved_local: "Validated & saved locally",
+    essay_guest_alert: "💡 In guest mode, your grade is temporary. Sign up or log in to save your academic transcript!",
+    essay_time_limit: "Time limit:",
+    essay_time_remaining: "Time remaining:",
+    essay_time_expired: "Time's up! Your work has been submitted for grading.",
+    essay_minutes: "minutes",
+    essay_seconds: "seconds",
+    essay_prep_advice: "Make sure you have reviewed the course material, sit in a quiet place, and take a short break if needed to refresh your mind.",
+    essay_time_focus: "Ensure you have about {time} of uninterrupted focus ahead of you to complete the test.",
+    essay_time_focus_default: "Ensure you have a few minutes of uninterrupted focus ahead of you to complete the test.",
+    essay_offline_evaluation: "Offline Evaluation",
+    essay_offline_feedback: "Offline Evaluation: Your response has been received and evaluated locally. It demonstrates a solid grasp of the core concepts, though it could benefit from more detailed examples and structured arguments."
   },
   FR: {
     glossary_definition: "Définition du Glossaire",
@@ -499,7 +521,29 @@ export const STATIC_UI_STRINGS = {
     ex_incorrect: "Incorrect. Essayez de réévaluer la formule ou les étapes.",
     ex_attempts: "Tentatives restantes :",
     ex_unlocked_sol: "💡 Résolution débloquée !",
-    ex_placeholder: "Entrez la valeur numérique..."
+    ex_placeholder: "Entrez la valeur numérique...",
+    essay_title: "Évaluation Rédactionnelle",
+    essay_desc: "Rédigez une courte synthèse en réponse au sujet ci-dessous. Votre tuteur IA va évaluer et noter votre travail.",
+    essay_start: "Démarrer l'Évaluation",
+    essay_grading_scale: "Barème de notation :",
+    essay_placeholder: "Écrivez votre devoir ici...",
+    essay_submit: "Soumettre ma rédaction",
+    essay_evaluating: "Le tuteur IA évalue votre copie...",
+    essay_feedback_title: "Évaluation du Tuteur IA",
+    essay_grade_label: "Note",
+    essay_retry: "Recommencer la rédaction",
+    essay_saved_local: "Validé & enregistré localement",
+    essay_guest_alert: "💡 En mode invité, votre note est temporaire. Créez un compte ou connectez-vous pour conserver votre relevé de notes !",
+    essay_time_limit: "Temps limité :",
+    essay_time_remaining: "Temps restant :",
+    essay_time_expired: "Temps écoulé ! Votre travail a été soumis automatiquement pour évaluation.",
+    essay_minutes: "minutes",
+    essay_seconds: "secondes",
+    essay_prep_advice: "Assurez-vous d'avoir bien révisé le cours, installez-vous dans un endroit calme, et prenez éventuellement une courte pause pour vous vider l'esprit avant de commencer.",
+    essay_time_focus: "Assurez-vous d'avoir environ {time} devant vous de concentration ininterrompue pour réaliser ce test.",
+    essay_time_focus_default: "Assurez-vous d'avoir quelques minutes devant vous de concentration ininterrompue pour réaliser ce test.",
+    essay_offline_evaluation: "Évaluation hors-ligne",
+    essay_offline_feedback: "Évaluation hors-ligne : Votre réponse a été reçue et évaluée localement. Elle démontre une bonne compréhension des concepts clés, même s'il serait bénéfique d'approfondir les exemples et de structurer davantage l'argumentation."
   },
   ES: {
     glossary_definition: "Definición del Glosario",
@@ -749,7 +793,29 @@ export const STATIC_UI_STRINGS = {
     ex_incorrect: "Incorrecto. Intenta volver a evaluar la fórmula.",
     ex_attempts: "Intentos restantes:",
     ex_unlocked_sol: "💡 ¡Resolución desbloqueada!",
-    ex_placeholder: "Ingresa el valor numérico..."
+    ex_placeholder: "Ingresa el valor numérico...",
+    essay_title: "Evaluación de Ensayo",
+    essay_desc: "Escribe un ensayo corto en respuesta al tema de abajo. Tu tutor de IA evaluará y calificará tu trabajo.",
+    essay_start: "Iniciar Evaluación",
+    essay_grading_scale: "Sistema de calificación:",
+    essay_placeholder: "Escribe tu ensayo aquí...",
+    essay_submit: "Enviar ensayo",
+    essay_evaluating: "El tutor de IA está calificando...",
+    essay_feedback_title: "Evaluación del Tutor de IA",
+    essay_grade_label: "Calificación",
+    essay_retry: "Reescribir ensayo",
+    essay_saved_local: "Validado y guardado localmente",
+    essay_guest_alert: "💡 En modo invitado, tu calificación es temporal. ¡Regístrate o inicia sesión para guardar tu expediente!",
+    essay_time_limit: "Límite de tiempo:",
+    essay_time_remaining: "Tiempo restante:",
+    essay_time_expired: "¡Tiempo agotado! Tu trabajo ha sido enviado para calificar.",
+    essay_minutes: "minutos",
+    essay_seconds: "segundos",
+    essay_prep_advice: "Asegúrate de haber repasado la lección, siéntate en un lugar tranquilo y tómate un breve descanso para refrescar la mente antes de comenzar.",
+    essay_time_focus: "Asegúrate de tener aproximadamente {time} por delante de concentración ininterrumpida para completar la prueba.",
+    essay_time_focus_default: "Asegúrate de tener unos minutos por delante de concentración ininterrumpida para completar la prueba.",
+    essay_offline_evaluation: "Evaluación fuera de línea",
+    essay_offline_feedback: "Evaluación fuera de línea: Su respuesta ha sido recibida y evaluada localmente. Muestra una comprensión sólida de los conceptos clave, aunque se beneficiaría de ejemplos más detallados y argumentos más estructurados."
   },
   DE: {
     glossary_definition: "Glossar-Definition",
@@ -987,7 +1053,29 @@ export const STATIC_UI_STRINGS = {
     ex_incorrect: "Falsch. Überprüfen Sie die Formel oder die Schritte.",
     ex_attempts: "Verbleibende Versuche:",
     ex_unlocked_sol: "💡 Lösung freigeschaltet!",
-    ex_placeholder: "Geben Sie den numerischen Wert ein..."
+    ex_placeholder: "Geben Sie den numerischen Wert ein...",
+    essay_title: "Aufsatz-Bewertung",
+    essay_desc: "Schreiben Sie einen kurzen Aufsatz als Antwort auf das unten stehende Thema. Ihr KI-Tutor wird Ihre Arbeit bewerten und benoten.",
+    essay_start: "Bewertung starten",
+    essay_grading_scale: "Notensystem:",
+    essay_placeholder: "Schreiben Sie Ihren Aufsatz hier...",
+    essay_submit: "Aufsatz einreichen",
+    essay_evaluating: "KI-Tutor bewertet...",
+    essay_feedback_title: "KI-Tutor Beurteilung",
+    essay_grade_label: "Note",
+    essay_retry: "Aufsatz neu schreiben",
+    essay_saved_local: "Validiert & lokal gespeichert",
+    essay_guest_alert: "💡 Im Gastmodus ist Ihre Note vorübergehend. Registrieren Sie sich oder melden Sie sich an, um Ihr Zeugnis zu speichern!",
+    essay_time_limit: "Zeitlimit:",
+    essay_time_remaining: "Verbleibende Zeit:",
+    essay_time_expired: "Zeit abgelaufen! Ihre Arbeit wurde zur Bewertung eingereicht.",
+    essay_minutes: "Minuten",
+    essay_seconds: "Sekunden",
+    essay_prep_advice: "Stellen Sie sicher, dass Sie den Kursstoff wiederholt haben, setzen Sie sich an einen routinierten Ort und machen Sie bei Bedarf eine kurze Pause, um den Kopf frei zu bekommen.",
+    essay_time_focus: "Stellen Sie sicher, dass Sie etwa {time} ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
+    essay_time_focus_default: "Stellen Sie sicher, dass Sie einige Minuten ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
+    essay_offline_evaluation: "Offline-Bewertung",
+    essay_offline_feedback: "Offline-Bewertung: Ihre Antwort wurde empfangen und lokal bewertet. Sie zeigt ein solides Verständnis der Kernkonzepte, könnte jedoch von detaillierteren Beispielen und strukturierteren Argumenten profitieren."
   },
   ZH: {
     glossary_definition: "词汇表定义",
@@ -1237,7 +1325,29 @@ export const STATIC_UI_STRINGS = {
     ex_incorrect: "不正确。请尝试重新评估公式或步骤。",
     ex_attempts: "剩余尝试次数：",
     ex_unlocked_sol: "💡 解题步骤已解锁！",
-    ex_placeholder: "输入数值..."
+    ex_placeholder: "输入数值...",
+    essay_title: "作文评估",
+    essay_desc: "针对以下主题写一篇短文。您的AI导师将对您的作品进行评估和评分。",
+    essay_start: "开始评估",
+    essay_grading_scale: "评分系统：",
+    essay_placeholder: "在此写下您的作文...",
+    essay_submit: "提交作文",
+    essay_evaluating: "AI导师正在评分...",
+    essay_feedback_title: "AI导师评估反馈",
+    essay_grade_label: "评分",
+    essay_retry: "重新撰写",
+    essay_saved_local: "已验证并保存在本地",
+    essay_guest_alert: "💡 在游客模式下，您的成绩是暂时的。请注册或登录以保存您的学术成绩单！",
+    essay_time_limit: "时间限制：",
+    essay_time_remaining: "剩余时间：",
+    essay_time_expired: "时间到！您的作品已提交评分。",
+    essay_minutes: "分钟",
+    essay_seconds: "秒",
+    essay_prep_advice: "请确保您已经复习了课程内容，坐在安静的地方，并在开始前稍微休息一下以清醒头脑。",
+    essay_time_focus: "请确保您有大约 {time} 无打扰的专注时间来完成测试。",
+    essay_time_focus_default: "请确保您有几分钟无打扰的专注时间来完成测试。",
+    essay_offline_evaluation: "离线评估",
+    essay_offline_feedback: "离线评估：您的回答已在本地接收并评估。它展示了对核心概念的扎实理解，但如果能提供更详细的例子和更具条理的论证，效果会更好。"
   }
 };
 
@@ -1300,3 +1410,15 @@ export const translateDisciplineQuery = (query: string, targetLang: string): str
   }
   return query;
 };
+
+// Helper to clean path segments by removing accents, spaces, and special characters
+export const cleanPathSegment = (text: string): string => {
+  if (!text) return 'General';
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[^a-zA-Z0-9_-]/g, "_") // replace non-alphanumeric/dash/underscore with underscore
+    .replace(/_+/g, "_")             // collapse multiple underscores
+    .replace(/^_+|_+$/g, "");        // trim leading/trailing underscores
+};
+

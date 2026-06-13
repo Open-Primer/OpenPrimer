@@ -78,7 +78,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
 
 interface UnsolvedExerciseProps {
   question: string;
-  correctAnswer: string | number;
+  correctAnswer?: string | number;
   tolerance?: number; // Tolerated numeric variation (+/-)
   placeholder?: string;
   hint?: string;
@@ -111,6 +111,40 @@ export const UnsolvedExercise = ({
     placeholder: dict.ex_placeholder
   };
 
+  const isReflection = correctAnswer === undefined || correctAnswer === null || String(correctAnswer).trim() === '';
+
+  const reflectionPlaceholders: Record<string, string> = {
+    EN: "Enter your reflection here...",
+    FR: "Saisissez votre réflexion ici...",
+    ES: "Escribe tu reflexión aquí...",
+    DE: "Schreiben Sie Ihre Überlegungen hier...",
+    ZH: "在此输入您的思考..."
+  };
+
+  const reflectionSuccessMessages: Record<string, string> = {
+    EN: "Reflection saved. Compare your answer with the suggested solution below.",
+    FR: "Réflexion enregistrée. Comparez votre réponse avec la solution modèle ci-dessous.",
+    ES: "Reflexión registrada. Compare su respuesta con la solución modelo a continuación.",
+    DE: "Überlegung gespeichert. Vergleichen Sie Ihre Antwort mit der unten stehenden Musterlösung.",
+    ZH: "思考已记录。请对比下方给出的参考答案。"
+  };
+
+  const reflectionButtonLabels: Record<string, string> = {
+    EN: "Submit",
+    FR: "Valider",
+    ES: "Validar",
+    DE: "Bestätigen",
+    ZH: "提交"
+  };
+
+  const defaultPlaceholder = isReflection 
+    ? (reflectionPlaceholders[language.toUpperCase()] || reflectionPlaceholders.EN)
+    : t.placeholder;
+
+  const checkButtonLabel = isReflection
+    ? (reflectionButtonLabels[language.toUpperCase()] || reflectionButtonLabels.EN)
+    : t.check;
+
   const [inputVal, setInputVal] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -119,6 +153,12 @@ export const UnsolvedExercise = ({
 
   const handleCheck = () => {
     if (isCorrect || attempts <= 0 || revealed) return;
+
+    if (isReflection) {
+      setIsCorrect(true);
+      setRevealed(true);
+      return;
+    }
 
     const cleanInput = inputVal.trim().replace(',', '.');
     const targetVal = String(correctAnswer).trim().replace(',', '.');
@@ -163,7 +203,7 @@ export const UnsolvedExercise = ({
             </span>
           </div>
 
-          {!revealed && attempts > 0 && (
+          {!isReflection && !revealed && attempts > 0 && (
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-950/40 border border-slate-800/80 rounded-lg px-2 py-0.5 select-none">
               {t.attempts} <strong className="text-blue-400">{attempts}</strong>
             </span>
@@ -173,30 +213,43 @@ export const UnsolvedExercise = ({
         <p className="text-slate-100 text-sm font-bold leading-relaxed">{question}</p>
 
         {/* Input area */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className={`flex flex-col ${isReflection ? 'space-y-4' : 'sm:flex-row items-center gap-3'}`}>
           <div className="relative flex-1 w-full flex items-center">
-            <input
-              type="text"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              disabled={revealed}
-              placeholder={placeholder || t.placeholder}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 outline-none rounded-xl py-3 px-4 text-slate-200 text-sm font-medium transition-all disabled:opacity-75 disabled:text-slate-400"
-            />
-            {unit && (
-              <span className="absolute right-4 text-xs font-black text-slate-500 select-none uppercase tracking-wider">
-                {unit}
-              </span>
+            {isReflection ? (
+              <textarea
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                disabled={revealed}
+                placeholder={placeholder || defaultPlaceholder}
+                rows={4}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 outline-none rounded-xl py-3 px-4 text-slate-200 text-sm font-medium transition-all disabled:opacity-75 disabled:text-slate-400 resize-y min-h-[100px]"
+              />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  disabled={revealed}
+                  placeholder={placeholder || defaultPlaceholder}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 outline-none rounded-xl py-3 px-4 text-slate-200 text-sm font-medium transition-all disabled:opacity-75 disabled:text-slate-400"
+                />
+                {unit && (
+                  <span className="absolute right-4 text-xs font-black text-slate-500 select-none uppercase tracking-wider">
+                    {unit}
+                  </span>
+                )}
+              </>
             )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className={`flex items-center gap-2 w-full ${isReflection ? 'justify-end sm:w-auto' : 'sm:w-auto'}`}>
             <button
               onClick={handleCheck}
               disabled={revealed || !inputVal.trim()}
-              className="flex-1 sm:flex-initial px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-850 disabled:text-slate-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2"
+              className={`${isReflection ? 'w-full sm:w-auto' : 'flex-1 sm:flex-initial'} px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-850 disabled:text-slate-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2`}
             >
-              <span>{t.check}</span>
+              <span>{checkButtonLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
@@ -242,7 +295,11 @@ export const UnsolvedExercise = ({
               {isCorrect ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>{t.correct}</span>
+                  <span>
+                    {isReflection 
+                      ? (reflectionSuccessMessages[language.toUpperCase()] || reflectionSuccessMessages.EN) 
+                      : t.correct}
+                  </span>
                 </>
               ) : (
                 <>

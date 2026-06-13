@@ -1010,6 +1010,13 @@ export const supabaseDatabaseProvider: DatabaseService = {
   purgeCourse: async (courseId: number) => {
     try {
       addCourseTombstone(courseId);
+      
+      // Cascade delete lessons belonging to this course first to avoid orphaned records
+      const { data: courseData } = await supabase.from('courses').select('slug').eq('id', courseId).single();
+      if (courseData?.slug) {
+        await supabase.from('lessons').delete().eq('course_slug', courseData.slug);
+      }
+
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw error;
 

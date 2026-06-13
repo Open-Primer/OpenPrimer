@@ -6,7 +6,7 @@ import * as Icons from 'lucide-react';
 import Link from 'next/link';
 import { dbService } from '@/lib/db';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
-import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
 
 interface CourseCompletionFeedbackProps {
   courseId: string;
@@ -179,7 +179,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                 if (nextChildCourse) {
                   const prog = progressMap[nextChildCourse.slug] ?? progressMap[nextChildId] ?? 0;
                   if (prog < 100) {
-                    setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+                    setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
                     setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
                     return;
                   }
@@ -194,7 +194,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           const nextChildId = childIds[currentIndex + 1];
           const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
           if (nextChildCourse) {
-            setNextCoursePath(`/${nextChildCourse.level}/${nextChildCourse.subject}/${nextChildCourse.slug}/introduction`);
+            setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
             setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
             return;
           }

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService } from '@/lib/db';
-import { getLocalizedDiscipline, getLocalizedDisciplineDescription } from '@/lib/translations';
+import { getLocalizedDiscipline, getLocalizedDisciplineDescription, cleanPathSegment } from '@/lib/translations';
 
 interface CourseKioskProps {
   lang: string;
@@ -42,11 +42,19 @@ const TRANSLATED_LEVELS: Record<string, Record<string, string>> = {
   L1: { EN: 'L1 (101)', FR: 'Niveau L1', ES: 'L1 (101)', DE: 'Klasse L1', ZH: '大一 (101)' },
   L2: { EN: 'L2 (201)', FR: 'Niveau L2', ES: 'L2 (201)', DE: 'Klasse L2', ZH: '大二 (201)' },
   L3: { EN: 'L3 (301)', FR: 'Niveau L3', ES: 'L3 (301)', DE: 'Klasse L3', ZH: '大三 (301)' },
+  beginner: { EN: 'Beginner', FR: 'Débutant', ES: 'Principiante', DE: 'Anfänger', ZH: '初学者' },
+  intermediate: { EN: 'Intermediate', FR: 'Intermédiaire', ES: 'Intermedio', DE: 'Mittelstufe', ZH: '中级' },
+  advanced: { EN: 'Advanced', FR: 'Avancé', ES: 'Avanzado', DE: 'Fortgeschritten', ZH: '高级' },
+  expert: { EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' }
 };
 
 const formatCourseLevel = (level: string, lang: string) => {
   if (!level) return '';
   const langKey = lang.toUpperCase();
+  const lvlLower = level.toLowerCase().trim();
+  if (TRANSLATED_LEVELS[lvlLower]) {
+    return TRANSLATED_LEVELS[lvlLower][langKey] || TRANSLATED_LEVELS[lvlLower].EN;
+  }
   if (TRANSLATED_LEVELS[level]) {
     return TRANSLATED_LEVELS[level][langKey] || TRANSLATED_LEVELS[level].EN;
   }
@@ -326,7 +334,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                   const IconComponent = SUBJECT_ICONS[item.subject] || Book;
                   const localizedTitle = dbService.getLocalizedCourseTitle(item, lang) || item.title;
                   const levelText = formatCourseLevel(item.level, lang);
-                  const linkPath = `/${item.level}/${item.subject}/${item.slug}/introduction`;
+                  const linkPath = `/${cleanPathSegment(item.level)}/${cleanPathSegment(item.subject)}/${item.slug}/introduction`;
 
                   const cardContent = (
                     <div className={`w-full h-full p-6 bg-gradient-to-b ${colors.bg} border ${colors.border} rounded-[28px] backdrop-blur-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/card shadow-lg ${colors.shadow} h-[200px]`}>

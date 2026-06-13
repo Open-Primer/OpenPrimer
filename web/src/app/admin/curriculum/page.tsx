@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage, isDatabaseConfigured, compileRuleLocally } from '@/lib/db';
+import { cleanPathSegment } from '@/lib/translations';
 
 export const CURRICULUM_STRINGS = {
   EN: {
@@ -2668,6 +2669,10 @@ export const ACADEMIC_LEVELS = [
   { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — \u5927\u4e09\uff08\u5b68\u58eb\uff09' },
   { value: 'M1',           EN: 'M1 — 1st Year (Master)', FR: 'M1 — 1ère Année de Master', ES: 'M1 — Máster (1er Año)', DE: 'M1 — Master (1. Jahr)', ZH: 'M1 — \u7814\u4e00' },
   { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — \u7814\u4e8c' },
+  { value: 'beginner',     EN: 'Beginner', FR: 'Débutant', ES: 'Principiante', DE: 'Anfänger', ZH: '初学者' },
+  { value: 'intermediate', EN: 'Intermediate', FR: 'Intermédiaire', ES: 'Intermedio', DE: 'Mittelstufe', ZH: '中级' },
+  { value: 'advanced',     EN: 'Advanced', FR: 'Avancé', ES: 'Avanzado', DE: 'Fortgeschritten', ZH: '高级' },
+  { value: 'expert',       EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' },
 ] as const;
 
 export const DISCIPLINES = [
@@ -4974,11 +4979,12 @@ export default function AdminCurriculumPage() {
       return;
     }
 
-    const safeSubject = (matchedCourse.subject || 'General').replace(/\s+/g, '_');
+    const safeSubject = cleanPathSegment(matchedCourse.subject || 'General');
+    const safeLevel = cleanPathSegment(matchedCourse.level || 'L1');
     
     // 1. If we have revisedSlugs stored on the task, navigate immediately
     if (task.revisedSlugs && task.revisedSlugs.length > 0) {
-      const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${task.revisedSlugs[0]}`;
+      const url = `/${safeLevel}/${safeSubject}/${matchedCourse.slug}/${task.revisedSlugs[0]}`;
       window.open(url, '_blank');
       return;
     }
@@ -4997,7 +5003,7 @@ export default function AdminCurriculumPage() {
     }
     
     if (!chapterPart) {
-      const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/introduction`;
+      const url = `/${safeLevel}/${safeSubject}/${matchedCourse.slug}/introduction`;
       window.open(url, '_blank');
       return;
     }
@@ -5027,7 +5033,7 @@ export default function AdminCurriculumPage() {
         }
         
         if (bestMatch) {
-          const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${bestMatch.lesson_slug}`;
+          const url = `/${safeLevel}/${safeSubject}/${matchedCourse.slug}/${bestMatch.lesson_slug}`;
           window.open(url, '_blank');
           return;
         }
@@ -5045,7 +5051,7 @@ export default function AdminCurriculumPage() {
       .trim()
       .replace(/\s+/g, '-');
       
-    const url = `/${matchedCourse.level}/${safeSubject}/${matchedCourse.slug}/${fallbackSlug}`;
+    const url = `/${safeLevel}/${safeSubject}/${matchedCourse.slug}/${fallbackSlug}`;
     window.open(url, '_blank');
   };
 

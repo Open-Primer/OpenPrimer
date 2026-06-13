@@ -3,6 +3,7 @@ import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
+import { cleanPathSegment } from './translations';
 
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -287,6 +288,7 @@ Requirements:
       * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
         \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
         *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes.
+        *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a historical figure in a '<HistoricalPerson>' tag if they are already wrapped in one, and do NOT place a '<HistoricalPerson>' tag inside the bold title of a '**Mini-Biographie**' block (keep the title simple as plain text, e.g., '**Mini-Biographie : DisplayName (Dates)**', and only wrap the first mention of the person in the actual biography content/text below the title). Duplicate or nested '<HistoricalPerson>' tags for the same person are strictly prohibited.
         - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
         - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
       * **Artworks and Works of Art (Œuvres d'art)**: For notable artworks mentioned in the text (e.g. paintings, sculptures, literary works, monuments like "L'Homme de Vitruve", "La Joconde", "La Cène", "La Nuit étoilée"), you MUST wrap them in:
@@ -412,16 +414,16 @@ Requirements:
                 * Other: most specific English/French description (e.g. \`title="Normal heartbeat sinus rhythm stethoscope"\`)
               - Keep duration under 2-3 minutes (e.g. \`duration="2 min"\`).
         * Geometry/Mathematics/Physics Chapters (Draggable 2D Sandbox): For any chapter teaching coordinate systems, triangle trigonometry, vectors, or trigonometric circles, you MUST systematically insert at least one 2D Geometry sandbox widget:
-             - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\` (or \`<Geometrie2D>\`). Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
+             - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\`. Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
         * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
  18. Special Pedagogical Enrichment Blocks (Balises JSX d'Enrichissement) :
       You MUST dynamically and contextually enrich the lesson body using the following custom tags:
-      - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\` or \`<EspritCritique>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
-      - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\` or \`<LeSaviezVous>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
-      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\` or \`<AnecdoteHistorique>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (NOT just a plain history event like the creation of a lab). Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
-      - **Idée Brillante** (\`<IdeeBrillante title="...">...</IdeeBrillante>\` or \`<BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
-      - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\` or \`<PointDeVue>\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
-      - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\` or \`<EtApres>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
+      - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
+      - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
+      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (NOT just a plain history event like the creation of a lab). Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
+      - **Idée Brillante** (\`<BrilliantIdea title="...">...</BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
+      - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
+      - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
  19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
      - The following features are completely OPTIONAL. You should organically choose to use just one or two of them if they fit the level and subject, to avoid drowning the content:
        * L'Ancre Problématique (The Hook): A real-world story, scene, or case study demonstrating the necessity of the concept.
@@ -528,16 +530,16 @@ ${currentMdx}
 Your Checkpoints:
 1. "Zero-Placeholder & Prohibited Empty Tags & Nested Wrappers & Content Collisions":
    - Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
-   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Objectives></Objectives>, <CriticalThinking />, <EtApres />, <WhatsNext />, <IdeeBrillante />, <BrilliantIdea />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
-   - Nested wrappers are strictly forbidden. You must NOT nest <WhatsNext> and <EtApres> inside each other (e.g. <WhatsNext><EtApres/></WhatsNext> is invalid). Use only one single tag for the block.
-   - Content collision: Ensure that <HistoricalAnecdote> (or <AnecdoteHistorique>) and <DidYouKnow> (or <LeSaviezVous>) do NOT cover the exact same subject, discovery, or event. If they overlap or duplicate information, reject the content (set "approved": false) so they are written on distinct, non-overlapping pedagogical hooks. Ensure that <HistoricalAnecdote> is truly anecdotal, quirky, unexpected or human (not just a dry historical timeline event).
+   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Objectives></Objectives>, <CriticalThinking />, <WhatsNext />, <BrilliantIdea />, <OpenQuestion />, <ScientificDebate />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
+   - Nested wrappers are strictly forbidden (e.g. self-nesting is invalid). Use only one single tag for the block.
+   - Content collision: Ensure that <HistoricalAnecdote> and <DidYouKnow> do NOT cover the exact same subject, discovery, or event. If they overlap or duplicate information, reject the content (set "approved": false) so they are written on distinct, non-overlapping pedagogical hooks. Ensure that <HistoricalAnecdote> is truly anecdotal, quirky, unexpected or human (not just a dry historical timeline event).
 2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
 3. "Structural Completeness & Mandated Sections":
    - Ensure the presence of prerequisites at the very beginning (using '<Prerequisites items={[...]} />').
    - Ensure the presence of diagnostic quizzes (using '<DiagnosticQuiz ... />') before the introduction.
    - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading like '## Présentation').
    - Ensure the presence of learning objectives (using '<Objectives>' containing '<Knowledge>', '<Skills>', and '<Attitudes>' sub-components).
-   - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' or '<EtApres>' component) before the final evaluation.
+   - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' component) before the final evaluation.
    - Ensure the presence of a concluding section (using a heading like '## Conclusion' or '## Synthèse & Discussion' or '## Synthèse & Ouverture') containing the '<Summary items={[...]} />' component.
    - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>', '<SummativeEvaluation>', or '<EssayEvaluation ... />').
    - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
@@ -560,10 +562,11 @@ Your Checkpoints:
      * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph or equation component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', or '<Geometry2D />'. A lesson in these disciplines without any of these MUST be rejected.
      * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />' for active code execution. A lesson without it MUST be rejected.
      * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
-     * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />' (or '<EspritCritique />'), '<PointOfView />' (or '<PointDeVue />'), or '<HistoricalAnecdote />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
+     * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />', '<PointOfView />', or '<HistoricalAnecdote />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
 6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
 7. "Historical Person & Artwork Overlays":
    - Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
+   - Verify that there are no duplicate or nested '<HistoricalPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<HistoricalPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
    - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">'.
 8. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
 9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
@@ -761,9 +764,10 @@ ${validatedMdx}`;
           if (!retryCheck.success) {
             console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
             try {
+              const cleanCrsSlug = cleanPathSegment(courseName);
               await dbService.submitReport(
-                courseName.toLowerCase().replace(/ /g, '_'),
-                `${courseName.toLowerCase().replace(/ /g, '_')}/${item.slug}`,
+                cleanCrsSlug,
+                `${cleanCrsSlug}/${item.slug}`,
                 `[GENERATION MDX EXCEPTION] ${retryCheck.error}`
               );
             } catch (reportErr) {
@@ -782,7 +786,7 @@ ${validatedMdx}`;
 
       // Save to Supabase
       await dbService.saveLesson({
-        course_slug: courseName.toLowerCase().replace(/ /g, '_'),
+        course_slug: cleanPathSegment(courseName),
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
         title: item.title,
@@ -793,7 +797,7 @@ ${validatedMdx}`;
 
     // Save/Update the Course card in the database
     try {
-      const courseSlug = courseName.toLowerCase().replace(/ /g, '_');
+      const courseSlug = cleanPathSegment(courseName);
       const { data: allCourses } = await dbService.getAllCourses();
       const existingCourse = allCourses?.find(c => c.slug === courseSlug);
       
@@ -976,7 +980,7 @@ ${currentTranslation}
 
 Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
-2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking /> or <EtApres /> without text/children. Do NOT nest wrapper components (e.g. <WhatsNext><EtApres/></WhatsNext> is strictly forbidden).
+2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. Do NOT nest wrapper components (e.g. nesting <WhatsNext> inside itself is strictly forbidden).
 3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs) preserved exactly as in the original?
 4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
@@ -1417,7 +1421,7 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
         .filter((c: any) => {
           if (!c.course) return false;
           const courseLower = c.course.toLowerCase();
-          const courseSlugLower = c.course.toLowerCase().replace(/ /g, '_');
+          const courseSlugLower = cleanPathSegment(c.course).toLowerCase();
           return courseLower === targetTitleLower || 
                  courseSlugLower === targetSlugLower ||
                  courseLower === targetSlugLower;
@@ -1628,9 +1632,9 @@ ${currentMdx}
 
 Your validation checklist:
 1. Did the revision fully address the student concerns and instructions in the revision instructions list?
-2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
-3. Zero placeholders and empty tags: Are there any placeholders, skeletal sentences, or unfinished sections? Do NOT generate empty components like <CriticalThinking /> or <EtApres /> without text/children. If a component is present, it must contain full text/children.
-4. No nested wrappers: Ensure you do NOT nest <WhatsNext> and <EtApres> inside each other (e.g. <WhatsNext><EtApres/></WhatsNext> is strictly forbidden).
+2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
+3. Zero placeholders and empty tags: Are there any placeholders, skeletal sentences, or unfinished sections? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. If a component is present, it must contain full text/children.
+4. No nested wrappers: Ensure you do NOT nest wrapper tags inside each other (e.g. self-nesting is strictly forbidden).
 4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
 5. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
 6. Mandated Sections & Structural Integrity: Verify that the revised MDX content still contains:
@@ -1638,7 +1642,7 @@ Your validation checklist:
    - Diagnostic quiz ('<DiagnosticQuiz ... />') before the introduction.
    - Introduction heading (titled '## Introduction' or localized equivalent).
    - Objectives block ('<Objectives>') containing '<Knowledge>', '<Skills>', and '<Attitudes>'.
-   - Forward-looking section ('<WhatsNext>' or '<EtApres>') before the final evaluation.
+   - Forward-looking section ('<WhatsNext>') before the final evaluation.
    - Concluding section (titled '## Conclusion' or localized equivalent) containing the '<Summary>' component.
    - Glossary section (titled '### Glossary' or localized equivalent).
    - Bibliography/references section (titled '### References' or localized equivalent), unless the original course is a primary school level course.

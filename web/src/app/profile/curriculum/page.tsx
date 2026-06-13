@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
 import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
+import { cleanPathSegment } from '@/lib/translations';
 
 export default function CurriculumPage() {
   const router = useRouter();
@@ -93,31 +94,30 @@ export default function CurriculumPage() {
     const slug = c.slug;
     if (!slug) return '/catalog';
     if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-      return '/L1/Physics/Classical_Mechanics/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Physics')}/Classical_Mechanics/introduction`;
     }
     if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-      return '/L2/Physics/Physique_Test_L2/introduction';
+      return `/${cleanPathSegment('L2')}/${cleanPathSegment('Physics')}/Physique_Test_L2/introduction`;
     }
     if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-      return '/L1/Biology/Cell_Biology/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Biology')}/Cell_Biology/introduction`;
     }
     if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-      return '/L1/Biology/Biologie_Test_L1/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Biology')}/Biologie_Test_L1/introduction`;
     }
     if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-      return '/L1/Law/Droit_Test/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Law')}/Droit_Test/introduction`;
     }
     if (slug === 'Maths_Test' || c.id === 7) {
-      return '/L1/Mathematics/Maths_Test/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Maths_Test/introduction`;
     }
     if (slug === 'Maths_Test_L1' || c.id === 8) {
-      return '/L1/Mathematics/Maths_Test_L1/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Maths_Test_L1/introduction`;
     }
     if (slug === 'Statistics' || c.id === 11) {
-      return '/L1/Mathematics/Statistics/introduction';
+      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Statistics/introduction`;
     }
-    const cleanSubject = c.subject ? c.subject.replace(/\s+/g, '_') : 'General';
-    return `/${c.level || 'L1'}/${cleanSubject}/${c.slug}/introduction`;
+    return `/${cleanPathSegment(c.level || 'L1')}/${cleanPathSegment(c.subject || 'General')}/${c.slug}/introduction`;
   };
 
   const getLocalizedTitle = (c: any) => {

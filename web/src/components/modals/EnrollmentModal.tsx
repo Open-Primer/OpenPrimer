@@ -4,6 +4,7 @@ import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket, B
 import { getLocalizedLabel, formatCourseLevel, UI_STRINGS } from '../RefinedUI';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
+import { cleanPathSegment } from '@/lib/translations';
 
 interface EnrollmentModalProps {
   course: any;
@@ -461,7 +462,7 @@ export const EnrollmentModal = ({
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = `/${activeCourse.level}/${activeCourse.subject}/${activeCourse.slug}/introduction`;
+                  window.location.href = `/${cleanPathSegment(activeCourse.level)}/${cleanPathSegment(activeCourse.subject)}/${activeCourse.slug}/introduction`;
                 }}
                 className="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
               >

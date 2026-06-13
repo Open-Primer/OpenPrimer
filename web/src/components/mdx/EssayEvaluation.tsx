@@ -19,122 +19,35 @@ interface EssayEvaluationProps {
   durationLimit?: number; // in seconds
 }
 
-const EVAL_STRINGS = {
-  EN: {
-    title: "Essay Evaluation",
-    desc: "Write a short essay response to the prompt below. Your AI tutor will evaluate and grade your work.",
-    start: "Start Assessment",
-    grading_scale: "Grading system:",
-    placeholder: "Write your essay here...",
-    submit: "Submit Essay",
-    evaluating: "AI Tutor is grading...",
-    feedback_title: "AI Tutor Assessment",
-    grade_label: "Grade",
-    retry: "Rewrite Essay",
-    saved_local: "Validated & saved locally",
-    guest_alert: "💡 In guest mode, your grade is temporary. Sign up or log in to save your academic transcript!",
-    time_limit: "Time limit:",
-    time_remaining: "Time remaining:",
-    time_expired: "Time's up! Your work has been submitted for grading.",
-    minutes: "minutes",
-    seconds: "seconds",
-    prep_advice: "Make sure you have reviewed the course material, sit in a quiet place, and take a short break if needed to refresh your mind.",
-    time_focus: "Ensure you have about {time} of uninterrupted focus ahead of you to complete the test.",
-    time_focus_default: "Ensure you have a few minutes of uninterrupted focus ahead of you to complete the test."
-  },
-  FR: {
-    title: "Évaluation Rédactionnelle",
-    desc: "Rédigez une courte synthèse en réponse au sujet ci-dessous. Votre tuteur IA va évaluer et noter votre travail.",
-    start: "Démarrer l'Évaluation",
-    grading_scale: "Barème de notation :",
-    placeholder: "Écrivez votre devoir ici...",
-    submit: "Soumettre ma rédaction",
-    evaluating: "Le tuteur IA évalue votre copie...",
-    feedback_title: "Évaluation du Tuteur IA",
-    grade_label: "Note",
-    retry: "Recommencer la rédaction",
-    saved_local: "Validé & enregistré localement",
-    guest_alert: "💡 En mode invité, votre note est temporaire. Créez un compte ou connectez-vous pour conserver votre relevé de notes !",
-    time_limit: "Temps limité :",
-    time_remaining: "Temps restant :",
-    time_expired: "Temps écoulé ! Votre travail a été soumis automatiquement pour évaluation.",
-    minutes: "minutes",
-    seconds: "secondes",
-    prep_advice: "Assurez-vous d'avoir bien révisé le cours, installez-vous dans un endroit calme, et prenez éventuellement une courte pause pour vous vider l'esprit avant de commencer.",
-    time_focus: "Assurez-vous d'avoir environ {time} devant vous de concentration ininterrompue pour réaliser ce test.",
-    time_focus_default: "Assurez-vous d'avoir quelques minutes devant vous de concentration ininterrompue pour réaliser ce test."
-  },
-  ES: {
-    title: "Evaluación de Ensayo",
-    desc: "Escribe un ensayo corto en respuesta al tema de abajo. Tu tutor de IA evaluará y calificará tu trabajo.",
-    start: "Iniciar Evaluación",
-    grading_scale: "Sistema de calificación:",
-    placeholder: "Escribe tu ensayo aquí...",
-    submit: "Enviar ensayo",
-    evaluating: "El tutor de IA está calificando...",
-    feedback_title: "Evaluación del Tutor de IA",
-    grade_label: "Calificación",
-    retry: "Reescribir ensayo",
-    saved_local: "Validado y guardado localmente",
-    guest_alert: "💡 En modo invitado, tu calificación es temporal. ¡Regístrate o inicia sesión para guardar tu expediente!",
-    time_limit: "Límite de tiempo:",
-    time_remaining: "Tiempo restante:",
-    time_expired: "¡Tiempo agotado! Tu trabajo ha sido enviado para calificar.",
-    minutes: "minutos",
-    seconds: "segundos",
-    prep_advice: "Asegúrate de haber repasado la lección, siéntate en un lugar tranquilo y tómate un breve descanso para refrescar la mente antes de comenzar.",
-    time_focus: "Asegúrate de tener aproximadamente {time} por delante de concentración ininterrumpida para completar la prueba.",
-    time_focus_default: "Asegúrate de tener unos minutos por delante de concentración ininterrumpida para completar la prueba."
-  },
-  DE: {
-    title: "Aufsatz-Bewertung",
-    desc: "Schreiben Sie einen kurzen Aufsatz als Antwort auf das unten stehende Thema. Ihr KI-Tutor wird Ihre Arbeit bewerten und benoten.",
-    start: "Bewertung starten",
-    grading_scale: "Notensystem:",
-    placeholder: "Schreiben Sie Ihren Aufsatz hier...",
-    submit: "Aufsatz einreichen",
-    evaluating: "KI-Tutor bewertet...",
-    feedback_title: "KI-Tutor Beurteilung",
-    grade_label: "Note",
-    retry: "Aufsatz neu schreiben",
-    saved_local: "Validiert & lokal gespeichert",
-    guest_alert: "💡 Im Gastmodus ist Ihre Note vorübergehend. Registrieren Sie sich oder melden Sie sich an, um Ihr Zeugnis zu speichern!",
-    time_limit: "Zeitlimit:",
-    time_remaining: "Verbleibende Zeit:",
-    time_expired: "Zeit abgelaufen! Ihre Arbeit wurde zur Bewertung eingereicht.",
-    minutes: "Minuten",
-    seconds: "Sekunden",
-    prep_advice: "Stellen Sie sicher, dass Sie den Kursstoff wiederholt haben, setzen Sie sich an einen routinierten Ort und machen Sie bei Bedarf eine kurze Pause, um den Kopf frei zu bekommen.",
-    time_focus: "Stellen Sie sicher, dass Sie etwa {time} ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
-    time_focus_default: "Stellen Sie sicher, dass Sie einige Minuten ungestörte Konzentration vor sich haben, um den Test abzuschließen."
-  },
-  ZH: {
-    title: "作文评估",
-    desc: "针对以下主题写一篇短文。您的AI导师将对您的作品进行评估 and 评分。",
-    start: "开始评估",
-    grading_scale: "评分系统：",
-    placeholder: "在此写下您的作文...",
-    submit: "提交作文",
-    evaluating: "AI导师正在评分...",
-    feedback_title: "AI导师评估反馈",
-    grade_label: "评分",
-    retry: "重新撰写",
-    saved_local: "已验证并保存在本地",
-    guest_alert: "💡 在游客模式下，您的成绩是暂时的。请注册或登录以保存您的学术成绩单！",
-    time_limit: "时间限制：",
-    time_remaining: "剩余时间：",
-    time_expired: "时间到！您的作品已提交评分。",
-    minutes: "分钟",
-    seconds: "秒",
-    prep_advice: "请确保您已经复习了课程内容，坐在安静的地方，并在开始前稍微休息一下以清醒头脑。",
-    time_focus: "请确保您有大约 {time} 无打扰的专注时间来完成测试。",
-    time_focus_default: "请确保您有几分钟无打扰的专注时间来完成测试。"
-  }
-};
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit }: EssayEvaluationProps) => {
   const { language } = useLanguage();
-  const t = EVAL_STRINGS[language as keyof typeof EVAL_STRINGS] || EVAL_STRINGS.EN;
+  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const t = {
+    title: dict.essay_title,
+    desc: dict.essay_desc,
+    start: dict.essay_start,
+    grading_scale: dict.essay_grading_scale,
+    placeholder: dict.essay_placeholder,
+    submit: dict.essay_submit,
+    evaluating: dict.essay_evaluating,
+    feedback_title: dict.essay_feedback_title,
+    grade_label: dict.essay_grade_label,
+    retry: dict.essay_retry,
+    saved_local: dict.essay_saved_local,
+    guest_alert: dict.essay_guest_alert,
+    time_limit: dict.essay_time_limit,
+    time_remaining: dict.essay_time_remaining,
+    time_expired: dict.essay_time_expired,
+    minutes: dict.essay_minutes,
+    seconds: dict.essay_seconds,
+    prep_advice: dict.essay_prep_advice,
+    time_focus: dict.essay_time_focus,
+    time_focus_default: dict.essay_time_focus_default,
+    offline_evaluation: dict.essay_offline_evaluation || "Offline Evaluation",
+    offline_feedback: dict.essay_offline_feedback || "Offline Evaluation: Your response has been received and evaluated."
+  };
 
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationLimit || 0);
@@ -281,12 +194,11 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
       // Offline fallback grading
       let fallbackGrade = '14/20';
       if (gradingSystem === '0/10') fallbackGrade = '7.5/10';
+      else if (gradingSystem === '0/20') fallbackGrade = '14/20';
       else if (gradingSystem === 'A-F') fallbackGrade = 'B';
       else if (gradingSystem === 'pass-fail') fallbackGrade = 'Pass';
 
-      const fb = language === 'FR' 
-        ? "Votre devoir a été enregistré automatiquement à l'expiration du temps imparti. Le travail montre des notions correctes, mais aurait gagné en rigueur avec plus de temps."
-        : "Your essay was automatically submitted when the timer expired. Your response shows conceptual understanding, but would have benefited from more thorough development.";
+      const fb = t.offline_feedback;
       
       setGrade(fallbackGrade);
       setFeedback(fb);
@@ -333,7 +245,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
 
   const handleSubmit = async () => {
     if (!answer.trim() || answer.length < 10) {
-      setError(language === 'FR' ? 'Veuillez écrire une réponse plus substantielle (min 10 caractères).' : 'Please write a more substantial answer (min 10 characters).');
+      let msg = 'Please write a more substantial answer (min 10 characters).';
+      if (language === 'FR') msg = 'Veuillez écrire une réponse plus substantielle (min 10 caractères).';
+      else if (language === 'ES') msg = 'Por favor, escribe una respuesta más sustancial (mínimo 10 caracteres).';
+      else if (language === 'DE') msg = 'Bitte schreiben Sie eine aussagekräftigere Antwort (mindestens 10 Zeichen).';
+      else if (language === 'ZH') msg = '请写出更充实的回答（至少10个字符）。';
+      setError(msg);
       return;
     }
 
@@ -369,7 +286,25 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         throw new Error(data.error || 'Evaluation failed.');
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred.');
+      console.warn("AI Tutor evaluation failed, falling back to local evaluation:", err);
+      let fallbackGrade = '14/20';
+      if (gradingSystem === '0/10') fallbackGrade = '7.5/10';
+      else if (gradingSystem === '0/20') fallbackGrade = '14/20';
+      else if (gradingSystem === 'A-F') fallbackGrade = 'B';
+      else if (gradingSystem === 'pass-fail') fallbackGrade = 'Pass';
+
+      const fb = t.offline_feedback;
+      setGrade(fallbackGrade);
+      setFeedback(fb);
+      setIsReadOnly(true);
+      saveGradingResult(answer, fallbackGrade, fb);
+      
+      let warnMsg = 'Offline evaluation applied (AI tutor is offline).';
+      if (language === 'FR') warnMsg = 'Évaluation hors-ligne appliquée (le tuteur IA est indisponible).';
+      else if (language === 'ES') warnMsg = 'Evaluación fuera de línea aplicada (el tutor de IA no está disponible).';
+      else if (language === 'DE') warnMsg = 'Offline-Bewertung angewendet (KI-Tutor ist offline).';
+      else if (language === 'ZH') warnMsg = '已应用离线评估（AI导师目前离线）。';
+      setError(warnMsg);
     } finally {
       setIsLoading(false);
     }

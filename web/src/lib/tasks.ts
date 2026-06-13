@@ -1,6 +1,7 @@
 import { supabaseAdmin as supabase } from './supabase';
 import { dbService } from './db';
 import { generateCourseContent, translateCourseContent } from './ai';
+import { cleanPathSegment } from './translations';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
 
@@ -123,11 +124,11 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       const allCrs = await dbService.getAllCourses();
       const course = allCrs.data?.find(c => 
         c.title.toLowerCase() === courseTitle.toLowerCase() || 
-        c.slug === courseTitle.toLowerCase().replace(/ /g, '_') ||
+        c.slug === cleanPathSegment(courseTitle).toLowerCase() ||
         c.slug === courseTitle
       );
       
-      const courseSlug = course ? course.slug : courseTitle.toLowerCase().replace(/ /g, '_');
+      const courseSlug = course ? course.slug : cleanPathSegment(courseTitle);
       logs.push(`[REVISION] Resolved course slug: "${courseSlug}"`);
       logs.push(`[REVISION] Revision details: "${revisionDetails}"`);
       
@@ -140,7 +141,7 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
 
     } else if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
       // === Translation Task ===
-      const courseSlug = nextTask.target || nextTask.description?.toLowerCase().replace(/ /g, '_') || '';
+      const courseSlug = cleanPathSegment(nextTask.target || nextTask.description || '');
       logs.push(`[TRANSLATOR] Starting academic translation of course "${courseSlug}" to "${targetLang}"...`);
       
       await translateCourseContent(courseSlug, targetLang);
@@ -173,7 +174,7 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       await generateCourseContent(nextTask.name, level, targetLang);
 
       const newId = `crs_${Date.now()}`;
-      const slug = nextTask.name.toLowerCase().replace(/ /g, '_');
+      const slug = cleanPathSegment(nextTask.name);
       
       logs.push(`[GENERATOR] Saving newly generated course card: ${slug}`);
       const saveRes = await dbService.saveCourse({

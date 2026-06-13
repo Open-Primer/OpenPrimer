@@ -37,6 +37,7 @@ export const DataChart = ({
 }: DataChartProps) => {
   // Parse data if it is a JSON string from MDX
   const data: ChartDataItem[] = React.useMemo(() => {
+    console.log("=== DataChart rawData ===", rawData, "type:", typeof rawData);
     if (typeof rawData === 'string') {
       try {
         return JSON.parse(rawData);
@@ -45,7 +46,7 @@ export const DataChart = ({
         return [];
       }
     }
-    return rawData || [];
+    return (rawData as any) || [];
   }, [rawData]);
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -54,7 +55,7 @@ export const DataChart = ({
     return (
       <div className="my-6 p-6 rounded-2xl border border-red-500/15 bg-red-500/5 text-slate-400 text-sm flex items-center gap-3">
         <Info className="w-5 h-5 text-red-400 shrink-0" />
-        <span>No data provided or invalid JSON in DataChart.</span>
+        <span>No data provided or invalid JSON in DataChart. (rawData type: {typeof rawData})</span>
       </div>
     );
   }
