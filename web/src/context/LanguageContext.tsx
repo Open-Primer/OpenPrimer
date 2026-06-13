@@ -1,18 +1,22 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { DYNAMIC_UI_STRINGS } from '@/lib/translations';
 
 type Language = string;
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  translationVersion: number;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('EN');
+  const [translationVersion, setTranslationVersion] = useState(0);
+
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -95,6 +99,35 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Async loader for dynamic language translations fetched from DB
+  useEffect(() => {
+    const langUpper = language.toUpperCase();
+    
+    // Skip statically compiled dictionaries
+    if (['EN', 'FR', 'ES', 'DE', 'ZH'].includes(langUpper)) {
+      return;
+    }
+    
+    // Check if already fetched/cached in-memory
+    if (DYNAMIC_UI_STRINGS[langUpper]) {
+      return;
+    }
+    
+    console.log(`[I18N] Fetching dynamic UI translation dictionary for: ${langUpper}...`);
+    fetch(`/api/translate/ui?lang=${langUpper.toLowerCase()}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && resData.strings) {
+          DYNAMIC_UI_STRINGS[langUpper] = resData.strings;
+          setTranslationVersion(v => v + 1);
+          console.log(`[I18N] Loaded dynamic UI translations for: ${langUpper}`);
+        }
+      })
+      .catch(err => {
+        console.warn(`[I18N] Dynamic UI translation fetch failed for ${langUpper}:`, err);
+      });
+  }, [language]);
+
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang);
     localStorage.setItem('openprimer_lang', lang);
@@ -107,7 +140,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, translationVersion }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -84,21 +84,44 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
   extra.max_attempts = maxAttempts;
   extra.last_attempt_at = new Date().toISOString();
 
-  await supabase
-    .from('task_queue')
-    .update({
-      status: 'running',
-      progress: 20, // default starting progress
-      description: JSON.stringify(extra),
-      logs: [
-        ...(nextTask.logs || []),
-        `[${new Date().toISOString()}] Attempt ${currentAttempt}/${maxAttempts} started.`
-      ]
-    })
-    .eq('id', nextTask.id);
+  try {
+    const { error: runError } = await supabase
+      .from('task_queue')
+      .update({
+        status: 'running',
+        progress: 20, // default starting progress
+        description: JSON.stringify(extra),
+        logs: [
+          ...(nextTask.logs || []),
+          `[${new Date().toISOString()}] Attempt ${currentAttempt}/${maxAttempts} started.`
+        ]
+      })
+      .eq('id', nextTask.id);
+    if (runError) {
+      console.error(`[TASK RUNNER DB ERROR] Failed to set status to 'running' for task ${nextTask.id}:`, runError.message);
+      logs.push(`[WARNING] Failed to update task state in database: ${runError.message}`);
+    }
+  } catch (dbErr: any) {
+    console.error(`[TASK RUNNER DB EXCEPTION] Exception updating status to 'running' for task ${nextTask.id}:`, dbErr);
+    logs.push(`[WARNING] Exception updating task state in database: ${dbErr.message || String(dbErr)}`);
+  }
 
   const targetLang = (extra.targetLang || nextTask.targetLang || 'en').toLowerCase();
-  const level = extra.level || nextTask.level || 'Beginner';
+  const rawLevel = extra.level || nextTask.level || 'beginner';
+  const normalizeLevel = (lvl: string): string => {
+    if (!lvl) return 'beginner';
+    const clean = lvl.trim().toLowerCase();
+    if (clean === 'l1') return 'L1';
+    if (clean === 'l2') return 'L2';
+    if (clean === 'l3') return 'L3';
+    if (clean === 'm1') return 'M1';
+    if (clean === 'm2') return 'M2';
+    const standards = ['foundation_1', 'foundation_2', 'secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3', 'beginner', 'intermediate', 'advanced', 'expert'];
+    const found = standards.find(s => s === clean);
+    if (found) return found;
+    return clean;
+  };
+  const level = normalizeLevel(rawLevel);
   const subject = extra.subject || 'General';
 
   const taskPromise = (async () => {
@@ -138,6 +161,64 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
         extra.revisedSlugs = revisedSlugs;
       }
       logs.push(`[REVISION] Revision completed successfully.`);
+
+    } else if (nextTask.target === 'ui_translation') {
+      // === UI Translation Task ===
+      logs.push(`[UI-TRANSLATOR] Starting batch translation of static UI strings dictionary to "${targetLang}"...`);
+      
+      const { RAW_STATIC_UI_STRINGS } = require('./translations');
+      const sourceDict = RAW_STATIC_UI_STRINGS.EN;
+      
+      const geminiPrompt = `You are an elite academic translator and expert localizer.
+Translate the following key-value text dictionary from English into the target language: ${targetLang.toUpperCase()}.
+
+DICTIONARY TO TRANSLATE:
+${JSON.stringify(sourceDict, null, 2)}
+
+CRITICAL RULES:
+1. Return strictly valid JSON. Do NOT wrap the output in markdown code blocks or include any conversational preamble. Return ONLY the JSON object.
+2. The output must be a single JSON object where the keys are EXACTLY the same as the input keys, and the values are their translations in the target language.
+3. Preserve all parameters (like {name}), formatting tags, and academic tone.`;
+
+      const { callVertexAI } = require('./vertex-client');
+      const res = await callVertexAI({
+        task: 'batch_translate',
+        contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
+        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+      });
+      
+      if (!res || !res.ok) {
+        throw new Error(`Vertex AI batch translation call failed for UI strings: ${res ? res.statusText : 'No response'}`);
+      }
+      
+      const data = await res.json();
+      const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!jsonText) {
+        throw new Error(`Vertex AI returned an empty response for UI strings translation.`);
+      }
+      
+      let translatedDict;
+      try {
+        translatedDict = JSON.parse(jsonText.trim());
+      } catch (err) {
+        const cleaned = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+        translatedDict = JSON.parse(cleaned);
+      }
+      
+      logs.push(`[UI-TRANSLATOR] Saving translated dictionary to system_parameters table with key "ui_strings_${targetLang.toUpperCase()}"...`);
+      const { error: upsertError } = await supabase
+        .from('system_parameters')
+        .upsert({
+          key: `ui_strings_${targetLang.toUpperCase()}`,
+          value: JSON.stringify(translatedDict),
+          updated_at: new Date().toISOString()
+        });
+        
+      if (upsertError) {
+        throw new Error(`Failed to upsert UI translations into database: ${upsertError.message}`);
+      }
+      
+      logs.push(`[UI-TRANSLATOR] Dynamic UI translation completed and saved successfully.`);
 
     } else if (nextTask.name.toLowerCase().includes('translation') || nextTask.target?.includes('translate')) {
       // === Translation Task ===
@@ -221,27 +302,43 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
     // --- SUCCESS: Update status to completed ---
     extra.completedAt = new Date().toISOString();
     
-    // Fetch latest task logs from DB to avoid overwriting logs written by other processes
-    const { data: latestTask } = await supabase
-      .from('task_queue')
-      .select('logs')
-      .eq('id', nextTask.id)
-      .single();
-
-    const finalLogs = [
-      ...(latestTask?.logs || nextTask.logs || []),
+    let finalLogs = [
+      ...(nextTask.logs || []),
       `[${new Date().toISOString()}] ✅ Attempt ${currentAttempt}/${maxAttempts} succeeded. Task completed.`
     ];
 
-    await supabase
-      .from('task_queue')
-      .update({
-        status: 'completed',
-        progress: 100,
-        description: JSON.stringify(extra),
-        logs: finalLogs
-      })
-      .eq('id', nextTask.id);
+    try {
+      const { data: latestTask } = await supabase
+        .from('task_queue')
+        .select('logs')
+        .eq('id', nextTask.id)
+        .single();
+      if (latestTask?.logs) {
+        finalLogs = [
+          ...latestTask.logs,
+          `[${new Date().toISOString()}] ✅ Attempt ${currentAttempt}/${maxAttempts} succeeded. Task completed.`
+        ];
+      }
+    } catch (e) {
+      console.warn(`[TASK RUNNER DB WARNING] Failed to fetch latest logs before completion:`, e);
+    }
+
+    try {
+      const { error: compError } = await supabase
+        .from('task_queue')
+        .update({
+          status: 'completed',
+          progress: 100,
+          description: JSON.stringify(extra),
+          logs: finalLogs
+        })
+        .eq('id', nextTask.id);
+      if (compError) {
+        console.error(`[TASK RUNNER DB ERROR] Failed to set status to 'completed' for task ${nextTask.id}:`, compError.message);
+      }
+    } catch (dbErr: any) {
+      console.error(`[TASK RUNNER DB EXCEPTION] Exception updating status to 'completed' for task ${nextTask.id}:`, dbErr);
+    }
 
     logs.push(`[SUCCESS] Task "${nextTask.name}" completed successfully.`);
     return { success: true };
@@ -251,36 +348,53 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
     const errStack = error.stack || errMsg;
     console.error(`[TASK RUNNER ERROR] Task ${nextTask.id} failed:`, errMsg);
 
-    // Fetch latest logs to avoid overwrite
-    const { data: latestTask } = await supabase
-      .from('task_queue')
-      .select('logs')
-      .eq('id', nextTask.id)
-      .single();
-
-    const newLogs = [
-      ...(latestTask?.logs || nextTask.logs || []),
+    let newLogs = [
+      ...(nextTask.logs || []),
       `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
       `Stack: ${errStack}`
     ];
+
+    try {
+      const { data: latestTask } = await supabase
+        .from('task_queue')
+        .select('logs')
+        .eq('id', nextTask.id)
+        .single();
+      if (latestTask?.logs) {
+        newLogs = [
+          ...latestTask.logs,
+          `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
+          `Stack: ${errStack}`
+        ];
+      }
+    } catch (e) {
+      console.warn(`[TASK RUNNER DB WARNING] Failed to fetch latest logs during failure handler:`, e);
+    }
 
     if (currentAttempt < maxAttempts) {
       // --- RETRY: Re-queue task ---
       logs.push(`[RETRY] Re-queuing task for attempt ${currentAttempt + 1}/${maxAttempts}...`);
       extra.last_error = errMsg;
       
-      await supabase
-        .from('task_queue')
-        .update({
-          status: 'queued',
-          progress: 0,
-          description: JSON.stringify(extra),
-          logs: [
-            ...newLogs,
-            `[${new Date().toISOString()}] ⏳ Re-queued for retry (attempt ${currentAttempt + 1}/${maxAttempts}).`
-          ]
-        })
-        .eq('id', nextTask.id);
+      try {
+        const { error: retryError } = await supabase
+          .from('task_queue')
+          .update({
+            status: 'queued',
+            progress: 0,
+            description: JSON.stringify(extra),
+            logs: [
+              ...newLogs,
+              `[${new Date().toISOString()}] ⏳ Re-queued for retry (attempt ${currentAttempt + 1}/${maxAttempts}).`
+            ]
+          })
+          .eq('id', nextTask.id);
+        if (retryError) {
+          console.error(`[TASK RUNNER DB ERROR] Failed to set status to 'queued' for task ${nextTask.id}:`, retryError.message);
+        }
+      } catch (dbErr: any) {
+        console.error(`[TASK RUNNER DB EXCEPTION] Exception updating status to 'queued' for task ${nextTask.id}:`, dbErr);
+      }
 
       return { success: false, error: errMsg };
     } else {
@@ -289,18 +403,25 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       extra.completedAt = new Date().toISOString();
       extra.last_error = errMsg;
 
-      await supabase
-        .from('task_queue')
-        .update({
-          status: 'failed',
-          progress: 0,
-          description: JSON.stringify(extra),
-          logs: [
-            ...newLogs,
-            `[${new Date().toISOString()}] 🔴 PERMANENTLY FAILED after ${maxAttempts} attempts. No more retries.`
-          ]
-        })
-        .eq('id', nextTask.id);
+      try {
+        const { error: failError } = await supabase
+          .from('task_queue')
+          .update({
+            status: 'failed',
+            progress: 0,
+            description: JSON.stringify(extra),
+            logs: [
+              ...newLogs,
+              `[${new Date().toISOString()}] 🔴 PERMANENTLY FAILED after ${maxAttempts} attempts. No more retries.`
+            ]
+          })
+          .eq('id', nextTask.id);
+        if (failError) {
+          console.error(`[TASK RUNNER DB ERROR] Failed to set status to 'failed' for task ${nextTask.id}:`, failError.message);
+        }
+      } catch (dbErr: any) {
+        console.error(`[TASK RUNNER DB EXCEPTION] Exception updating status to 'failed' for task ${nextTask.id}:`, dbErr);
+      }
 
       return { success: false, error: errMsg };
     }

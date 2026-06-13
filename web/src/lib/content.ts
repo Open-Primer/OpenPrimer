@@ -1211,6 +1211,13 @@ function healGlossaryTags(mdx: string): string {
 
   // 4. Auto-close unclosed Glossary tags.
   processed = processed.replace(/<Glossary\s+term="([^"]+)"\s+definition="([^"]+)">([^<]+?)(?=\s*(?:<Glossary|\n\n|$))/gi, (match, term, def, displayName) => {
+    // Check if displayName ends with markdown formatting like **, *, __, _, etc.
+    const trimMatch = displayName.match(/^([\s\S]*?)([\*_]+[.,;:!?]*)$/);
+    if (trimMatch) {
+      const cleanName = trimMatch[1];
+      const trailingFormat = trimMatch[2];
+      return `<Glossary term="${term}" definition="${def}">${cleanName}</Glossary>${trailingFormat}`;
+    }
     return `<Glossary term="${term}" definition="${def}">${displayName}</Glossary>`;
   });
 
@@ -1603,15 +1610,25 @@ function healObjectivesTags(mdx: string): string {
 
     if (!knowledge && !skills && !attitudes) return match;
 
+    const cleanBlock = (text: string) => {
+      if (!text) return '';
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => '    ' + line)
+        .join('\n');
+    };
+
     return `<Objectives>
   <Knowledge>
-    ${knowledge}
+${cleanBlock(knowledge)}
   </Knowledge>
   <Skills>
-    ${skills}
+${cleanBlock(skills)}
   </Skills>
   <Attitudes>
-    ${attitudes}
+${cleanBlock(attitudes)}
   </Attitudes>
 </Objectives>`;
   });
@@ -1651,7 +1668,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
   const allowedTagsPattern = allowedTags.join('|');
   const splitRegex = new RegExp(
-    `(\\$\\$[\\s\\S]*?\\$\\$|\\$(?:[^\\$]|\\n(?!\\n))+?\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b[^>]*>)`,
+    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'">]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')*?>)`,
     'gi'
   );
   const parts = mdx.split(splitRegex);
@@ -1873,7 +1890,7 @@ function balancePedagogicalTags(mdx: string): string {
   let result = mdx;
 
   for (const tag of wrapperTags) {
-    const regex = new RegExp(`<(\\/?)(${tag})\\b([^>]*?)(\\/?)>`, 'gi');
+    const regex = new RegExp(`<(\\/?)(${tag})\\b((?:[^'">]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')*?)(\\/?)>`, 'gi');
     
     interface Token {
       index: number;
@@ -1961,11 +1978,20 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = balancePedagogicalTags(processed);
   processed = reorderMdxSections(processed, lang);
 
+  // Clean doubly HTML-encoded entities
+  processed = processed.replace(/&amp;quot;/g, '&quot;');
+  processed = processed.replace(/&amp;apos;/g, '&apos;');
+  processed = processed.replace(/&amp;amp;/g, '&amp;');
+
   // 0a. Restore HTML-encoded quotes in JSX attributes to prevent next-mdx-remote parse failures
   processed = processed.replace(/=\s*&quot;([\s\S]*?)&quot;/gi, '="$1"');
   processed = processed.replace(/=\s*&apos;([\s\S]*?)&apos;/gi, '=\'$1\'');
   processed = processed.replace(/=\s*&#39;([\s\S]*?)&#39;/gi, '=\'$1\'');
   processed = processed.replace(/=\s*&#x27;([\s\S]*?)&#x27;/gi, '=\'$1\'');
+
+  // Fix legacy/invalid zero-padded numbers in JSX curly braces (e.g. correctIndex={00} or {01})
+  processed = processed.replace(/(correctIndex|durationLimit|duration|tolerance|order|correct|index|x|y)=\{\s*0+(\d+)\s*\}/gi, '$1={$2}');
+  processed = processed.replace(/(correctIndex|durationLimit|duration|tolerance|order|correct|index|x|y)=\{\s*0+\s*\}/gi, '$1={0}');
 
   // 0b. Convert GlossaryList and GlossaryList.Item to standard markdown bulleted lists
   processed = processed.replace(/<GlossaryList\.Item\s+term=["']([^"']+)["']\s+definition=["']([\s\S]*?)["']\s*\/?>/gi, (match, term, definition) => {
@@ -2021,13 +2047,11 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   });
 
   processed = escapeCurlyBracesAndLessThanInText(processed);
-  // Fix bare & in JSX attribute string values (prevents MDX parse crash)
   processed = sanitizeAmpersandInJsxAttributes(processed);
   processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
   processed = healGlossaryTags(processed);
   processed = healObjectivesTags(processed);
-  // Fix AI-generated nesting errors where wrapper tags are never properly closed
   processed = healWrapperTagNesting(processed);
   processed = healWhatsNextNesting(processed);
   processed = deduplicateHistoricalPersons(processed);
@@ -2075,7 +2099,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   });
 
   // 2. Inline math ($ ... $) spanning multiple lines but not crossing paragraphs
-  processed = processed.replace(/(?<!\\)\$((?:[^\$]|\n(?!\n))+?)(?<!\\)\$/g, (match, mathContent) => {
+  processed = processed.replace(/(?<!\\)\$([^$\n]*(?:\n[^$\n]+)*)(?<!\\)\$/g, (match, mathContent) => {
     const unescapedMath = mathContent
       .replace(/&#123;/g, '{')
       .replace(/&#125;/g, '}');
@@ -2310,8 +2334,8 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
  */
 function removeOrphanedCloseTags(mdx: string): string {
   const HTML_SELF_CLOSING = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-  // Use non-greedy match to ensure capture group 4 correctly extracts the self-closing slash '/'
-  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b([^>]*?)(\/?)>/g;
+  // Quote-aware and escape-aware regex to ensure that < and > inside string attributes do not interfere with tag extraction
+  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)(\/?)>/g;
   
   const stack: { name: string; start: number; end: number }[] = [];
   const toRemove: { start: number; end: number }[] = [];
@@ -2355,15 +2379,28 @@ function removeOrphanedCloseTags(mdx: string): string {
     }
   }
   
-  if (toRemove.length === 0) {
-    return mdx;
-  }
-  
   // Apply removals from back to front
   let result = mdx;
   for (let i = toRemove.length - 1; i >= 0; i--) {
     const { start, end } = toRemove[i];
     result = result.substring(0, start) + result.substring(end);
+  }
+  
+  // If stack has remaining unclosed opening tags, append their closing tags to prevent acorn/mdx compilation crashes
+  if (stack.length > 0) {
+    let closingTags = '';
+    // Append in reverse order to properly close nested tags
+    for (let i = stack.length - 1; i >= 0; i--) {
+      closingTags += `</${stack[i].name}>`;
+    }
+    
+    // Find a good place to insert closing tags: before glossary or references, or at the end
+    const insertIndex = result.search(/###\s*(Glossaire|Glossary|Réf|References|Bibliography)/i);
+    if (insertIndex !== -1) {
+      result = result.substring(0, insertIndex) + `\n${closingTags}\n\n` + result.substring(insertIndex);
+    } else {
+      result = result + `\n${closingTags}\n`;
+    }
   }
   
   return result;

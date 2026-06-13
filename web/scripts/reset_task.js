@@ -2,7 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
-// Parse .env.local manually
 let envPath = path.resolve(__dirname, '../.env.local');
 if (fs.existsSync(envPath)) {
   const content = fs.readFileSync(envPath, 'utf8');
@@ -20,32 +19,27 @@ if (fs.existsSync(envPath)) {
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("Missing environment variables.");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-async function resetTask() {
-  const taskId = 'd09391d1-5996-4418-b074-f5b6842a998c';
-  console.log(`Resetting task ${taskId}...`);
-  
-  const { data, error } = await supabase
+async function run() {
+  const taskId = 'ed30303f-1710-4924-bc5c-92538675dfb1';
+  console.log(`Resetting task ${taskId} to queued...`);
+  const { error } = await supabase
     .from('task_queue')
-    .update({ 
+    .update({
       status: 'queued',
-      logs: [] // Reset logs
+      progress: 0,
+      logs: ['Reset for debug validation.']
     })
     .eq('id', taskId);
 
   if (error) {
     console.error("Error resetting task:", error);
-  } else {
-    console.log("Task reset successfully!");
+    return;
   }
+
+  console.log("Task reset successfully!");
 }
 
-resetTask();
+run().catch(console.error);

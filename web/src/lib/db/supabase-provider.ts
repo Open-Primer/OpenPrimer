@@ -1085,6 +1085,23 @@ export const supabaseDatabaseProvider: DatabaseService = {
         
       if (error) throw error;
 
+      // Queue an asynchronous background task to translate the UI strings
+      await supabase
+        .from('task_queue')
+        .insert({
+          name: `Translate UI Dictionary - ${lang.code.toUpperCase()}`,
+          description: JSON.stringify({
+            targetLang: lang.code.toLowerCase(),
+            current_attempt: 0,
+            max_attempts: 3
+          }),
+          priority: 'High',
+          status: 'queued',
+          progress: 0,
+          target: 'ui_translation',
+          logs: [`[${new Date().toISOString()}] Task enqueued for translating UI static strings to ${lang.code.toUpperCase()}.`]
+        });
+
       // Pre-create/translate the email templates for the new language in the background
       const { getOrTranslateTemplate } = await import('@/lib/emailService');
       getOrTranslateTemplate('verify_email', lang.code).catch(e => console.error("Error pre-creating verify_email template:", e));

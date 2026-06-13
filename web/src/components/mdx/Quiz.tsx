@@ -81,7 +81,11 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const questions = (React.Children.toArray(children) as React.ReactElement[]).filter(
-    (child) => React.isValidElement(child) && (child.props as any) && 'q' in (child.props as any)
+    (child) => {
+      if (!React.isValidElement(child)) return false;
+      const typeName = (child.type as any)?.name || String(child.type);
+      return typeName === 'Question' || typeName === 'QuestionComponent' || 'q' in (child.props as any);
+    }
   );
   const totalQuestions = questions.length;
   const totalAnswered = Object.keys(answers).length;
@@ -95,10 +99,22 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
         setIsTutorLoading(true);
         try {
           const pathname = window.location.pathname;
-          const qResults = questions.map((q: any) => ({
-            question: q.props.q,
-            correct: answers[q.props.q] === true
-          }));
+          const qResults = questions.map((q: any, i) => {
+            let qText = q.props.q;
+            if (!qText && q.props.children) {
+              const stringChild = React.Children.toArray(q.props.children).find(
+                c => typeof c === 'string'
+              );
+              if (stringChild) {
+                qText = String(stringChild);
+              }
+            }
+            qText = qText || `question_${i}`;
+            return {
+              question: qText,
+              correct: answers[qText] === true
+            };
+          });
 
           const response = await fetch('/api/tutor/chat', {
             method: 'POST',
@@ -398,12 +414,24 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
       {(!isFinished || showAnswers) && (
         <div className="space-y-8">
           {questions.map((question: any, index) => {
-            const isAnswered = answers[question.props.q] !== undefined;
-            const savedAnswer = answers[question.props.q];
+            let questionText = question.props.q;
+            if (!questionText && question.props.children) {
+              const stringChild = React.Children.toArray(question.props.children).find(
+                child => typeof child === 'string'
+              );
+              if (stringChild) {
+                questionText = String(stringChild);
+              }
+            }
+            questionText = questionText || `question_${index}`;
+
+            const isAnswered = answers[questionText] !== undefined;
+            const savedAnswer = answers[questionText];
             
             return React.cloneElement(question, {
               key: `${resetKey}_${index}`,
-              onAnswer: (correct: boolean) => handleAnswer(question.props.q, correct),
+              q: questionText,
+              onAnswer: (correct: boolean) => handleAnswer(questionText, correct),
               isParentReadOnly: isFinished || isTimeUp,
               savedCorrect: isAnswered ? savedAnswer : null
             } as any);

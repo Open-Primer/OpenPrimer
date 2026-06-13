@@ -48,7 +48,6 @@ export const TASK_MODELS: Record<string, ModelId> = {
   course_generation:  'gemini-2.5-flash',     // Fast & cheap direct replacement for 1.5 Flash
   course_translation: 'gemini-2.5-flash',     // Good quality for academic translation
   tutor_chat:         'gemini-2.5-flash',     // Fast & cheap for real-time chat
-  jit_translate:      'gemini-2.5-flash',     // Inline lesson translation
   batch_translate:    'gemini-2.5-flash',     // Batch field translation
   analytics:          'gemini-2.5-flash',     // Simple report generation
   badge_expand:       'gemini-2.5-flash',     // Simple prompt expansion
@@ -74,7 +73,6 @@ export const TASK_TOKEN_ESTIMATES: Record<string, { inputTokens: number; outputT
   course_generation:  { inputTokens: 2_000,  outputTokens: 8_000  }, // per lesson
   course_translation: { inputTokens: 8_000,  outputTokens: 7_000  }, // per lesson
   tutor_chat:         { inputTokens: 4_000,  outputTokens: 800    }, // per exchange
-  jit_translate:      { inputTokens: 6_000,  outputTokens: 5_500  }, // per page
   batch_translate:    { inputTokens: 1_500,  outputTokens: 1_200  }, // per batch
   analytics:          { inputTokens: 2_000,  outputTokens: 1_000  }, // per report
   badge_expand:       { inputTokens: 300,    outputTokens: 150    }, // per badge

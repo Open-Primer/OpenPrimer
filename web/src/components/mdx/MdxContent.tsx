@@ -30,6 +30,8 @@ import { DynamicSimulation } from './DynamicSimulation';
 import { GoingFurther, GoingFurtherItem } from './GoingFurther';
 import { FunctionManipulator } from './FunctionManipulator';
 import { EquationManipulator } from './EquationManipulator';
+import { ChemicalStoichiometry } from './ChemicalStoichiometry';
+import { BasicMathExplorer } from './BasicMathExplorer';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, BookOpen, Key, Compass, Award, FileText, Calendar, Send, HelpCircle, PenTool, RefreshCw, Play, Timer, Lock, ClipboardCheck } from 'lucide-react';
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
@@ -1093,6 +1095,38 @@ const ImageAlias = (props: any) => {
   return <CustomFigure {...props} />;
 };
 
+const Explanation = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  return <div className="text-slate-400 text-xs italic pl-4 my-1 select-text">• {children}</div>;
+};
+
+const Solution = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  return (
+    <div className="p-4 bg-emerald-950/20 border border-emerald-500/20 rounded-xl my-2 text-xs">
+      <div className="text-emerald-400 font-bold mb-1 select-none">Solution :</div>
+      <div className="text-slate-300">{children}</div>
+    </div>
+  );
+};
+
+const KeyConcept = ({ title, children }: { title?: string; children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  return (
+    <div className="p-4 bg-blue-950/20 border border-blue-500/20 rounded-xl my-4 text-xs font-semibold">
+      {title && <div className="text-blue-400 font-bold mb-1">{title}</div>}
+      <div className="text-slate-300">{children}</div>
+    </div>
+  );
+};
+
+const Instruction = ({ children }: { children: React.ReactNode }) => {
+  if (isChildrenEmpty(children)) return null;
+  return <div className="text-slate-400 text-xs italic my-1 select-text">{children}</div>;
+};
+
+const Shape = () => null;
+
 const components = {
   Alert,
   CustomFigure,
@@ -1103,6 +1137,11 @@ const components = {
   Video,
   AudioPlayer,
   Audio: AudioPlayer,
+  Explanation,
+  Solution,
+  KeyConcept,
+  Instruction,
+  Shape,
   FillInBlanks,
   MetaNote,
   SolvedProblem,
@@ -1140,7 +1179,16 @@ const components = {
   GoingFurther,
   GoingFurtherItem,
   FunctionManipulator,
+  ManipulateurFonction: FunctionManipulator,
+  ExplorateurFonctions: FunctionManipulator,
   EquationManipulator,
+  ManipulateurEquation: EquationManipulator,
+  ExplorateurEquations: EquationManipulator,
+  ChemicalStoichiometry,
+  EquilibrageChimique: ChemicalStoichiometry,
+  StoichiometrieChimique: ChemicalStoichiometry,
+  BasicMathExplorer,
+  ExplorateurMathsBase: BasicMathExplorer,
   pre: PreCodeInterceptor,
 
   // New Custom Pedagogical Blocks

@@ -3,6 +3,37 @@ import path from 'path';
 import crypto from 'crypto';
 import { supabaseAdmin } from './supabase';
 
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => {
+    try { controller.abort(); } catch {}
+  }, timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
+}
+
 const saPath = 'c:\\Silvere\\Encours\\Developpement\\OpenPrimer\\web\\secrets\\openprimer-free-a9fb82581e59.json';
 
 // Helper to encode JWT components
@@ -42,11 +73,11 @@ async function getGoogleAccessToken(): Promise<string | null> {
 
     const jwt = `${stringToSign}.${signatureEncoded}`;
 
-    const tokenRes = await fetch(sa.token_uri || 'https://oauth2.googleapis.com/token', {
+    const tokenRes = await fetchWithTimeout(sa.token_uri || 'https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-    });
+    }, 6000);
 
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
@@ -65,16 +96,16 @@ async function getGoogleAccessToken(): Promise<string | null> {
 // Ensure the Supabase Storage bucket exists
 async function ensureBucketExists() {
   try {
-    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+    const { data: buckets, error: listError } = await withTimeout(supabaseAdmin.storage.listBuckets(), 8000);
     if (listError) throw listError;
 
     const exists = buckets?.some(b => b.name === 'course-media');
     if (!exists) {
       console.log('[MEDIA-RESOLVER] Creating Supabase Storage bucket "course-media"...');
-      const { error: createError } = await supabaseAdmin.storage.createBucket('course-media', {
+      const { error: createError } = await withTimeout(supabaseAdmin.storage.createBucket('course-media', {
         public: true,
         fileSizeLimit: 20 * 1024 * 1024 // 20MB
-      });
+      }), 8000);
       if (createError) throw createError;
     }
   } catch (err) {
@@ -87,12 +118,15 @@ async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeTyp
   try {
     await ensureBucketExists();
 
-    const { error } = await supabaseAdmin.storage
-      .from('course-media')
-      .upload(fileName, buffer, {
-        contentType: mimeType,
-        upsert: true
-      });
+    const { error } = await withTimeout(
+      supabaseAdmin.storage
+        .from('course-media')
+        .upload(fileName, buffer, {
+          contentType: mimeType,
+          upsert: true
+        }),
+      15000
+    );
 
     if (error) {
       console.error(`[MEDIA-RESOLVER] Failed to upload ${fileName} to storage:`, error);
@@ -115,7 +149,7 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
   try {
     const cleanTitle = title.trim().replace(/\s+/g, '_');
     const url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original&titles=${encodeURIComponent(cleanTitle)}&format=json&origin=*`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url, {}, 4000);
     if (!res.ok) return null;
     
     const json = await res.json();
@@ -142,11 +176,11 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
 async function searchYouTubeVideo(query: string): Promise<string | null> {
   try {
     const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-    const res = await fetch(searchUrl, {
+    const res = await fetchWithTimeout(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
       }
-    });
+    }, 5000);
     if (!res.ok) return null;
     const html = await res.text();
     const match = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
@@ -165,7 +199,7 @@ async function validateYouTubeVideo(videoId: string): Promise<boolean> {
     return false;
   }
   try {
-    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' });
+    const res = await fetchWithTimeout(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' }, 4000);
     return res.ok;
   } catch (err) {
     return true; // Network/rate limit: assume OK
@@ -180,7 +214,7 @@ async function fetchWikimediaAudio(title: string): Promise<string | null> {
     const searchQuery = `${cleanTitle} (filetype:ogg OR filetype:wav OR filetype:mp3 OR filetype:oga)`;
     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchQuery)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
     
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url, {}, 4000);
     if (!res.ok) return null;
     const json = await res.json();
     const pages = json.query?.pages;
@@ -226,14 +260,14 @@ async function generateLyriaAudio(prompt: string, durationHint: string = '30s'):
 
     console.log(`[MEDIA-RESOLVER] Generating audio via Lyria (${model}) for: "${prompt.substring(0, 60)}..."`);
 
-    const res = await fetch(lyriaUrl, {
+    const res = await fetchWithTimeout(lyriaUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: { response_mime_type: 'audio/mpeg' }
       })
-    });
+    }, 12000);
 
     if (!res.ok) {
       const err = await res.text();
@@ -318,14 +352,14 @@ async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buff
     };
 
     console.log(`[MEDIA-RESOLVER] Synthesizing speech for: "${text.substring(0, 40)}..." in ${langCode}`);
-    const res = await fetch(ttsUrl, {
+    const res = await fetchWithTimeout(ttsUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json; charset=utf-8'
       },
       body: JSON.stringify(body)
-    });
+    }, 8000);
 
     if (!res.ok) {
       const err = await res.text();
@@ -435,7 +469,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
       if (resolvedUrl) {
         try {
-          const dlRes = await fetch(resolvedUrl);
+          const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
           if (dlRes.ok) {
             audioBuffer = Buffer.from(await dlRes.arrayBuffer());
             const contentType = dlRes.headers.get('content-type') || '';
@@ -532,7 +566,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
             console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
           }
         } else {
-          const imageRes = await fetch(sourceUrl);
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 6000);
           if (imageRes.ok) {
             contentType = imageRes.headers.get('content-type') || 'image/jpeg';
             buffer = Buffer.from(await imageRes.arrayBuffer());
@@ -606,7 +640,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
             console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
           }
         } else {
-          const imageRes = await fetch(sourceUrl);
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 6000);
           if (imageRes.ok) {
             contentType = imageRes.headers.get('content-type') || 'image/jpeg';
             buffer = Buffer.from(await imageRes.arrayBuffer());

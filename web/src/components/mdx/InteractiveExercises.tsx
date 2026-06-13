@@ -9,7 +9,7 @@ import { STATIC_UI_STRINGS } from '@/lib/translations';
 interface SolvedExerciseProps {
   title: string;
   children: React.ReactNode; // Exercise statement
-  solution: React.ReactNode; // Step-by-step resolution details
+  solution?: React.ReactNode; // Step-by-step resolution details
 }
 
 export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProps) => {
@@ -30,6 +30,29 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
   };
   const [isOpen, setIsOpen] = useState(false);
 
+  // Extract Solution child if present
+  let resolvedSolution = solution;
+  let otherChildren: React.ReactNode[] = [];
+  let solutionChild: React.ReactNode = null;
+
+  if (children) {
+    React.Children.toArray(children).forEach((child) => {
+      if (React.isValidElement(child)) {
+        const typeName = (child.type as any)?.name || String(child.type);
+        if (typeName === 'Solution') {
+          solutionChild = (child as React.ReactElement<any>).props.children;
+        } else {
+          otherChildren.push(child);
+        }
+      } else {
+        otherChildren.push(child);
+      }
+    });
+  }
+
+  const finalChildren = otherChildren.length > 0 ? otherChildren : children;
+  const finalSolution = resolvedSolution || solutionChild;
+
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
       {/* Exercise Body */}
@@ -43,7 +66,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
           </span>
         </div>
         <div className="text-slate-200 text-sm leading-relaxed prose-p:mb-4 last:prose-p:mb-0">
-          {children}
+          {finalChildren}
         </div>
       </div>
 
@@ -67,7 +90,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
             className="bg-slate-950/60 border-t border-emerald-500/10"
           >
             <div className="p-6 sm:p-8 text-slate-350 text-xs sm:text-sm leading-relaxed whitespace-pre-line border-l-2 border-emerald-500/50">
-              {solution}
+              {finalSolution}
             </div>
           </motion.div>
         )}
@@ -77,23 +100,29 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
 };
 
 interface UnsolvedExerciseProps {
-  question: string;
+  question?: string;
+  children?: React.ReactNode;
   correctAnswer?: string | number;
   tolerance?: number; // Tolerated numeric variation (+/-)
   placeholder?: string;
   hint?: string;
   solution?: string; // Revealed when correct or out of attempts
   unit?: string;     // unit label e.g., "m/s"
+  id?: string;
+  title?: string;
 }
 
 export const UnsolvedExercise = ({
   question,
+  children,
   correctAnswer,
   tolerance = 0.05,
   placeholder,
   hint,
   solution,
-  unit
+  unit,
+  id,
+  title
 }: UnsolvedExerciseProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -110,6 +139,29 @@ export const UnsolvedExercise = ({
     unlocked_sol: dict.ex_unlocked_sol,
     placeholder: dict.ex_placeholder
   };
+
+  // Extract custom children if present
+  let resolvedQuestion: React.ReactNode = question;
+  let resolvedSolution: React.ReactNode = solution;
+  let otherChildren: React.ReactNode[] = [];
+  let solutionChild: React.ReactNode = null;
+
+  if (children) {
+    React.Children.toArray(children).forEach((child) => {
+      if (React.isValidElement(child)) {
+        const typeName = (child.type as any)?.name || String(child.type);
+        if (typeName === 'Instruction' || typeName === 'Instructions') {
+          resolvedQuestion = resolvedQuestion || (child as React.ReactElement<any>).props.children;
+        } else if (typeName === 'Solution') {
+          solutionChild = (child as React.ReactElement<any>).props.children;
+        } else {
+          otherChildren.push(child);
+        }
+      } else {
+        otherChildren.push(child);
+      }
+    });
+  }
 
   const isReflection = correctAnswer === undefined || correctAnswer === null || String(correctAnswer).trim() === '';
 
@@ -190,6 +242,8 @@ export const UnsolvedExercise = ({
     }
   };
 
+  const finalTitle = title ? `${t.unsolved_title} : ${title}` : t.unsolved_title;
+
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
       <div className="p-6 sm:p-8 space-y-5">
@@ -199,7 +253,7 @@ export const UnsolvedExercise = ({
               <Lightbulb className="w-4 h-4 animate-pulse" />
             </div>
             <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">
-              {t.unsolved_title}
+              {finalTitle}
             </span>
           </div>
 
@@ -210,7 +264,17 @@ export const UnsolvedExercise = ({
           )}
         </div>
 
-        <p className="text-slate-100 text-sm font-bold leading-relaxed">{question}</p>
+        {resolvedQuestion && (
+          <div className="text-slate-100 text-sm font-bold leading-relaxed">
+            {resolvedQuestion}
+          </div>
+        )}
+
+        {otherChildren.length > 0 && (
+          <div className="space-y-4">
+            {otherChildren}
+          </div>
+        )}
 
         {/* Input area */}
         <div className={`flex flex-col ${isReflection ? 'space-y-4' : 'sm:flex-row items-center gap-3'}`}>
@@ -314,7 +378,7 @@ export const UnsolvedExercise = ({
 
       {/* Solution Block revealed when attempts finish or correct answer is submitted */}
       <AnimatePresence>
-        {revealed && solution && (
+        {revealed && (resolvedSolution || solutionChild) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -323,9 +387,9 @@ export const UnsolvedExercise = ({
             <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest block select-none">
               {t.unlocked_sol}
             </span>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed italic whitespace-pre-line border-l-2 border-blue-500/50 pl-4">
-              {solution}
-            </p>
+            <div className="text-slate-300 text-xs sm:text-sm leading-relaxed italic border-l-2 border-blue-500/50 pl-4">
+              {resolvedSolution || solutionChild}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

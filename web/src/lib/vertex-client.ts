@@ -208,9 +208,10 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
   if (configuredModel === 'gemini-2.5-pro') {
     modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
   } else if (configuredModel === 'gemini-2.0-flash-lite') {
-    modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+    modelsToTry = ['gemini-2.0-flash-lite', 'gemini-2.5-flash'];
   } else {
-    modelsToTry = [configuredModel, 'gemini-2.5-pro'];
+    // Rely strictly on configuredModel (typically gemini-2.5-flash) and retries rather than falling back to pro
+    modelsToTry = [configuredModel];
   }
 
   const method = req.stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
@@ -228,8 +229,8 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       body.generationConfig = req.generationConfig;
     }
 
-    const maxRetries = 3;
-    let delay = 2000;
+    const maxRetries = 5;
+    let delay = 4000;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[VERTEX] Attempting call with model "${model}" (attempt ${attempt}/${maxRetries})...`);
@@ -275,7 +276,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
           console.warn(`${lastError}. Retrying in ${delay}ms...`);
           if (attempt < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2.5; // Exponential backoff (2s -> 5s -> 12.5s)
+            delay *= 2.0; // Exponential backoff (4s -> 8s -> 16s -> 32s -> 64s -> 128s)
             continue;
           }
         } else {
@@ -287,6 +288,12 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       } catch (e) {
         lastError = `[VERTEX] Model "${model}" exception: ${e}`;
         console.warn(lastError);
+        if (attempt < maxRetries) {
+          console.warn(`[VERTEX] Retrying in ${delay}ms after exception...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2.0;
+          continue;
+        }
         break;
       }
     }
@@ -328,7 +335,7 @@ export async function recordMetrics(
       } else {
         metricId = 'generation';
       }
-    } else if (task === 'course_translation' || task === 'jit_translate' || task === 'batch_translate') {
+    } else if (task === 'course_translation' || task === 'batch_translate') {
       metricId = 'translation';
     } else if (task === 'analytics' || task === 'revision') {
       metricId = 'revision';

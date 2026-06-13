@@ -2720,6 +2720,29 @@ export const DISCIPLINES = [
   { value: 'education',          EN: 'Pedagogy & Education', FR: 'Pédagogie & Éducation', ES: 'Pedagogía y Educación', DE: 'Pédagogik', ZH: '\u6559\u80b2\u5b66' }
 ] as const;
 
+export const normalizeLevel = (level: string | undefined | null): string => {
+  if (!level) return 'beginner';
+  const clean = level.trim().toLowerCase();
+  const matched = ACADEMIC_LEVELS.find(lvl => lvl.value.toLowerCase() === clean);
+  if (matched) return matched.value;
+  if (clean === 'l1') return 'L1';
+  if (clean === 'l2') return 'L2';
+  if (clean === 'l3') return 'L3';
+  if (clean === 'm1') return 'M1';
+  if (clean === 'm2') return 'M2';
+  return clean;
+};
+
+export const formatCourseLevelGlobal = (level: string | undefined | null, lang: string) => {
+  if (!level) return '101';
+  const normalized = normalizeLevel(level);
+  const foundLvl = ACADEMIC_LEVELS.find(l => l.value === normalized);
+  if (foundLvl) {
+    return getLevelLabel(foundLvl.value, lang);
+  }
+  return normalized.toUpperCase();
+};
+
 export const getLevelLabel = (value: string, lang: string): string => {
   const lvl = ACADEMIC_LEVELS.find(l => l.value === value);
   if (!lvl) return value;
@@ -2771,7 +2794,7 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
       translatedLevels[lvl.value] = translatedText;
     } catch (e) {
       console.error(`Failed to translate academic level ${lvl.value}`, e);
-      translatedLevels[lvl.value] = lvl.EN;
+      translatedLevels[lvl.value] = (lvl as any)[targetLang.toUpperCase()] || lvl.EN;
     }
   }
   localStorage.setItem(`op_lang_levels_${targetLang}`, JSON.stringify(translatedLevels));
@@ -2786,7 +2809,7 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
       translatedDisciplines[disc.value] = translatedText;
     } catch (e) {
       console.error(`Failed to translate discipline ${disc.value}`, e);
-      translatedDisciplines[disc.value] = disc.EN;
+      translatedDisciplines[disc.value] = (disc as any)[targetLang.toUpperCase()] || disc.EN;
     }
   }
   localStorage.setItem(`op_lang_disciplines_${targetLang}`, JSON.stringify(translatedDisciplines));
@@ -3861,6 +3884,12 @@ export default function AdminCurriculumPage() {
             }
           }
         }
+        if (t.level) {
+          const normLvl = normalizeLevel(t.level);
+          if (normLvl !== t.level) {
+            updates.level = normLvl;
+          }
+        }
         return Object.keys(updates).length ? { ...t, ...updates } : t;
       });
 
@@ -3914,6 +3943,18 @@ export default function AdminCurriculumPage() {
     const interval = setInterval(loadData, 10_000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`op_lang_levels_${lang}`);
+      if (!stored) {
+        console.log(`[LOCALIZATION] Translating metadata on startup/change for lang "${lang}"`);
+        translateMetadataForLanguage(lang).catch(err => {
+          console.error("Failed to translate metadata for lang on mount:", err);
+        });
+      }
+    }
+  }, [lang]);
 
   // Priority-Based Tasks execution scheduling loop (runs every 4 seconds)
   useEffect(() => {
@@ -4573,7 +4614,7 @@ export default function AdminCurriculumPage() {
             priority: p.count >= 15 ? 'High' : 'Medium',
             timestamp: new Date().toISOString(),
             targetLang: lang,
-            level: p.level || 'L1',
+            level: normalizeLevel(p.level || 'L1'),
             subject: p.subject || 'General'
           });
           promoted = true;
@@ -4759,7 +4800,7 @@ export default function AdminCurriculumPage() {
       timestamp: new Date().toISOString(),
       details: `Sovereign Academic Expansion: L2 Progression on subject "${subject}". Prerequisite: ${prerequisite}`,
       targetLang: lang,
-      level: level,
+      level: normalizeLevel(level),
       subject: subject || 'General'
     };
     const updated = [...queue, newTask];
@@ -4803,7 +4844,7 @@ export default function AdminCurriculumPage() {
       timestamp: new Date().toISOString(),
       details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
       targetLang: manualLang,
-      level: manualLevel,
+      level: normalizeLevel(manualLevel),
       subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject,
       courseType: manualType,
       volume: manualVolumePref === 'explicit' ? `${manualVolumeHours} hours` : 'Automatic'
@@ -4848,7 +4889,7 @@ export default function AdminCurriculumPage() {
       priority: count >= 15 ? 'High' : 'Medium',
       timestamp: new Date().toISOString(),
       targetLang: lang,
-      level: level || 'L1',
+      level: normalizeLevel(level || 'L1'),
       subject: subject || 'General'
     };
     const updated = [...queue, newTask];
@@ -7750,7 +7791,7 @@ export default function AdminCurriculumPage() {
                                     </div>
                                   </td>
                                   <td className="px-6 py-4 text-slate-400 font-mono font-bold">
-                                    {course.level === 'L1' ? '101' : (course.level === 'L2' ? '102' : (course.level === 'L3' ? '103' : (course.level === 'M1' ? '501' : (course.level === 'M2' ? '502' : course.level))))}
+                                    {formatCourseLevelGlobal(course.level, lang)}
                                   </td>
                                   <td className="px-6 py-4">
                                     <ArchivingLevelButtons 
@@ -7998,25 +8039,11 @@ export default function AdminCurriculumPage() {
                             statusColor = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
                           }
 
-                          const formatCourseLevel = (level: string) => {
-                            if (!level) return '101';
-                            const foundLvl = ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === level.toLowerCase());
-                            if (foundLvl) {
-                              return getLevelLabel(foundLvl.value, lang);
-                            }
-                            const l = level.toUpperCase();
-                            const matchLvl = ACADEMIC_LEVELS.find(l => l.value.toUpperCase() === level.toUpperCase());
-                            if (matchLvl) {
-                              return getLevelLabel(matchLvl.value, lang);
-                            }
-                            return tr(l);
-                          };
-
                           return (
                             <tr key={task.id} className="hover:bg-slate-900/20 transition-colors">
                               <td className="px-6 py-4 font-mono text-[9px] text-slate-500">{task.id}</td>
                               <td className="px-6 py-4 font-bold text-slate-200">{tr(task.title)}</td>
-                              <td className="px-6 py-4 font-mono font-bold text-slate-400">{formatCourseLevel(task.level)}</td>
+                              <td className="px-6 py-4 font-mono font-bold text-slate-400">{formatCourseLevelGlobal(task.level, lang)}</td>
                               <td className="px-6 py-4">
                                 {task.targetLang ? (
                                   <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black rounded-full uppercase">{task.targetLang}</span>

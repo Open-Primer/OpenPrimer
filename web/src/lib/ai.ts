@@ -4,6 +4,7 @@ import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client
 import { preprocessMdx } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
+import { TASK_MODELS } from './ai-config';
 
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -38,7 +39,22 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
   }
 }
 
-export async function generateCourseContent(courseName: string, level: string, targetLang: string = 'en') {
+export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en') {
+  const normalizeLevel = (lvl: string): string => {
+    if (!lvl) return 'beginner';
+    const clean = lvl.trim().toLowerCase();
+    if (clean === 'l1') return 'L1';
+    if (clean === 'l2') return 'L2';
+    if (clean === 'l3') return 'L3';
+    if (clean === 'm1') return 'M1';
+    if (clean === 'm2') return 'M2';
+    const standards = ['foundation_1', 'foundation_2', 'secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3', 'beginner', 'intermediate', 'advanced', 'expert'];
+    const found = standards.find(s => s === clean);
+    if (found) return found;
+    return clean;
+  };
+  const level = normalizeLevel(levelInput);
+
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
 Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive du cours intitulé "${courseName}" pour le niveau "${level}". Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
@@ -111,7 +127,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     let success = false;
     
     if (isVertexConfigured()) {
-      console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (gemini-2.5-pro)...`);
+      console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
       try {
         const res = await callVertexAI({
           task: 'course_generation',
@@ -192,17 +208,16 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     // ─────────────────────────────────────────────────────────────────
     const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
 
-    // 2. For each lesson, generate rich MDX content
-    for (let index = 0; index < lessonsList.length; index++) {
-      const item = lessonsList[index];
-
-      // Wait between lessons to smooth API request bursts (skip for first lesson)
+    // 2. For each lesson, generate rich MDX content in parallel with staggered starts
+    const lessonPromises = lessonsList.map(async (item, index) => {
+      // Stagger starts to smooth API requests
       if (index > 0 && INTER_LESSON_DELAY_MS > 0) {
-        console.log(`[THROTTLE] Inter-lesson delay: waiting ${INTER_LESSON_DELAY_MS / 1000}s before lesson ${index + 1}/${lessonsList.length}...`);
-        await new Promise(resolve => setTimeout(resolve, INTER_LESSON_DELAY_MS));
+        const delay = index * INTER_LESSON_DELAY_MS;
+        console.log(`[THROTTLE] Delaying start of lesson "${item.title}" (${index + 1}/${lessonsList.length}) by ${delay / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      const isPrimary = level.toLowerCase().includes('primary') || level.toLowerCase().includes('primaire');
+      const isPrimary = levelInput.toLowerCase().includes('primary') || levelInput.toLowerCase().includes('primaire');
       
       const promptContent = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
 Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome, exhaustif et immédiatement exploitable. L'évitement, la paresse textuelle et le résumé vague sont considérés comme des fautes critiques de génération.
@@ -319,6 +334,14 @@ Requirements:
     - **Mandatory Timed Challenges (\`durationLimit\` attribute)**: To break learning monotony and encourage focused self-assessment, you MUST systematically set a clear, reasonable duration limit on these final evaluations using the \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes, \`durationLimit={600}\` for 10 minutes, or \`durationLimit={900}\` for 15 minutes depending on the question count and complexity).
     - You MUST NOT limit evaluations to MCQ quizzes only! You MUST actively diversify the evaluation format based on the discipline, level, and context:
       * MCQ Quizzes: Use the custom \`<Quiz durationLimit={seconds}>\` component with multiple \`<Question>\` elements inside. Excellent for scientific, math, or factual topics.
+        - **STRICT SYNTAX FOR QUIZZES**: You MUST format quizzes as:
+          \`<Quiz>\`
+            \`<Question q="Question text" explanation="Alternative helper explanation for students who get it wrong...">\`
+              \`<Option correct={true}>Correct answer option</Option>\`
+              \`<Option correct={false}>Wrong answer option</Option>\`
+            \`</Question>\`
+          \`</Quiz>\`
+        - **NO PEDAGOGICAL TAGS**: It is strictly forbidden to use tags like \`<Explanation>\`, \`<Solution>\`, \`<KeyConcept>\`, \`<Instruction>\`, or \`<Shape>\` directly inside or outside the quizzes. Always pass explanation text in the \`explanation\` attribute of the \`<Question>\` component, or use approved worked example components like \`<SolvedExercise>\` and \`<UnsolvedExercise>\`.
       * Essay & Written Evaluations (Manual Tutor Grading): Use the custom \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." durationLimit={seconds} />\` component. You MUST systematically select this format for humanities, literature, history, social sciences, philosophy, law, or any deep conceptual/theoretical discussions where students are expected to write a structured analysis or synthesis. This will be manually reviewed, critiqued, and graded by the AI tutor.
         - The \`prompt\` must be the essay question/topic in "${targetLang.toUpperCase()}".
         - The \`gradingSystem\` attribute MUST be chosen based on the course's country/cultural context: use "0/20" for French/Francophone settings, "A-F" for US/UK/International settings, "0/10" for general European settings, or "pass-fail" for introductory courses.
@@ -351,13 +374,13 @@ Requirements:
      * *In the References Section*: Each reference item must be its own distinct paragraph separated by a double newline. Prefix each item with its return-link anchor: \`<a id="ref-X" href="#ref-src-X">**[X]**</a> [Complete Academic Citation.](https://example.org/article-url)\`, so that clicking the inline superscript number smoothly scrolls down to the reference at the bottom, and clicking the \`**[X]**\` in the reference at the bottom smoothly scrolls back up to the exact footnote position in the body text.
    
    - Just before the References section, you CAN optionally include a "Pour aller plus loin" (Going Further) block to suggest deep-dive academic or research references (books, articles, videos, websites). Use the \`<GoingFurther>\` and \`<GoingFurtherItem>\` components as follows:
-     \`\`\`mdx
+      \`\`\`mdx
      <GoingFurther title="Pour aller plus loin...">
        <GoingFurtherItem title="Title of Book" type="book" description="Brief description of why this book is relevant and highly recommended." />
        <GoingFurtherItem title="Academic Research Paper" type="research" url="https://doi.org/...or-real-url" description="Detailed description of this paper's advanced concepts." />
        <GoingFurtherItem title="Recommended Video Explainer" type="video" url="https://youtube.com/..." description="Short summary of this excellent 2-minute video visual breakdown." />
      </GoingFurther>
-     \`\`\``}
+      \`\`\``}
  15. Short Audio and Video Duration Limits (Micro-learning):
      - To optimize student focus and prevent attention loss, all recommended or embedded videos (using \`<Video id="..." title="..." provider="..." duration="..." />\` or \`<Video url="..." title="..." duration="..." />\`) and audio tracks (using \`<Audio url="..." title="..." duration="..." />\`) MUST be short (maximum 2 to 3 minutes long).
      - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\` or \`duration="1:45"\`) and keep it within this short micro-learning boundary.
@@ -391,8 +414,12 @@ Requirements:
                \`<SolvedExercise title="Name of Example" solution="Detailed multi-line step-by-step mathematical or scientific derivation resolution details...">Full problem statement/text here...</SolvedExercise>\`
              - At least one Unsolved Interactive Calculation Challenge:
                \`<UnsolvedExercise question="Calculated challenge question requiring a numeric value response" correctAnswer={5.2} tolerance={0.05} placeholder="Enter numerical result..." hint="Helpful formula/clue hint..." solution="Step-by-step worked resolution revealed after correct answer or no attempts left..." unit="m/s" />\`
-             - For lessons teaching chemistry (reaction balancing, chemical formulas) or algebraic mathematics (solving linear/rational equations, factoring, isolating variables), you MUST include:
-               \`<EquationManipulator />\` (an elegant sandbox supporting chemical stoichiometry balancing and interactive step-by-step algebraic equation solver pathways).
+             - For lessons teaching basic subtraction (elementary levels like CP/CE), you MUST include:
+               \`<BasicMathExplorer />\` (an interactive subtraction explorer with a curved step-jump number line and visual objects to cross out/manipulate).
+             - For chemistry lessons teaching chemical reaction balancing, you MUST include:
+               \`<ChemicalStoichiometry />\` (an elegant chemical reaction balancing sandbox).
+             - For algebra or higher-level mathematics teaching equation solving, factoring, or isolating variables, you MUST include:
+               \`<EquationManipulator />\` (an elegant sandbox supporting step-by-step algebraic equation solver pathways).
         * Chemistry, Biology, Material Sciences, Crystallography, or Molecular Physics: You MUST systematically include at least one interactive 3D particle structure viewer:
              - \`<StructureViewer3D presetId="h2o|co2|ch4|nacl|graphene" />\`
              - Support presets: "h2o" (bent water structure), "co2" (linear double-bond carbon dioxide), "ch4" (tetrahedral methane), "nacl" (Alternating ionic salt FCC crystal grid), or "graphene" (rippled carbon hexagonal sheet).
@@ -417,15 +444,16 @@ Requirements:
              - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\`. Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
         * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
  18. Special Pedagogical Enrichment Blocks (Balises JSX d'Enrichissement) :
-      You MUST dynamically and contextually enrich the lesson body using the following custom tags:
-      - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
-      - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
-      - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (e.g. a funny misconception, an unusual experiment mishap, or a witty quote; NOT just a plain history event like the creation of a lab or the publication of a book). This should be a fun, social-gathering conversational snippet. Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
-      - **Fait Historique** (\`<HistoricalFact title="..." date="...">...</HistoricalFact>\`): Add a 2-4 sentence description of a landmark historical event, foundational experiment, or crucial historical milestone (such as the opening of a famous laboratory or the publication of a seminal textbook) that is important for academic context but is a factual milestone rather than a quirky anecdote.
-      - **Idée Brillante** (\`<BrilliantIdea title="...">...</BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
-      - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
-      - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
- 19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
+       You MUST dynamically and contextually enrich the lesson body using the following custom tags.
+       *CRITICAL COMPONENT TAG NAME REQUIREMENT*: Regardless of the target language of the lesson (French, Spanish, German, Chinese, or any new language we may add), you MUST write the JSX tag names EXACTLY as specified below in canonical English (e.g. write '<CriticalThinking>', '<HistoricalFact>', '<DidYouKnow>', etc. NEVER translate the tag names themselves). This is strict and mandatory.
+       - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
+       - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
+       - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (e.g. a funny misconception, an unusual experiment mishap, or a witty quote; NOT just a plain history event like the creation of a lab or the publication of a book). This should be a fun, social-gathering conversational snippet. Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
+       - **Fait Historique** (\`<HistoricalFact title="..." date="...">...</HistoricalFact>\`): Add a 2-4 sentence description of a landmark historical event, foundational experiment, or crucial historical milestone (such as the opening of a famous laboratory or the publication of a seminal textbook) that is important for academic context but is a factual milestone rather than a quirky anecdote.
+       - **Idée Brillante** (\`<BrilliantIdea title="...">...</BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
+       - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
+       - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
+  19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
      - The following features are completely OPTIONAL. You should organically choose to use just one or two of them if they fit the level and subject, to avoid drowning the content:
        * L'Ancre Problématique (The Hook): A real-world story, scene, or case study demonstrating the necessity of the concept.
        * Le Guide des Idées Reçues (Debunking Grid): 3 to 5 common misconceptions dismantled by the lesson.
@@ -433,8 +461,16 @@ Requirements:
        * Analogies Transversales: Creative cross-discipline analogies to explain abstract concepts.
        * Bac à Sable Interactif (Sandbox / Simulator): Simulation guides or interactive parameter manipulation cues.
        * L'Invite de Journalisation Métacognitive: A short metacognitive journal prompt encouraging self-reflection.
- 20. Write the response in "${targetLang.toUpperCase()}".
- 21. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
+  20. Write the response in "${targetLang.toUpperCase()}".
+  21. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`\`).
+  22. CRITICAL MDX COMPILER COMPLIANCE RULES:
+      - Absolutely NO orphaned JSX tags or unclosed tags. Ensure all tags (such as <Objectives>, <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <Epistemology>, <GoingFurther>, <GoingFurtherItem>, <ComparisonSlider>, <CodeSandbox>, <InteractiveDiagram>, <FunctionPlotter>, <FunctionManipulator>, <SolvedExercise>, <UnsolvedExercise>, <BasicMathExplorer>, <ChemicalStoichiometry>, <EquationManipulator>, <StructureViewer3D>, <DynamicSimulation>, <DataChart>, <ComparisonSlider>, <Geometry2D>) are closed correctly.
+      - JSX Attributes MUST be formatted strictly as: name="value". Do NOT use single quotes for attributes (like name='value'). Do NOT use braces without values.
+      - Inside JSX attributes (like term, definition, bio, prompt, subject, q, explanation, title, beforeContent, afterContent), do NOT use raw double quotes. Use &quot; or escape them properly, or just use single quotes inside the double-quoted attribute.
+      - Inside JSX attributes, do NOT use raw ampersands '&'. Use the word 'and' or wrap/escape it as '&amp;'.
+      - Never nest a custom component inside itself (e.g. do NOT put <WhatsNext> inside <WhatsNext>).
+      - Do NOT generate empty components like '<CriticalThinking />' or '<WhatsNext />' without text or children.
+      - Frontmatter headers are allowed, but the main body must be raw MDX. Do NOT wrap the entire output in markdown block wrappers like \`\`\`html or \`\`\`mdx.`;
 
       let rawMdx = '';
       let contentSuccess = false;
@@ -444,7 +480,7 @@ Requirements:
       let studioError = 'N/A';
 
       if (isVertexConfigured()) {
-        console.log(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (gemini-2.5-pro)...`);
+        console.log(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
         vertexStatus = 'Attempted';
         try {
           const contentRes = await callVertexAI({
@@ -549,7 +585,7 @@ Your Checkpoints:
 4. "Multimedia, Illustrations, & Non-Text Media Density":
    This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${courseName}"):
    - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
-   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', or '<StructureViewer3D />'. Reject if NONE of these are present.
+   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', '<StructureViewer3D />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'. Reject if NONE of these are present.
    - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
    - "Audio/Video Integrity": When '<AudioPlayer />', '<Audio />', or '<Video />' components are present in the content, verify that:
      * Each has a non-empty 'src' or 'url' attribute (not a placeholder like "url_here" or "").
@@ -557,10 +593,10 @@ Your Checkpoints:
      * Each has a caption line directly below it (italicized, e.g. *Audio 1 : Title - Description.*) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
    - Regardless of discipline: Verify that audio players ('<AudioPlayer />' / '<Audio />') or video players ('<Video />') are incorporated where spoken context or audio demonstrations are pedagogically valuable (e.g. listening comprehension for language courses, spoken philosophical lectures, or historical audio documents).
 5. "Section Interactivity and Sandboxes":
-   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', or '<DynamicSimulation />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
+   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
    5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
      * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' (for anatomical or cellular structures) or '<StructureViewer3D presetId="..." />' (for molecular/crystal structures). A lesson in these disciplines without either component MUST be rejected.
-     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph or equation component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', or '<Geometry2D />'. A lesson in these disciplines without any of these MUST be rejected.
+     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', '<Geometry2D />', or '<BasicMathExplorer />'. A lesson in these disciplines without any of these MUST be rejected.
      * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />' for active code execution. A lesson without it MUST be rejected.
      * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
      * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />', '<PointOfView />', '<HistoricalAnecdote />', or '<HistoricalFact />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
@@ -571,8 +607,8 @@ Your Checkpoints:
    - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">'.
 8. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
 9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
-   - You critique the work of the writer (Agent 3) and architect (Agent 2) to ensure that every <Quiz> (knowledge check) is indeed fully filled, not empty, and contains high-quality questions and options/answers.
-   - The questions, answers, and explanations must be of high academic quality and directly in line with the target course level ("${level}"), as well as the length and complexity of the subject. Reject any quiz that contains generic, trivial, simplified, or low-effort questions/answers.
+    - Every <Question> element MUST have its question text defined in the 'q' attribute (e.g. <Question q="Question text?">) and not as raw text children.
+    - Systematically reject (approved: false) any content containing deprecated pedagogical tags like <Explanation>, <Solution>, <Instruction>, or <KeyConcept>.
    - Every <Quiz> contains at least one <Question> element, and every <Question> contains at least two <Option> elements.
    - Every <Option> tag has a "correct" boolean attribute (set to true or false) indicating whether it is the correct answer. Systematically reject any quiz question that does not define options or where no option has correct={true}.
    - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
@@ -794,7 +830,9 @@ ${validatedMdx}`;
         content: resolvedMdx,
         order: index + 1
       });
-    }
+    });
+
+    await Promise.all(lessonPromises);
 
     // Save/Update the Course card in the database
     try {
@@ -861,23 +899,42 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
     
     if (course?.isCurriculum) {
       console.log(`[TRANSLATOR] Target "${courseSlug}" is a curriculum. Cascading translation to all child courses first...`);
+      
+      const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
+      
       const childIds = course.childCourses || [];
-      for (const childId of childIds) {
+      const childPromises = childIds.map(async (childId, index) => {
         const childCourse = allCourses?.find(c => c.id === childId);
         if (childCourse && childCourse.slug) {
-          console.log(`[TRANSLATOR] Translating curriculum child course: "${childCourse.slug}" to "${targetLang}"...`);
-          await translateCourseContent(childCourse.slug, targetLang);
+          const delay = index * INTER_LESSON_DELAY_MS;
+          console.log(`[TRANSLATOR] Staggering child translation for "${childCourse.slug}" by ${delay / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          try {
+            console.log(`[TRANSLATOR] Translating curriculum child course: "${childCourse.slug}" to "${targetLang}"...`);
+            await translateCourseContent(childCourse.slug, targetLang);
+          } catch (childErr) {
+            console.error(`[TRANSLATOR ERROR] Failed to translate curriculum child course "${childCourse.slug}":`, childErr);
+          }
         }
-      }
+      });
+      await Promise.all(childPromises);
       
       const optionalIds = course.optionalCourses || [];
-      for (const optId of optionalIds) {
+      const optionalPromises = optionalIds.map(async (optId, index) => {
         const optCourse = allCourses?.find(c => c.id === optId);
         if (optCourse && optCourse.slug) {
-          console.log(`[TRANSLATOR] Translating curriculum optional course: "${optCourse.slug}" to "${targetLang}"...`);
-          await translateCourseContent(optCourse.slug, targetLang);
+          const delay = index * INTER_LESSON_DELAY_MS;
+          console.log(`[TRANSLATOR] Staggering optional translation for "${optCourse.slug}" by ${delay / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          try {
+            console.log(`[TRANSLATOR] Translating curriculum optional course: "${optCourse.slug}" to "${targetLang}"...`);
+            await translateCourseContent(optCourse.slug, targetLang);
+          } catch (optErr) {
+            console.error(`[TRANSLATOR ERROR] Failed to translate curriculum optional course "${optCourse.slug}":`, optErr);
+          }
         }
-      }
+      });
+      await Promise.all(optionalPromises);
     } else {
       // 1. Fetch all existing lessons for this course
       const { data: sourceLessons } = await supabase
@@ -888,9 +945,17 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
       if (!sourceLessons || sourceLessons.length === 0) {
         console.warn(`No source lessons found in database for course ${courseSlug} to translate.`);
       } else {
-        // 2. For each lesson, translate
-        for (const lesson of sourceLessons) {
-      const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
+        const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
+        const failures: string[] = [];
+        
+        // 2. Translate lessons in parallel with staggered starts
+        const lessonPromises = sourceLessons.map(async (lesson, index) => {
+          try {
+            const delay = index * INTER_LESSON_DELAY_MS;
+            console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
 Rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
@@ -900,76 +965,85 @@ Rules:
    - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
    - Keep other tag names and syntax untouched.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
+5. CRITICAL MDX COMPILER COMPLIANCE RULES:
+   - Do NOT wrap the translated response in markdown code blocks (such as \`\`\`md or \`\`\`mdx). Return the raw MDX content directly.
+   - Absolutely NO orphaned JSX tags or unclosed tags. Ensure all tags (such as <Objectives>, <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <Epistemology>, <GoingFurther>, <GoingFurtherItem>, <ComparisonSlider>, <CodeSandbox>, <InteractiveDiagram>, <FunctionPlotter>, <FunctionManipulator>, <SolvedExercise>, <UnsolvedExercise>, <BasicMathExplorer>, <ChemicalStoichiometry>, <EquationManipulator>, <StructureViewer3D>, <DynamicSimulation>, <DataChart>, <ComparisonSlider>, <Geometry2D>) are closed correctly.
+   - JSX Attributes MUST be formatted strictly as: name="value". Do NOT use single quotes for attributes (like name='value'). Do NOT use braces without values.
+   - Inside JSX attributes (like term, definition, bio, prompt, subject, q, explanation, title, beforeContent, afterContent), do NOT use raw double quotes. Use &quot; or escape them properly, or just use single quotes inside the double-quoted attribute.
+   - Inside JSX attributes, do NOT use raw ampersands '&'. Use the word 'and' or wrap/escape it as '&amp;'.
+   - Never nest a custom component inside itself.
+   - Do NOT generate empty components without text or children.
+   - Preserve all other JSX components, their properties, and Math equations ($ or $$) exactly as in the original.
 
 MDX CONTENT TO TRANSLATE:
 ${lesson.content}`;
 
-      let translatedMdx = '';
-      let transSuccess = false;
+            let translatedMdx = '';
+            let transSuccess = false;
 
-      if (isVertexConfigured()) {
-        console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via Vertex AI (gemini-2.5-flash)...`);
-        try {
-          const res = await callVertexAI({
-            task: 'course_translation',
-            contents: [{ role: 'user', parts: [{ text: promptTranslate }] }],
-            generationConfig: { temperature: 0.1 }
-          });
+            if (isVertexConfigured()) {
+              console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via Vertex AI (gemini-2.5-flash)...`);
+              try {
+                const res = await callVertexAI({
+                  task: 'course_translation',
+                  contents: [{ role: 'user', parts: [{ text: promptTranslate }] }],
+                  generationConfig: { temperature: 0.1 }
+                });
 
-          if (res && res.ok) {
-            const resJson = await res.json();
-            translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            transSuccess = true;
-          }
-        } catch (err) {
-          console.warn("[AI GENERATOR] Vertex translation call failed:", err);
-        }
-      }
-      
-      if (!transSuccess && apiKey) {
-        console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
-        const startTime = Date.now();
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptTranslate }] }]
-            })
-          });
-          if (res.ok) {
-            const resJson = await res.json();
-            translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            transSuccess = true;
+                if (res && res.ok) {
+                  const resJson = await res.json();
+                  translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  transSuccess = true;
+                }
+              } catch (err) {
+                console.warn("[AI GENERATOR] Vertex translation call failed:", err);
+              }
+            }
+            
+            if (!transSuccess && apiKey) {
+              console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
+              const startTime = Date.now();
+              try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptTranslate }] }]
+                  })
+                });
+                if (res.ok) {
+                  const resJson = await res.json();
+                  translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  transSuccess = true;
 
-            const durationMs = Date.now() - startTime;
-            const usage = resJson.usageMetadata || {};
-            const promptTokens = usage.promptTokenCount || 0;
-            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTranslate);
-          }
-        } catch (err) {
-          console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
-        }
-      }
+                  const durationMs = Date.now() - startTime;
+                  const usage = resJson.usageMetadata || {};
+                  const promptTokens = usage.promptTokenCount || 0;
+                  const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTranslate);
+                }
+              } catch (err) {
+                console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
+              }
+            }
 
-      if (!translatedMdx) {
-        console.warn(`[AI GENERATOR] Failed to translate lesson "${lesson.title}". Using fallback translator.`);
-        translatedMdx = lesson.content.replace('lang: "en"', `lang: "${targetLang}"`);
-      }
+            if (!translatedMdx) {
+              console.warn(`[AI GENERATOR] Failed to translate lesson "${lesson.title}". Using fallback translator.`);
+              translatedMdx = lesson.content.replace('lang: "en"', `lang: "${targetLang}"`);
+            }
 
-      // === TRANSLATION CRITIC PIPELINE ===
-      let approved = false;
-      let critique = '';
-      let currentTranslation = translatedMdx;
-      let critiqueIteration = 0;
-      const maxCritiqueIterations = 3;
+            // === TRANSLATION CRITIC PIPELINE ===
+            let approved = false;
+            let critique = '';
+            let currentTranslation = translatedMdx;
+            let critiqueIteration = 0;
+            const maxCritiqueIterations = 3;
 
-      while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
-        critiqueIteration++;
-        console.log(`[AI GENERATOR - TRANSLATION CRITIC] Reviewing translation for "${lesson.title}" to "${targetLang}" (Attempt ${critiqueIteration}/${maxCritiqueIterations})...`);
+            while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
+              critiqueIteration++;
+              console.log(`[AI GENERATOR - TRANSLATION CRITIC] Reviewing translation for "${lesson.title}" to "${targetLang}" (Attempt ${critiqueIteration}/${maxCritiqueIterations})...`);
 
-        const promptCritic = `You are the Translation Critic Agent (Agent 4 - Specialized in Translation Quality Assurance). Your job is to strictly validate the translated academic MDX content against the original source content.
+              const promptCritic = `You are the Translation Critic Agent (Agent 4 - Specialized in Translation Quality Assurance). Your job is to strictly validate the translated academic MDX content against the original source content.
 Source Language: English
 Target Language: "${targetLang.toUpperCase()}"
 
@@ -995,67 +1069,67 @@ You must output ONLY a valid JSON object matching this structure:
 }
 Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
 
-        let criticResText = '';
-        let criticSuccess = false;
+              let criticResText = '';
+              let criticSuccess = false;
 
-        if (isVertexConfigured()) {
-          try {
-            const res = await callVertexAI({
-              task: 'course_generation', // Using pro model for critique reasoning
-              contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
-              generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
-            });
-            if (res && res.ok) {
-              const resJson = await res.json();
-              criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              criticSuccess = true;
-            }
-          } catch (err) {
-            console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex critique call failed:", err);
-          }
-        }
+              if (isVertexConfigured()) {
+                try {
+                  const res = await callVertexAI({
+                    task: 'course_generation', // Using pro model for critique reasoning
+                    contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
+                    generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+                  });
+                  if (res && res.ok) {
+                    const resJson = await res.json();
+                    criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    criticSuccess = true;
+                  }
+                } catch (err) {
+                  console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex critique call failed:", err);
+                }
+              }
 
-        if (!criticSuccess && apiKey) {
-          try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptCritic }] }],
-                generationConfig: { responseMimeType: "application/json" }
-              })
-            });
-            if (res.ok) {
-              const resJson = await res.json();
-              criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              criticSuccess = true;
-            }
-          } catch (err) {
-            console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback critique call failed:", err);
-          }
-        }
+              if (!criticSuccess && apiKey) {
+                try {
+                  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      contents: [{ parts: [{ text: promptCritic }] }],
+                      generationConfig: { responseMimeType: "application/json" }
+                    })
+                  });
+                  if (res.ok) {
+                    const resJson = await res.json();
+                    criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    criticSuccess = true;
+                  }
+                } catch (err) {
+                  console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback critique call failed:", err);
+                }
+              }
 
-        if (criticSuccess && criticResText) {
-          try {
-            const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const criticObj = safeJsonParse(cleanedCritic, 'reviseCourseContent (Agent 4 Verification)');
-            approved = !!criticObj.approved;
-            critique = criticObj.critique || '';
-          } catch (e) {
-            console.error("[AI GENERATOR - TRANSLATION CRITIC] Failed to parse critic JSON response:", e);
-            approved = true; // Avoid infinite loop or blocks if AI returns malformed JSON
-          }
-        } else {
-          approved = true; // Bypass critique loop if service is unavailable
-        }
+              if (criticSuccess && criticResText) {
+                try {
+                  const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
+                  const criticObj = safeJsonParse(cleanedCritic, 'reviseCourseContent (Agent 4 Verification)');
+                  approved = !!criticObj.approved;
+                  critique = criticObj.critique || '';
+                } catch (e) {
+                  console.error("[AI GENERATOR - TRANSLATION CRITIC] Failed to parse critic JSON response:", e);
+                  approved = true; // Avoid infinite loop or blocks if AI returns malformed JSON
+                }
+              } else {
+                approved = true; // Bypass critique loop if service is unavailable
+              }
 
-        if (approved) {
-          console.log(`[AI GENERATOR - TRANSLATION CRITIC] Translation approved for "${lesson.title}"!`);
-          translatedMdx = currentTranslation;
-        } else {
-          console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
-          // Refine translation
-          const promptRefine = `You are a professional academic translator. The Translation Critic Agent has rejected your previous translation with the following critique:
+              if (approved) {
+                console.log(`[AI GENERATOR - TRANSLATION CRITIC] Translation approved for "${lesson.title}"!`);
+                translatedMdx = currentTranslation;
+              } else {
+                console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
+                // Refine translation
+                const promptRefine = `You are a professional academic translator. The Translation Critic Agent has rejected your previous translation with the following critique:
 
 CRITIQUE FROM TRANSLATION CRITIC:
 ${critique}
@@ -1077,162 +1151,176 @@ Follow all initial translation rules:
    - Keep other tag names and syntax untouched.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
 
-          let refineSuccess = false;
-          if (isVertexConfigured()) {
-            try {
-              const resRefine = await callVertexAI({
-                task: 'course_translation',
-                contents: [{ role: 'user', parts: [{ text: promptRefine }] }],
-                generationConfig: { temperature: 0.1 }
-              });
-              if (resRefine && resRefine.ok) {
-                const resJson = await resRefine.json();
-                currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                refineSuccess = true;
+                let refineSuccess = false;
+                if (isVertexConfigured()) {
+                  try {
+                    const resRefine = await callVertexAI({
+                      task: 'course_translation',
+                      contents: [{ role: 'user', parts: [{ text: promptRefine }] }],
+                      generationConfig: { temperature: 0.1 }
+                    });
+                    if (resRefine && resRefine.ok) {
+                      const resJson = await resRefine.json();
+                      currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      refineSuccess = true;
+                    }
+                  } catch (err) {
+                    console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex translation refinement call failed:", err);
+                  }
+                }
+
+                if (!refineSuccess && apiKey) {
+                  try {
+                    const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptRefine }] }]
+                      })
+                    });
+                    if (resRefine.ok) {
+                      const resJson = await resRefine.json();
+                      currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      refineSuccess = true;
+                    }
+                  } catch (err) {
+                    console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
+                  }
+                }
+
+                if (!refineSuccess) {
+                  console.warn("[AI GENERATOR - TRANSLATION CRITIC] Refinement failed to respond, continuing with current translation.");
+                  translatedMdx = currentTranslation;
+                  break;
+                }
               }
-            } catch (err) {
-              console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex translation refinement call failed:", err);
             }
-          }
 
-          if (!refineSuccess && apiKey) {
+            // Translate title
+            let transTitle = lesson.title;
             try {
-              const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: promptRefine }] }]
-                })
-              });
-              if (resRefine.ok) {
-                const resJson = await resRefine.json();
-                currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                refineSuccess = true;
+              const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
+              
+              let transTitleSuccess = false;
+              if (isVertexConfigured()) {
+                try {
+                  const resTitle = await callVertexAI({
+                    task: 'course_translation',
+                    contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
+                    generationConfig: { temperature: 0.1 }
+                  });
+                  if (resTitle && resTitle.ok) {
+                    const tJson = await resTitle.json();
+                    transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+                    transTitleSuccess = true;
+                  }
+                } catch (err) {
+                  console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
+                }
               }
-            } catch (err) {
-              console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
+              
+              if (!transTitleSuccess && apiKey) {
+                console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+                const startTime = Date.now();
+                try {
+                  const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      contents: [{ parts: [{ text: promptTitle }] }]
+                    })
+                  });
+                  if (resTitle.ok) {
+                    const tJson = await resTitle.json();
+                    transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+                    transTitleSuccess = true;
+
+                    const durationMs = Date.now() - startTime;
+                    const usage = tJson.usageMetadata || {};
+                    const promptTokens = usage.promptTokenCount || 0;
+                    const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTitle);
+                  }
+                } catch (err) {
+                  console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
+                }
+              }
+            } catch (e) {
+              console.warn(`[AI GENERATOR] Title translation failed:`, e);
             }
-          }
 
-          if (!refineSuccess) {
-            console.warn("[AI GENERATOR - TRANSLATION CRITIC] Refinement failed to respond, continuing with current translation.");
-            translatedMdx = currentTranslation;
-            break;
-          }
-        }
-      }
+            // De-hallucinate translated references
+            let validatedMdx = await validateAndFixBibliography(translatedMdx, targetLang.toLowerCase());
+            validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
 
-      // Translate title
-      let transTitle = lesson.title;
-      try {
-        const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
-        
-        let transTitleSuccess = false;
-        if (isVertexConfigured()) {
-          try {
-            const resTitle = await callVertexAI({
-              task: 'course_translation',
-              contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
-              generationConfig: { temperature: 0.1 }
+            // Pre-validate translated MDX compilation
+            let mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+            if (!mdxCheck.success) {
+              console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
+              let healedResult = validatedMdx;
+              let healAttempt = 0;
+              const maxHealAttempts = 3;
+              while (!mdxCheck.success && healAttempt < maxHealAttempts) {
+                healAttempt++;
+                console.log(`[SELF-HEALING-TRANSLATION] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
+                healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+                mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
+              }
+
+              if (mdxCheck.success) {
+                console.log(`[SELF-HEALING-TRANSLATION] Successfully healed MDX content on attempt ${healAttempt}!`);
+                validatedMdx = healedResult;
+              } else {
+                console.warn(`[SELF-HEALING-TRANSLATION] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
+                validatedMdx = sanitizeMdxFallback(validatedMdx);
+
+                const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
+                if (!retryCheck.success) {
+                  console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
+                  try {
+                    await dbService.submitReport(
+                      courseSlug,
+                      `${courseSlug}/${lesson.lesson_slug}`,
+                      `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
+                    );
+                  } catch (reportErr) {
+                    console.error("Failed to auto-submit translation error report:", reportErr);
+                  }
+                  throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
+                }
+              }
+            }
+
+            // Preprocess and heal translated MDX before writing to DB
+            const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+            const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
+
+            // Save translated lesson to Supabase
+            await dbService.saveLesson({
+              course_slug: courseSlug,
+              lesson_slug: lesson.lesson_slug,
+              lang: targetLang.toLowerCase(),
+              title: transTitle,
+              content: resolvedMdx,
+              order: lesson.order
             });
-            if (resTitle && resTitle.ok) {
-              const tJson = await resTitle.json();
-              transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
-              transTitleSuccess = true;
-            }
-          } catch (err) {
-            console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
+
+          } catch (lessonErr: any) {
+            console.error(`[TRANSLATOR ERROR] Failed to translate lesson "${lesson.title}":`, lessonErr);
+            failures.push(`Lesson "${lesson.title}": ${lessonErr.message || String(lessonErr)}`);
           }
-        }
-        
-        if (!transTitleSuccess && apiKey) {
-          console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
-          const startTime = Date.now();
-          try {
-            const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptTitle }] }]
-              })
-            });
-            if (resTitle.ok) {
-              const tJson = await resTitle.json();
-              transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
-              transTitleSuccess = true;
+        });
 
-              const durationMs = Date.now() - startTime;
-              const usage = tJson.usageMetadata || {};
-              const promptTokens = usage.promptTokenCount || 0;
-              const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTitle);
-            }
-          } catch (err) {
-            console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
-          }
-        }
-      } catch (e) {
-        console.warn(`[AI GENERATOR] Title translation failed:`, e);
-      }
+        await Promise.all(lessonPromises);
 
-      // De-hallucinate translated references
-      let validatedMdx = await validateAndFixBibliography(translatedMdx, targetLang.toLowerCase());
-      validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
-
-      // Pre-validate translated MDX compilation
-      let mdxCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
-      if (!mdxCheck.success) {
-        console.warn(`[AI GENERATOR - TRANSLATION MDX ERROR] Content for translated "${transTitle}" failed MDX validation: ${mdxCheck.error}. Initiating Self-Healing MDX loop...`);
-        let healedResult = validatedMdx;
-        let healAttempt = 0;
-        const maxHealAttempts = 3;
-        while (!mdxCheck.success && healAttempt < maxHealAttempts) {
-          healAttempt++;
-          console.log(`[SELF-HEALING-TRANSLATION] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
-          healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
-          mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
-        }
-
-        if (mdxCheck.success) {
-          console.log(`[SELF-HEALING-TRANSLATION] Successfully healed MDX content on attempt ${healAttempt}!`);
-          validatedMdx = healedResult;
-        } else {
-          console.warn(`[SELF-HEALING-TRANSLATION] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
-          validatedMdx = sanitizeMdxFallback(validatedMdx);
-
-          const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
-          if (!retryCheck.success) {
-            console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
-            try {
-              await dbService.submitReport(
-                courseSlug,
-                `${courseSlug}/${lesson.lesson_slug}`,
-                `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
-              );
-            } catch (reportErr) {
-              console.error("Failed to auto-submit translation error report:", reportErr);
-            }
-            throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
+        if (failures.length > 0) {
+          console.warn(`[TRANSLATOR] Course translation completed with ${failures.length} lesson translation failure(s):\n${failures.join('\n')}`);
+          if (failures.length === sourceLessons.length) {
+            throw new Error(`[CRITICAL] All ${sourceLessons.length} lessons failed to translate for course "${courseSlug}".`);
           }
         }
       }
-
-      // Preprocess and heal translated MDX before writing to DB
-      const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
-      const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
-
-      // Save translated lesson to Supabase
-      await dbService.saveLesson({
-        course_slug: courseSlug,
-        lesson_slug: lesson.lesson_slug,
-        lang: targetLang.toLowerCase(),
-        title: transTitle,
-        content: resolvedMdx,
-        order: lesson.order
-      });
     }
-  }
-}
 
     // 3. Translate the course metadata (Syllabus/Curriculum Card) to targetLang
     try {
@@ -1650,11 +1738,11 @@ Your validation checklist:
    If any of these required structural sections/components are missing, you MUST reject the revision (set "approved": false).
 7. Multimedia, Illustrations, & Non-Text Media Integrity (DISCIPLINE-AWARE):
    - For VISUAL/SPATIAL/HISTORICAL/EMPIRICAL disciplines (visual arts, anatomy, architecture, history of art, cinema, geography, biology, etc.): Verify that the revision has not accidentally removed illustration elements. '<CustomFigure />' / '<Image />', '<Mermaid />', or '<InteractiveDiagram />' components that were present in the original MUST remain intact. Their removal constitutes a regression and must be rejected.
-   - For QUANTITATIVE/EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics): Verify that interactive visual components ('<Mermaid />', '<FunctionPlotter />', '<EquationManipulator />', '<DataChart />', etc.) are preserved.
+   - For QUANTITATIVE/EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics): Verify that interactive visual components ('<Mermaid />', '<FunctionPlotter />', '<EquationManipulator />', '<DataChart />', '<BasicMathExplorer />', '<ChemicalStoichiometry />', etc.) are preserved.
    - For TEXTUAL/PHILOSOPHICAL/LITERARY disciplines (philosophy, literature, law, ethics): Do not reject if illustration components are absent, but flag in the critique if they have been removed without reason — reducing visual enrichment unnecessarily is undesirable even in text-heavy disciplines.
    - Regardless of discipline: Ensure any audio players ('<AudioPlayer />' or '<Audio />') or video players ('<Video />') from the original are preserved and not lost during revision.
 8. Section Interactivity and Interactive Sandboxes:
-   - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', or '<DynamicSimulation />').
+   - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />').
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -1926,13 +2014,19 @@ INSTRUCTIONS:
       if (res.ok) {
         const jsonRes = await res.json();
         repairedMdx = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        success = true;
-        
-        const durationMs = Date.now() - startTime;
-        const usage = jsonRes.usageMetadata || {};
-        const promptTokens = usage.promptTokenCount || 0;
-        const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-        await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptHealer);
+        if (repairedMdx) {
+          success = true;
+          const durationMs = Date.now() - startTime;
+          const usage = jsonRes.usageMetadata || {};
+          const promptTokens = usage.promptTokenCount || 0;
+          const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptHealer);
+        } else {
+          console.warn("[SELF-HEALING] AI Studio healer returned empty content");
+        }
+      } else {
+        const errText = await res.text();
+        console.warn(`[SELF-HEALING] AI Studio healer failed (${res.status}): ${errText}`);
       }
     } catch (err) {
       console.error(`[SELF-HEALING] AI Studio healer exception:`, err);
@@ -2158,7 +2252,7 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
       console.log(`[BIBLIOGRAPHY VALIDATOR] Attempt ${attempt + 1}/3 with query: "${query}"`);
 
       try {
-        const searchRes = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=1`);
+        const searchRes = await fetchWithTimeout(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=1`);
         if (searchRes.ok) {
           const data = await searchRes.json();
           const item = data.message?.items?.[0];
@@ -2176,7 +2270,7 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
       }
 
       try {
-        const gBooksRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`);
+        const gBooksRes = await fetchWithTimeout(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`);
         if (gBooksRes.ok) {
           const data = await gBooksRes.json();
           const book = data.items?.[0]?.volumeInfo;
@@ -2271,6 +2365,25 @@ async function validateAndFixImages(mdx: string): Promise<string> {
   }
   
   return updatedMdx;
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 3500): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => {
+    try { controller.abort(); } catch {}
+  }, timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
 }
 
 async function isUrlReachable(url: string, timeoutMs: number = 3500): Promise<boolean> {
@@ -2463,7 +2576,7 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
           console.log(`[EXTERNAL RESOURCE VALIDATOR] Link retry ${attempt + 1}/3 with query: "${query}" in language "${queryLang}"`);
           
           try {
-            const wikiRes = await fetch(`https://${queryLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
+            const wikiRes = await fetchWithTimeout(`https://${queryLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
             if (wikiRes.ok) {
               const data = await wikiRes.json();
               if (data && data[3] && data[3][0]) {
@@ -2494,7 +2607,22 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
   return updatedMdx;
 }
 
-export async function generateCurriculum(curriculumName: string, level: string, targetLang: string = 'en') {
+export async function generateCurriculum(curriculumName: string, levelInput: string, targetLang: string = 'en') {
+  const normalizeLevel = (lvl: string): string => {
+    if (!lvl) return 'beginner';
+    const clean = lvl.trim().toLowerCase();
+    if (clean === 'l1') return 'L1';
+    if (clean === 'l2') return 'L2';
+    if (clean === 'l3') return 'L3';
+    if (clean === 'm1') return 'M1';
+    if (clean === 'm2') return 'M2';
+    const standards = ['foundation_1', 'foundation_2', 'secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3', 'beginner', 'intermediate', 'advanced', 'expert'];
+    const found = standards.find(s => s === clean);
+    if (found) return found;
+    return clean;
+  };
+  const level = normalizeLevel(levelInput);
+
   const promptCurriculum = `You are a Curriculum Planner Agent (Agent 0). Your goal is to structure a full academic curriculum for "${curriculumName}" at the level "${level}".
 You must model this curriculum on real-world academic programs (curriculums and syllabus guidelines from schools and universities) for this specific discipline and level.
 Be flexible:
@@ -2670,8 +2798,8 @@ function stripJsxComments(mdx: string): string {
 }
 
 async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
+  const cleanedContent = preprocessMdx(content, lang);
   try {
-    const cleanedContent = preprocessMdx(content, lang);
     const { serialize } = await import('next-mdx-remote/serialize');
     const remarkMath = (await import('remark-math')).default;
     const remarkGfm = (await import('remark-gfm')).default;
@@ -2687,7 +2815,30 @@ async function validateMdxContent(content: string, lang: string = 'fr'): Promise
     return { success: true };
   } catch (err) {
     const error = err as Error;
-    return { success: false, error: error.message || String(err) };
+    let errorMsg = error.message || String(err);
+    
+    let lineNum = -1;
+    let colNum = -1;
+    const match = errorMsg.match(/(?:at\s+line\s+|:)(\d+)(?::|,?\s+column\s+)(\d+)/i) || errorMsg.match(/\((\d+):(\d+)\)/);
+    if (match) {
+      lineNum = parseInt(match[1], 10);
+      colNum = parseInt(match[2], 10);
+    }
+    
+    if (lineNum !== -1) {
+      const lines = cleanedContent.split(/\r?\n/);
+      const startLine = Math.max(1, lineNum - 3);
+      const endLine = Math.min(lines.length, lineNum + 3);
+      const snippet = lines.slice(startLine - 1, endLine).map((l, idx) => {
+        const curLineNum = startLine + idx;
+        const pointer = curLineNum === lineNum ? ' >>> ' : '     ';
+        return `${pointer}${curLineNum}: ${l}`;
+      }).join('\n');
+      
+      errorMsg = `${errorMsg}\n\n=== MDX PARSER ERROR CONTEXT ===\nLine: ${lineNum}, Column: ${colNum}\n\nSnippet:\n${snippet}\n================================`;
+    }
+    
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -2701,7 +2852,7 @@ function sanitizeMdxFallback(mdx: string): string {
   ];
   const tagPattern = new RegExp(`<\\/?(${allowedTags.join('|')})\\b`, 'i');
   
-  const parts = mdx.split(/(<\/?[a-zA-Z0-9_]+[^>]*>)/g);
+  const parts = mdx.split(/(<\/?[a-zA-Z0-9_]+(?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?>)/g);
   const processedParts = parts.map(part => {
     if (part.startsWith('<') && part.endsWith('>')) {
       if (tagPattern.test(part)) {

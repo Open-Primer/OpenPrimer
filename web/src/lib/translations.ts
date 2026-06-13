@@ -1,6 +1,6 @@
 // --- INTERNATIONALIZATION DICTIONARY (SHARED CLIENT/SERVER) ---
 
-export const STATIC_UI_STRINGS = {
+export const RAW_STATIC_UI_STRINGS = {
   EN: {
     glossary_definition: "Glossary Definition",
     give_example_prompt: "Give me a concrete real-world example of this concept.",
@@ -1421,4 +1421,31 @@ export const cleanPathSegment = (text: string): string => {
     .replace(/_+/g, "_")             // collapse multiple underscores
     .replace(/^_+|_+$/g, "");        // trim leading/trailing underscores
 };
+
+// Global in-memory cache for dynamically fetched translations
+export const DYNAMIC_UI_STRINGS: Record<string, Record<string, string>> = {};
+
+// Exported Proxy that seamlessly resolves either static or dynamic UI string dictionaries
+export const STATIC_UI_STRINGS: Record<string, typeof RAW_STATIC_UI_STRINGS.EN> = new Proxy(RAW_STATIC_UI_STRINGS, {
+  get(target, prop) {
+    if (typeof prop === 'string') {
+      const upper = prop.toUpperCase();
+      
+      // If we have dynamically enqueued translations loaded for this key
+      if (DYNAMIC_UI_STRINGS[upper]) {
+        return {
+          ...target.EN,
+          ...DYNAMIC_UI_STRINGS[upper]
+        };
+      }
+      
+      // Otherwise fallback to raw static dictionaries (EN, FR, ES, DE, ZH)
+      if (upper in target) {
+        return target[upper as keyof typeof target];
+      }
+    }
+    return Reflect.get(target, prop);
+  }
+}) as any;
+
 
