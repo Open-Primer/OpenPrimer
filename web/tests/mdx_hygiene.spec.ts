@@ -33,4 +33,17 @@ test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
     expect(processed).toContain('### Isaac Newton et la gravitation');
     expect(processed).not.toContain('<HistoricalPerson');
   });
+
+  test('should normalize FaitHistorique to HistoricalFact', () => {
+    const rawMdx = `
+<FaitHistorique title="Fondation du laboratoire" date="1879">
+  Le premier laboratoire de psychologie expérimentale...
+</FaitHistorique>
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+    expect(processed).toContain('<HistoricalFact title="Fondation du laboratoire" date="1879">');
+    expect(processed).toContain('</HistoricalFact>');
+    expect(processed).not.toContain('<FaitHistorique');
+  });
 });
