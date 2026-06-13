@@ -1423,10 +1423,34 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   saveCourse: async (course: any) => {
     try {
-      let searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
-      if (typeof searchId === 'number' && searchId > 2147483647) {
-        searchId = (searchId % 2000000000) + 1000;
+      let existingId = null;
+      let existingLanguages: string[] = [];
+      if (course.slug) {
+        const { data: existingCourse } = await supabase
+          .from('courses')
+          .select('id, languages')
+          .eq('slug', course.slug)
+          .maybeSingle();
+        if (existingCourse) {
+          existingId = existingCourse.id;
+          existingLanguages = existingCourse.languages || [];
+        }
       }
+
+      let searchId = existingId;
+      if (searchId === null) {
+        searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
+        if (typeof searchId === 'number' && searchId > 2147483647) {
+          searchId = (searchId % 2000000000) + 1000;
+        }
+      }
+
+      const mergedLanguages = Array.from(new Set([
+        ...existingLanguages,
+        ...(course.languages || []),
+        ...(course.langs || [])
+      ].map(l => l.toLowerCase())));
+
       const { data, error } = await supabase.from('courses').upsert({
         id: searchId,
         title: course.title,
@@ -1434,7 +1458,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         level: course.level,
         subject: course.subject,
         description: course.description,
-        languages: course.languages,
+        languages: mergedLanguages,
         ects: course.ects || (course.credits ? Math.round(course.credits / 100) : 6),
         popularity: course.popularity || 0,
         is_active: course.is_active !== undefined ? course.is_active : true,

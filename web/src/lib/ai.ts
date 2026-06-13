@@ -205,11 +205,25 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     // INTER-LESSON THROTTLE — prevents burst of Vertex AI calls within a run.
     // Tune via INTER_LESSON_DELAY_MS env var (default: 5000ms = 5 seconds).
     // Set to 0 to disable. Raise this value if you still hit 429 errors.
-    // ─────────────────────────────────────────────────────────────────
-    const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
+    const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 0);
 
     // 2. For each lesson, generate rich MDX content in parallel with staggered starts
     const lessonPromises = lessonsList.map(async (item, index) => {
+      // Check if this lesson already exists and is non-empty (incremental generation check)
+      try {
+        const { data: existingLesson } = await dbService.getLesson(
+          cleanPathSegment(courseName),
+          item.slug,
+          targetLang.toLowerCase()
+        );
+        if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
+          console.log(`[INCREMENTAL] Skipping generation for already existing lesson: "${item.title}" (${item.slug})`);
+          return;
+        }
+      } catch (err) {
+        console.warn(`[INCREMENTAL] Check failed for "${item.title}", proceeding with generation.`, err);
+      }
+
       // Stagger starts to smooth API requests
       if (index > 0 && INTER_LESSON_DELAY_MS > 0) {
         const delay = index * INTER_LESSON_DELAY_MS;

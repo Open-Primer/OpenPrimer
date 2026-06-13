@@ -923,12 +923,33 @@ export const mockDatabaseProvider: DatabaseService = {
 
   saveCourse: async (course: any) => {
     const list = getMockCourses();
-    const searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
-    const existing = list.find(c => c.id === searchId);
+    let searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
+    
+    // Check if there is an existing course by slug or ID
+    const existingBySlug = course.slug ? list.find(c => c.slug === course.slug) : null;
+    const existing = existingBySlug || list.find(c => c.id === searchId);
+    
+    if (existing) {
+      searchId = existing.id;
+    }
+
     let finalCourse: MockCourse;
     let updated: MockCourse[];
     if (existing) {
-      finalCourse = { ...existing, ...course, id: searchId };
+      const mergedLanguages = Array.from(new Set([
+        ...(existing.languages || []),
+        ...(existing.langs || []),
+        ...(course.languages || []),
+        ...(course.langs || [])
+      ].map(l => l.toLowerCase())));
+
+      finalCourse = { 
+        ...existing, 
+        ...course, 
+        id: searchId,
+        languages: mergedLanguages,
+        langs: mergedLanguages.map(l => l.toUpperCase())
+      };
       updated = list.map(c => c.id === searchId ? finalCourse : c);
     } else {
       finalCourse = {
