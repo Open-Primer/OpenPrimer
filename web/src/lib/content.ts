@@ -1629,7 +1629,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer', 'Description',
     'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer', 'Image', 'CustomFigure',
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
-    'AnecdoteHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
+    'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
     'IdeeBrillante', 'BrilliantIdea',
     'FunctionManipulator', 'EquationManipulator',
@@ -1697,6 +1697,7 @@ function sanitizeAmpersandInJsxAttributes(mdx: string): string {
  */
 const MDX_WRAPPER_TAGS = [
   'HistoricalAnecdote', 'AnecdoteHistorique',
+  'HistoricalFact', 'FaitHistorique',
   'CriticalThinking', 'EspritCritique',
   'DidYouKnow', 'LeSaviezVous',
   'ScientificMethod', 'MethodeScientifique',
@@ -1785,6 +1786,7 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
   const mapping: Record<string, string> = {
     EtApres: 'WhatsNext',
     AnecdoteHistorique: 'HistoricalAnecdote',
+    FaitHistorique: 'HistoricalFact',
     EspritCritique: 'CriticalThinking',
     LeSaviezVous: 'DidYouKnow',
     MethodeScientifique: 'ScientificMethod',
@@ -1863,7 +1865,7 @@ function deduplicateHistoricalPersons(mdx: string): string {
 
 function balancePedagogicalTags(mdx: string): string {
   const wrapperTags = [
-    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'WhatsNext', 'EtApres',
+    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalFact', 'WhatsNext', 'EtApres',
     'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate'
   ];
