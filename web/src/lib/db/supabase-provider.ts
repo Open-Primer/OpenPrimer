@@ -32,6 +32,74 @@ import {
 } from '../db';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
+export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ data: any; error: any }> {
+  try {
+    const BUCKET = 'course-media';
+    const SUPABASE_STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
+
+    // 1. Collect all Storage URLs referenced by this course's lessons
+    const { data: lessons } = await supabaseAdmin
+      .from('lessons')
+      .select('content')
+      .eq('course_slug', courseSlug);
+
+    if (!lessons || lessons.length === 0) return { data: null, error: null };
+
+    const urlRegex = new RegExp(
+      SUPABASE_STORAGE_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([\\w.%-]+)',
+      'g'
+    );
+
+    const courseFileNames = new Set<string>();
+    for (const lesson of lessons) {
+      const content = lesson.content || '';
+      let m: RegExpExecArray | null;
+      // Reset lastIndex before each exec loop to avoid stale state
+      urlRegex.lastIndex = 0;
+      while ((m = urlRegex.exec(content)) !== null) {
+        courseFileNames.add(m[1]);
+      }
+    }
+
+    if (courseFileNames.size === 0) return { data: null, error: null };
+
+    // 2. Collect all Storage URLs referenced by ALL OTHER courses' lessons
+    const { data: otherLessons } = await supabaseAdmin
+      .from('lessons')
+      .select('content')
+      .neq('course_slug', courseSlug);
+
+    const referencedElsewhere = new Set<string>();
+    for (const lesson of (otherLessons || [])) {
+      const content = lesson.content || '';
+      urlRegex.lastIndex = 0;
+      let m: RegExpExecArray | null;
+      while ((m = urlRegex.exec(content)) !== null) {
+        referencedElsewhere.add(m[1]);
+      }
+    }
+
+    // 3. Purge only truly orphaned files
+    const toDelete = [...courseFileNames].filter(f => !referencedElsewhere.has(f));
+    if (toDelete.length === 0) {
+      console.log(`[Storage Cleanup] No orphaned media files for course "${courseSlug}".`);
+      return { data: null, error: null };
+    }
+
+    console.log(`[Storage Cleanup] Purging ${toDelete.length} orphaned media files for course "${courseSlug}": ${toDelete.join(', ')}`);
+    const { error } = await supabaseAdmin.storage.from(BUCKET).remove(toDelete);
+    if (error) {
+      console.error('[Storage Cleanup] Failed to remove orphaned files:', error);
+      return { data: null, error };
+    }
+    console.log(`[Storage Cleanup] Successfully removed ${toDelete.length} orphaned media files.`);
+    return { data: { removed: toDelete.length }, error: null };
+  } catch (err: any) {
+    console.error('[Storage Cleanup] Exception during media purge:', err);
+    return { data: null, error: err };
+  }
+}
+
 export const supabaseDatabaseProvider: DatabaseService = {
   getSystemParameters: async () => {
     try {
@@ -970,6 +1038,13 @@ export const supabaseDatabaseProvider: DatabaseService = {
       
       if (level === 3) {
         addCourseTombstone(courseId);
+
+        // Purge orphaned Storage media before deleting the course
+        const { data: slugRow } = await supabase.from('courses').select('slug').eq('id', courseId).single();
+        if (slugRow?.slug) {
+          await purgeOrphanedCourseMedia(slugRow.slug);
+        }
+
         const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
         if (error) throw error;
 
@@ -1011,9 +1086,11 @@ export const supabaseDatabaseProvider: DatabaseService = {
     try {
       addCourseTombstone(courseId);
       
-      // Cascade delete lessons belonging to this course first to avoid orphaned records
+      // Purge orphaned Storage media BEFORE deleting lessons (need content to scan URLs)
       const { data: courseData } = await supabase.from('courses').select('slug').eq('id', courseId).single();
       if (courseData?.slug) {
+        await purgeOrphanedCourseMedia(courseData.slug);
+        // Cascade delete lessons belonging to this course
         await supabase.from('lessons').delete().eq('course_slug', courseData.slug);
       }
 
@@ -1768,6 +1845,13 @@ export const supabaseDatabaseProvider: DatabaseService = {
   deleteCourse: async (courseId: number) => {
     try {
       addCourseTombstone(courseId);
+
+      // Purge orphaned Storage media before hard-deleting the course
+      const { data: slugRow } = await supabase.from('courses').select('slug').eq('id', courseId).single();
+      if (slugRow?.slug) {
+        await purgeOrphanedCourseMedia(slugRow.slug);
+      }
+
       const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw error;
 
