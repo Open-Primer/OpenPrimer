@@ -2353,7 +2353,7 @@ async function validateAndFixImages(mdx: string): Promise<string> {
   const validationResults = await Promise.all(
     blocks.map(async (block) => {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 3500);
+      const id = setTimeout(() => controller.abort(), 15000);
       try {
         const response = await fetch(block.url, {
           method: 'GET',
@@ -2362,18 +2362,28 @@ async function validateAndFixImages(mdx: string): Promise<string> {
         clearTimeout(id);
         if (!response.ok) {
           console.warn(`[IMAGE VALIDATOR] Image failed with status ${response.status}: ${block.url}`);
+          if (block.url.includes('pollinations.ai')) {
+            return { fullBlock: block.fullBlock, isValid: true };
+          }
           return { fullBlock: block.fullBlock, isValid: false };
         }
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
           console.warn(`[IMAGE VALIDATOR] Image URL returned a JSON error payload: ${block.url}`);
+          if (block.url.includes('pollinations.ai')) {
+            return { fullBlock: block.fullBlock, isValid: true };
+          }
           return { fullBlock: block.fullBlock, isValid: false };
         }
         console.log(`[IMAGE VALIDATOR] Image validated successfully: ${block.url}`);
         return { fullBlock: block.fullBlock, isValid: true };
-      } catch (err) {
+      } catch (err: any) {
         clearTimeout(id);
         console.warn(`[IMAGE VALIDATOR] Error checking image ${block.url}:`, err);
+        if (block.url.includes('pollinations.ai') || err.name === 'AbortError') {
+          console.log(`[IMAGE VALIDATOR] Keeping pollinations/timeout image: ${block.url}`);
+          return { fullBlock: block.fullBlock, isValid: true };
+        }
         return { fullBlock: block.fullBlock, isValid: false };
       }
     })

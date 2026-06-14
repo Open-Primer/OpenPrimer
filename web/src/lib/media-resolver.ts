@@ -566,7 +566,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
             console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
           }
         } else {
-          const imageRes = await fetchWithTimeout(sourceUrl, {}, 6000);
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 20000);
           if (imageRes.ok) {
             contentType = imageRes.headers.get('content-type') || 'image/jpeg';
             buffer = Buffer.from(await imageRes.arrayBuffer());
@@ -640,7 +640,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
             console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
           }
         } else {
-          const imageRes = await fetchWithTimeout(sourceUrl, {}, 6000);
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 20000);
           if (imageRes.ok) {
             contentType = imageRes.headers.get('content-type') || 'image/jpeg';
             buffer = Buffer.from(await imageRes.arrayBuffer());
