@@ -213,7 +213,8 @@ const GuestFootnote = () => {
 };
 
 // Composant Texte à Trous
-export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: string }) => {
+export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string, answer?: string }) => {
+  if (!sentence) return null;
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [input, setInput] = useState('');
@@ -329,7 +330,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
   return (
     <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isCorrect === true || isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : isCorrect === false ? 'border-red-500/30 bg-red-500/5' : 'border-slate-800'} transition-all space-y-4`}>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-slate-300 font-medium">{sentence.split('[...]')[0]}</span>
+        <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[0] : ''}</span>
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -337,7 +338,7 @@ export const FillInBlanks = ({ sentence, answer }: { sentence: string, answer: s
           placeholder={t.placeholder_answer}
           disabled={isReadOnly || isCorrect !== null}
         />
-        <span className="text-slate-300 font-medium">{sentence.split('[...]')[1]}</span>
+        <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[1] : ''}</span>
         
         {isCorrect === null && !isReadOnly && (
           <button 

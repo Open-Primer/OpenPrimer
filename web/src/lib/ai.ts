@@ -685,11 +685,12 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           const cleanedVJson = verifierRaw.replace(/```json/g, '').replace(/```/g, '').trim();
           const verificationResult = safeJsonParse(cleanedVJson, 'generateCourseContent (Agent 4 Verification)');
 
-          if (verificationResult.approved === true) {
+          if (verificationResult && verificationResult.approved === true) {
             console.log(`[AI GENERATOR - AGENT 4] Content approved for "${item.title}" on attempt ${iteration}!`);
             approved = true;
           } else {
-            console.warn(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${verificationResult.critique}`);
+            const critique = verificationResult?.critique || 'Invalid or empty verification response from AI critic.';
+            console.warn(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
             
             // Re-generate content using the critique
             const refinerPrompt = `You are a world-class academic professor (Agent 1/2/3). The verifier/critic (Agent 4) has rejected your previous output.
@@ -788,8 +789,8 @@ ${validatedMdx}`;
         try {
           const fs = require('fs');
           const path = require('path');
-          fs.writeFileSync(path.resolve(process.cwd(), 'failed_mdx.md'), mdxWithFrontmatter, 'utf8');
-          console.log("[DEBUG] Wrote failed MDX to failed_mdx.md");
+          fs.writeFileSync(path.resolve(process.cwd(), `failed_mdx_${item.slug}.md`), mdxWithFrontmatter, 'utf8');
+          console.log(`[DEBUG] Wrote failed MDX to failed_mdx_${item.slug}.md`);
         } catch (debugErr) {
           console.error("Failed to write debug MDX file:", debugErr);
         }
@@ -814,6 +815,14 @@ ${validatedMdx}`;
           const retryCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
           if (!retryCheck.success) {
             console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
+            try {
+              const fs = require('fs');
+              const path = require('path');
+              fs.writeFileSync(path.resolve(process.cwd(), `failed_mdx_final_${item.slug}.md`), mdxWithFrontmatter, 'utf8');
+              console.log(`[DEBUG] Wrote final failed MDX to failed_mdx_final_${item.slug}.md`);
+            } catch (debugErr) {
+              console.error("Failed to write debug MDX file:", debugErr);
+            }
             try {
               const cleanCrsSlug = cleanPathSegment(courseName);
               await dbService.submitReport(
@@ -2861,8 +2870,13 @@ function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
-    'Epistemology', 'Video', 'Audio', 'Mermaid', 'ComparisonSlider',
-    'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem'
+    'HistoricalEvent', 'HistoricalDate', 'Location', 'EntityLink',
+    'Artwork', 'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote',
+    'HistoricalFact', 'WhatsNext', 'EtApres', 'IdeeBrillante', 'BrilliantIdea',
+    'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
+    'Geometry2D', 'OpenQuestion', 'ScientificDebate', 'Epistemology',
+    'Video', 'Audio', 'Mermaid', 'ComparisonSlider', 'FunctionPlotter',
+    'CodeSandbox', 'SelfEval', 'SolvedProblem', 'InteractiveDiagram', 'FillInBlanks'
   ];
   const tagPattern = new RegExp(`<\\/?(${allowedTags.join('|')})\\b`, 'i');
   

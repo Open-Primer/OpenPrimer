@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { getPageContent, getNavigationTree, getFirstAvailableLanguage, NavItem } from '@/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
-import { notFound } from 'next/navigation';
+import { notFound, redirect, unstable_rethrow } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { CourseClientWrapper } from '@/components/CourseClientWrapper';
 import { MdxContent } from '@/components/mdx/MdxContent';
@@ -86,6 +86,42 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       } catch (err) {
         console.error("[CoursePage] Error checking available languages:", err);
       }
+    }
+
+    let redirectUrl = '';
+    if (slug.length === 3 || (slug.length === 4 && slug[3] === 'introduction')) {
+      const courseSlug = slug[2];
+      try {
+        const { data: introLesson } = await supabase
+          .from('lessons')
+          .select('lesson_slug')
+          .eq('course_slug', courseSlug)
+          .eq('lesson_slug', 'introduction')
+          .eq('lang', lang.toLowerCase())
+          .maybeSingle();
+
+        if (!introLesson) {
+          const { data: firstLesson } = await supabase
+            .from('lessons')
+            .select('lesson_slug')
+            .eq('course_slug', courseSlug)
+            .eq('lang', lang.toLowerCase())
+            .order('order', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (firstLesson) {
+            redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+          }
+        }
+      } catch (err) {
+        console.error("[CoursePage Routing] Error executing fallback redirection:", err);
+      }
+    }
+
+    if (redirectUrl) {
+      console.log(`[CoursePage Routing] 'introduction' slug is missing. Redirecting to first available lesson: ${redirectUrl}`);
+      redirect(redirectUrl);
     }
 
     pageData = await getPageContent(slug, lang);
@@ -380,9 +416,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       </CourseClientWrapper>
     );
   } catch (err: any) {
-    if (err && (err.message?.includes('NEXT_HTTP_ERROR_FALLBACK') || err.digest?.includes('NEXT_HTTP_ERROR_FALLBACK'))) {
-      throw err;
-    }
+    unstable_rethrow(err);
     console.error("CRITICAL ERROR IN CoursePage:", err);
     
     // In background, log the issue to the database

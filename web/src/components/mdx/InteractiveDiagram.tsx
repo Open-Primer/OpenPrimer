@@ -133,7 +133,7 @@ export const InteractiveDiagram = ({
   
   const defaultHotspots = resolvedType === 'neuron' ? DEFAULT_NEURON_HOTSPOTS : DEFAULT_CELL_HOTSPOTS;
   // If hotspots are empty, omitted, or if they match DEFAULT_CELL_HOTSPOTS but it is a neuron, load default hotspots
-  const activeHotspots = (!resolvedHotspots || resolvedHotspots.length === 0 || (resolvedHotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
+  const activeHotspots = (!Array.isArray(resolvedHotspots) || resolvedHotspots.length === 0 || (resolvedHotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
     ? defaultHotspots 
     : resolvedHotspots;
   
@@ -392,10 +392,10 @@ export const InteractiveDiagram = ({
               <line x1="300" y1="100" x2="300" y2="300" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.2" strokeDasharray="4,4" />
 
               {/* Signal pulse animations along connections */}
-              <motion.circle cx="100" cy="100" r="3" fill="#60a5fa" animate={{ cx: [100, 200], cy: [100, 200] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} />
-              <motion.circle cx="300" cy="100" r="3" fill="#60a5fa" animate={{ cx: [300, 200], cy: [100, 200] }} transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }} />
-              <motion.circle cx="100" cy="300" r="3" fill="#60a5fa" animate={{ cx: [100, 200], cy: [300, 200] }} transition={{ duration: 4.5, repeat: Infinity, ease: "linear" }} />
-              <motion.circle cx="300" cy="300" r="3" fill="#60a5fa" animate={{ cx: [300, 200], cy: [300, 200] }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} />
+              <motion.circle cx={100} cy={100} r={3} fill="#60a5fa" initial={{ cx: 100, cy: 100 }} animate={{ cx: [100, 200], cy: [100, 200] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} />
+              <motion.circle cx={300} cy={100} r={3} fill="#60a5fa" initial={{ cx: 300, cy: 100 }} animate={{ cx: [300, 200], cy: [100, 200] }} transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }} />
+              <motion.circle cx={100} cy={300} r={3} fill="#60a5fa" initial={{ cx: 100, cy: 300 }} animate={{ cx: [100, 200], cy: [300, 200] }} transition={{ duration: 4.5, repeat: Infinity, ease: "linear" }} />
+              <motion.circle cx={300} cy={300} r={3} fill="#60a5fa" initial={{ cx: 300, cy: 300 }} animate={{ cx: [300, 200], cy: [300, 200] }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} />
 
               {/* Node Glows & Circles */}
               <circle cx="200" cy="200" r="35" fill="url(#nodeGlow)" />

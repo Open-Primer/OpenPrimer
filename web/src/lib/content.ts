@@ -1197,7 +1197,21 @@ function healGlossaryTags(mdx: string): string {
   // 3. Match any single closing tag starting with </Gloss or </Historical followed by any characters, and turn them into the correct close tags
   processed = processed.replace(/(?:<\/|&lt;\/\s*)(Gloss|Historical)[a-zA-Z\u00C0-\u00FF]*([^a-zA-Z\u00C0-\u00FF]*)/gi, (match, prefix, suffix) => {
     const isHistorical = prefix.toLowerCase().startsWith('historical');
-    const correctTag = isHistorical ? '</HistoricalPerson>' : '</Glossary>';
+    let correctTag = '</Glossary>';
+    if (isHistorical) {
+      const fullMatchLower = match.toLowerCase();
+      if (fullMatchLower.includes('event') || fullMatchLower.includes('événement') || fullMatchLower.includes('evenement')) {
+        correctTag = '</HistoricalEvent>';
+      } else if (fullMatchLower.includes('date')) {
+        correctTag = '</HistoricalDate>';
+      } else if (fullMatchLower.includes('anecdote')) {
+        correctTag = '</HistoricalAnecdote>';
+      } else if (fullMatchLower.includes('fact') || fullMatchLower.includes('fait')) {
+        correctTag = '</HistoricalFact>';
+      } else {
+        correctTag = '</HistoricalPerson>';
+      }
+    }
     
     let cleanSuffix = suffix;
     if (cleanSuffix.includes('>')) {
@@ -1516,129 +1530,545 @@ function parseJsonLikeArray(arrStr: string): any[] {
   return JSON.parse(jsonValid);
 }
 
+function parseAttributes(attrStr: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  let i = 0;
+  while (i < attrStr.length) {
+    while (i < attrStr.length && /\s/.test(attrStr[i])) {
+      i++;
+    }
+    if (i >= attrStr.length) break;
+    
+    let nameStart = i;
+    while (i < attrStr.length && /[a-zA-Z0-9_.:-]/.test(attrStr[i])) {
+      i++;
+    }
+    const name = attrStr.substring(nameStart, i);
+    if (!name) {
+      i++;
+      continue;
+    }
+    
+    while (i < attrStr.length && /\s/.test(attrStr[i])) {
+      i++;
+    }
+    if (attrStr[i] !== '=') {
+      attrs[name] = 'true';
+      continue;
+    }
+    i++; // Skip '='
+    
+    while (i < attrStr.length && /\s/.test(attrStr[i])) {
+      i++;
+    }
+    
+    if (attrStr[i] === '"' || attrStr[i] === "'") {
+      const quote = attrStr[i];
+      i++;
+      let valStart = i;
+      while (i < attrStr.length && attrStr[i] !== quote) {
+        if (attrStr[i] === '\\') i++;
+        i++;
+      }
+      attrs[name] = attrStr.substring(valStart, i);
+      i++;
+    } else if (attrStr[i] === '{') {
+      i++;
+      let braceCount = 1;
+      let valStart = i;
+      while (i < attrStr.length && braceCount > 0) {
+        if (attrStr[i] === '{') {
+          braceCount++;
+        } else if (attrStr[i] === '}') {
+          braceCount--;
+        }
+        if (braceCount > 0) i++;
+      }
+      attrs[name] = attrStr.substring(valStart, i).trim();
+      i++;
+    } else {
+      let valStart = i;
+      while (i < attrStr.length && !/\s/.test(attrStr[i]) && attrStr[i] !== '/' && attrStr[i] !== '>') {
+        i++;
+      }
+      attrs[name] = attrStr.substring(valStart, i).trim();
+    }
+  }
+  return attrs;
+}
+
+function parseItems(attrs: Record<string, string>, body: string): string[] {
+  const items: string[] = [];
+  if (attrs.itemsBase64) {
+    try {
+      const decoded = JSON.parse(Buffer.from(attrs.itemsBase64, 'base64').toString('utf8'));
+      if (Array.isArray(decoded)) {
+        items.push(...decoded);
+      }
+    } catch (_) {}
+  }
+  if (attrs.items) {
+    try {
+      const parsed = parseJsonLikeArray(attrs.items);
+      if (Array.isArray(parsed)) {
+        items.push(...parsed);
+      }
+    } catch (_) {
+      const cleaned = attrs.items.replace(/^\[\s*|,\s*\]$/g, '').split(',');
+      items.push(...cleaned.map(s => s.trim().replace(/^["']|["']$/g, '')));
+    }
+  }
+  if (attrs.goal) {
+    items.push(attrs.goal);
+  }
+  if (body && body.trim()) {
+    const lines = body.split('\n')
+      .map(line => line.trim())
+      .filter(line => {
+        // Skip list wrapper tags
+        const clean = line.replace(/<ul\b[^>]*?>|<\/ul>/gi, '').trim();
+        return clean.length > 0;
+      })
+      .map(line => {
+        let clean = line;
+        // Strip <li> and </li> if present
+        clean = clean.replace(/<li\b[^>]*?>|<\/li>/gi, '');
+        // Trim and strip markdown bullet points
+        return clean.trim().replace(/^-\s*|^\*\s*/, '').trim();
+      })
+      .filter(Boolean);
+    items.push(...lines);
+  }
+  return items;
+}
+
 function healObjectivesTags(mdx: string): string {
-  // ── Pass 1: Normalize dot-notation <Objectives.Knowledge>, <Objectives.Skills>, <Objectives.Attitudes>
-  mdx = mdx
-    .replace(/<Objectives\.Knowledge(\b[^>]*?)>/gi, '<Knowledge$1>')
+  let processed = mdx
+    .replace(/<Objectives\.Knowledge\b/gi, '<Knowledge')
     .replace(/<\/Objectives\.Knowledge>/gi, '</Knowledge>')
-    .replace(/<Objectives\.Skills(\b[^>]*?)>/gi, '<Skills$1>')
+    .replace(/<Objectives\.Skills\b/gi, '<Skills')
     .replace(/<\/Objectives\.Skills>/gi, '</Skills>')
-    .replace(/<Objectives\.Attitudes(\b[^>]*?)>/gi, '<Attitudes$1>')
+    .replace(/<Objectives\.Attitudes\b/gi, '<Attitudes')
     .replace(/<\/Objectives\.Attitudes>/gi, '</Attitudes>');
 
-  // ── Pass 2: Convert <Objective type="knowledge" goal="..." /> variants to structured blocks
-  mdx = mdx.replace(
-    /(<Objectives\b[^>]*?>)([\s\S]*?)(<\/Objectives>)/gi,
-    (full, openTag, body, closeTag) => {
-      // Already has structured children — leave untouched
-      if (/<(Knowledge|Skills|Attitudes)\b/i.test(body)) return full;
-      // No <Objective ...> variants — leave for isChildrenEmpty guard
-      if (!/<Objective\b/i.test(body)) return full;
-
-      const knowledgeItems: string[] = [];
-      const skillsItems:    string[] = [];
-      const attitudesItems: string[] = [];
-
-      const processEntry = (attrs: string, innerContent: string) => {
-        const typeMatch = attrs.match(/\btype=["']?([^"'\s>]+)["']?/i);
-        const goalMatch = attrs.match(/\bgoal=["']([^"']+)["']/i);
-        const itemsB64  = attrs.match(/\bitemsBase64=["']([^"']+)["']/i);
-        const rawType   = (typeMatch?.[1] || 'knowledge').toLowerCase();
-
-        let text = innerContent.trim() || goalMatch?.[1] || '';
-
-        if (itemsB64) {
-          try {
-            const decoded = JSON.parse(Buffer.from(itemsB64[1], 'base64').toString('utf8'));
-            if (Array.isArray(decoded)) {
-              text = decoded.map((s: string) => '- ' + s).join('\n');
-            }
-          } catch (_) { /* keep text as-is */ }
-        }
-
-        // Remove inline JSX props like knowledge={[...]}
-        text = text.replace(/\b(?:knowledge|skills|attitudes|items)\s*=\s*\{[\s\S]*?\}/gi, '').trim();
-
-        const line = text ? (text.startsWith('-') ? text : '- ' + text) : '';
-        if (!line) return;
-
-        if (rawType.includes('skill') || rawType.includes('comp')) skillsItems.push(line);
-        else if (rawType.includes('attitud'))                       attitudesItems.push(line);
-        else                                                        knowledgeItems.push(line);
-      };
-
-      // Self-closing: <Objective ... />  or  <Objective ...>
-      const scRe = /<Objective\b([^>]*?)\/?>/gi;
-      // Wrapping:    <Objective ...>content</Objective>
-      const wrRe = /<Objective\b([^>]*?)>([\s\S]*?)<\/Objective>/gi;
-      let m: RegExpExecArray | null;
-      while ((m = scRe.exec(body)) !== null) processEntry(m[1], '');
-      while ((m = wrRe.exec(body)) !== null) processEntry(m[1], m[2]);
-
-      if (!knowledgeItems.length && !skillsItems.length && !attitudesItems.length) return full;
-
-      const blocks: string[] = [];
-      if (knowledgeItems.length) blocks.push('  <Knowledge>\n' + knowledgeItems.map(i => '    ' + i).join('\n') + '\n  </Knowledge>');
-      if (skillsItems.length)    blocks.push('  <Skills>\n'    + skillsItems.map(i    => '    ' + i).join('\n') + '\n  </Skills>');
-      if (attitudesItems.length) blocks.push('  <Attitudes>\n' + attitudesItems.map(i => '    ' + i).join('\n') + '\n  </Attitudes>');
-
-      return '<Objectives>\n' + blocks.join('\n') + '\n</Objectives>';
+  const objectivesRe = /<Objectives\b([^>]*?)>([\s\S]*?)<\/Objectives>/gi;
+  return processed.replace(objectivesRe, (match, openAttrs, body) => {
+    const knowledgeItems: string[] = [];
+    const skillsItems: string[] = [];
+    const attitudesItems: string[] = [];
+    
+    const processTag = (tagName: string, tagAttrsStr: string, tagBody: string) => {
+      const attrs = parseAttributes(tagAttrsStr);
+      let type = attrs.type || 'knowledge';
+      if (tagName === 'Knowledge') type = 'knowledge';
+      else if (tagName === 'Skills') type = 'skills';
+      else if (tagName === 'Attitudes') type = 'attitudes';
+      
+      const items = parseItems(attrs, tagBody);
+      
+      if (type.includes('skill') || type.includes('comp')) {
+        skillsItems.push(...items);
+      } else if (type.includes('attitud')) {
+        attitudesItems.push(...items);
+      } else {
+        knowledgeItems.push(...items);
+      }
+    };
+    
+    const childRe = /<(Knowledge|Skills|Attitudes|Objective)\b([^>]*?)>([\s\S]*?)<\/\1>|<(Knowledge|Skills|Attitudes|Objective)\b([^>]*?)\/>/gi;
+    let m;
+    while ((m = childRe.exec(body)) !== null) {
+      if (m[1]) {
+        processTag(m[1], m[2], m[3]);
+      } else {
+        processTag(m[4], m[5], '');
+      }
     }
-  );
-
-  // ── Pass 3: Original logic — heal raw <Knowledge>/<Skills>/<Attitudes> missing proper structure
-  const objectivesBlockRegex = /<Objectives>([\s\S]*?)(?:<\/Objectives>|$)/gi;
-
-  return mdx.replace(objectivesBlockRegex, (match, body) => {
-    const extractContent = (tagName: string) => {
-      const tagStartRegex = new RegExp('<' + tagName + '>', 'i');
-      const startMatch = body.match(tagStartRegex);
-      if (!startMatch) return '';
-      const startIndex = startMatch.index! + startMatch[0].length;
-      const subBody = body.substring(startIndex);
-      const nextTagRegex = /<\/?(Knowledge|Skills|Attitudes|Objectives)\b/i;
-      const endMatch = subBody.match(nextTagRegex);
-      let ct = subBody;
-      if (endMatch) ct = subBody.substring(0, endMatch.index);
-      ct = ct.replace(new RegExp('</' + tagName + '>', 'gi'), '');
-      return ct.trim();
-    };
-
-    const knowledge = extractContent('Knowledge');
-    const skills    = extractContent('Skills');
-    const attitudes = extractContent('Attitudes');
-
-    if (!knowledge && !skills && !attitudes) return match;
-
-    const cleanBlock = (text: string) => {
-      if (!text) return '';
-      return text
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean)
-        .map(line => '    ' + line)
-        .join('\n');
-    };
-
-    return `<Objectives>
-  <Knowledge>
-${cleanBlock(knowledge)}
-  </Knowledge>
-  <Skills>
-${cleanBlock(skills)}
-  </Skills>
-  <Attitudes>
-${cleanBlock(attitudes)}
-  </Attitudes>
-</Objectives>`;
+    
+    if (knowledgeItems.length === 0 && skillsItems.length === 0 && attitudesItems.length === 0) {
+      const lines = body.split('\n')
+        .map((line: string) => line.trim().replace(/^-\s*|^\*\s*/, ''))
+        .filter(Boolean);
+      lines.forEach((line: string, index: number) => {
+        if (index % 3 === 0) knowledgeItems.push(line);
+        else if (index % 3 === 1) skillsItems.push(line);
+        else attitudesItems.push(line);
+      });
+    }
+    
+    const blocks: string[] = [];
+    if (knowledgeItems.length > 0) {
+      blocks.push(`  <Knowledge>\n    <ul className="list-disc pl-4 space-y-1">\n` + knowledgeItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Knowledge>`);
+    }
+    if (skillsItems.length > 0) {
+      blocks.push(`  <Skills>\n    <ul className="list-disc pl-4 space-y-1">\n` + skillsItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Skills>`);
+    }
+    if (attitudesItems.length > 0) {
+      blocks.push(`  <Attitudes>\n    <ul className="list-disc pl-4 space-y-1">\n` + attitudesItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Attitudes>`);
+    }
+    
+    return `<Objectives>\n${blocks.join('\n')}\n</Objectives>`;
   });
+}
+
+function healSelfClosingComponents(mdx: string): string {
+  let processed = mdx;
+  const components = [
+    'CodeSandbox', 'FunctionPlotter', 'FunctionManipulator', 'EquationManipulator',
+    'Geometry2D', 'DataChart', 'StructureViewer3D', 'DynamicSimulation',
+    'BasicMathExplorer', 'ChemicalStoichiometry', 'Video', 'Audio',
+    'FillInBlanks', 'InteractiveDiagram'
+  ];
+  
+  for (const comp of components) {
+    const openingRe = new RegExp(`<${comp}\\b([\\s\\S]*?)(?:\\/?>|>)`, 'gi');
+    processed = processed.replace(openingRe, (match, attrsStr) => {
+      let cleanAttrs = attrsStr.trim();
+      if (cleanAttrs.endsWith('/')) {
+        cleanAttrs = cleanAttrs.slice(0, -1).trim();
+      }
+      return `<${comp} ${cleanAttrs} />`;
+    });
+    
+    const closingRe = new RegExp(`</${comp}>`, 'gi');
+    processed = processed.replace(closingRe, '');
+  }
+  
+  return processed;
+}
+
+function extractAnswers(blanksStr: string): string[] {
+  const answers: string[] = [];
+  const propRegex = /(?:answer|answer")\s*:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)')/gi;
+  let m;
+  while ((m = propRegex.exec(blanksStr)) !== null) {
+    answers.push(m[1] || m[2]);
+  }
+  
+  if (answers.length === 0) {
+    const strRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'/g;
+    while ((m = strRegex.exec(blanksStr)) !== null) {
+      answers.push(m[1] || m[2]);
+    }
+  }
+  return answers;
+}
+
+function healFillInBlanks(mdx: string): string {
+  const regex = /<(FillInBlanks|FillInTheBlanks)\b([^>]*?)\/?>/gi;
+  
+  return mdx.replace(regex, (match, tagName, attrsStr) => {
+    const attrs = parseAttributes(attrsStr);
+    
+    if (attrs.question && attrs.blanks) {
+      const question = attrs.question;
+      const blanksStr = attrs.blanks;
+      
+      const answers = extractAnswers(blanksStr);
+      const placeholderRegex = /_{2,}|-{2,}|\.{3,}|\[\.\.\.\]/g;
+      const segments = question.split(placeholderRegex);
+      
+      const resultComponents = [];
+      for (let i = 0; i < answers.length; i++) {
+        const answer = answers[i];
+        let prevSeg = (segments[i] || '').trim();
+        let nextSeg = (segments[i+1] || '').trim();
+        
+        const sentence = `${prevSeg} [...] ${nextSeg}`;
+        resultComponents.push(`<FillInBlanks sentence="${sentence.replace(/"/g, '&quot;')}" answer="${answer.replace(/"/g, '&quot;')}" />`);
+      }
+      
+      return resultComponents.join('\n');
+    }
+    
+    if (attrs.sentences) {
+      let sentencesArray: string[] = [];
+      try {
+        sentencesArray = parseJsonLikeArray(attrs.sentences);
+      } catch (_) {
+        const cleaned = attrs.sentences.replace(/^\[\s*|,\s*\]$/g, '').split(',');
+        sentencesArray = cleaned.map(s => s.trim().replace(/^["']|["']$/g, ''));
+      }
+      
+      const title = attrs.title || '';
+      const feedback = attrs.feedback || '';
+      
+      let result = '';
+      if (title) {
+        result += `\n\n##### ${title}\n\n`;
+      }
+      
+      sentencesArray.forEach(sentence => {
+        const matchWord = /\{([^}]+)\}/.exec(sentence);
+        if (matchWord) {
+          const answer = matchWord[1];
+          const cleanSentence = sentence.replace(/\{[^}]+\}/, '[...]');
+          result += `<FillInBlanks sentence="${cleanSentence}" answer="${answer}" />\n`;
+        } else {
+          result += `<FillInBlanks sentence="${sentence}" answer="" />\n`;
+        }
+      });
+      
+      if (feedback) {
+        result += `\n\n*${feedback}*\n\n`;
+      }
+      
+      return result;
+    }
+    
+    if (tagName.toLowerCase() === 'fillintheblanks') {
+      return match.replace(/FillInTheBlanks/i, 'FillInBlanks');
+    }
+    
+    return match;
+  });
+}
+
+function healInteractiveDiagram(mdx: string): string {
+  return mdx.replace(/<InteractiveDiagram\b([^>]*?)>([\s\S]*?)<\/InteractiveDiagram>/gi, (match, attrsStr, body) => {
+    const mainAttrs = parseAttributes(attrsStr);
+    const hotspots: any[] = [];
+    let index = 0;
+    
+    const itemRe = /<DiagramItem\b([^>]*?)\/?>/gi;
+    let m;
+    const defaultCoords = [
+      { x: 25, y: 30 },
+      { x: 50, y: 45 },
+      { x: 75, y: 30 },
+      { x: 35, y: 70 },
+      { x: 65, y: 70 },
+      { x: 15, y: 50 },
+      { x: 85, y: 50 }
+    ];
+    while ((m = itemRe.exec(body)) !== null) {
+      const itemAttrs = parseAttributes(m[1]);
+      const coords = defaultCoords[index % defaultCoords.length];
+      const x = itemAttrs.x ? parseInt(itemAttrs.x, 10) : coords.x;
+      const y = itemAttrs.y ? parseInt(itemAttrs.y, 10) : coords.y;
+      
+      hotspots.push({
+        id: itemAttrs.id || `item-${index}`,
+        name: itemAttrs.label || itemAttrs.name || `Point ${index + 1}`,
+        description: itemAttrs.description || '',
+        x,
+        y
+      });
+      index++;
+    }
+    
+    const hotspotRe = /<Hotspot\b([^>]*?)>([\s\S]*?)<\/Hotspot>/gi;
+    while ((m = hotspotRe.exec(body)) !== null) {
+      const hsAttrs = parseAttributes(m[1]);
+      const hsBody = m[2];
+      
+      let description = '';
+      const contentMatch = /<Content>([\s\S]*?)<\/Content>/gi.exec(hsBody);
+      if (contentMatch) {
+        description = contentMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim();
+      } else {
+        description = hsBody.replace(/<\/?[^>]+(>|$)/g, "").trim();
+      }
+      
+      hotspots.push({
+        id: hsAttrs.id || `hs-${index}`,
+        name: hsAttrs.label || hsAttrs.name || `Point ${index + 1}`,
+        description: description,
+        x: hsAttrs.x ? parseInt(hsAttrs.x, 10) : 50,
+        y: hsAttrs.y ? parseInt(hsAttrs.y, 10) : 50
+      });
+      index++;
+    }
+    
+    if (hotspots.length > 0) {
+      const base64 = Buffer.from(JSON.stringify(hotspots)).toString('base64');
+      let newAttrsStr = '';
+      for (const [k, v] of Object.entries(mainAttrs)) {
+        if (k !== 'hotspots' && k !== 'hotspotsBase64') {
+          newAttrsStr += ` ${k}="${v}"`;
+        }
+      }
+      return `<InteractiveDiagram${newAttrsStr} hotspotsBase64="${base64}" />`;
+    }
+    
+    return match;
+  });
+}
+
+function healSingleQuestionQuiz(mdx: string): string {
+  return mdx.replace(/<Quiz\b([^>]*?)>([\s\S]*?)<\/Quiz>/gi, (match, attrsStr, body) => {
+    const attrs = parseAttributes(attrsStr);
+    if (attrs.question || attrs.q) {
+      const feedbackMatch = /<Feedback\b([^>]*?)\/?>/gi.exec(body);
+      let explanation = '';
+      if (feedbackMatch) {
+        const feedbackAttrs = parseAttributes(feedbackMatch[1]);
+        explanation = feedbackAttrs.correct || feedbackAttrs.explanation || '';
+      }
+      
+      const q = attrs.question || attrs.q;
+      const options = attrs.options || '';
+      const correctIndex = attrs.correctIndex || '0';
+      
+      return `<Quiz><Question q="${q}" options="${options}" correctIndex="${correctIndex}" explanation="${explanation}" /></Quiz>`;
+    }
+    return match;
+  });
+}
+
+function healQuestionTags(mdx: string): string {
+  let processed = mdx.replace(/<Quiz\.Question\b/gi, '<Question');
+  processed = processed.replace(/<\/Quiz\.Question>/gi, '</Question>');
+  processed = processed.replace(/<Quiz\.Choice\b/gi, '<Option');
+  processed = processed.replace(/<\/Quiz\.Choice>/gi, '</Option>');
+
+  const questionRe = /<Question\b([^>]*?)>([\s\S]*?)<\/Question>|<Question\b([^>]*?)\/>/gi;
+  return processed.replace(questionRe, (match, wrapAttrsStr, body, scAttrsStr) => {
+    const attrsStr = wrapAttrsStr || scAttrsStr || '';
+    const attrs = parseAttributes(attrsStr);
+    const content = body || '';
+    
+    let q = attrs.q || attrs.questionText || attrs.text || attrs.question || '';
+    let type = attrs.type || 'multiple-choice';
+    let correctIndex = attrs.correctIndex !== undefined ? attrs.correctIndex : (attrs.correctAnswerIndex !== undefined ? attrs.correctAnswerIndex : '0');
+    let explanation = attrs.explanation || '';
+    
+    let optionsStr = attrs.options || '';
+    if (type === 'true-false') {
+      optionsStr = 'Vrai|||Faux';
+      const corrAns = attrs.correctAnswer === 'true' || attrs.correctAnswer === 'true-false' || attrs.correctIndex === '0' || attrs.correctAnswerIndex === '0';
+      correctIndex = corrAns ? '0' : '1';
+    }
+    
+    let options: any[] = [];
+    if (optionsStr && optionsStr.trim().startsWith('[')) {
+      try {
+        options = parseJsonLikeArray(optionsStr);
+      } catch (_) {
+        const cleaned = optionsStr.replace(/^\[\s*|,\s*\]$/g, '').split(',');
+        options = cleaned.map(s => s.trim().replace(/^["']|["']$/g, ''));
+      }
+    } else if (optionsStr) {
+      options = optionsStr.split('|||').map(s => s.trim());
+    }
+    
+    if (options.length > 0 && typeof options[0] === 'object') {
+      const objOptions = options as any[];
+      options = objOptions.map(o => o.text || '');
+      const correctIdx = objOptions.findIndex(o => o.isCorrect === true || o.correct === true);
+      if (correctIdx !== -1) {
+        correctIndex = String(correctIdx);
+      }
+    }
+    
+    let newContent = content;
+    const feedbackMatch = /<Feedback\b([^>]*?)>([\s\S]*?)<\/Feedback>|<Feedback\b([^>]*?)\/?>/gi.exec(content);
+    if (feedbackMatch) {
+      const fbAttrs = parseAttributes(feedbackMatch[1] || '');
+      explanation = explanation || fbAttrs.correct || fbAttrs.explanation || '';
+      newContent = content.replace(/<Feedback\b[^>]*?(?:>[\s\S]*?<\/Feedback>|\/>)/gi, '');
+    }
+    
+    newContent = newContent.replace(/<Option\b[^>]*?(?:>[\s\S]*?<\/Option>|\/>)/gi, '');
+    newContent = newContent.replace(/<Answer\b[^>]*?(?:>[\s\S]*?<\/Answer>|\/>)/gi, '');
+    
+    let imageFigure = '';
+    if (attrs.imageSrc) {
+      imageFigure = `<CustomFigure src="${attrs.imageSrc}" alt="Question Image" />\n`;
+    }
+    
+    let optionTags = '';
+    if (options.length > 0) {
+      optionTags = options.map((opt, idx) => {
+        const isCorr = String(idx) === String(correctIndex);
+        return `  <Option text="${opt}"${isCorr ? ' correct={true}' : ''} />`;
+      }).join('\n');
+    } else {
+      optionTags = newContent;
+    }
+    
+    const explanationAttr = explanation ? ` explanation="${explanation.replace(/"/g, '&quot;')}"` : '';
+    
+    return `${imageFigure}<Question q="${q}"${explanationAttr}>\n${optionTags}\n</Question>`;
+  });
+}
+
+function healWhatsNextCards(mdx: string): string {
+  const cardRe = /<(?:EtApres|WhatsNext)\.Card\b([^>]*?)\/?>/gi;
+  let processed = mdx.replace(cardRe, (match, attrsStr) => {
+    const attrs = parseAttributes(attrsStr);
+    const title = attrs.title || '';
+    const subject = attrs.subject || '';
+    const level = attrs.level || '';
+    const description = attrs.description || '';
+    const details = [subject, level].filter(Boolean).join(' - ');
+    const subtitle = details ? ` (${details})` : '';
+    return `\n**${title}**${subtitle} : ${description}\n`;
+  });
+  processed = processed.replace(/<\/(?:EtApres|WhatsNext)\.Card>/gi, '');
+  return processed;
+}
+
+function healPrerequisitesAndSummary(mdx: string): string {
+  let processed = mdx;
+  
+  processed = processed.replace(/<Prerequisites\b([^>]*?)\/?>/gi, (match, attrsStr) => {
+    const attrs = parseAttributes(attrsStr);
+    if (attrs.items) {
+      try {
+        const parsed = parseJsonLikeArray(attrs.items);
+        const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+        let newAttrsStr = '';
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k !== 'items' && k !== 'itemsBase64') {
+            newAttrsStr += ` ${k}="${v}"`;
+          }
+        }
+        return `<Prerequisites${newAttrsStr} itemsBase64="${base64}" />`;
+      } catch (e) {
+        console.error("Failed to parse Prerequisites items in preprocessor:", e);
+      }
+    }
+    return match;
+  });
+
+  processed = processed.replace(/<Summary\b([^>]*?)(?:\/>|>([\s\S]*?)<\/Summary>)/gi, (match, attrsStr, body) => {
+    const attrs = parseAttributes(attrsStr);
+    let items: string[] = [];
+    
+    if (attrs.items) {
+      try {
+        items = parseJsonLikeArray(attrs.items);
+      } catch (e) {
+        items = attrs.items.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+      }
+    } else if (body) {
+      items = body.split('\n')
+        .map((line: string) => line.trim().replace(/^-\s*|^\*\s*/, ''))
+        .filter(Boolean);
+    }
+    
+    if (items.length > 0) {
+      const joined = items.join('|||');
+      let newAttrsStr = '';
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k !== 'items' && k !== 'itemsString') {
+          newAttrsStr += ` ${k}="${v}"`;
+        }
+      }
+      return `<Summary${newAttrsStr} itemsString="${joined}" />`;
+    }
+    return match;
+  });
+
+  return processed;
 }
 function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   const allowedTags = [
     'a', 'span', 'sup', 'sub', 'strong', 'em', 'img', 'br', 'code', 'pre', 'p', 'ul', 'ol', 'li', 'div', 'blockquote',
     'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'iframe',
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
-    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
+    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'EvenementHistorique',
     'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
@@ -1697,12 +2127,19 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
  *   "Unexpected character `&` (U+0026) before attribute value"
  */
 function sanitizeAmpersandInJsxAttributes(mdx: string): string {
-  // Match JSX attribute value strings: attrName="..."
-  // We replace bare & (not already &amp; or other valid HTML entity) with &amp;
-  return mdx.replace(/(<[A-Za-z][A-Za-z0-9]*[^>]*?\s[\w-]+=")([^"]*?)(")/g, (match, open, value, close) => {
-    // Encode bare & that is not already part of a valid HTML entity (e.g. &amp; &lt; &quot; &#123; etc.)
-    const fixedValue = value.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
-    return `${open}${fixedValue}${close}`;
+  // Match any opening/self-closing custom or HTML tag (e.g. <TagName ...>)
+  // then parse and replace bare ampersands inside all its quoted attribute values.
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
+    const replacedAttrs = attributesPart
+      .replace(/([\w:-]+=")([^"]*?)(")/g, (attrMatch: string, open: string, value: string, close: string) => {
+        const fixedValue = value.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+        return `${open}${fixedValue}${close}`;
+      })
+      .replace(/([\w:-]+=')([^']*?)(')/g, (attrMatch: string, open: string, value: string, close: string) => {
+        const fixedValue = value.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+        return `${open}${fixedValue}${close}`;
+      });
+    return `${tagStart}${replacedAttrs}>`;
   });
 }
 
@@ -1881,23 +2318,28 @@ function deduplicateHistoricalPersons(mdx: string): string {
 }
 
 function balancePedagogicalTags(mdx: string): string {
-  const wrapperTags = [
+  const inlineTags = [
+    'HistoricalPerson', 'HistoricalEvent', 'HistoricalDate', 'Location', 'EntityLink'
+  ];
+  const blockTags = [
     'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalFact', 'WhatsNext', 'EtApres',
     'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate'
   ];
-
+  
+  const allTags = [...inlineTags, ...blockTags];
   let result = mdx;
 
-  for (const tag of wrapperTags) {
-    const regex = new RegExp(`<(\\/?)(${tag})\\b((?:[^'">]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')*?)(\\/?)>`, 'gi');
+  for (const tag of allTags) {
+    const isInline = inlineTags.includes(tag);
+    const regex = new RegExp(`<(\\/?)(${tag})\\b([^>]*?)(\\/?)>`, 'gi');
     
     interface Token {
       index: number;
       length: number;
       type: 'open' | 'close' | 'self';
       raw: string;
-      attrs: string;
+      newIndex?: number;
     }
     
     const tokens: Token[] = [];
@@ -1918,70 +2360,293 @@ function balancePedagogicalTags(mdx: string): string {
         index: match.index,
         length: match[0].length,
         type,
-        raw: match[0],
-        attrs: match[3]
+        raw: match[0]
       });
     }
     
     if (tokens.length === 0) continue;
     
-    const conversions = new Set<number>();
-    const openStack: number[] = [];
+    let newResult = '';
+    let lastCopiedIndex = 0;
+    const openStack: Token[] = [];
     
     for (let i = 0; i < tokens.length; i++) {
       const tok = tokens[i];
+      
+      newResult += result.substring(lastCopiedIndex, tok.index);
+      
       if (tok.type === 'open') {
-        openStack.push(i);
+        tok.newIndex = newResult.length;
+        openStack.push(tok);
+        newResult += tok.raw;
+        lastCopiedIndex = tok.index + tok.length;
       } else if (tok.type === 'self') {
-        // self-closing
+        newResult += tok.raw;
+        lastCopiedIndex = tok.index + tok.length;
       } else if (tok.type === 'close') {
         if (openStack.length > 0) {
-          openStack.pop();
-        } else {
-          let foundSelf = -1;
-          for (let j = i - 1; j >= 0; j--) {
-            if (tokens[j].type === 'self' && !conversions.has(j)) {
-              foundSelf = j;
-              break;
+          const lastOpen = openStack[openStack.length - 1];
+          let canMatch = true;
+          if (isInline) {
+            const textBetween = result.substring(lastOpen.index + lastOpen.length, tok.index);
+            if (/\n\s*\n/.test(textBetween)) {
+              canMatch = false;
             }
           }
-          if (foundSelf !== -1) {
-            conversions.add(foundSelf);
+          if (canMatch) {
+            openStack.pop();
+            newResult += tok.raw;
+            lastCopiedIndex = tok.index + tok.length;
+          } else {
+            // Discard mismatched/far-away closing tag that crosses paragraph boundaries
+            lastCopiedIndex = tok.index + tok.length;
           }
+        } else {
+          // Unmatched closing tag - discard it
+          lastCopiedIndex = tok.index + tok.length;
         }
       }
     }
     
-    if (conversions.size > 0) {
-      const sortedConversions = Array.from(conversions).sort((a, b) => b - a);
-      let tempResult = result;
-      for (const idx of sortedConversions) {
-        const tok = tokens[idx];
-        let newAttrs = tok.attrs.trim();
-        if (newAttrs.endsWith('/')) {
-          newAttrs = newAttrs.substring(0, newAttrs.length - 1).trim();
+    newResult += result.substring(lastCopiedIndex);
+    
+    if (openStack.length > 0) {
+      if (isInline) {
+        let tempResult = newResult;
+        for (let j = openStack.length - 1; j >= 0; j--) {
+          const tok = openStack[j];
+          const startIdx = tok.newIndex;
+          if (startIdx !== undefined && startIdx !== -1) {
+            let endOfLineIdx = tempResult.indexOf('\n', startIdx);
+            if (endOfLineIdx === -1) {
+              endOfLineIdx = tempResult.length;
+            }
+            
+            let insertIdx = endOfLineIdx;
+            const delimiters = ['**', '__', ']', '<'];
+            for (const delim of delimiters) {
+              const searchStart = delim === '<' ? startIdx + 1 : startIdx;
+              const idx = tempResult.indexOf(delim, searchStart);
+              if (idx !== -1 && idx < insertIdx) {
+                insertIdx = idx;
+              }
+            }
+            
+            tempResult = tempResult.substring(0, insertIdx) + `</${tag}>` + tempResult.substring(insertIdx);
+          }
         }
-        const replacement = `<${tag} ${newAttrs}>`.replace(/\s+>/g, '>');
-        tempResult = tempResult.substring(0, tok.index) + replacement + tempResult.substring(tok.index + tok.length);
+        newResult = tempResult;
+      } else {
+        for (let j = 0; j < openStack.length; j++) {
+          newResult += `\n</${tag}>`;
+        }
       }
-      result = tempResult;
     }
+    
+    result = newResult;
   }
   
   return result;
 }
 
+function decodeHtmlEncodedTags(mdx: string): string {
+  let processed = mdx;
+  // Convert &lt;/TagName or &lt;TagName to </TagName or <TagName
+  processed = processed.replace(/&lt;\/([A-Za-z][A-Za-z0-9.-]*)/gi, '</$1');
+  processed = processed.replace(/&lt;([A-Za-z][A-Za-z0-9.-]*)/gi, '<$1');
+  
+  // Replace &gt; that closes these tags
+  let prev;
+  do {
+    prev = processed;
+    processed = processed.replace(/<([A-Za-z][A-Za-z0-9.-]*)\b([^>]*?)&gt;/gi, '<$1$2>');
+  } while (processed !== prev);
+
+  return processed;
+}
+
+function sanitizeQuotesInComponentTags(mdx: string): string {
+  const tagStartRegex = /<([A-Z][A-Za-z0-9.-]*)\b/g;
+  let match;
+  let result = '';
+  let lastIndex = 0;
+  
+  tagStartRegex.lastIndex = 0;
+  while ((match = tagStartRegex.exec(mdx)) !== null) {
+    const startIdx = match.index;
+    const tagName = match[1];
+    
+    result += mdx.substring(lastIndex, startIdx);
+    
+    let idx = startIdx;
+    idx += 1 + tagName.length;
+    
+    let tagContent = '<' + tagName;
+    
+    while (idx < mdx.length) {
+      const wsMatch = /^\s+/.exec(mdx.substring(idx));
+      if (wsMatch) {
+        tagContent += wsMatch[0];
+        idx += wsMatch[0].length;
+      }
+      
+      if (mdx.substring(idx, idx + 2) === '/>') {
+        tagContent += '/>';
+        idx += 2;
+        break;
+      }
+      if (mdx[idx] === '>') {
+        tagContent += '>';
+        idx += 1;
+        break;
+      }
+      
+      const nameMatch = /^[A-Za-z0-9_.-]+/.exec(mdx.substring(idx));
+      if (!nameMatch) {
+        tagContent += mdx[idx];
+        idx++;
+        continue;
+      }
+      
+      const attrName = nameMatch[0];
+      tagContent += attrName;
+      idx += attrName.length;
+      
+      const eqMatch = /^\s*=\s*/.exec(mdx.substring(idx));
+      if (!eqMatch) {
+        continue;
+      }
+      
+      tagContent += eqMatch[0];
+      idx += eqMatch[0].length;
+      
+      if (mdx[idx] === '{') {
+        let braceCount = 1;
+        tagContent += '{';
+        idx++;
+        while (idx < mdx.length && braceCount > 0) {
+          const char = mdx[idx];
+          if (char === '{') braceCount++;
+          else if (char === '}') braceCount--;
+          tagContent += char;
+          idx++;
+        }
+      } else if (mdx[idx] === '"') {
+        tagContent += '"';
+        idx++;
+        
+        let valStartIdx = idx;
+        let trueEndIdx = -1;
+        
+        while (idx < mdx.length) {
+          if (mdx[idx] === '"') {
+            const rest = mdx.substring(idx + 1);
+            if (/^\s*[A-Za-z0-9_.-]+\s*=/.test(rest) || /^\s*\/>/.test(rest) || /^\s*>/.test(rest)) {
+              trueEndIdx = idx;
+              break;
+            }
+          }
+          idx++;
+        }
+        
+        if (trueEndIdx !== -1) {
+          let val = mdx.substring(valStartIdx, trueEndIdx);
+          val = val.replace(/"/g, '&quot;');
+          tagContent += val + '"';
+          idx = trueEndIdx + 1;
+        } else {
+          while (idx < mdx.length && mdx[idx] !== '"' && mdx[idx] !== '\n') {
+            tagContent += mdx[idx];
+            idx++;
+          }
+          if (idx < mdx.length && mdx[idx] === '"') {
+            tagContent += '"';
+            idx++;
+          }
+        }
+      } else if (mdx[idx] === "'") {
+        tagContent += "'";
+        idx++;
+        
+        let valStartIdx = idx;
+        let trueEndIdx = -1;
+        
+        while (idx < mdx.length) {
+          if (mdx[idx] === "'") {
+            const rest = mdx.substring(idx + 1);
+            if (/^\s*[A-Za-z0-9_.-]+\s*=/.test(rest) || /^\s*\/>/.test(rest) || /^\s*>/.test(rest)) {
+              trueEndIdx = idx;
+              break;
+            }
+          }
+          idx++;
+        }
+        
+        if (trueEndIdx !== -1) {
+          let val = mdx.substring(valStartIdx, trueEndIdx);
+          val = val.replace(/'/g, '&apos;');
+          tagContent += val + "'";
+          idx = trueEndIdx + 1;
+        } else {
+          while (idx < mdx.length && mdx[idx] !== "'" && mdx[idx] !== '\n') {
+            tagContent += mdx[idx];
+            idx++;
+          }
+          if (idx < mdx.length && mdx[idx] === "'") {
+            tagContent += "'";
+            idx++;
+          }
+        }
+      } else {
+        while (idx < mdx.length && !/\s/.test(mdx[idx]) && mdx[idx] !== '>' && mdx.substring(idx, idx + 2) !== '/>') {
+          tagContent += mdx[idx];
+          idx++;
+        }
+      }
+    }
+    
+    result += tagContent;
+    lastIndex = idx;
+    tagStartRegex.lastIndex = idx;
+  }
+  
+  result += mdx.substring(lastIndex);
+  return result;
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
+  // Decode HTML-encoded tags first so they are correctly recognized as JSX components
+  let processed = decodeHtmlEncodedTags(content);
+
+  // Sanitize nested quotes inside component attributes
+  processed = sanitizeQuotesInComponentTags(processed);
+
   // Trim any outer markdown code block wrapper (e.g. ```mdx ... ``` or ``` ...)
-  let processed = stripOuterCodeFences(content);
-  processed = normalizeFrenchPedagogicalTags(processed);
-  processed = balancePedagogicalTags(processed);
-  processed = reorderMdxSections(processed, lang);
+  processed = stripOuterCodeFences(processed);
+
+  // Strip AI-hallucinated import/export statements (invalid in next-mdx-remote serialize mode).
+  // e.g. `import { Foo, Bar } from '@components';` -> removed entirely.
+  processed = processed.replace(/^import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?\s*$/gm, '');
+  processed = processed.replace(/^export\s+[\s\S]*?;\s*$/gm, '');
 
   // Clean doubly HTML-encoded entities
   processed = processed.replace(/&amp;quot;/g, '&quot;');
   processed = processed.replace(/&amp;apos;/g, '&apos;');
   processed = processed.replace(/&amp;amp;/g, '&amp;');
+
+  // Component-specific structural normalization/pre-processing (Run BEFORE escaping braces!)
+  processed = healSelfClosingComponents(processed);
+  processed = healFillInBlanks(processed);
+  processed = healInteractiveDiagram(processed);
+  processed = healSingleQuestionQuiz(processed);
+  processed = healQuestionTags(processed);
+  processed = healWhatsNextCards(processed);
+  processed = healPrerequisitesAndSummary(processed);
+  processed = healObjectivesTags(processed);
+
+  processed = normalizeFrenchPedagogicalTags(processed);
+  processed = balancePedagogicalTags(processed);
+  processed = reorderMdxSections(processed, lang);
 
   // 0a. Restore HTML-encoded quotes in JSX attributes to prevent next-mdx-remote parse failures
   processed = processed.replace(/=\s*&quot;([\s\S]*?)&quot;/gi, '="$1"');
@@ -2000,44 +2665,9 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<\/GlossaryList\.Item>/gi, '');
   processed = processed.replace(/<\/?GlossaryList\b[^>]*>/gi, '');
 
-  // 0c. Normalize dot-notation Quiz components
-  processed = processed.replace(/<(Quiz\.)?Question\b([^>]*?)>([\s\S]*?)<\/\1?Question>/gi, (match, prefix, attrs, innerContent) => {
-    let newAttrs = attrs;
-
-    // Convert question= to q= if present
-    if (/\bquestion=/i.test(newAttrs)) {
-      newAttrs = newAttrs.replace(/\bquestion=/gi, 'q=');
-    }
-
-    // Extract explanation if present
-    let explanationText = '';
-    const explanationRegex = /<(?:Quiz\.)?Explanation>([\s\S]*?)<\/(?:Quiz\.)?Explanation>/gi;
-    const explanationMatch = explanationRegex.exec(innerContent);
-    if (explanationMatch) {
-      explanationText = explanationMatch[1].trim().replace(/"/g, '&quot;');
-    }
-    let cleanInner = innerContent.replace(explanationRegex, '');
-
-    // Convert Quiz.Choice or Choice to Option
-    cleanInner = cleanInner.replace(/<(?:Quiz\.)?Choice\b/gi, '<Option');
-    cleanInner = cleanInner.replace(/<\/(?:Quiz\.)?Choice>/gi, '</Option>');
-
-    // Inject explanation attribute
-    if (explanationText && !/\bexplanation=/i.test(newAttrs)) {
-      newAttrs += ` explanation="${explanationText}"`;
-    }
-
-    return `<Question${newAttrs}>${cleanInner}</Question>`;
-  });
-
-  // 0d. Normalize GoingFurther.Item and WhatsNext.Card / EtApres.Card
+  // 0d. Normalize GoingFurther.Item
   processed = processed.replace(/<GoingFurther\.Item\b/gi, '<GoingFurtherItem');
   processed = processed.replace(/<\/GoingFurther\.Item>/gi, '</GoingFurtherItem>');
-
-  processed = processed.replace(/<(?:EtApres|WhatsNext)\.Card\s+title=["']([^"']+)["']\s+subject=["']([^"']+)["']\s+level=["']([^"']+)["']\s+slug=["']([^"']+)["']\s+description=["']([\s\S]*?)["']\s*\/?>/gi, (match, title, subject, level, slug, description) => {
-    return `\n**${title}** (${subject} - ${level}) : ${description}\n`;
-  });
-  processed = processed.replace(/<\/(?:EtApres|WhatsNext)\.Card>/gi, '');
 
   // Convert invalid AI-generated <Figure [text]> ... </Figure> into standard markdown *Figure [text]*
   processed = processed.replace(/<\/Figure>/gi, '');
@@ -2046,12 +2676,23 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
     return `\n\n*Figure ${cleanText}*\n\n`;
   });
 
+  // Strip AI-hallucinated <Sandbox>...</Sandbox> blocks containing raw HTML (onClick etc.)
+  // These are not valid MDX components and crash the acorn parser.
+  processed = processed.replace(/<Sandbox\b[^>]*>[\s\S]*?<\/Sandbox>/gi, '');
+  processed = processed.replace(/<ExternalSandbox\b[^>]*>[\s\S]*?<\/ExternalSandbox>/gi, '');
+  // Strip hallucinated <HistoricalFigureOverlay> self-closing tags (not a real component)
+  processed = processed.replace(/<HistoricalFigureOverlay\b[^>]*?\/?>/gi, '');
+  processed = processed.replace(/<ArtworkOverlay\b[^>]*?\/?>/gi, '');
+  processed = processed.replace(/<InteractiveTimeline\b[^>]*>\s*[\s\S]*?<\/InteractiveTimeline>/gi, '');
+  processed = processed.replace(/<DragAndDropActivity\b[^>]*>\s*[\s\S]*?<\/DragAndDropActivity>/gi, '');
+  processed = processed.replace(/<Flowchart\b[^>]*>\s*[\s\S]*?<\/Flowchart>/gi, '');
+
+  processed = healUnclosedInlineTags(processed);
   processed = escapeCurlyBracesAndLessThanInText(processed);
   processed = sanitizeAmpersandInJsxAttributes(processed);
   processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
   processed = healGlossaryTags(processed);
-  processed = healObjectivesTags(processed);
   processed = healWrapperTagNesting(processed);
   processed = healWhatsNextNesting(processed);
   processed = deduplicateHistoricalPersons(processed);
@@ -2082,7 +2723,6 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/\s*{#[\w\-]+}/g, '');
 
   // Remove AI-generated orphaned intro sentences that precede <Objectives> blocks.
-  // These phrases ("À la fin de cette leçon, vous serez capable de :", etc.) become
   // floating paragraphs when <Objectives> is empty and returns null.
   processed = processed.replace(
     /[ \t]*(?:[Àa] la fin de (?:cette (?:leçon|lecon)|ce (?:chapitre|module))[,\s]*(?:vous serez capable de\s*[:;]?|vous serez en mesure de\s*[:;]?|vous pourrez\s*[:;]?)?|By the end of (?:this (?:lesson|chapter|module))[,\s]*(?:you (?:will (?:be able to|understand|know)|should be able to)\s*[:;]?)?|Al final de (?:esta (?:lección|leccion|unidad))[,\s]*(?:(?:usted |tú )?(?:podr[aá]s?|ser[aá]s? capaz de)\s*[:;]?)?|Am Ende (?:dieser (?:Lektion|Einheit|des Kapitels))[,\s]*(?:(?:werden Sie|wirst du) (?:in der Lage sein|können)\s*[:;]?)?|学完(?:本节课|本章|本模块)后[，,]\s*(?:你(?:将能够|将会|应该能够)\s*[:：]?)?)\s*\r?\n/gi,
@@ -2404,5 +3044,61 @@ function removeOrphanedCloseTags(mdx: string): string {
   }
   
   return result;
+}
+
+/**
+ * Automatically heals unclosed inline pedagogical tags (e.g. <HistoricalEvent ...> without a closing </HistoricalEvent>).
+ * 
+ * Works line-by-line: for each line, if an inline tag is opened but not closed on the same line,
+ * the closing tag is appended at end-of-line. This prevents MDX paragraph-level parse failures
+ * caused by inline tags that span across list item boundaries.
+ */
+function healUnclosedInlineTags(mdx: string): string {
+  const inlineTags = ['HistoricalEvent', 'EvenementHistorique', 'HistoricalPerson', 'Location', 'Artwork', 'Glossary'];
+  const tagPattern = new RegExp(
+    `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
+    'gi'
+  );
+
+  const lines = mdx.split(/\r?\n/);
+  const result: string[] = [];
+
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    let line = lines[lineIdx];
+    const openStack: string[] = [];
+
+    // Count net open/close tags on this line
+    let match;
+    const localPattern = new RegExp(
+      `<(/?)(${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
+      'gi'
+    );
+    while ((match = localPattern.exec(line)) !== null) {
+      const isClose = match[1] === '/';
+      const tagName = match[2];
+      const isSelfClose = match[3] === '/';
+      if (isSelfClose) continue;
+      if (isClose) {
+        // pop from stack if we find a matching open tag
+        const lastIdx = openStack.map(t => t.toLowerCase()).lastIndexOf(tagName.toLowerCase());
+        if (lastIdx !== -1) {
+          openStack.splice(lastIdx, 1);
+        }
+      } else {
+        openStack.push(tagName);
+      }
+    }
+
+    // Append closing tags for any unclosed open tags on this line (in reverse order)
+    if (openStack.length > 0) {
+      for (let i = openStack.length - 1; i >= 0; i--) {
+        line = line + `</${openStack[i]}>`;
+      }
+    }
+
+    result.push(line);
+  }
+
+  return result.join('\n');
 }
 

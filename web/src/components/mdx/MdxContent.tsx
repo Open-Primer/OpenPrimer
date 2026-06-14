@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
-import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork } from './HistoricalPerson';
+import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork, HistoricalFact } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -36,7 +36,7 @@ import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, B
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
 import { HistoricalAnecdote } from './HistoricalAnecdote';
-import { HistoricalFact } from './HistoricalFact';
+
 import { ScientificMethod } from './ScientificMethod';
 import { WhatsNext } from './WhatsNext';
 import { PointOfView } from './PointOfView';
@@ -1247,6 +1247,12 @@ const components = {
   Callout,
   CalloutContainer,
   Image: ImageAlias,
+
+  // Fallback safety components to prevent runtime crashes on unmapped tags
+  Feedback: () => null,
+  DiagramItem: () => null,
+  Hotspot: () => null,
+  Content: () => null,
 };
 
 interface MdxContentProps {
@@ -1254,5 +1260,10 @@ interface MdxContentProps {
 }
 
 export function MdxContent({ source }: MdxContentProps) {
+  console.log("MDX Content Components:", {
+    HistoricalFact: components.HistoricalFact,
+    HistoricalAnecdote: components.HistoricalAnecdote,
+    FaitHistorique: (components as any).FaitHistorique,
+  });
   return <MDXRemote {...source} components={components as any} />;
 }

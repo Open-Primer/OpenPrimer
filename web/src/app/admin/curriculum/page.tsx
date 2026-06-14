@@ -3150,6 +3150,7 @@ export default function AdminCurriculumPage() {
   const [queueAutoRetry, setQueueAutoRetry] = useState(false);
   const [queueAutoRetryDelayHours, setQueueAutoRetryDelayHours] = useState(24);
   const [queueRetentionDays, setQueueRetentionDays] = useState(30);
+  const [maxParallelTasks, setMaxParallelTasks] = useState(1);
 
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -3709,6 +3710,7 @@ export default function AdminCurriculumPage() {
       case 'queueAutoRetry': setQueueAutoRetry(value === 'true'); break;
       case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(value) || 24); break;
       case 'queueRetentionDays': setQueueRetentionDays(Number(value) || 30); break;
+      case 'maxParallelTasks': setMaxParallelTasks(Math.max(1, Math.min(5, Number(value) || 1))); break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -3722,6 +3724,7 @@ export default function AdminCurriculumPage() {
     let loadedQueueAutoRetry = queueAutoRetry;
     let loadedQueueAutoRetryDelayHours = queueAutoRetryDelayHours;
     let loadedQueueRetentionDays = queueRetentionDays;
+    let loadedMaxParallel = maxParallelTasks;
 
     if (typeof window !== 'undefined') {
       try {
@@ -3781,6 +3784,10 @@ export default function AdminCurriculumPage() {
             case 'queueRetentionDays': 
               setQueueRetentionDays(Number(val) || 30); 
               loadedQueueRetentionDays = Number(val) || 30;
+              break;
+            case 'maxParallelTasks':
+              setMaxParallelTasks(Math.max(1, Math.min(5, Number(val) || 1)));
+              loadedMaxParallel = Math.max(1, Math.min(5, Number(val) || 1));
               break;
           }
         });
@@ -3961,23 +3968,29 @@ export default function AdminCurriculumPage() {
     const timer = setInterval(async () => {
       if (queue.length === 0) return;
 
-      const runningTask = queue.find(t => t.status === 'running');
-      
-      if (runningTask) {
-        // Increment progress of currently running task up to 90% while waiting for API response
-        const nextProgress = Math.min(90, (runningTask.progress || 0) + 10);
-        if (nextProgress !== runningTask.progress) {
-          const updated = queue.map(t => {
-            if (t.id === runningTask.id) {
+      const runningTasks = queue.filter(t => t.status === 'running');
+      const MAX_PARALLEL = maxParallelTasks;
+
+      if (runningTasks.length > 0) {
+        // Increment progress of all currently running tasks up to 90%
+        let progressUpdated = false;
+        const progressUpdatedQueue = queue.map(t => {
+          if (t.status === 'running') {
+            const nextProgress = Math.min(90, (t.progress || 0) + 10);
+            if (nextProgress !== t.progress) {
+              progressUpdated = true;
               return { ...t, progress: nextProgress };
             }
-            return t;
-          });
-          setQueue(updated);
-          dbService.savePipelineQueue(updated);
+          }
+          return t;
+        });
+        if (progressUpdated) {
+          setQueue(progressUpdatedQueue);
+          dbService.savePipelineQueue(progressUpdatedQueue);
         }
 
         // Trigger API Call only once per running task
+        for (const runningTask of runningTasks) {
         if (!triggeredTaskIds.current.has(runningTask.id)) {
           triggeredTaskIds.current.add(runningTask.id);
 
@@ -4173,29 +4186,27 @@ export default function AdminCurriculumPage() {
             }
           })();
         }
-      } else {
-        // No task is currently running, select the next queued task by descending priority
+        } // end for runningTasks
+      }
+
+      // Start new tasks up to MAX_PARALLEL slots
+      const currentRunning = queue.filter(t => t.status === 'running').length;
+      const slotsAvailable = MAX_PARALLEL - currentRunning;
+      if (slotsAvailable > 0) {
         const queuedTasks = queue.filter(t => t.status === 'queued');
         if (queuedTasks.length > 0) {
           const priorityWeight = { High: 3, Medium: 2, Low: 1 };
-          
           const sortedQueued = [...queuedTasks].sort((a, b) => {
             const weightA = priorityWeight[a.priority as keyof typeof priorityWeight] || 2;
             const weightB = priorityWeight[b.priority as keyof typeof priorityWeight] || 2;
-            if (weightA !== weightB) {
-              return weightB - weightA;
-            }
+            if (weightA !== weightB) return weightB - weightA;
             return new Date(a.timestamp || '').getTime() - new Date(b.timestamp || '').getTime();
           });
 
-          const nextTask = sortedQueued[0];
+          const toStart = sortedQueued.slice(0, slotsAvailable);
           const updated = queue.map(t => {
-            if (t.id === nextTask.id) {
-              return {
-                ...t,
-                status: 'running',
-                progress: 0
-              };
+            if (toStart.some(s => s.id === t.id)) {
+              return { ...t, status: 'running', progress: 0 };
             }
             return t;
           });
@@ -5304,7 +5315,7 @@ export default function AdminCurriculumPage() {
       if (t.id === id) {
         return {
           ...t,
-          status: t.status === 'paused' ? 'running' : 'paused'
+          status: t.status === 'paused' ? 'queued' : 'paused'
         };
       }
       return t;
@@ -7915,6 +7926,27 @@ export default function AdminCurriculumPage() {
                             className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
                           />
                           <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Days")}</span>
+                        </div>
+                      </div>
+
+                      {/* 3. Max Parallel Tasks */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Max Parallel Tasks")}</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            {tr("Maximum number of tasks running simultaneously. Increase with caution (Vertex AI quotas apply).")}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+                          <input
+                            type="number"
+                            min="1"
+                            max="5"
+                            value={maxParallelTasks}
+                            onChange={(e) => updateParameter("maxParallelTasks", String(Math.max(1, Math.min(5, Number(e.target.value)))))}
+                            className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Tasks")}</span>
                         </div>
                       </div>
                     </div>
