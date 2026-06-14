@@ -291,7 +291,8 @@ CRITICAL RULES:
   })();
 
   // Implement native timeout handling via Promise.race
-  const timeoutMs = process.env.CLI_WORKER === 'true' ? 2400000 : 260000;
+  const timeoutMs = process.env.CLI_WORKER === 'true' ? 2400000 : 600000;
+
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Task execution timed out (took > ${timeoutMs / 1000} seconds).`)), timeoutMs)
   );
