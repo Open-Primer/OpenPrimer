@@ -1,0 +1,14 @@
+[extend]
+# Extend the default gitleaks ruleset
+useDefault = true
+
+[[allowlists]]
+description = """
+  Historical generator scripts (generator/*.py) contained a hardcoded
+  Google AI Studio key that was committed in May 2026 before the project
+  migrated to environment variables. The key has been revoked. These
+  findings are acknowledged and do not represent an active security risk.
+"""
+paths = [
+  '''generator/.*\.py'''
+]

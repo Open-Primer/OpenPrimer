@@ -58,7 +58,7 @@ jobs:
           rm gitleaks.tar.gz
 
       - name: Run Gitleaks
-        run: gitleaks detect --verbose --redact
+        run: gitleaks detect --verbose --redact --config .gitleaks.toml
 
   headers-check:
     name: Security headers check
