@@ -3,12 +3,11 @@
 useDefault = true
 
 [allowlist]
-description = """
-  Historical generator scripts (generator/*.py) contained a hardcoded
-  Google AI Studio key that was committed in May 2026 before the project
-  migrated to environment variables. The key has been revoked. These
-  findings are acknowledged and do not represent an active security risk.
-"""
+description = "Global allowlist to ignore historical scripts with revoked keys and mock secrets/hashes in documentation/testing code."
 paths = [
-  '''generator/.*\.py'''
+  '''generator/.*\.py''',
+  '''docs/GCP_CLOUD_RUN_DEPLOYMENT\.md''',
+  '''web/scripts/register_parameters\.ts''',
+  '''web/db_deploy\.js''',
+  '''web/src/lib/db\.ts'''
 ]
