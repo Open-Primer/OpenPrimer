@@ -2,12 +2,13 @@ name: Security Audit
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   schedule:
     # Run every Monday at 08:00 Paris time (06:00 UTC)
     - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 jobs:
   npm-audit:
@@ -63,8 +64,8 @@ jobs:
   headers-check:
     name: Security headers check
     runs-on: ubuntu-latest
-    # Only runs on push to main (not on PRs, no live URL available)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Only runs on push to master (not on PRs, no live URL available)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
       - name: Check security headers via securityheaders.com API

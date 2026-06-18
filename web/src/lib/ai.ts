@@ -154,83 +154,168 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 * **Exhaustivité du chapitrage :** Tu dois spécifier 4 à 6 leçons bien distinctes (maximum 3 pour le niveau Primaire). L'agent rédacteur (Agent 3) ne doit avoir aucune extrapolation à faire sur le plan.`;
 
   try {
-    let rawJson = '';
-    let success = false;
-    
-    if (isVertexConfigured()) {
-      console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
-      try {
-        const res = await callVertexAI({
-          task: 'course_generation',
-          contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
-        });
+    let parsedSyllabus: any = null;
+    let lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = [];
+    let courseContext: any = {};
 
-        if (res && res.ok) {
-          const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
-          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-          success = true;
+  if (taskId) {
+    try {
+      const { data: taskData, error: taskError } = await supabase
+        .from('task_queue')
+        .select('description')
+        .eq('id', taskId)
+        .single();
+      if (!taskError && taskData?.description) {
+        const extra = JSON.parse(taskData.description || '{}');
+        if (extra.syllabus) {
+          console.log(`[AI GENERATOR] Found cached syllabus in task description for task ${taskId}. Reusing to prevent duplicate chapters.`);
+          parsedSyllabus = extra.syllabus;
         }
-      } catch (err) {
-        console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
       }
+    } catch (err) {
+      console.warn(`[AI GENERATOR WARNING] Failed to retrieve cached syllabus for task ${taskId}:`, err);
     }
-    
-    if (!success && apiKey) {
-      console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
-      const startTime = Date.now();
-      try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptSyllabus }] }],
-            generationConfig: { responseMimeType: "application/json" }
-          })
-        });
-        if (res.ok) {
-          const jsonRes = await safeResponseJson(res, 'AI Studio syllabus generation fallback');
-          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-          success = true;
+  }
 
-          const durationMs = Date.now() - startTime;
-          const usage = jsonRes.usageMetadata || {};
-          const promptTokens = usage.promptTokenCount || 0;
-          const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptSyllabus);
-        } else {
-          const errText = await res.text();
-          console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
+  // If we have a lessonOffset > 0, but no cached syllabus, we have a mismatch hazard!
+  // In this case, we reset lessonOffset to 0 and start from scratch to guarantee course consistency.
+  if (lessonOffset > 0 && !parsedSyllabus) {
+    console.warn(`[AI GENERATOR WARNING] lessonOffset is ${lessonOffset} but no cached syllabus was found. Resetting offset to 0 to avoid duplicates and syllabus mismatch.`);
+    lessonOffset = 0;
+  }
+
+  // If lessonOffset is 0, clear any existing lessons for this course and language to avoid duplicates from previous failed runs.
+  if (lessonOffset === 0) {
+    const cleanSlug = cleanPathSegment(courseName);
+    console.log(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
+    try {
+      const { error: deleteError } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('course_slug', cleanSlug)
+        .eq('lang', targetLang.toLowerCase());
+      if (deleteError) {
+        console.warn(`[AI GENERATOR WARNING] Failed to clear existing lessons: ${deleteError.message}`);
+      }
+    } catch (err) {
+      console.warn(`[AI GENERATOR WARNING] Exception clearing existing lessons:`, err);
+    }
+  }
+
+  if (parsedSyllabus) {
+    lessonsList = Array.isArray(parsedSyllabus) ? parsedSyllabus : (parsedSyllabus.lessons || []);
+    courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
+  } else {
+    try {
+      let rawJson = '';
+      let success = false;
+      
+      if (isVertexConfigured()) {
+        console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
+        try {
+          const res = await callVertexAI({
+            task: 'course_generation',
+            contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
+            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+          });
+
+          if (res && res.ok) {
+            const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
+            rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+            success = true;
+          }
+        } catch (err) {
+          console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
         }
-      } catch (err) {
-        console.error(`[AI GENERATOR] AI Studio fetch exception:`, err);
       }
-    }
+      
+      if (!success && apiKey) {
+        console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
+        const startTime = Date.now();
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptSyllabus }] }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+          if (res.ok) {
+            const jsonRes = await safeResponseJson(res, 'AI Studio syllabus generation fallback');
+            rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+            success = true;
 
-    if (!rawJson) {
-      console.warn("[AI GENERATOR] AI model failed to generate syllabus. Generating mock syllabus.");
-      rawJson = JSON.stringify({
-        courseContext: {
-          discipline: "General",
-          epistemologicalMatrix: "Ingénierie",
-          targetLevel: level,
-          pedagogicalStrategy: "Fallback basic strategy"
-        },
-        lessons: [
-          { title: "Introduction", slug: "introduction", cognitiveArtifact: "Overview", technicalDepth: "Basic introduction to core concepts" },
-          { title: "Fundamental Principles", slug: "fundamental_principles", cognitiveArtifact: "Core concepts explanation", technicalDepth: "Key terms and equations" },
-          { title: "Advanced Applications", slug: "advanced_applications", cognitiveArtifact: "Case study", technicalDepth: "Real-world context" },
-          { title: "Conclusion", slug: "conclusion", cognitiveArtifact: "Summary", technicalDepth: "Final summary" }
-        ]
-      });
-    }
+            const durationMs = Date.now() - startTime;
+            const usage = jsonRes.usageMetadata || {};
+            const promptTokens = usage.promptTokenCount || 0;
+            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptSyllabus);
+          } else {
+            const errText = await res.text();
+            console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
+          }
+        } catch (err) {
+          console.error(`[AI GENERATOR] AI Studio fetch exception:`, err);
+        }
+      }
 
-    const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsedSyllabus = safeJsonParse(cleanedJson, 'generateCourseContent (Syllabus)');
-    const lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = Array.isArray(parsedSyllabus)
-      ? parsedSyllabus
-      : (parsedSyllabus.lessons || []);
-    const courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
+      if (!rawJson) {
+        console.warn("[AI GENERATOR] AI model failed to generate syllabus. Generating mock syllabus.");
+        rawJson = JSON.stringify({
+          courseContext: {
+            discipline: "General",
+            epistemologicalMatrix: "Ingénierie",
+            targetLevel: level,
+            pedagogicalStrategy: "Fallback basic strategy"
+          },
+          lessons: [
+            { title: "Introduction", slug: "introduction", cognitiveArtifact: "Overview", technicalDepth: "Basic introduction to core concepts" },
+            { title: "Fundamental Principles", slug: "fundamental_principles", cognitiveArtifact: "Core concepts explanation", technicalDepth: "Key terms and equations" },
+            { title: "Advanced Applications", slug: "advanced_applications", cognitiveArtifact: "Case study", technicalDepth: "Real-world context" },
+            { title: "Conclusion", slug: "conclusion", cognitiveArtifact: "Summary", technicalDepth: "Final summary" }
+          ]
+        });
+      }
+
+      const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
+      parsedSyllabus = safeJsonParse(cleanedJson, 'generateCourseContent (Syllabus)');
+      lessonsList = Array.isArray(parsedSyllabus)
+        ? parsedSyllabus
+        : (parsedSyllabus.lessons || []);
+      courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
+
+      // Save the syllabus to the task description to ensure durability on retries
+      if (taskId) {
+        try {
+          const { data: taskData, error: fetchError } = await supabase
+            .from('task_queue')
+            .select('description')
+            .eq('id', taskId)
+            .single();
+          if (!fetchError && taskData) {
+            const extra = JSON.parse(taskData.description || '{}');
+            extra.syllabus = parsedSyllabus;
+            
+            const { error: updateError } = await supabase
+              .from('task_queue')
+              .update({ description: JSON.stringify(extra) })
+              .eq('id', taskId);
+            if (updateError) {
+              console.error(`[AI GENERATOR] Failed to save syllabus to task description:`, updateError.message);
+            } else {
+              console.log(`[AI GENERATOR] Successfully persisted generated syllabus to task description for task ${taskId}.`);
+            }
+          }
+        } catch (err) {
+          console.warn(`[AI GENERATOR WARNING] Failed to persist syllabus to task description:`, err);
+        }
+      }
+    } catch (err) {
+      console.error("AI Generation failed:", err);
+      throw err;
+    }
+  }
 
     let completedLessons = lessonOffset;
     const updateTaskProgress = async () => {

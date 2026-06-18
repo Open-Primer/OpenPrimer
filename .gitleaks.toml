@@ -2,7 +2,7 @@
 # Extend the default gitleaks ruleset
 useDefault = true
 
-[[allowlists]]
+[allowlist]
 description = """
   Historical generator scripts (generator/*.py) contained a hardcoded
   Google AI Studio key that was committed in May 2026 before the project
