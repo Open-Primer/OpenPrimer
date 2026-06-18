@@ -9,9 +9,40 @@ import { TASK_MODELS } from './ai-config';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
+export class TransientNetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TransientNetworkError';
+  }
+}
+
+export class StructuralJsonError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StructuralJsonError';
+  }
+}
+
+export async function safeResponseJson(res: Response, contextName: string = 'unknown'): Promise<any> {
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    throw new TransientNetworkError(`[HTTP NON-JSON RESPONSE] Expected JSON response, but received Content-Type "${contentType}" with status ${res.status}. Context: "${contextName}". Body: "${text.slice(0, 300)}"`);
+  }
+  try {
+    return await res.json();
+  } catch (e: any) {
+    const text = await res.clone().text().catch(() => '');
+    throw new StructuralJsonError(`[JSON PARSE ERROR] Failed to parse JSON response. Context: "${contextName}". Error: ${e.message}. Snippet: "${text.slice(0, 200)}"`);
+  }
+}
+
 export function safeJsonParse(text: string, contextName: string = 'unknown'): any {
   if (!text) return null;
   const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+  if (cleaned.startsWith('<!DOCTYPE') || cleaned.startsWith('<html') || cleaned.startsWith('<')) {
+    throw new TransientNetworkError(`[JSON PARSE FAILED] Received HTML response instead of JSON. Context: "${contextName}". Snippet: "${cleaned.slice(0, 200)}"`);
+  }
   try {
     return JSON.parse(cleaned);
   } catch (e) {
@@ -35,11 +66,11 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
     console.error(`[safeJsonParse] JSON parse failure in context "${contextName}". Raw length: ${cleaned.length}`);
     console.error(`[safeJsonParse] Content snippet: "${cleaned.slice(0, 1000)}"`);
     
-    throw new Error(`[JSON PARSE FAILED] The model returned an invalid JSON response (likely a natural language error or empty response). Context: "${contextName}". Error: ${(e as Error).message}. Snippet: "${cleaned.slice(0, 200)}"`);
+    throw new StructuralJsonError(`[JSON PARSE FAILED] The model returned an invalid JSON response (likely a natural language error or empty response). Context: "${contextName}". Error: ${(e as Error).message}. Snippet: "${cleaned.slice(0, 200)}"`);
   }
 }
 
-export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en') {
+export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
   const normalizeLevel = (lvl: string): string => {
     if (!lvl) return 'beginner';
     const clean = lvl.trim().toLowerCase();
@@ -136,7 +167,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
         });
 
         if (res && res.ok) {
-          const jsonRes = await res.json();
+          const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
           rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
           success = true;
         }
@@ -158,7 +189,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
           })
         });
         if (res.ok) {
-          const jsonRes = await res.json();
+          const jsonRes = await safeResponseJson(res, 'AI Studio syllabus generation fallback');
           rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
           success = true;
 
@@ -201,6 +232,22 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       : (parsedSyllabus.lessons || []);
     const courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
 
+    let completedLessons = lessonOffset;
+    const updateTaskProgress = async () => {
+      if (!taskId) return;
+      completedLessons++;
+      const currentProgress = 20 + Math.floor((completedLessons / lessonsList.length) * 70);
+      try {
+        await supabase
+          .from('task_queue')
+          .update({ progress: Math.min(99, currentProgress) })
+          .eq('id', taskId);
+        console.log(`[TASK PROGRESS] Task ${taskId} updated to ${currentProgress}%`);
+      } catch (err) {
+        console.warn(`[PROGRESS UPDATE ERROR] Failed to update task ${taskId} progress to ${currentProgress}:`, err);
+      }
+    };
+
     // ─────────────────────────────────────────────────────────────────
     // INTER-LESSON THROTTLE — prevents burst of Vertex AI calls within a run.
     // Tune via INTER_LESSON_DELAY_MS env var (default: 5000ms = 5 seconds).
@@ -209,6 +256,11 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
     // 2. For each lesson, generate rich MDX content in parallel with staggered starts
     const lessonPromises = lessonsList.map(async (item, index) => {
+      if (index < lessonOffset) {
+        console.log(`[INCREMENTAL] Skipping lesson "${item.title}" because it is below the resume offset ${lessonOffset}.`);
+        return;
+      }
+
       // Check if this lesson already exists and is non-empty (incremental generation check)
       try {
         const { data: existingLesson } = await dbService.getLesson(
@@ -218,6 +270,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
         );
         if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
           console.log(`[INCREMENTAL] Skipping generation for already existing lesson: "${item.title}" (${item.slug})`);
+          await updateTaskProgress();
           return;
         }
       } catch (err) {
@@ -504,7 +557,7 @@ Requirements:
           });
 
           if (contentRes && contentRes.ok) {
-            const contentJson = await contentRes.json();
+            const contentJson = await safeResponseJson(contentRes, 'Vertex lesson generation');
             rawMdx = contentJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
             contentSuccess = true;
             vertexStatus = 'Success';
@@ -534,7 +587,7 @@ Requirements:
             })
           });
           if (contentRes.ok) {
-            const contentJson = await contentRes.json();
+            const contentJson = await safeResponseJson(contentRes, 'AI Studio lesson generation fallback');
             rawMdx = contentJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
             contentSuccess = true;
             studioStatus = 'Success';
@@ -853,6 +906,7 @@ ${validatedMdx}`;
         content: resolvedMdx,
         order: index + 1
       });
+      await updateTaskProgress();
     });
 
     await Promise.all(lessonPromises);
@@ -914,7 +968,7 @@ ${validatedMdx}`;
   }
 }
 
-export async function translateCourseContent(courseSlug: string, targetLang: string) {
+export async function translateCourseContent(courseSlug: string, targetLang: string, taskId?: string, lessonOffset: number = 0) {
   try {
     // 1. Check if the course is a curriculum
     const { data: allCourses } = await dbService.getAllCourses();
@@ -959,11 +1013,16 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
       });
       await Promise.all(optionalPromises);
     } else {
-      // 1. Fetch all existing lessons for this course
+      // 1. Fetch only primary source lessons for this course to avoid duplicates
+      const sourceLang = (course?.languages && course.languages.length > 0)
+        ? course.languages[0].toLowerCase()
+        : 'en';
+
       const { data: sourceLessons } = await supabase
         .from('lessons')
         .select('*')
-        .eq('course_slug', courseSlug);
+        .eq('course_slug', courseSlug)
+        .eq('lang', sourceLang);
 
       if (!sourceLessons || sourceLessons.length === 0) {
         console.warn(`No source lessons found in database for course ${courseSlug} to translate.`);
@@ -971,8 +1030,45 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
         const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
         const failures: string[] = [];
         
+        let completedLessons = lessonOffset;
+        const updateTaskProgress = async () => {
+          if (!taskId) return;
+          completedLessons++;
+          const currentProgress = 20 + Math.floor((completedLessons / sourceLessons.length) * 70);
+          try {
+            await supabase
+              .from('task_queue')
+              .update({ progress: Math.min(99, currentProgress) })
+              .eq('id', taskId);
+            console.log(`[TASK PROGRESS] Translation Task ${taskId} updated to ${currentProgress}%`);
+          } catch (err) {
+            console.warn(`[PROGRESS UPDATE ERROR] Failed to update task ${taskId} progress to ${currentProgress}:`, err);
+          }
+        };
+        
         // 2. Translate lessons in parallel with staggered starts
         const lessonPromises = sourceLessons.map(async (lesson, index) => {
+          if (index < lessonOffset) {
+            console.log(`[INCREMENTAL] Skipping translation for lesson "${lesson.title}" because it is below the resume offset ${lessonOffset}.`);
+            return;
+          }
+
+          // Check if this lesson is already translated (incremental translation check)
+          try {
+            const { data: existingLesson } = await dbService.getLesson(
+              courseSlug,
+              lesson.lesson_slug,
+              targetLang.toLowerCase()
+            );
+            if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
+              console.log(`[INCREMENTAL] Skipping translation for already existing translated lesson: "${lesson.title}" (${lesson.lesson_slug}) to "${targetLang}"`);
+              await updateTaskProgress();
+              return;
+            }
+          } catch (err) {
+            console.warn(`[INCREMENTAL] Translation check failed for "${lesson.title}", proceeding.`, err);
+          }
+
           try {
             const delay = index * INTER_LESSON_DELAY_MS;
             console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
@@ -1327,10 +1423,12 @@ Follow all initial translation rules:
               content: resolvedMdx,
               order: lesson.order
             });
+            await updateTaskProgress();
 
           } catch (lessonErr: any) {
             console.error(`[TRANSLATOR ERROR] Failed to translate lesson "${lesson.title}":`, lessonErr);
             failures.push(`Lesson "${lesson.title}": ${lessonErr.message || String(lessonErr)}`);
+            await updateTaskProgress();
           }
         });
 

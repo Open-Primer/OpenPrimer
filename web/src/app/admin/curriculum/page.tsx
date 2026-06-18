@@ -3151,6 +3151,7 @@ export default function AdminCurriculumPage() {
   const [queueAutoRetryDelayHours, setQueueAutoRetryDelayHours] = useState(24);
   const [queueRetentionDays, setQueueRetentionDays] = useState(30);
   const [maxParallelTasks, setMaxParallelTasks] = useState(1);
+  const [executeTasksInBrowser, setExecuteTasksInBrowser] = useState(false);
 
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -3711,6 +3712,7 @@ export default function AdminCurriculumPage() {
       case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(value) || 24); break;
       case 'queueRetentionDays': setQueueRetentionDays(Number(value) || 30); break;
       case 'maxParallelTasks': setMaxParallelTasks(Math.max(1, Math.min(5, Number(value) || 1))); break;
+      case 'executeTasksInBrowser': setExecuteTasksInBrowser(value === 'true'); break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -3725,6 +3727,7 @@ export default function AdminCurriculumPage() {
     let loadedQueueAutoRetryDelayHours = queueAutoRetryDelayHours;
     let loadedQueueRetentionDays = queueRetentionDays;
     let loadedMaxParallel = maxParallelTasks;
+    let loadedExecuteTasksInBrowser = executeTasksInBrowser;
 
     if (typeof window !== 'undefined') {
       try {
@@ -3788,6 +3791,10 @@ export default function AdminCurriculumPage() {
             case 'maxParallelTasks':
               setMaxParallelTasks(Math.max(1, Math.min(5, Number(val) || 1)));
               loadedMaxParallel = Math.max(1, Math.min(5, Number(val) || 1));
+              break;
+            case 'executeTasksInBrowser':
+              setExecuteTasksInBrowser(val === 'true');
+              loadedExecuteTasksInBrowser = val === 'true';
               break;
           }
         });
@@ -3913,7 +3920,7 @@ export default function AdminCurriculumPage() {
               return {
                 ...t,
                 status: 'queued',
-                progress: 0,
+                progress: t.progress || 0,
                 logs: [...(t.logs || []), `[SYSTEM] Automatically retried task after ${loadedQueueAutoRetryDelayHours}h cooldown.`]
               };
             }
@@ -3965,6 +3972,8 @@ export default function AdminCurriculumPage() {
 
   // Priority-Based Tasks execution scheduling loop (runs every 4 seconds)
   useEffect(() => {
+    if (!executeTasksInBrowser) return;
+
     const timer = setInterval(async () => {
       if (queue.length === 0) return;
 
@@ -4172,7 +4181,7 @@ export default function AdminCurriculumPage() {
                     return {
                       ...t,
                       status: 'failed',
-                      progress: 0,
+                      progress: t.progress || 0,
                       completedAt: new Date().toISOString(),
                       logs: [...(t.logs || []), `Error: ${err.message || String(err)}`]
                     };
@@ -4206,7 +4215,7 @@ export default function AdminCurriculumPage() {
           const toStart = sortedQueued.slice(0, slotsAvailable);
           const updated = queue.map(t => {
             if (toStart.some(s => s.id === t.id)) {
-              return { ...t, status: 'running', progress: 0 };
+              return { ...t, status: 'running', progress: t.progress || 0 };
             }
             return t;
           });
@@ -4217,7 +4226,7 @@ export default function AdminCurriculumPage() {
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [queue]);
+  }, [queue, executeTasksInBrowser, maxParallelTasks, lang]);
 
   // Compute Active Generation Proposals
   useEffect(() => {
@@ -5296,7 +5305,7 @@ export default function AdminCurriculumPage() {
         return {
           ...t,
           status: 'queued',
-          progress: 0,
+          progress: t.progress || 0,
           logs: [...(t.logs || []), 'Retried task execution manually.']
         };
       }
@@ -5332,7 +5341,7 @@ export default function AdminCurriculumPage() {
         return {
           ...t,
           status: 'failed',
-          progress: 0,
+          progress: t.progress || 0,
           completedAt: new Date().toISOString(),
           logs: [...(t.logs || []), `[${new Date().toISOString()}] 🔴 Reset: Task forced to failed state by Administrator.`]
         };
@@ -7947,6 +7956,26 @@ export default function AdminCurriculumPage() {
                             className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
                           />
                           <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Tasks")}</span>
+                        </div>
+                      </div>
+
+                      {/* 4. Browser-Side Execution */}
+                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Browser Execution")}</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                            {tr("Execute queued tasks directly in the browser. Recommended: OFF if background CLI worker is active.")}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                          <button 
+                            type="button"
+                            onClick={() => updateParameter('executeTasksInBrowser', String(!executeTasksInBrowser))}
+                            className={`w-10 h-5 rounded-full relative transition-all ${executeTasksInBrowser ? 'bg-cyan-600' : 'bg-slate-800'}`}
+                          >
+                            <motion.div animate={{ x: executeTasksInBrowser ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                          </button>
+                          <span className="text-xs font-bold text-slate-300">{tr(executeTasksInBrowser ? 'ON' : 'OFF')}</span>
                         </div>
                       </div>
                     </div>

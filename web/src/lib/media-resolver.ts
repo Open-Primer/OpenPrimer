@@ -3,6 +3,35 @@ import path from 'path';
 import crypto from 'crypto';
 import { supabaseAdmin } from './supabase';
 
+class TransientNetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TransientNetworkError';
+  }
+}
+
+class StructuralJsonError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StructuralJsonError';
+  }
+}
+
+async function safeResponseJson(res: Response, contextName: string = 'unknown'): Promise<any> {
+  const contentType = res.headers.get('Content-Type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    throw new TransientNetworkError(`[HTTP NON-JSON RESPONSE] Expected JSON response, but received Content-Type "${contentType}" with status ${res.status}. Context: "${contextName}". Body: "${text.slice(0, 300)}"`);
+  }
+  try {
+    return await res.json();
+  } catch (e: any) {
+    const text = await res.clone().text().catch(() => '');
+    throw new StructuralJsonError(`[JSON PARSE ERROR] Failed to parse JSON response. Context: "${contextName}". Error: ${e.message}. Snippet: "${text.slice(0, 200)}"`);
+  }
+}
+
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => {
@@ -85,7 +114,7 @@ async function getGoogleAccessToken(): Promise<string | null> {
       return null;
     }
 
-    const data = await tokenRes.json();
+    const data = await safeResponseJson(tokenRes, 'Google access token exchange');
     return data.access_token || null;
   } catch (err) {
     console.error('[MEDIA-RESOLVER] Failed to generate access token:', err);
@@ -152,7 +181,7 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
     const res = await fetchWithTimeout(url, {}, 4000);
     if (!res.ok) return null;
     
-    const json = await res.json();
+    const json = await safeResponseJson(res, 'Wikipedia image fetch');
     const pages = json.query?.pages;
     if (!pages) return null;
     
@@ -216,7 +245,7 @@ async function fetchWikimediaAudio(title: string): Promise<string | null> {
     
     const res = await fetchWithTimeout(url, {}, 4000);
     if (!res.ok) return null;
-    const json = await res.json();
+    const json = await safeResponseJson(res, 'Wikimedia audio search');
     const pages = json.query?.pages;
     if (!pages) return null;
     
@@ -278,7 +307,7 @@ async function generateLyriaAudio(prompt: string, durationHint: string = '30s'):
     // Response may be JSON with base64 audio, or raw binary
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
-      const json = await res.json();
+      const json = await safeResponseJson(res, 'Lyria audio generation');
       // Try to extract base64 audio from candidates
       const audioData = json?.candidates?.[0]?.content?.parts?.find(
         (p: any) => p.inlineData?.mimeType?.startsWith('audio/')
@@ -367,7 +396,7 @@ async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buff
       return null;
     }
 
-    const data = await res.json();
+    const data = await safeResponseJson(res, 'Google TTS synthesis');
     if (data.audioContent) {
       return Buffer.from(data.audioContent, 'base64');
     }

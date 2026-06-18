@@ -1,6 +1,6 @@
 import { supabaseAdmin as supabase } from './supabase';
 import { dbService } from './db';
-import { generateCourseContent, translateCourseContent } from './ai';
+import { generateCourseContent, translateCourseContent, safeResponseJson } from './ai';
 import { cleanPathSegment } from './translations';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
@@ -51,7 +51,6 @@ export async function cleanupStuckTasks() {
           .from('task_queue')
           .update({
             status: 'failed',
-            progress: 0,
             description: JSON.stringify(extra),
             logs: [
               ...(task.logs || []),
@@ -89,7 +88,7 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       .from('task_queue')
       .update({
         status: 'running',
-        progress: 20, // default starting progress
+        progress: Math.max(nextTask.progress || 0, 20),
         description: JSON.stringify(extra),
         logs: [
           ...(nextTask.logs || []),
@@ -191,7 +190,7 @@ CRITICAL RULES:
         throw new Error(`Vertex AI batch translation call failed for UI strings: ${res ? res.statusText : 'No response'}`);
       }
       
-      const data = await res.json();
+      const data = await safeResponseJson(res, 'Vertex AI batch translation for UI strings');
       const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!jsonText) {
         throw new Error(`Vertex AI returned an empty response for UI strings translation.`);
@@ -225,7 +224,24 @@ CRITICAL RULES:
       const courseSlug = cleanPathSegment(nextTask.target || nextTask.description || '');
       logs.push(`[TRANSLATOR] Starting academic translation of course "${courseSlug}" to "${targetLang}"...`);
       
-      await translateCourseContent(courseSlug, targetLang);
+      let lessonOffset = extra.lessonOffset || 0;
+      if (!lessonOffset) {
+        try {
+          const { data: existingLessons } = await supabase
+            .from('lessons')
+            .select('lesson_slug')
+            .eq('course_slug', courseSlug)
+            .eq('lang', targetLang.toLowerCase());
+          if (existingLessons && existingLessons.length > 0) {
+            lessonOffset = existingLessons.length;
+            logs.push(`[INCREMENTAL] Detected ${lessonOffset} already translated lessons. Resuming translation from offset ${lessonOffset}.`);
+          }
+        } catch (err) {
+          console.warn("[INCREMENTAL] Failed to count existing translated lessons for offset:", err);
+        }
+      }
+
+      await translateCourseContent(courseSlug, targetLang, nextTask.id, lessonOffset);
 
       const allCrs = await dbService.getAllCourses();
       const foundCourse = allCrs.data?.find(c => c.slug === courseSlug);
@@ -252,10 +268,27 @@ CRITICAL RULES:
       // === Course Content Generation Task ===
       logs.push(`[GENERATOR] Starting AI course content generation for "${nextTask.name}" (${level}, ${targetLang})...`);
       
-      await generateCourseContent(nextTask.name, level, targetLang);
+      const slug = cleanPathSegment(nextTask.name);
+      let lessonOffset = extra.lessonOffset || 0;
+      if (!lessonOffset) {
+        try {
+          const { data: existingLessons } = await supabase
+            .from('lessons')
+            .select('lesson_slug')
+            .eq('course_slug', slug)
+            .eq('lang', targetLang.toLowerCase());
+          if (existingLessons && existingLessons.length > 0) {
+            lessonOffset = existingLessons.length;
+            logs.push(`[INCREMENTAL] Detected ${lessonOffset} already completed lessons. Resuming course generation from offset ${lessonOffset}.`);
+          }
+        } catch (err) {
+          console.warn("[INCREMENTAL] Failed to count existing lessons for offset:", err);
+        }
+      }
+
+      await generateCourseContent(nextTask.name, level, targetLang, nextTask.id, lessonOffset);
 
       const newId = `crs_${Date.now()}`;
-      const slug = cleanPathSegment(nextTask.name);
       
       logs.push(`[GENERATOR] Saving newly generated course card: ${slug}`);
       const saveRes = await dbService.saveCourse({
@@ -382,7 +415,6 @@ CRITICAL RULES:
           .from('task_queue')
           .update({
             status: 'queued',
-            progress: 0,
             description: JSON.stringify(extra),
             logs: [
               ...newLogs,
@@ -409,7 +441,6 @@ CRITICAL RULES:
           .from('task_queue')
           .update({
             status: 'failed',
-            progress: 0,
             description: JSON.stringify(extra),
             logs: [
               ...newLogs,

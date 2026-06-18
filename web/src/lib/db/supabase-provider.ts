@@ -356,44 +356,83 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   savePipelineQueue: async (queue: any[]) => {
     try {
-      const { error: deleteError } = await supabase.from('task_queue').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (deleteError) throw deleteError;
+      // 1. Get current database rows to merge/preserve status, progress, and logs
+      const { data: dbRows } = await supabase.from('task_queue').select('*');
+      const dbMap = new Map<string, any>(dbRows?.map(r => [r.id, r]) || []);
 
-      if (queue.length > 0) {
-        const rows = queue.map(t => {
-          const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.id);
-          const rowId = isValidUUID ? t.id : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-            const r = Math.random() * 16 | 0;
-            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-          });
-          const extra = {
-            level: t.level || 'L1',
-            targetLang: t.targetLang || '',
-            subject: t.subject || 'General',
-            parentCurriculumSlug: t.parentCurriculumSlug || '',
-            courseType: t.courseType || '',
-            volume: t.volume || '',
-            description: t.description || '',
-            completedAt: t.completedAt || ''
-          };
-          return {
-            id: rowId,
-            name: t.title || '',
-            description: JSON.stringify(extra),
-            priority: t.priority || 'Medium',
-            status: t.status || 'queued',
-            progress: t.progress || 0,
-            target: t.type || 'generation',
-            logs: t.logs || []
-          };
+      const rows = queue.map(t => {
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.id);
+        const rowId = isValidUUID ? t.id : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
-        const { error: insertError } = await supabase.from('task_queue').insert(rows);
-        if (insertError) throw insertError;
+
+        const extra = {
+          level: t.level || 'L1',
+          targetLang: t.targetLang || '',
+          subject: t.subject || 'General',
+          parentCurriculumSlug: t.parentCurriculumSlug || '',
+          courseType: t.courseType || '',
+          volume: t.volume || '',
+          description: t.description || '',
+          completedAt: t.completedAt || ''
+        };
+
+        const dbRow = dbMap.get(rowId);
+        
+        // Merge strategy: if dbRow exists, we should preserve its progress, status, and logs 
+        // if the database has a newer/running/completed state, OR if we are just doing a general queue save.
+        // Let's check if the database version is "more advanced" (running/completed/failed vs queued/paused)
+        const dbStatus = dbRow?.status || 'queued';
+        const isDbMoreAdvanced = (dbStatus === 'running' && t.status !== 'completed' && t.status !== 'failed') || 
+                                 (dbStatus === 'completed') || 
+                                 (dbStatus === 'failed' && t.status !== 'queued');
+        
+        let finalStatus = t.status || 'queued';
+        let finalProgress = t.progress || 0;
+        let finalLogs = t.logs || [];
+
+        if (dbRow && isDbMoreAdvanced) {
+          finalStatus = dbRow.status;
+          finalProgress = Math.max(dbRow.progress || 0, t.progress || 0);
+          finalLogs = dbRow.logs || [];
+        }
+
+        return {
+          id: rowId,
+          name: t.title || '',
+          description: JSON.stringify(extra),
+          priority: t.priority || 'Medium',
+          status: finalStatus,
+          progress: finalProgress,
+          target: t.type || 'generation',
+          logs: finalLogs
+        };
+      });
+
+      // Delete any tasks in the DB that are NOT in our queue list (and not the dummy ID)
+      const keepIds = rows.map(r => r.id);
+      if (keepIds.length > 0) {
+        await supabase.from('task_queue')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+          .not('id', 'in', `(${keepIds.map(id => `'${id}'`).join(',')})`);
+      } else {
+        await supabase.from('task_queue')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000');
       }
+
+      // Upsert the merged rows!
+      if (rows.length > 0) {
+        const { error: upsertError } = await supabase.from('task_queue').upsert(rows);
+        if (upsertError) throw upsertError;
+      }
+      
       return { data: queue, error: null };
     } catch (e) {
       handleDatabaseError(e);
-      return { data: queue, error: e as any };
+      return { data: [], error: e as any };
     }
   },
 
