@@ -32,6 +32,17 @@ test.describe('OpenPrimer Smoke Tests', () => {
     await expect(page.locator('nav').locator('text=OPENPRIMER').first()).toBeVisible();
   });
 
+  test('should navigate directly to course page when clicking a course in the homepage carousel', async ({ page }) => {
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+    // Find the first course card button in the kiosk carousel
+    const courseCard = page.locator('button').filter({ hasText: /VIEW DETAILS/i }).first();
+    await expect(courseCard).toBeVisible();
+    await courseCard.click();
+    // Verify it navigated directly to a course path (containing /L1/, /L2/, /L3/, etc.) and ending with /introduction
+    await expect(page).toHaveURL(/\/L[1-4]\/.*\/introduction/);
+  });
+
   test('should navigate to the catalog', async ({ page }) => {
     await page.goto(BASE_URL);
     await page.locator('a[href="/catalog"]').first().click();

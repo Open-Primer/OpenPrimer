@@ -21,6 +21,39 @@ interface EssayEvaluationProps {
 
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 
+const formatGradingSystem = (system: string, lang: string): string => {
+  const lUpper = (lang || 'EN').toUpperCase();
+  if (system === '0/20') {
+    if (lUpper === 'FR') return 'de 0 à 20';
+    if (lUpper === 'ES') return 'de 0 a 20';
+    if (lUpper === 'DE') return '0 bis 20';
+    if (lUpper === 'ZH') return '0 到 20';
+    return '0 to 20';
+  }
+  if (system === '0/10') {
+    if (lUpper === 'FR') return 'de 0 à 10';
+    if (lUpper === 'ES') return 'de 0 a 10';
+    if (lUpper === 'DE') return '0 bis 10';
+    if (lUpper === 'ZH') return '0 到 10';
+    return '0 to 10';
+  }
+  if (system === 'A-F') {
+    if (lUpper === 'FR') return 'de A à F';
+    if (lUpper === 'ES') return 'de A a F';
+    if (lUpper === 'DE') return 'A bis F';
+    if (lUpper === 'ZH') return 'A 到 F';
+    return 'A to F';
+  }
+  if (system === 'pass-fail') {
+    if (lUpper === 'FR') return 'admis/ajourné';
+    if (lUpper === 'ES') return 'aprobado/reprobado';
+    if (lUpper === 'DE') return 'bestanden/nicht bestanden';
+    if (lUpper === 'ZH') return '通过/不通过';
+    return 'pass/fail';
+  }
+  return system;
+};
+
 export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit }: EssayEvaluationProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -366,7 +399,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         <div className="flex flex-col items-center justify-center gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-800 text-slate-400 rounded-xl text-xs">
             <Award className="w-4 h-4 text-slate-500" />
-            <span>{t.grading_scale} <strong className="text-violet-300">{gradingSystem}</strong></span>
+            <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
           </div>
 
           {durationLimit && (
@@ -454,7 +487,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         <p className="text-slate-100 text-md font-medium leading-relaxed">{prompt}</p>
         <div className="mt-4 flex items-center gap-2 text-xs text-slate-400 border-t border-slate-800/60 pt-3">
           <Award className="w-4 h-4 text-slate-500" />
-          <span>{t.grading_scale} <strong className="text-violet-300">{gradingSystem}</strong></span>
+          <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
         </div>
       </div>
 

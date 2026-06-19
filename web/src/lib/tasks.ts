@@ -155,9 +155,15 @@ export async function executeTask(nextTask: any, logs: string[]): Promise<{ succ
       logs.push(`[REVISION] Revision details: "${revisionDetails}"`);
       
       const { reviseCourseContent } = require('./ai');
-      const revisedSlugs = await reviseCourseContent(courseSlug, revisionDetails, targetLang);
-      if (revisedSlugs && revisedSlugs.length > 0) {
-        extra.revisedSlugs = revisedSlugs;
+      const result = await reviseCourseContent(courseSlug, revisionDetails, targetLang);
+      if (result) {
+        const revisedSlugs = result.revisedSlugs || [];
+        if (revisedSlugs.length > 0) {
+          extra.revisedSlugs = revisedSlugs;
+        }
+        extra.isSystemic = !!result.isSystemic;
+        extra.systemicReason = result.systemicReason || "";
+        logs.push(`[REVISION] Systemic audit completed. isSystemic=${extra.isSystemic}, Reason="${extra.systemicReason}"`);
       }
       logs.push(`[REVISION] Revision completed successfully.`);
 
@@ -334,8 +340,6 @@ CRITICAL RULES:
     await Promise.race([taskPromise, timeoutPromise]);
 
     // --- SUCCESS: Update status to completed ---
-    extra.completedAt = new Date().toISOString();
-    
     let finalLogs = [
       ...(nextTask.logs || []),
       `[${new Date().toISOString()}] ✅ Attempt ${currentAttempt}/${maxAttempts} succeeded. Task completed.`
@@ -357,13 +361,30 @@ CRITICAL RULES:
       console.warn(`[TASK RUNNER DB WARNING] Failed to fetch latest logs before completion:`, e);
     }
 
+    // Merge latest description from database to prevent overwriting generated syllabus
+    let finalExtra = { ...extra };
+    try {
+      const { data: taskData } = await supabase
+        .from('task_queue')
+        .select('description')
+        .eq('id', nextTask.id)
+        .single();
+      if (taskData?.description) {
+        const dbExtra = JSON.parse(taskData.description || '{}');
+        finalExtra = { ...dbExtra, ...extra };
+      }
+    } catch (e) {
+      console.warn(`[TASK RUNNER DB WARNING] Failed to fetch/merge latest description before completion:`, e);
+    }
+    finalExtra.completedAt = new Date().toISOString();
+
     try {
       const { error: compError } = await supabase
         .from('task_queue')
         .update({
           status: 'completed',
           progress: 100,
-          description: JSON.stringify(extra),
+          description: JSON.stringify(finalExtra),
           logs: finalLogs
         })
         .eq('id', nextTask.id);
@@ -405,17 +426,33 @@ CRITICAL RULES:
       console.warn(`[TASK RUNNER DB WARNING] Failed to fetch latest logs during failure handler:`, e);
     }
 
+    // Merge latest description from database to prevent overwriting generated syllabus
+    let failExtra = { ...extra };
+    try {
+      const { data: taskData } = await supabase
+        .from('task_queue')
+        .select('description')
+        .eq('id', nextTask.id)
+        .single();
+      if (taskData?.description) {
+        const dbExtra = JSON.parse(taskData.description || '{}');
+        failExtra = { ...dbExtra, ...extra };
+      }
+    } catch (e) {
+      console.warn(`[TASK RUNNER DB WARNING] Failed to fetch/merge latest description during failure handler:`, e);
+    }
+
     if (currentAttempt < maxAttempts) {
       // --- RETRY: Re-queue task ---
       logs.push(`[RETRY] Re-queuing task for attempt ${currentAttempt + 1}/${maxAttempts}...`);
-      extra.last_error = errMsg;
+      failExtra.last_error = errMsg;
       
       try {
         const { error: retryError } = await supabase
           .from('task_queue')
           .update({
             status: 'queued',
-            description: JSON.stringify(extra),
+            description: JSON.stringify(failExtra),
             logs: [
               ...newLogs,
               `[${new Date().toISOString()}] ⏳ Re-queued for retry (attempt ${currentAttempt + 1}/${maxAttempts}).`
@@ -433,15 +470,15 @@ CRITICAL RULES:
     } else {
       // --- FINAL FAILURE: Mark as failed ---
       logs.push(`[FAILED] All attempts exhausted. Marking as failed.`);
-      extra.completedAt = new Date().toISOString();
-      extra.last_error = errMsg;
+      failExtra.completedAt = new Date().toISOString();
+      failExtra.last_error = errMsg;
 
       try {
         const { error: failError } = await supabase
           .from('task_queue')
           .update({
             status: 'failed',
-            description: JSON.stringify(extra),
+            description: JSON.stringify(failExtra),
             logs: [
               ...newLogs,
               `[${new Date().toISOString()}] 🔴 PERMANENTLY FAILED after ${maxAttempts} attempts. No more retries.`

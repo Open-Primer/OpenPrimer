@@ -70,6 +70,25 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
   }
 }
 
+async function mapConcurrent<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (index < items.length) {
+      const currentIndex = index++;
+      results[currentIndex] = await fn(items[currentIndex], currentIndex);
+    }
+  });
+  
+  await Promise.all(workers);
+  return results;
+}
+
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
   const normalizeLevel = (lvl: string): string => {
     if (!lvl) return 'beginner';
@@ -160,7 +179,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
   if (taskId) {
     try {
-      const { data: taskData, error: taskError } = await supabase
+      const { data: taskData, error: taskError } = await supabaseAdmin
         .from('task_queue')
         .select('description')
         .eq('id', taskId)
@@ -189,7 +208,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     const cleanSlug = cleanPathSegment(courseName);
     console.log(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
     try {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await supabaseAdmin
         .from('lessons')
         .delete()
         .eq('course_slug', cleanSlug)
@@ -288,7 +307,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       // Save the syllabus to the task description to ensure durability on retries
       if (taskId) {
         try {
-          const { data: taskData, error: fetchError } = await supabase
+          const { data: taskData, error: fetchError } = await supabaseAdmin
             .from('task_queue')
             .select('description')
             .eq('id', taskId)
@@ -297,7 +316,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
             const extra = JSON.parse(taskData.description || '{}');
             extra.syllabus = parsedSyllabus;
             
-            const { error: updateError } = await supabase
+            const { error: updateError } = await supabaseAdmin
               .from('task_queue')
               .update({ description: JSON.stringify(extra) })
               .eq('id', taskId);
@@ -323,7 +342,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       completedLessons++;
       const currentProgress = 20 + Math.floor((completedLessons / lessonsList.length) * 70);
       try {
-        await supabase
+        await supabaseAdmin
           .from('task_queue')
           .update({ progress: Math.min(99, currentProgress) })
           .eq('id', taskId);
@@ -339,8 +358,10 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
     // Set to 0 to disable. Raise this value if you still hit 429 errors.
     const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 0);
 
-    // 2. For each lesson, generate rich MDX content in parallel with staggered starts
-    const lessonPromises = lessonsList.map(async (item, index) => {
+    const MAX_PARALLEL_LESSONS = Number(process.env.MAX_PARALLEL_LESSONS || 1);
+
+    // 2. For each lesson, generate rich MDX content with concurrency limit
+    await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item, index) => {
       if (index < lessonOffset) {
         console.log(`[INCREMENTAL] Skipping lesson "${item.title}" because it is below the resume offset ${lessonOffset}.`);
         return;
@@ -994,8 +1015,6 @@ ${validatedMdx}`;
       await updateTaskProgress();
     });
 
-    await Promise.all(lessonPromises);
-
     // Save/Update the Course card in the database
     try {
       const courseSlug = cleanPathSegment(courseName);
@@ -1131,8 +1150,10 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
           }
         };
         
-        // 2. Translate lessons in parallel with staggered starts
-        const lessonPromises = sourceLessons.map(async (lesson, index) => {
+        const MAX_PARALLEL_LESSONS = Number(process.env.MAX_PARALLEL_LESSONS || 1);
+
+        // 2. Translate lessons with concurrency limit
+        const lessonPromises = mapConcurrent(sourceLessons, MAX_PARALLEL_LESSONS, async (lesson, index) => {
           if (index < lessonOffset) {
             console.log(`[INCREMENTAL] Skipping translation for lesson "${lesson.title}" because it is below the resume offset ${lessonOffset}.`);
             return;
@@ -1516,8 +1537,7 @@ Follow all initial translation rules:
             await updateTaskProgress();
           }
         });
-
-        await Promise.all(lessonPromises);
+        await lessonPromises;
 
         if (failures.length > 0) {
           console.warn(`[TRANSLATOR] Course translation completed with ${failures.length} lesson translation failure(s):\n${failures.join('\n')}`);
@@ -1822,9 +1842,11 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
     affectedSlugs = lessons.map(l => l.lesson_slug);
   }
 
+  const revisedSlugs = affectedSlugs;
+
   if (affectedSlugs.length === 0) {
     console.log(`[REVISION AGENT] No lessons identified for revision.`);
-    return [];
+    return { revisedSlugs: [], isSystemic: false, systemicReason: 'No lessons affected.' };
   }
 
   console.log(`[REVISION AGENT] Lessons identified for revision: ${affectedSlugs.join(', ')}`);
@@ -2161,7 +2183,81 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
   } catch (err) {
     console.error(`[REVISION AGENT] Failed to update course version card:`, err);
   }
-  return affectedSlugs;
+
+  // 5. Systemic issue analysis to determine propagation necessity
+  let isSystemic = false;
+  let systemicReason = "Defaulting to non-systemic (language-specific) unless identified as conceptual or structural.";
+
+  const promptSystemic = `You are a Pedagogical Auditor.
+Analyze the following course revision feedback/motive:
+"${feedbackText}"
+
+Determine if this feedback relates to a systemic issue that should be propagated to all other language versions of the course (e.g., conceptual error, scientific/mathematical formula error, incorrect tags, empty examples, structural formatting issue).
+If it is a local language-specific issue (e.g., translation correction, spelling mistake, grammar typo specific to the language "${targetLang}"), it should NOT be propagated.
+
+Return a valid JSON object with the following fields:
+{
+  "isSystemic": true or false,
+  "reason": "A brief explanation of why this affects or does not affect other languages"
+}
+Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).`;
+
+  let analysisRaw = '{"isSystemic":false,"reason":""}';
+  let analysisSuccess = false;
+
+  if (isVertexConfigured()) {
+    try {
+      const res = await callVertexAI({
+        task: 'course_generation',
+        contents: [{ role: 'user', parts: [{ text: promptSystemic }] }],
+        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+      });
+      if (res && res.ok) {
+        const jsonRes = await res.json();
+        analysisRaw = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{"isSystemic":false,"reason":""}';
+        analysisSuccess = true;
+      }
+    } catch (e) {
+      console.warn(`[REVISION AGENT] Vertex AI systemic analysis failed:`, e);
+    }
+  }
+
+  if (!analysisSuccess && apiKey) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptSystemic }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      if (res.ok) {
+        const jsonRes = await res.json();
+        analysisRaw = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{"isSystemic":false,"reason":""}';
+        analysisSuccess = true;
+      }
+    } catch (e) {
+      console.error(`[REVISION AGENT] AI Studio systemic analysis failed:`, e);
+    }
+  }
+
+  try {
+    const cleanedAnalysis = analysisRaw.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleanedAnalysis);
+    isSystemic = !!parsed.isSystemic;
+    systemicReason = parsed.reason || "";
+  } catch (e) {
+    console.error(`[REVISION AGENT] Failed to parse systemic analysis JSON: "${analysisRaw}"`, e);
+  }
+
+  console.log(`[REVISION AGENT] Systemic audit results: isSystemic = ${isSystemic}, Reason = "${systemicReason}"`);
+
+  return {
+    revisedSlugs: affectedSlugs,
+    isSystemic,
+    systemicReason
+  };
 }
 
 export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr'): Promise<string> {
@@ -3061,6 +3157,7 @@ async function validateMdxContent(content: string, lang: string = 'fr'): Promise
 
 function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [
+    // Core & Structural
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
     'HistoricalEvent', 'HistoricalDate', 'Location', 'EntityLink',
@@ -3069,7 +3166,27 @@ function sanitizeMdxFallback(mdx: string): string {
     'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'OpenQuestion', 'ScientificDebate', 'Epistemology',
     'Video', 'Audio', 'Mermaid', 'ComparisonSlider', 'FunctionPlotter',
-    'CodeSandbox', 'SelfEval', 'SolvedProblem', 'InteractiveDiagram', 'FillInBlanks'
+    'CodeSandbox', 'SelfEval', 'SolvedProblem', 'InteractiveDiagram', 'FillInBlanks',
+    
+    // Additional registered elements
+    'Alert', 'CustomFigure', 'Objectives', 'Objective', 'Knowledge', 'Skills', 'Attitudes',
+    'References', 'AudioPlayer', 'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape',
+    'MetaNote', 'SelfAssessment', 'FictionalCharacter', 'Place', 'EvenementHistorique',
+    'ExternalSandbox', 'GestaltInteractive', 'GestaltLab', 'DataChart', 'StructureViewer3D',
+    'DynamicSimulation', 'GoingFurther', 'GoingFurtherItem', 'FunctionManipulator',
+    'ManipulateurFonction', 'ExplorateurFonctions', 'EquationManipulator', 'ManipulateurEquation',
+    'ExplorateurEquations', 'ChemicalStoichiometry', 'EquilibrageChimique', 'StoichiometrieChimique',
+    'BasicMathExplorer', 'ExplorateurMathsBase', 'EspritCritique', 'LeSaviezVous',
+    'AnecdoteHistorique', 'FaitHistorique', 'MethodeScientifique', 'PointDeVue', 'Geometrie2D',
+    'SummativeEvaluation', 'EvaluationSection', 'Assignment', 'Deadline', 'Submission',
+    'Evaluation', 'FinalProject', 'FinalWork', 'Format', 'Instructions', 'FinalQuiz',
+    'QuizQuestion', 'Answer', 'Description', 'Title', 'FormativeQuiz', 'Callout',
+    'CalloutContainer', 'Image',
+    
+    // Common standard HTML elements that could be output or generated
+    'p', 'span', 'div', 'a', 'img', 'br', 'hr', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre',
+    'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'iframe'
   ];
   const tagPattern = new RegExp(`<\\/?(${allowedTags.join('|')})\\b`, 'i');
   

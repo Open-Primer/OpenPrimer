@@ -1755,9 +1755,48 @@ function extractAnswers(blanksStr: string): string[] {
 }
 
 function healFillInBlanks(mdx: string): string {
+  // 1. Convert contiguous blocks of <Text> and <Blank> tags into a single <FillInBlanks question="..." blanks="..." />
+  const blockRegex = /(?:<Text\b[^>]*>[\s\S]*?<\/Text>\s*|<Blank\b[^>]*>[\s\S]*?<\/Blank>\s*){2,}/gi;
+  
+  let processed = mdx.replace(blockRegex, (block) => {
+    let question = '';
+    const blanks: string[] = [];
+    
+    const tagRegex = /<(Text|Blank)\b([^>]*?)>([\s\S]*?)<\/\1>/gi;
+    let match;
+    while ((match = tagRegex.exec(block)) !== null) {
+      const tagName = match[1];
+      const attrsStr = match[2];
+      const content = match[3];
+      
+      if (tagName.toLowerCase() === 'text') {
+        question += content;
+      } else if (tagName.toLowerCase() === 'blank') {
+        question += '______';
+        let answer = '';
+        const ansMatch = attrsStr.match(/correctAnswers?=\{\s*\[?\s*["']([^"']+)["']/i) || 
+                         attrsStr.match(/correctAnswers?=["']([^"']+)["']/i);
+        if (ansMatch) {
+          answer = ansMatch[1];
+        } else {
+          answer = content.trim().replace(/^_+|_+$/g, '');
+        }
+        blanks.push(answer);
+      }
+    }
+    
+    const blanksJson = JSON.stringify(blanks);
+    const questionEscaped = question.replace(/"/g, '&quot;');
+    return `<FillInBlanks question="${questionEscaped}" blanks='${blanksJson}' />\n`;
+  });
+
+  // If a <FillInBlanks /> tag was immediately preceding the block, clean it up
+  processed = processed.replace(/<FillInBlanks\s*\/?>\s*<FillInBlanks\b([^>]*?)\/?>/gi, '<FillInBlanks$1/>');
+
+  // 2. Main processing of <FillInBlanks> tags
   const regex = /<(FillInBlanks|FillInTheBlanks)\b([^>]*?)\/?>/gi;
   
-  return mdx.replace(regex, (match, tagName, attrsStr) => {
+  return processed.replace(regex, (match, tagName, attrsStr) => {
     const attrs = parseAttributes(attrsStr);
     
     if (attrs.question && attrs.blanks) {
@@ -1775,7 +1814,9 @@ function healFillInBlanks(mdx: string): string {
         let nextSeg = (segments[i+1] || '').trim();
         
         const sentence = `${prevSeg} [...] ${nextSeg}`;
-        resultComponents.push(`<FillInBlanks sentence="${sentence.replace(/"/g, '&quot;')}" answer="${answer.replace(/"/g, '&quot;')}" />`);
+        const safeSentence = (sentence || '').replace(/"/g, '&quot;');
+        const safeAnswer = (answer || '').replace(/"/g, '&quot;');
+        resultComponents.push(`<FillInBlanks sentence="${safeSentence}" answer="${safeAnswer}" />`);
       }
       
       return resultComponents.join('\n');
@@ -2098,7 +2139,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
   const allowedTagsPattern = allowedTags.join('|');
   const splitRegex = new RegExp(
-    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'">]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')*?>)`,
+    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
     'gi'
   );
   const parts = mdx.split(splitRegex);
@@ -2551,6 +2592,9 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         
         if (trueEndIdx !== -1) {
           let val = mdx.substring(valStartIdx, trueEndIdx);
+          // Strip any nested JSX/HTML tags inside the attribute value to avoid parser issues
+          val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?>([\s\S]*?)<\/[A-Za-z][A-Za-z0-9.-]*?>/gi, '$1');
+          val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?\/>/gi, '');
           val = val.replace(/"/g, '&quot;');
           tagContent += val + '"';
           idx = trueEndIdx + 1;
@@ -2584,6 +2628,9 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         
         if (trueEndIdx !== -1) {
           let val = mdx.substring(valStartIdx, trueEndIdx);
+          // Strip any nested JSX/HTML tags inside the attribute value to avoid parser issues
+          val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?>([\s\S]*?)<\/[A-Za-z][A-Za-z0-9.-]*?>/gi, '$1');
+          val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?\/>/gi, '');
           val = val.replace(/'/g, '&apos;');
           tagContent += val + "'";
           idx = trueEndIdx + 1;

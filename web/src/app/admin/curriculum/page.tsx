@@ -409,10 +409,15 @@ export const COCKPIT_DICTIONARY = {
     // 2. Translation Engine Tab
     "Dynamic Translation & Retention Engine": "Dynamic Translation & Retention Engine",
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:",
+    "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:": "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:",
     "Condition 1: Unresolved Foreign Search Spikes": "Condition 1: Unresolved Foreign Search Spikes",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.",
     "Condition 2: High-Volume Completions": "Condition 2: High-Volume Completions",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.",
+    "Condition 3: Post-Revision Parity Trigger": "Condition 3: Post-Revision Parity Trigger",
+    "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.": "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.",
+    "Triggered by systemic revision:": "Triggered by systemic revision:",
+    "Revision": "Revision",
     "Auto-Approve Translation": "Auto-Approve Translation",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.",
     "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.": "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.",
@@ -833,10 +838,15 @@ export const COCKPIT_DICTIONARY = {
     // 2. Translation Engine Tab
     "Dynamic Translation & Retention Engine": "Moteur de Traduction Dynamique & Rétention",
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Gère les demandes de localisation dynamique. Les propositions sont calculées de manière autonome selon deux déclencheurs pédagogiques :",
+    "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:": "Gère les demandes de localisation dynamique de cours. Les propositions sont calculées de manière autonome par le moteur sur la base de trois déclencheurs pédagogiques :",
     "Condition 1: Unresolved Foreign Search Spikes": "Condition 1 : Pics de Recherches Étrangères non Résolus",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Déclenche une proposition de traduction lorsqu'un utilisateur recherche un cours existant dans une autre langue. Requiert au moins {searches} recherches.",
     "Condition 2: High-Volume Completions": "Condition 2 : Fort Volume de Validations",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Suggère de traduire les cours populaires dans d'autres langues enregistrées lorsque les validations historiques atteignent {completions} réussites.",
+    "Condition 3: Post-Revision Parity Trigger": "Condition 3 : Déclenchement de Parité Post-Révision",
+    "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.": "Déclenche une proposition de traduction lorsqu'un cours subit une révision systémique (ex. correction conceptuelle ou tags incorrects) pour propager les mises à jour aux autres langues actives.",
+    "Triggered by systemic revision:": "Déclenché par révision systémique :",
+    "Revision": "Révision",
     "Auto-Approve Translation": "Auto-Approbation des Traductions",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Permet aux propositions de traduction qualifiées de contourner la validation manuelle et de s'insérer directement en file d'attente.",
     "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.": "Période de refroidissement d'au moins 24 heures requise avant qu'une proposition de traduction ne soit auto-approuvée et construite.",
@@ -1256,10 +1266,15 @@ export const COCKPIT_DICTIONARY = {
     // 2. Translation Engine Tab
     "Dynamic Translation & Retention Engine": "Motor de Traducción Dinámica y Retención",
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Gestiona solicitudes de localización. El motor las calcula basándose en dos activadores:",
+    "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:": "Gestiona las solicitudes de localización dinámica de cursos. Las propuestas son calculadas de forma autónoma por el motor basándose en tres disparadores pedagógicos:",
     "Condition 1: Unresolved Foreign Search Spikes": "Condición 1: Picos de Búsqueda no Resueltos",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Propone traducción cuando un usuario busca un curso que existe en otro idioma pero falta en el suyo.",
     "Condition 2: High-Volume Completions": "Condition 2: Alto Volumen de Completados",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Sugiere traducir cursos populares cuando las validaciones históricas alcanzan el umbral.",
+    "Condition 3: Post-Revision Parity Trigger": "Condición 3: Activador de Paridad Post-Revisión",
+    "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.": "Activa una propuesta de traducción cuando un curso se somete a una revisión sistémica (por ejemplo, corrección conceptual o etiquetas incorrectas) para propagar las actualizaciones a los otros idiomas activos.",
+    "Triggered by systemic revision:": "Activado por revisión sistémica:",
+    "Revision": "Revisión",
     "Auto-Approve Translation": "Auto-aprobar Traducción",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Permite que propuestas de traducción calificadas eviten validación manual e ingresen a la cola.",
     "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.": "Periodo de enfriamiento de al menos 24 horas antes de auto-aprobar y compilar.",
@@ -1676,10 +1691,15 @@ export const COCKPIT_DICTIONARY = {
     // 2. Translation Engine Tab
     "Dynamic Translation & Retention Engine": "Dynamische Übersetzungs- & Retentions-Engine",
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "Verwaltet Übersetzungsanfragen. Die Engine berechnet sie basierend auf zwei Auslösern:",
+    "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:": "Verwaltet dynamische Kurslokalisierungsanfragen. Vorschläge werden vom System basierend auf drei pädagogischen Triggern autonom berechnet:",
     "Condition 1: Unresolved Foreign Search Spikes": "Bedingung 1: Spitzen erfolgloser Fremdsprachen-Suchen",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "Schlägt Übersetzung vor, wenn ein Kurs in einer anderen Sprache existiert, aber in der gesuchten fehlt.",
     "Condition 2: High-Volume Completions": "Condition 2: Hohes Abschlussvolumen",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "Schlägt Übersetzung beliebter Kurse vor, wenn die Validierungen den Schwellenwert erreichen.",
+    "Condition 3: Post-Revision Parity Trigger": "Bedingung 3: Paritäts-Trigger nach Revision",
+    "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.": "Löst einen Übersetzungsvorschlag aus, wenn ein Kurs einer systemischen Revision unterzogen wird (z. B. konzeptionelle Korrektur oder falsche Tags), um die Aktualisierungen auf andere aktive Sprachen zu übertragen.",
+    "Triggered by systemic revision:": "Ausgelöst durch systemische Revision:",
+    "Revision": "Revision",
     "Auto-Approve Translation": "Übersetzung Automatisch Freigeben",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "Ermöglicht es qualifizierten Übersetzungsvorschlägen, die manuelle Freigabe zu umgehen.",
     "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.": "Wartezeit von mindestens 24 Stunden, bevor eine Übersetzung auto-freigegeben wird.",
@@ -2095,10 +2115,15 @@ export const COCKPIT_DICTIONARY = {
     "Re-evaluate & Force Release": "重新评估并强制发布",
     "Dynamic Translation & Retention Engine": "动态翻译与存留引擎",
     "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:": "管理动态课程本地化请求。引擎基于两个教学触发器自主计算提案：",
+    "Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:": "管理动态课程本地化需求。引擎根据三个教学触发器自主计算提案：",
     "Condition 1: Unresolved Foreign Search Spikes": "条件 1：未解决的非本币搜索高峰",
     "Triggers a translation proposal when a user types an exact query for a course that exists in another language, but is missing in the typed language. Requires at least {searches} searches.": "当用户对存在于另一种语言但缺失于输入语言的课程输入精确查询时触发翻译提案。需要至少 {searches} 次搜索。",
     "Condition 2: High-Volume Completions": "条件 2：高完成度",
     "Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.": "当历史验证达到 {completions} 次完成时，建议将热门课程翻译成其他已注册的语言。",
+    "Condition 3: Post-Revision Parity Trigger": "条件 3：修订后对等触发器",
+    "Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.": "当课程经历系统性修订（例如概念性纠错或错误的标记）时触发翻译提案，以将更新同步到所有其他活跃的语言中。",
+    "Triggered by systemic revision:": "由系统性修订触发：",
+    "Revision": "修订",
     "Auto-Approve Translation": "自动批准翻译",
     "Allows qualified translation proposals to bypass manual validation and self-schedule to the pipeline queue.": "允许符合条件的翻译提案绕过手动验证，并自动调度到管道队列。",
     "Cooldown period of at least 24 hours required before a translation proposal is automatically approved and built.": "在翻译提案被自动批准并构建之前，需要至少 24 小时的冷却期。",
@@ -3712,7 +3737,10 @@ export default function AdminCurriculumPage() {
       case 'queueAutoRetryDelayHours': setQueueAutoRetryDelayHours(Number(value) || 24); break;
       case 'queueRetentionDays': setQueueRetentionDays(Number(value) || 30); break;
       case 'maxParallelTasks': setMaxParallelTasks(Math.max(1, Math.min(5, Number(value) || 1))); break;
-      case 'executeTasksInBrowser': setExecuteTasksInBrowser(value === 'true'); break;
+      case 'executeTasksInBrowser':
+        if (process.env.NODE_ENV === 'production') break;
+        setExecuteTasksInBrowser(value === 'true');
+        break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -3793,8 +3821,13 @@ export default function AdminCurriculumPage() {
               loadedMaxParallel = Math.max(1, Math.min(5, Number(val) || 1));
               break;
             case 'executeTasksInBrowser':
-              setExecuteTasksInBrowser(val === 'true');
-              loadedExecuteTasksInBrowser = val === 'true';
+              if (process.env.NODE_ENV === 'production') {
+                setExecuteTasksInBrowser(false);
+                loadedExecuteTasksInBrowser = false;
+              } else {
+                setExecuteTasksInBrowser(val === 'true');
+                loadedExecuteTasksInBrowser = val === 'true';
+              }
               break;
           }
         });
@@ -3972,7 +4005,7 @@ export default function AdminCurriculumPage() {
 
   // Priority-Based Tasks execution scheduling loop (runs every 4 seconds)
   useEffect(() => {
-    if (!executeTasksInBrowser) return;
+    if (process.env.NODE_ENV === 'production' || !executeTasksInBrowser) return;
 
     const timer = setInterval(async () => {
       if (queue.length === 0) return;
@@ -4511,6 +4544,67 @@ export default function AdminCurriculumPage() {
     // Automatically clean translation emails older than 90 days
     dbService.cleanupTranslationEmails(90);
 
+    // Process systemic revisions for translation parity (Condition 3)
+    const completedRevisions = queue.filter(t => 
+      (t.type === 'revision' || t.title.toLowerCase().includes('revise:')) &&
+      (t.status === 'completed' || t.status === 'complete') &&
+      t.isSystemic === true
+    );
+
+    completedRevisions.forEach(revTask => {
+      let courseTitle = revTask.title;
+      const splitIndex = revTask.title.indexOf(' - Revise: ');
+      if (splitIndex !== -1) {
+        courseTitle = revTask.title.substring(0, splitIndex).trim();
+      } else {
+        const splitIndex2 = revTask.title.indexOf(' - Revise ');
+        if (splitIndex2 !== -1) {
+          courseTitle = revTask.title.substring(0, splitIndex2).trim();
+        }
+      }
+
+      const course = courses.find(c => 
+        c.title.toLowerCase() === courseTitle.toLowerCase() || 
+        c.slug === cleanPathSegment(courseTitle).toLowerCase() ||
+        c.slug === courseTitle
+      );
+
+      if (course) {
+        const sourceLang = (revTask.targetLang || 'EN').toUpperCase();
+        availableLanguages.forEach(langItem => {
+          const targetLang = langItem.code.toUpperCase();
+          if (targetLang !== sourceLang) {
+            // Check if there is a newer completed translation task for this course in targetLang to avoid duplicate triggers
+            const newerTranslation = queue.some(qTask => 
+              qTask.type === 'translation' && 
+              qTask.title.toLowerCase().includes(course.title.toLowerCase()) &&
+              qTask.targetLang?.toUpperCase() === targetLang &&
+              (qTask.status === 'completed' || qTask.status === 'complete') &&
+              new Date(qTask.completedAt || qTask.timestamp || 0).getTime() > new Date(revTask.completedAt || revTask.timestamp || 0).getTime()
+            );
+
+            if (!newerTranslation) {
+              const key = `${course.title}_${targetLang}`;
+              if (!candidateMap[key]) {
+                candidateMap[key] = {
+                  courseTitle: course.title,
+                  targetLang,
+                  failedCount: 0,
+                  completionCount: 0,
+                  timestamp: revTask.completedAt || revTask.timestamp || new Date().toISOString(),
+                  isRevisionTriggered: true,
+                  revisionReason: revTask.systemicReason || revTask.title
+                };
+              } else {
+                candidateMap[key].isRevisionTriggered = true;
+                candidateMap[key].revisionReason = revTask.systemicReason || revTask.title;
+              }
+            }
+          }
+        });
+      }
+    });
+
     const dynamicProposals: any[] = [];
 
     // Assemble proposals with dynamic composite scoring and duplicates check
@@ -4520,7 +4614,7 @@ export default function AdminCurriculumPage() {
 
       // Duplicates Check: Catalog vs Pipeline vs Refused Backlog
       const targetCourse = courses.find(c => c.title.toLowerCase() === lowerCourse);
-      const isAlreadyTranslated = targetCourse && (
+      const isAlreadyTranslated = !cand.isRevisionTriggered && targetCourse && (
         (targetCourse.languages || []).includes(lowerLang) || 
         (targetCourse.langs || []).includes(cand.targetLang)
       );
@@ -4531,7 +4625,7 @@ export default function AdminCurriculumPage() {
       );
 
       const taskTitle = `${cand.courseTitle} (${cand.targetLang})`;
-      const isInPipeline = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+      const isInPipeline = queue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase() && (t.status === 'queued' || t.status === 'running'));
 
       if (!isAlreadyTranslated && !isRefused && !isInPipeline) {
         const score = cand.failedCount + cand.completionCount;
@@ -4541,10 +4635,12 @@ export default function AdminCurriculumPage() {
           id: `prop_t_${cand.courseTitle}_${cand.targetLang}`,
           courseTitle: cand.courseTitle,
           targetLang: cand.targetLang,
-          count: score,
+          count: cand.isRevisionTriggered ? 20 : score,
           failedCount: cand.failedCount,
           completionCount: cand.completionCount,
-          priority,
+          isRevisionTriggered: !!cand.isRevisionTriggered,
+          revisionReason: cand.revisionReason || "",
+          priority: cand.isRevisionTriggered ? 'High' : priority,
           timestamp: cand.timestamp
         });
       }
@@ -4563,9 +4659,9 @@ export default function AdminCurriculumPage() {
         // Enforce delay period (at least autoTranslateDelayHours, min 24 hours) for translation auto-approval
         const elapsedHours = (Date.now() - new Date(p.timestamp).getTime()) / (1000 * 60 * 60);
         
-        if (elapsedHours >= autoTranslateDelayHours) {
+        if (elapsedHours >= autoTranslateDelayHours || p.isRevisionTriggered) {
           const taskTitle = `${p.courseTitle} (${p.targetLang.toUpperCase()})`;
-          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase() && (t.status === 'queued' || t.status === 'running'));
 
           if (!isInQueue) {
             const newTask = {
@@ -4574,10 +4670,12 @@ export default function AdminCurriculumPage() {
               type: 'translation',
               status: 'queued',
               progress: 0,
-              priority: p.priority,
+              priority: p.priority || 'Medium',
               targetLang: p.targetLang.toUpperCase(),
               timestamp: new Date().toISOString(),
-              details: `Autonomous Auto-Translate: Spike score ${p.count} (Failed searches: ${p.failedCount}, Completions: ${p.completionCount}). Delayed ${Math.round(elapsedHours)}h.`
+              details: p.isRevisionTriggered 
+                ? `Autonomous Auto-Translate: Condition 3 Triggered by systemic revision: "${p.revisionReason}".`
+                : `Autonomous Auto-Translate: Spike score ${p.count} (Failed searches: ${p.failedCount}, Completions: ${p.completionCount}). Delayed ${Math.round(elapsedHours)}h.`
             };
             updatedQueue.push(newTask);
             promoted = true;
@@ -4656,14 +4754,14 @@ export default function AdminCurriculumPage() {
       let promoted = false;
 
       translationRequests.forEach(tr => {
-        if (tr.count >= transThreshold) {
+        if (tr.count >= transThreshold || tr.isRevisionTriggered) {
           const taskTitle = `${tr.courseTitle} (${tr.targetLang.toUpperCase()})`;
-          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+          const isInQueue = updatedQueue.some(t => t.title.toLowerCase() === taskTitle.toLowerCase() && (t.status === 'queued' || t.status === 'running'));
           const isRefused = refusedTranslations.some(rt => rt.name.toLowerCase() === tr.courseTitle.toLowerCase() && rt.targetLang.toLowerCase() === tr.targetLang.toLowerCase());
           
-          // Prevent duplicate translation generation
+          // Prevent duplicate translation generation unless revision-triggered
           const targetCourse = courses.find(c => c.title.toLowerCase() === tr.courseTitle.toLowerCase());
-          const alreadyTranslated = targetCourse && targetCourse.translations && targetCourse.translations[tr.targetLang.toUpperCase()];
+          const alreadyTranslated = !tr.isRevisionTriggered && targetCourse && targetCourse.translations && targetCourse.translations[tr.targetLang.toUpperCase()];
 
           if (!isInQueue && !isRefused && !alreadyTranslated) {
             updatedQueue.push({
@@ -4672,7 +4770,7 @@ export default function AdminCurriculumPage() {
               type: 'translation',
               status: 'queued',
               progress: 0,
-              priority: 'Medium',
+              priority: tr.priority || 'Medium',
               targetLang: tr.targetLang.toUpperCase(),
               timestamp: new Date().toISOString()
             });
@@ -6359,14 +6457,8 @@ export default function AdminCurriculumPage() {
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white font-mono"
                           />
                         </div>
-                      )}
-                      <div className="col-span-1 md:col-span-2 p-4 bg-red-950/20 border border-red-500/20 rounded-2xl flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                        <p className="text-[10px] font-medium text-red-400/90 leading-relaxed">
-                          {tr("All manual proposals are submitted with HIGH priority to the sovereign AI pipeline. No external tutor assignment is required.")}
-                        </p>
-                      </div>
-                    </div>
+                       
+                     </div>
                     <div className="flex justify-end pt-2">
                       <button
                         type="button"
@@ -6530,9 +6622,9 @@ export default function AdminCurriculumPage() {
                         <h2 className="text-xl font-extrabold text-white">{tr("Dynamic Translation & Retention Engine")}</h2>
                       </div>
                       <p className="text-sm text-slate-400 leading-relaxed">
-                        {tr("Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on two pedagogical triggers:")}
+                        {tr("Manages dynamic course localization requests. Proposals are autonomously computed by the engine based on three pedagogical triggers:")}
                       </p>
-                      <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+                      <div className="grid md:grid-cols-3 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {tr("Condition 1: Unresolved Foreign Search Spikes")}
@@ -6547,6 +6639,14 @@ export default function AdminCurriculumPage() {
                           </div>
                           <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
                             {tr("Suggests translating popular courses into other registered languages when historical validations reach {completions} completions.").replace('{completions}', String(transValidationsThreshold))}
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> {tr("Condition 3: Post-Revision Parity Trigger")}
+                          </div>
+                          <p className="text-xs text-slate-400 leading-relaxed pl-3.5">
+                            {tr("Triggers a translation proposal when a course undergoes a systemic revision (e.g., conceptual correction or general formatting fixes) to propagate updates to all other active languages.")}
                           </p>
                         </div>
                       </div>
@@ -6697,8 +6797,15 @@ export default function AdminCurriculumPage() {
                   <div className="grid md:grid-cols-2 gap-6">
                     {paginatedTrans.map((item) => (
                       <div key={item.id} className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl flex justify-between items-center hover:border-emerald-500/20 transition-all group">
-                        <div>
-                          <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-base font-bold text-slate-200">{item.courseTitle}</h4>
+                            {item.isRevisionTriggered && (
+                              <span className="px-2 py-0.5 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] text-blue-400 font-black uppercase tracking-widest">
+                                {tr("Revision")}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[8px] font-black text-slate-500 uppercase mt-1">
                             {tr("Target Language:")} <span className="text-emerald-400 font-extrabold">{item.targetLang.toUpperCase()}</span>
                           </p>
@@ -6710,6 +6817,11 @@ export default function AdminCurriculumPage() {
                               {tr("Priority:")} {tr(item.priority || "Medium")}
                             </span>
                           </div>
+                          {item.isRevisionTriggered && (
+                            <p className="text-[10px] text-blue-400 mt-2 italic leading-relaxed">
+                              ⚡ {tr("Triggered by systemic revision:")} <span className="text-slate-300 font-medium">"{item.revisionReason}"</span>
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button 
@@ -7960,24 +8072,26 @@ export default function AdminCurriculumPage() {
                       </div>
 
                       {/* 4. Browser-Side Execution */}
-                      <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
-                        <div>
-                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Browser Execution")}</span>
-                          <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                            {tr("Execute queued tasks directly in the browser. Recommended: OFF if background CLI worker is active.")}
-                          </p>
+                      {process.env.NODE_ENV !== 'production' && (
+                        <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Browser Execution")}</span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              {tr("Execute queued tasks directly in the browser. Recommended: OFF if background CLI worker is active.")}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
+                            <button 
+                              type="button"
+                              onClick={() => updateParameter('executeTasksInBrowser', String(!executeTasksInBrowser))}
+                              className={`w-10 h-5 rounded-full relative transition-all ${executeTasksInBrowser ? 'bg-cyan-600' : 'bg-slate-800'}`}
+                            >
+                              <motion.div animate={{ x: executeTasksInBrowser ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
+                            </button>
+                            <span className="text-xs font-bold text-slate-300">{tr(executeTasksInBrowser ? 'ON' : 'OFF')}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60">
-                          <button 
-                            type="button"
-                            onClick={() => updateParameter('executeTasksInBrowser', String(!executeTasksInBrowser))}
-                            className={`w-10 h-5 rounded-full relative transition-all ${executeTasksInBrowser ? 'bg-cyan-600' : 'bg-slate-800'}`}
-                          >
-                            <motion.div animate={{ x: executeTasksInBrowser ? 20 : 4 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg" />
-                          </button>
-                          <span className="text-xs font-bold text-slate-300">{tr(executeTasksInBrowser ? 'ON' : 'OFF')}</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 

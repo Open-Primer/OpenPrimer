@@ -12,6 +12,7 @@ import { UI_STRINGS } from '@/components/RefinedUI';
 import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from '@/components/CourseKiosk';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
+import { cleanPathSegment } from '@/lib/translations';
 
 const AUTH_STRINGS: Record<string, Record<string, string>> = {
   EN: {
@@ -864,7 +865,7 @@ export default function Home() {
             lang={lang} 
             title={s.popular_curricula}
             subtitle={lang.toUpperCase() === 'FR' ? "Découvrez nos cursus universitaires et cours interactifs d'élite" : "Explore our elite university curricula and interactive courses"}
-            onCourseClick={(course) => router.push(`/catalog?search=${encodeURIComponent(course.title)}`)}
+            onCourseClick={(course) => router.push(`/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`)}
           />
         </div>
 

@@ -175,7 +175,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         cleanedContent = cleanedContent.replace(/\r?\n```$/, '');
         cleanedContent = cleanedContent.trim();
       }
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('lessons')
         .upsert(
           {
@@ -1005,7 +1005,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
   toggleCourseActiveStatus: async (courseId: number) => {
     try {
       const { data: course } = await supabase.from('courses').select('is_active').eq('id', courseId).single();
-      const { data, error } = await supabase.from('courses').update({ is_active: !course?.is_active }).eq('id', courseId);
+      const { data, error } = await supabaseAdmin.from('courses').update({ is_active: !course?.is_active }).eq('id', courseId);
       if (error) throw error;
       return { data, error };
     } catch (e) {
@@ -1084,7 +1084,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           await purgeOrphanedCourseMedia(slugRow.slug);
         }
 
-        const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+        const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
         if (error) throw error;
 
         // Also update local cache
@@ -1096,7 +1096,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
         return { data, error };
       }
-      const { data, error } = await supabase.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
+      const { data, error } = await supabaseAdmin.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
       if (error) throw error;
 
       // Also update local cache
@@ -1130,10 +1130,10 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (courseData?.slug) {
         await purgeOrphanedCourseMedia(courseData.slug);
         // Cascade delete lessons belonging to this course
-        await supabase.from('lessons').delete().eq('course_slug', courseData.slug);
+        await supabaseAdmin.from('lessons').delete().eq('course_slug', courseData.slug);
       }
 
-      const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+      const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
       if (error) throw error;
 
       // Also update local cache
@@ -1178,12 +1178,38 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   getAvailableLanguages: async () => {
-    const filtered = getAvailableLanguagesList().filter(l => (l.archivingLevel ?? 0) !== 2);
-    return { data: filtered, error: null };
+    try {
+      const { data, error } = await supabase.from('languages').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(l => ({
+        code: l.code,
+        flag: l.flag,
+        label: l.label,
+        archivingLevel: l.archiving_level ?? 0
+      })).filter(l => l.archivingLevel !== 2);
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      const filtered = getAvailableLanguagesList().filter(l => (l.archivingLevel ?? 0) !== 2);
+      return { data: filtered, error: e as any };
+    }
   },
 
   getLanguagesAdmin: async () => {
-    return { data: getAvailableLanguagesList(), error: null };
+    try {
+      const { data, error } = await supabase.from('languages').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(l => ({
+        code: l.code,
+        flag: l.flag,
+        label: l.label,
+        archivingLevel: l.archiving_level ?? 0
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: getAvailableLanguagesList(), error: e as any };
+    }
   },
 
   registerLanguage: async (lang: LanguageInfo) => {
@@ -1500,7 +1526,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   addCourse: async (course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>) => {
     try {
-      const { data, error } = await supabase.from('courses').insert({
+      const { data, error } = await supabaseAdmin.from('courses').insert({
         title: course.title,
         slug: course.slug,
         level: course.level,
@@ -1542,7 +1568,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       let existingId = null;
       let existingLanguages: string[] = [];
       if (course.slug) {
-        const { data: existingCourse } = await supabase
+        const { data: existingCourse } = await supabaseAdmin
           .from('courses')
           .select('id, languages')
           .eq('slug', course.slug)
@@ -1567,7 +1593,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         ...(course.langs || [])
       ].map(l => l.toLowerCase())));
 
-      const { data, error } = await supabase.from('courses').upsert({
+      const { data, error } = await supabaseAdmin.from('courses').upsert({
         id: searchId,
         title: course.title,
         slug: course.slug,
@@ -1891,7 +1917,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         await purgeOrphanedCourseMedia(slugRow.slug);
       }
 
-      const { data, error } = await supabase.from('courses').delete().eq('id', courseId);
+      const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
       if (error) throw error;
 
       // Also update local cache
