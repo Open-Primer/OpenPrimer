@@ -2135,11 +2135,11 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     // Catch-all: any unknown PascalCase JSX component will be in the allowedTags via the regex
   ];
 
-  // Match: math blocks, known lowercase HTML tags, AND any PascalCase JSX component (<MyComponent ...>)
+  // Match: math blocks, markdown code blocks, inline code, known lowercase HTML tags, AND any PascalCase JSX component (<MyComponent ...>)
   // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
   const allowedTagsPattern = allowedTags.join('|');
   const splitRegex = new RegExp(
-    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
+    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|\`\`\`[\\s\\S]*?\`\`\`|\`[^\`]*\`|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
     'gi'
   );
   const parts = mdx.split(splitRegex);
@@ -2661,6 +2661,121 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
   return result;
 }
 
+function sanitizeSmartQuotesInTags(mdx: string): string {
+  // Replace curly/smart double quotes and single quotes with standard straight ones only inside tags
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b[^>]*>)/g, (tag) => {
+    return tag
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'");
+  });
+}
+
+function healFillInBlanksAttributes(mdx: string): string {
+  let processed = mdx;
+
+  // 1. Convert blanks={["answer"]} to answer="answer"
+  processed = processed.replace(/<FillInBlanks\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)\bblanks=\{\s*\[\s*["']([^"']+)["']\s*\]\s*\}((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)\/?>/gi, (match, before, answer, after) => {
+    return `<FillInBlanks${before}answer="${answer}"${after}/>`;
+  });
+
+  // 2. Convert block form <FillInBlanks sentence="A [Input] B">answer</FillInBlanks> to <FillInBlanks sentence="A [Input] B" answer="answer" />
+  processed = processed.replace(/<FillInBlanks\b([^>]*?)\bsentence=["']([^"']+)["']([^>]*?)>\s*([^<\n]+)\s*<\/FillInBlanks>/gi, (match, before, sentence, after, answer) => {
+    const cleanAnswer = answer.trim().replace(/^["']|["']$/g, '');
+    return `<FillInBlanks sentence="${sentence}"${before}${after} answer="${cleanAnswer}" />`;
+  });
+
+  return processed;
+}
+
+function normalizeQuestionAndQuizTags(mdx: string): string {
+  // Matches <Question ...> or <DiagnosticQuiz ...> (either opening tag or self-closing tag)
+  return mdx.replace(/(<(?:Question|DiagnosticQuiz)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?))(\/?>)/gi, (match, tagBody, attrsPart, tagEnd) => {
+    let replacedAttrs = attrsPart;
+
+    // 1. Process options={[...]} array prop into options="a|||b|||c" string prop
+    replacedAttrs = replacedAttrs.replace(/\boptions=\{\s*\[([\s\S]*?)\]\s*\}/gi, (optMatch: string, arrayContent: string) => {
+      try {
+        const arrStr = `[${arrayContent}]`;
+        const parsedArray = parseJsonLikeArray(arrStr);
+        return `options="${parsedArray.join('|||')}"`;
+      } catch (e) {
+        const items = arrayContent.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+        return `options="${items.join('|||')}"`;
+      }
+    });
+
+    // 2. Process correctIndex={N} numeric prop into correctIndex="N" string prop
+    replacedAttrs = replacedAttrs.replace(/\bcorrectIndex=\{\s*(\d+)\s*\}/gi, 'correctIndex="$1"');
+
+    return `${tagBody.substring(0, tagBody.length - attrsPart.length)}${replacedAttrs}${tagEnd}`;
+  });
+}
+
+function normalizeComplexAttributeTags(mdx: string): string {
+  // Matches any Prerequisites, InteractiveDiagram, DataChart, or Summary tag
+  return mdx.replace(/(<(?:Prerequisites|InteractiveDiagram|DataChart|Summary)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?))(\/?>)/gi, (match, tagBody, attrsPart, tagEnd) => {
+    let replacedAttrs = attrsPart;
+    const tagName = tagBody.match(/^<([A-Za-z]+)/)?.[1] || '';
+
+    if (tagName === 'Prerequisites') {
+      replacedAttrs = replacedAttrs.replace(/\bitems=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+        try {
+          const arrStr = `[${arrayContent}]`;
+          const parsed = parseJsonLikeArray(arrStr);
+          const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+          return `itemsBase64="${base64}"`;
+        } catch (e) {
+          console.error("Failed to parse Prerequisites items in tag helper:", e);
+          return m;
+        }
+      });
+    }
+
+    if (tagName === 'InteractiveDiagram') {
+      replacedAttrs = replacedAttrs.replace(/\bhotspots=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+        try {
+          const arrStr = `[${arrayContent}]`;
+          const parsed = parseJsonLikeArray(arrStr);
+          const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+          return `hotspotsBase64="${base64}"`;
+        } catch (e) {
+          console.error("Failed to parse InteractiveDiagram hotspots in tag helper:", e);
+          return m;
+        }
+      });
+    }
+
+    if (tagName === 'DataChart') {
+      replacedAttrs = replacedAttrs.replace(/\bdata=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+        try {
+          const arrStr = `[${arrayContent}]`;
+          const parsed = parseJsonLikeArray(arrStr);
+          const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+          return `dataBase64="${base64}"`;
+        } catch (e) {
+          console.error("Failed to parse DataChart data in tag helper:", e);
+          return m;
+        }
+      });
+    }
+
+    if (tagName === 'Summary') {
+      replacedAttrs = replacedAttrs.replace(/\bitems=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+        try {
+          const arrStr = `[${arrayContent}]`;
+          const parsedArray = parseJsonLikeArray(arrStr);
+          return `itemsString="${parsedArray.join('|||')}"`;
+        } catch (e) {
+          const items = arrayContent.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+          return `itemsString="${items.join('|||')}"`;
+        }
+      });
+    }
+
+    return `${tagBody.substring(0, tagBody.length - attrsPart.length)}${replacedAttrs}${tagEnd}`;
+  });
+}
+
 export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
@@ -2670,6 +2785,9 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
 
   // Sanitize nested quotes inside component attributes
   processed = sanitizeQuotesInComponentTags(processed);
+
+  // Sanitize smart/curly quotes inside JSX component tags
+  processed = sanitizeSmartQuotesInTags(processed);
 
   // Trim any outer markdown code block wrapper (e.g. ```mdx ... ``` or ``` ...)
   processed = stripOuterCodeFences(processed);
@@ -2683,6 +2801,11 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/&amp;quot;/g, '&quot;');
   processed = processed.replace(/&amp;apos;/g, '&apos;');
   processed = processed.replace(/&amp;amp;/g, '&amp;');
+
+  // Unified normalizations of components to heal any block forms or broken attributes before general self-closing processing
+  processed = healFillInBlanksAttributes(processed);
+  processed = normalizeQuestionAndQuizTags(processed);
+  processed = normalizeComplexAttributeTags(processed);
 
   // Component-specific structural normalization/pre-processing (Run BEFORE escaping braces!)
   processed = healSelfClosingComponents(processed);
@@ -2803,110 +2926,23 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Fix non-self-closing img tags
   processed = processed.replace(/<img([^>]*?)(?<!\/)>/gi, '<img$1 />');
 
-  // 1. Process DiagnosticQuiz options
-  processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsedArray = JSON.parse(arrStr);
-      const joined = parsedArray.join('|||');
-      return `<DiagnosticQuiz${p1}options="${joined}"${p3}/>`;
-    } catch (e) {
-      // Fallback: split by comma and clean quotes
-      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
-      const joined = items.join('|||');
-      return `<DiagnosticQuiz${p1}options="${joined}"${p3}/>`;
-    }
-  });
+  // 1. Process Quiz & Question Tags (options array, correctIndex)
+  processed = normalizeQuestionAndQuizTags(processed);
 
-  // 2. Process DiagnosticQuiz correctIndex
-  processed = processed.replace(/<DiagnosticQuiz([\s\S]*?)correctIndex=\{\s*(\d+)\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
-    return `<DiagnosticQuiz${p1}correctIndex="${p2}"${p3}/>`;
-  });
-
-  // 2b. Process Question options={[...]} → options="a|||b|||c"
-  processed = processed.replace(/<Question([\s\S]*?)options=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(?=\n\s*(?:correctIndex|explanation|\/?>))/gi, (match, p1, p2, p3) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsedArray = JSON.parse(arrStr);
-      const joined = parsedArray.join('|||');
-      return `<Question${p1}options="${joined}"${p3}`;
-    } catch (e) {
-      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
-      const joined = items.join('|||');
-      return `<Question${p1}options="${joined}"${p3}`;
-    }
-  });
-
-  // 2c. Process Question correctIndex={N} → correctIndex="N"
-  processed = processed.replace(/<Question([\s\S]*?)correctIndex=\{\s*(\d+)\s*\}([\s\S]*?)(?=\n\s*(?:explanation|\/?>))/gi, (match, p1, p2, p3) => {
-    return `<Question${p1}correctIndex="${p2}"${p3}`;
-  });
-
-  // 2d. Fix FillInBlanks — the component only accepts `sentence` and `answer` string props.
-  // Strip the block form <FillInBlanks>...</FillInBlanks> (AI-hallucinated wrapper syntax — not valid)
+  // 2. Heal and Normalize FillInBlanks forms
+  processed = healFillInBlanksAttributes(processed);
+  // Keep the safety fallback strips for unhealed or invalid forms
   processed = processed.replace(/<FillInBlanks[\s\S]*?<\/FillInBlanks>/gi, '');
-  // Strip self-closing forms with complex `blanks={[...]}` prop (crashes acorn)
   processed = processed.replace(/<FillInBlanks[^>]*?blanks=\{[\s\S]*?\}[^>]*?\/>/gi, '');
-  // Keep valid <FillInBlanks sentence="..." answer="..." /> forms untouched
 
-  // 2e. Normalize invalid [!CRITICAL THINKING] alert type to [!NOTE]
+  // 2e. Normalize invalid alert types
   processed = processed.replace(/\[!CRITICAL THINKING\]/gi, '[!NOTE]');
   processed = processed.replace(/\[!THINKING\]/gi, '[!NOTE]');
   processed = processed.replace(/\[!REFLECTION\]/gi, '[!NOTE]');
   processed = processed.replace(/\[!INFO\]/gi, '[!NOTE]');
 
-  // 3. Process Prerequisites items
-  processed = processed.replace(/<Prerequisites([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)\/>/gi, (match, p1, p2, p3) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsed = parseJsonLikeArray(arrStr);
-      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-      return `<Prerequisites${p1}itemsBase64="${base64}"${p3}/>`;
-    } catch (e) {
-      console.error("Failed to parse Prerequisites items in preprocessor:", e);
-      return match;
-    }
-  });
-
-  // 3a. Process InteractiveDiagram hotspots
-  processed = processed.replace(/<InteractiveDiagram([\s\S]*?)hotspots=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsed = parseJsonLikeArray(arrStr);
-      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-      return `<InteractiveDiagram${p1}hotspotsBase64="${base64}"${p3}${p4}`;
-    } catch (e) {
-      console.error("Failed to parse InteractiveDiagram hotspots in preprocessor:", e);
-      return match;
-    }
-  });
-
-  // 3c. Process DataChart data
-  processed = processed.replace(/<DataChart([\s\S]*?)data=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsed = parseJsonLikeArray(arrStr);
-      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-      return `<DataChart${p1}dataBase64="${base64}"${p3}${p4}`;
-    } catch (e) {
-      console.error("Failed to parse DataChart data in preprocessor:", e);
-      return match;
-    }
-  });
-
-  // 3b. Process Summary items to itemsString
-  processed = processed.replace(/<Summary([\s\S]*?)items=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
-    try {
-      const arrStr = `[${p2}]`;
-      const parsedArray = parseJsonLikeArray(arrStr);
-      const joined = parsedArray.join('|||');
-      return `<Summary${p1}itemsString="${joined}"${p3}${p4}`;
-    } catch (e) {
-      const items = p2.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
-      const joined = items.join('|||');
-      return `<Summary${p1}itemsString="${joined}"${p3}${p4}`;
-    }
-  });
+  // 3. Process Complex Attribute Components (Prerequisites, InteractiveDiagram, DataChart, Summary)
+  processed = normalizeComplexAttributeTags(processed);
 
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
