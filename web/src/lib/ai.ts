@@ -1,4 +1,4 @@
-import { dbService } from './db';
+﻿import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
@@ -243,6 +243,179 @@ Rules:
     .split(/\s+/)
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CITATION STYLE RESOLVER
+// Maps discipline/subject to internationally recommended citation style
+// ─────────────────────────────────────────────────────────────────
+
+interface CitationStyleSpec {
+  name: string;       // Short label, e.g. "APA 7"
+  fullName: string;   // Full name, e.g. "American Psychological Association (APA), 7th edition"
+  bookExample: string;
+  articleExample: string;
+  chapterExample: string;
+  websiteExample: string;
+  notes: string;
+}
+
+function getCitationStyle(discipline: string): CitationStyleSpec {
+  const d = (discipline || '').toLowerCase().trim();
+
+  // ── Psychology, Behavioural Sciences, Social Sciences, Education, Linguistics
+  if (/psycholog|psychiatr|cogniti|neuroscien|social scien|sociolog|anthropolog|politic|education|pedagog|linguist|communication|management|human resources|business administration/.test(d)) {
+    return {
+      name: 'APA 7',
+      fullName: 'American Psychological Association (APA), 7th edition',
+      bookExample: 'Lastname, A. B. (Year). *Book title: Subtitle*. Publisher. https://doi.org/xxxxx',
+      articleExample: 'Lastname, A. B., & Lastname, C. D. (Year). Article title. *Journal Name*, *Volume*(Issue), page–page. https://doi.org/xxxxx',
+      chapterExample: 'Lastname, A. B. (Year). Chapter title. In E. Editor (Ed.), *Book title* (pp. xx–xx). Publisher.',
+      websiteExample: 'Author, A. (Year, Month Day). *Page title*. Website Name. https://www.example.com',
+      notes: 'In-text citations use (Author, Year) format. Every in-text citation must have a matching reference entry. Use italics for journal names and book/report titles. Include DOI or URL when available.'
+    };
+  }
+
+  // ── Humanities: Literature, History of Art, Film, Comparative Literature, Cultural Studies
+  if (/literatur|humanities|film|cinema|cultur|art histor|comparative|theatre|music(?!olog)|media studi/.test(d)) {
+    return {
+      name: 'MLA 9',
+      fullName: 'Modern Language Association (MLA), 9th edition',
+      bookExample: 'Lastname, Firstname. *Book Title: Subtitle*. Publisher, Year.',
+      articleExample: 'Lastname, Firstname. "Article Title." *Journal Name*, vol. X, no. Y, Year, pp. xx–xx. DOI or URL.',
+      chapterExample: 'Lastname, Firstname. "Chapter Title." *Book Title*, edited by Firstname Lastname, Publisher, Year, pp. xx–xx.',
+      websiteExample: 'Lastname, Firstname. "Page Title." *Website Name*, Day Month Year, URL.',
+      notes: 'In-text citations use (Author page) parenthetical format. Container titles are italicised. Works Cited list is alphabetically sorted. Access dates required for online sources.'
+    };
+  }
+
+  // ── History, Archaeology, Classical Studies, Philosophy (analytical)
+  if (/histor(?!y of art)|archaeolog|classical|philosoph|ethics|politic(?!al scien)|theology|religion/.test(d)) {
+    return {
+      name: 'Chicago 17 (Notes–Bibliography)',
+      fullName: 'Chicago Manual of Style, 17th edition — Notes–Bibliography system',
+      bookExample: 'Lastname, Firstname. *Book Title: Subtitle*. City: Publisher, Year.',
+      articleExample: 'Lastname, Firstname. "Article Title." *Journal Name* Volume, no. Issue (Year): page–page. https://doi.org/xxxxx.',
+      chapterExample: 'Lastname, Firstname. "Chapter Title." In *Book Title*, edited by Firstname Lastname, xx–xx. City: Publisher, Year.',
+      websiteExample: 'Lastname, Firstname. "Page Title." Website Name. Last modified Month Day, Year. URL.',
+      notes: 'Use footnotes or endnotes for in-text citations (superscript numbers). Ibid. and short-form citations acceptable after first full note. Bibliography is alphabetical by author surname.'
+    };
+  }
+
+  // ── Medicine, Biomedical Sciences, Nursing, Public Health, Pharmacology
+  if (/medic(?!al law)|biomed|nursing|pharmac|public health|epidemiolog|clinical|health scien|surgery|radiol|patholog/.test(d)) {
+    return {
+      name: 'Vancouver / ICMJE',
+      fullName: 'Vancouver style (International Committee of Medical Journal Editors — ICMJE recommendations)',
+      bookExample: 'Lastname AB, Lastname CD. Book Title: Subtitle. Edition. City: Publisher; Year. Total pages p.',
+      articleExample: 'Lastname AB, Lastname CD, Lastname EF. Article title. *Abbreviated J Name*. Year;Volume(Issue):page–page. doi:10.xxxx/xxxxx.',
+      chapterExample: 'Lastname AB. Chapter title. In: Lastname EF, editor. Book Title. City: Publisher; Year. p. xx–xx.',
+      websiteExample: 'Organisation Name [Internet]. Page title [cited Year Month Day]. Available from: https://www.example.com',
+      notes: 'References are numbered sequentially in the order they appear in the text, using superscript numbers [1]. Journal titles are abbreviated per NLM/Index Medicus conventions. PMID or DOI must be included when available.'
+    };
+  }
+
+  // ── Biology, Ecology, Zoology, Botany, Genetics, Molecular Biology, Biochemistry
+  if (/biolog|ecolog|zoolog|botan|genetic|molecular|biochem|evolutionar|microbiolog/.test(d)) {
+    return {
+      name: 'CSE (Citation-Name)',
+      fullName: 'Council of Science Editors (CSE), 8th edition — Citation-Name system',
+      bookExample: 'Lastname AB, Lastname CD. Year. Book title: subtitle. City (State): Publisher. Total pages p.',
+      articleExample: 'Lastname AB, Lastname CD. Year. Article title. *Journal Abbrev*. Volume(Issue):page–page. doi:10.xxxx/xxxxx.',
+      chapterExample: 'Lastname AB. Year. Chapter title. In: Lastname EF, editor. Book title. City: Publisher. p. xx–xx.',
+      websiteExample: '[Author/Organisation]. Year [accessed Year Month Day]. Page title. URL.',
+      notes: 'References are listed alphabetically and numbered; in-text citations use the corresponding number in brackets [1]. Scientific names must be italicised. Abbreviate journal titles per NLM standard.'
+    };
+  }
+
+  // ── Physical Sciences: Physics, Astronomy, Chemistry (general), Materials Science, Geoscience
+  if (/physics|astronom|chemist(?!ry of law)|material scien|geoscien|geolog|earth scien|climat|atmospheri/.test(d)) {
+    return {
+      name: 'AIP / ACS',
+      fullName: 'AIP Style (American Institute of Physics) for physics; ACS Style (American Chemical Society) for chemistry',
+      bookExample: 'A. B. Lastname, *Book Title: Subtitle* (Publisher, City, Year), pp. xx–xx.',
+      articleExample: 'A. B. Lastname and C. D. Lastname, J. Abbrev., **volume**, page (year). doi:10.xxxx/xxxxx.',
+      chapterExample: 'A. B. Lastname, in *Book Title*, edited by C. D. Editor (Publisher, City, Year), pp. xx–xx.',
+      websiteExample: 'A. B. Lastname, "Page title", Website Name (Year), URL, accessed Day Month Year.',
+      notes: 'In-text citations are superscript numbers in the order of appearance. Journal names are abbreviated. Italicise journal abbreviation and volume number. DOI required for all journal articles.'
+    };
+  }
+
+  // ── Mathematics, Statistics, Computer Science, Information Technology
+  if (/mathematic|statistic|computer scien|information technolog|software|algorithm|cryptograph|data scien|artificial intelligence|machine learning/.test(d)) {
+    return {
+      name: 'ACM / IEEE',
+      fullName: 'ACM Reference Format (computing) or IEEE Citation Style (engineering/CS)',
+      bookExample: '[1] A. B. Lastname and C. D. Lastname, *Book Title: Subtitle*. City, Country: Publisher, Year, pp. xx–xx.',
+      articleExample: '[1] A. B. Lastname, "Article title," *Journal Name*, vol. X, no. Y, pp. xx–xx, Month Year, doi: 10.xxxx/xxxxx.',
+      chapterExample: '[1] A. B. Lastname, "Chapter title," in *Book Title*, C. D. Editor, Ed. City: Publisher, Year, pp. xx–xx.',
+      websiteExample: '[1] A. B. Lastname. "Page title." Website Name. Accessed: Day Month Year. [Online]. Available: https://www.example.com',
+      notes: 'References are numbered [1], [2], … in order of appearance in the text. Abbreviate journal and conference names per IEEE/ACM convention. All references in a numbered list at the end.'
+    };
+  }
+
+  // ── Engineering: Civil, Mechanical, Electrical, Environmental
+  if (/engineer|mechanic|electrical|civil|structural|environmental|aerospace|chemical engineer/.test(d)) {
+    return {
+      name: 'IEEE',
+      fullName: 'IEEE Reference Style',
+      bookExample: '[1] A. B. Lastname and C. D. Lastname, *Book Title*. City, Country: Publisher, Year, pp. xx–xx.',
+      articleExample: '[1] A. B. Lastname, "Article title," *IEEE Trans. Abbrev.*, vol. X, no. Y, pp. xx–xx, Month Year, doi: 10.1109/xxx.',
+      chapterExample: '[1] A. B. Lastname, "Chapter title," in *Book Title*, C. D. Editor, Ed. City: Publisher, Year, pp. xx–xx.',
+      websiteExample: '[1] Organisation. "Page title." Accessed: Day Month Year. [Online]. Available: https://www.example.com',
+      notes: 'In-text citations use bracketed sequential numbers [1]. Italicise book and journal titles. Abbreviate journal/conference names per the IEEE Abbreviations list.'
+    };
+  }
+
+  // ── Economics, Finance, Business, Accounting, Marketing
+  if (/econom|financ|accounting|marketing|business|commerce|management(?! de)/.test(d)) {
+    return {
+      name: 'APA 7',
+      fullName: 'American Psychological Association (APA), 7th edition (standard in economics/business journals)',
+      bookExample: 'Lastname, A. B. (Year). *Book title: Subtitle*. Publisher. https://doi.org/xxxxx',
+      articleExample: 'Lastname, A. B., & Lastname, C. D. (Year). Article title. *Journal Name*, *Volume*(Issue), page–page. https://doi.org/xxxxx',
+      chapterExample: 'Lastname, A. B. (Year). Chapter title. In E. Editor (Ed.), *Book title* (pp. xx–xx). Publisher.',
+      websiteExample: 'Organisation Name. (Year, Month Day). *Report or page title*. Publisher/Website. https://www.example.com',
+      notes: 'In-text citations use (Author, Year) or (Author, Year, p. xx) format. All references include DOI or URL. Working papers: include institution and working paper number.'
+    };
+  }
+
+  // ── Law
+  if (/\blaw\b|legal|jurisprudence|droit|rechtswissenschaft|derecho/.test(d)) {
+    return {
+      name: 'Oscillating (Bluebook / Dalloz / OSCOLA)',
+      fullName: 'Legal citation: Bluebook (US/International), Dalloz style (France), or OSCOLA (UK) depending on jurisdiction',
+      bookExample: 'LASTNAME Firstname, Title of Book, Publisher, City, Year, p. xx.',
+      articleExample: 'LASTNAME Firstname, "Article title", Revue/Journal Name, Year, No. X, p. xx.',
+      chapterExample: 'LASTNAME Firstname, "Chapter title", in EDITOR Firstname (dir.), Book Title, Publisher, Year, p. xx.',
+      websiteExample: 'ORGANISATION, "Document title", Website Name, Date, [available at: URL, accessed Day Month Year].',
+      notes: 'French law: author surnames in SMALL CAPS or all-caps; use « guillemets » for article titles; italicise journal and book titles. Cite legislation as: Code civil, art. XX. Cite case law by court, date, and publication reference. For other jurisdictions, follow the dominant national standard.'
+    };
+  }
+
+  // ── Architecture, Design, Urban Planning, Fine Arts
+  if (/architect|design|urban plan|fine art|visual art|graphic design/.test(d)) {
+    return {
+      name: 'Chicago 17 (Author–Date)',
+      fullName: 'Chicago Manual of Style, 17th edition — Author–Date system (commonly used in architecture & design journals)',
+      bookExample: 'Lastname, Firstname. Year. *Book Title: Subtitle*. City: Publisher.',
+      articleExample: 'Lastname, Firstname. Year. "Article Title." *Journal Name* Volume (Issue): page–page. https://doi.org/xxxxx.',
+      chapterExample: 'Lastname, Firstname. Year. "Chapter Title." In *Book Title*, edited by Firstname Lastname, xx–xx. City: Publisher.',
+      websiteExample: 'Lastname, Firstname. Year. "Page Title." Website Name. Month Day. URL.',
+      notes: 'In-text citations use (Author Year, page) format. Figures and images: full caption with artist, title, date, medium, and institution/collection. Licence and source URL required for reproduced images.'
+    };
+  }
+
+  // ── Default fallback: general academic / multi-disciplinary
+  return {
+    name: 'Chicago 17 (Author–Date)',
+    fullName: 'Chicago Manual of Style, 17th edition — Author–Date system (general academic fallback)',
+    bookExample: 'Lastname, Firstname. Year. *Book Title: Subtitle*. City: Publisher.',
+    articleExample: 'Lastname, Firstname. Year. "Article Title." *Journal Name* Volume (Issue): page–page. https://doi.org/xxxxx.',
+    chapterExample: 'Lastname, Firstname. Year. "Chapter Title." In *Book Title*, edited by Firstname Lastname, xx–xx. City: Publisher.',
+    websiteExample: 'Lastname, Firstname. Year. "Page Title." Website Name. Month Day. URL.',
+    notes: 'In-text citations use (Author Year) or (Author Year, page) format. Full reference list at the end of the document, alphabetically by author.'
+  };
 }
 
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
@@ -700,7 +873,7 @@ Requirements:
 9. Glossary and Highlighted Terms with Wikipedia integration :
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
    - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
-   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically as: **Term** : Definition. [[Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores)]. Crucial: the Wikipedia redirect link at the end of each glossary definition MUST NOT be in bold (it should be standard normal text weight, not wrapped in any double asterisks \`**\`). For example: **Term** : Definition. [[Wikipédia](url)] and NOT **Term** : Definition. **[[Wikipédia](url)]**. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
+   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically using a SINGLE-bracket Markdown link (NOT double-bracket) like: **Term** : Definition. [Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores). CRITICAL: Use ONLY a single pair of square brackets \`[Wikipédia](url)\` — NEVER double brackets \`[[Wikipédia](url)]\` as this produces a stray closing parenthesis \`)\` on screen. The Wikipedia link MUST NOT be wrapped in bold asterisks. Correct format: **Term** : Definition. [Wikipédia](url). Incorrect formats: **Term** : Definition. **[Wikipédia](url)** OR **Term** : Definition. [[Wikipédia](url)]. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
 10. Connected Entities: Historical Figures, Fictional Characters, Key Geographic Places, and Artworks (Personnalités, Personnages Fictifs, Lieux Clés, et Œuvres d'art) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
       * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
@@ -764,17 +937,25 @@ Requirements:
      * *Collège / Lycée (Secondary school)*: Must systematically include exactly 3 to 5 references.
      * *University Level (L1, L2, L3, Master, Doctorat, undergraduate_1, undergraduate_2, undergraduate_3, graduate)*: Must systematically include at least 8 to 12 references (une bonne dizaine). Since this course level is "${level}", you must STRICTLY respect this reference count requirement.
    
-   - **Citation Completeness and Standard Academic Formatting**:
-     Do NOT generate simple titles or placeholders. All bibliographical references MUST be complete, formal, and structured standard academic citations containing:
-     * *For Books*: Authors (Lastname Initial.), "Book Title", Publisher, City of publication, Year of publication, Page numbers (e.g., p. 45-67).
-     * *For Research Articles*: Authors (Lastname Initial.), "Article Title", *Journal Name*, Volume, Issue, Year of publication, Pages.
-     * *For Websites*: Authors/Organization, "Page Title", Website name, Year/Date of publication.
-     Every reference MUST contain a real, high-quality, clickable link (using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, Google Scholar, DOIs, publisher pages, or academic websites. The bracketed link text MUST end with a trailing period, e.g., \`[Authors, "Title", Journal, Year.](url)\`). Ensure all citations include complete bibliographic details (publishing house, publication city, and page references) for academic credibility.
+   - **Citation Completeness — Discipline-Specific Bibliographic Standard**:
+      Do NOT generate simple titles or placeholders. You MUST apply the **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}** citation standard to ALL references in this lesson, as it is the internationally recognised standard for this discipline.
+
+      **Bibliographic format to use strictly: ${getCitationStyle(courseContext.discipline || correctedCourseName).name}**
+
+      Format examples:
+      * *Book*: ${getCitationStyle(courseContext.discipline || correctedCourseName).bookExample}
+      * *Journal Article*: ${getCitationStyle(courseContext.discipline || correctedCourseName).articleExample}
+      * *Book Chapter*: ${getCitationStyle(courseContext.discipline || correctedCourseName).chapterExample}
+      * *Website / Online resource*: ${getCitationStyle(courseContext.discipline || correctedCourseName).websiteExample}
+
+      Additional rules: ${getCitationStyle(courseContext.discipline || correctedCourseName).notes}
+
+      Every reference MUST contain a real, high-quality link using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, DOIs, publisher pages, or academic websites. Crucial: Do NOT include raw URLs in the bracketed link text. The bracketed link text must contain ONLY the formatted citation details following the ${getCitationStyle(courseContext.discipline || correctedCourseName).name} format above. The bracketed link text MUST end with a trailing period. Ensure all citations include complete bibliographic details for academic credibility.
    
    - **Active Bidirectional Links**:
      Every reference in the bibliography section MUST correspond to a footnote citation in the text.
      * *In the Body Text*: Place inline superscript/link citations exactly like this: \`<sup><a id="ref-src-X" href="#ref-X">X</a></sup>\` where X is the sequential footnote number starting at 1.
-     * *In the References Section*: Each reference item must be its own distinct paragraph separated by a double newline. Prefix each item with its return-link anchor: \`<a id="ref-X" href="#ref-src-X">**[X]**</a> [Complete Academic Citation.](https://example.org/article-url)\`, so that clicking the inline superscript number smoothly scrolls down to the reference at the bottom, and clicking the \`**[X]**\` in the reference at the bottom smoothly scrolls back up to the exact footnote position in the body text.
+     * *In the References Section*: Each reference item must be its own distinct paragraph separated by a double newline. Prefix each item with its return-link anchor: \`<a id="ref-X" href="#ref-src-X">**[X]**</a> [Complete Academic Citation.](https://example.org/article-url)\` (where the bracketed text contains NO raw URLs, and the citation uses standard quotes rather than asterisks), so that clicking the inline superscript number smoothly scrolls down to the reference at the bottom, and clicking the \`**[X]**\` in the reference at the bottom smoothly scrolls back up to the exact footnote position in the body text.
    
    - Just before the References section, you CAN optionally include a "Pour aller plus loin" (Going Further) block to suggest deep-dive academic or research references (books, articles, videos, websites). Use the \`<GoingFurther>\` and \`<GoingFurtherItem>\` components as follows:
       \`\`\`mdx
@@ -984,7 +1165,8 @@ Your Checkpoints:
    - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>', '<SummativeEvaluation>', or '<EssayEvaluation ... />').
    - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
    - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
-   If any of these required structural sections/components are missing, you MUST reject the content (set "approved": false) and request the writer to add them.
+    - Check formatting of bibliography references: verify that (a) they do NOT contain raw URLs, hyperlinks, or markdown link syntax in the citation text; (b) book/article titles inside the citation text must be wrapped in standard quotation marks (or French guillemets « ... » for French lessons) and NEVER in asterisks (*) or underscores (_); and (c) the citation format matches the discipline-appropriate style expected for the course (i.e., **${getCitationStyle(courseContext.discipline || correctedCourseName).name}**) — for example, APA 7 for psychology/social sciences, Vancouver for medicine, Chicago Notes-Bibliography for history/philosophy, IEEE for engineering/CS, CSE for biology, Bluebook/OSCOLA for law, etc. Reject if references are in plainly wrong format for the discipline.
+     If any of these required structural sections/components are missing or malformed, you MUST reject the content (set "approved": false) and request the writer to add or correct them.
 4. "Multimedia, Illustrations, & Non-Text Media Density":
    This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${correctedCourseName}"):
    - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
@@ -1020,6 +1202,10 @@ Your Checkpoints:
     - Verify that any quote in a language other than the lesson's target language (e.g., an English quote in a French lesson) is systematically translated into the target language of the lesson, and that this translation is displayed in brackets (e.g., [Traduction : ...] or [Translation: ...]) immediately following the quote. Reject if a foreign quote is not followed by its bracketed translation. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
 11. "Wikimedia Commons Preference for Complex Diagrams":
     - For complex biological, chemical, physical, geographical, or anatomical diagrams (such as the plasma membrane structure, cell anatomy, molecular models, or historical maps), verify that high-quality public domain images from Wikimedia Commons are preferred over low-quality Pollinations.ai images or simple placeholders. Verify that the Wikimedia Commons image URL is correctly used in the markdown image syntax and linked/credited in the references section.
+12. "DataChart Data Integrity":
+    - Every \`<DataChart />\` tag MUST have a \`data={[...]}\` attribute with at least 2 valid data point objects (each with a label string and value number). A \`<DataChart />\` without a data attribute, with an empty data array, or with a string instead of a JSX array MUST be rejected (approved: false). Zero tolerance: no DataChart with invalid or missing data is acceptable at generation time.
+13. "SolvedExercise Completeness":
+    - Every \`<SolvedExercise>\` block MUST have: (a) a non-empty \`title\` attribute, (b) non-empty problem statement children (clearly formulating a concrete problem with enough context), AND (c) a non-empty \`solution="..."\` attribute or \`<Solution>...</Solution>\` child with step-by-step resolution. An empty \`<SolvedExercise>\` (missing children, missing solution, or where problem and solution are identical text) MUST be rejected (approved: false).
 
 You must return a valid JSON object with the following keys:
 - "approved": boolean (true if it perfectly complies with the policies; false if there are violations).

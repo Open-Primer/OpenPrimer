@@ -212,7 +212,7 @@ const GuestFootnote = () => {
   );
 };
 
-// Composant Texte à Trous
+// Composant Texte à Trous (standalone, une seule question)
 export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string, answer?: string }) => {
   if (!sentence) return null;
   const { language } = useLanguage();
@@ -221,8 +221,13 @@ export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
-  const [tutorComment, setTutorComment] = useState('');
-  const [isTutorLoading, setIsTutorLoading] = useState(false);
+
+  // Build a per-question storage key using pathname + a hash of the sentence
+  const storageKey = React.useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const sentenceHash = sentence.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return `op_fib_${window.location.pathname}_${sentenceHash}`;
+  }, [sentence]);
 
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
@@ -237,207 +242,164 @@ export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string
     const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
+    // Restore per-question saved state (input + correctness)
     const storage = getProgressionStorage();
-    if (storage) {
-      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
-      if (visited.includes(window.location.pathname)) {
-        setIsReadOnly(true);
-        // Autofill correct answer when completed
-        setInput(answer);
-        setIsCorrect(true);
+    if (storage && storageKey) {
+      try {
+        const saved = JSON.parse(storage.getItem(storageKey) || 'null');
+        if (saved && typeof saved.input === 'string') {
+          setInput(saved.input);
+          if (typeof saved.isCorrect === 'boolean') {
+            setIsCorrect(saved.isCorrect);
+          }
+          // Only lock the field if the answer was correct
+          if (saved.isCorrect === true) {
+            setIsReadOnly(true);
+          }
+        }
+      } catch {
+        // Ignore malformed stored state
       }
     }
 
     return () => {
       window.removeEventListener('op_auth_state_change', handleAuthChange);
     };
-  }, [answer]);
+  }, [storageKey]);
 
-  const check = async () => {
+  const check = () => {
     if (isReadOnly) return;
-    
     const correct = input.toLowerCase().trim() === answer.toLowerCase().trim();
     setIsCorrect(correct);
-    
-    // Update progress locally in correct storage
+
+    // Persist the exact state (input + correctness) for this question
     const storage = getProgressionStorage();
-    if (storage) {
-      const pathname = window.location.pathname;
-      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
-      if (!visited.includes(pathname)) {
-        visited.push(pathname);
-        storage.setItem('op_visited_pages', JSON.stringify(visited));
-        window.dispatchEvent(new Event('op_progress_updated'));
-      }
+    if (storage && storageKey) {
+      storage.setItem(storageKey, JSON.stringify({ input, isCorrect: correct }));
     }
 
-    // Now fetch tutor comment!
-    setIsTutorLoading(true);
-    try {
-      const response = await fetch('/api/tutor/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'user',
-              content: `L'étudiant a répondu "${input}" au texte à trous "${sentence}" (la bonne réponse était "${answer}"). Le résultat est donc ${correct ? 'CORRECT' : 'INCORRECT'}.\nDonne un commentaire très court (1 à 2 phrases max) sur ce concept en tant que tuteur, expliquant pourquoi c'est correct ou en rappelant brièvement la notion s'il y a erreur.`
-            }
-          ],
-          persona: 'curious_polymath',
-          language: language,
-          pageContext: `Sentence context: ${sentence}`
-        })
-      });
-
-      if (response.ok) {
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder('utf-8');
-        if (reader) {
-          let accumulated = '';
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-            for (const line of lines) {
-              if (line.startsWith('data:')) {
-                try {
-                  const parsed = JSON.parse(line.slice(5).trim());
-                  if (parsed.text) {
-                    accumulated += parsed.text;
-                    setTutorComment(accumulated);
-                  }
-                } catch {}
-              }
-            }
-          }
+    // Mark page as visited only on first correct answer
+    if (correct) {
+      setIsReadOnly(true);
+      if (storage) {
+        const pathname = window.location.pathname;
+        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+        if (!visited.includes(pathname)) {
+          visited.push(pathname);
+          storage.setItem('op_visited_pages', JSON.stringify(visited));
+          window.dispatchEvent(new Event('op_progress_updated'));
         }
-      } else {
-        throw new Error("Chat failed");
       }
-    } catch (e) {
-      console.warn("[FILL IN BLANKS TUTOR FEEDBACK] Offline fallback...", e);
-      setTutorComment(correct
-        ? (language === 'FR' ? "Tuteur : Excellent travail ! Vous avez trouvé la bonne réponse." : "Tutor: Excellent work! You got the right answer.")
-        : (language === 'FR' ? `Tuteur : Ce n'est pas tout à fait correct. La bonne réponse est "${answer}".` : `Tutor: That's not quite correct. The expected answer is "${answer}".`)
-      );
-    } finally {
-      setIsTutorLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && isCorrect === null && !isReadOnly) check();
+  };
+
   return (
-    <div className={`my-8 p-6 rounded-3xl bg-slate-900/50 border ${isCorrect === true || isReadOnly ? 'border-emerald-500/30 bg-emerald-500/5' : isCorrect === false ? 'border-red-500/30 bg-red-500/5' : 'border-slate-800'} transition-all space-y-4`}>
-      <div className="flex flex-wrap items-center gap-3">
+    <div className={`my-4 p-4 rounded-2xl border ${
+      isCorrect === true || isReadOnly
+        ? 'border-emerald-500/30 bg-emerald-500/5'
+        : isCorrect === false
+          ? 'border-red-500/25 bg-red-500/5'
+          : 'border-slate-800 bg-slate-900/30'
+    } transition-all`}>
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[0] : ''}</span>
-        <input 
+        <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className={`bg-slate-950 border ${isCorrect === true || (isReadOnly && input) ? 'border-emerald-500' : isCorrect === false ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-1 text-white outline-none transition-all disabled:opacity-70`}
+          onKeyDown={handleKeyDown}
+          className={`bg-slate-950 border ${
+            isCorrect || isReadOnly
+              ? 'border-emerald-500 text-emerald-300'
+              : isCorrect === false
+                ? 'border-red-500 text-white'
+                : 'border-slate-700 text-white'
+          } rounded-lg px-3 py-1 outline-none transition-all disabled:opacity-70 text-sm`}
           placeholder={t.placeholder_answer}
           disabled={isReadOnly || isCorrect !== null}
         />
         <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[1] : ''}</span>
-        
+
         {isCorrect === null && !isReadOnly && (
-          <button 
+          <button
             onClick={check}
-            className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
           >
             {t.validate}
           </button>
         )}
 
-        {(isReadOnly || isCorrect === true) && (
-          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
-            <CheckCircle2 className="w-3.5 h-3.5" /> {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
+        {(isReadOnly && isCorrect === true) && (
+          <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
           </span>
         )}
       </div>
 
-      {isCorrect !== null && (
-        <div className="border-t border-slate-800/80 pt-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800/50">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col items-center justify-center px-3 py-1 bg-blue-600/10 border border-blue-500/20 rounded-xl min-w-[80px]">
-                <span className="text-[8px] font-black uppercase text-blue-400 tracking-wider">Note</span>
-                <span className="text-sm font-extrabold text-white">{isCorrect ? '1 / 1' : '0 / 1'}</span>
-              </div>
-              <div className="text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
-                  <span className={isCorrect ? 'text-emerald-400 font-bold animate-pulse' : 'text-red-400 font-bold'}>{input || '—'}</span>
-                </div>
-                {!isCorrect && (
-                  <div className="flex items-center gap-1.5 mt-1 border-t border-slate-800/40 pt-1">
-                    <span className="text-slate-400">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
-                    <span className="text-emerald-400 font-bold">{answer}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {(isTutorLoading || tutorComment) && (
-            <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-2xl relative overflow-hidden shadow-md space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-                <h4 className="text-[10px] font-black uppercase text-violet-400 tracking-wider">
-                  {language === 'FR' ? 'Commentaire du Tuteur' : 'Tutor Feedback'}
-                </h4>
-              </div>
-              {isTutorLoading && !tutorComment ? (
-                <div className="flex items-center gap-2 text-slate-400 text-[10px] italic">
-                  <div className="w-3 border border-violet-500 border-t-transparent rounded-full animate-spin aspect-square" />
-                  <span>{language === 'FR' ? 'Analyse...' : 'Analyzing...'}</span>
-                </div>
-              ) : (
-                <p className="text-slate-300 text-xs leading-relaxed italic font-medium pl-0.5">
-                  {tutorComment}
-                </p>
-              )}
-            </div>
-          )}
+      {/* On error only: show the correct answer, no score, no per-answer tutor comment */}
+      {isCorrect === false && (
+        <div className="mt-2 flex items-center gap-2 text-xs">
+          <span className="text-slate-400">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
+          <span className="text-emerald-400 font-bold">{answer}</span>
         </div>
       )}
-      
+
       {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>
   );
 };
 
 // Inline sub-component for paragraph fill-in-the-blanks
+// On validation (Enter/blur): correct → green border + checkmark overlay; wrong → red border + show correct answer below
 FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [val, setVal] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
-  const checkAnswer = (v: string) => {
-    setVal(v);
-    if (!v.trim()) {
-      setIsCorrect(null);
-    } else {
-      setIsCorrect(v.toLowerCase().trim() === answer.toLowerCase().trim());
-    }
+  const validate = (v: string) => {
+    if (!v.trim()) return;
+    setIsCorrect(v.toLowerCase().trim() === answer.toLowerCase().trim());
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') validate(val);
+  };
+
+  const handleBlur = () => {
+    if (val.trim()) validate(val);
   };
 
   return (
-    <input
-      type="text"
-      value={val}
-      onChange={(e) => checkAnswer(e.target.value)}
-      className={`inline-block mx-1 bg-slate-950 border ${
-        isCorrect === true 
-          ? 'border-emerald-500 text-emerald-400 font-semibold' 
-          : isCorrect === false 
-            ? 'border-red-500 text-red-400 font-semibold' 
-            : 'border-slate-700 text-white'
-      } rounded-lg px-2.5 py-0.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20`}
-      style={{ width: `${Math.max(80, answer.length * 10 + 20)}px` }}
-      placeholder={t.placeholder_answer}
-    />
+    <span className="inline-flex flex-col items-start mx-1 align-middle">
+      <input
+        type="text"
+        value={val}
+        onChange={(e) => { setVal(e.target.value); if (isCorrect !== null) setIsCorrect(null); }}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        disabled={isCorrect === true}
+        className={`bg-slate-950 border ${
+          isCorrect === true
+            ? 'border-emerald-500 text-emerald-400 font-semibold'
+            : isCorrect === false
+              ? 'border-red-500 text-slate-300'
+              : 'border-slate-700 text-white'
+        } rounded-lg px-2.5 py-0.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20`}
+        style={{ width: `${Math.max(80, answer.length * 10 + 20)}px` }}
+        placeholder={t.placeholder_answer}
+      />
+      {/* On error: show only the correct answer, not the wrong one */}
+      {isCorrect === false && (
+        <span className="text-[10px] text-emerald-400 font-bold mt-0.5 pl-1">
+          {language === 'FR' ? '→' : '→'} {answer}
+        </span>
+      )}
+    </span>
   );
 };
 

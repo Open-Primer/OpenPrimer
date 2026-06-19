@@ -8,9 +8,47 @@ import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface SolvedExerciseProps {
   title: string;
-  children: React.ReactNode; // Exercise statement
-  solution?: React.ReactNode; // Step-by-step resolution details
+  children: React.ReactNode; // Exercise statement (problem formulation)
+  solution?: React.ReactNode; // Step-by-step resolution details (hidden by default, revealable)
 }
+
+/**
+ * Lightweight inline markdown renderer: handles **bold**, *italic*, \n newlines, and bullet lists.
+ * Used to properly render AI-generated solution text that may contain markdown markup.
+ */
+const InlineMd = ({ text }: { text: string }) => {
+  if (!text) return null;
+  const lines = text.split(/\n/);
+  return (
+    <>
+      {lines.map((line, li) => {
+        // Detect unordered list items
+        const isBullet = /^(\*|-|\d+\.) /.test(line.trim());
+        const content = line.replace(/^(\*|-|\d+\.) /, '');
+        // Inline formatting: **bold** and *italic*
+        const parts = content.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/);
+        const rendered = parts.map((part, pi) => {
+          if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={pi}>{part.slice(2, -2)}</strong>;
+          if (/^\*[^*]+\*$/.test(part)) return <em key={pi}>{part.slice(1, -1)}</em>;
+          return <span key={pi}>{part}</span>;
+        });
+        if (isBullet) {
+          return <li key={li} className="ml-4 list-disc">{rendered}</li>;
+        }
+        if (!line.trim()) return <br key={li} />;
+        return <p key={li} className="mb-1">{rendered}</p>;
+      })}
+    </>
+  );
+};
+
+/** Checks if a ReactNode is non-empty (has meaningful content) */
+const isNodeEmpty = (node: React.ReactNode): boolean => {
+  if (node === null || node === undefined || node === false) return true;
+  if (typeof node === 'string') return node.trim() === '';
+  if (Array.isArray(node)) return node.every(isNodeEmpty);
+  return false;
+};
 
 export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProps) => {
   const { language } = useLanguage();
@@ -53,9 +91,16 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
   const finalChildren = otherChildren.length > 0 ? otherChildren : children;
   const finalSolution = resolvedSolution || solutionChild;
 
+  // Guard: if the problem statement is missing, skip rendering entirely.
+  // Agent 4 guarantees content is always populated before persistence — this is a last-resort safety net.
+  const hasChildren = !isNodeEmpty(finalChildren);
+  const hasSolution = !isNodeEmpty(finalSolution);
+
+  if (!hasChildren) return null;
+
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
-      {/* Exercise Body */}
+      {/* Exercise Header + Problem Statement */}
       <div className="p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
@@ -65,7 +110,8 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
             {t.solved_title} : {title}
           </span>
         </div>
-        <div className="text-slate-200 text-sm leading-relaxed prose-p:mb-4 last:prose-p:mb-0">
+        {/* Problem formulation */}
+        <div className="text-slate-200 text-sm leading-relaxed space-y-1">
           {finalChildren}
         </div>
       </div>
@@ -80,7 +126,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
         {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>
 
-      {/* Expanded Solution Panel */}
+      {/* Expanded Solution Panel: renders markdown properly */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -89,8 +135,16 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
             exit={{ height: 0, opacity: 0 }}
             className="bg-slate-950/60 border-t border-emerald-500/10"
           >
-            <div className="p-6 sm:p-8 text-slate-350 text-xs sm:text-sm leading-relaxed whitespace-pre-line border-l-2 border-emerald-500/50">
-              {finalSolution}
+            <div className="p-6 sm:p-8 text-slate-300 text-xs sm:text-sm leading-relaxed border-l-2 border-emerald-500/50 space-y-1">
+              {hasSolution ? (
+                typeof finalSolution === 'string'
+                  ? <InlineMd text={finalSolution} />
+                  : finalSolution
+              ) : (
+                <p className="text-slate-400 italic">
+                  {language === 'FR' ? 'Solution détaillée non disponible.' : 'Detailed solution not available.'}
+                </p>
+              )}
             </div>
           </motion.div>
         )}
