@@ -6457,7 +6457,7 @@ export default function AdminCurriculumPage() {
                             className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white font-mono"
                           />
                         </div>
-                       
+                      )}
                      </div>
                     <div className="flex justify-end pt-2">
                       <button
