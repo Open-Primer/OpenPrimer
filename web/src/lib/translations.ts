@@ -271,7 +271,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus: "Ensure you have about {time} of uninterrupted focus ahead of you to complete the test.",
     essay_time_focus_default: "Ensure you have a few minutes of uninterrupted focus ahead of you to complete the test.",
     essay_offline_evaluation: "Offline Evaluation",
-    essay_offline_feedback: "Offline Evaluation: Your response has been received and evaluated locally. It demonstrates a solid grasp of the core concepts, though it could benefit from more detailed examples and structured arguments."
+    essay_offline_feedback: "Offline Evaluation: Your response has been received and evaluated locally. It demonstrates a solid grasp of the core concepts, though it could benefit from more detailed examples and structured arguments.",
+    audio_ai_generated: "Audio synthesized by artificial intelligence — illustrative only"
   },
   FR: {
     glossary_definition: "Définition du Glossaire",
@@ -543,7 +544,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus: "Assurez-vous d'avoir environ {time} devant vous de concentration ininterrompue pour réaliser ce test.",
     essay_time_focus_default: "Assurez-vous d'avoir quelques minutes devant vous de concentration ininterrompue pour réaliser ce test.",
     essay_offline_evaluation: "Évaluation hors-ligne",
-    essay_offline_feedback: "Évaluation hors-ligne : Votre réponse a été reçue et évaluée localement. Elle démontre une bonne compréhension des concepts clés, même s'il serait bénéfique d'approfondir les exemples et de structurer davantage l'argumentation."
+    essay_offline_feedback: "Évaluation hors-ligne : Votre réponse a été reçue et évaluée localement. Elle démontre une bonne compréhension des concepts clés, même s'il serait bénéfique d'approfondir les exemples et de structurer davantage l'argumentation.",
+    audio_ai_generated: "Audio synthétisé par intelligence artificielle — à titre d'illustration"
   },
   ES: {
     glossary_definition: "Definición del Glosario",
@@ -815,7 +817,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus: "Asegúrate de tener aproximadamente {time} por delante de concentración ininterrumpida para completar la prueba.",
     essay_time_focus_default: "Asegúrate de tener unos minutos por delante de concentración ininterrumpida para completar la prueba.",
     essay_offline_evaluation: "Evaluación fuera de línea",
-    essay_offline_feedback: "Evaluación fuera de línea: Su respuesta ha sido recibida y evaluada localmente. Muestra una comprensión sólida de los conceptos clave, aunque se beneficiaría de ejemplos más detallados y argumentos más estructurados."
+    essay_offline_feedback: "Evaluación fuera de línea: Su respuesta ha sido recibida y evaluada localmente. Muestra una comprensión sólida de los conceptos clave, aunque se beneficiaría de ejemplos más detallados y argumentos más estructurados.",
+    audio_ai_generated: "Audio sintetizado por inteligencia artificial — solo ilustrativo"
   },
   DE: {
     glossary_definition: "Glossar-Definition",
@@ -1075,7 +1078,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus: "Stellen Sie sicher, dass Sie etwa {time} ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
     essay_time_focus_default: "Stellen Sie sicher, dass Sie einige Minuten ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
     essay_offline_evaluation: "Offline-Bewertung",
-    essay_offline_feedback: "Offline-Bewertung: Ihre Antwort wurde empfangen und lokal bewertet. Sie zeigt ein solides Verständnis der Kernkonzepte, könnte jedoch von detaillierteren Beispielen und strukturierteren Argumenten profitieren."
+    essay_offline_feedback: "Offline-Bewertung: Ihre Antwort wurde empfangen und lokal bewertet. Sie zeigt ein solides Verständnis der Kernkonzepte, könnte jedoch von detaillierteren Beispielen und strukturierteren Argumenten profitieren.",
+    audio_ai_generated: "Audio von künstlicher Intelligenz synthetisiert — nur zur Veranschaulichung"
   },
   ZH: {
     glossary_definition: "词汇表定义",
@@ -1347,7 +1351,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus: "请确保您有大约 {time} 无打扰的专注时间来完成测试。",
     essay_time_focus_default: "请确保您有几分钟无打扰的专注时间来完成测试。",
     essay_offline_evaluation: "离线评估",
-    essay_offline_feedback: "离线评估：您的回答已在本地接收并评估。它展示了对核心概念的扎实理解，但如果能提供更详细的例子和更具条理的论证，效果会更好。"
+    essay_offline_feedback: "离线评估：您的回答已在本地接收并评估。它展示了对核心概念的扎实理解，但如果能提供更详细的例子和更具条理的论证，效果会更好。",
+    audio_ai_generated: "音频由人工智能合成——仅供示例参考"
   }
 };
 

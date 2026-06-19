@@ -4,9 +4,6 @@ import path from 'path';
 import matter from 'gray-matter';
 import { cleanPathSegment } from './translations';
 
-const CONTENT_PATH = fs.existsSync(path.join(process.cwd(), 'content'))
-  ? path.join(process.cwd(), 'content')
-  : path.join(process.cwd(), '../content');
 
 export function stripOuterCodeFences(content: string): string {
   if (!content) return '';
@@ -486,145 +483,11 @@ export function getTranslatedSubject(subject: string, lang: string): string {
   return subject || '';
 }
 
-export function formatModuleStructure(course: any, lang: string): string {
-  const currentLang = (lang || 'en').toLowerCase();
-  
-  if (course?.units && Array.isArray(course.units) && course.units.length > 0) {
-    return course.units.map((unit: any, idx: number) => {
-      const title = unit.title || '';
-      const modulesStr = Array.isArray(unit.modules) ? unit.modules.join(', ') : '';
-      return modulesStr ? `${idx + 1}. **${title}** : ${modulesStr}` : `${idx + 1}. **${title}**`;
-    }).join('\n');
-  }
-
-  // Fallbacks
-  return '';
-}
-
-export function getLocalizedDefaultTemplate(course: any, pageTitle: string, lang: string): string {
-  const currentLang = (lang || 'en').toLowerCase();
-  const subjectTranslated = getTranslatedSubject(course.subject, currentLang);
-  const structure = formatModuleStructure(course, currentLang);
-  
-  if (currentLang === 'fr') {
-    const structureSection = structure ? `\n## 📚 Structure du Module\n${structure}\n` : '';
-    return `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Introduction"
----
-
-# ${course.title} - ${pageTitle}
-
-Bienvenue dans le module souverain de **${course.title}**, conçu et synthétisé de manière dynamique par notre moteur d'intelligence artificielle pédagogique.
-
-## 🌟 Objectifs du cours
-Dans ce cours axé sur **${subjectTranslated}**, nous allons explorer en profondeur les concepts clés, en s'assurant d'une base théorique solide combinée à des applications concrètes :
-- Maîtriser les fondations de *${course.title}*.
-- Connecter les théories académiques à des perspectives concrètes et historiques.
-- Développer un esprit d'analyse critique et une intuition profonde.
-${structureSection}`;
-  }
-  
-  if (currentLang === 'es') {
-    const structureSection = structure ? `\n## 📚 Estructura del Módulo\n${structure}\n` : '';
-    return `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Introducción"
----
-
-# ${course.title} - ${pageTitle}
-
-Bienvenido al módulo soberano de **${course.title}**, sintetizado dinámicamente por nuestro motor de inteligencia artificial pedagógica.
-
-## 🌟 Objetivos de Aprendizaje
-En este curso centrado en **${subjectTranslated}**, profundizaremos en conceptos clave, asegurando una base teórica sólida combinada con aplicaciones concretas:
-- Dominar los fundamentos de *${course.title}*.
-- Conectar teorías académicas con perspectivas concretas e históricas.
-- Desarrollar el análisis crítico y una intuición profunda.
-${structureSection}`;
-  }
-  
-  if (currentLang === 'de') {
-    const structureSection = structure ? `\n## 📚 Modulstruktur\n${structure}\n` : '';
-    return `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Einführung"
----
-
-# ${course.title} - ${pageTitle}
-
-Willkommen im souveränen Modul von **${course.title}**, das von unserer pädagogischen künstlichen Intelligenz dynamisch synthetisiert wurde.
-
-## 🌟 Lernziele
-In diesem Kurs, der sich auf **${subjectTranslated}** konzentriert, werden wir tief in Schlüsselkonzepte eintauchen und eine solide theoretische Grundlage in Kombination mit konkreten Anwendungen sicherstellen:
-- Beherrschen Sie die Grundlagen von *${course.title}*.
-- Verbinden Sie akademische Theorien mit konkreten und historischen Perspektiven.
-- Entwickeln Sie kritische Analysen und tiefe Intuition.
-${structureSection}`;
-  }
-  
-  if (currentLang === 'zh') {
-    const structureSection = structure ? `\n## 📚 模块结构\n${structure}\n` : '';
-    return `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "介绍"
----
-
-# ${course.title} - ${pageTitle}
-
-欢迎来到**${course.title}**主权模块，该模块由我们的教学人工智能引擎动态合成。
-
-## 🌟 学习目标
-在本门专注于**${subjectTranslated}**的课程中，我们将深入探讨核心概念，确保将坚实的理论基础与具体应用相结合：
-- 掌握*${course.title}*的核心基音。
-- 将学术理论与具体和历史视角相联系。
-- 培养批判性分析和深刻的直觉。
-${structureSection}`;
-  }
-  
-  const structureSection = structure ? `\n## 📚 Module Structure\n${structure}\n` : '';
-  return `---
-title: "${pageTitle}"
-subject: "${course.subject}"
-level: "${course.level}"
-module: "Introduction"
----
-
-# ${course.title} - ${pageTitle}
-
-Welcome to the sovereign module of **${course.title}**, dynamically synthesized by our pedagogical artificial intelligence engine.
-
-## 🌟 Learning Objectives
-In this course focused on **${subjectTranslated}**, we will dive deep into key concepts, ensuring a solid theoretical foundation combined with concrete applications:
-- Master the foundations of *${course.title}*.
-- Connect academic theories with concrete and historical perspectives.
-- Develop critical analysis and deep intuition.
-${structureSection}`;
-}
-
 export interface NavItem {
   name: string;
   type: 'folder' | 'file';
   path: string;
   children?: NavItem[];
-}
-
-export function getSyllabus() {
-  const syllabusPath = fs.existsSync(path.join(process.cwd(), 'syllabus.json'))
-    ? path.join(process.cwd(), 'syllabus.json')
-    : path.join(process.cwd(), '../generator/syllabus.json');
-  if (fs.existsSync(syllabusPath)) {
-    return JSON.parse(fs.readFileSync(syllabusPath, 'utf-8'));
-  }
-  return null;
 }
 
 export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<NavItem[]> {
@@ -666,112 +529,14 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
     }
   }
 
-  let fullPath = path.join(CONTENT_PATH, dir);
-
-  // Sibling version fallback if the directory does not exist or has no matching files for the language
   if (parts.length === 3) {
-    const [level, subject, requestedFolder] = parts;
-    const requestedPath = path.join(CONTENT_PATH, level, subject, requestedFolder);
-    
-    // Check if the requested directory has files for this language
-    let hasFilesForLang = false;
-    if (fs.existsSync(requestedPath)) {
-      try {
-        const files = fs.readdirSync(requestedPath);
-        hasFilesForLang = files.some(f => f.endsWith(`.${lang}.mdx`));
-        if (!hasFilesForLang) {
-          // Check nested folders
-          for (const f of files) {
-            const sub = path.join(requestedPath, f);
-            if (fs.statSync(sub).isDirectory()) {
-              const subFiles = fs.readdirSync(sub);
-              if (subFiles.some(sf => sf.endsWith(`.${lang}.mdx`))) {
-                hasFilesForLang = true;
-                break;
-              }
-            }
-          }
-        }
-      } catch (e) {}
-    }
-
-    if (!hasFilesForLang) {
-      const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
-      const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
-      const parentDir = path.join(CONTENT_PATH, level, subject);
-      if (fs.existsSync(parentDir)) {
-        try {
-          const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
-            .map(dirent => dirent.name);
-          
-          for (const sibling of siblingDirs) {
-            const siblingPath = path.join(parentDir, sibling);
-            // Check if sibling has files in this language
-            let siblingHasFiles = false;
-            const siblingFiles = fs.readdirSync(siblingPath);
-            if (siblingFiles.some(f => f.endsWith(`.${lang}.mdx`))) {
-              siblingHasFiles = true;
-            } else {
-              for (const f of siblingFiles) {
-                const sub = path.join(siblingPath, f);
-                if (fs.statSync(sub).isDirectory()) {
-                  if (fs.readdirSync(sub).some(sf => sf.endsWith(`.${lang}.mdx`))) {
-                    siblingHasFiles = true;
-                    break;
-                  }
-                }
-              }
-            }
-            if (siblingHasFiles) {
-              console.log(`[Navigation Fallback] Using sibling directory: ${sibling} for language ${lang}`);
-              fullPath = siblingPath;
-              break;
-            }
-          }
-        } catch (e) {}
-      }
-    }
+    return [{
+      name: 'Introduction',
+      type: 'file',
+      path: '/' + dir + '/introduction'
+    }];
   }
-
-  if (!fs.existsSync(fullPath)) {
-    if (parts.length === 3) {
-      return [{
-        name: 'Introduction',
-        type: 'file',
-        path: '/' + dir + '/introduction'
-      }];
-    }
-    return [];
-  }
-
-  const items = fs.readdirSync(fullPath, { withFileTypes: true });
-  
-  const navItems: NavItem[] = [];
-
-  for (const item of items) {
-    const relativePath = path.join(dir, item.name).split(path.sep).join('/');
-    if (item.isDirectory()) {
-      // Recursively fetch folder children. Do not add empty folders that have no translated content.
-      const children = await getNavigationTree(relativePath, lang);
-      if (children.length > 0) {
-        navItems.push({
-          name: item.name.replace(/_/g, ' '),
-          type: 'folder',
-          path: relativePath,
-          children
-        });
-      }
-    } else if (item.name.endsWith(`.${lang}.mdx`)) {
-      navItems.push({
-        name: item.name.replace(/\.(en|fr|es|de|zh)\.mdx$/, '').replace(/_/g, ' '),
-        type: 'file',
-        path: '/' + relativePath.replace(/\.(en|fr|es|de|zh)\.mdx$/, '')
-      });
-    }
-  }
-
-  return navItems.sort((a, b) => a.type === 'folder' ? -1 : 1);
+  return [];
 }
 
 async function validateYouTubeVideo(videoId: string): Promise<boolean> {
@@ -985,116 +750,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
     }
   }
 
-  const baseFilePath = path.join(CONTENT_PATH, ...slug);
-  let filePath = baseFilePath + `.${lang}.mdx`;
-  
-  // Fallback: If requested language does not exist for this specific versioned course folder,
-  // we try to locate other versioned folders of the same course that HAVE this page in this language!
-  if (!fs.existsSync(filePath) && slug.length >= 3) {
-    const level = slug[0];
-    const subject = slug[1];
-    const requestedFolder = slug[2];
-    const rest = slug.slice(3);
-
-    const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
-    const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
-    const parentDir = path.join(CONTENT_PATH, level, subject);
-    if (fs.existsSync(parentDir)) {
-      try {
-        const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
-          .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
-          .map(dirent => dirent.name);
-
-        for (const sibling of siblingDirs) {
-          const candidatePath = path.join(parentDir, sibling, ...rest) + `.${lang}.mdx`;
-          if (fs.existsSync(candidatePath)) {
-            console.log(`[Version Fallback] File not found in ${requestedFolder} for ${lang}. Falling back to sibling version: ${sibling}`);
-            filePath = candidatePath;
-            break;
-          }
-        }
-      } catch (err) {
-        console.error("Error in sibling version resolution fallback:", err);
-      }
-    }
-  }
-  
-  console.log("=== getPageContent ===");
-  console.log("slug:", slug);
-  console.log("lang:", lang);
-  console.log("filePath:", filePath);
-  console.log("exists:", fs.existsSync(filePath));
-  console.log("======================");
-  
-  if (!fs.existsSync(filePath)) {
-    if (slug.length >= 3) {
-      const courseSlug = slug[2];
-      try {
-        const { dbService } = require('./db');
-        const { data: courses } = await dbService.getAllCourses();
-        const course = courses?.find((c: any) => c.slug?.toLowerCase() === courseSlug?.toLowerCase() || String(c.id) === courseSlug);
-        if (course) {
-          try {
-            const { supabase } = require('./supabase');
-            const { data: dbLessons } = await supabase
-              .from('lessons')
-              .select('title')
-              .eq('course_slug', courseSlug)
-              .eq('lang', lang.toLowerCase())
-              .order('order', { ascending: true });
-            
-            if (dbLessons && dbLessons.length > 0) {
-              course.units = dbLessons.map((l: any) => ({
-                title: l.title,
-                modules: []
-              }));
-            }
-          } catch (dbErr) {
-            console.error("Failed to query lessons for formatModuleStructure dynamic rendering:", dbErr);
-          }
-
-          const overviewMap: Record<string, string> = {
-            en: "Overview",
-            fr: "Vue d'ensemble",
-            es: "Descripción general",
-            de: "Übersicht",
-            zh: "概述"
-          };
-          const pageTitle = slug[3] ? slug[3].replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()) : (overviewMap[lang.toLowerCase()] || "Overview");
-          
-          const mdxContent = getLocalizedDefaultTemplate(course, pageTitle, lang);
-
-          const { data, content: bodyContent } = matter(mdxContent);
-          const processedContent = preprocessMdx(bodyContent, lang);
-          const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
-          return {
-            meta: data,
-            content: enriched
-          };
-        }
-      } catch (err) {
-        console.error("Failed to resolve dynamic course fallback in content.ts:", err);
-      }
-    }
-    return null;
-  }
-
-  const fileContent = fs.readFileSync(filePath, 'utf-8');
-  const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(fileContent);
-  const { data } = matter(fileContent);
-
-  const processedContent = preprocessMdx(cleanBody, lang);
-  const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
-
-  return {
-    meta: {
-      title: data.title || manualMeta.title || slug[3] || 'Untitled',
-      subject: data.subject || manualMeta.subject || slug[1],
-      level: data.level || manualMeta.level || slug[0],
-      module: data.module || manualMeta.module || getLocalizedCoreModuleText(lang)
-    },
-    content: enriched
-  };
+  return null;
 }
 
 export async function getFirstAvailableLanguage(slug: string[]): Promise<string | null> {
@@ -1128,55 +784,8 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
         return anyLesson.lang;
       }
     } catch (err) {
-      // DB lookup failed — fall through to filesystem
+      // DB lookup failed
     }
-  }
-
-  // 2. Filesystem fallback (for MDX-based courses)
-  let baseFilePath = path.join(CONTENT_PATH, ...slug);
-  let dirPath = path.dirname(baseFilePath);
-  let baseName = path.basename(baseFilePath);
-  
-  if (!fs.existsSync(dirPath) && slug.length >= 3) {
-    const level = slug[0];
-    const subject = slug[1];
-    const requestedFolder = slug[2];
-    const rest = slug.slice(3);
-
-    const indicatorIndex = requestedFolder.search(/_(flash|pro|v\d+|standard|vanguard)/i);
-    const prefix = indicatorIndex !== -1 ? requestedFolder.substring(0, indicatorIndex) : requestedFolder;
-    const parentDir = path.join(CONTENT_PATH, level, subject);
-    if (fs.existsSync(parentDir)) {
-      try {
-        const siblingDirs = fs.readdirSync(parentDir, { withFileTypes: true })
-          .filter(dirent => dirent.isDirectory() && dirent.name.toLowerCase().startsWith(prefix.toLowerCase()))
-          .map(dirent => dirent.name);
-        for (const sibling of siblingDirs) {
-          const candidateDirPath = path.join(parentDir, sibling, ...rest.slice(0, -1));
-          if (fs.existsSync(candidateDirPath)) {
-            dirPath = candidateDirPath;
-            baseName = rest[rest.length - 1] || '';
-            break;
-          }
-        }
-      } catch (e) {}
-    }
-  }
-  
-  if (!fs.existsSync(dirPath)) return null;
-  
-  try {
-    const files = fs.readdirSync(dirPath);
-    for (const file of files) {
-      if (file.startsWith(baseName + '.')) {
-        const parts = file.split('.');
-        if (parts.length >= 3 && parts[parts.length - 1] === 'mdx') {
-          return parts[parts.length - 2];
-        }
-      }
-    }
-  } catch (e) {
-    console.error("Error reading dir for available languages:", e);
   }
   return null;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, AlertTriangle, Loader2, Music4, ExternalLink, Cpu } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Loader2, Music4 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface AudioPlayerProps {
   url: string;
@@ -13,6 +15,8 @@ interface AudioPlayerProps {
 type AudioStatus = 'checking' | 'ok' | 'unavailable';
 
 export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerProps) => {
+  const { language } = useLanguage();
+  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const [status, setStatus] = useState<AudioStatus>('checking');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -151,31 +155,9 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
     );
   }
 
-  // When unavailable: show a clean fallback card with a link instead of nothing
+  // When unavailable: nothing shown — no broken card, no orphan caption
   if (status === 'unavailable') {
-    if (!url) return null;
-    return (
-      <div className="my-8 p-5 bg-slate-900/60 border border-slate-800 border-dashed rounded-[24px] flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-          <AlertTriangle className="w-4 h-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-slate-300 truncate">{title}</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">
-            Lecture intégrée indisponible.
-          </p>
-        </div>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all"
-        >
-          <ExternalLink className="w-3 h-3" />
-          Ouvrir
-        </a>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -204,10 +186,9 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
             </span>
           )}
           {aiGenerated && (
-            <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-bold leading-none bg-violet-500/10 text-violet-400 border border-violet-500/20" title="Cet audio a été généré par une intelligence artificielle">
-              <Cpu className="w-2.5 h-2.5" />
-              Généré par IA
-            </span>
+            <p className="text-[10px] text-slate-500 italic mt-0.5 leading-relaxed">
+              {t.audio_ai_generated}
+            </p>
           )}
         </div>
         <h4 className="text-sm font-bold text-slate-100 truncate">{title}</h4>
