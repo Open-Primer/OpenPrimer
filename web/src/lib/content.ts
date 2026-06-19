@@ -2950,6 +2950,11 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
 
+  // Fix AI-generated double-bracket Wikipedia links that produce a stray closing parenthesis.
+  // Pattern: [[Wikipédia](url)] or [[Wikipedia](url)] → [Wikipédia](url)
+  // The outer brackets were intended as a Markdown link wrapper but produce literal "[text](url)]"
+  processed = processed.replace(/\[\[([^\]]+)\]\(([^)]+)\)\]/g, '[$1]($2)');
+
   // Remove markdown wrapping (emphasis/strong) around JSX tags to prevent MDX parser escaping them as raw text
   processed = processed.replace(/\*\*<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>\*\*/g, '<$1$2>$3</$1>');
   processed = processed.replace(/\*<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>\*/g, '<$1$2>$3</$1>');
@@ -3187,57 +3192,61 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
 
       const trimmedRest = rest.trim();
       
-      // Format link text and rewrite unstable links to Google Scholar
-      const processedRest = trimmedRest.replace(/\[([^\]]+)\]\(([^)]+)\)/gi, (linkMatch: string, linkText: string, url: string) => {
-        let cleanLinkText = linkText.trim();
-        if (!cleanLinkText.endsWith('.')) {
-          cleanLinkText += '.';
-        }
-
-        const isAbsolute = /^https?:\/\//i.test(url) || url.startsWith('//');
-        const isStable = isAbsolute && /doi\.org|ncbi\.nlm\.nih\.gov|google\..*?\/books|books\.google|sciencedirect/i.test(url);
-        let targetUrl = url;
-
-        if (!isStable) {
-          let queryText = trimmedRest
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/gi, '')
-            .replace(/\*\*\[\d+\]\*\*/g, '')
-            .trim();
-          if (queryText.length > 150) {
-            queryText = queryText.substring(0, 150);
-          }
-          targetUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
-        }
-        return `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline hover:text-indigo-300 transition-colors">${cleanLinkText}</a>`;
-      });
-
-      // Extract search query text to search on Google Scholar
-      let queryTextForScholar = trimmedRest
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // remove link syntax but keep text
-        .replace(/[*_`~]/g, '') // remove formatting markdown
-        .replace(/<[^>]*>/g, '') // remove HTML tags
-        .replace(/\b\d+\b/g, '') // remove isolated reference numbers
-        .trim();
-      if (queryTextForScholar.length > 150) {
-        queryTextForScholar = queryTextForScholar.substring(0, 150);
+      let resolvedUrl = '';
+      const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/gi;
+      let matchUrl;
+      if ((matchUrl = markdownLinkRegex.exec(trimmedRest)) !== null) {
+        resolvedUrl = matchUrl[2].trim();
       }
 
-      const scholarUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryTextForScholar)}`;
-      const scholarLinkTexts: Record<string, string> = {
-        fr: "Google Scholar",
-        es: "Google Scholar",
-        de: "Google Scholar",
-        zh: "Google Scholar",
-        en: "Google Scholar"
-      };
+      // 1. Convert markdown link to plain text
+      let processedRest = trimmedRest.replace(/\[([^\]]+)\]\(([^)]+)\)/gi, '$1');
+
+      // 2. Remove raw HTTP/HTTPS URLs
+      processedRest = processedRest.replace(/https?:\/\/[^\s)|]+/gi, '');
+
+      // 3. Clean up spaces and punctuation
+      processedRest = processedRest.replace(/\s+/g, ' ').trim();
+      processedRest = processedRest.replace(/[,;|.\s\-]+$/, '').trim();
+      if (processedRest && !processedRest.endsWith('.')) {
+        processedRest += '.';
+      }
+
+      // 4. Format book/article titles (convert asterisks/underscores to quotes/guillemets)
       const currentLang = (lang || 'en').toLowerCase();
-      const scholarLinkText = scholarLinkTexts[currentLang] || scholarLinkTexts['en'];
+      if (currentLang === 'fr') {
+        processedRest = processedRest.replace(/\*([^*]+)\*/g, '« $1 »').replace(/_([^_]+)_/g, '« $1 »');
+      } else {
+        processedRest = processedRest.replace(/\*([^*]+)\*/g, '"$1"').replace(/_([^_]+)_/g, '"$1"');
+      }
+
+      // 5. Determine if it's a book vs an article
+      const isBook = isBookReference(processedRest) || (resolvedUrl && /google\..*?\/books|books\.google/i.test(resolvedUrl));
+
+      // 6. Simplify search query parameters (Title + Author + Year)
+      const queryText = simplifyCitationQuery(processedRest);
+
+      // 7. Determine final URL and search button label
+      let finalUrl = resolvedUrl;
+      const isStable = resolvedUrl && /^https?:\/\//i.test(resolvedUrl) && /doi\.org|ncbi\.nlm\.nih\.gov|google\..*?\/books|books\.google|sciencedirect/i.test(resolvedUrl);
+
+      if (isBook) {
+        if (!isStable || !/google\..*?\/books|books\.google/i.test(resolvedUrl)) {
+          finalUrl = `https://books.google.com/books?q=${encodeURIComponent(queryText)}`;
+        }
+      } else {
+        if (!isStable) {
+          finalUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+        }
+      }
+
+      const searchLabel = isBook ? 'Google Books' : 'Google Scholar';
 
       parsedItems.push({
         num: parseInt(num, 10),
         text: processedRest,
-        scholarUrl: scholarUrl,
-        scholarText: scholarLinkText
+        scholarUrl: finalUrl,
+        scholarText: searchLabel
       });
     }
 
@@ -3617,6 +3626,101 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
   }
 
   return processed;
+}
+
+function isBookReference(text: string): boolean {
+  const lowercase = text.toLowerCase();
+  
+  const bookKeywords = [
+    'presses universitaires', 'éditions', 'editions', 'publisher', 'publishing', 'university press', 
+    'lgdj', 'dalloz', 'lexisnexis', 'gualino', 'lextenso', 'springer', 'routledge', 'oxford', 
+    'cambridge', 'palgrave', 'book', 'livre', 'manuel', 'traité', 'précis', 'introduction au', 
+    'droit de', 'droit des', 'droit civil', 'droit commercial', 'droit des affaires'
+  ];
+  
+  const articleKeywords = [
+    'journal of', 'review of', 'revue de', 'revue française', 'revue internationale',
+    'vol.', 'no.', 'issue', 'tome', 'fascicule', 'colloque', 'actes du colloque', 
+    'article', 'working paper', 'preprint', 'doi:'
+  ];
+
+  let bookScore = 0;
+  let articleScore = 0;
+
+  for (const kw of bookKeywords) {
+    if (lowercase.includes(kw)) bookScore++;
+  }
+  for (const kw of articleKeywords) {
+    if (lowercase.includes(kw)) articleScore++;
+  }
+
+  if (/, (paris|london|new york|boston|chicago|berlin|tokyo),/i.test(lowercase)) {
+    bookScore += 2;
+  }
+
+  if (/\bp\.\s*\d+/i.test(lowercase)) {
+    bookScore += 0.5;
+  }
+
+  return bookScore >= articleScore;
+}
+
+function simplifyCitationQuery(citationText: string): string {
+  let cleanText = citationText
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+
+  let author = '';
+  let title = '';
+  let year = '';
+
+  const yearMatch = cleanText.match(/\b(18\d{2}|19\d{2}|20\d{2})\b/);
+  if (yearMatch) {
+    year = yearMatch[1];
+  }
+
+  const titleMatch = cleanText.match(/[*_“"«]([^*_”"»]{5,})[*_”"»]/);
+  if (titleMatch) {
+    title = titleMatch[1].trim();
+  } else {
+    let withoutYear = cleanText;
+    if (year) {
+      withoutYear = cleanText.replace(new RegExp(`\\(?${year}\\)?`), '');
+    }
+    const parts = withoutYear.split(/[.。]/).map(p => p.trim()).filter(p => p.length > 0);
+    if (parts.length > 1) {
+      const candidates = parts.slice(0, 3);
+      candidates.sort((a, b) => b.length - a.length);
+      title = candidates[0];
+    } else {
+      title = cleanText;
+    }
+  }
+
+  const authorPart = cleanText.split(/[\(.,.。]/)[0].trim();
+  if (authorPart) {
+    const words = authorPart.split(/\s+/);
+    author = words[0] || '';
+  }
+
+  title = title
+    .replace(/[:;,\-].*$/, '')
+    .replace(/[*_`~"«»()]/g, '')
+    .trim();
+
+  if (title.length > 60) {
+    title = title.substring(0, 60).trim();
+  }
+
+  const queryParts = [];
+  if (title) queryParts.push(title);
+  if (author && !title.toLowerCase().includes(author.toLowerCase())) {
+    queryParts.push(author);
+  }
+  if (year) queryParts.push(year);
+
+  return queryParts.join(' ').trim();
 }
 
 

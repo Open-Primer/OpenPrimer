@@ -54,3 +54,20 @@ next-env.d.ts
 
 # Scratch / one-off debug scripts (may contain secrets or API keys)
 /scratch/
+
+# Build & CI logs
+build*.log
+*.log
+
+# Debug/temporary MDX dumps
+failed_mdx*.md
+failed_mdx_final_*.md
+preprocessed_*.md
+healed_*.md
+balanced_*.md
+
+# One-off debug/doc files at root
+diff_curriculum.txt
+lesson_content.mdx
+lesson_body_text.txt
+saved_cloud_run_url.txt

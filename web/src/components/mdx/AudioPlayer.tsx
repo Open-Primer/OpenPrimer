@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, AlertTriangle, Loader2, Music4, Search } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, AlertTriangle, Loader2, Music4, ExternalLink, Cpu } from 'lucide-react';
 
 interface AudioPlayerProps {
   url: string;
   title: string;
   duration?: string; // e.g. "2 min" or "1:45"
+  aiGenerated?: boolean; // true if the audio was synthesized by AI
 }
 
 type AudioStatus = 'checking' | 'ok' | 'unavailable';
 
-export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
+export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerProps) => {
   const [status, setStatus] = useState<AudioStatus>('checking');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -32,7 +33,8 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
     return false;
   })();
 
-  // Test URL reachability
+  // Test URL reachability — in no-cors mode the response is always opaque (ok=true),
+  // so we rely on whether the URL is a known valid CDN prefix or Supabase storage URL.
   useEffect(() => {
     if (!url) {
       setStatus('unavailable');
@@ -40,20 +42,35 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
     }
 
     let active = true;
-    const testAudio = async () => {
+
+    const checkUrl = async () => {
+      // Consider URL valid if it points to our Supabase storage or a trusted CDN
+      const trustedPrefixes = [
+        'https://upload.wikimedia.org',
+        'https://commons.wikimedia.org',
+        'supabase',
+        'storage'
+      ];
+      const seemsTrusted = trustedPrefixes.some(p => url.includes(p));
+
+      if (seemsTrusted) {
+        if (active) setStatus('ok');
+        return;
+      }
+
+      // For other URLs use a best-effort HEAD check with a 5 s timeout
       try {
-        const res = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-        if (active) {
-          setStatus('ok');
-        }
-      } catch (err) {
-        if (active) {
-          setStatus('unavailable');
-        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timer);
+        if (active) setStatus('ok');
+      } catch {
+        if (active) setStatus('unavailable');
       }
     };
 
-    testAudio();
+    checkUrl();
     return () => { active = false; };
   }, [url]);
 
@@ -72,12 +89,17 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
+    const handleError = () => {
+      // If audio element itself fails after status=ok, show unavailable card
+      setStatus('unavailable');
+    };
 
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.pause();
@@ -86,6 +108,7 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
       audioRef.current = null;
     };
   }, [status, url]);
@@ -123,13 +146,36 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
     return (
       <div className="my-8 p-6 bg-slate-900 border border-slate-800 rounded-[24px] flex items-center justify-center gap-3">
         <Loader2 className="w-4 h-4 animate-spin text-slate-650" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Checking audio link...</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Vérification de la ressource audio...</span>
       </div>
     );
   }
 
+  // When unavailable: show a clean fallback card with a link instead of nothing
   if (status === 'unavailable') {
-    return null;
+    if (!url) return null;
+    return (
+      <div className="my-8 p-5 bg-slate-900/60 border border-slate-800 border-dashed rounded-[24px] flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+          <AlertTriangle className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-slate-300 truncate">{title}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            Lecture intégrée indisponible.
+          </p>
+        </div>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all"
+        >
+          <ExternalLink className="w-3 h-3" />
+          Ouvrir
+        </a>
+      </div>
+    );
   }
 
   return (
@@ -143,7 +189,7 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">
-            Audio Resource
+            Ressource Audio
           </span>
           {duration && (
             <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold leading-none ${
@@ -154,7 +200,13 @@ export const AudioPlayer = ({ url, title, duration }: AudioPlayerProps) => {
           )}
           {isLongAudio && (
             <span className="text-[9px] text-amber-500/80 italic font-semibold leading-none">
-              Attention limit warning
+              Dépasse la limite recommandée
+            </span>
+          )}
+          {aiGenerated && (
+            <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-bold leading-none bg-violet-500/10 text-violet-400 border border-violet-500/20" title="Cet audio a été généré par une intelligence artificielle">
+              <Cpu className="w-2.5 h-2.5" />
+              Généré par IA
             </span>
           )}
         </div>
