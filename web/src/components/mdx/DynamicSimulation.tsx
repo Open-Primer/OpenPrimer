@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Activity, Info, Sliders, Layers } from 'lucide-react';
+import { Play, Pause, RotateCcw, Activity, Info } from 'lucide-react';
 
 interface SimulationPreset {
   id: string;
@@ -70,7 +70,238 @@ const PRESETS: SimulationPreset[] = [
   }
 ];
 
+const LOCALIZED_PRESETS: Record<string, Record<string, SimulationPreset>> = {
+  fr: {
+    mitosis: {
+      id: "mitosis",
+      name: "Division par mitose cellulaire",
+      description: "Observez une cellule eucaryote dupliquer ses chromosomes et se diviser en deux cellules filles identiques.",
+      stages: [
+        { at: 0, label: "Interphase", details: "La cellule est au repos. L'ADN est répliqué sous forme de filaments de chromatine non condensés dans un noyau intact." },
+        { at: 25, label: "Prophase", details: "La chromatine se condense en chromosomes épais visibles. L'enveloppe nucléaire se désintegre et les fibres du fuseau commencent à se former." },
+        { at: 50, label: "Métaphase", details: "Les fibres du fuseau alignent parfaitement les chromatides sœurs le long de la plaque équatoriale." },
+        { at: 75, label: "Anaphase", details: "Les fibres du fuseau se raccourcissent, tirant les chromatides sœurs vers les pôles opposés. La membrane cellulaire commence à s'étrangler (sillon de division)." },
+        { at: 100, label: "Télophase & Cytocinèse", details: "Les membranes nucléaires se reforment autour des groupes de chromosomes. Le cytoplasme se sépare, donnant naissance à deux cellules diploïdes distinctes." }
+      ]
+    },
+    carnot: {
+      id: "carnot",
+      name: "Cycle thermodynamique de Carnot",
+      description: "Le cycle moteur thermique idéal définissant la limite d'efficacité maximale de tout système thermodynamique.",
+      stages: [
+        { at: 0, label: "1. Détente isotherme (A → B)", details: "Le gaz se détend à température chaude constante (Th). Le cylindre est en contact avec le thermostat chaud. Le piston monte : le volume augmente, la pression chute." },
+        { at: 25, label: "2. Détente adiabatique (B → C)", details: "Le cylindre est isolé thermiquement. Le gaz continue de se détendre et de fournir du travail. Le volume augmente encore, la pression baisse et la température chute à Tc." },
+        { at: 50, label: "3. Compression isotherme (C → D)", details: "Le gaz est compressé à température froide constante (Tc) en contact avec le thermostat froid. Le piston descend : le volume diminue, la pression augmente et de la chaleur est rejetée." },
+        { at: 100, label: "4. Compression adiabatique (D → A)", details: "Le cylindre est à nouveau isolé. La compression continue, faisant remonter la température à Th. La pression augmente, ramenant le système à son état initial." }
+      ]
+    },
+    waves: {
+      id: "waves",
+      name: "Superposition & vitesse des ondes",
+      description: "Étudiez la propagation des ondes mécaniques. Modifiez la fréquence et l'amplitude pour visualiser les interférences constructives et destructives.",
+      stages: [
+        { at: 0, label: "État initial", details: "Onde sinusoïdale cohérente continue générée par un oscillateur se propageant le long d'un milieu." },
+        { at: 50, label: "Résistance du milieu", details: "Ajustez la fréquence et l'amplitude pour voir comment la vitesse de l'onde (v = f * λ) reste constante à moins que le milieu ne soit modifié." },
+        { at: 100, label: "Réflexion aux limites", details: "Les interférences constructives et destructives se superposent lorsque les ondes se réfléchissent sur les limites du milieu." }
+      ]
+    },
+    doubleslit: {
+      id: "doubleslit",
+      name: "Fentes de Young (Diffraction)",
+      description: "L'expérience historique de Thomas Young démontrant la dualité onde-corpuscule et la nature ondulatoire de la lumière par interférence cohérente.",
+      stages: [
+        { at: 0, label: "Émission d'ondes", details: "Une source d'ondes cohérentes émet des fronts d'ondes plans se propageant vers une paroi percée de deux fentes étroites." },
+        { at: 50, label: "Diffraction aux fentes", details: "Les deux fentes agissent comme des sources secondaires d'ondelettes cohérentes se propageant dans toutes les directions." },
+        { at: 100, label: "Franges d'interférence", details: "Les ondelettes se superposent en interférant de manière constructive (franges brillantes) et destructive (franges sombres) sur l'écran." }
+      ]
+    },
+    enzyme: {
+      id: "enzyme",
+      name: "Mécanisme Enzyme-Substrat",
+      description: "Le modèle d'ajustement induit illustrant la catalyse enzymatique et la division métabolique des substrats.",
+      stages: [
+        { at: 0, label: "Approche du substrat", details: "La molécule de substrat se dirige vers le site actif spécifique de l'enzyme catalyseur." },
+        { at: 50, label: "Complexe enzyme-substrat", details: "Le substrat se lie au site actif. L'enzyme modifie légèrement sa forme (ajustement induit) pour verrouiller et affaiblir les liaisons chimiques." },
+        { at: 100, label: "Libération des produits", details: "La réaction chimique est terminée. Le substrat est divisé en deux produits distincts qui sont libérés. L'enzyme retrouve sa forme initiale." }
+      ]
+    }
+  },
+  en: {
+    mitosis: PRESETS[0],
+    carnot: PRESETS[1],
+    waves: PRESETS[2],
+    doubleslit: PRESETS[3],
+    enzyme: PRESETS[4]
+  },
+  es: {
+    mitosis: {
+      id: "mitosis",
+      name: "División por mitosis celular",
+      description: "Observe cómo una célula eucariota duplica sus cromosomas y se divide en dos células hijas idénticas.",
+      stages: [
+        { at: 0, label: "Interfase", details: "La célula está en estado de reposo. El ADN se replica pero existe como filamentos de cromatina descondensados dentro de un núcleo intacto." },
+        { at: 25, label: "Profase", details: "La cromatina se condensa en cromosomas gruesos y visibles. La envoltura nuclear se desintegra y las fibras del huso comienzan a formarse." },
+        { at: 50, label: "Metafase", details: "Las fibras del huso alinean perfectamente las cromátides hermanas a lo largo de la placa ecuatorial." },
+        { at: 75, label: "Anafase", details: "Las fibras del huso se acortan, tirando de las cromátides hermanas hacia los polos opuestos. La membrana celular comienza a contraerse (surco de división)." },
+        { at: 100, label: "Telofase y Citocinesis", details: "Las membranas nucleares se reforman alrededor de los grupos de cromosomas separados. El citoplasma se estrangula por completo, dividiéndose en dos células diploides distintas." }
+      ]
+    },
+    carnot: {
+      id: "carnot",
+      name: "Ciclo termodinámico de Carnot",
+      description: "El ciclo ideal del motor térmico que define el límite de eficiencia máxima de cualquier sistema termodinámico.",
+      stages: [
+        { at: 0, label: "1. Expansión isotérmica (A → B)", details: "El gas se expande a una temperatura alta constante (Th). El cilindro está en contacto con el foco caliente. El pistón se mueve hacia arriba; el volumen aumenta, la presión disminuye." },
+        { at: 25, label: "2. Expansión adiabática (B → C)", details: "El cilindro está aislado térmicamente. El gas continúa expandiéndose y realizando trabajo. El volumen aumenta aún más, la presión y la temperatura bajan a Tc." },
+        { at: 50, label: "3. Compresión isotérmica (C → D)", details: "El gas se comprime a una temperatura fría constante (Tc) en contacto con el foco frío. El pistón se mueve hacia abajo; el volumen disminuye, la presión aumenta y se libera calor." },
+        { at: 100, label: "4. Compresión adiabática (D → A)", details: "El cilindro se aísla de nuevo. La compresión continúa, haciendo que la temperatura suba de nuevo a Th. La presión aumenta, devolviendo el sistema a su estado inicial." }
+      ]
+    },
+    waves: {
+      id: "waves",
+      name: "Superposición y velocidad de ondas",
+      description: "Investigue la propagación de ondas mecánicas. Altere la frecuencia y amplitud para ver la interferencia constructiva/destructiva.",
+      stages: [
+        { at: 0, label: "Estado inicial", details: "Onda senoidal coherente y continua generada por un oscilador que viaja a lo largo de un medio." },
+        { at: 50, label: "Resistencia del medio", details: "Ajuste los controles de frecuencia y amplitud para ver cómo la velocidad de la onda (v = f * λ) permanece constante a menos que se altere el medio." },
+        { at: 100, label: "Reflexión en bordes", details: "La interferencia constructiva y destructiva se superpone a medida que las ondas se reflejan en los límites." }
+      ]
+    },
+    doubleslit: {
+      id: "doubleslit",
+      name: "Difracción de doble rendija",
+      description: "El experimento de Thomas Young que demuestra la dualidad onda-partícula y la naturaleza ondulatoria de la luz mediante interferencia coherente.",
+      stages: [
+        { at: 0, label: "Emisión de ondas", details: "Una fuente de ondas coherentes emite frentes de onda planos que viajan hacia una partición con dos rendijas estrechas." },
+        { at: 50, label: "Difracción de rendijas", details: "Las dos rendijas actúan como fuentes secundarias de ondas esféricas coherentes que se propagan en todas direcciones." },
+        { at: 100, label: "Interferencia de franjas", details: "Las ondas superpuestas interfieren de forma constructiva (franjas brillantes) y destructiva (franjas oscuras) en la pantalla de detección." }
+      ]
+    },
+    enzyme: {
+      id: "enzyme",
+      name: "Mecanismo Enzima-Sustrato",
+      description: "El modelo biológico de ajuste inducido que ilustra la catálisis enzimática y la división metabólica.",
+      stages: [
+        { at: 0, label: "Aproximación del sustrato", details: "La molécula del sustrato se dirige hacia el sitio activo de la enzima específica." },
+        { at: 50, label: "Complejo Enzima-Sustrato", details: "El sustrato se une. La enzima cambia ligeramente de forma (ajuste inducido) para bloquear y debilitar las uniones moleculares." },
+        { at: 100, label: "Liberación del producto", details: "La reacción química se completa. El sustrato se divide en dos productos más pequeños que son liberados. La enzima vuelve a su forma original." }
+      ]
+    }
+  },
+  de: {
+    mitosis: {
+      id: "mitosis",
+      name: "Zelluläre Mitose-Teilung",
+      description: "Beobachten Sie, wie eine eukaryotische Zelle ihre Chromosomen verdoppelt und sich in zwei identische Tochterzellen teilt.",
+      stages: [
+        { at: 0, label: "Interphase", details: "Die Zelle befindet sich im Ruhezustand. Die DNA ist repliziert, liegt aber als ungeknäuelte Chromatinfäden in einem intakten Zellkern vor." },
+        { at: 25, label: "Prophase", details: "Das Chromatin kondensiert zu dicken, sichtbaren Chromosomen. Die Kernhülle löst sich auf und die Spindelfasern beginnen sich zu bilden." },
+        { at: 50, label: "Metaphase", details: "Spindelfasern richten die Schwesterchromatiden perfekt an der äquatorialen Mittelplatte (Metaphaseplatte) aus." },
+        { at: 75, label: "Anaphase", details: "Die Spindelfasern verkürzen sich und ziehen die Schwesterchromatiden zu den entgegengesetzten Polen der Zelle. Die Zellmembran beginnt sich einzuschnüren (Teilungsfurche)." },
+        { at: 100, label: "Telophase & Zytokinese", details: "Kernmembranen bilden sich um die getrennten Chromosomengruppen neu. Das Zytoplasma schnürt sich vollständig ab und teilt sich in zwei diploide Zellen." }
+      ]
+    },
+    carnot: {
+      id: "carnot",
+      name: "Thermodynamischer Carnot-Kreisprozess",
+      description: "Der ideale Wärmekraftmaschinen-Kreisprozess, der die maximale Effizienzgrenze jedes thermodynamischen Systems definiert.",
+      stages: [
+        { at: 0, label: "1. Isotherme Expansion (A → B)", details: "Das Gas expandiert bei einer konstanten hohen Temperatur (Th). Der Zylinder steht in Kontakt mit einem heißen Reservoir. Der Kolben bewegt sich nach oben; das Volumen steigt, der Druck sinkt." },
+        { at: 25, label: "2. Adiabatische Expansion (B → C)", details: "Der Zylinder ist thermisch isoliert. Das Gas expandiert weiter und verrichtet Arbeit. Das Volumen steigt weiter, der Druck sinkt und die Temperatur fällt auf Tc." },
+        { at: 50, label: "3. Isotherme Kompression (C → D)", details: "Das Gas wird bei einer konstanten kalten Temperatur (Tc) komprimiert, während es in Kontakt mit einer Kältesenke steht. Der Kolben bewegt sich nach unten; das Volumen sinkt, der Druck steigt und Wärme wird abgegeben." },
+        { at: 100, label: "4. Adiabatische Kompression (D → A)", details: "Der Zylinder wird wieder isoliert. Die Kompression wird fortgesetzt, wodurch die Temperatur wieder auf Th ansteigt. Der Druck steigt und bringt das System in seinen Anfangszustand zurück." }
+      ]
+    },
+    waves: {
+      id: "waves",
+      name: "Wellenüberlagerung & Geschwindigkeit",
+      description: "Untersuchen Sie die Ausbreitung mechanischer Wellen. Ändern Sie Frequenz und Amplitude, um konstruktive/destruktive Interferenz zu sehen.",
+      stages: [
+        { at: 0, label: "Anfangszustand", details: "Eine kontinuierliche kohärente Sinuswelle, die von einem Oszillator erzeugt wird und sich durch ein Medium ausbreitet." },
+        { at: 50, label: "Medium-Widerstand", details: "Passen Sie die Frequenz- und Amplitudenschieber an, um zu sehen, wie die Wellengeschwindigkeit (v = f * λ) konstant bleibt, es sei denn, das Medium wird verändert." },
+        { at: 100, label: "Grenzreflexion", details: "Konstruktive und destruktive Interferenz überlagern sich, wenn Wellen an Grenzen reflektiert werden." }
+      ]
+    },
+    doubleslit: {
+      id: "doubleslit",
+      name: "Doppelspalt-Diffraktion",
+      description: "Thomas Youngs Experiment, das den Welle-Teilchen-Dualismus und die Wellennatur des Lichts durch kohärente Interferenz zeigt.",
+      stages: [
+        { at: 0, label: "Wellenfront-Emission", details: "Eine kohärente Wellenquelle emittiert planare Wellenfronten, die sich auf eine Trennwand mit zwei schmalen Spalten zubewegen." },
+        { at: 50, label: "Spaltdiffraktion", details: "Die beiden Spalte wirken als Sekundärquellen kohärenter Kugelwellen, die sich in alle Richtungen ausbreiten." },
+        { at: 100, label: "Interferenzmuster", details: "Überlagernde Kugelwellen interferieren konstruktiv (helle Streifen) und destruktiv (dunkle Streifen) auf dem Detektorschirm." }
+      ]
+    },
+    enzyme: {
+      id: "enzyme",
+      name: "Enzym-Substrat-Mechanismus",
+      description: "Das Induced-fit-Modell zur Veranschaulichung der Enzymkatalyse und metabolischer Spaltungsfunktionen.",
+      stages: [
+        { at: 0, label: "Substrat-Annäherung", details: "Das Substratmolekül bewegt sich auf das aktive Zentrum des spezifischen Enzymkatalysators zu." },
+        { at: 50, label: "Enzym-Substrat-Komplex", details: "Das Substrat bindet. Das Enzym ändert seine Form leicht (Schlüssel-Schloss-Prinzip / induced fit), um die Molekülbindungen zu sichern und zu destabilisieren." },
+        { at: 100, label: "Produktfreigabe", details: "Die chemische Reaktion ist abgeschlossen. Das Substrat spaltet sich in zwei kleinere Produkte auf, die freigesetzt werden. Das Enzym kehrt in seine ursprüngliche Form zurück." }
+      ]
+    }
+  },
+  zh: {
+    mitosis: {
+      id: "mitosis",
+      name: "细胞有丝分裂",
+      description: "观察真核细胞复制其染色体并分裂为两个完全相同的子细胞的过程。",
+      stages: [
+        { at: 0, label: "分裂间期", details: "细胞处于静息状态。DNA已复制，但在完整的细胞核内以未卷曲的染色质丝形式存在。" },
+        { at: 25, label: "前期", details: "染色质缩凝聚成粗大的可见染色体。核膜解体，纺锤丝开始从两极形成。" },
+        { at: 50, label: "中期", details: "纺锤丝将姐妹染色单体完美地排列在赤道板（中期板）上。" },
+        { at: 75, label: "后期", details: "纺锤丝缩短，将姐妹染色单体拉向细胞的两极。细胞膜开始凹陷（分裂沟）。" },
+        { at: 100, label: "末期与胞质分裂", details: "核膜在分离的染色体群周围重新形成。细胞质完全裂开，分裂为两个不同的二倍体子细胞。" }
+      ]
+    },
+    carnot: {
+      id: "carnot",
+      name: "卡诺热力学循环",
+      description: "理想的热机循环，定义了任何热力学系统的最高效率极限。",
+      stages: [
+        { at: 0, label: "1. 等温膨胀 (A → B)", details: "气体在恒定的高温 (Th) 下膨胀。气缸与热源接触。活塞向上移动；体积增加，压力下降。" },
+        { at: 25, label: "2. 绝热膨胀 (B → C)", details: "气缸绝热。气体继续膨胀并做功。体积进一步增加，压力下降，温度降至 Tc。" },
+        { at: 50, label: "3. 等温压缩 (C → D)", details: "气体在与冷源接触的恒定低温 (Tc) 下被压缩。活塞向下移动；体积减小，压力上升，向外放热。" },
+        { at: 100, label: "4. 绝热压缩 (D → A)", details: "气缸再次绝热。压缩继续，使温度回升至 Th。压力增加，系统回到初始状态。" }
+      ]
+    },
+    waves: {
+      id: "waves",
+      name: "波的叠加与波速",
+      description: "研究机械波的传播。改变频率和振幅以观察相长/相消干涉。",
+      stages: [
+        { at: 0, label: "初始状态", details: "由振荡器产生的连续相干正弦波沿介质传播。" },
+        { at: 50, label: "介质阻力", details: "调整频率和振幅滑块，观察除非改变介质，否则波速 (v = f * λ) 保持不变。" },
+        { at: 100, label: "边界反射", details: "当波从边界反射时，相长和相消干涉相互重叠。" }
+      ]
+    },
+    doubleslit: {
+      id: "doubleslit",
+      name: "双缝衍射与干涉",
+      description: "托马斯·杨的双缝实验，通过相干干涉展示了光波粒二象性及光的波动本质。",
+      stages: [
+        { at: 0, label: "波前发射", details: "相干波源发射平面波前，向带有两个窄缝的屏障传播。" },
+        { at: 50, label: "狭缝衍射", details: "两个狭缝作为相干球形微波的次级波源，向各个方向传播。" },
+        { at: 100, label: "条纹干涉", details: "重叠的微波在探测屏上产生相长干涉（亮条纹）和相消干涉（暗条纹）。" }
+      ]
+    },
+    enzyme: {
+      id: "enzyme",
+      name: "酶-底物催化机制",
+      description: "底物结合。酶轻微改变其形状（诱导契合）以牢固锁定并使分子键不稳定。",
+      stages: [
+        { at: 0, label: "底物接近", details: "底物分子移向特异性酶催化剂的活性中心。" },
+        { at: 50, label: "酶-底物复合物", details: "底物结合。酶轻微改变其形状（诱导契合）以牢固锁定并使分子键不稳定。" },
+        { at: 100, label: "产物释放", details: "化学反应完成。底物裂解为两个较小的产物并释放。酶恢复其初始形状。" }
+      ]
+    }
+  }
+};
+
 export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string }) => {
+  const [lang, setLang] = useState('en');
   const [activePreset, setActivePreset] = useState<SimulationPreset>(() => {
     return PRESETS.find(p => p.id === presetId) || PRESETS[0];
   });
@@ -85,13 +316,20 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
   const [wavelength, setWavelength] = useState(500); // Nanometers for double-slit color representation
 
   useEffect(() => {
-    const found = PRESETS.find(p => p.id === presetId);
-    if (found) {
-      setActivePreset(found);
-      setProgress(0);
-      setIsPlaying(false);
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lang') || 'en';
+      setLang(stored.toLowerCase());
     }
-  }, [presetId]);
+  }, []);
+
+  useEffect(() => {
+    const currentLang = lang === 'fr' || lang === 'es' || lang === 'de' || lang === 'zh' ? lang : 'en';
+    const localizedMap = LOCALIZED_PRESETS[currentLang] || LOCALIZED_PRESETS.en;
+    const found = localizedMap[presetId] || localizedMap.mitosis;
+    setActivePreset(found);
+    setProgress(0);
+    setIsPlaying(false);
+  }, [presetId, lang]);
 
   // Handle play/pause looping
   useEffect(() => {
@@ -125,6 +363,28 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
     });
     return matched;
   }, [progress, activePreset]);
+
+  const isFr = lang === 'fr';
+  const t = {
+    title: isFr ? "Simulateur Dynamique Interactif" : lang === 'es' ? "Simulador Dinámico Interactivo" : lang === 'de' ? "Interaktiver Dynamischer Simulator" : lang === 'zh' ? "交互式动态模拟器" : "Interactive Dynamic Simulator",
+    subtitle: isFr ? "Jouez, mettez en pause ou déplacez le curseur pour étudier les étapes pas à pas." : lang === 'es' ? "Reproduce, pausa o desplaza la línea de tiempo para estudiar los estados paso a paso." : lang === 'de' ? "Spielen, pausieren oder scrollen Sie manuell durch die Zeitleiste, um die Zustände Schritt für Schritt zu untersuchen." : lang === 'zh' ? "播放、暂停或手动拖动时间轴以逐步学习不同状态。" : "Play, pause or manually scrub the timeline to study step-by-step states.",
+    reset: isFr ? "Réinitialiser la chronologie" : lang === 'es' ? "Restablecer cronología" : lang === 'de' ? "Zeitleiste zurücksetzen" : lang === 'zh' ? "重置时间轴" : "Reset Timeline",
+    pvDiagram: isFr ? "Diagramme PV" : lang === 'es' ? "Diagrama PV" : lang === 'de' ? "PV-Diagramm" : lang === 'zh' ? "PV 示功图" : "PV Indicator Diagram",
+    pressure: isFr ? "Pression (P)" : lang === 'es' ? "Presión (P)" : lang === 'de' ? "Druck (P)" : lang === 'zh' ? "压力 (P)" : "Pressure (P)",
+    volume: isFr ? "Volume (V)" : lang === 'es' ? "Volumen (V)" : lang === 'de' ? "Volumen (V)" : lang === 'zh' ? "体积 (V)" : "Volume (V)",
+    cylinder: isFr ? "Cylindre à gaz" : lang === 'es' ? "Cilindro de gas" : lang === 'de' ? "Gaszylinder" : lang === 'zh' ? "气缸装置" : "Gas Cylinder Assembly",
+    hotPlate: isFr ? "Plaque Chaude" : lang === 'es' ? "Placa Caliente" : lang === 'de' ? "Heiße Platte" : lang === 'zh' ? "热源" : "Hot Plate",
+    coldSink: isFr ? "Source Froide" : lang === 'es' ? "Source Froide" : lang === 'de' ? "Kältesenke" : lang === 'zh' ? "冷源" : "Cold Sink",
+    insulation: isFr ? "Isolation" : lang === 'es' ? "Aislamiento" : lang === 'de' ? "Isolierung" : lang === 'zh' ? "绝热" : "Insulation",
+    frequency: isFr ? "Fréquence de l'onde (f)" : lang === 'es' ? "Frecuencia de onda (f)" : lang === 'de' ? "Wellenfrequenz (f)" : lang === 'zh' ? "波频 (f)" : "Wave Frequency (f)",
+    amplitude: isFr ? "Amplitude (A)" : lang === 'es' ? "Amplitud (A)" : lang === 'de' ? "Amplitude (A)" : lang === 'zh' ? "振幅 (A)" : "Amplitude (A)",
+    wavelength: isFr ? "Longueur d'onde (λ)" : lang === 'es' ? "Longitud de onda (λ)" : lang === 'de' ? "Wellenlänge (λ)" : lang === 'zh' ? "波长 (λ)" : "Source Laser Wavelength (λ)",
+    detector: isFr ? "Détecteur d'intensité" : lang === 'es' ? "Detector de Intensidad" : lang === 'de' ? "Streifenintensität" : lang === 'zh' ? "条纹强度检测器" : "Fringe Intensity Detector",
+    enzyme: isFr ? "Enzyme" : lang === 'es' ? "Enzima" : lang === 'de' ? "Enzym" : lang === 'zh' ? "酶" : "Enzyme",
+    substrate: isFr ? "Substrat" : lang === 'es' ? "Sustrato" : lang === 'de' ? "Substrat" : lang === 'zh' ? "底物" : "Substrate",
+    p1: isFr ? "Produit 1" : lang === 'es' ? "Producto 1" : lang === 'de' ? "Produkt 1" : lang === 'zh' ? "产物 1" : "P1",
+    p2: isFr ? "Produit 2" : lang === 'es' ? "Producto 2" : lang === 'de' ? "Produkt 2" : lang === 'zh' ? "产物 2" : "P2"
+  };
 
   // Render SVG for Mitosis Cell Division
   const drawMitosis = () => {
@@ -176,7 +436,7 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
         {/* Chromosomes details depending on phases */}
         {p < 0.25 && (
-          // Interphase: Intact nucleus containing wool-like chromatin threads
+          // Interphase: Intact nucleus containing chromatin threads
           <g>
             <circle cx={200} cy={120} r="28" fill="#1e293b" stroke="#34d399" strokeWidth="1.5" strokeDasharray="3,3" />
             <path d="M 190 110 Q 200 130, 210 115 T 195 130" stroke="#f43f5e" strokeWidth="1" fill="none" className="opacity-50" />
@@ -226,6 +486,96 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
           </g>
         )}
 
+        {/* Dynamic Labels with helper pointer lines */}
+        <g className="text-[7.5px] font-extrabold fill-slate-400 opacity-90 select-none">
+          {/* Plasma membrane label (always visible) */}
+          <path d="M 70 50 L 95 50 L 110 80" stroke="#475569" strokeWidth="0.5" fill="none" />
+          <text x={65} y={53} textAnchor="end" className="fill-emerald-400 uppercase tracking-wider">
+            {isFr ? "Membrane plasmique" : lang === 'es' ? "Membrana plasmática" : lang === 'de' ? "Zellmembran" : lang === 'zh' ? "细胞膜" : "Plasma membrane"}
+          </text>
+
+          {/* Conditional labels based on phase */}
+          {p < 0.25 && (
+            <>
+              {/* Noyau intact */}
+              <path d="M 200 65 L 200 45 L 230 45" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={235} y={48} textAnchor="start" className="fill-emerald-400 uppercase tracking-wider">
+                {isFr ? "Noyau cellulaire" : lang === 'es' ? "Núcleo celular" : lang === 'de' ? "Zellkern" : lang === 'zh' ? "细胞核" : "Cell nucleus"}
+              </text>
+
+              {/* Chromatine */}
+              <path d="M 195 125 L 180 155 L 150 155" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={145} y={158} textAnchor="end" className="fill-pink-400 uppercase tracking-wider">
+                {isFr ? "Chromatine diffuse" : lang === 'es' ? "Cromatina difusa" : lang === 'de' ? "Diffuses Chromatin" : lang === 'zh' ? "弥散染色质" : "Diffuse chromatin"}
+              </text>
+            </>
+          )}
+
+          {p >= 0.25 && p < 0.45 && (
+            <>
+              {/* Centrioles */}
+              <path d="M 130 115 L 130 85 L 100 85" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={95} y={88} textAnchor="end" className="fill-blue-400 uppercase tracking-wider">
+                {isFr ? "Centrioles (Pôle)" : lang === 'es' ? "Centriolos (Polo)" : lang === 'de' ? "Zentriolen (Pol)" : lang === 'zh' ? "中心粒 (两极)" : "Centrioles (Pole)"}
+              </text>
+
+              {/* Chromosomes condensés */}
+              <path d="M 215 130 L 230 160 L 260 160" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={265} y={163} textAnchor="start" className="fill-pink-400 uppercase tracking-wider">
+                {isFr ? "Chromosomes condensés" : lang === 'es' ? "Cromosomas condensados" : lang === 'de' ? "Kondensierte Chromosomen" : lang === 'zh' ? "凝聚染色体" : "Condensed chromosomes"}
+              </text>
+            </>
+          )}
+
+          {p >= 0.45 && p < 0.65 && (
+            <>
+              {/* Plaque métaphasique */}
+              <path d="M 200 70 L 200 45 L 230 45" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={235} y={48} textAnchor="start" className="fill-pink-400 uppercase tracking-wider">
+                {isFr ? "Plaque équatoriale" : lang === 'es' ? "Placa ecuatorial" : lang === 'de' ? "Äquatorialplatte" : lang === 'zh' ? "赤道板" : "Equatorial plate"}
+              </text>
+
+              {/* Fuseau mitotique */}
+              <path d="M 160 110 L 160 70 L 140 70" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={135} y={73} textAnchor="end" className="fill-blue-400 uppercase tracking-wider">
+                {isFr ? "Fuseau mitotique" : lang === 'es' ? "Huso mitótico" : lang === 'de' ? "Mitosespindel" : lang === 'zh' ? "纺锤体" : "Mitotic spindle"}
+              </text>
+            </>
+          )}
+
+          {p >= 0.65 && p < 0.9 && (
+            <>
+              {/* Chromatides sœurs séparées */}
+              <path d="M 160 90 L 160 60 L 180 60" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={185} y={63} textAnchor="start" className="fill-pink-400 uppercase tracking-wider">
+                {isFr ? "Chromatides sœurs" : lang === 'es' ? "Cromátides hermanas" : lang === 'de' ? "Schwesterchromatiden" : lang === 'zh' ? "姐妹染色单体" : "Sister chromatids"}
+              </text>
+
+              {/* Sillon de division */}
+              <path d="M 200 135 L 200 170 L 220 170" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={225} y={173} textAnchor="start" className="fill-amber-400 uppercase tracking-wider">
+                {isFr ? "Sillon de division" : lang === 'es' ? "Surco de división" : lang === 'de' ? "Teilungsfurche" : lang === 'zh' ? "分裂沟" : "Cleavage furrow"}
+              </text>
+            </>
+          )}
+
+          {p >= 0.9 && (
+            <>
+              {/* Enveloppe nucléaire en reformation */}
+              <path d="M 135 110 L 120 70 L 95 70" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={90} y={73} textAnchor="end" className="fill-emerald-400 uppercase tracking-wider">
+                {isFr ? "Enveloppe nucléaire" : lang === 'es' ? "Envoltura nuclear" : lang === 'de' ? "Kernhülle" : lang === 'zh' ? "核膜" : "Nuclear envelope"}
+              </text>
+
+              {/* Cytocinèse */}
+              <path d="M 200 120 L 200 170 L 220 170" stroke="#475569" strokeWidth="0.5" fill="none" />
+              <text x={225} y={173} textAnchor="start" className="fill-amber-400 uppercase tracking-wider">
+                {isFr ? "Cytocinèse" : lang === 'es' ? "Citocinesis" : lang === 'de' ? "Zytokinese" : lang === 'zh' ? "胞质分裂" : "Cytokinesis"}
+              </text>
+            </>
+          )}
+        </g>
+
         <defs>
           <linearGradient id="cell-grad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10b981" stopOpacity="0.04" />
@@ -241,8 +591,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
     const p = progress / 100;
     
     // Cycle points A, B, C, D coordinates on Pressure-Volume grid
-    // P-V graph starts at (80, 40) bottom is (200, 160)
-    // A: high P, low V. B: high-mid P, med V. C: low P, high V. D: low-mid P, med-low V.
     const pts = {
       A: { x: 70, y: 50 },
       B: { x: 130, y: 75 },
@@ -250,35 +598,30 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
       D: { x: 110, y: 135 }
     };
 
-    // Interpolate current dot coordinates based on p
     let dotX = pts.A.x;
     let dotY = pts.A.y;
     let pistonY = 70; // piston expansion level
     let thermalColor = "rgba(100, 116, 139, 0.2)"; // plate heat color
 
     if (p < 0.25) {
-      // Isothermal Expansion (A -> B)
       const ratio = p / 0.25;
       dotX = pts.A.x + (pts.B.x - pts.A.x) * ratio;
       dotY = pts.A.y + (pts.B.y - pts.A.y) * ratio;
       pistonY = 70 + ratio * 20;
       thermalColor = "rgba(239, 68, 68, 0.4)"; // Hot contact (Th)
     } else if (p < 0.5) {
-      // Adiabatic Expansion (B -> C)
       const ratio = (p - 0.25) / 0.25;
       dotX = pts.B.x + (pts.C.x - pts.B.x) * ratio;
       dotY = pts.B.y + (pts.C.y - pts.B.y) * ratio;
       pistonY = 90 + ratio * 25;
       thermalColor = "rgba(100, 116, 139, 0.05)"; // Insulated (Q=0)
     } else if (p < 0.75) {
-      // Isothermal Compression (C -> D)
       const ratio = (p - 0.5) / 0.25;
       dotX = pts.C.x + (pts.D.x - pts.C.x) * ratio;
       dotY = pts.C.y + (pts.D.y - pts.C.y) * ratio;
       pistonY = 115 - ratio * 30;
       thermalColor = "rgba(59, 130, 246, 0.4)"; // Cold sink (Tc)
     } else {
-      // Adiabatic Compression (D -> A)
       const ratio = (p - 0.75) / 0.25;
       dotX = pts.D.x + (pts.A.x - pts.D.x) * ratio;
       dotY = pts.D.y + (pts.A.y - pts.D.y) * ratio;
@@ -291,23 +634,19 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
         {/* PV diagram SVG */}
         <div>
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">
-            PV Indicator Diagram
+            {t.pvDiagram}
           </span>
           <svg viewBox="0 0 240 180" className="w-full bg-slate-950 rounded-xl border border-slate-900 overflow-visible p-2">
             {/* Grid Axes */}
             <line x1={40} y1={20} x2={40} y2={160} stroke="#475569" strokeWidth="1" />
             <line x1={40} y1={160} x2={220} y2={160} stroke="#475569" strokeWidth="1" />
-            <text x={35} y={25} fill="#64748b" fontSize="8" textAnchor="end" fontWeight="bold">Pressure (P)</text>
-            <text x={210} y={172} fill="#64748b" fontSize="8" textAnchor="middle" fontWeight="bold">Volume (V)</text>
+            <text x={35} y={25} fill="#64748b" fontSize="8" textAnchor="end" fontWeight="bold">{t.pressure}</text>
+            <text x={210} y={172} fill="#64748b" fontSize="8" textAnchor="middle" fontWeight="bold">{t.volume}</text>
 
-            {/* Cycle curves (Bezier lines) */}
-            {/* A -> B */}
+            {/* Cycle curves */}
             <path d={`M ${pts.A.x} ${pts.A.y} Q 100 62, ${pts.B.x} ${pts.B.y}`} stroke="#ef4444" strokeWidth="1.5" fill="none" />
-            {/* B -> C */}
             <path d={`M ${pts.B.x} ${pts.B.y} Q 160 110, ${pts.C.x} ${pts.C.y}`} stroke="#f59e0b" strokeWidth="1.5" fill="none" />
-            {/* C -> D */}
             <path d={`M ${pts.C.x} ${pts.C.y} Q 150 145, ${pts.D.x} ${pts.D.y}`} stroke="#3b82f6" strokeWidth="1.5" fill="none" />
-            {/* D -> A */}
             <path d={`M ${pts.D.x} ${pts.D.y} Q 90 90, ${pts.A.x} ${pts.A.y}`} stroke="#a855f7" strokeWidth="1.5" fill="none" />
 
             {/* Stage point labels */}
@@ -325,13 +664,13 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
         {/* Cylinder piston animation */}
         <div className="flex flex-col items-center">
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">
-            Gas Cylinder Assembly
+            {t.cylinder}
           </span>
           <svg viewBox="0 0 160 180" className="w-40 bg-slate-950 rounded-xl border border-slate-900 overflow-visible">
             {/* Thermic interface block at the bottom */}
             <rect x={20} y={150} width={120} height={18} rx="3" fill={thermalColor} stroke="#334155" strokeWidth="1" className="transition-all duration-300" />
             <text x={80} y={162} fill="#94a3b8" fontSize="8" textAnchor="middle" fontWeight="bold" className="uppercase tracking-wider">
-              {p < 0.25 ? "Hot Plate" : p >= 0.5 && p < 0.75 ? "Cold Sink" : "Insulation"}
+              {p < 0.25 ? t.hotPlate : p >= 0.5 && p < 0.75 ? t.coldSink : t.insulation}
             </text>
 
             {/* Cylinder boundary */}
@@ -340,11 +679,9 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
             {/* Compressed / Expanded working fluid molecules */}
             <g opacity="0.6">
               {Array.from({ length: 15 }).map((_, i) => {
-                // Scatter gas molecules inside the dynamic volume
                 const stepSeed = Math.sin(i * 1.7) * 45;
                 const cosSeed = Math.cos(i * 2.3) * 45;
                 const atomX = 80 + stepSeed * 0.7;
-                // Bound on top by the moving piston
                 const volumeHeight = 150 - pistonY;
                 const atomY = pistonY + 5 + Math.abs(cosSeed) * (volumeHeight / 55);
 
@@ -361,8 +698,7 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
               })}
             </g>
 
-            {/* Piston head line and rod moving */}
-            {/* Piston block */}
+            {/* Piston head */}
             <rect x={37} y={pistonY} width={86} height={10} fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
             {/* Piston rod */}
             <rect x={76} y={10} width={8} height={pistonY - 10} fill="#cbd5e1" />
@@ -374,16 +710,14 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
   // Render SVG for continuous customizable waves
   const drawWaves = () => {
-    // Generate wave path using current freq and amp parameters
     const points: string[] = [];
     const width = 400;
     const height = 150;
     const centerY = height / 2;
-    const t = progress * 0.25; // wave offset over time
+    const tVal = progress * 0.25;
 
     for (let x = 0; x <= width; x += 3) {
-      // Calculate sine wave coordinates with parameter offsets
-      const radians = (x * 0.05 * freq) - t;
+      const radians = (x * 0.05 * freq) - tVal;
       const y = centerY + Math.sin(radians) * amp;
       points.push(`${x},${y}`);
     }
@@ -392,12 +726,8 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
     return (
       <div className="space-y-4">
-        {/* Dynamic Wave display canvas */}
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full bg-slate-950 rounded-xl border border-slate-900 overflow-hidden">
-          {/* Axis center line */}
           <line x1={0} y1={centerY} x2={width} y2={centerY} stroke="#334155" strokeWidth="0.5" strokeDasharray="5,5" />
-          
-          {/* Active oscillating sine wave */}
           <path
             d={pathD}
             fill="none"
@@ -406,11 +736,7 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
             strokeLinecap="round"
             className="drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
           />
-
-          {/* Source node moving vertically */}
-          <circle cx={4} cy={centerY + Math.sin(-t) * amp} r="6" fill="#f59e0b" />
-
-          {/* Gradients */}
+          <circle cx={4} cy={centerY + Math.sin(-tVal) * amp} r="6" fill="#f59e0b" />
           <defs>
             <linearGradient id="wave-grad" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#3b82f6" />
@@ -420,11 +746,10 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
           </defs>
         </svg>
 
-        {/* Live numerical parameters box */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/60 p-4 border border-slate-850 rounded-xl">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-              <span className="uppercase tracking-wider">Wave Frequency (f)</span>
+              <span className="uppercase tracking-wider">{t.frequency}</span>
               <span className="text-blue-400">{freq.toFixed(1)} Hz</span>
             </div>
             <input
@@ -440,7 +765,7 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-              <span className="uppercase tracking-wider">Amplitude (A)</span>
+              <span className="uppercase tracking-wider">{t.amplitude}</span>
               <span className="text-purple-400">{amp.toFixed(0)} px</span>
             </div>
             <input
@@ -459,7 +784,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
   // Render SVG for wave optics Double-Slit Diffraction
   const drawDoubleSlit = () => {
-    // Wavelength color mapping (for screen readout and glowing source lines)
     const getWavelengthColor = (nm: number) => {
       if (nm < 450) return "#8b5cf6"; // Violet
       if (nm < 490) return "#06b6d4"; // Cyan
@@ -475,17 +799,12 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-          
-          {/* Main propagation block (3 cols) */}
           <div className="md:col-span-3 relative h-40 bg-slate-950 rounded-xl border border-slate-900 overflow-hidden">
-            {/* Slit Partition Wall */}
             <rect x={140} y={0} width={10} height={60} fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
             <rect x={140} y={75} width={10} height={25} fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
             <rect x={140} y={115} width={10} height={50} fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
 
-            {/* Incoming coherent plane wavefronts (before slits at x=140) */}
             {Array.from({ length: 5 }).map((_, i) => {
-              // Scroll wavefronts right
               const xCoord = ((i * 30 + p * 30) % 140);
               return (
                 <line
@@ -501,8 +820,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
               );
             })}
 
-            {/* Slits positions: Slit1 (y=67), Slit2 (y=107) */}
-            {/* Diffracted circular wavefronts radiating from the two slits */}
             {p > 0.1 && (
               <g stroke={laserColor} strokeWidth="1.5" fill="none">
                 {Array.from({ length: 4 }).map((_, i) => {
@@ -510,9 +827,7 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
                   if (r < 10) return null;
                   return (
                     <g key={i} strokeOpacity={Math.max(0, 1 - r / 140)}>
-                      {/* Radiating from upper slit */}
                       <path d={`M 150 ${67 - r} A ${r} ${r} 0 0 1 150 ${67 + r}`} />
-                      {/* Radiating from lower slit */}
                       <path d={`M 150 ${107 - r} A ${r} ${r} 0 0 1 150 ${107 + r}`} />
                     </g>
                   );
@@ -520,20 +835,15 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
               </g>
             )}
 
-            {/* Interference Screen at x=280 */}
             <line x1={290} y1={0} x2={290} y2={160} stroke="#475569" strokeWidth="3" />
           </div>
 
-          {/* Detector Screen fringe representation (1 col) */}
           <div className="md:col-span-1 flex flex-col items-center justify-center p-3 bg-slate-950 rounded-xl border border-slate-900">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-2 text-center">
-              Fringe Intensity Detector
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-2 text-center text-ellipsis overflow-hidden w-full whitespace-nowrap">
+              {t.detector}
             </span>
             <div className="w-full h-32 rounded bg-slate-950 flex flex-col overflow-hidden relative">
-              {/* Overlapping bright and dark bands based on wavelength diffraction spacing */}
               {Array.from({ length: 11 }).map((_, i) => {
-                // Calculate sinusoidal fringe intensity
-                // Screen height is 128px, center is i=5
                 const distFromCenter = Math.abs(i - 5);
                 const slitSpacingFactor = 1.3;
                 const fringeIntensity = Math.abs(Math.cos(distFromCenter * (wavelength / 180) * slitSpacingFactor));
@@ -553,10 +863,9 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
           </div>
         </div>
 
-        {/* Wavelength parameters controls */}
         <div className="space-y-1.5 bg-slate-950/60 p-4 border border-slate-850 rounded-xl">
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-            <span className="uppercase tracking-wider">Source Laser Wavelength (λ)</span>
+            <span className="uppercase tracking-wider">{t.wavelength}</span>
             <span style={{ color: laserColor }} className="font-extrabold">{wavelength} nm</span>
           </div>
           <input
@@ -578,8 +887,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
   const drawEnzyme = () => {
     const p = progress / 100;
 
-    // Substrate Coordinates: moving from right to active site
-    // At p=0: floating on the right. At p=0.5: bound into enzyme pocket. At p=1: split into two product pieces on the left
     let sub1X = 280;
     let sub1Y = 120;
     let sub2X = 280;
@@ -587,14 +894,12 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
     let enzymeGlow = "rgba(16,185,129,0)";
 
     if (p < 0.5) {
-      // Substrate approaching (280 -> 180)
       const ratio = p / 0.5;
       sub1X = 280 - ratio * 100;
       sub2X = 280 - ratio * 100;
       sub1Y = 115 - ratio * 5;
       sub2Y = 85 + ratio * 5;
     } else if (p < 0.65) {
-      // Bound Enzyme-Substrate Complex (Glow increases)
       sub1X = 180;
       sub2X = 180;
       sub1Y = 110;
@@ -602,7 +907,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
       const ratio = (p - 0.5) / 0.15;
       enzymeGlow = `rgba(16,185,129,${ratio * 0.45})`;
     } else {
-      // Splitting & Product Release (180 -> 80) and floating left separately
       const ratio = (p - 0.65) / 0.35;
       sub1X = 180 - ratio * 110;
       sub2X = 180 - ratio * 110;
@@ -620,22 +924,17 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
           </filter>
         </defs>
 
-        {/* Glowing Enzyme backdrop active zone */}
         <circle cx={170} cy={110} r="45" fill={enzymeGlow} filter="url(#active-glow)" className="transition-all duration-300" />
 
-        {/* Large Enzyme structure (Pac-man key shape) */}
-        {/* Active site cleft: a rectangular/triangular indentation at x=170 to x=190, y=80 to y=140 */}
         <path
           d="M 120 110 C 120 60, 170 50, 170 80 Q 170 95, 185 95 Q 170 110, 185 110 Q 170 125, 185 125 Q 170 140, 170 140 C 170 170, 120 160, 120 110 Z"
           fill="#1e1b4b"
           stroke="#818cf8"
           strokeWidth="3"
         />
-        <text x={140} y={114} fill="#818cf8" fontSize="10" fontWeight="900" textAnchor="middle" className="uppercase tracking-widest">Enzyme</text>
+        <text x={140} y={114} fill="#818cf8" fontSize="10" fontWeight="900" textAnchor="middle" className="uppercase tracking-widest">{t.enzyme}</text>
 
-        {/* Reacting Substrate / Released pieces */}
         {p < 0.65 ? (
-          // Single bound substrate (2 connecting interlocking parts)
           <g>
             <path
               d={`M ${sub1X} ${sub2Y} L ${sub1X + 15} ${sub2Y} L ${sub1X + 15} ${sub1Y + 15} L ${sub1X} ${sub1Y + 15} Q ${sub1X - 8} ${sub1Y + 5}, ${sub1X} ${sub2Y} Z`}
@@ -643,35 +942,31 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
               stroke="#f472b6"
               strokeWidth="1.5"
             />
-            <text x={sub1X + 8} y={(sub1Y + sub2Y) / 2 + 4} fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">Substrate</text>
+            <text x={sub1X + 8} y={(sub1Y + sub2Y) / 2 + 4} fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">{t.substrate}</text>
           </g>
         ) : (
-          // Two separate split product blocks floating off to the left
           <g>
-            {/* Product piece 1 (Top) */}
             <path
               d={`M ${sub2X} ${sub2Y} L ${sub2X + 15} ${sub2Y} L ${sub2X + 15} ${sub2Y + 18} L ${sub2X} ${sub2Y + 18} Z`}
               fill="#fb7185"
               stroke="#fda4af"
               strokeWidth="1.5"
             />
-            <text x={sub2X + 7} y={sub2Y + 12} fill="#ffffff" fontSize="6" fontWeight="bold" textAnchor="middle">P1</text>
+            <text x={sub2X + 7} y={sub2Y + 12} fill="#ffffff" fontSize="6" fontWeight="bold" textAnchor="middle">{t.p1}</text>
 
-            {/* Product piece 2 (Bottom) */}
             <path
               d={`M ${sub1X} ${sub1Y} L ${sub1X + 15} ${sub1Y} L ${sub1X + 15} ${sub1Y + 18} L ${sub1X} ${sub1Y + 18} Z`}
               fill="#38bdf8"
               stroke="#7dd3fc"
               strokeWidth="1.5"
             />
-            <text x={sub1X + 7} y={sub1Y + 12} fill="#ffffff" fontSize="6" fontWeight="bold" textAnchor="middle">P2</text>
+            <text x={sub1X + 7} y={sub1Y + 12} fill="#ffffff" fontSize="6" fontWeight="bold" textAnchor="middle">{t.p2}</text>
           </g>
         )}
       </svg>
     );
   };
 
-  // Switch renderer depending on simulation preset
   const renderSpecimenCanvas = () => {
     switch (activePreset.id) {
       case "mitosis":
@@ -691,41 +986,20 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
 
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
-      {/* Simulation Header with Presets Toggle */}
+      {/* Simulation Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850/80 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Activity className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Interactive Dynamic Simulator</span>
+            <span>{activePreset.name}</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            Play, pause or manually scrub the timeline to study step-by-step states.
+            {t.subtitle}
           </p>
-        </div>
-
-        {/* Switch presets pill navigation */}
-        <div className="flex flex-wrap gap-1.5">
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                setActivePreset(p);
-                setProgress(0);
-                setIsPlaying(false);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-                activePreset.id === p.id
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                  : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {p.name.split(' ')[0]} {/* short descriptor */}
-            </button>
-          ))}
         </div>
       </div>
 
-      {/* Main active speciment display */}
+      {/* Main active specimen display */}
       <div className="bg-slate-950/80 rounded-2xl border border-slate-900 p-5 min-h-[220px] flex items-center justify-center">
         <div className="w-full">
           {renderSpecimenCanvas()}
@@ -738,7 +1012,6 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
         {/* Scrubber Playback row */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="flex items-center gap-2.5">
-            {/* Play/Pause Trigger */}
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               className="p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center"
@@ -746,20 +1019,18 @@ export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string 
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 pl-0.5" />}
             </button>
 
-            {/* Reset timeline */}
             <button
               onClick={() => {
                 setIsPlaying(false);
                 setProgress(0);
               }}
               className="p-3 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
-              title="Reset Timeline"
+              title={t.reset}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Timeline scrubber progress input */}
           <div className="flex-1 w-full flex items-center gap-3">
             <span className="text-[10px] font-black text-slate-500 w-8 text-right font-mono">
               {Math.floor(progress)}%

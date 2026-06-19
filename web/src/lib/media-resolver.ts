@@ -229,7 +229,8 @@ async function validateYouTubeVideo(videoId: string): Promise<boolean> {
   }
   try {
     const res = await fetchWithTimeout(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' }, 4000);
-    return res.ok;
+    if (res.status === 404) return false;
+    return true; // Assume exists for other statuses (e.g. 429, 403) to prevent false-negative repairs
   } catch (err) {
     return true; // Network/rate limit: assume OK
   }

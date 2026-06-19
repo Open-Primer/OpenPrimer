@@ -160,11 +160,11 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
 
   const LOCALIZED_HEADINGS: Record<string, Record<string, string>> = {
     conclusion: {
-      fr: '## Conclusion : Synthèse & Discussion',
-      en: '## Conclusion: Summary & Discussion',
-      es: '## Conclusión: Síntesis y Discusión',
-      de: '## Fazit: Zusammenfassung & Diskussion',
-      zh: '## 结论：总结与讨论',
+      fr: '## Conclusion',
+      en: '## Conclusion',
+      es: '## Conclusión',
+      de: '## Fazit',
+      zh: '## 结论',
     },
     et_apres: {
       fr: '## Et Après ?',
@@ -1272,8 +1272,17 @@ function healBlockquoteContiguity(content: string): string {
       if (listType === 'ol' && /^\d+\./.test(marker)) {
         const currentNum = parseInt(marker);
         if (lastNum !== null && currentNum === lastNum + 1) {
-          shouldHeal = true;
-          lastNum = currentNum;
+          let hasLaterBQ = false;
+          for (let j = i + 1; j < Math.min(lines.length, i + 10); j++) {
+            if (/^\s*>\s*/.test(lines[j])) {
+              hasLaterBQ = true;
+              break;
+            }
+          }
+          if (hasLaterBQ) {
+            shouldHeal = true;
+            lastNum = currentNum;
+          }
         }
       } else if (listType === 'ul' && !/^\d+\./.test(marker)) {
         // For unordered lists, check if there is a blockquote line later in the file
@@ -1284,7 +1293,7 @@ function healBlockquoteContiguity(content: string): string {
             break;
           }
         }
-        if (hasLaterBQ || marker === lastBullet) {
+        if (hasLaterBQ) {
           shouldHeal = true;
         }
       }
@@ -1356,19 +1365,6 @@ function indentNestedBlockquotes(content: string): string {
       const blockquoteLines: number[] = [];
       while (j < lines.length) {
         const nextLine = lines[j];
-        if (nextLine.trim() === '') {
-          // Allow empty lines within a blockquote if they are followed by more blockquote lines
-          let k = j + 1;
-          while (k < lines.length && lines[k].trim() === '') {
-            k++;
-          }
-          if (k < lines.length && lines[k].trim().startsWith('>')) {
-            j = k;
-            continue;
-          } else {
-            break;
-          }
-        }
         if (nextLine.trim().startsWith('>')) {
           blockquoteLines.push(j);
           j++;
@@ -1483,9 +1479,21 @@ function parseMdxAlerts(content: string): string {
         bodyText = bodyText.slice(0, -1).trim();
       }
       
+      let typeToUse = type;
+      if (bodyText.match(/^\s*(?:\*\*)?\s*Mini-Biograph(?:ie|y)\b/i)) {
+        typeToUse = "biography";
+        // Clean the prefix "Mini-Biographie : " or "Mini-Biography: " from the body
+        // Case 1: **Mini-Biographie : Name** -> **Name**
+        bodyText = bodyText.replace(/^\s*\*\*\s*Mini-Biograph(?:ie|y)\s*[:\-–—]?\s*(.*?)\s*\*\*/i, '**$1**');
+        // Case 2: **Mini-Biographie** : Name -> Name
+        bodyText = bodyText.replace(/^\s*\*\*\s*Mini-Biograph(?:ie|y)\s*\*\*\s*[:\-–—]?\s*/i, '');
+        // Case 3: Mini-Biographie : Name -> Name
+        bodyText = bodyText.replace(/^\s*Mini-Biograph(?:ie|y)\s*[:\-–—]?\s*/i, '');
+      }
+      
       const finalAlertLines = bodyText.split('\n');
       const alertBodyWithIndent = finalAlertLines.map(line => baseIndent + line).join('\n');
-      const alertHtml = `${baseIndent}<Alert type="${type}">\n${alertBodyWithIndent}\n${baseIndent}</Alert>`;
+      const alertHtml = `${baseIndent}<Alert type="${typeToUse.toLowerCase()}">\n${alertBodyWithIndent}\n${baseIndent}</Alert>`;
       result.push(alertHtml);
       i = j;
     } else {
@@ -1640,6 +1648,96 @@ function parseItems(attrs: Record<string, string>, body: string): string[] {
     items.push(...lines);
   }
   return items;
+}
+
+function parseMarkdownObjectivesToJsx(content: string): string {
+  // Regex to match the Objectives header and capture all content until the next H2/H3 header or page end
+  const objectivesHeaderRegex = /^((?:##|###)\s*(?:🌟\s*)?(?:Objectifs\s+(?:d['’]apprentissage|de\s+la\s+leçon|du\s+cours|de\s+l['’]unité)|Learning\s+Objectives|Objetivos\s+de\s+aprendizaje|Lernziele|学习目标)\s*\r?\n)([\s\S]*?)(?=\r?\n(?:##|###)|(?![\s\S]))/gim;
+
+  return content.replace(objectivesHeaderRegex, (match, header, body) => {
+    // If the content already contains the <Objectives> component tag, skip processing
+    if (body.includes('<Objectives>') || body.includes('<Objectives ')) {
+      return match;
+    }
+
+    const knowledgeItems: string[] = [];
+    const skillsItems: string[] = [];
+    const attitudesItems: string[] = [];
+    
+    let currentCategory: 'knowledge' | 'skills' | 'attitudes' = 'knowledge';
+    
+    const lines = body.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      
+      const lower = trimmed.toLowerCase();
+      
+      // Categorize based on keywords
+      if (
+        lower.includes('savoir-faire') || 
+        lower.includes('compétence') || 
+        lower.includes('competence') || 
+        lower.includes('skills')
+      ) {
+        currentCategory = 'skills';
+      } else if (
+        lower.includes('posture') || 
+        lower.includes('attitude') || 
+        lower.includes('savoir-être') || 
+        lower.includes('savoir-etre')
+      ) {
+        currentCategory = 'attitudes';
+      } else if (
+        lower.includes('savoir') || 
+        lower.includes('connaissance') || 
+        lower.includes('knowledge')
+      ) {
+        currentCategory = 'knowledge';
+      }
+      
+      // If it matches a bullet point line, extract the clean item
+      const bulletMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+      if (bulletMatch) {
+        let text = bulletMatch[1].trim();
+        
+        // Clean any bold headings/prefixes from the bullet itself (e.g. "**Savoir :** Décrire..." -> "Décrire...")
+        text = text.replace(/^\*\*.*?\*\*\s*[:\-]?\s*/, '');
+        
+        // Skip empty or purely categorical bullets (e.g. if the bullet was just "- **Savoir**")
+        if (!text || text.toLowerCase() === 'savoir' || text.toLowerCase() === 'savoir-faire' || text.toLowerCase() === 'posture' || text.toLowerCase() === 'attitudes') {
+          continue;
+        }
+        
+        if (currentCategory === 'knowledge') {
+          knowledgeItems.push(text);
+        } else if (currentCategory === 'skills') {
+          skillsItems.push(text);
+        } else {
+          attitudesItems.push(text);
+        }
+      }
+    }
+    
+    // If we didn't find any bullet points, return the match unchanged
+    if (knowledgeItems.length === 0 && skillsItems.length === 0 && attitudesItems.length === 0) {
+      return match;
+    }
+    
+    const blocks: string[] = [];
+    if (knowledgeItems.length > 0) {
+      blocks.push(`  <Knowledge>\n    <ul className="list-disc pl-4 space-y-1">\n` + knowledgeItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Knowledge>`);
+    }
+    if (skillsItems.length > 0) {
+      blocks.push(`  <Skills>\n    <ul className="list-disc pl-4 space-y-1">\n` + skillsItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Skills>`);
+    }
+    if (attitudesItems.length > 0) {
+      blocks.push(`  <Attitudes>\n    <ul className="list-disc pl-4 space-y-1">\n` + attitudesItems.map(i => `      <li>${i}</li>`).join('\n') + `\n    </ul>\n  </Attitudes>`);
+    }
+    
+    return `${header}\n<Objectives>\n${blocks.join('\n')}\n</Objectives>\n`;
+  });
 }
 
 function healObjectivesTags(mdx: string): string {
@@ -2001,6 +2099,27 @@ function healQuestionTags(mdx: string): string {
         correctIndex = String(correctIdx);
       }
     }
+
+    // Parse child Option/Answer tags before they are deleted
+    const childOptionRe = /<(Option|Answer)\b([^>]*?)>([\s\S]*?)<\/\1>|<(Option|Answer)\b([^>]*?)\/>/gi;
+    let optMatch;
+    const parsedOptions: { text: string; correct: boolean }[] = [];
+    while ((optMatch = childOptionRe.exec(content)) !== null) {
+      const optAttrsStr = optMatch[2] || optMatch[5] || '';
+      const optAttrs = parseAttributes(optAttrsStr);
+      const optBody = (optMatch[3] || '').trim();
+      const text = optAttrs.text || optBody || '';
+      const isCorrect = String(optAttrs.correct) === 'true' || String(optAttrs.isCorrect) === 'true';
+      parsedOptions.push({ text, correct: isCorrect });
+    }
+
+    if (options.length === 0 && parsedOptions.length > 0) {
+      options = parsedOptions.map(o => o.text);
+      const correctIdx = parsedOptions.findIndex(o => o.correct);
+      if (correctIdx !== -1) {
+        correctIndex = String(correctIdx);
+      }
+    }
     
     let newContent = content;
     const feedbackMatch = /<Feedback\b([^>]*?)>([\s\S]*?)<\/Feedback>|<Feedback\b([^>]*?)\/?>/gi.exec(content);
@@ -2022,8 +2141,12 @@ function healQuestionTags(mdx: string): string {
     if (options.length > 0) {
       optionTags = options.map((opt, idx) => {
         const isCorr = String(idx) === String(correctIndex);
-        return `  <Option text="${opt}"${isCorr ? ' correct={true}' : ''} />`;
+        return `  <Option text=${JSON.stringify(opt)}${isCorr ? ' correct={true}' : ''} />`;
       }).join('\n');
+      const remaining = newContent.trim();
+      if (remaining) {
+        optionTags = remaining + '\n' + optionTags;
+      }
     } else {
       optionTags = newContent;
     }
@@ -2490,6 +2613,53 @@ function balancePedagogicalTags(mdx: string): string {
   return result;
 }
 
+function normalizeCustomTagsCasing(mdx: string): string {
+  const customTags = [
+    'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
+    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'EvenementHistorique',
+    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
+    'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
+    'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
+    'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
+    'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer', 'Description',
+    'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer', 'Image', 'CustomFigure',
+    'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
+    'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
+    'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
+    'IdeeBrillante', 'BrilliantIdea', 'FunctionManipulator', 'EquationManipulator',
+    'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
+    'ExternalSandbox', 'IframeWidget', 'FillInBlanks', 'MetaNote', 'FeynmanBox',
+    'PredictOutcome', 'BilingualText', 'SpeechButton', 'UnsolvedExercise', 'SolvedExercise',
+    'Artwork', 'Location', 'EntityLink', 'Place', 'FunctionGraph', 'DynamicSimulation',
+    'StructureViewer3D', 'GeochemicalChart', 'DataTable', 'PeriodicElement',
+    'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
+    'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
+    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'AnnotatedImage'
+  ];
+
+  let processed = mdx;
+  for (const tag of customTags) {
+    const tagRegex = new RegExp(`<(/?)(${tag})\\b`, 'gi');
+    processed = processed.replace(tagRegex, (match, closeSlash, matchedTag) => {
+      if (matchedTag === tag) return match;
+      return `<${closeSlash}${tag}`;
+    });
+  }
+  return processed;
+}
+
+function healPollinationsUrls(mdx: string): string {
+  return mdx.replace(/(https:\/\/image\.pollinations\.ai\/prompt\/)([^)"]+)/gi, (match, prefix, rest) => {
+    const [promptPart, query] = rest.split('?');
+    const decoded = decodeURIComponent(promptPart);
+    const cleanedPrompt = decoded
+      .replace(/[\s\-_]+/g, '_')
+      .replace(/[^a-zA-Z0-9_]/g, '');
+    const queryStr = query ? `?${query}` : '';
+    return `${prefix}${cleanedPrompt}${queryStr}`;
+  });
+}
+
 function decodeHtmlEncodedTags(mdx: string): string {
   let processed = mdx;
   // Convert &lt;/TagName or &lt;TagName to </TagName or <TagName
@@ -2780,6 +2950,17 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
 
+  // Remove markdown wrapping (emphasis/strong) around JSX tags to prevent MDX parser escaping them as raw text
+  processed = processed.replace(/\*\*<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>\*\*/g, '<$1$2>$3</$1>');
+  processed = processed.replace(/\*<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>\*/g, '<$1$2>$3</$1>');
+  processed = processed.replace(/_<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>_/g, '<$1$2>$3</$1>');
+
+  // Normalize custom React component tag casing to exact PascalCase
+  processed = normalizeCustomTagsCasing(processed);
+
+  // Heal any spaces or invalid characters in Pollinations AI image URLs
+  processed = healPollinationsUrls(processed);
+
   // Fix any spaces introduced before sub-component dots (e.g. <FillInBlanks .Input -> <FillInBlanks.Input)
   processed = processed.replace(/<(\w+)\s+\.(\w+)/gi, '<$1.$2');
 
@@ -2815,6 +2996,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = healQuestionTags(processed);
   processed = healWhatsNextCards(processed);
   processed = healPrerequisitesAndSummary(processed);
+  processed = parseMarkdownObjectivesToJsx(processed);
   processed = healObjectivesTags(processed);
 
   processed = normalizeFrenchPedagogicalTags(processed);
@@ -2881,7 +3063,10 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/).*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureRegex, (match, alt, imgUrl, caption, fallbackText, fallbackUrl) => {
     const cleanAlt = (alt || '').replace(/"/g, '&quot;');
-    const cleanCaption = (caption || '').replace(/"/g, '&quot;');
+    let cleanCaption = (caption || '');
+    // Strip any HTML/JSX tags from the caption so they don't render literally
+    cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
+    cleanCaption = cleanCaption.replace(/"/g, '&quot;');
     const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
     return `<CustomFigure src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
   });
@@ -2945,6 +3130,10 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = normalizeComplexAttributeTags(processed);
 
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
+  processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-(\d+)"[^>]*?>\s*\d+\s*<\/a>\s*<\/sup>/gi, (match, num) => {
+    return `<sup>[${num}](#ref-${num})</sup>`;
+  });
+
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
     return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
   });
@@ -3200,4 +3389,234 @@ function healUnclosedInlineTags(mdx: string): string {
 
   return result.join('\n');
 }
+
+export function isolateJsxForTranslation(mdx: string): { content: string; registry: Record<string, any> } {
+  const registry: Record<string, any> = {};
+  let currentId = 0;
+
+  // Step 1: Replace all closing custom JSX tags
+  let processed = mdx.replace(/<\/([A-Z][A-Za-z0-9.]*)>/g, (match, tagName) => {
+    const placeholder = `__JSX_CLOSE_${tagName}_${currentId++}__`;
+    registry[placeholder] = { type: 'close', tagName, original: match };
+    return placeholder;
+  });
+
+  // Step 2: Replace all opening or self-closing custom JSX tags
+  const tagRegex = /<([A-Z][A-Za-z0-9.]*)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)(\/?>)/g;
+  processed = processed.replace(tagRegex, (match, tagName, attrsStr, tagEnd) => {
+    const isSelfClosing = tagEnd.trim() === '/>';
+    const attrs = parseAttributes(attrsStr);
+    const placeholderId = currentId++;
+
+    // Category A: Completely isolated components (no translation needed)
+    const selfClosingIsolated = [
+      'Prerequisites', 'InteractiveDiagram', 'DataChart', 'CodeSandbox', 'Video', 'Audio',
+      'StructureViewer3D', 'DynamicSimulation', 'BasicMathExplorer', 'ChemicalStoichiometry',
+      'EquationManipulator', 'FunctionPlotter', 'FunctionManipulator', 'Geometry2D',
+      'GestaltInteractive', 'GestaltLab', 'PreCodeInterceptor'
+    ];
+
+    if (selfClosingIsolated.includes(tagName) || (isSelfClosing && !['FillInBlanks', 'Glossary', 'EssayEvaluation', 'HistoricalPerson', 'Artwork', 'Option', 'Question', 'DiagnosticQuiz'].includes(tagName))) {
+      const placeholder = `__JSX_SELF_${tagName}_${placeholderId}__`;
+      registry[placeholder] = { type: 'self', tagName, original: match };
+      return placeholder;
+    }
+
+    // Category B: Components with translatable attributes
+    if (tagName === 'FillInBlanks') {
+      const sentence = attrs.sentence || '';
+      const answer = attrs.answer || '';
+      const placeholder = `__JSX_ATTR_FillInBlanks_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_fib', tagName, attrs, original: match };
+      return `${placeholder} ${sentence} ||| ${answer} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'Glossary') {
+      const term = attrs.term || '';
+      const definition = attrs.definition || '';
+      const placeholder = `__JSX_ATTR_Glossary_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_glossary', tagName, attrs, original: match };
+      return `${placeholder} ${term} ||| ${definition} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'EssayEvaluation') {
+      const prompt = attrs.prompt || '';
+      const subject = attrs.subject || '';
+      const placeholder = `__JSX_ATTR_EssayEvaluation_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_essay', tagName, attrs, original: match };
+      return `${placeholder} ${prompt} ||| ${subject} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'HistoricalPerson' || tagName === 'Artwork') {
+      const name = attrs.name || '';
+      const placeholder = `__JSX_ATTR_${tagName}_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_entity', tagName, attrs, original: match };
+      return `${placeholder} ${name} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'Option') {
+      const text = attrs.text || '';
+      const placeholder = `__JSX_ATTR_Option_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_option', tagName, attrs, original: match };
+      return `${placeholder} ${text} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'Question' || tagName === 'DiagnosticQuiz') {
+      const q = attrs.q || attrs.questionText || attrs.text || attrs.question || '';
+      const explanation = attrs.explanation || '';
+      const placeholder = `__JSX_ATTR_${tagName}_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_question', tagName, attrs, original: match, isSelfClosing };
+      return `${placeholder} ${q} ||| ${explanation} __JSX_END_${placeholderId}__`;
+    }
+
+    // Category C: Standard opening tags of block components
+    const placeholder = `__JSX_OPEN_${tagName}_${placeholderId}__`;
+    registry[placeholder] = { type: 'open', tagName, attrs, original: match };
+    return placeholder;
+  });
+
+  return { content: processed, registry };
+}
+
+export function restoreJsxAfterTranslation(translatedMdx: string, registry: Record<string, any>): string {
+  let processed = translatedMdx;
+
+  function formatAttribute(k: string, v: any): string {
+    const cleanV = String(v || '').trim();
+    const isBraced = cleanV.startsWith('[') || cleanV.startsWith('{') || cleanV === 'true' || cleanV === 'false' || /^\d+$/.test(cleanV);
+    if (isBraced) {
+      return ` ${k}={${cleanV}}`;
+    } else {
+      const escapedV = cleanV.replace(/"/g, '&quot;');
+      return ` ${k}="${escapedV}"`;
+    }
+  }
+
+  // Sort keys by length descending to prevent substring collision
+  const keys = Object.keys(registry).sort((a, b) => b.length - a.length);
+
+  for (const placeholder of keys) {
+    const entry = registry[placeholder];
+    const idMatch = placeholder.match(/_(\d+)__/);
+    const placeholderId = idMatch ? idMatch[1] : '\\d+';
+
+    if (entry.type === 'close') {
+      processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+    } else if (entry.type === 'self') {
+      processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+    } else if (entry.type === 'open') {
+      processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+    } else if (entry.type === 'attr_fib') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const sentence = match[1].trim();
+        const answer = match[2].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'sentence' && k !== 'answer') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<FillInBlanks sentence="${sentence}" answer="${answer}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_glossary') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const term = match[1].trim();
+        const definition = match[2].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'term' && k !== 'definition') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<Glossary term="${term}" definition="${definition}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_essay') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const prompt = match[1].trim();
+        const subject = match[2].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'prompt' && k !== 'subject') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<EssayEvaluation prompt="${prompt}" subject="${subject}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_entity') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const name = match[1].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'name') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<${entry.tagName} name="${name}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_option') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const text = match[1].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'text') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<Option text="${text}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_question') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const q = match[1].trim();
+        const explanation = match[2].trim();
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'explanation') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const expAttr = explanation ? ` explanation="${explanation}"` : '';
+        const restoredTag = `<${entry.tagName} q="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    }
+  }
+
+  // Fallback cleanup of any orphaned tokens
+  for (const placeholder of keys) {
+    const entry = registry[placeholder];
+    processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+  }
+
+  return processed;
+}
+
 

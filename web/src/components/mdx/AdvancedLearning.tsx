@@ -84,6 +84,37 @@ export const SolvedProblem = ({ title, children }: { title: string, children: Re
   );
 };
 
+const healSummaryItems = (items: string[]): string[] => {
+  if (items.length <= 1) return items;
+  
+  const result: string[] = [];
+  let current = items[0];
+  
+  for (let i = 1; i < items.length; i++) {
+    const next = items[i];
+    if (!current || !next) continue;
+    
+    const lastChar = current.trim().slice(-1);
+    const isTerminated = /[.\?!]/.test(lastChar);
+    
+    const nextClean = next.trim();
+    const firstChar = nextClean.charAt(0);
+    const startsLowercase = firstChar === firstChar.toLowerCase() && firstChar !== firstChar.toUpperCase();
+    
+    if (!isTerminated || startsLowercase) {
+      const needsSeparator = !/[\s,;\-]/.test(lastChar) && !/^[\s,;\-]/.test(nextClean);
+      current = current.trim() + (needsSeparator ? ' ' : '') + nextClean;
+    } else {
+      result.push(current.trim());
+      current = next;
+    }
+  }
+  if (current) {
+    result.push(current.trim());
+  }
+  return result;
+};
+
 // Résumé de Section
 export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?: string }) => {
   const { language } = useLanguage();
@@ -100,13 +131,26 @@ export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?
     return null;
   }
 
+  const sanitizedItems = safeItems.map(item => {
+    if (!item) return '';
+    let cleaned = item.trim();
+    cleaned = cleaned.replace(/^[•\-\*\+◦▪▫\d\.\)\'\"]+\s*/, '');
+    return cleaned.trim();
+  }).filter(Boolean);
+
+  const healedItems = healSummaryItems(sanitizedItems);
+
+  if (healedItems.length === 0) {
+    return null;
+  }
+
   return (
     <div className="my-12 p-10 rounded-[40px] bg-slate-900 border border-slate-800 shadow-2xl">
       <h3 className="text-white text-xl font-black mb-8 flex items-center gap-3">
         <BookOpen className="w-6 h-6 text-blue-500" /> {t.summary_title}
       </h3>
       <ul className="space-y-4">
-        {safeItems.map((item, i) => (
+        {healedItems.map((item, i) => (
           <li key={i} className="flex items-start gap-4 text-slate-400 group">
             <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-600 group-hover:scale-150 transition-transform" />
             <span className="leading-relaxed">{item}</span>

@@ -1,7 +1,7 @@
 import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
-import { preprocessMdx } from './content';
+import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
 import { TASK_MODELS } from './ai-config';
@@ -89,7 +89,166 @@ async function mapConcurrent<T, R>(
   return results;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// STRUCTURED OUTPUT SCHEMAS
+// ─────────────────────────────────────────────────────────────────
+
+const syllabusSchema = {
+  type: "object",
+  properties: {
+    courseContext: {
+      type: "object",
+      properties: {
+        discipline: { type: "string" },
+        description: { type: "string" },
+        epistemologicalMatrix: { type: "string" },
+        targetLevel: { type: "string" },
+        pedagogicalStrategy: { type: "string" }
+      },
+      required: ["discipline", "description", "epistemologicalMatrix", "targetLevel", "pedagogicalStrategy"]
+    },
+    lessons: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          slug: { type: "string" },
+          cognitiveArtifact: { type: "string" },
+          technicalDepth: { type: "string" }
+        },
+        required: ["title", "slug", "cognitiveArtifact", "technicalDepth"]
+      }
+    }
+  },
+  required: ["courseContext", "lessons"]
+};
+
+const verificationSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    critique: { type: "string" }
+  },
+  required: ["approved", "critique"]
+};
+
+const slugsArraySchema = {
+  type: "array",
+  items: { type: "string" }
+};
+
+const systemicAnalysisSchema = {
+  type: "object",
+  properties: {
+    isSystemic: { type: "boolean" },
+    reason: { type: "string" }
+  },
+  required: ["isSystemic", "reason"]
+};
+
+const videoSearchSchema = {
+  type: "object",
+  properties: {
+    provider: { type: "string" },
+    id: { type: "string" },
+    url: { type: "string" }
+  }
+};
+
+const audioSearchSchema = {
+  type: "object",
+  properties: {
+    url: { type: "string" }
+  }
+};
+
+const curriculumSchema = {
+  type: "object",
+  properties: {
+    description: { type: "string" },
+    courses: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          subject: { type: "string" },
+          volume: { type: "string" },
+          type: { type: "string", enum: ["mandatory", "optional"] },
+          description: { type: "string" }
+        },
+        required: ["title", "subject", "volume", "type", "description"]
+      }
+    }
+  },
+  required: ["description", "courses"]
+};
+
+export async function correctCourseTitle(title: string, targetLang: string = 'en'): Promise<string> {
+  const cleanTitle = title.trim();
+  if (!cleanTitle || cleanTitle.length < 3) return title;
+  
+  const systemInstruction = `You are an elite academic copyeditor. Your task is to correct the spelling, grammar, accentuation, and capitalization of the course title in the language '${targetLang}'.
+Rules:
+- Standardize the capitalization (use Title Case appropriate for academic subjects in the target language).
+- Correct any obvious spelling errors, typos, and punctuation issues.
+- Do NOT translate the title to another language. Keep the original language if it makes sense (e.g., if the user wrote "droit des afaires" in French, correct it to "Droit des Affaires", not "Business Law").
+- Respond with ONLY the corrected title text. Do not add any quotes, markdown formatting, explanations, or introductory text.`;
+
+  const userPrompt = `Course Title to correct: "${cleanTitle}"`;
+
+  try {
+    if (isVertexConfigured()) {
+      const res = await callVertexAI({
+        task: 'course_generation',
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        systemInstruction,
+        generationConfig: { temperature: 0.1 }
+      });
+      if (res && res.ok) {
+        const json = await res.json();
+        const corrected = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (corrected) {
+          return corrected.replace(/^["']|["']$/g, '').replace(/```/g, '').trim();
+        }
+      }
+    }
+    
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (apiKey) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          generationConfig: { temperature: 0.1 }
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const corrected = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (corrected) {
+          return corrected.replace(/^["']|["']$/g, '').replace(/```/g, '').trim();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[correctCourseTitle] Failed to correct title using AI:`, err);
+  }
+
+  // Basic fallback: Capitalize each word (Title Case) if AI fails
+  return cleanTitle
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
+  const correctedCourseName = await correctCourseTitle(courseName, targetLang);
+  console.log(`[TITLE CORRECTION] Corrected course title from "${courseName}" to "${correctedCourseName}"`);
+
   const normalizeLevel = (lvl: string): string => {
     if (!lvl) return 'beginner';
     const clean = lvl.trim().toLowerCase();
@@ -107,7 +266,7 @@ export async function generateCourseContent(courseName: string, levelInput: stri
 
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
-Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive du cours intitulé "${courseName}" pour le niveau "${level}". Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
+Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive du cours intitulé "${correctedCourseName}" pour le niveau "${level}". Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
 
 Un cours d'anatomie ne s'articule pas comme un cours de topologie algébrique ou de philosophie politique. Tu dois impérativement adapter le squelette du cours à l'ADN épistémologique de la discipline et à l'âge du public visé (de la Primaire à la Licence 3).
 
@@ -117,20 +276,20 @@ Un cours d'anatomie ne s'articule pas comme un cours de topologie algébrique ou
 Avant de générer le moindre chapitre, tu dois classifier la discipline cible selon son mode d'administration de la preuve et de la transmission. Tu choisiras et appliqueras la matrice dominante parmi les suivantes :
 
 1. **Sciences Déductives / Formelles (Mathématiques, Logique, Physique Théorique) :**
-   * *Focus :* Rigueur absolue, chaîne causale sans faille.
-   * *Composants obligatoires :* Lemme ➔ Théorème ➔ Démonstration ➔ Corollaire. Chaque brique doit découler logiquement de la précédente.
+   * Focus : Rigueur absolue, chaîne causale sans faille.
+   * Composants obligatoires : Lemme ➔ Théorème ➔ Démonstration ➔ Corollaire. Chaque brique doit découler logiquement de la précédente.
 
 2. **Sciences Empiriques / Expérimentales (Biologie, Physique Expérimentale, Chimie) :**
-   * *Focus :* Observation du réel, double codage visuel.
-   * *Composants obligatoires :* Hypothèse ➔ Protocole Expérimental ➔ Observation/Données ➔ Interprétation/Modélisation. Présence massive de schémas, d'atlas ou d'illustrations anatomiques/structurelles.
+   * Focus : Observation du réel, double codage visuel.
+   * Composants obligatoires : Hypothèse ➔ Protocole Expérimental ➔ Observation/Données ➔ Interprétation/Modélisation. Présence massive de schémas, d'atlas ou d'illustrations anatomiques/structurelles.
 
 3. **Sciences Humaines et Discursives (Philosophie, Histoire, Littérature) :**
-   * *Focus :* Rhétorique, problématisation, dialectique.
-   * *Composants obligatoires :* Thèse ➔ Antithèse ➔ Synthèse (ou approche généalogique/conceptuelle). Analyse textuelle fine, contextualisation socio-historique, controverses doctrinales.
+   * Focus : Rhétorique, problématisation, dialectique.
+   * Composants obligatoires : Thèse ➔ Antithèse ➔ Synthèse (ou approche généalogique/conceptuelle). Analyse textuelle fine, contextualisation socio-historique, controverses doctrinales.
 
 4. **Sciences Appliquées / Ingénierie (Informatique, Architecture des Systèmes, Électronique) :**
-   * *Focus :* Résolution de problèmes, design pattern, constructivisme.
-   * *Composants obligatoires :* Expression du besoin ➔ Contraintes techniques ➔ Spécification de l'Architecture ➔ Implémentation/Code ➔ Tests de validation.
+   * Focus : Résolution de problèmes, design pattern, constructivisme.
+   * Composants obligatoires : Expression du besoin ➔ Contraintes techniques ➔ Spécification de l'Architecture ➔ Implémentation/Code ➔ Tests de validation.
 
 ---
 
@@ -170,7 +329,9 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
 # CONTRÔLE QUALITÉ ET INTERDICTIONS STRICTES
 * **Interdiction absolue du plan générique :** Un plan de cours de Mathématiques L3 qui ressemble à un plan d'Histoire (ex: I. Introduction, II. Évolution, III. Conclusion) sera rejeté.
-* **Exhaustivité du chapitrage :** Tu dois spécifier 4 à 6 leçons bien distinctes (maximum 3 pour le niveau Primaire). L'agent rédacteur (Agent 3) ne doit avoir aucune extrapolation à faire sur le plan.`;
+* **Exhaustivité du chapitrage :** Tu dois spécifier 4 à 6 leçons bien distinctes (maximum 3 pour le niveau Primaire). L'agent rédacteur (Agent 3) ne doit avoir aucune extrapolation à faire sur le plan.
+* **Introduction obligatoire :** La toute première leçon du cours (le premier élément de la liste 'lessons') doit obligatoirement être une leçon d'Introduction (titre: "Introduction" ou "Introduction à [Sujet]" ou équivalent dans la langue "${targetLang}", slug: "introduction" ou "introduction-a-[sujet]"). Cette première leçon doit être rédigée avec la même qualité et rigueur académique que les autres leçons, sans aucun placeholder ou fallback.
+* **Évaluation Finale globale obligatoire :** La toute dernière leçon du cours (le dernier élément de la liste 'lessons') doit obligatoirement être consacrée à l'Évaluation Finale (titre: "Évaluation Finale" ou "Final Evaluation" selon la langue "${targetLang}", slug: "evaluation-finale" ou "final-evaluation"). Ce chapitre ne doit pas introduire de nouveaux concepts, mais servir d'examen final sommatif pour évaluer l'assimilation globale de l'ensemble du cours.`;
 
   try {
     let parsedSyllabus: any = null;
@@ -205,7 +366,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
   // If lessonOffset is 0, clear any existing lessons for this course and language to avoid duplicates from previous failed runs.
   if (lessonOffset === 0) {
-    const cleanSlug = cleanPathSegment(courseName);
+    const cleanSlug = cleanPathSegment(correctedCourseName);
     console.log(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
     try {
       const { error: deleteError } = await supabaseAdmin
@@ -235,7 +396,11 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
           const res = await callVertexAI({
             task: 'course_generation',
             contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
-            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: "application/json",
+              responseSchema: syllabusSchema
+            }
           });
 
           if (res && res.ok) {
@@ -257,7 +422,10 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: promptSyllabus }] }],
-              generationConfig: { responseMimeType: "application/json" }
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: syllabusSchema
+              }
             })
           });
           if (res.ok) {
@@ -280,21 +448,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       }
 
       if (!rawJson) {
-        console.warn("[AI GENERATOR] AI model failed to generate syllabus. Generating mock syllabus.");
-        rawJson = JSON.stringify({
-          courseContext: {
-            discipline: "General",
-            epistemologicalMatrix: "Ingénierie",
-            targetLevel: level,
-            pedagogicalStrategy: "Fallback basic strategy"
-          },
-          lessons: [
-            { title: "Introduction", slug: "introduction", cognitiveArtifact: "Overview", technicalDepth: "Basic introduction to core concepts" },
-            { title: "Fundamental Principles", slug: "fundamental_principles", cognitiveArtifact: "Core concepts explanation", technicalDepth: "Key terms and equations" },
-            { title: "Advanced Applications", slug: "advanced_applications", cognitiveArtifact: "Case study", technicalDepth: "Real-world context" },
-            { title: "Conclusion", slug: "conclusion", cognitiveArtifact: "Summary", technicalDepth: "Final summary" }
-          ]
-        });
+        throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model failed to generate syllabus for course "${correctedCourseName}". Syllabus raw JSON is empty.`);
       }
 
       const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -303,6 +457,16 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
         ? parsedSyllabus
         : (parsedSyllabus.lessons || []);
       courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
+
+      if (!lessonsList || lessonsList.length === 0) {
+        throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model generated an empty or invalid syllabus for course "${correctedCourseName}". Lessons list is empty.`);
+      }
+
+      lessonsList.forEach((les: any, idx: number) => {
+        if (!les || typeof les !== 'object' || !les.title || !les.slug) {
+          throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus lesson at index ${idx} is missing a title or slug: ${JSON.stringify(les)}`);
+        }
+      });
 
       // Save the syllabus to the task description to ensure durability on retries
       if (taskId) {
@@ -370,7 +534,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       // Check if this lesson already exists and is non-empty (incremental generation check)
       try {
         const { data: existingLesson } = await dbService.getLesson(
-          cleanPathSegment(courseName),
+          cleanPathSegment(correctedCourseName),
           item.slug,
           targetLang.toLowerCase()
         );
@@ -391,8 +555,49 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       }
 
       const isPrimary = levelInput.toLowerCase().includes('primary') || levelInput.toLowerCase().includes('primaire');
-      
-      const promptContent = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
+      const isLastLesson = index === lessonsList.length - 1 && lessonsList.length > 1;
+
+      let promptPreamble = '';
+      if (isLastLesson) {
+        promptPreamble = `### EXIGENCE ABSOLUE : ÉVALUATION FINALE SOMMATIVE ET EXHAUSTIVE (ZÉRO VIDE)
+Règle d'or : Cette dernière leçon est l'Évaluation Finale globale du cours "${correctedCourseName}". Elle ne doit PAS être un cours théorique classique, mais un examen complet et sérieux de validation qui couvre l'intégralité des concepts abordés dans l'ensemble des leçons précédentes.
+
+Vous devez concevoir un examen d'évaluation final de haut niveau, qui prendra entre plusieurs dizaines de minutes et deux heures à réaliser. L'évitement ou la paresse textuelle (comme un quiz vide ou comportant seulement 2 ou 3 questions) sont strictement interdits et entraîneront le rejet immédiat du contenu.
+
+Zéro Placeholder (Interdiction des squelettes) : Toutes les questions, options, explications, et consignes doivent être rédigées de manière exhaustive et complète.
+
+Format du contenu de l'Évaluation Finale :
+1. Introduction de l'Évaluation :
+   - Un paragraphe d'introduction prestigieux rappelant le parcours de l'étudiant à travers le cours "${correctedCourseName}" et présentant les consignes de l'examen final.
+   - Les objectifs pédagogiques de l'évaluation wrapped dans le composant custom \`<Objectives>\` (avec \`<Knowledge>\`, \`<Skills>\` et \`<Attitudes>\`).
+2. Corps de l'Évaluation Finale :
+   Générez un examen sommatif de qualité adapté à la discipline et au niveau du cours :
+   
+   * DISCIPLINE HUMANISTE / DISCURSIVE (Philosophie, Littérature, Histoire, Droit, Sciences Sociales, etc.) :
+     - Vous devez obligatoirement insérer le composant de rédaction académique tutoré par IA :
+       \`<EssayEvaluation prompt="[Un sujet d'examen final extrêmement complet, profond et structuré en plusieurs sous-questions couvrant l'ensemble du cours, obligeant l'étudiant à rédiger une synthèse approfondie]" gradingSystem="${targetLang.toLowerCase() === 'fr' ? '0/20' : 'A-F'}" subject="${correctedCourseName}" durationLimit={7200} />\`
+     - Ajoutez également une série de 5 à 10 questions de réflexion critique à réponse ouverte.
+     
+   * DISCIPLINE SCIENTIFIQUE / TECHNIQUE / QUANTITATIVE (Mathématiques, Physique, Chimie, Informatique, Économie, etc.) :
+     - Vous devez obligatoirement insérer un grand Quiz sommatif : \`<Quiz durationLimit={3600}>\` contenant entre 20 et 30 questions de haut niveau couvrant tous les chapitres du cours.
+       Chaque question doit être rédigée sous la forme :
+       \`<Question q="[Texte de la question]" explanation="[Explication alternative et constructive de la solution]">
+         <Option correct={true}>[Option correcte]</Option>
+         <Option correct={false}>[Option erronée 1]</Option>
+         <Option correct={false}>[Option erronée 2]</Option>
+         <Option correct={false}>[Option erronée 3]</Option>
+       </Question>\`
+     - Insérez également au moins 3 exercices résolus (\`<SolvedExercise>\`) et 3 exercices interactifs à réponse numérique (\`<UnsolvedExercise>\`).
+     - Intégrez au moins un simulateur ou sandbox interactif de la discipline (\`<FunctionManipulator />\`, \`<EquationManipulator />\`, \`<Geometry2D />\`, \`<ChemicalStoichiometry />\` ou \`<CodeSandbox />\`).
+     
+   * NIVEAU PRIMAIRE (CP - CM2) :
+     - Proposez un grand Quiz de 10 à 15 questions sous forme de défis (\`<Quiz durationLimit={1800}>\`) et des textes à trous (\`<FillInBlanks sentence="..." answer="..." />\`).
+     
+3. Glossaire et Références (comme d'habitude) :
+   - Un glossaire complet réunissant tous les termes clés de l'évaluation et du cours.
+   - Les références académiques de base du cours (pour les niveaux supérieurs, au moins 8 à 12 références).`;
+      } else {
+        promptPreamble = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
 Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome, exhaustif et immédiatement exploitable. L'évitement, la paresse textuelle et le résumé vague sont considérés comme des fautes critiques de génération.
 
 Zéro Placeholder (Interdiction des squelettes) : Il est strictement interdit d'utiliser des formulations de type "Dans cette section, nous aborderons...", "Exemple à compléter...", ou "etc.". Tout concept introduit doit être intégralement développé, expliqué et illustré dans le corps du texte.
@@ -401,13 +606,16 @@ Interdiction absolue des balises de composants vides : Il est strictement proscr
 
 Rigueur Factuelle et Précision Scientifique : Le ton doit être académique, précis et pédagogique. Utilisez les termes techniques exacts, immédiatement suivis de leur vulgarisation ou de leur ancrage dans le glossaire. Pas de généralités floues.
 
-Profondeur Pédagogique : Si un cours nécessite 3 000 mots pour être traité avec la rigueur d'un niveau L3 (ou la clarté adaptée à un niveau Primaire), générez l'intégralité du contenu requis. Ne sacrifiez jamais la substance pour la concision.
+Profondeur Pédagogique : Si un cours nécessite 3 000 mots pour être traité avec la rigueur d'un niveau L3 (ou la clarté adaptée à un niveau Primaire), génerez l'intégralité du contenu requis. Ne sacrifiez jamais la substance pour la concision.
 
-Critère de Rejet (Quality Gate) : Tout cours comportant des sections ou balises vides, des listes à puces non développées, des approximations factuelles ou des conclusions hâtives sera détecté par le script de validation, immédiatement rejeté sans paiement/crédit, et détruira la réputation de l'infrastructure. Tu agis ici en tant qu'expert académique mondial.
+Critère de Rejet (Quality Gate) : Tout cours comportant des sections ou balises vides, des listes à puces non développées, des approximations factuelles ou des conclusions hâtives sera détecté par le script de validation, immédiatement rejeté sans paiement/crédit, et détruira la réputation de l'infrastructure. Tu agis ici en tant qu'expert académique mondial.`;
+      }
+
+      const promptContent = `${promptPreamble}
 
 ---
 
-You are a world-class academic professor (Agent 3 - Academic Writer). Generate the complete, professional, extremely detailed academic MDX lesson content for the lesson "${item.title}" in the course "${courseName}" (${level}).
+You are a world-class academic professor (Agent 3 - Academic Writer). Generate the complete, professional, extremely detailed academic MDX lesson content for the lesson "${item.title}" in the course "${correctedCourseName}" (${level}).
 
 Pedagogical Context and Strategy (from Pedagogical Architect Agent 1 & 2):
 ${courseContext.pedagogicalStrategy ? `- Pedagogical Strategy: ${courseContext.pedagogicalStrategy}` : ''}
@@ -438,15 +646,36 @@ Requirements:
      \`<DiagnosticQuiz question="Diagnostic Question text" options={["Option A", "Option B", "Option C"]} correctIndex={0} targetSectionId="section-slug-to-skip-to" sectionTitle="Section Title to Skip" />\`
      This question should test the entry concepts of the first sections. If the user answers correctly, it lets them skip directly to the target section.
    - You MUST start the lesson with a clear, engaging "Introduction" or "Présentation" section (using a heading like "## Introduction" or "## Présentation" in the course language). This section must set the stage, define the learning objectives, and present the scope of the lesson.
-   - Immediately after the introduction section, you MUST systematically insert the explicit learning objectives following the KSA (Knowledge, Skills, Attitudes) model. Segment the learning targets into three distinct axes: Knowledge (Savoir - concepts), Skills (Savoir-faire - application), and Attitudes (Posture/Analyse). If the course level is L3 (Bachelor 3ème année or Senior Undergraduate), you MUST use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer) for these objectives.
-   - You MUST conclude the lesson content (immediately before the evaluation) with a "Summary & Conclusion" or "Synthèse & Ouverture" section (using a heading like "## Conclusion" or "## Synthèse & Discussion").
-   - This concluding section must contain:
-     * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component. Each item in the array MUST be a complete, grammatically whole, and self-contained sentence in the course's language. Under NO circumstances should you split a single sentence, clause, or paragraph across multiple items or artificial bullet points. Provide exactly 3 to 4 points, each representing a distinct, complete educational takeaway.
-     * A brief paragraph containing open reflection questions (questions ouvertes de réflexion) and an opening (ouverture) toward further study or neighboring fields.
+   - Immediately after the introduction section, you MUST systematically insert the explicit learning objectives following the KSA (Knowledge, Skills, Attitudes) model. You MUST wrap the objectives inside the custom \`<Objectives>\` component, using the \`<Knowledge>\`, \`<Skills>\`, and \`<Attitudes>\` sub-components:
+      \`<Objectives>
+        <Knowledge>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Distinguer...</li>
+            <li>Expliquer...</li>
+          </ul>
+        </Knowledge>
+        <Skills>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Résoudre...</li>
+            <li>Calculer...</li>
+          </ul>
+        </Skills>
+        <Attitudes>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Apprécier...</li>
+            <li>Analyser de manière critique...</li>
+          </ul>
+        </Attitudes>
+      </Objectives>\`
+      Segment the learning targets into three distinct axes: Knowledge (Savoir - concepts), Skills (Savoir-faire - application), and Attitudes (Posture/Analyse). If the course level is L3 (Bachelor 3ème année ou Senior Undergraduate), you MUST use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer) for these objectives.
+   - You MUST conclude the lesson content (immediately before the evaluation) with a concluding section (using the heading "## Conclusion" or localized equivalent). Do NOT use headings like "## Synthèse & Discussion" or "## Synthèse & Ouverture", but the concluding section itself must contain the synthesis, discussion, questioning, and opening (synthèse, discussion, questionnement, ouverture) written in a natural, flowing manner.
+    - This concluding section must contain:
+      * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component. Each item in the array MUST be a complete, grammatically whole, and self-contained sentence in the course's language. Under NO circumstances should you split a single sentence, clause, or paragraph across multiple items or artificial bullet points. Provide exactly 3 to 4 points, each representing a distinct, complete educational takeaway.
+      * A structured content block covering the synthesis, discussion, questioning, and opening (synthèse, discussion, questionnement, et ouverture) toward further study or neighboring fields. You can write multiple, lengthy paragraphs if appropriate for the course level and subject, but the text must flow naturally and you MUST NOT use any sub-headings or labels (do NOT write sub-headings like "Synthèse" or "Discussion").
 5. Conceptual framework, historical perspective, and concrete real-world applications in the body of the lesson.
    - **Author Quotes (Citations d'auteurs, complete academic citations required)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes, providing a complete bibliographic citation as the source (author, book title, publishing house, city, year, and page numbers):
      \`> "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. PageNumber\`
-     Ensure every quote is beautifully integrated, translated or kept in its original prestigious phrasing (with a translation in parentheses if helpful), and followed by a dedicated paragraph explaining its conceptual implications and context.
+     Ensure every quote is beautifully integrated. If a quote is in a language other than the lesson's target language (e.g., an English quote in a French lesson), you MUST systematically translate it into the target language of the lesson and display the translation in brackets (e.g., [Traduction : ...] or [Translation: ...]) immediately following the quote. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
 6. Controlled Digressions (Encadrés Epistémologiques):
    - If the course level is university level (L1, L2, L3 / undergraduate_1, undergraduate_2, undergraduate_3), you MUST systematically insert at least one controlled digression box in the body of the lesson using the custom component:
      \`<Epistemology title="Title of Digression">...</Epistemology>\`
@@ -461,12 +690,13 @@ Requirements:
    - **Secure Pollinations.ai Image Generation**: All images must be securely loaded using the following markdown URL syntax:
      \`![Alt Text](https://image.pollinations.ai/prompt/{descriptive_english_prompt_with_underscores}?width=800&height=600&nologo=true)\`
      *The prompt inside the curly braces MUST be written in English (the image generator's native language) for high aesthetic quality, be highly specific and illustrative, and use ONLY underscores (\`_\`) or hyphens (\`-\`) instead of spaces. Do NOT include raw spaces, quotes, or special characters in the URL, as they break rendering.*
+   - **Prefer Wikimedia Commons for Real/Complex Illustrations**: For complex biological, chemical, physical, geographical, or anatomical diagrams (such as the plasma membrane structure, cell anatomy, molecular models, or historical maps), you MUST prefer using high-quality public domain images from Wikimedia Commons instead of generating lower-quality AI images (via Pollinations.ai) or building overly simplistic/incomplete custom interactive diagram components. Specify the real Wikimedia Commons image URL in the markdown syntax (e.g. \`![Structure of the Plasma Membrane](https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Cell_membrane_detailed_diagram_en.svg/1024px-Cell_membrane_detailed_diagram_en.svg.png)\`) and link to it in the references section.
    - **Systematic captions & sequential numbering (Légendage et Titrage)**: Every image/figure, video player, and audio player MUST be sequentially captioned and numbered directly below the element using italicized text:
-     * For an Image/Figure: \`*Figure X : [Titre explicite] - [Description détaillée de ce qu'affiche l'image].*\`
-     * For a Video: \`*Vidéo X : [Titre de la vidéo] - [Résumé structuré du contenu de la vidéo].*\`
-     * For an Audio track: \`*Audio X : [Titre de la piste audio] - [Transcription textuelle complète de ce qui est prononcé].*\`
-    - **Footnote referencing**: Link every major actual external illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. <sup><a id="ref-src-1" href="#ref-1">1</a></sup>. Do NOT add footnotes or source references for system-generated flowcharts, interactive diagrams, sandboxes, equation solvers, or simulators, as they are constructed programmatically on the fly.
-    - **Failures and Redirect links**: Directly below the caption of actual external resources (e.g. external images, audio, or video files), systematically insert an alternative textual link letting the student access the original external resource directly if loading fails. This link MUST be written ONLY in the course's target language (e.g., [Accéder directement à la ressource](url) in French, or [Access the resource directly](url) in English). Under NO circumstances should you combine multiple languages or use bilingual/slashed links like [Accéder... / Access...]. Never add redirect/source links for system-generated flowcharts (like mermaid), interactive diagrams, or simulators, as they do not have external source URLs.
+     * For an Image/Figure: \`*Figure X : [Titre explicite] - [Description détaillée de ce qu'affiche l'image]. Source : [Spécifier systématiquement la source, par exemple "Wikimedia Commons" ou "Image générée par une intelligence artificielle à titre d'illustration"].*\`
+     * For a Video: \`*Vidéo X : [Titre de la vidéo] - [Résumé structuré du contenu de la vidéo]. Source : [Spécifier systématiquement la source, par exemple "YouTube", "Vimeo", ou "Vidéo générée par une intelligence artificielle"].*\`
+     * For an Audio track: \`*Audio X : [Titre de la piste audio] - [Transcription textuelle complète de ce qui est prononcé]. Source : [Spécifier systématiquement la source, par exemple "Enregistrement historique" ou "Audio généré par synthèse vocale d'intelligence artificielle"].*\`
+   - **Footnote referencing**: Link every major actual external illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. <sup><a id="ref-src-1" href="#ref-1">1</a></sup>. Do NOT add footnotes or source references for system-generated flowcharts, interactive diagrams, sandboxes, equation solvers, or simulators, as they are constructed programmatically on the fly.
+   - **Failures and Redirect links**: Directly below the caption of actual external resources that possess a real external origin (e.g. external images, audio, or video files with URLs), systematically insert a very short, non-intrusive source link in the format [Source](url) (or translated equivalent in the course's target language: e.g., [Source](url) in French/English, [Fuente](url) in Spanish, [Quelle](url) in German, [来源](url) in Chinese). Under NO circumstances should you use long verbose phrases like "Accéder directement à la ressource" or combine multiple languages. If the resource was generated by an artificial intelligence (e.g., Pollinations.ai images, AI-synthesized audio, or AI-generated video simulations), you MUST NOT insert any redirect link (as there is no external URL), but instead ensure the italicized caption itself explicitly states it was generated by an artificial intelligence.
 9. Glossary and Highlighted Terms with Wikipedia integration :
    - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
    - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
@@ -475,7 +705,7 @@ Requirements:
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects:
       * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
         \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
-        *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes.
+        *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<HistoricalPerson>' tags inside markdown image captions or figure titles, as these are transformed into JSX attributes and will display the raw HTML/JSX tags literally on the page. Keep captions as plain text.
         *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a historical figure in a '<HistoricalPerson>' tag if they are already wrapped in one, and do NOT place a '<HistoricalPerson>' tag inside the bold title of a '**Mini-Biographie**' block (keep the title simple as plain text, e.g., '**Mini-Biographie : DisplayName (Dates)**', and only wrap the first mention of the person in the actual biography content/text below the title). Duplicate or nested '<HistoricalPerson>' tags for the same person are strictly prohibited.
         - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
         - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
@@ -715,14 +945,14 @@ Requirements:
       }
 
       if (!rawMdx) {
-        const errorMsg = `[AI GENERATOR CRITICAL ERROR] Failed to generate content for lesson "${item.title}" in course "${courseName}". Vertex AI Status: ${vertexStatus} (${vertexError}), AI Studio Status: ${studioStatus} (${studioError}).`;
+        const errorMsg = `[AI GENERATOR CRITICAL ERROR] Failed to generate content for lesson "${item.title}" in course "${correctedCourseName}". Vertex AI Status: ${vertexStatus} (${vertexError}), AI Studio Status: ${studioStatus} (${studioError}).`;
         console.error(errorMsg);
         throw new Error(errorMsg);
       }
 
       // Agent 4 (Verifier/Critic) refinement loop
       let currentMdx = rawMdx;
-      let approved = !contentSuccess; // Skip verification loop if generation failed and we are outputting diagnostics
+      let approved = !contentSuccess;
       let iteration = 0;
       const maxIterations = 3;
 
@@ -750,13 +980,13 @@ Your Checkpoints:
    - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading like '## Présentation').
    - Ensure the presence of learning objectives (using '<Objectives>' containing '<Knowledge>', '<Skills>', and '<Attitudes>' sub-components).
    - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' component) before the final evaluation.
-   - Ensure the presence of a concluding section (using a heading like '## Conclusion' or '## Synthèse & Discussion' or '## Synthèse & Ouverture') containing the '<Summary items={[...]} />' component.
+   - Ensure the presence of a concluding section (using the heading '## Conclusion' or localized equivalent) containing the '<Summary items={[...]} />' component.
    - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>', '<SummativeEvaluation>', or '<EssayEvaluation ... />').
    - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
    - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
    If any of these required structural sections/components are missing, you MUST reject the content (set "approved": false) and request the writer to add them.
 4. "Multimedia, Illustrations, & Non-Text Media Density":
-   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${courseName}"):
+   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${correctedCourseName}"):
    - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
    - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', '<StructureViewer3D />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'. Reject if NONE of these are present.
    - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
@@ -778,7 +1008,7 @@ Your Checkpoints:
    - Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
    - Verify that there are no duplicate or nested '<HistoricalPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<HistoricalPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
    - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="...">'.
-8. "No Source Redirects for Flowcharts": Check system-generated flowcharts (mermaid diagrams) or interactive simulators, and ensure they do NOT contain any "Accéder directement à la source" / "Access the resource directly" links below them, as they are constructed dynamically on the fly.
+8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources (like Pollinations.ai images), and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
 9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
     - Every <Question> element MUST have its question text defined in the 'q' attribute (e.g. <Question q="Question text?">) and not as raw text children.
     - Systematically reject (approved: false) any content containing deprecated pedagogical tags like <Explanation>, <Solution>, <Instruction>, or <KeyConcept>.
@@ -786,6 +1016,10 @@ Your Checkpoints:
    - Every <Option> tag has a "correct" boolean attribute (set to true or false) indicating whether it is the correct answer. Systematically reject any quiz question that does not define options or where no option has correct={true}.
    - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
    - All text content and attributes inside these assessment tags are fully written, meaningful, and not empty or skeletal. Reject any empty or placeholder assessments.
+10. "Foreign Language Quotes & Translations":
+    - Verify that any quote in a language other than the lesson's target language (e.g., an English quote in a French lesson) is systematically translated into the target language of the lesson, and that this translation is displayed in brackets (e.g., [Traduction : ...] or [Translation: ...]) immediately following the quote. Reject if a foreign quote is not followed by its bracketed translation. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
+11. "Wikimedia Commons Preference for Complex Diagrams":
+    - For complex biological, chemical, physical, geographical, or anatomical diagrams (such as the plasma membrane structure, cell anatomy, molecular models, or historical maps), verify that high-quality public domain images from Wikimedia Commons are preferred over low-quality Pollinations.ai images or simple placeholders. Verify that the Wikimedia Commons image URL is correctly used in the markdown image syntax and linked/credited in the references section.
 
 You must return a valid JSON object with the following keys:
 - "approved": boolean (true if it perfectly complies with the policies; false if there are violations).
@@ -801,7 +1035,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
               const vRes = await callVertexAI({
                 task: 'course_generation',
                 contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
-                generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+                generationConfig: {
+                  temperature: 0.1,
+                  responseMimeType: "application/json",
+                  responseSchema: verificationSchema
+                }
               });
               if (vRes && vRes.ok) {
                 const vJson = await vRes.json();
@@ -814,7 +1052,6 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           }
           
           if (!verifierSuccess && apiKey) {
-            console.log(`[AI GENERATOR - AGENT 4] Verifying lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
             const startTime = Date.now();
             try {
               const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -822,19 +1059,16 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: verifierPrompt }] }],
-                  generationConfig: { responseMimeType: "application/json" }
+                  generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: verificationSchema
+                  }
                 })
               });
               if (vRes.ok) {
                 const vJson = await vRes.json();
                 verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
                 verifierSuccess = true;
-
-                const durationMs = Date.now() - startTime;
-                const usage = vJson.usageMetadata || {};
-                const promptTokens = usage.promptTokenCount || 0;
-                const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, verifierPrompt);
               }
             } catch (err) {
               console.error(`[AI GENERATOR - AGENT 4] AI Studio verification fetch exception:`, err);
@@ -851,12 +1085,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
             const critique = verificationResult?.critique || 'Invalid or empty verification response from AI critic.';
             console.warn(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
             
-            // Re-generate content using the critique
             const refinerPrompt = `You are a world-class academic professor (Agent 1/2/3). The verifier/critic (Agent 4) has rejected your previous output.
 You must now rewrite, expand, and fully correct the MDX lesson content based on their feedback, ensuring zero placeholders and high academic density.
 
 CRITIQUE FROM AGENT 4:
-"${verificationResult.critique}"
+"${critique}"
 
 PREVIOUS MDX CONTENT:
 ---
@@ -886,7 +1119,6 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
             }
             
             if (!refineSuccess && apiKey) {
-              console.log(`[AI GENERATOR - REFINE] Refining lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
               const startTime = Date.now();
               try {
                 const refRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -900,12 +1132,10 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
                   const refJson = await refRes.json();
                   refinedMdx = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
                   refineSuccess = true;
-
+                  
                   const durationMs = Date.now() - startTime;
                   const usage = refJson.usageMetadata || {};
-                  const promptTokens = usage.promptTokenCount || 0;
-                  const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                  await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, refinerPrompt);
+                  await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, refinerPrompt);
                 }
               } catch (err) {
                 console.error(`[AI GENERATOR - REFINE] AI Studio refinement fetch exception:`, err);
@@ -918,9 +1148,9 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
               console.warn("[AI GENERATOR - AGENT 4] Refinement failed to return content, keeping previous MDX.");
             }
           }
-        } catch (vErr) {
-          console.error("[AI GENERATOR - AGENT 4] Error during verification cycle, bypassing loop:", vErr);
-          approved = true; // Bypass to avoid blocker/infinite loop
+        } catch (vErr: any) {
+          console.error("[AI GENERATOR - AGENT 4] Error during verification cycle:", vErr);
+          throw new Error(`[VERIFICATION CRITICAL ERROR] Verification failed for lesson "${item.title}": ${vErr.message || vErr}`);
         }
       }
 
@@ -930,7 +1160,7 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
 
       let mdxWithFrontmatter = `---
 title: "${item.title}"
-subject: "${courseName}"
+subject: "${correctedCourseName}"
 level: "${level}"
 module: "${item.title}"
 order: ${index + 1}
@@ -968,33 +1198,26 @@ ${validatedMdx}`;
           console.log(`[SELF-HEALING] Successfully healed MDX content on attempt ${healAttempt}!`);
           mdxWithFrontmatter = healedResult;
         } else {
-          console.warn(`[SELF-HEALING] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
-          mdxWithFrontmatter = sanitizeMdxFallback(mdxWithFrontmatter);
-          
-          const retryCheck = await validateMdxContent(mdxWithFrontmatter, targetLang.toLowerCase());
-          if (!retryCheck.success) {
-            console.error(`[AI GENERATOR - MDX CRITICAL ERROR] Sanitized content for "${item.title}" still failed MDX validation: ${retryCheck.error}.`);
-            try {
-              const fs = require('fs');
-              const path = require('path');
-              fs.writeFileSync(path.resolve(process.cwd(), `failed_mdx_final_${item.slug}.md`), mdxWithFrontmatter, 'utf8');
-              console.log(`[DEBUG] Wrote final failed MDX to failed_mdx_final_${item.slug}.md`);
-            } catch (debugErr) {
-              console.error("Failed to write debug MDX file:", debugErr);
-            }
-            try {
-              const cleanCrsSlug = cleanPathSegment(courseName);
-              await dbService.submitReport(
-                cleanCrsSlug,
-                `${cleanCrsSlug}/${item.slug}`,
-                `[GENERATION MDX EXCEPTION] ${retryCheck.error}`
-              );
-            } catch (reportErr) {
-              console.error("Failed to auto-submit generation error report:", reportErr);
-            }
-            // Throw compile exception to abort generation of this course and trigger CLI automatic retry
-            throw new Error(`[MDX COMPILATION CRITICAL ERROR] Lesson "${item.title}" failed compilation check: ${retryCheck.error}`);
+          console.error(`[SELF-HEALING] Self-healing failed after ${maxHealAttempts} attempts. Rejecting lesson generation to avoid fallback/broken rendering.`);
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            fs.writeFileSync(path.resolve(process.cwd(), `failed_mdx_final_${item.slug}.md`), healedResult, 'utf8');
+            console.log(`[DEBUG] Wrote final failed MDX to failed_mdx_final_${item.slug}.md`);
+          } catch (debugErr) {
+            console.error("Failed to write debug MDX file:", debugErr);
           }
+          try {
+            const cleanCrsSlug = cleanPathSegment(correctedCourseName);
+            await dbService.submitReport(
+              cleanCrsSlug,
+              `${cleanCrsSlug}/${item.slug}`,
+              `[GENERATION MDX FAILURE] Self-healing failed: ${mdxCheck.error}`
+            );
+          } catch (reportErr) {
+            console.error("Failed to auto-submit generation error report:", reportErr);
+          }
+          throw new Error(`[MDX COMPILATION CRITICAL ERROR] Lesson "${item.title}" failed MDX compilation and self-healing: ${mdxCheck.error}`);
         }
       }
 
@@ -1005,7 +1228,7 @@ ${validatedMdx}`;
 
       // Save to Supabase
       await dbService.saveLesson({
-        course_slug: cleanPathSegment(courseName),
+        course_slug: cleanPathSegment(correctedCourseName),
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
         title: item.title,
@@ -1017,11 +1240,11 @@ ${validatedMdx}`;
 
     // Save/Update the Course card in the database
     try {
-      const courseSlug = cleanPathSegment(courseName);
+      const courseSlug = cleanPathSegment(correctedCourseName);
       const { data: allCourses } = await dbService.getAllCourses();
       const existingCourse = allCourses?.find(c => c.slug === courseSlug);
       
-      const courseDescription = courseContext.description || `A comprehensive course on ${courseName} dynamically generated at ${level} level.`;
+      const courseDescription = courseContext.description || `A comprehensive course on ${correctedCourseName} dynamically generated at ${level} level.`;
       const ectsCount = lessonsList.length || 4; // Calibration: 1 ECTS per lesson, or minimum of 4
       
       let courseId = existingCourse ? existingCourse.id : undefined;
@@ -1042,13 +1265,13 @@ ${validatedMdx}`;
 
       const translations = existingCourse?.translations || {};
       translations[targetLang.toUpperCase()] = {
-        title: courseName,
+        title: correctedCourseName,
         description: courseDescription
       };
 
       await dbService.saveCourse({
         id: courseId,
-        title: courseName,
+        title: correctedCourseName,
         slug: courseSlug,
         subject: courseContext.discipline || "General",
         description: courseDescription,
@@ -1062,10 +1285,11 @@ ${validatedMdx}`;
         childCourses: [],
         translations: translations
       });
-      console.log(`[AI GENERATOR] Saved/Updated course card for "${courseName}" (ID: ${courseId}, ECTS: ${ectsCount}, Languages: ${updatedLanguages.join(', ')})`);
+      console.log(`[AI GENERATOR] Saved/Updated course card for "${correctedCourseName}" (ID: ${courseId}, ECTS: ${ectsCount}, Languages: ${updatedLanguages.join(', ')})`);
     } catch (saveErr) {
       console.error("[AI GENERATOR] Failed to save/update course card:", saveErr);
     }
+    return { title: correctedCourseName, slug: cleanPathSegment(correctedCourseName) };
   } catch (err) {
     console.error("AI Generation failed:", err);
     throw err;
@@ -1180,28 +1404,22 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             
+            const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
+
             const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
 Rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
-3. Do NOT translate technical code blocks. For JSX React tags:
-   - For \`<Glossary term="..." definition="...">\`, translate the values of the \`term\` and \`definition\` attributes to the target language, as well as the text content inside the tag.
-   - For \`<HistoricalPerson name="..." lang="...">\` and \`<Artwork name="..." lang="...">\`, translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Vitruvian_Man" to "Homme_de_Vitruve" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
-   - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
-   - Keep other tag names and syntax untouched.
+3. Do NOT translate technical code blocks. You will see placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. These placeholders protect the custom interactive components from corruption. Do NOT translate or modify these placeholders or the '|||' separators. Preserve them EXACTLY as they are.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
 5. CRITICAL MDX COMPILER COMPLIANCE RULES:
    - Do NOT wrap the translated response in markdown code blocks (such as \`\`\`md or \`\`\`mdx). Return the raw MDX content directly.
-   - Absolutely NO orphaned JSX tags or unclosed tags. Ensure all tags (such as <Objectives>, <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <Epistemology>, <GoingFurther>, <GoingFurtherItem>, <ComparisonSlider>, <CodeSandbox>, <InteractiveDiagram>, <FunctionPlotter>, <FunctionManipulator>, <SolvedExercise>, <UnsolvedExercise>, <BasicMathExplorer>, <ChemicalStoichiometry>, <EquationManipulator>, <StructureViewer3D>, <DynamicSimulation>, <DataChart>, <ComparisonSlider>, <Geometry2D>) are closed correctly.
-   - JSX Attributes MUST be formatted strictly as: name="value". Do NOT use single quotes for attributes (like name='value'). Do NOT use braces without values.
-   - Inside JSX attributes (like term, definition, bio, prompt, subject, q, explanation, title, beforeContent, afterContent), do NOT use raw double quotes. Use &quot; or escape them properly, or just use single quotes inside the double-quoted attribute.
-   - Inside JSX attributes, do NOT use raw ampersands '&'. Use the word 'and' or wrap/escape it as '&amp;'.
+   - Absolutely NO orphaned JSX tags or unclosed tags.
    - Never nest a custom component inside itself.
    - Do NOT generate empty components without text or children.
-   - Preserve all other JSX components, their properties, and Math equations ($ or $$) exactly as in the original.
 
 MDX CONTENT TO TRANSLATE:
-${lesson.content}`;
+${isolatedContent}`;
 
             let translatedMdx = '';
             let transSuccess = false;
@@ -1217,7 +1435,8 @@ ${lesson.content}`;
 
                 if (res && res.ok) {
                   const resJson = await res.json();
-                  translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  translatedMdx = restoreJsxAfterTranslation(rawText, registry);
                   transSuccess = true;
                 }
               } catch (err) {
@@ -1238,7 +1457,8 @@ ${lesson.content}`;
                 });
                 if (res.ok) {
                   const resJson = await res.json();
-                  translatedMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  translatedMdx = restoreJsxAfterTranslation(rawText, registry);
                   transSuccess = true;
 
                   const durationMs = Date.now() - startTime;
@@ -1302,7 +1522,11 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
                   const res = await callVertexAI({
                     task: 'course_generation', // Using pro model for critique reasoning
                     contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
-                    generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+                    generationConfig: {
+                      temperature: 0.1,
+                      responseMimeType: "application/json",
+                      responseSchema: verificationSchema
+                    }
                   });
                   if (res && res.ok) {
                     const resJson = await res.json();
@@ -1321,7 +1545,10 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       contents: [{ parts: [{ text: promptCritic }] }],
-                      generationConfig: { responseMimeType: "application/json" }
+                      generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: verificationSchema
+                      }
                     })
                   });
                   if (res.ok) {
@@ -1353,27 +1580,26 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
                 translatedMdx = currentTranslation;
               } else {
                 console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
-                // Refine translation
+                
+                const { content: isolatedContent, registry: refineRegistry } = isolateJsxForTranslation(lesson.content);
+                const { content: isolatedRejected } = isolateJsxForTranslation(currentTranslation);
+
                 const promptRefine = `You are a professional academic translator. The Translation Critic Agent has rejected your previous translation with the following critique:
 
 CRITIQUE FROM TRANSLATION CRITIC:
 ${critique}
 
 Original MDX Content to Translate:
-${lesson.content}
+${isolatedContent}
 
 Previous Rejected Translation:
-${currentTranslation}
+${isolatedRejected}
 
 Please re-translate the Original MDX Content to "${targetLang.toUpperCase()}", correcting all issues highlighted by the critic.
 Follow all initial translation rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
-3. Do NOT translate technical code blocks. For JSX React tags:
-   - For \`<Glossary term="..." definition="...">\`, translate the values of the \`term\` and \`definition\` attributes to the target language, as well as the text content inside the tag.
-   - For \`<HistoricalPerson name="..." lang="...">\`, translate the value of the \`name\` attribute to the equivalent Wikipedia page title in the target language (e.g. changing "Napoleon" to "Napoléon_Ier" when translating to French), and update the \`lang\` attribute to the target language code (e.g. "fr"). Also translate the inner display name text if appropriate.
-   - For \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." />\`, translate the value of the \`prompt\` and \`subject\` attributes to the target language. Keep the \`gradingSystem\` attribute values untouched.
-   - Keep other tag names and syntax untouched.
+3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
 
                 let refineSuccess = false;
@@ -1386,7 +1612,8 @@ Follow all initial translation rules:
                     });
                     if (resRefine && resRefine.ok) {
                       const resJson = await resRefine.json();
-                      currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -1405,7 +1632,8 @@ Follow all initial translation rules:
                     });
                     if (resRefine.ok) {
                       const resJson = await resRefine.json();
-                      currentTranslation = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -1496,23 +1724,17 @@ Follow all initial translation rules:
                 console.log(`[SELF-HEALING-TRANSLATION] Successfully healed MDX content on attempt ${healAttempt}!`);
                 validatedMdx = healedResult;
               } else {
-                console.warn(`[SELF-HEALING-TRANSLATION] Self-healing failed after ${maxHealAttempts} attempts. Applying fallback sanitization.`);
-                validatedMdx = sanitizeMdxFallback(validatedMdx);
-
-                const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
-                if (!retryCheck.success) {
-                  console.error(`[AI GENERATOR - TRANSLATION CRITICAL ERROR] Sanitized content for translated "${transTitle}" still failed MDX validation: ${retryCheck.error}.`);
-                  try {
-                    await dbService.submitReport(
-                      courseSlug,
-                      `${courseSlug}/${lesson.lesson_slug}`,
-                      `[TRANSLATION MDX EXCEPTION] ${retryCheck.error}`
-                    );
-                  } catch (reportErr) {
-                    console.error("Failed to auto-submit translation error report:", reportErr);
-                  }
-                  throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation: ${retryCheck.error}`);
+                console.error(`[SELF-HEALING-TRANSLATION] Self-healing failed after ${maxHealAttempts} attempts. Rejecting translation.`);
+                try {
+                  await dbService.submitReport(
+                    courseSlug,
+                    `${courseSlug}/${lesson.lesson_slug}`,
+                    `[TRANSLATION MDX FAILURE] Self-healing failed: ${mdxCheck.error}`
+                  );
+                } catch (reportErr) {
+                  console.error("Failed to auto-submit translation error report:", reportErr);
                 }
+                throw new Error(`[MDX TRANSLATION CRITICAL ERROR] Lesson "${transTitle}" failed compilation and self-healing: ${mdxCheck.error}`);
               }
             }
 
@@ -1801,7 +2023,11 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
       const res = await callVertexAI({
         task: 'course_generation',
         contents: [{ role: 'user', parts: [{ text: promptIdentify }] }],
-        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+          responseSchema: slugsArraySchema
+        }
       });
       if (res && res.ok) {
         const jsonRes = await res.json();
@@ -1820,7 +2046,10 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptIdentify }] }],
-          generationConfig: { responseMimeType: "application/json" }
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: slugsArraySchema
+          }
         })
       });
       if (res.ok) {
@@ -1987,7 +2216,11 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
           const res = await callVertexAI({
             task: 'course_generation', // Using pro model configuration
             contents: [{ role: 'user', parts: [{ text: promptCritic }] }],
-            generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json",
+              responseSchema: verificationSchema
+            }
           });
           if (res && res.ok) {
             const resJson = await res.json();
@@ -2006,7 +2239,10 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: promptCritic }] }],
-              generationConfig: { responseMimeType: "application/json" }
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: verificationSchema
+              }
             })
           });
           if (res.ok) {
@@ -2123,22 +2359,17 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
         console.log(`[SELF-HEALING-REVISION] Successfully healed MDX content on attempt ${healAttempt}!`);
         validatedMdx = healedResult;
       } else {
-        console.warn(`[SELF-HEALING-REVISION] Self-healing failed. Applying fallback sanitization.`);
-        validatedMdx = sanitizeMdxFallback(validatedMdx);
-        const retryCheck = await validateMdxContent(validatedMdx, targetLang.toLowerCase());
-        if (!retryCheck.success) {
-          console.error(`[REVISION AGENT - MDX CRITICAL ERROR] Sanitized content for "${lesson.title}" still failed MDX validation: ${retryCheck.error}.`);
-          try {
-            await dbService.submitReport(
-              courseSlug,
-              `${courseSlug}/${slug}`,
-              `[REVISION MDX EXCEPTION] ${retryCheck.error}`
-            );
-          } catch (reportErr) {
-            console.error("Failed to auto-submit revision error report:", reportErr);
-          }
-          throw new Error(`[MDX REVISION CRITICAL ERROR] Lesson "${lesson.title}" failed compilation check: ${retryCheck.error}`);
+        console.error(`[SELF-HEALING-REVISION] Self-healing failed after ${maxHealAttempts} attempts. Rejecting revision.`);
+        try {
+          await dbService.submitReport(
+            courseSlug,
+            `${courseSlug}/${slug}`,
+            `[REVISION MDX FAILURE] Self-healing failed: ${mdxCheck.error}`
+          );
+        } catch (reportErr) {
+          console.error("Failed to auto-submit revision error report:", reportErr);
         }
+        throw new Error(`[MDX REVISION CRITICAL ERROR] Lesson "${lesson.title}" failed compilation and self-healing: ${mdxCheck.error}`);
       }
     }
 
@@ -2210,7 +2441,11 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
       const res = await callVertexAI({
         task: 'course_generation',
         contents: [{ role: 'user', parts: [{ text: promptSystemic }] }],
-        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+          responseSchema: systemicAnalysisSchema
+        }
       });
       if (res && res.ok) {
         const jsonRes = await res.json();
@@ -2229,7 +2464,10 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptSystemic }] }],
-          generationConfig: { responseMimeType: "application/json" }
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: systemicAnalysisSchema
+          }
         })
       });
       if (res.ok) {
@@ -2373,7 +2611,11 @@ If you cannot find any real video, output: {}`;
         const res = await callVertexAI({
           task: 'course_generation',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+            responseSchema: videoSearchSchema
+          }
         });
         if (res && res.ok) {
           const jsonRes = await res.json();
@@ -2385,7 +2627,10 @@ If you cannot find any real video, output: {}`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: videoSearchSchema
+            }
           })
         });
         if (res.ok) {
@@ -2457,7 +2702,11 @@ If you cannot find any real audio, output: {}`;
         const res = await callVertexAI({
           task: 'course_generation',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+            responseSchema: audioSearchSchema
+          }
         });
         if (res && res.ok) {
           const jsonRes = await res.json();
@@ -2469,7 +2718,10 @@ If you cannot find any real audio, output: {}`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: audioSearchSchema
+            }
           })
         });
         if (res.ok) {
@@ -2959,7 +3211,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
       const res = await callVertexAI({
         task: 'course_generation',
         contents: [{ role: 'user', parts: [{ text: promptCurriculum }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+          responseSchema: curriculumSchema
+        }
       });
       if (res && res.ok) {
         const jsonRes = await res.json();
@@ -2974,7 +3230,10 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: promptCurriculum }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: curriculumSchema
+            }
           })
         });
         if (res.ok) {

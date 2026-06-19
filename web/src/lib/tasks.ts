@@ -1,6 +1,6 @@
 import { supabaseAdmin as supabase } from './supabase';
 import { dbService } from './db';
-import { generateCourseContent, translateCourseContent, safeResponseJson } from './ai';
+import { generateCourseContent, translateCourseContent, safeResponseJson, correctCourseTitle } from './ai';
 import { cleanPathSegment } from './translations';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
@@ -186,10 +186,18 @@ CRITICAL RULES:
 3. Preserve all parameters (like {name}), formatting tags, and academic tone.`;
 
       const { callVertexAI } = require('./vertex-client');
+      const translationDictSchema = {
+        type: "object",
+        additionalProperties: { type: "string" }
+      };
       const res = await callVertexAI({
         task: 'batch_translate',
         contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
-        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+          responseSchema: translationDictSchema
+        }
       });
       
       if (!res || !res.ok) {
@@ -272,6 +280,20 @@ CRITICAL RULES:
 
     } else {
       // === Course Content Generation Task ===
+      const correctedName = await correctCourseTitle(nextTask.name, targetLang);
+      if (correctedName !== nextTask.name) {
+        logs.push(`[GENERATOR] Corrected course title from "${nextTask.name}" to "${correctedName}". Updating task in queue.`);
+        try {
+          await supabase
+            .from('task_queue')
+            .update({ name: correctedName })
+            .eq('id', nextTask.id);
+        } catch (err) {
+          console.warn("[GENERATOR] Failed to update task name in DB:", err);
+        }
+        nextTask.name = correctedName;
+      }
+
       logs.push(`[GENERATOR] Starting AI course content generation for "${nextTask.name}" (${level}, ${targetLang})...`);
       
       const slug = cleanPathSegment(nextTask.name);
@@ -472,6 +494,31 @@ CRITICAL RULES:
       logs.push(`[FAILED] All attempts exhausted. Marking as failed.`);
       failExtra.completedAt = new Date().toISOString();
       failExtra.last_error = errMsg;
+
+      // Clean up partially generated lessons for new course generations
+      if (nextTask.target !== 'revision' && 
+          !nextTask.name.toLowerCase().includes('revise:') && 
+          !nextTask.name.toLowerCase().includes('revision') &&
+          nextTask.target !== 'ui_translation' && 
+          !nextTask.name.toLowerCase().includes('translation') &&
+          !nextTask.target?.includes('translate')) {
+        const slug = cleanPathSegment(nextTask.name);
+        logs.push(`[CLEANUP] Cleaning up partially generated lessons for course slug "${slug}" and language "${targetLang}" due to permanent task failure.`);
+        try {
+          const { error: cleanupErr } = await supabase
+            .from('lessons')
+            .delete()
+            .eq('course_slug', slug)
+            .eq('lang', targetLang.toLowerCase());
+          if (cleanupErr) {
+            console.warn("[CLEANUP] Failed to delete partially generated lessons:", cleanupErr.message);
+          } else {
+            console.log(`[CLEANUP] Successfully cleaned up partially generated lessons for course "${slug}" (${targetLang}).`);
+          }
+        } catch (cleanupException) {
+          console.warn("[CLEANUP] Exception deleting partially generated lessons:", cleanupException);
+        }
+      }
 
       try {
         const { error: failError } = await supabase

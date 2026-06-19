@@ -118,6 +118,13 @@ const ALERT_TITLES: Record<string, Record<string, string>> = {
     ES: "Precaución",
     DE: "Achtung",
     ZH: "注意"
+  },
+  biography: {
+    EN: "Mini-Biography",
+    FR: "Mini-Biographie",
+    ES: "Mini-Biografía",
+    DE: "Mini-Biografie",
+    ZH: "迷你传记"
   }
 };
 
@@ -157,6 +164,11 @@ const Alert = ({ type, children }: { type: string; children: React.ReactNode }) 
     titleKey = "caution";
     borderClass = "border-l-red-500 bg-red-500/5 dark:bg-red-500/[0.04] border-red-500/20";
     titleColor = "text-red-500 dark:text-red-400";
+  } else if (t === 'biography') {
+    icon = <BookOpen className="w-4 h-4 text-violet-500 dark:text-violet-400" />;
+    titleKey = "biography";
+    borderClass = "border-l-violet-500 bg-violet-500/5 dark:bg-violet-500/[0.04] border-violet-500/20";
+    titleColor = "text-violet-500 dark:text-violet-400";
   }
 
   const title = (ALERT_TITLES[titleKey] && ALERT_TITLES[titleKey][langKey]) || ALERT_TITLES[titleKey]?.EN || "Note";
@@ -1137,6 +1149,60 @@ FillInBlanksWrapper.Input = (props: any) => {
   return <input type="text" className="inline-block mx-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-0.5 text-sm w-28" placeholder="..." {...props} />;
 };
 
+const SmartEquationManipulator = (props: any) => {
+  // If the props imply basic arithmetic (addition, subtraction, multiplication, division),
+  // we render BasicMathExplorer configured with the appropriate initial values.
+  const isBasicMath = props && (
+    props.variables ||
+    props.result ||
+    (props.equation && (props.equation.includes('a') || props.equation.includes('b') || props.equation.includes('c')))
+  );
+
+  if (isBasicMath) {
+    let initialTab: 'add-sub' | 'mul-div' | 'fractions' | 'parentheses' = 'add-sub';
+    let initialMode: 'add' | 'sub' | 'mul' | 'div' = 'sub';
+    let initialNumA = 8;
+    let initialNumB = 3;
+
+    if (props.equation) {
+      const eq = props.equation.toLowerCase();
+      if (eq.includes('+')) {
+        initialTab = 'add-sub';
+        initialMode = 'add';
+      } else if (eq.includes('-')) {
+        initialTab = 'add-sub';
+        initialMode = 'sub';
+      } else if (eq.includes('*') || eq.includes('x') || eq.includes('times')) {
+        initialTab = 'mul-div';
+        initialMode = 'mul';
+      } else if (eq.includes('/') || eq.includes('div') || eq.includes(':')) {
+        initialTab = 'mul-div';
+        initialMode = 'div';
+      }
+    }
+
+    if (Array.isArray(props.variables)) {
+      if (props.variables[0] && typeof props.variables[0].initialValue === 'number') {
+        initialNumA = props.variables[0].initialValue;
+      }
+      if (props.variables[1] && typeof props.variables[1].initialValue === 'number') {
+        initialNumB = props.variables[1].initialValue;
+      }
+    }
+
+    return (
+      <BasicMathExplorer
+        initialTab={initialTab}
+        initialMode={initialMode}
+        initialNumA={initialNumA}
+        initialNumB={initialNumB}
+      />
+    );
+  }
+
+  return <EquationManipulator {...props} />;
+};
+
 const components = {
   Alert,
   CustomFigure,
@@ -1192,9 +1258,9 @@ const components = {
   FunctionManipulator,
   ManipulateurFonction: FunctionManipulator,
   ExplorateurFonctions: FunctionManipulator,
-  EquationManipulator,
-  ManipulateurEquation: EquationManipulator,
-  ExplorateurEquations: EquationManipulator,
+  EquationManipulator: SmartEquationManipulator,
+  ManipulateurEquation: SmartEquationManipulator,
+  ExplorateurEquations: SmartEquationManipulator,
   ChemicalStoichiometry,
   EquilibrageChimique: ChemicalStoichiometry,
   StoichiometrieChimique: ChemicalStoichiometry,
@@ -1341,22 +1407,31 @@ function stripJsxAndRender(rawMdx: string) {
   clean = clean.replace(/^---[\s\S]*?---/, '');
   
   // 1. Flatten Quiz / Auto-Evaluation into instructional text
-  clean = clean.replace(/<Quiz[\s\S]*?>([\s\S]*?)<\/Quiz>/g, (quizBlock, innerContent) => {
-    const questionRegex = /<Question\s+text="([^"]+)"[^>]*>([\s\S]*?)<\/Question>/g;
+  clean = clean.replace(/<Quiz[\s\S]*?>([\s\S]*?)<\/Quiz>/gi, (quizBlock, innerContent) => {
+    const questionRegex = /<Question\b([^>]*?)>([\s\S]*?)<\/Question>/gi;
     let questionsText = '\n\n### 📝 Auto-Évaluation / Quiz :\n';
     let match;
     let qCount = 0;
     while ((match = questionRegex.exec(innerContent)) !== null) {
       qCount++;
-      const questionText = match[1];
+      const attrsStr = match[1];
       const optionsBlock = match[2];
+      
+      const qMatch = attrsStr.match(/\bq=["']([^"']+)["']/i) || attrsStr.match(/\btext=["']([^"']+)["']/i) || attrsStr.match(/\bquestion=["']([^"']+)["']/i);
+      const questionText = qMatch ? qMatch[1] : 'Question';
+      
       questionsText += `\n**Question ${qCount} : ${questionText}**\n`;
       
-      const optionRegex = /<Option\s+text="([^"]+)"\s*(correct)?[^>]*\/>/g;
+      const optionRegex = /<Option\b([^>]*?)(?:>([\s\S]*?)<\/Option>|\/>)/gi;
       let optMatch;
       while ((optMatch = optionRegex.exec(optionsBlock)) !== null) {
-        const optionText = optMatch[1];
-        const isCorrect = !!optMatch[2];
+        const optAttrsStr = optMatch[1];
+        const optBody = optMatch[2] || '';
+        
+        const optTextMatch = optAttrsStr.match(/\btext=["']([^"']+)["']/i);
+        const optionText = optTextMatch ? optTextMatch[1] : optBody.trim();
+        
+        const isCorrect = optAttrsStr.includes('correct={true}') || optAttrsStr.includes('correct="true"') || optAttrsStr.includes('correct=true');
         questionsText += `${isCorrect ? '✅' : '⬜'} ${optionText}${isCorrect ? ' *(Réponse attendue)*' : ''}\n`;
       }
     }
@@ -1367,14 +1442,14 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 2. Flatten CodeSandbox blocks
-  clean = clean.replace(/<CodeSandbox([^>]*?)>([\s\S]*?)<\/CodeSandbox>/g, (m, attrs, content) => {
+  clean = clean.replace(/<CodeSandbox([^>]*?)>([\s\S]*?)<\/CodeSandbox>/gi, (m, attrs, content) => {
     const titleMatch = attrs.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : 'Exercice de programmation';
     return `\n\n💻 **[Activité pratique de code : ${title}]**\n${content}\n`;
   });
 
   // 3. Flatten ExternalSandbox
-  clean = clean.replace(/<ExternalSandbox([^>]*?)\/>/g, (m, attrs) => {
+  clean = clean.replace(/<ExternalSandbox([^>]*?)\/>/gi, (m, attrs) => {
     const titleMatch = attrs.match(/title="([^"]+)"/);
     const urlMatch = attrs.match(/url="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : 'Laboratoire de simulation';
@@ -1383,14 +1458,14 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 4. Flatten InteractiveDiagram
-  clean = clean.replace(/<InteractiveDiagram([^>]*?)\/>/g, (m, attrs) => {
+  clean = clean.replace(/<InteractiveDiagram([^>]*?)\/>/gi, (m, attrs) => {
     const titleMatch = attrs.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : 'Schéma explicatif';
     return `\n\n📊 **[Schéma interactif : ${title}]** *(Version dynamique non disponible)*\n`;
   });
 
   // 5. Flatten ComparisonSlider
-  clean = clean.replace(/<ComparisonSlider([^>]*?)\/>/g, (m, attrs) => {
+  clean = clean.replace(/<ComparisonSlider([^>]*?)\/>/gi, (m, attrs) => {
     const leftMatch = attrs.match(/leftTitle="([^"]+)"/);
     const rightMatch = attrs.match(/rightTitle="([^"]+)"/);
     const left = leftMatch ? leftMatch[1] : 'Avant';
@@ -1399,46 +1474,44 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 6. Flatten SolvedExercise & UnsolvedExercise
-  clean = clean.replace(/<SolvedExercise([^>]*?)>([\s\S]*?)<\/SolvedExercise>/g, (m, attrs, content) => {
+  clean = clean.replace(/<SolvedExercise([^>]*?)>([\s\S]*?)<\/SolvedExercise>/gi, (m, attrs, content) => {
     const titleMatch = attrs.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : 'Exercice d\'application';
     return `\n\n✏️ **[Exercice résolu : ${title}]**\n${content}\n`;
   });
-  clean = clean.replace(/<UnsolvedExercise([^>]*?)>([\s\S]*?)<\/UnsolvedExercise>/g, (m, attrs, content) => {
+  clean = clean.replace(/<UnsolvedExercise([^>]*?)>([\s\S]*?)<\/UnsolvedExercise>/gi, (m, attrs, content) => {
     const titleMatch = attrs.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : 'Exercice à résoudre';
     return `\n\n✏️ **[Exercice pratique : ${title}]**\n${content}\n`;
   });
 
   // 7. Flatten mathematical/science utility manipulators
-  clean = clean.replace(/<FunctionPlotter([^>]*?)\/>/g, (m, attrs) => {
+  clean = clean.replace(/<FunctionPlotter([^>]*?)\/>/gi, (m, attrs) => {
     const formulaMatch = attrs.match(/formula="([^"]+)"/);
     const formula = formulaMatch ? formulaMatch[1] : '';
     return `\n\n📈 **[Visualiseur de courbe]**\n${formula ? `Équation : \`y = ${formula}\`` : ''}\n`;
   });
-  clean = clean.replace(/<FunctionManipulator([^>]*?)\/>/g, (m, attrs) => {
+  clean = clean.replace(/<FunctionManipulator([^>]*?)\/>/gi, (m, attrs) => {
     const formulaMatch = attrs.match(/formula="([^"]+)"/);
     const formula = formulaMatch ? formulaMatch[1] : '';
     return `\n\n📈 **[Explorateur de fonction]**\n${formula ? `Équation interactive : \`y = ${formula}\`` : ''}\n`;
   });
 
   // 8. Flatten Mermaid diagrams
-  clean = clean.replace(/<Mermaid([^>]*?)>([\s\S]*?)<\/Mermaid>/g, (m, attrs, content) => {
+  clean = clean.replace(/<Mermaid([^>]*?)>([\s\S]*?)<\/Mermaid>/gi, (m, attrs, content) => {
     return `\n\n📋 **[Diagramme structurel Mermaid]**\n\`\`\`mermaid\n${content.trim()}\n\`\`\`\n`;
   });
 
   // 9. Clean up FillInBlanks dot notations and wrappers
-  clean = clean.replace(/<FillInBlanks\.Input[^>]*?answer="([^"]+)"[^>]*?\/>/g, ' **[ $1 ]** ');
-  clean = clean.replace(/<FillInBlanks\.Input[^>]*?\/>/g, ' **[ _______ ]** ');
-  clean = clean.replace(/<FillInBlanks[\s\S]*?>([\s\S]*?)<\/FillInBlanks>/g, (m, content) => {
+  clean = clean.replace(/<FillInBlanks\.Input[^>]*?answer="([^"]+)"[^>]*?\/>/gi, ' **[ $1 ]** ');
+  clean = clean.replace(/<FillInBlanks\.Input[^>]*?\/>/gi, ' **[ _______ ]** ');
+  clean = clean.replace(/<FillInBlanks[\s\S]*?>([\s\S]*?)<\/FillInBlanks>/gi, (m, content) => {
     return `\n\n📖 **[Exercice à trous]**\n${content.replace(/<[^>]+>/g, '')}\n`;
   });
 
   // 10. Replace inline named components with text formatting
-  clean = clean.replace(/<HistoricalPerson\s+name="([^"]+)"[^>]*?\/>/g, '**$1**');
-  clean = clean.replace(/<HistoricalEvent\s+name="([^"]+)"[^>]*?\/>/g, '**$1**');
-  clean = clean.replace(/<Location\s+name="([^"]+)"[^>]*?\/>/g, '**$1**');
-  clean = clean.replace(/<Artwork\s+title="([^"]+)"[^>]*?\/>/g, '*$1*');
+  clean = clean.replace(/<(?:HistoricalPerson|HistoricalEvent|Location|Place|EvenementHistorique)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '**$1**');
+  clean = clean.replace(/<Artwork\b[^>]*?>([\s\S]*?)<\/Artwork>/gi, '*$1*');
   
   // Strip remaining custom tag structures but preserve their content
   clean = clean.replace(/<[A-Za-z0-9_.-]+[^>]*>/g, '');

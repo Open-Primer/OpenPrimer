@@ -6,16 +6,28 @@ import { useLanguage } from '@/context/LanguageContext';
 
 type ExplorerTab = 'add-sub' | 'mul-div' | 'fractions' | 'parentheses';
 
-export const BasicMathExplorer = () => {
+interface BasicMathExplorerProps {
+  initialTab?: ExplorerTab;
+  initialMode?: 'add' | 'sub' | 'mul' | 'div';
+  initialNumA?: number;
+  initialNumB?: number;
+}
+
+export const BasicMathExplorer = ({
+  initialTab,
+  initialMode,
+  initialNumA,
+  initialNumB
+}: BasicMathExplorerProps = {}) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
 
-  const [activeTab, setActiveTab] = useState<ExplorerTab>('add-sub');
+  const [activeTab, setActiveTab] = useState<ExplorerTab>(initialTab || 'add-sub');
 
   // --- TAB 1: ADDITION / SUBTRACTION STATE ---
-  const [addSubMode, setAddSubMode] = useState<'add' | 'sub'>('sub');
-  const [numA, setNumA] = useState(8);
-  const [numB, setNumB] = useState(3);
+  const [addSubMode, setAddSubMode] = useState<'add' | 'sub'>((initialMode === 'add' || initialMode === 'sub') ? initialMode : 'sub');
+  const [numA, setNumA] = useState(initialNumA !== undefined ? initialNumA : 8);
+  const [numB, setNumB] = useState(initialNumB !== undefined ? initialNumB : 3);
   const [crossedIndexes, setCrossedIndexes] = useState<number[]>([]);
   const [tab1Guess, setTab1Guess] = useState('');
   const [tab1Feedback, setTab1Feedback] = useState<{ isCorrect: boolean; text: string } | null>(null);

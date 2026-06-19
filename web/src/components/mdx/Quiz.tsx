@@ -162,10 +162,47 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
           }
         } catch (e) {
           console.warn("[QUIZ TUTOR FEEDBACK] Offline fallback...", e);
-          setTutorComment(language === 'FR' 
-            ? `Tuteur : Vous avez obtenu ${totalCorrect}/${totalQuestions}. C'est une bonne base. Prenez le temps de revoir les questions incorrectes et d'utiliser les explications complémentaires pour approfondir.`
-            : `Tutor: You scored ${totalCorrect}/${totalQuestions}. Good effort. Take your time to review the incorrect items and leverage alternative explanations to improve.`
-          );
+          const ratio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
+          const lang = (language || 'EN').toUpperCase();
+          let fallback = '';
+          if (ratio === 1) {
+            if (lang === 'FR') {
+              fallback = `Tuteur : Excellent sans-faute ! Vous avez obtenu ${totalCorrect}/${totalQuestions}. Vous maîtrisez parfaitement ces notions.`;
+            } else if (lang === 'ES') {
+              fallback = `Tutor: ¡Excelente, puntuación perfecta! Obtuviste ${totalCorrect}/${totalQuestions}. Has dominado completamente estos conceptos.`;
+            } else if (lang === 'DE') {
+              fallback = `Tutor: Hervorragend, perfekte Punktzahl! Sie haben ${totalCorrect}/${totalQuestions} erreicht. Sie haben diese Konzepte vollständig gemeistert.`;
+            } else if (lang === 'ZH') {
+              fallback = `导师：太棒了，满分！你答对了 ${totalCorrect}/${totalQuestions}。你已完全掌握了这些概念。`;
+            } else {
+              fallback = `Tutor: Excellent perfect score! You scored ${totalCorrect}/${totalQuestions}. You have fully mastered these concepts.`;
+            }
+          } else if (ratio >= 0.5) {
+            if (lang === 'FR') {
+              fallback = `Tuteur : Félicitations, vous avez obtenu ${totalCorrect}/${totalQuestions}. C'est une bonne base. Prenez le temps de revoir les questions incorrectes pour bien ancrer vos connaissances.`;
+            } else if (lang === 'ES') {
+              fallback = `Tutor: ¡Felicitaciones! Obtuviste ${totalCorrect}/${totalQuestions}. Es una buena base. Tómate el tiempo para revisar las preguntas incorrectas y consolidar tus conocimientos.`;
+            } else if (lang === 'DE') {
+              fallback = `Tutor: Herzlichen Glückwunsch! Sie haben ${totalCorrect}/${totalQuestions} erreicht. Das ist eine gute Grundlage. Nehmen Sie sich Zeit, um die falschen Fragen zu überprüfen und Ihr Wissen zu festigen.`;
+            } else if (lang === 'ZH') {
+              fallback = `导师：恭喜！你答对了 ${totalCorrect}/${totalQuestions}。这是一个不错的基础。花点时间复习一下答错的题目，以巩固你的知识。`;
+            } else {
+              fallback = `Tutor: Congratulations, you scored ${totalCorrect}/${totalQuestions}. That's a good foundation. Take some time to review the incorrect questions to solidify your knowledge.`;
+            }
+          } else {
+            if (lang === 'FR') {
+              fallback = `Tuteur : Vous avez obtenu ${totalCorrect}/${totalQuestions}. Des lacunes subsistent sur ces notions. Prenez le temps de relire attentivement le cours et de revoir les questions incorrectes avec les explications complémentaires.`;
+            } else if (lang === 'ES') {
+              fallback = `Tutor: Obtuviste ${totalCorrect}/${totalQuestions}. Aún quedan lagunas por resolver. Tómate el tiempo para leer atentamente la lección y revisar las preguntas incorrectas con las explicaciones adicionales.`;
+            } else if (lang === 'DE') {
+              fallback = `Tutor: Sie haben ${totalCorrect}/${totalQuestions} erreicht. Es gibt noch einige Lücken in Ihrem Verständnis. Nehmen Sie sich Zeit, um die Lektion sorgfältig noch einmal zu lesen und die falschen Fragen mit den zusätzlichen Erklärungen zu überprüfen.`;
+            } else if (lang === 'ZH') {
+              fallback = `导师：你答对了 ${totalCorrect}/${totalQuestions}。对于这些概念的理解还存在一些薄弱环节。请花时间仔细重读课程，并结合补充解析复习答错的题目。`;
+            } else {
+              fallback = `Tutor: You scored ${totalCorrect}/${totalQuestions}. There are still some gaps in your understanding of these concepts. Take the time to carefully reread the lesson and review the incorrect questions with the additional explanations.`;
+            }
+          }
+          setTutorComment(fallback);
         } finally {
           setIsTutorLoading(false);
         }
