@@ -407,6 +407,40 @@ export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string
   );
 };
 
+// Inline sub-component for paragraph fill-in-the-blanks
+FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
+  const { language } = useLanguage();
+  const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
+  const [val, setVal] = useState('');
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  const checkAnswer = (v: string) => {
+    setVal(v);
+    if (!v.trim()) {
+      setIsCorrect(null);
+    } else {
+      setIsCorrect(v.toLowerCase().trim() === answer.toLowerCase().trim());
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={val}
+      onChange={(e) => checkAnswer(e.target.value)}
+      className={`inline-block mx-1 bg-slate-950 border ${
+        isCorrect === true 
+          ? 'border-emerald-500 text-emerald-400 font-semibold' 
+          : isCorrect === false 
+            ? 'border-red-500 text-red-400 font-semibold' 
+            : 'border-slate-700 text-white'
+      } rounded-lg px-2.5 py-0.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20`}
+      style={{ width: `${Math.max(80, answer.length * 10 + 20)}px` }}
+      placeholder={t.placeholder_answer}
+    />
+  );
+};
+
 // Composant Méta-Commentaire
 export const MetaNote = ({ title, children }: { title: string, children: React.ReactNode }) => (
   <div className="my-10 p-8 rounded-[40px] bg-blue-600/5 border border-blue-600/20 relative overflow-hidden group">

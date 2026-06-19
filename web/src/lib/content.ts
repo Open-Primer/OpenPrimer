@@ -1721,7 +1721,7 @@ function healSelfClosingComponents(mdx: string): string {
   ];
   
   for (const comp of components) {
-    const openingRe = new RegExp(`<${comp}\\b([\\s\\S]*?)(?:\\/?>|>)`, 'gi');
+    const openingRe = new RegExp(`<${comp}\\b(?![.\\\\w])([\\s\\S]*?)(?:\\/?>|>)`, 'gi');
     processed = processed.replace(openingRe, (match, attrsStr) => {
       let cleanAttrs = attrsStr.trim();
       if (cleanAttrs.endsWith('/')) {
@@ -1794,7 +1794,7 @@ function healFillInBlanks(mdx: string): string {
   processed = processed.replace(/<FillInBlanks\s*\/?>\s*<FillInBlanks\b([^>]*?)\/?>/gi, '<FillInBlanks$1/>');
 
   // 2. Main processing of <FillInBlanks> tags
-  const regex = /<(FillInBlanks|FillInTheBlanks)\b([^>]*?)\/?>/gi;
+  const regex = /<(FillInBlanks|FillInTheBlanks)\b(?![.\w])([^>]*?)\/?>/gi;
   
   return processed.replace(regex, (match, tagName, attrsStr) => {
     const attrs = parseAttributes(attrsStr);
@@ -2665,6 +2665,9 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
 
+  // Fix any spaces introduced before sub-component dots (e.g. <FillInBlanks .Input -> <FillInBlanks.Input)
+  processed = processed.replace(/<(\w+)\s+\.(\w+)/gi, '<$1.$2');
+
   // Sanitize nested quotes inside component attributes
   processed = sanitizeQuotesInComponentTags(processed);
 
@@ -2874,6 +2877,19 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
       return `<InteractiveDiagram${p1}hotspotsBase64="${base64}"${p3}${p4}`;
     } catch (e) {
       console.error("Failed to parse InteractiveDiagram hotspots in preprocessor:", e);
+      return match;
+    }
+  });
+
+  // 3c. Process DataChart data
+  processed = processed.replace(/<DataChart([\s\S]*?)data=\{\s*\[([\s\S]*?)\]\s*\}([\s\S]*?)(\/?>)/gi, (match, p1, p2, p3, p4) => {
+    try {
+      const arrStr = `[${p2}]`;
+      const parsed = parseJsonLikeArray(arrStr);
+      const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
+      return `<DataChart${p1}dataBase64="${base64}"${p3}${p4}`;
+    } catch (e) {
+      console.error("Failed to parse DataChart data in preprocessor:", e);
       return match;
     }
   });

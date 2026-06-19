@@ -13,7 +13,8 @@ interface ChartDataItem {
 interface DataChartProps {
   title?: string;
   type?: 'bar' | 'pie' | 'donut';
-  data: ChartDataItem[] | string; // Can be array or JSON-serialized string from MDX
+  data?: ChartDataItem[] | string; // Can be array or JSON-serialized string from MDX
+  dataBase64?: string;
   xAxisLabel?: string;
   yAxisLabel?: string;
   unit?: string;
@@ -31,23 +32,35 @@ export const DataChart = ({
   title,
   type = 'bar',
   data: rawData,
+  dataBase64,
   xAxisLabel,
   yAxisLabel,
   unit = ''
 }: DataChartProps) => {
-  // Parse data if it is a JSON string from MDX
+  // Parse data if it is a JSON string or Base64 from MDX
   const data: ChartDataItem[] = React.useMemo(() => {
-    console.log("=== DataChart rawData ===", rawData, "type:", typeof rawData);
-    if (typeof rawData === 'string') {
+    let resolvedData = rawData;
+    if (dataBase64) {
       try {
-        return JSON.parse(rawData);
+        const decoded = typeof window !== 'undefined'
+          ? decodeURIComponent(escape(window.atob(dataBase64)))
+          : Buffer.from(dataBase64, 'base64').toString('utf-8');
+        resolvedData = JSON.parse(decoded);
+      } catch (e) {
+        console.error("Failed to decode dataBase64 in DataChart:", e);
+      }
+    }
+
+    if (typeof resolvedData === 'string') {
+      try {
+        return JSON.parse(resolvedData);
       } catch (e) {
         console.error("Failed to parse DataChart JSON data:", e);
         return [];
       }
     }
-    return (rawData as any) || [];
-  }, [rawData]);
+    return (resolvedData as any) || [];
+  }, [rawData, dataBase64]);
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 

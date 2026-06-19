@@ -1143,6 +1143,11 @@ const components = {
   Instruction,
   Shape,
   FillInBlanks,
+  'FillInBlanks.Input': (props: any) => {
+    const Impl = (FillInBlanks as any).Input;
+    if (Impl) return <Impl {...props} />;
+    return <input type="text" className="inline-block mx-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-0.5 text-sm w-28" placeholder="..." {...props} />;
+  },
   MetaNote,
   SolvedProblem,
   Summary,
@@ -1260,10 +1265,5 @@ interface MdxContentProps {
 }
 
 export function MdxContent({ source }: MdxContentProps) {
-  console.log("MDX Content Components:", {
-    HistoricalFact: components.HistoricalFact,
-    HistoricalAnecdote: components.HistoricalAnecdote,
-    FaitHistorique: (components as any).FaitHistorique,
-  });
   return <MDXRemote {...source} components={components as any} />;
 }
