@@ -374,7 +374,12 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             prose-strong:text-blue-500 prose-strong:font-black
             prose-blockquote:border-l-4 prose-blockquote:border-blue-600 prose-blockquote:bg-blue-600/5 prose-blockquote:py-4 prose-blockquote:px-10 prose-blockquote:rounded-r-[40px] prose-blockquote:not-italic prose-blockquote:text-foreground
             prose-code:text-emerald-400 prose-code:bg-emerald-400/5 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:before:content-none prose-code:after:content-none">
-            <MdxContent source={mdxSource} />
+            <MdxContent 
+              source={mdxSource} 
+              rawMdx={pageData.content} 
+              courseSlug={slug[2] || 'general'} 
+              lessonSlug={slug.slice(3).join('/') || 'introduction'} 
+            />
           </article>
 
           {/* Footer Navigation */}

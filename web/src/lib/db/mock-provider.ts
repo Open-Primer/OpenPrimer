@@ -709,6 +709,48 @@ export const mockDatabaseProvider: DatabaseService = {
     }
     setReportClusters(reports);
     setLocalStorageItem('openprimer_reports', reports);
+
+    // If MDX failure, trigger task queue enqueuing
+    if (comment && comment.includes('MDX_RENDERING_FAILURE')) {
+      let courseTitle = cleanCourse;
+      const courseObj = getMockCourses().find(c => c.slug === cleanCourse);
+      if (courseObj) {
+        courseTitle = courseObj.title;
+      }
+
+      let targetLang = 'en';
+      const cleanPageLower = cleanPage.toLowerCase();
+      if (cleanPageLower.startsWith('fr/') || cleanPageLower.includes('/fr/')) {
+        targetLang = 'fr';
+      } else if (cleanPageLower.startsWith('es/') || cleanPageLower.includes('/es/')) {
+        targetLang = 'es';
+      } else if (cleanPageLower.startsWith('de/') || cleanPageLower.includes('/de/')) {
+        targetLang = 'de';
+      } else if (cleanPageLower.startsWith('zh/') || cleanPageLower.includes('/zh/')) {
+        targetLang = 'zh';
+      }
+
+      const pipelineRes = await mockDatabaseProvider.getPipelineQueue();
+      const currentQueue = pipelineRes.data || [];
+      const newTask = {
+        id: `task_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        name: `${courseTitle} - Revise: MDX_RENDERING_FAILURE on page "${cleanPage}"`,
+        description: JSON.stringify({
+          targetLang: targetLang,
+          current_attempt: 0,
+          max_attempts: 3,
+          error_message: comment
+        }),
+        priority: 'High',
+        status: 'queued',
+        progress: 0,
+        target: 'revision',
+        logs: [`[${new Date().toISOString()}] Automated task enqueued due to MDX rendering failure on page "${cleanPage}".`],
+        created_at: new Date().toISOString()
+      };
+      await mockDatabaseProvider.savePipelineQueue([...currentQueue, newTask]);
+    }
+
     return { data: null, error: null };
   },
 

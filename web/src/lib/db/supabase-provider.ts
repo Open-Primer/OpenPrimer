@@ -1170,7 +1170,53 @@ export const supabaseDatabaseProvider: DatabaseService = {
         ai_proposal: `Address issue reported on page "${cleanPage}"`,
         priority: 'Medium'
       });
-      return { data, error };
+      if (error) throw error;
+
+      // Check if it's an MDX Rendering Failure to trigger the revision pipeline
+      if (comment && comment.includes('MDX_RENDERING_FAILURE')) {
+        let courseTitle = cleanCourse;
+        try {
+          const { data: courseData } = await supabase
+            .from('courses')
+            .select('title')
+            .eq('slug', cleanCourse)
+            .maybeSingle();
+          if (courseData?.title) {
+            courseTitle = courseData.title;
+          }
+        } catch (e) {
+          console.warn("Failed to fetch course title for task queue insert:", e);
+        }
+
+        let targetLang = 'en';
+        const cleanPageLower = cleanPage.toLowerCase();
+        if (cleanPageLower.startsWith('fr/') || cleanPageLower.includes('/fr/')) {
+          targetLang = 'fr';
+        } else if (cleanPageLower.startsWith('es/') || cleanPageLower.includes('/es/')) {
+          targetLang = 'es';
+        } else if (cleanPageLower.startsWith('de/') || cleanPageLower.includes('/de/')) {
+          targetLang = 'de';
+        } else if (cleanPageLower.startsWith('zh/') || cleanPageLower.includes('/zh/')) {
+          targetLang = 'zh';
+        }
+
+        await supabase.from('task_queue').insert({
+          name: `${courseTitle} - Revise: MDX_RENDERING_FAILURE on page "${cleanPage}"`,
+          description: JSON.stringify({
+            targetLang: targetLang,
+            current_attempt: 0,
+            max_attempts: 3,
+            error_message: comment
+          }),
+          priority: 'High',
+          status: 'queued',
+          progress: 0,
+          target: 'revision',
+          logs: [`[${new Date().toISOString()}] Automated task enqueued due to MDX rendering failure on page "${cleanPage}".`]
+        });
+      }
+
+      return { data, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: null, error: e as any };
