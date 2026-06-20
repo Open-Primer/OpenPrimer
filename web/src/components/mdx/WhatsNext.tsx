@@ -52,7 +52,11 @@ export const WhatsNext = ({ title, items, itemsBase64, children }: WhatsNextProp
   let resolvedItems: WhatsNextItem[] = items || [];
   if (itemsBase64) {
     try {
-      const decoded = decodeURIComponent(escape(atob(itemsBase64)));
+      const binary = typeof window !== 'undefined'
+        ? window.atob(itemsBase64)
+        : Buffer.from(itemsBase64, 'base64').toString('binary');
+      const percentEncoded = binary.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      const decoded = decodeURIComponent(percentEncoded);
       resolvedItems = JSON.parse(decoded);
     } catch (e) {
       console.error("Failed to decode itemsBase64 in WhatsNext:", e);

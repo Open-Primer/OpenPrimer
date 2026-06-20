@@ -3049,7 +3049,46 @@ export function compileRuleLocally(description: string, threshold: string): any 
   };
 }
 
+export const resetEvaluationState = (assessmentId: string) => {
+  if (typeof window === 'undefined') return;
+  
+  // 1. Clear Quiz attempts
+  localStorage.removeItem(`op_quiz_attempts_${assessmentId}`);
+  sessionStorage.removeItem(`op_quiz_attempts_${assessmentId}`);
+  
+  // 2. Clear Essay copies
+  const essayPrefix = `op_essay_${assessmentId}_`;
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(essayPrefix)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  
+  // 3. Clear from op_quiz_results
+  try {
+    const quizResultsStr = localStorage.getItem('op_quiz_results');
+    if (quizResultsStr) {
+      const quizResults = JSON.parse(quizResultsStr);
+      if (quizResults[assessmentId]) {
+        delete quizResults[assessmentId];
+        localStorage.setItem('op_quiz_results', JSON.stringify(quizResults));
+      }
+    }
+  } catch (e) {
+    console.error("Error updating op_quiz_results in resetEvaluationState:", e);
+  }
+
+  // 4. Dispatch event to notify layout/progression of update
+  window.dispatchEvent(new Event('op_progress_updated'));
+};
+
 export const progressService = {
+  resetEvaluationState: (assessmentId: string) => {
+    resetEvaluationState(assessmentId);
+  },
   isGradePassing: (grade: string | null | undefined): boolean => {
     if (!grade) return false;
     const cleanGrade = grade.trim().toLowerCase();

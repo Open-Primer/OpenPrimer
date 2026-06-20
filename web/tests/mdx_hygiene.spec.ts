@@ -46,4 +46,17 @@ test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
     expect(processed).toContain('</HistoricalFact>');
     expect(processed).not.toContain('<FaitHistorique');
   });
+
+  test('should inject isFinal={true} to Quiz and EssayEvaluation when isSummative is true', () => {
+    const rawMdx = `
+<Quiz durationLimit={300}>
+  <Question options="A|||B" correctIndex="0">Question 1</Question>
+</Quiz>
+<EssayEvaluation prompt="Structured essay" />
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr', true);
+    expect(processed).toContain('<Quiz isFinal={true} durationLimit={300}>');
+    expect(processed).toContain('<EssayEvaluation isFinal={true} prompt="Structured essay" />');
+  });
 });

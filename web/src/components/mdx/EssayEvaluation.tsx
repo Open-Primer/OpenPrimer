@@ -17,6 +17,7 @@ interface EssayEvaluationProps {
   gradingSystem: '0/10' | '0/20' | 'A-F' | 'pass-fail';
   subject?: string;
   durationLimit?: number; // in seconds
+  isFinal?: boolean;
 }
 
 import { STATIC_UI_STRINGS } from '@/lib/translations';
@@ -54,7 +55,7 @@ const formatGradingSystem = (system: string, lang: string): string => {
   return system;
 };
 
-export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit }: EssayEvaluationProps) => {
+export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit, isFinal = false }: EssayEvaluationProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
@@ -79,7 +80,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     time_focus: dict.essay_time_focus,
     time_focus_default: dict.essay_time_focus_default,
     offline_evaluation: dict.essay_offline_evaluation || "Offline Evaluation",
-    offline_feedback: dict.essay_offline_feedback || "Offline Evaluation: Your response has been received and evaluated."
+    offline_feedback: dict.essay_offline_feedback || "Offline Evaluation: Your response has been received and evaluated.",
+    summative_single_attempt_warning: dict.summative_single_attempt_warning
   };
 
   const [isStarted, setIsStarted] = useState(false);
@@ -555,6 +557,11 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           <ul className="list-disc list-inside space-y-2 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
             <li>{durationLimit ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) : t.time_focus_default}</li>
+            {isFinal && (
+              <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
+                <span>{t.summative_single_attempt_warning}</span>
+              </li>
+            )}
           </ul>
         </div>
 
@@ -1018,7 +1025,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                {!isCourseCompleted ? (
+                {!isCourseCompleted && !isFinal ? (
                   <button
                     onClick={handleRetry}
                     className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"

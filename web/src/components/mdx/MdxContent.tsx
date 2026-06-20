@@ -569,6 +569,8 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase() as keyof typeof SUMMATIVE_STRINGS;
   const t = SUMMATIVE_STRINGS[langKey] || SUMMATIVE_STRINGS.EN;
+  const staticDict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const singleAttemptWarning = staticDict.summative_single_attempt_warning;
 
   const prompts = React.useMemo(() => extractPrompts(childrenArray), [childrenArray]);
 
@@ -805,6 +807,10 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
                 <span className="text-amber-500 mt-0.5">•</span>
                 <span>{language === 'FR' ? "L'évaluation se fait sous forme de rédaction structurée." : "The evaluation requires a structured written response."}</span>
               </li>
+              <li className="flex items-start gap-2 text-red-400 font-bold border-t border-red-500/20 pt-2.5 mt-2.5">
+                <span className="text-red-500 mt-0.5">•</span>
+                <span>{singleAttemptWarning}</span>
+              </li>
             </ul>
           </div>
 
@@ -905,14 +911,6 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
               <div className="p-4 bg-slate-950/20 border border-slate-900 rounded-2xl text-[11px] text-slate-500 text-left font-medium leading-relaxed">
                 {t.guest_alert}
               </div>
-
-              <button
-                onClick={handleRetry}
-                className="w-full py-4 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white rounded-2xl border border-slate-800/80 hover:border-slate-700/80 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>{t.retry}</span>
-              </button>
             </div>
           )}
         </div>
@@ -931,6 +929,17 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
     child => React.isValidElement(child) && (child.type === Quiz || (child.type as any)?.name === 'Quiz')
   );
 
+  const finalChildren = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      const type = child.type;
+      const typeName = typeof type === 'string' ? type : (type as any)?.name;
+      if (type === Quiz || typeName === 'Quiz' || type === EssayEvaluation || typeName === 'EssayEvaluation') {
+        return React.cloneElement(child, { isFinal: true } as any);
+      }
+    }
+    return child;
+  });
+
   if (hasQuiz) {
     return (
       <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-amber-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
@@ -945,7 +954,7 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
           </div>
         </div>
         <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
-          {children}
+          {finalChildren}
         </div>
       </div>
     );

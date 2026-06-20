@@ -11,48 +11,12 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
-import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, formatCourseLevel } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
 import { ErrorModal } from '@/components/modals/ErrorModal';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 
-const getLocalizedLevel = (currentLang: string, lvl: string) => {
-  const lUpper = currentLang.toUpperCase();
-  const lvlLower = (lvl || '').toLowerCase().trim();
-  
-  const dict: Record<string, Record<string, string>> = {
-    beginner: {
-      FR: "Débutant",
-      ES: "Principiante",
-      DE: "Anfänger",
-      ZH: "初学者"
-    },
-    intermediate: {
-      FR: "Intermédiaire",
-      ES: "Intermedio",
-      DE: "Mittelstufe",
-      ZH: "中级"
-    },
-    advanced: {
-      FR: "Avancé",
-      ES: "Avanzado",
-      DE: "Fortgeschritten",
-      ZH: "高级"
-    },
-    expert: {
-      FR: "Expert",
-      ES: "Experto",
-      DE: "Experte",
-      ZH: "专家"
-    }
-  };
-  
-  if (dict[lvlLower] && dict[lvlLower][lUpper]) {
-    return dict[lvlLower][lUpper];
-  }
-  return lvl;
-};
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
@@ -338,7 +302,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       <CourseClientWrapper 
         navItems={navItems} 
         pageContext={pageData.content}
-        courseLevel={getLocalizedLevel(lang, level)}
+        courseLevel={formatCourseLevel(level, lang)}
         courseTitle={title}
         courseSubject={subject}
       >
@@ -358,7 +322,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           <header className="mb-12 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-4 distraction-free-hide">
               <span className="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-slate-900 border border-slate-800 text-slate-400 uppercase">
-                {getLocalizedLevel(lang, level)}
+                {formatCourseLevel(level, lang)}
               </span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
@@ -488,7 +452,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         <CourseClientWrapper 
           navItems={navItems} 
           pageContext={pageData?.content || ''}
-          courseLevel={getLocalizedLevel(lang, pageData?.meta?.level || 'L1')}
+          courseLevel={formatCourseLevel(pageData?.meta?.level || 'L1', lang)}
           courseTitle={title}
           courseSubject={subject}
         >

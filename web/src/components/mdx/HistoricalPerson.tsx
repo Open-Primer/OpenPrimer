@@ -246,11 +246,11 @@ export const HistoricalFact = ({ title, date, children }: HistoricalFactProps) =
   const { language } = useLanguage();
   
   const defaultHeaderLabels: Record<string, string> = {
-    fr: "Fait Historique",
-    en: "Historical Fact",
-    es: "Hecho Histórico",
-    de: "Historische Tatsache",
-    zh: "历史事实"
+    fr: "Événement Historique",
+    en: "Historical Event",
+    es: "Evento Histórico",
+    de: "Historisches Ereignis",
+    zh: "历史事件"
   };
   
   const normalizedLang = (language || 'en').toLowerCase().split('-')[0];

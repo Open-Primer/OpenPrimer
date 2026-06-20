@@ -272,7 +272,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus_default: "Ensure you have a few minutes of uninterrupted focus ahead of you to complete the test.",
     essay_offline_evaluation: "Offline Evaluation",
     essay_offline_feedback: "Offline Evaluation: Your response has been received and evaluated locally. It demonstrates a solid grasp of the core concepts, though it could benefit from more detailed examples and structured arguments.",
-    audio_ai_generated: "Audio synthesized by artificial intelligence — illustrative only"
+    audio_ai_generated: "Audio synthesized by artificial intelligence — illustrative only",
+    summative_single_attempt_warning: "⚠️ Single Attempt Only: This is a final evaluation. You will not be able to retake this test after submission."
   },
   FR: {
     glossary_definition: "Définition du Glossaire",
@@ -545,7 +546,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus_default: "Assurez-vous d'avoir quelques minutes devant vous de concentration ininterrompue pour réaliser ce test.",
     essay_offline_evaluation: "Évaluation hors-ligne",
     essay_offline_feedback: "Évaluation hors-ligne : Votre réponse a été reçue et évaluée localement. Elle démontre une bonne compréhension des concepts clés, même s'il serait bénéfique d'approfondir les exemples et de structurer davantage l'argumentation.",
-    audio_ai_generated: "Audio synthétisé par intelligence artificielle — à titre d'illustration"
+    audio_ai_generated: "Audio synthétisé par intelligence artificielle — à titre d'illustration",
+    summative_single_attempt_warning: "⚠️ Tentative unique : Il s'agit de l'évaluation finale. Vous ne pourrez pas recommencer ce test après soumission."
   },
   ES: {
     glossary_definition: "Definición del Glosario",
@@ -818,7 +820,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus_default: "Asegúrate de tener unos minutos por delante de concentración ininterrumpida para completar la prueba.",
     essay_offline_evaluation: "Evaluación fuera de línea",
     essay_offline_feedback: "Evaluación fuera de línea: Su respuesta ha sido recibida y evaluada localmente. Muestra una comprensión sólida de los conceptos clave, aunque se beneficiaría de ejemplos más detallados y argumentos más estructurados.",
-    audio_ai_generated: "Audio sintetizado por inteligencia artificial — solo ilustrativo"
+    audio_ai_generated: "Audio sintetizado por inteligencia artificial — solo ilustrativo",
+    summative_single_attempt_warning: "⚠️ Un solo intento: Esta es la evaluación final. No podrá volver a realizar esta prueba después del envío."
   },
   DE: {
     glossary_definition: "Glossar-Definition",
@@ -1079,7 +1082,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus_default: "Stellen Sie sicher, dass Sie einige Minuten ungestörte Konzentration vor sich haben, um den Test abzuschließen.",
     essay_offline_evaluation: "Offline-Bewertung",
     essay_offline_feedback: "Offline-Bewertung: Ihre Antwort wurde empfangen und lokal bewertet. Sie zeigt ein solides Verständnis der Kernkonzepte, könnte jedoch von detaillierteren Beispielen und strukturierteren Argumenten profitieren.",
-    audio_ai_generated: "Audio von künstlicher Intelligenz synthetisiert — nur zur Veranschaulichung"
+    audio_ai_generated: "Audio von künstlicher Intelligenz synthetisiert — nur zur Veranschaulichung",
+    summative_single_attempt_warning: "⚠️ Nur ein Versuch: Dies ist die Abschlussbewertung. Sie können diesen Test nach der Abgabe nicht wiederholen."
   },
   ZH: {
     glossary_definition: "词汇表定义",
@@ -1352,7 +1356,8 @@ export const RAW_STATIC_UI_STRINGS = {
     essay_time_focus_default: "请确保您有几分钟无打扰的专注时间来完成测试。",
     essay_offline_evaluation: "离线评估",
     essay_offline_feedback: "离线评估：您的回答已在本地接收并评估。它展示了对核心概念的扎实理解，但如果能提供更详细的例子和更具条理的论证，效果会更好。",
-    audio_ai_generated: "音频由人工智能合成——仅供示例参考"
+    audio_ai_generated: "音频由人工智能合成——仅供示例参考",
+    summative_single_attempt_warning: "⚠️ 仅限一次尝试：这是最终评估。提交后您将无法重新进行此测验。"
   }
 };
 
@@ -1452,5 +1457,185 @@ export const STATIC_UI_STRINGS: Record<string, typeof RAW_STATIC_UI_STRINGS.EN> 
     return Reflect.get(target, prop);
   }
 }) as any;
+
+export const STATIC_ACADEMIC_LEVELS = [
+  { value: 'foundation_1', EN: 'Foundation 1 (CP-CE2)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundamental 1', DE: 'Grundstufe 1', ZH: '基础 1' },
+  { value: 'foundation_2', EN: 'Foundation 2 (CM1-CM2)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundamental 2', DE: 'Grundstufe 2', ZH: '基础 2' },
+  { value: 'secondary_1',  EN: 'Secondary 1 (6e-3e)', FR: 'Secondaire 1 (6ème–3ème)', ES: 'Secundaria 1', DE: 'Sekundarstufe 1', ZH: '中学 1' },
+  { value: 'secondary_2',  EN: 'Secondary 2 (2de-Tle)', FR: 'Secondaire 2 (Seconde–Terminale)', ES: 'Secundaria 2', DE: 'Sekundarstufe 2', ZH: '中学 2' },
+  { value: 'preuni_1',     EN: 'Pre-University (Bachelor Prep)', FR: 'Pré-Universitaire (Licence)', ES: 'Pre-Universitario (Prep. Grado)', DE: 'Voruniversitär', ZH: '大学预科' },
+  { value: 'preuni_2',     EN: 'Pre-University (Master Prep)', FR: 'Pré-Universitaire (Master)', ES: 'Pre-Universitario (Prep. Máster)', DE: 'Vor-Master', ZH: '硕士预科' },
+  { value: 'preuni_3',     EN: 'Pre-University (Doctoral Prep)', FR: 'Pré-Universitaire (Doctorat)', ES: 'Pre-Universitario (Prep. Doctorado)', DE: 'Vor-Doktorat', ZH: '博士预科' },
+  { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Universidad (1er Año)', DE: 'L1 — Universität (1. Jahr)', ZH: 'L1 — 大一' },
+  { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Universidad (2o Año)', DE: 'L2 — Universität (2. Jahr)', ZH: 'L2 — 大二' },
+  { value: 'L3',           EN: 'L3 — 3rd Year (University)', FR: 'L3 — 3ème Année Universitaire', ES: 'L3 — Universidad (3er Año)', DE: 'L3 — Universität (3. Jahr)', ZH: 'L3 — 大三' },
+  { value: 'M1',           EN: 'M1 — 1st Year (Master)', FR: 'M1 — 1ère Année de Master', ES: 'M1 — Máster (1er Año)', DE: 'M1 — Master (1. Jahr)', ZH: 'M1 — 研一' },
+  { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — 研二' },
+  { value: 'beginner',     EN: 'Beginner', FR: 'Débutant', ES: 'Principiante', DE: 'Anfänger', ZH: '初学者' },
+  { value: 'intermediate', EN: 'Intermediate', FR: 'Intermédiaire', ES: 'Intermedio', DE: 'Mittelstufe', ZH: '中级' },
+  { value: 'advanced',     EN: 'Advanced', FR: 'Avancé', ES: 'Avanzado', DE: 'Fortgeschritten', ZH: '高级' },
+  { value: 'expert',       EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' }
+] as const;
+
+export const formatCourseLevel = (level: string | number | undefined | null, lang: string): string => {
+  if (!level) return '';
+  const lvlStr = String(level).trim().toLowerCase();
+  const langKey = lang.toUpperCase();
+
+  // 1. Try localStorage translation cache first
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`op_lang_levels_${langKey}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[level]) return parsed[level];
+        if (parsed[lvlStr]) return parsed[lvlStr];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 2. Try static list match (excluding L1-M2 codes if we want to display shorter codes like '101' for them)
+  const isL1toM2 = ['l1', 'l2', 'l3', 'm1', 'm2'].includes(lvlStr);
+  if (!isL1toM2) {
+    const found = STATIC_ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === lvlStr);
+    if (found) {
+      return (found as any)[langKey] || found.EN;
+    }
+  }
+
+  const isEn = langKey === 'EN';
+  const isZh = langKey === 'ZH';
+  const isEs = langKey === 'ES';
+  const isDe = langKey === 'DE';
+  const isFr = langKey === 'FR';
+
+  if (lvlStr === 'beginner') {
+    if (isFr) return 'Débutant';
+    if (isEs) return 'Principiante';
+    if (isDe) return 'Anfänger';
+    if (isZh) return '初学者';
+    return 'Beginner';
+  }
+  if (lvlStr === 'intermediate') {
+    if (isFr) return 'Intermédiaire';
+    if (isEs) return 'Intermedio';
+    if (isDe) return 'Mittelstufe';
+    if (isZh) return '中级';
+    return 'Intermediate';
+  }
+  if (lvlStr === 'advanced') {
+    if (isFr) return 'Avancé';
+    if (isEs) return 'Avanzado';
+    if (isDe) return 'Fortgeschritten';
+    if (isZh) return '高级';
+    return 'Advanced';
+  }
+  if (lvlStr === 'expert') {
+    if (isFr) return 'Expert';
+    if (isEs) return 'Experto';
+    if (isDe) return 'Experte';
+    if (isZh) return '专家';
+    return 'Expert';
+  }
+
+  if (lvlStr === 'secondary_1') {
+    if (isFr) return 'Secondaire 1 (6ème–3ème)';
+    if (isZh) return '中学 1';
+    if (isEs) return 'Secundaria 1';
+    if (isDe) return 'Sekundarstufe 1';
+    return 'Secondary 1';
+  }
+  if (lvlStr === 'secondary_2') {
+    if (isFr) return 'Secondaire 2 (Seconde–Terminale)';
+    if (isZh) return '中学 2';
+    if (isEs) return 'Secundaria 2';
+    if (isDe) return 'Sekundarstufe 2';
+    return 'Secondary 2';
+  }
+  if (lvlStr === 'secondary_3') {
+    if (isFr) return 'Secondaire 3';
+    if (isZh) return '中学 3';
+    if (isEs) return 'Secundaria 3';
+    if (isDe) return 'Sekundarstufe 3';
+    return 'Secondary 3';
+  }
+  if (lvlStr.startsWith('secondary_')) {
+    const num = lvlStr.split('_')[1];
+    if (isFr) return `Secondaire ${num}`;
+    if (isZh) return `中学 ${num}`;
+    if (isEs) return `Secundaria ${num}`;
+    if (isDe) return `Sekundarstufe ${num}`;
+    return `Secondary ${num}`;
+  }
+  if (lvlStr.startsWith('primary_')) {
+    const num = lvlStr.split('_')[1];
+    if (isFr) return `Primaire ${num}`;
+    if (isZh) return `小学 ${num}`;
+    if (isEs) return `Primaria ${num}`;
+    if (isDe) return `Primarstufe ${num}`;
+    return `Primary ${num}`;
+  }
+
+  if (lvlStr === 'l1') {
+    if (isFr) return 'Niveau L1';
+    if (isEn) return 'L1 (101)';
+    if (isZh) return '大一 (101)';
+    if (isEs) return 'L1 (101)';
+    if (isDe) return 'Klasse L1';
+    return 'L1';
+  }
+  if (lvlStr === 'l2') {
+    if (isFr) return 'Niveau L2';
+    if (isEn) return 'L2 (201)';
+    if (isZh) return '大二 (201)';
+    if (isEs) return 'L2 (201)';
+    if (isDe) return 'Klasse L2';
+    return 'L2';
+  }
+  if (lvlStr === 'l3') {
+    if (isFr) return 'Niveau L3';
+    if (isEn) return 'L3 (301)';
+    if (isZh) return '大三 (301)';
+    if (isEs) return 'L3 (301)';
+    if (isDe) return 'Klasse L3';
+    return 'L3';
+  }
+  if (lvlStr === 'm1') {
+    if (isEn) return '501';
+    if (isZh) return '研一 (501)';
+    if (isEs) return 'M1 (501)';
+    if (isDe) return 'M1 (501)';
+    if (isFr) return 'M1 (501)';
+    return 'M1';
+  }
+  if (lvlStr === 'm2') {
+    if (isEn) return '502';
+    if (isZh) return '研二 (502)';
+    if (isEs) return 'M2 (502)';
+    if (isDe) return 'M2 (502)';
+    if (isFr) return 'M2 (502)';
+    return 'M2';
+  }
+
+  if (/^\d+$/.test(lvlStr)) {
+    const num = parseInt(lvlStr, 10);
+    if (isZh) return `${num}年级`;
+    if (isEn) return `Grade ${num}`;
+    if (isFr) return `Niveau ${num}`;
+    if (isEs) return `Grado ${num}`;
+    if (isDe) return `Klasse ${num}`;
+  }
+  
+  // Try static list match fallback for any other level not handled by overrides
+  const foundFallback = STATIC_ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === lvlStr);
+  if (foundFallback) {
+    return (foundFallback as any)[langKey] || foundFallback.EN;
+  }
+
+  return lvlStr.toUpperCase();
+};
+
 
 

@@ -58,7 +58,11 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
   let parsedItems: ReferenceItem[] = directItems || [];
   if (itemsBase64) {
     try {
-      const decoded = decodeURIComponent(escape(atob(itemsBase64)));
+      const binary = typeof window !== 'undefined'
+        ? window.atob(itemsBase64)
+        : Buffer.from(itemsBase64, 'base64').toString('binary');
+      const percentEncoded = binary.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      const decoded = decodeURIComponent(percentEncoded);
       parsedItems = JSON.parse(decoded);
     } catch (e) {
       console.error("Failed to decode references itemsBase64:", e);
@@ -90,7 +94,6 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
           </div>
           <div>
             <h3 className="text-lg font-black text-white leading-tight">{t.title}</h3>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.sortBy}</p>
           </div>
         </div>
         

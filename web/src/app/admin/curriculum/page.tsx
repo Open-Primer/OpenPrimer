@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Achievement, TutorPersonality, MockCourse, BADGE_LIBRARY, StyledBadgeImage, isDatabaseConfigured, compileRuleLocally } from '@/lib/db';
-import { cleanPathSegment } from '@/lib/translations';
+import { cleanPathSegment, STATIC_ACADEMIC_LEVELS, formatCourseLevel } from '@/lib/translations';
 
 export const CURRICULUM_STRINGS = {
   EN: {
@@ -2760,31 +2760,11 @@ export const normalizeLevel = (level: string | undefined | null): string => {
 
 export const formatCourseLevelGlobal = (level: string | undefined | null, lang: string) => {
   if (!level) return '101';
-  const normalized = normalizeLevel(level);
-  const foundLvl = ACADEMIC_LEVELS.find(l => l.value === normalized);
-  if (foundLvl) {
-    return getLevelLabel(foundLvl.value, lang);
-  }
-  return normalized.toUpperCase();
+  return formatCourseLevel(level, lang);
 };
 
 export const getLevelLabel = (value: string, lang: string): string => {
-  const lvl = ACADEMIC_LEVELS.find(l => l.value === value);
-  if (!lvl) return value;
-  const k = lang.toUpperCase();
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem(`op_lang_levels_${k}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed[value]) return parsed[value];
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  const key = k as keyof typeof lvl;
-  return (lvl[key] as string) || lvl.EN;
+  return formatCourseLevel(value, lang);
 };
 
 export const getDisciplineLabel = (value: string, lang: string): string => {

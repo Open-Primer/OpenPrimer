@@ -33,9 +33,10 @@ const GuestFootnote = () => {
 interface QuizProps {
   children: React.ReactNode;
   durationLimit?: number; // in seconds
+  isFinal?: boolean;
 }
 
-export const Quiz = ({ children, durationLimit }: QuizProps) => {
+export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
@@ -54,7 +55,8 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
     prep_advice: dict.quiz_prep_advice,
     time_focus: dict.quiz_time_focus,
     time_focus_default: dict.quiz_time_focus_default,
-    tutor_explanation: dict.quiz_tutor_explanation
+    tutor_explanation: dict.quiz_tutor_explanation,
+    summative_single_attempt_warning: dict.summative_single_attempt_warning
   };
 
   const estTimeTexts: Record<string, string> = {
@@ -355,6 +357,11 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
                 ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) 
                 : t.time_focus.replace('{time}', formatDurationText(estimatedSeconds))}
             </li>
+            {isFinal && (
+              <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
+                <span>{t.summative_single_attempt_warning}</span>
+              </li>
+            )}
           </ul>
         </div>
 
@@ -500,7 +507,7 @@ export const Quiz = ({ children, durationLimit }: QuizProps) => {
                   : (language === 'FR' ? 'Voir les réponses' : 'Show Answers')}
               </button>
 
-              {!isCourseCompleted && (
+              {!isCourseCompleted && !isFinal && (
                 <button
                   onClick={handleRetry}
                   className="px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"

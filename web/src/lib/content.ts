@@ -402,7 +402,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             });
         }
 
-        const processedContent = preprocessMdx(repairedBody, lang);
+        const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
+        const processedContent = preprocessMdx(repairedBody, lang, isSummative);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
         return {
           meta: {
@@ -450,7 +451,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             });
         }
 
-        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang);
+        const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
+        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, fallbackLesson.lang || lang);
         return {
           meta: {
@@ -2346,7 +2348,7 @@ function normalizeComplexAttributeTags(mdx: string): string {
   });
 }
 
-export function preprocessMdx(content: string, lang: string = 'en'): string {
+export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
 
@@ -2712,6 +2714,11 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
 
   // Final validation: balance tags and strip orphaned closing JSX tags
   processed = removeOrphanedCloseTags(processed);
+
+  if (isSummative) {
+    // Inject isFinal={true} to Quiz and EssayEvaluation if not already present
+    processed = processed.replace(/<(Quiz|EssayEvaluation)\b(?![^>]*\bisFinal\b)\s*([^>]*?)>/gi, '<$1 isFinal={true} $2>');
+  }
 
   return processed;
 }
