@@ -738,7 +738,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
 
             {/* Content Container (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
               {activeTab === 'profile' && (
                 <div className="space-y-8">
                   {/* Personal info form */}

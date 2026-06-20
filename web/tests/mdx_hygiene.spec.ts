@@ -34,7 +34,7 @@ test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
     expect(processed).not.toContain('<HistoricalPerson');
   });
 
-  test('should normalize FaitHistorique to HistoricalFact', () => {
+  test('should normalize FaitHistorique to HistoricalEvent', () => {
     const rawMdx = `
 <FaitHistorique title="Fondation du laboratoire" date="1879">
   Le premier laboratoire de psychologie expérimentale...
@@ -42,8 +42,8 @@ test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
     `.trim();
 
     const processed = preprocessMdx(rawMdx, 'fr');
-    expect(processed).toContain('<HistoricalFact title="Fondation du laboratoire" date="1879">');
-    expect(processed).toContain('</HistoricalFact>');
+    expect(processed).toContain('<HistoricalEvent title="Fondation du laboratoire" date="1879">');
+    expect(processed).toContain('</HistoricalEvent>');
     expect(processed).not.toContain('<FaitHistorique');
   });
 
@@ -58,5 +58,249 @@ test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
     const processed = preprocessMdx(rawMdx, 'fr', true);
     expect(processed).toContain('<Quiz isFinal={true} durationLimit={300}>');
     expect(processed).toContain('<EssayEvaluation isFinal={true} prompt="Structured essay" />');
+  });
+
+  test('should parse references correctly and extract Google Books search URL query format as First Author Name + Book Title + Year', () => {
+    const rawMdx = `
+This is text.
+
+### References
+
+[1] Carlson, N. R., & Heth, C. D. (2010). *Physiological Psychology* (10e éd.). Pearson Education. [Google Books](https://books.google.com/books?q=Carlson)
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+    expect(processed).toContain('<References itemsBase64="');
+
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    expect(items.length).toBe(1);
+    expect(items[0].text).toContain('Carlson, N. R., &amp; Heth, C. D. (2010). « Physiological Psychology » (10e éd.). Pearson Education.');
+    // Check that "Google Books" placeholder text was removed from the reference text to avoid duplicates
+    expect(items[0].text).not.toContain('Google Books');
+    expect(items[0].scholarUrl).toContain('books.google.com/books?q=Carlson%20Physiological%20Psychology%202010');
+  });
+
+  test('should correctly handle and extract Markdown links containing nested parentheses', () => {
+    const rawMdx = `
+This is text.
+
+### References
+
+[1] Author. *Title*. [Google Books](https://books.google.com/books?id=Author_Title_(2010)_(10th))
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    expect(items.length).toBe(1);
+    expect(items[0].scholarUrl).toBe('https://books.google.com/books?id=Author_Title_(2010)_(10th)');
+  });
+
+  test('should identify duplicate references, deduplicate them in references block, and update inline citations / component refNums', () => {
+    const rawMdx = `
+This is a cite<sup>[1](#ref-1)</sup> and another cite<sup>[2](#ref-2)</sup>.
+Also a component citation <Citation refNum={2} author="Carlson" source="Physiological Psychology" year="2010" />.
+
+### References
+
+[1] Carlson, N. R. (2010). *Physiological Psychology*.
+[2] Carlson, N. R. (2010). *Physiological Psychology*.
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+
+    // Verify inline citations: both should now point to [1]
+    expect(processed).toContain('<sup id="cite-1" class="scroll-mt-24"><a href="#ref-1">[1]</a></sup>');
+    expect(processed).not.toContain('<sup id="cite-2"');
+    
+    // Verify component citation: refNum={2} should be rewritten to refNum={1}
+    expect(processed).toContain('refNum={1}');
+    expect(processed).not.toContain('refNum={2}');
+
+    // Verify Reference items: only 1 should be present in the base64 JSON
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    expect(items.length).toBe(1);
+    expect(items[0].num).toBe(1);
+  });
+
+  test('should handle url-encoded garbage in Google Books search link and deduplicate successfully', () => {
+    const rawMdx = `
+This is a cite<sup>[1](#ref-1)</sup> and another cite<sup>[2](#ref-2)</sup>.
+
+### References
+
+[1] Carlson, N. R., & Heth, C. D. (2010). *Physiological Psychology* (10e éd.). Pearson Education, Boston, MA, p. 200-350. [Google Books](https://books.google.com/books?q=Carlson)
+[2] Carlson, N. R., & Heth, C. D. (2010). *Physiological Psychology* (10e éd.). Pearson Education, Boston, MA, p. 200-350. [Google Books](https://books.google.com/books?q=Carlson,%20Physiological%20Psychology%20(2010)%20(10th)%20Pearson%20Education,%20Boston,%20MA,%20p.%20200-350.).%20Pearson%20Education%2C%20Boston%2C%20MA%2C%20p.%20200-350.%20.%2520«%20Physiological%2520Psych...%20»Physiological%20Psychology*%20(10e%20%C3%A9d.).%20Pearson%20Education%2C%20Boston%2C%20MA%2C%20350.)
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    // Verify they are successfully deduplicated into one item
+    expect(items.length).toBe(1);
+    expect(items[0].num).toBe(1);
+
+    // Verify trailing URL encoded garbage was truncated from the reference text
+    expect(items[0].text).toContain('Carlson, N. R., &amp; Heth, C. D. (2010). « Physiological Psychology » (10e éd.). Pearson Education, Boston, MA, p. 200-350.');
+    expect(items[0].text).not.toContain('%20');
+    expect(items[0].text).not.toContain('%2C');
+
+    // Verify Google Books search URL is rebuilt cleanly as [First Author] [Book Title] [Year]
+    expect(items[0].scholarUrl).toBe('https://books.google.com/books?q=Carlson%20Physiological%20Psychology%202010');
+  });
+
+  test('should handle url-encoded garbage in Google Scholar search link and rebuild clean query', () => {
+    const rawMdx = `
+This is a cite<sup>[1](#ref-1)</sup>.
+
+### References
+
+[1] Carlson, N. R., & Heth, C. D. (2010). *Physiological Psychology* (10e éd.). Pearson Education. [Google Scholar](https://scholar.google.com/scholar?q=Carlson,%20Physiological%20Psychology%20(2010)%20(10th)%20Pearson%20Education,%20Boston,%20MA,%20p.%20200-350.).%20Pearson%20Education%2C%20Boston%2C%20MA%2C%2520p.%20200-350.)
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    expect(items.length).toBe(1);
+    expect(items[0].text).toContain('Carlson, N. R., &amp; Heth, C. D. (2010). « Physiological Psychology » (10e éd.). Pearson Education.');
+    expect(items[0].text).not.toContain('%20');
+
+    // Verify Google Scholar search URL is rebuilt cleanly as [First Author] [Book Title] [Year]
+    expect(items[0].scholarUrl).toBe('https://scholar.google.com/scholar?q=Carlson%20Physiological%20Psychology%202010');
+  });
+
+  test.describe('Pedagogical Enrichment and Interactive Components validation', () => {
+    function validatePedagogicalRequirements(mdx: string, level: string) {
+      const solvedCount = (mdx.match(/<SolvedExercise/gi) || []).length;
+      const unsolvedCount = (mdx.match(/<UnsolvedExercise/gi) || []).length;
+      
+      const simulators = [
+        '<DynamicSimulation', '<CodeSandbox', '<StructureViewer3D', '<Geometry2D',
+        '<FunctionPlotter', '<FunctionManipulator', '<ChemicalStoichiometry',
+        '<EquationManipulator', '<BasicMathExplorer', '<InteractiveDiagram'
+      ];
+      const hasSimulator = simulators.some(sim => new RegExp(sim, 'i').test(mdx));
+
+      const imageCount = (mdx.match(/!\[.*?\]\(.*?\)/g) || []).length + (mdx.match(/<CustomFigure|<Image/gi) || []).length;
+
+      const concreteKeywords = ['exemple', 'concret', 'mise en situation', 'application', 'cas pratique', 'example', 'scenario', 'practical'];
+      const hasConcreteExamples = concreteKeywords.some(kw => mdx.toLowerCase().includes(kw));
+
+      return {
+        solvedCount,
+        unsolvedCount,
+        hasSimulator,
+        imageCount,
+        hasConcreteExamples,
+        isValid: solvedCount >= 2 && unsolvedCount >= 2 && hasSimulator && hasConcreteExamples
+      };
+    }
+
+    test('should approve MDX that meets all pedagogical enrichment requirements', () => {
+      const validMdx = `
+# Leçon de Physique: La Gravitation
+<Prerequisites items={["Concepts de base"]} />
+<DiagnosticQuiz q="Qu'est-ce que la gravité ?" options="Force|||Particule" correctIndex="0" />
+
+## Introduction
+La gravité est une force fondamentale.
+
+## Exemples Concrets et Mises en Situation
+1. **Mise en situation** : Quand on lâche une pomme, elle tombe au sol à cause de la force d'attraction de la Terre.
+2. **Exemple concret** : Les satellites restent en orbite autour de la Terre grâce à la force gravitationnelle.
+
+## Simulateur Interactif
+<FunctionPlotter mode="linear" title="Force vs Distance" xLabel="Distance" yLabel="Force" />
+
+## Exercices Résolus
+<SolvedExercise title="Exercice résolu 1" solution="F = G * (m1 * m2) / r^2">
+Calculer la force gravitationnelle entre deux masses de 1kg à 1m.
+</SolvedExercise>
+
+<SolvedExercise title="Exercice résolu 2" solution="g = 9.81 m/s^2">
+Calculer l'accélération de la pesanteur.
+</SolvedExercise>
+
+## Exercices à Résoudre
+<UnsolvedExercise question="Calculer F pour m=2kg et a=9.8m/s2" correctAnswer={19.6} tolerance={0.1} solution="F = m * a" />
+<UnsolvedExercise question="Calculer le poids d'un objet de 10kg sur Terre" correctAnswer={98.1} tolerance={1.0} solution="P = m * g" />
+
+### Glossary
+- **Gravité** : Force d'attraction.
+
+### References
+[1] Newton, I. (1687). *Principia*.
+      `;
+
+      const result = validatePedagogicalRequirements(validMdx, 'lycee');
+      expect(result.solvedCount).toBe(2);
+      expect(result.unsolvedCount).toBe(2);
+      expect(result.hasSimulator).toBe(true);
+      expect(result.hasConcreteExamples).toBe(true);
+      expect(result.isValid).toBe(true);
+    });
+
+    test('should reject MDX that fails minimum exercise count', () => {
+      const invalidMdx = `
+# Leçon de Mathématiques
+## Introduction
+Les fractions.
+<SolvedExercise title="Exemple 1" solution="1/2 = 0.5">Calculer demi.</SolvedExercise>
+<UnsolvedExercise question="Calculer un quart" correctAnswer={0.25} tolerance={0.01} solution="1/4 = 0.25" />
+<FunctionManipulator />
+      `;
+      const result = validatePedagogicalRequirements(invalidMdx, 'lycee');
+      expect(result.isValid).toBe(false);
+    });
+
+    test('should reject MDX that lacks a simulator or active gamification sandbox', () => {
+      const invalidMdx = `
+# Leçon de Biologie
+## Introduction
+Les cellules.
+<SolvedExercise title="Exemple 1" solution="A">Calculer A.</SolvedExercise>
+<SolvedExercise title="Exemple 2" solution="B">Calculer B.</SolvedExercise>
+<UnsolvedExercise question="Q1" correctAnswer="A" solution="A" />
+<UnsolvedExercise question="Q2" correctAnswer="B" solution="B" />
+      `;
+      const result = validatePedagogicalRequirements(invalidMdx, 'lycee');
+      expect(result.hasSimulator).toBe(false);
+      expect(result.isValid).toBe(false);
+    });
+
+    test('should validate that primary school level prioritizes visual density and games', () => {
+      const primaryMdx = `
+# Les Animaux de la Ferme
+![Une belle vache dans un pré](https://image.pollinations.ai/prompt/cow_in_field?width=800&height=600&nologo=true)
+*Figure 1 : Une vache laitière - Photo de vache mangeant de l'herbe. Source : Image générée par IA.*
+
+![Un petit cochon rose](https://image.pollinations.ai/prompt/little_pink_pig?width=800&height=600&nologo=true)
+*Figure 2 : Un cochon domestique - Photo de cochon rose. Source : Image générée par IA.*
+
+<BasicMathExplorer />
+      `;
+      const result = validatePedagogicalRequirements(primaryMdx, 'primary');
+      expect(result.imageCount).toBeGreaterThanOrEqual(2);
+      expect(result.hasSimulator).toBe(true);
+    });
   });
 });

@@ -84,6 +84,16 @@ Some other paragraph.
     {
       name: "12. Bidirectional footnote citation normalization",
       input: `This is a sentence with a citation<sup><a id="ref-src-1" href="#ref-1">1</a></sup> and another one<sup> <a href="#ref-2" id="ref-src-2">2</a> </sup>.`
+    },
+    {
+      name: "13. Citation and auto-references generation with bidirectional links",
+      input: `<Citation author="David Hilbert" source="Radio Address" year="1930" original="Wir müssen wissen. Wir werden wissen.">Nous devons savoir. Nous saurons.</Citation>
+
+And another citation:
+<Citation author="Albert Einstein" source="The World as I See It" year="1934" original="Wir müssen wissen.">Le monde comme je le vois.</Citation>
+
+And a duplicate citation to test consolidation:
+<Citation author="David Hilbert" source="Radio Address" year="1930" original="Wir müssen wissen. Wir werden wissen.">Nous devons savoir. Nous saurons de nouveau.</Citation>`
     }
   ];
 

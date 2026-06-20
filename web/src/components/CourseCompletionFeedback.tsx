@@ -70,6 +70,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
   const [achievements, setAchievements] = useState<any[]>([]);
   const [earnedIds, setEarnedIds] = useState<number[]>([]);
+  // IDs of badges already shown to the user for THIS course on a previous visit
+  const [alreadyShownIds, setAlreadyShownIds] = useState<number[]>([]);
+  const [newBadgesForCourse, setNewBadgesForCourse] = useState<any[]>([]);
 
   useEffect(() => {
     const session = localStorage.getItem('op_session');
@@ -159,6 +162,11 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       });
       const earned = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_earned_achievements') || '[]') : [];
       setEarnedIds(earned);
+
+      // Load the set of badge IDs already shown for this specific course
+      const shownKey = `op_shown_badges_${courseId}`;
+      const alreadyShown = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(shownKey) || '[]') : [];
+      setAlreadyShownIds(alreadyShown);
     }
 
     // Check next course in curriculum path asynchronously (whether logged in or not)
@@ -289,25 +297,29 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     }
   };
 
+  /**
+   * Returns only the badges NEWLY earned for this course that haven't been shown yet.
+   * Badges already shown on a previous visit (tracked in localStorage per course) are excluded,
+   * so the celebration is genuine every time — just like real-world platforms (Duolingo, Coursera).
+   * The global trophy shelf (profile/curriculum) still shows ALL earned badges at all times.
+   */
   const getCourseEarnedAchievements = () => {
     if (typeof window === 'undefined') return [];
     const courseEarned: any[] = [];
-    
-    // 1. Fast Learner check
+
+    // 1. Fast Learner: completed this course within 3 days of enrollment
     const fastLearnerAch = achievements.find(a => a.threshold.toLowerCase().includes('3 days'));
     if (fastLearnerAch && earnedIds.includes(fastLearnerAch.id)) {
       const enrollDateStr = localStorage.getItem('op_enroll_date_' + courseId);
       if (enrollDateStr) {
         const diffDays = (Date.now() - new Date(enrollDateStr).getTime()) / (1000 * 60 * 60 * 24);
-        if (diffDays <= 3) {
-          courseEarned.push(fastLearnerAch);
-        }
+        if (diffDays <= 3) courseEarned.push(fastLearnerAch);
       } else {
         courseEarned.push(fastLearnerAch);
       }
     }
-    
-    // 2. Perfect Score check
+
+    // 2. Perfect Score on the final evaluation of this course
     const perfectScoreAch = achievements.find(a => a.threshold.toLowerCase().includes('100% score'));
     if (perfectScoreAch && earnedIds.includes(perfectScoreAch.id)) {
       const quizResults = JSON.parse(localStorage.getItem('op_quiz_results') || '{}');
@@ -316,22 +328,33 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         courseEarned.push(perfectScoreAch);
       }
     }
-    
-    // 3. Course completion milestones check (e.g., "completed 1 course", "completed 5 courses")
-    const completedCount = Object.values(JSON.parse(localStorage.getItem('op_course_progress') || '{}')).filter(v => v === 100).length;
+
+    // 3. Cumulative completion milestones (e.g. "completed 5 courses")
+    const completedCount = Object.values(
+      JSON.parse(localStorage.getItem('op_course_progress') || '{}')
+    ).filter(v => v === 100).length;
     achievements.forEach(a => {
       const th = a.threshold.toLowerCase();
-      if (th.includes('course') && !th.includes('3 days')) {
-        if (earnedIds.includes(a.id)) {
-          const reqCount = parseInt(th.replace(/\D/g, '')) || 1;
-          if (completedCount >= reqCount) {
-            courseEarned.push(a);
-          }
-        }
+      if (th.includes('course') && !th.includes('3 days') && earnedIds.includes(a.id)) {
+        const reqCount = parseInt(th.replace(/\D/g, '')) || 1;
+        if (completedCount >= reqCount) courseEarned.push(a);
       }
     });
-    
-    return Array.from(new Set(courseEarned));
+
+    const allEarned = Array.from(new Set(courseEarned));
+
+    // Filter to only badges NOT yet shown for this course visit
+    return allEarned.filter((a: any) => !alreadyShownIds.includes(a.id));
+  };
+
+  /** Mark all currently displayed course badges as "seen" so they aren't repeated on reload. */
+  const markBadgesAsSeen = (badges: any[]) => {
+    if (typeof window === 'undefined' || badges.length === 0) return;
+    const shownKey = `op_shown_badges_${courseId}`;
+    const current: number[] = JSON.parse(localStorage.getItem(shownKey) || '[]');
+    const updated = Array.from(new Set([...current, ...badges.map((b: any) => b.id)]));
+    localStorage.setItem(shownKey, JSON.stringify(updated));
+    setAlreadyShownIds(updated);
   };
 
   const langKey = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
@@ -366,7 +389,20 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     finishLearning: staticT.fb_finishLearning
   };
   const isEvaluationCompleted = submitted || userRating !== null;
-  const courseEarnedBadges = getCourseEarnedAchievements();
+
+  // Compute new (unshown) badges once achievements + earned data are loaded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    if (achievements.length === 0) return;
+    const fresh = getCourseEarnedAchievements();
+    setNewBadgesForCourse(fresh);
+    if (fresh.length > 0) {
+      // Auto-mark as seen after a short delay so the celebration animation plays
+      const t = setTimeout(() => markBadgesAsSeen(fresh), 2000);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [achievements, earnedIds, alreadyShownIds]);
 
   if (!isLoggedIn) {
     return (
@@ -436,9 +472,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
   return (
     <div className="mt-32 pt-12 border-t border-slate-900 space-y-8 animate-fade-in">
-      {/* Earned Badges block */}
-      {courseEarnedBadges.length > 0 && (
-        <div className="bg-slate-900/10 border border-slate-800/60 rounded-[36px] p-8 md:p-10 space-y-6 backdrop-blur-md animate-fade-in">
+      {/* Newly earned badges block — shown only once per course completion */}
+      {newBadgesForCourse.length > 0 && (
+        <div className="bg-slate-900/10 border border-amber-500/20 rounded-[36px] p-8 md:p-10 space-y-6 backdrop-blur-md animate-fade-in">
           <div>
             <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">
               {t.badgesEarned}
@@ -450,16 +486,15 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               {t.achievementsDesc}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-2">
-            {courseEarnedBadges.map((ach) => {
+            {newBadgesForCourse.map((ach) => {
               const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
               const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
-              
               return (
-                <div 
+                <div
                   key={ach.id}
-                  className="p-5 border rounded-[28px] flex items-center gap-4 transition-all bg-slate-950/40 border-amber-500/20 shadow-xl shadow-amber-500/5 hover:border-amber-500/40"
+                  className="p-5 border rounded-[28px] flex items-center gap-4 transition-all bg-slate-950/40 border-amber-500/20 shadow-xl shadow-amber-500/5 hover:border-amber-500/40 animate-fade-in"
                 >
                   <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shadow-md shrink-0`}>
                     <IconComponent className="w-5 h-5" />
@@ -499,7 +534,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           </p>
         </div>
 
-        {(!isCompleted || !isEvaluationPassed) ? (
+        {(!isCompleted || !isEvaluationPassed) && (
           <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 border border-dashed border-slate-800 rounded-3xl bg-slate-950/40 backdrop-blur-sm animate-fade-in">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20 shadow-inner animate-pulse">
               <Icons.Lock className="w-6 h-6" />
@@ -521,72 +556,72 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               </p>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
-              {/* Stars Selection */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                  {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
-                </span>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      disabled={isEvaluationCompleted}
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => !isEvaluationCompleted && setHoverRating(star)}
-                      onMouseLeave={() => !isEvaluationCompleted && setHoverRating(0)}
-                      className={`p-1 transition-transform outline-none ${isEvaluationCompleted ? 'cursor-not-allowed opacity-60' : 'hover:scale-110 cursor-pointer'}`}
-                    >
-                      <Star 
-                        className={`w-8 h-8 transition-colors ${
-                          star <= (hoverRating || rating) 
-                            ? 'fill-amber-400 text-amber-400' 
-                            : 'text-slate-700'
-                        }`} 
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Comment Input */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                  {t.commentsSuggestions}
-                </span>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  disabled={isEvaluationCompleted}
-                  placeholder={t.textareaPlaceholder}
-                  rows={4}
-                  className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isEvaluationCompleted ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-900/50">
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                {!isEvaluationCompleted && (
-                  <button
-                    type="submit"
-                    disabled={rating === 0}
-                    className={`w-full sm:w-auto px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
-                      rating > 0 
-                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
-                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {t.submitComplete}
-                  </button>
-                )}
-              </div>
-            </div>
-          </form>
         )}
+
+        <form onSubmit={handleSubmit} className={`space-y-6 ${(!isCompleted || !isEvaluationPassed) ? 'pointer-events-none opacity-30 select-none filter blur-[0.2px]' : ''}`}>
+          <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
+            {/* Stars Selection */}
+            <div className="space-y-3">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
+              </span>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    disabled={isEvaluationCompleted || !isCompleted || !isEvaluationPassed}
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => !isEvaluationCompleted && isCompleted && isEvaluationPassed && setHoverRating(star)}
+                    onMouseLeave={() => !isEvaluationCompleted && isCompleted && isEvaluationPassed && setHoverRating(0)}
+                    className={`p-1 transition-transform outline-none ${isEvaluationCompleted || !isCompleted || !isEvaluationPassed ? 'cursor-not-allowed opacity-60' : 'hover:scale-110 cursor-pointer'}`}
+                  >
+                    <Star 
+                      className={`w-8 h-8 transition-colors ${
+                        star <= (hoverRating || rating) 
+                          ? 'fill-amber-400 text-amber-400' 
+                          : 'text-slate-700'
+                      }`} 
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Comment Input */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                {t.commentsSuggestions}
+              </span>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                disabled={isEvaluationCompleted || !isCompleted || !isEvaluationPassed}
+                placeholder={t.textareaPlaceholder}
+                rows={4}
+                className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isEvaluationCompleted || !isCompleted || !isEvaluationPassed ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-900/50">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              {!isEvaluationCompleted && (
+                <button
+                  type="submit"
+                  disabled={rating === 0 || !isCompleted || !isEvaluationPassed}
+                  className={`w-full sm:w-auto px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
+                    rating > 0 && isCompleted && isEvaluationPassed
+                      ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  {t.submitComplete}
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
       </div>
 
       {/* Floating Premium Success Toast Notification */}

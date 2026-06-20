@@ -334,7 +334,7 @@ export const mockDatabaseProvider: DatabaseService = {
     const lessonProgress = isBrowser ? JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}') : {};
     
     const activeModules = enrolled.map((id: number) => {
-      const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2) && !/test/i.test(c.slug));
+      const course = getMockCourses().find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
       if (!course) return null;
       
       let prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
@@ -915,8 +915,15 @@ export const mockDatabaseProvider: DatabaseService = {
 
   addCourse: async (course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>) => {
     let list = getMockCourses();
+    const resolvedLanguages = (course.languages && course.languages.length > 0)
+      ? course.languages
+      : (course.langs && course.langs.length > 0)
+      ? course.langs.map((l: string) => l.toLowerCase())
+      : ['en']; // Courses must always have at least one language
     const newCourse: MockCourse = {
       ...course,
+      languages: resolvedLanguages,
+      langs: resolvedLanguages.map((l: string) => l.toUpperCase()),
       id: list.length > 0 ? Math.max(...list.map(c => c.id)) + 1 : 1,
       popularity: 0,
       is_active: true,
@@ -983,14 +990,16 @@ export const mockDatabaseProvider: DatabaseService = {
         ...(existing.langs || []),
         ...(course.languages || []),
         ...(course.langs || [])
-      ].map(l => l.toLowerCase())));
+      ].map((l: string) => l.toLowerCase())));
+      // Guarantee: courses must always have at least one language
+      const finalLanguages = mergedLanguages.length > 0 ? mergedLanguages : ['en'];
 
       finalCourse = { 
         ...existing, 
         ...course, 
         id: searchId,
-        languages: mergedLanguages,
-        langs: mergedLanguages.map(l => l.toUpperCase())
+        languages: finalLanguages,
+        langs: finalLanguages.map((l: string) => l.toUpperCase())
       };
       updated = list.map(c => c.id === searchId ? finalCourse : c);
     } else {

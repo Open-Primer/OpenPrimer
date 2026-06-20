@@ -4,13 +4,13 @@ import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-interface HistoricalFactProps {
+interface HistoricalEventProps {
   title: string;
   date?: string;
   children: React.ReactNode;
 }
 
-export const HistoricalFact = ({ title, date, children }: HistoricalFactProps) => {
+export const HistoricalEvent = ({ title, date, children }: HistoricalEventProps) => {
   const { language } = useLanguage();
   
   const defaultHeaderLabels: Record<string, string> = {

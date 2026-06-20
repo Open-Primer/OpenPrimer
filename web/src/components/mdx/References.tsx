@@ -48,6 +48,10 @@ const STRINGS: Record<string, { title: string; sortBy: string; appearance: strin
   }
 };
 
+interface DisplayReferenceItem extends ReferenceItem {
+  allNums: number[];
+}
+
 export function References({ itemsBase64, items: directItems }: ReferencesProps) {
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase();
@@ -73,7 +77,39 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
     return null;
   }
 
-  const displayedItems = [...parsedItems];
+  // Deduplicate and group reference numbers by text/URL
+  const uniqueItems: DisplayReferenceItem[] = [];
+  const textToItem = new Map<string, DisplayReferenceItem>();
+  const urlToItem = new Map<string, DisplayReferenceItem>();
+
+  for (const item of parsedItems) {
+    const cleanText = item.text.replace(/<[^>]*>/g, '').trim().toLowerCase();
+    const url = item.scholarUrl?.trim().toLowerCase();
+
+    let existing = textToItem.get(cleanText);
+    if (!existing && url) {
+      existing = urlToItem.get(url);
+    }
+
+    if (existing) {
+      if (!existing.allNums.includes(item.num)) {
+        existing.allNums.push(item.num);
+        existing.allNums.sort((a, b) => a - b);
+      }
+    } else {
+      const newItem: DisplayReferenceItem = {
+        ...item,
+        allNums: [item.num]
+      };
+      uniqueItems.push(newItem);
+      textToItem.set(cleanText, newItem);
+      if (url) {
+        urlToItem.set(url, newItem);
+      }
+    }
+  }
+
+  const displayedItems = [...uniqueItems];
   if (sortOrder === 'alphabetical') {
     displayedItems.sort((a, b) => {
       const cleanA = a.text.replace(/<[^>]*>/g, '').trim();
@@ -126,16 +162,25 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
       <div className="space-y-4">
         {displayedItems.map((item) => (
           <div key={item.num} className="text-sm leading-relaxed text-slate-300 flex items-start gap-3 select-text group">
-            {/* Scroll target anchor */}
-            <span id={`ref-${item.num}`} className="scroll-mt-24"></span>
+            {/* Scroll target anchors for all merged numbers */}
+            {item.allNums.map(num => (
+              <span key={num} id={`ref-${num}`} className="scroll-mt-24"></span>
+            ))}
             
-            <a 
-              href={`#cite-${item.num}`} 
-              className="no-underline hover:text-indigo-400 transition-colors font-bold text-indigo-400 whitespace-nowrap pt-0.5 select-none"
-              title="Scroll back to text citation"
-            >
-              [{item.num}]
-            </a>
+            <span className="flex items-center gap-1 whitespace-nowrap pt-0.5 select-none font-bold text-indigo-400">
+              {item.allNums.map((num, idx) => (
+                <React.Fragment key={num}>
+                  {idx > 0 && <span className="text-slate-600">,</span>}
+                  <a 
+                    href={`#cite-${num}`} 
+                    className="no-underline hover:text-indigo-300 transition-colors"
+                    title={`Scroll back to citation [${num}]`}
+                  >
+                    [{num}]
+                  </a>
+                </React.Fragment>
+              ))}
+            </span>
             
             <div className="flex-1">
               <span 

@@ -56,7 +56,10 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
     time_focus: dict.quiz_time_focus,
     time_focus_default: dict.quiz_time_focus_default,
     tutor_explanation: dict.quiz_tutor_explanation,
-    summative_single_attempt_warning: dict.summative_single_attempt_warning
+    summative_single_attempt_warning: dict.summative_single_attempt_warning,
+    eval_mode_label: (dict as any).eval_mode_label || "Evaluation Format",
+    eval_attempts_unlimited: (dict as any).eval_attempts_unlimited || "Unlimited retries (unless final exam)",
+    eval_attempts_single: (dict as any).eval_attempts_single || "Single attempt only — final evaluation"
   };
 
   const estTimeTexts: Record<string, string> = {
@@ -337,6 +340,11 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
   // 1. Initial State: Start Screen Cover
   if (!isStarted && !isFinished) {
     const estimatedSeconds = totalQuestions * 60;
+    const questionsLabel = language === 'FR' ? `📝 ${totalQuestions} question(s) à choix multiple`
+      : language === 'ES' ? `📝 ${totalQuestions} pregunta(s) de opción múltiple`
+      : language === 'DE' ? `📝 ${totalQuestions} Multiple-Choice-Frage(n)`
+      : language === 'ZH' ? `📝 ${totalQuestions} 道选择题`
+      : `📝 ${totalQuestions} multiple-choice question(s)`;
     return (
       <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-6">
         <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/20">
@@ -347,10 +355,32 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
           <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
+        {/* Evaluation Mode Info Card */}
+        <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
+          <p className="font-black text-blue-400 uppercase tracking-widest text-[9px]">📋 {t.eval_mode_label}</p>
+          <div className="grid grid-cols-1 gap-2 text-xs text-slate-300">
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-black shrink-0">▸</span>
+              <span>{questionsLabel}</span>
+            </div>
+            <div className="flex items-start gap-2 text-amber-300 font-bold">
+              <span className="shrink-0">⏱</span>
+              <span>{durationLimit
+                ? `${t.time_limit} ${formatDurationText(durationLimit)}`
+                : `${estTimeText} ${formatDurationText(estimatedSeconds)}`}
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-black shrink-0">▸</span>
+              <span>{isFinal ? t.eval_attempts_single : t.eval_attempts_unlimited}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Pre-flight Checklist Card */}
-        <div className="bg-slate-950/60 border border-slate-850/80 rounded-2xl p-5 text-left text-xs text-slate-350 max-w-md mx-auto space-y-2.5">
-          <p className="font-black text-blue-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
-          <ul className="list-disc list-inside space-y-2 leading-relaxed text-slate-300">
+        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-xs max-w-md mx-auto space-y-2">
+          <p className="font-black text-slate-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
+          <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
             <li>
               {durationLimit 
@@ -363,16 +393,6 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
               </li>
             )}
           </ul>
-        </div>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl text-xs font-bold select-none">
-          <Timer className="w-4 h-4" />
-          <span>
-            {durationLimit 
-              ? `${t.time_limit} ${formatDurationText(durationLimit)}` 
-              : `${estTimeText} ${formatDurationText(estimatedSeconds)}`
-            }
-          </span>
         </div>
 
         <div className="pt-2">

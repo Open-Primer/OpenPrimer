@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
-import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork, HistoricalFact } from './HistoricalPerson';
+import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEventLink, Artwork, HistoricalEvent } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -28,6 +28,7 @@ import { DataChart } from './DataChart';
 import { StructureViewer3D } from './StructureViewer3D';
 import { DynamicSimulation } from './DynamicSimulation';
 import { GoingFurther, GoingFurtherItem } from './GoingFurther';
+import { Citation, QuoteBlock, InteractiveQuote } from './Citation';
 import { FunctionManipulator } from './FunctionManipulator';
 import { EquationManipulator } from './EquationManipulator';
 import { ChemicalStoichiometry } from './ChemicalStoichiometry';
@@ -40,6 +41,7 @@ import { HistoricalAnecdote } from './HistoricalAnecdote';
 import { ScientificMethod } from './ScientificMethod';
 import { WhatsNext } from './WhatsNext';
 import { PointOfView } from './PointOfView';
+import { DivergingViews } from './DivergingViews';
 import { BrilliantIdea, IdeeBrillante } from './BrilliantIdea';
 import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
@@ -1253,7 +1255,9 @@ const components = {
   Location,
   Place: Location, // alias for Place
   HistoricalEvent,
+  HistoricalEventLink,
   EvenementHistorique: HistoricalEvent,
+  ÉvénementHistorique: HistoricalEvent,
   EntityLink,
   Artwork,
   EssayEvaluation,
@@ -1298,8 +1302,8 @@ const components = {
   LeSaviezVous: DidYouKnow,
   HistoricalAnecdote,
   AnecdoteHistorique: HistoricalAnecdote,
-  HistoricalFact,
-  FaitHistorique: HistoricalFact,
+  HistoricalFact: HistoricalEvent,
+  FaitHistorique: HistoricalEvent,
   ScientificMethod,
   MethodeScientifique: ScientificMethod,
   WhatsNext,
@@ -1312,6 +1316,31 @@ const components = {
   IdeeBrillante: BrilliantIdea,
   OpenQuestion,
   ScientificDebate,
+  Citation,
+  QuoteBlock,
+  InteractiveQuote,
+
+  // Opposing theories side-by-side
+  DivergingViews,
+  DivergingView: DivergingViews,
+  VisionsOpposees: DivergingViews,
+  VisionsOpposées: DivergingViews,
+
+  // Custom standard tag overrides
+  a: (props: any) => {
+    const href = props.href;
+    const isExternal = href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//'));
+    if (isExternal) {
+      return (
+        <a
+          {...props}
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+      );
+    }
+    return <a {...props} />;
+  },
 
   // Overriding standard table to render dynamic graphs on toggle
   table: DynamicTableChart,
@@ -1355,11 +1384,191 @@ const components = {
   Content: () => null,
 };
 
-class MdxErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ReactNode; courseSlug?: string; lessonSlug?: string },
-  { hasError: boolean; error: Error | null; reported: boolean }
-> {
-  constructor(props: any) {
+interface MdxErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  courseSlug?: string;
+  lessonSlug?: string;
+  language?: string;
+  rawMdx?: string;
+}
+
+interface MdxErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  reported: boolean;
+}
+
+const COMPATIBILITY_MESSAGES: Record<string, { title: string; prefix: string; suffix: string }> = {
+  EN: {
+    title: "Compatibility Mode Enabled",
+    prefix: "This chapter is displayed in a simplified version due to an anomaly in the format of the ",
+    suffix: " of the lesson. The incident has been reported to the administration."
+  },
+  FR: {
+    title: "Mode de compatibilité activé",
+    prefix: "Ce chapitre s'affiche en version allégée en raison d'une anomalie dans le format ",
+    suffix: " de la leçon. L'incident a été signalé à l'administration."
+  },
+  ES: {
+    title: "Modo de compatibilidad activado",
+    prefix: "Este capítulo se muestra en una versión simplificada debido a una anomalía en el formato ",
+    suffix: " de la lección. El incidente ha sido reportado a la administración."
+  },
+  DE: {
+    title: "Kompatibilitätsmodus aktiviert",
+    prefix: "Dieses Kapitel wird aufgrund einer Anomalie im Format ",
+    suffix: " der Lektion in einer vereinfachten Version angezeigt. Der Vorfall wurde der Verwaltung gemeldet."
+  },
+  ZH: {
+    title: "兼容模式已启用",
+    prefix: "本章因课程的",
+    suffix: "格式异常而以精简版显示。该事件已报告给管理部门。"
+  }
+};
+
+const CRITICAL_ERROR_MESSAGES: Record<string, { title: string; desc: string }> = {
+  EN: {
+    title: "Display Error",
+    desc: "This chapter could not be loaded due to a technical display issue. Please proceed to the next step using the navigation or the menu."
+  },
+  FR: {
+    title: "Erreur d'affichage",
+    desc: "Ce chapitre n'a pas pu être chargé en raison d'un problème technique d'affichage. Veuillez passer à l'étape suivante à l'aide de la navigation ou du menu."
+  },
+  ES: {
+    title: "Error de visualización",
+    desc: "Este capítulo no se pudo cargar debido a un problema técnico de visualización. Continúe con el siguiente paso utilizando la navegación o el menú."
+  },
+  DE: {
+    title: "Anzeigefehler",
+    desc: "Dieses Kapitel konnte aufgrund eines technischen Anzeigeproblems nicht geladen werden. Bitte fahren Sie mit dem nächsten Schritt über die Navigation oder das Menü fort."
+  },
+  ZH: {
+    title: "显示错误",
+    desc: "由于技术显示问题，无法加载本章。请使用导航或菜单继续下一步。"
+  }
+};
+
+function getAffectedComponentsList(rawMdx: string | undefined, lang: string): string {
+  const language = (lang || 'EN').toUpperCase();
+  const isFr = language === 'FR';
+  
+  if (!rawMdx) {
+    if (isFr) return "des composants interactifs";
+    if (language === 'ES') return "de los componentes interactivos";
+    if (language === 'DE') return "der interaktiven Komponenten";
+    if (language === 'ZH') return "互动组件";
+    return "interactive components";
+  }
+
+  const detected: string[] = [];
+
+  // Check for components
+  if (/<Quiz/i.test(rawMdx)) {
+    detected.push('quiz');
+  }
+  if (/<(CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer)/i.test(rawMdx)) {
+    detected.push('simulations');
+  }
+  if (/<(InteractiveDiagram|Mermaid|FunctionPlotter|FunctionManipulator|EquationManipulator|Geometry2D)/i.test(rawMdx)) {
+    detected.push('diagrams');
+  }
+  if (/<(ComparisonSlider|DataChart)/i.test(rawMdx)) {
+    detected.push('diagrams'); // Treat DataChart/slider as graphical/diagram components
+  }
+  if (/<(SolvedExercise|UnsolvedExercise|SolvedProblem|SelfAssessment)/i.test(rawMdx)) {
+    detected.push('exercises');
+  }
+  if (/<FillInBlanks/i.test(rawMdx)) {
+    detected.push('blanks');
+  }
+  if (/<DynamicTableChart/i.test(rawMdx)) {
+    detected.push('tables');
+  }
+  if (/<StructureViewer3D/i.test(rawMdx)) {
+    detected.push('models3d');
+  }
+
+  const translations: Record<string, Record<string, string>> = {
+    quiz: {
+      EN: "quizzes",
+      FR: "quiz",
+      ES: "cuestionarios",
+      DE: "Quiz",
+      ZH: "小测验"
+    },
+    simulations: {
+      EN: "simulations",
+      FR: "simulations",
+      ES: "simulaciones",
+      DE: "Simulationen",
+      ZH: "模拟"
+    },
+    diagrams: {
+      EN: "diagrams/graphics",
+      FR: "schémas/graphiques",
+      ES: "esquemas/gráficos",
+      DE: "Diagramme/Grafiken",
+      ZH: "图表/图形"
+    },
+    exercises: {
+      EN: "exercises",
+      FR: "exercices",
+      ES: "ejercicios",
+      DE: "Übungen",
+      ZH: "练习"
+    },
+    blanks: {
+      EN: "fill-in-the-blanks",
+      FR: "textes à trous",
+      ES: "ejercicios de rellenar huecos",
+      DE: "Lückentexte",
+      ZH: "填空题"
+    },
+    tables: {
+      EN: "tables",
+      FR: "tableaux",
+      ES: "tablas",
+      DE: "Tabellen",
+      ZH: "表格"
+    },
+    models3d: {
+      EN: "3D models",
+      FR: "modèles 3D",
+      ES: "modelos 3D",
+      DE: "3D-Modelle",
+      ZH: "3D模型"
+    }
+  };
+
+  const uniqueDetected = Array.from(new Set(detected));
+
+  if (uniqueDetected.length === 0) {
+    if (isFr) return "des composants interactifs";
+    if (language === 'ES') return "de los componentes interactivos";
+    if (language === 'DE') return "der interaktiven Komponenten";
+    if (language === 'ZH') return "互动组件";
+    return "interactive components";
+  }
+
+  const items = uniqueDetected.map(key => translations[key]?.[language] || translations[key]?.EN || key);
+
+  if (language === 'FR') {
+    return `des composants interactifs (${items.join(', ')})`;
+  } else if (language === 'ES') {
+    return `de los componentes interactivos (${items.join(', ')})`;
+  } else if (language === 'DE') {
+    return `der interaktiven Komponenten (${items.join(', ')})`;
+  } else if (language === 'ZH') {
+    return `互动组件（${items.join('、')}）`;
+  } else {
+    return `interactive components (${items.join(', ')})`;
+  }
+}
+
+class MdxErrorBoundary extends React.Component<MdxErrorBoundaryProps, MdxErrorBoundaryState> {
+  constructor(props: MdxErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, reported: false };
   }
@@ -1391,13 +1600,18 @@ class MdxErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
+      const langKey = (this.props.language || 'EN').toUpperCase();
+      const msg = COMPATIBILITY_MESSAGES[langKey] || COMPATIBILITY_MESSAGES.EN;
+      const crit = CRITICAL_ERROR_MESSAGES[langKey] || CRITICAL_ERROR_MESSAGES.EN;
+
       if (this.props.fallback) {
+        const affectedStr = getAffectedComponentsList(this.props.rawMdx, langKey);
         return (
           <div className="w-full">
             <div className="p-5 border border-amber-900/30 bg-amber-950/10 rounded-3xl text-left my-8 select-none">
-              <h3 className="text-amber-400 font-black text-sm tracking-wider uppercase mb-2">Mode de compatibilité activé</h3>
+              <h3 className="text-amber-400 font-black text-sm tracking-wider uppercase mb-2">{msg.title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Ce chapitre s'affiche en version allégée en raison d'une anomalie dans le format des composants interactifs de la leçon. L'incident a été signalé à l'administration.
+                {msg.prefix}{affectedStr}{msg.suffix}
               </p>
             </div>
             {this.props.fallback}
@@ -1406,9 +1620,9 @@ class MdxErrorBoundary extends React.Component<
       }
       return (
         <div className="p-8 border border-red-950/40 bg-red-950/10 rounded-[32px] text-left my-8 shadow-xl">
-          <h3 className="text-red-400 font-black text-sm tracking-wider uppercase mb-2">Erreur d'affichage</h3>
+          <h3 className="text-red-400 font-black text-sm tracking-wider uppercase mb-2">{crit.title}</h3>
           <p className="text-xs text-slate-400 leading-relaxed mb-4">
-            Ce chapitre n'a pas pu être chargé en raison d'un problème technique d'affichage. Veuillez passer à l'étape suivante à l'aide de la navigation ou du menu.
+            {crit.desc}
           </p>
           {this.state.error && (
             <pre className="text-[10px] text-red-300/60 overflow-auto max-h-32 mt-4 p-3 bg-black/40 rounded-xl font-mono leading-normal">
@@ -1536,7 +1750,7 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 10. Replace inline named components with text formatting
-  clean = clean.replace(/<(?:HistoricalPerson|HistoricalEvent|Location|Place|EvenementHistorique)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '**$1**');
+  clean = clean.replace(/<(?:HistoricalPerson|HistoricalEvent|HistoricalEventLink|Location|Place|EvenementHistorique|ÉvénementHistorique)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '**$1**');
   clean = clean.replace(/<Artwork\b[^>]*?>([\s\S]*?)<\/Artwork>/gi, '*$1*');
   
   // Strip remaining custom tag structures but preserve their content
@@ -1586,6 +1800,7 @@ interface MdxContentProps {
 }
 
 export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxContentProps) {
+  const { language } = useLanguage();
   const runtimeComponents = React.useMemo(() => {
     // Create a client-side wrapper function component
     const wrapper = (props: any) => {
@@ -1618,6 +1833,8 @@ export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxConten
       fallback={rawMdx ? stripJsxAndRender(rawMdx) : undefined}
       courseSlug={courseSlug}
       lessonSlug={lessonSlug}
+      language={language}
+      rawMdx={rawMdx}
     >
       <MDXRemote {...source} components={runtimeComponents as any} />
     </MdxErrorBoundary>

@@ -787,7 +787,15 @@ export const COCKPIT_DICTIONARY = {
     "Failed to archive course.": "Failed to archive course.",
     "Course archival refused and added to backlog.": "Course archival refused and added to backlog.",
     "Removed course from archiving backlog.": "Removed course from archiving backlog.",
-    "Excessive Cumulative Revisions": "Excessive Cumulative Revisions"},
+    "Excessive Cumulative Revisions": "Excessive Cumulative Revisions",
+    "Force Run Queue": "Force Run Queue",
+    "Processing...": "Processing...",
+    "Triggering worker execution...": "Triggering worker execution...",
+    "Queue check complete: No pending tasks in queue.": "Queue check complete: No pending tasks in queue.",
+    "Failed to run task worker:": "Failed to run task worker:",
+    "Already running max parallel tasks:": "Already running max parallel tasks:",
+    "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?"
+  },
   FR: {
     "Volume Preference": "Préférence de Volume",
     "Automatic": "Automatique",
@@ -1215,7 +1223,15 @@ export const COCKPIT_DICTIONARY = {
     "Failed to archive course.": "Échec de l'archivage du cours.",
     "Course archival refused and added to backlog.": "Archivage du cours refusé et ajouté au backlog.",
     "Removed course from archiving backlog.": "Cours retiré du backlog d'archivage.",
-    "Excessive Cumulative Revisions": "Révisions Cumulées Excessives"},
+    "Excessive Cumulative Revisions": "Révisions Cumulées Excessives",
+    "Force Run Queue": "Forcer l'exécution",
+    "Processing...": "Traitement...",
+    "Triggering worker execution...": "Déclenchement du traitement...",
+    "Queue check complete: No pending tasks in queue.": "Vérification terminée : Aucune tâche en attente dans la file.",
+    "Failed to run task worker:": "Échec du lancement du worker :",
+    "Already running max parallel tasks:": "Nombre maximum de tâches en cours d'exécution atteint :",
+    "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Forcer l'exécution de la file va nettoyer les tâches bloquées mais n'en lancera pas de nouvelles si la limite est dépassée. Continuer ?"
+  },
   ES: {
     "Volume Preference": "Preferencia de Volumen",
     "Automatic": "Automático",
@@ -1643,7 +1659,15 @@ export const COCKPIT_DICTIONARY = {
     "Failed to archive course.": "No se pudo archivar el curso.",
     "Course archival refused and added to backlog.": "Archivo del curso rechazado y agregado a la reserva.",
     "Removed course from archiving backlog.": "Curso eliminado de la reserva de archivo.",
-    "Excessive Cumulative Revisions": "Revisiones Acumuladas Excesivas"},
+    "Excessive Cumulative Revisions": "Revisiones Acumuladas Excesivas",
+    "Force Run Queue": "Forzar Ejecución",
+    "Processing...": "Procesando...",
+    "Triggering worker execution...": "Iniciando ejecución del worker...",
+    "Queue check complete: No pending tasks in queue.": "Verificación completa: No hay tareas pendientes en la cola.",
+    "Failed to run task worker:": "Error al ejecutar el worker:",
+    "Already running max parallel tasks:": "Ya se está ejecutando el número máximo de tareas en paralelo:",
+    "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Forzar la ejecución de la cola limpiará las tareas atascadas pero no iniciará nuevas si se supera el límite. ¿Proceder?"
+  },
   DE: {
     "AI Tutor Personalities": "KI-Tutor-Persönlichkeiten",
     "Seeded Achievements badges": "Standard-Errungenschaften",
@@ -2069,7 +2093,15 @@ export const COCKPIT_DICTIONARY = {
     "Failed to archive course.": "Fehler beim Archivieren des Kurses.",
     "Course archival refused and added to backlog.": "Kursarchivierung abgelehnt und dem Rückstand hinzugefügt.",
     "Removed course from archiving backlog.": "Kurs aus dem Archivierungsrückstand entfernt.",
-    "Excessive Cumulative Revisions": "Übermäßige kumulative Revisionen"},
+    "Excessive Cumulative Revisions": "Übermäßige kumulative Revisionen",
+    "Force Run Queue": "Warteschlange ausführen",
+    "Processing...": "Wird verarbeitet...",
+    "Triggering worker execution...": "Task-Worker wird gestartet...",
+    "Queue check complete: No pending tasks in queue.": "Warteschlange leer: Keine ausstehenden Tasks vorhanden.",
+    "Failed to run task worker:": "Fehler beim Ausführen des Task-Workers:",
+    "Already running max parallel tasks:": "Die maximale Anzahl paralleler Tasks wird bereits ausgeführt:",
+    "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Das Erzwingen der Warteschlange bereinigt blockierte Tasks, startet aber keine neuen, wenn das Limit überschritten ist. Fortfahren?"
+  },
   ZH: {
     "AI Tutor Personalities": "AI 导师个性配置",
     "Seeded Achievements badges": "预设成就勋章",
@@ -2489,7 +2521,14 @@ export const COCKPIT_DICTIONARY = {
     "Failed to archive course.": "归档课程失败。",
     "Course archival refused and added to backlog.": "已拒绝课程归档并添加到积压中。",
     "Removed course from archiving backlog.": "已从归档积压中移除课程。",
-    "Excessive Cumulative Revisions": "过度累积修订"
+    "Excessive Cumulative Revisions": "过度累积修订",
+    "Force Run Queue": "强制运行队列",
+    "Processing...": "处理中...",
+    "Triggering worker execution...": "正在触发工作线程执行...",
+    "Queue check complete: No pending tasks in queue.": "队列检查完成：队列中无待处理任务。",
+    "Failed to run task worker:": "运行工作线程失败：",
+    "Already running max parallel tasks:": "已运行最大并发任务数：",
+    "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "强制运行队列将清除僵死任务，但如果超过限制，将不会启动新任务。要继续吗？"
   }
 };
 
@@ -4929,14 +4968,32 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
-  const handleCreateManualTask = () => {
+  const handleCreateManualTask = async () => {
     if (!manualTitle.trim()) {
       const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
       showToast(pStrings.toast_title_empty, 'error');
       return;
     }
 
-    const title = manualTitle.trim();
+    // --- Title Sanitization: translate to English, fix capitalization & typos ---
+    let title = manualTitle.trim();
+    try {
+      const res = await fetch('/api/correct-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, targetLang: 'en', translateToTargetLang: true })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.corrected && data.corrected.length >= 3) {
+          title = data.corrected;
+        }
+      }
+    } catch (e) {
+      console.warn('[Manual Task] Title correction API failed, using raw title.', e);
+    }
+    // -----------------------------------------------------------------------
+
     const targetLvl = manualLevel || 'L1';
     const isTooSimilarCourse = courses.some(c => {
       const cLvl = c.level || 'L1';
@@ -4981,6 +5038,7 @@ export default function AdminCurriculumPage() {
     showToast(pStrings.toast_manual_success, 'success');
     loadData();
   };
+
 
   const handleApproveGen = (title: string, count: number, level?: string, subject?: string) => {
     const targetLvl = level || 'L1';
@@ -5356,6 +5414,65 @@ export default function AdminCurriculumPage() {
       localStorage.setItem('openprimer_refused_archivals', JSON.stringify(updated));
     }
     showToast(tr("Course archival refused and added to backlog."), 'info');
+  };
+
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+
+  const handleForceRunQueue = async () => {
+    if (isProcessingQueue) return;
+
+    const runningCount = queue.filter(t => t.status === 'running').length;
+    if (runningCount >= maxParallelTasks) {
+      const proceed = window.confirm(
+        `${tr("Already running max parallel tasks:")} ${maxParallelTasks}. ` +
+        `${tr("Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?")}`
+      );
+      if (!proceed) return;
+    }
+
+    setIsProcessingQueue(true);
+    showToast(tr("Triggering worker execution..."), 'info');
+    try {
+      let token: string | undefined;
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token;
+      } catch (err) {
+        console.warn("[QUEUE FORCE] Failed to retrieve client auth session token:", err);
+      }
+
+      const res = await fetch('/api/tasks/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch (e: any) {
+        throw new Error(`Worker returned non-JSON response: ${res.status}`);
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || `Failed with status ${res.status}`);
+      }
+
+      if (data.message === 'No tasks to process') {
+        showToast(tr("Queue check complete: No pending tasks in queue."), 'info');
+      } else {
+        showToast(tr("Worker completed task processing successfully!"), 'success');
+      }
+      await loadData();
+    } catch (err: any) {
+      console.error("[QUEUE FORCE ERROR]", err);
+      showToast(`${tr("Failed to run task worker:")} ${err.message || String(err)}`, 'error');
+    } finally {
+      setIsProcessingQueue(false);
+    }
   };
 
   const handleDeleteRefusedArchival = (courseId: number) => {
@@ -6932,7 +7049,7 @@ export default function AdminCurriculumPage() {
                      </button>
                    </div>
 
-                   <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                   <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
@@ -7756,7 +7873,7 @@ export default function AdminCurriculumPage() {
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                      <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
@@ -8108,6 +8225,20 @@ export default function AdminCurriculumPage() {
                          placeholder={`🔍 ${tr('Search tasks...')}`}
                          className="bg-slate-950/80 border border-slate-900 rounded-2xl py-2 px-4 text-xs focus:border-cyan-500/50 outline-none text-white w-56"
                        />
+                       <button
+                         type="button"
+                         disabled={isProcessingQueue}
+                         onClick={handleForceRunQueue}
+                         className={`flex items-center gap-2 px-4 py-2 border rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                           isProcessingQueue 
+                             ? 'bg-slate-950 border-slate-900 text-slate-600' 
+                             : 'bg-gradient-to-r from-cyan-600 to-blue-600 border-cyan-500/30 text-white hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-600/10 hover:shadow-cyan-500/20'
+                         }`}
+                         title={tr("Refresh & Force Run Queue")}
+                       >
+                         <RefreshCw className={`w-3.5 h-3.5 ${isProcessingQueue ? 'animate-spin' : ''}`} />
+                         {isProcessingQueue ? tr("Processing...") : tr("Force Run Queue")}
+                       </button>
                        {queue.length > 0 && (
                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
                            {filteredQueue.length}/{queue.length}
@@ -8115,7 +8246,7 @@ export default function AdminCurriculumPage() {
                        )}
                      </div>
                    </div>
-                   <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+                   <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
                      <table className="w-full text-left text-xs border-collapse">
                        <thead>
                          <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
@@ -8626,7 +8757,7 @@ export default function AdminCurriculumPage() {
                   <button onClick={() => { setShowAddAchievement(false); setBadgeError(null); }} className="text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
                
-               <form onSubmit={handleCreateAchievement} className="p-10 space-y-6 overflow-y-auto flex-1 pr-4">
+               <form onSubmit={handleCreateAchievement} className="p-10 space-y-6 overflow-y-auto custom-scrollbar flex-1 pr-4">
                   {badgeError && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl">
                       {badgeError}
@@ -8887,7 +9018,7 @@ export default function AdminCurriculumPage() {
                   <button onClick={() => { setSelectedAchievement(null); setBadgeError(null); }} className="text-slate-650 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
                </div>
                
-               <div className="p-10 space-y-6 overflow-y-auto flex-1 pr-4">
+               <div className="p-10 space-y-6 overflow-y-auto custom-scrollbar flex-1 pr-4">
                   {badgeError && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl">
                       {badgeError}
@@ -9403,7 +9534,7 @@ export default function AdminCurriculumPage() {
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Error Stack & Logs")}</h4>
-                  <div className="p-6 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-red-400 max-h-60 overflow-y-auto leading-relaxed whitespace-pre-wrap">
+                  <div className="p-6 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-red-400 max-h-60 overflow-y-auto custom-scrollbar leading-relaxed whitespace-pre-wrap">
                     {Array.isArray(errorDetailsTarget.logs) && errorDetailsTarget.logs.length > 0 
                       ? errorDetailsTarget.logs.join('\n') 
                       : errorDetailsTarget.logs || tr("No log information recorded.")}

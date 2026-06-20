@@ -723,7 +723,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       }
 
       const activeModules = enrolled.map((id: number) => {
-        const course = courses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2) && !/test/i.test(c.slug));
+        const course = courses.find(c => c.id === id && (!c.archivingLevel || c.archivingLevel < 2));
         if (!course) return null;
         
         let prog = progressMap[course.slug || ''] ?? progressMap[id] ?? 0;
@@ -1637,7 +1637,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
         ...existingLanguages,
         ...(course.languages || []),
         ...(course.langs || [])
-      ].map(l => l.toLowerCase())));
+      ].map((l: string) => l.toLowerCase())));
+      // Guarantee: courses must always declare at least one language
+      const finalLanguages = mergedLanguages.length > 0 ? mergedLanguages : ['en'];
 
       const { data, error } = await supabaseAdmin.from('courses').upsert({
         id: searchId,
@@ -1646,7 +1648,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         level: course.level,
         subject: course.subject,
         description: course.description,
-        languages: mergedLanguages,
+        languages: finalLanguages,
         ects: course.ects || (course.credits ? Math.round(course.credits / 100) : 6),
         popularity: course.popularity || 0,
         is_active: course.is_active !== undefined ? course.is_active : true,

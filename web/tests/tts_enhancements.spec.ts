@@ -35,8 +35,7 @@ test.describe('OpenPrimer TTS Enhancements', () => {
 
   test('should verify left speaker icon/wave is removed and checkboxes are present in settings', async ({ page }) => {
     // Navigate directly to the lesson page
-    await page.goto(`${BASE_URL}/L1/History/revolution/introduction`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/secondary_2/Histoire/Revolution_francaise/directoire-consulat-nouvel-ordre`);
 
     // 1. Verify TTS container is visible
     const ttsContainer = page.locator('div.fixed.bottom-6.left-6');
@@ -75,8 +74,7 @@ test.describe('OpenPrimer TTS Enhancements', () => {
 
   test('should verify alternative graphic descriptions and premium floating glassmorphic tooltips', async ({ page }) => {
     // Navigate directly to the lesson page
-    await page.goto(`${BASE_URL}/L1/History/revolution/introduction`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/secondary_2/Histoire/Revolution_francaise/directoire-consulat-nouvel-ordre`);
 
     // 1. Inject custom HTML inside the existing article to test hover states
     await page.evaluate(() => {

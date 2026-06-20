@@ -331,9 +331,20 @@ export const CourseClientWrapper = ({
       if (href && href.startsWith('#')) {
         const id = href.substring(1);
         const targetEl = document.getElementById(id);
-        if (targetEl) {
+        const container = mainRef.current;
+        if (targetEl && container) {
           e.preventDefault();
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Compute the element's offset relative to the scroll container
+          // Walk up the offsetParent chain until we reach the container or body
+          let offsetTop = 0;
+          let node: HTMLElement | null = targetEl;
+          while (node && node !== container) {
+            offsetTop += node.offsetTop;
+            node = node.offsetParent as HTMLElement | null;
+          }
+          // Subtract top-nav height (64px) + small breathing room (32px)
+          const scrollTarget = Math.max(0, offsetTop - 96);
+          container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
           // Update URL hash without reload
           window.history.pushState(null, '', href);
         }
@@ -448,14 +459,7 @@ export const CourseClientWrapper = ({
         });
         const calculatedCoursePercent = Math.round(totalPercentageSum / flatPages.length);
 
-        let finalProgress = calculatedCoursePercent;
-        if (finalProgress === 100) {
-          const finalPage = flatPages[flatPages.length - 1];
-          const evalStatus = (progressService as any).checkFinalEvaluationStatus(slug, finalPage);
-          if (!evalStatus.completed || !evalStatus.passed) {
-            finalProgress = 99; // Cap at 99% until passed
-          }
-        }
+        const finalProgress = progressService.getCapPercentage(slug, calculatedCoursePercent);
 
         const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
         const currentCourseProgress = progressMap[slug] ?? 0;

@@ -911,14 +911,16 @@ export default function CurriculumPage() {
                        }
 
                        return (
-                          <Link 
+                          <div 
                             key={course.id} 
-                            href={getCoursePath(courseDetails || course)} 
-                            onClick={() => handleCourseClick(courseDetails || course)}
-                            className="group"
+                            onClick={() => { 
+                              handleCourseClick(courseDetails || course); 
+                              router.push(getCoursePath(courseDetails || course)); 
+                            }} 
+                            className="group cursor-pointer" 
                           >
-                           {cardContent}
-                         </Link>
+                            {cardContent}
+                          </div>
                        );
                      })}
                    </div>
@@ -1161,14 +1163,16 @@ export default function CurriculumPage() {
                         }
 
                         return (
-                          <Link 
+                          <div 
                             key={course.id} 
-                            href={getCoursePath(courseDetails || course)} 
-                            onClick={() => handleCourseClick(courseDetails || course)}
-                            className="group"
+                            onClick={() => { 
+                              handleCourseClick(courseDetails || course); 
+                              router.push(getCoursePath(courseDetails || course)); 
+                            }} 
+                            className="group cursor-pointer" 
                           >
                             {cardContent}
-                          </Link>
+                          </div>
                         );
                       })}
                    </div>

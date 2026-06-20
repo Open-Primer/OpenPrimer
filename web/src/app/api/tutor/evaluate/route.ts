@@ -126,6 +126,9 @@ Student's Response: "${cleanAnswer}"`;
     parts.push({ text: `${userPrompt}\n\nAnalyze, comment, and grade this submission now.` });
 
     // === PRIMARY: Vertex AI ===
+    // POLICY: Offline/mock evaluation is strictly forbidden. If the AI is unavailable,
+    // we return a 503 so the client can display a proper "evaluation unavailable" error
+    // and instruct the student to contact administration or retry later.
     if (isVertexConfigured()) {
       console.log(`[TUTOR EVALUATOR] Dispatching to Vertex AI for essay/file grading...`);
       try {
@@ -146,25 +149,24 @@ Student's Response: "${cleanAnswer}"`;
           const result = JSON.parse(cleanedText);
           return NextResponse.json({ success: true, ...result });
         }
+
+        // AI responded but not OK — treat as service unavailable
+        console.error(`[TUTOR EVALUATOR] Vertex AI returned non-OK status. Blocking evaluation.`);
       } catch (err) {
-        console.error('[TUTOR EVALUATOR] Vertex AI grading failed, falling back to mock.', err);
+        console.error('[TUTOR EVALUATOR] Vertex AI grading failed. Blocking evaluation (no offline fallback allowed).', err);
       }
+    } else {
+      console.error('[TUTOR EVALUATOR] Vertex AI not configured. Blocking evaluation.');
     }
 
-    // === FALLBACK: Mock grading ===
-    console.warn('[TUTOR EVALUATOR] AI unavailable. Using mock evaluation...');
-    let mockGrade = '15/20';
-    if (gradingSystem === '0/10') mockGrade = '7.5/10';
-    else if (gradingSystem === 'A-F') mockGrade = 'B+';
-    else if (gradingSystem === 'pass-fail') mockGrade = 'Pass';
-
-    const mockFeedback = `Votre soumission a été bien reçue. L'évaluation montre une bonne compréhension des concepts clés abordés. Pour obtenir une note plus élevée, veuillez structurer vos arguments de manière plus formelle et citer des références précises. Le travail reste sérieux et rigoureux.`;
-
+    // === NO FALLBACK — Offline evaluation is prohibited ===
+    // Return 503 with a special flag so the client can show a proper error UI
+    // and instruct the student to report the issue to administration.
     return NextResponse.json({
-      success: true,
-      grade: mockGrade,
-      feedback: mockFeedback
-    });
+      success: false,
+      offline: true,
+      error: 'The AI evaluation service is currently unavailable. Offline grading is not permitted. Please contact your course administrator or try again later.'
+    }, { status: 503 });
 
   } catch (err: any) {
     console.error(`[TUTOR EVALUATOR ERROR]`, err);

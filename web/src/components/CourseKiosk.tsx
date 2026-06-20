@@ -144,15 +144,22 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
     dbService.getAllCourses()
       .then(({ data }) => {
         if (data && data.length > 0) {
-          // Filter out archived level >= 2 or inactive courses
-          const activeOnly = data.filter((c: any) => c.is_active !== false && (c.archivingLevel === undefined || c.archivingLevel < 2));
+          const activeLang = lang.toLowerCase();
+          // Strictly filter: only show courses that explicitly list the active language.
+          // Courses with no languages metadata are excluded to prevent leakage.
+          const activeOnly = data.filter((c: any) => {
+            const isActive = c.is_active !== false && (c.archivingLevel === undefined || c.archivingLevel < 2);
+            if (!isActive) return false;
+            if (!c.languages || c.languages.length === 0) return false; // exclude if no language metadata
+            return c.languages.some((l: string) => l.toLowerCase() === activeLang);
+          });
           setCourses(activeOnly);
         }
       })
       .catch((err) => {
         console.error("Error loading kiosk courses", err);
       });
-  }, []);
+  }, [lang]);
 
   // Filter and prepare kiosk items depending on the mode
   let items: any[] = [];

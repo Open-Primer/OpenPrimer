@@ -185,18 +185,28 @@ const curriculumSchema = {
   required: ["description", "courses"]
 };
 
-export async function correctCourseTitle(title: string, targetLang: string = 'en'): Promise<string> {
+export async function correctCourseTitle(title: string, targetLang: string = 'en', translateToTargetLang = true): Promise<string> {
   const cleanTitle = title.trim();
   if (!cleanTitle || cleanTitle.length < 3) return title;
-  
-  const systemInstruction = `You are an elite academic copyeditor. Your task is to correct the spelling, grammar, accentuation, and capitalization of the course title in the language '${targetLang}'.
+
+  const langLabel = targetLang.toUpperCase();
+  // When translateToTargetLang is true (default for English targets), translate AND correct.
+  // When false (used during non-English course generation), only correct in original language.
+  const systemInstruction = translateToTargetLang
+    ? `You are an elite academic copyeditor and translator. Produce a final, publication-ready course title in English (${langLabel}).
+Rules:
+- If the title is already in English, only correct spelling, grammar, and apply proper Title Case.
+- If the title is in another language (French, Spanish, German, Chinese, etc.), translate it to English AND apply Title Case (e.g. "chimie organique" → "Organic Chemistry", "droit des affaires" → "Business Law").
+- Keep academic level prefixes if present (e.g. L1, L2, M1, M2).
+- Respond with ONLY the corrected/translated title. No quotes, no markdown, no explanations.`
+    : `You are an elite academic copyeditor. Correct the spelling, grammar, accentuation, and capitalization of the course title in the language '${langLabel}'.
 Rules:
 - Standardize the capitalization (use Title Case appropriate for academic subjects in the target language).
 - Correct any obvious spelling errors, typos, and punctuation issues.
-- Do NOT translate the title to another language. Keep the original language if it makes sense (e.g., if the user wrote "droit des afaires" in French, correct it to "Droit des Affaires", not "Business Law").
-- Respond with ONLY the corrected title text. Do not add any quotes, markdown formatting, explanations, or introductory text.`;
+- Do NOT translate the title to another language. Correct it in its original language.
+- Respond with ONLY the corrected title text. No quotes, markdown formatting, explanations, or introductory text.`;
 
-  const userPrompt = `Course Title to correct: "${cleanTitle}"`;
+  const userPrompt = `Course Title: "${cleanTitle}"`;
 
   try {
     if (isVertexConfigured()) {
@@ -211,7 +221,7 @@ Rules:
         const corrected = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         if (corrected) {
           const sanitized = corrected.replace(/^["'«“‘]|["'»”’]$/g, '').replace(/```/g, '').trim();
-          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 2 + 10 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
+          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 3 + 20 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
             return sanitized;
           }
         }
@@ -234,7 +244,7 @@ Rules:
         const corrected = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         if (corrected) {
           const sanitized = corrected.replace(/^["'«“‘]|["'»”’]$/g, '').replace(/```/g, '').trim();
-          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 2 + 10 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
+          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 3 + 20 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
             return sanitized;
           }
         }
@@ -738,18 +748,38 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
       let promptPreamble = '';
       if (isLastLesson) {
-        promptPreamble = `### EXIGENCE ABSOLUE : ÉVALUATION FINALE SOMMATIVE ET EXHAUSTIVE (ZÉRO VIDE)
-Règle d'or : Cette dernière leçon est l'Évaluation Finale globale du cours "${correctedCourseName}". Elle ne doit PAS être un cours théorique classique, mais un examen complet et sérieux de validation qui couvre l'intégralité des concepts abordés dans l'ensemble des leçons précédentes.
+        promptPreamble = `### EXIGENCE ABSOLUE : CONCLUSION GÉNÉRALE DU COURS + ÉVALUATION FINALE SOMMATIVE EXHAUSTIVE (ZÉRO VIDE)
+Règle d'or : Cette dernière leçon est structurée en DEUX PARTIES OBLIGATOIRES et distinctes, dans l'ordre suivant :
+
+═══════════════════════════════════════════
+PARTIE I : CONCLUSION GÉNÉRALE DU COURS (OBLIGATOIRE — À PLACER EN PREMIER)
+═══════════════════════════════════════════
+Avant tout examen, cette dernière leçon doit comporter une section de conclusion générale du cours "${correctedCourseName}". Cette conclusion générale est un temps de synthèse, de recul et d'ouverture sur l'ensemble du parcours pédagogique. Elle doit être rédigée avec le même soin académique que n'importe quelle leçon du cours.
+
+Contenu obligatoire de la Conclusion Générale :
+1. Un paragraphe introductif de la conclusion générale, présentant ce que l'étudiant a accompli en suivant ce cours dans son intégralité.
+2. Un bilan des apprentissages clés (sous forme de composant \`<Summary items={["Point 1 complet...", "Point 2 complet...", ...]} />\`) : 4 à 6 points-clés qui résument les acquis fondamentaux de l'ensemble du cours. Chaque item doit être une phrase complète et autonome.
+3. Une synthèse narrative (2 à 4 paragraphes) reliant les grandes thématiques et les leçons entre elles — montrant la cohérence et l'architecture conceptuelle du cours dans son ensemble.
+4. Des questions d'ouverture et de réflexion : 4 à 6 questions philosophiques, critiques ou appliquées qui invitent l'étudiant à prolonger sa réflexion bien au-delà du cours. Ces questions ne doivent pas avoir de réponse univoque — elles ouvrent un espace de pensée. Formatez-les sous forme de liste numérotée à l'intérieur d'un bloc \`> [!NOTE]\`.
+5. Des perspectives et prolongements : orienter l'étudiant vers des domaines connexes, des lectures avancées, des applications professionnelles ou des axes de recherche. Utilisez ici le composant \`<GoingFurther>\` avec au moins 3 \`<GoingFurtherItem>\` (livres, articles ou vidéos recommandés).
+6. Un mot final de conclusion — un paragraphe conclusif fort, inspirant et mémorable qui clôture dignement le parcours pédagogique.
+
+Cette Conclusion Générale doit être substantielle et dense (minimum 600 à 1000 mots selon le niveau du cours), et NE DOIT PAS être un simple résumé en liste. Elle doit montrer la profondeur pédagogique du cours et laisser l'étudiant avec une vision claire des connexions entre les différentes leçons.
+
+═══════════════════════════════════════════
+PARTIE II : ÉVALUATION FINALE SOMMATIVE (À PLACER APRÈS LA CONCLUSION GÉNÉRALE)
+═══════════════════════════════════════════
+Après la Conclusion Générale, génerez l'Évaluation Finale globale du cours "${correctedCourseName}". Elle ne doit PAS introduire de nouveaux concepts, mais servir d'examen complet et sérieux de validation qui couvre l'intégralité des concepts abordés dans l'ensemble des leçons précédentes.
 
 Vous devez concevoir un examen d'évaluation final de haut niveau, qui prendra entre plusieurs dizaines de minutes et deux heures à réaliser. L'évitement ou la paresse textuelle (comme un quiz vide ou comportant seulement 2 ou 3 questions) sont strictement interdits et entraîneront le rejet immédiat du contenu.
 
 Zéro Placeholder (Interdiction des squelettes) : Toutes les questions, options, explications, et consignes doivent être rédigées de manière exhaustive et complète.
 
-Format du contenu de l'Évaluation Finale :
-1. Introduction de l'Évaluation :
-   - Un paragraphe d'introduction prestigieux rappelant le parcours de l'étudiant à travers le cours "${correctedCourseName}" et présentant les consignes de l'examen final.
+Introduction de l'Évaluation :
+   - Un paragraphe d'introduction de l'examen, distinct de la Conclusion Générale, rappelant les consignes et la structure de l'examen final.
    - Les objectifs pédagogiques de l'évaluation wrapped dans le composant custom \`<Objectives>\` (avec \`<Knowledge>\`, \`<Skills>\` et \`<Attitudes>\`).
-2. Corps de l'Évaluation Finale :
+
+Corps de l'Évaluation Finale :
    Générez un examen sommatif de qualité adapté à la discipline et au niveau du cours :
    
    * DISCIPLINE HUMANISTE / DISCURSIVE (Philosophie, Littérature, Histoire, Droit, Sciences Sociales, etc.) :
@@ -772,9 +802,9 @@ Format du contenu de l'Évaluation Finale :
    * NIVEAU PRIMAIRE (CP - CM2) :
      - Proposez un grand Quiz de 10 à 15 questions sous forme de défis (\`<Quiz durationLimit={1800}>\`) et des textes à trous (\`<FillInBlanks sentence="..." answer="..." />\`).
      
-3. Glossaire et Références (comme d'habitude) :
-   - Un glossaire complet réunissant tous les termes clés de l'évaluation et du cours.
-   - Les références académiques de base du cours (pour les niveaux supérieurs, au moins 8 à 12 références).`;
+ 3. Glossaire et Références (comme d'habitude) :
+    - Un glossaire complet réunissant tous les termes clés de l'évaluation et du cours.
+    - Les références académiques de base du cours (pour les niveaux supérieurs, au moins 8 à 12 références).`;
       } else {
         promptPreamble = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
 Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome, exhaustif et immédiatement exploitable. L'évitement, la paresse textuelle et le résumé vague sont considérés comme des fautes critiques de génération.

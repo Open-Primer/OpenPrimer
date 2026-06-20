@@ -729,12 +729,12 @@ let mockCourses: MockCourse[] = [
   { 
     id: 9, 
     title: "Organic Chemistry", 
-    slug: "Chimie_Test", 
+    slug: "organic-chemistry", 
     level: "L1", 
     subject: "Chemistry", 
     description: "Rigorous organic chemistry syllabus covering stereochemistry, reaction mechanisms, and carbon synthesis.", 
-    languages: ["en", "fr"], 
-    langs: ["en", "fr"],
+    languages: ["en"], 
+    langs: ["en"],
     ects: 6, 
     hours: 150,
     prerequisites: ["General Chemistry"],
@@ -1502,13 +1502,13 @@ let initialCourseFeedbacks: CourseFeedback[] = [
   { id: 'cf_mtl1_6', courseId: 'Maths_Test_L1', rating: 5, comment: 'Highly recommend this to any first-year student.', timestamp: new Date().toISOString(), isTreated: true },
 
   // Chimie_Test — avg target ~3.2 — isTreated: true
-  { id: 'cf_ct_1', courseId: 'Chimie_Test', rating: 3, comment: 'Stereochemistry is explained well but rushed.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_2', courseId: 'Chimie_Test', rating: 3, comment: 'Reaction mechanisms need more visualizations.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_3', courseId: 'Chimie_Test', rating: 4, comment: 'Good foundation for organic chemistry.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_4', courseId: 'Chimie_Test', rating: 2, comment: 'The SN1/SN2 chapter is confusing without more examples.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_5', courseId: 'Chimie_Test', rating: 4, comment: 'Nomenclature section is clear and helpful.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_6', courseId: 'Chimie_Test', rating: 3, comment: 'Average course, content is correct but presentation dry.', timestamp: new Date().toISOString(), isTreated: true },
-  { id: 'cf_ct_7', courseId: 'Chimie_Test', rating: 3, comment: 'Wish there were more interactive exercises.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_1', courseId: 'organic-chemistry', rating: 3, comment: 'Stereochemistry is explained well but rushed.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_2', courseId: 'organic-chemistry', rating: 3, comment: 'Reaction mechanisms need more visualizations.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_3', courseId: 'organic-chemistry', rating: 4, comment: 'Good foundation for organic chemistry.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_4', courseId: 'organic-chemistry', rating: 2, comment: 'The SN1/SN2 chapter is confusing without more examples.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_5', courseId: 'organic-chemistry', rating: 4, comment: 'Nomenclature section is clear and helpful.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_6', courseId: 'organic-chemistry', rating: 3, comment: 'Average course, content is correct but presentation dry.', timestamp: new Date().toISOString(), isTreated: true },
+  { id: 'cf_ct_7', courseId: 'organic-chemistry', rating: 3, comment: 'Wish there were more interactive exercises.', timestamp: new Date().toISOString(), isTreated: true },
 
   // Economie_Test — avg target ~3.8 — isTreated: true
   { id: 'cf_et_1', courseId: 'Economie_Test', rating: 4, comment: 'Great introduction to oligopoly dynamics.', timestamp: new Date().toISOString(), isTreated: true },
@@ -3158,9 +3158,10 @@ export const progressService = {
   },
 
   getCapPercentage: (slug: string, rawPercent: number): number => {
-    if (rawPercent < 100) return rawPercent;
     if (typeof window === 'undefined') return rawPercent;
-    
+    if (rawPercent < 100) return rawPercent;
+
+    // At 100% scroll coverage, gate on final evaluation completion
     const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
     const coursePaths: string[] = [];
     for (const path in lessonProgress) {
@@ -3169,10 +3170,10 @@ export const progressService = {
       }
     }
     if (coursePaths.length === 0) return rawPercent;
-    
+
     coursePaths.sort();
     const finalPage = coursePaths[coursePaths.length - 1];
-    
+
     const evalStatus = progressService.checkFinalEvaluationStatus(slug, finalPage);
     if (!evalStatus.completed || !evalStatus.passed) {
       return 99;

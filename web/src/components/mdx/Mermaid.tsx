@@ -521,6 +521,15 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           b: parseInt(rgbMatch[3], 10)
         };
       }
+
+      const rgbSpaceMatch = s.match(/^rgba?\((\d+)\s+(\d+)\s+(\d+)(?:\s*[\/\s\d.]+)?\)$/);
+      if (rgbSpaceMatch) {
+        return {
+          r: parseInt(rgbSpaceMatch[1], 10),
+          g: parseInt(rgbSpaceMatch[2], 10),
+          b: parseInt(rgbSpaceMatch[3], 10)
+        };
+      }
       
       const hexMatch = s.match(/^#([a-f0-9]{3,8})$/);
       if (hexMatch) {
@@ -567,24 +576,29 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     const adjustContrast = () => {
       const nodes = elementRef.current?.querySelectorAll('.node');
       nodes?.forEach(node => {
-        const shape = node.querySelector('.label-container, rect, circle, ellipse, polygon, path');
+        const shape = node.querySelector('.label-container, rect, circle, ellipse, polygon, path, [class*="label-container"]');
         if (!shape) return;
         
         const style = window.getComputedStyle(shape);
-        const fill = shape.getAttribute('style')?.match(/fill:\s*([^;]+)/)?.[1] || style.fill;
+        let fill = shape.getAttribute('style')?.match(/fill:\s*([^;]+)/)?.[1] || 
+                   shape.getAttribute('style')?.match(/background-color:\s*([^;]+)/)?.[1] ||
+                   shape.getAttribute('style')?.match(/background:\s*([^;]+)/)?.[1];
         
-        if (fill && fill !== 'none' && fill !== 'transparent') {
+        if (!fill || fill === 'none' || fill === 'transparent') {
+          fill = (style.fill && style.fill !== 'none' && style.fill !== 'transparent') ? style.fill : style.backgroundColor;
+        }
+        
+        if (fill && fill !== 'none' && fill !== 'transparent' && fill !== 'rgba(0, 0, 0, 0)') {
           const rgb = parseToRgb(fill);
           if (rgb) {
             const opacity = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
             const luminance = opacity / 255;
-            if (luminance > 0.6) {
-              const labels = node.querySelectorAll('text, span, div, p, a');
-              labels.forEach(label => {
-                (label as HTMLElement).style.setProperty('color', '#0f172a', 'important');
-                (label as HTMLElement).style.setProperty('fill', '#0f172a', 'important');
-              });
-            }
+            const targetColor = luminance > 0.6 ? '#0f172a' : (theme === 'paper' ? '#0f172a' : '#f8fafc');
+            const labels = node.querySelectorAll('text, span, div, p, a');
+            labels.forEach(label => {
+              (label as HTMLElement).style.setProperty('color', targetColor, 'important');
+              (label as HTMLElement).style.setProperty('fill', targetColor, 'important');
+            });
           }
         }
       });
@@ -593,7 +607,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     adjustContrast();
     const timeout = setTimeout(adjustContrast, 50);
     return () => clearTimeout(timeout);
-  }, [svg, loading, error]);
+  }, [svg, loading, error, theme]);
 
   if (loading) {
     return (
@@ -665,6 +679,8 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         #${id} .node polygon,
         #${id} .node path,
         #${id} .node .label-container,
+        #${id} .label-container,
+        #${id} div.label-container,
         #${id} .flowchart-label rect,
         #${id} .flowchart-label polygon,
         #${id} .flowchart-label ellipse,
@@ -674,6 +690,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           fill:   ${nd}  !important;
           stroke: ${str} !important;
           stroke-width: 1.5px !important;
+          ${theme !== 'dark' ? `background-color: ${nd} !important;` : ''}
         }
  
         /* ── All text / labels ── */

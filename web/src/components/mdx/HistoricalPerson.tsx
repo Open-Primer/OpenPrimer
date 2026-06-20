@@ -228,7 +228,7 @@ export const Location = (props: Omit<EntityLinkProps, 'type'>) => (
   <EntityLink {...props} type="location" />
 );
 
-export const HistoricalEvent = (props: Omit<EntityLinkProps, 'type'>) => (
+export const HistoricalEventLink = (props: Omit<EntityLinkProps, 'type'>) => (
     <EntityLink {...props} type="event" />
   );
 
@@ -236,13 +236,13 @@ export const Artwork = (props: Omit<EntityLinkProps, 'type'>) => (
   <EntityLink {...props} type="artwork" />
 );
 
-interface HistoricalFactProps {
-  title: string;
+interface HistoricalEventBlockProps {
+  title?: string;
   date?: string;
   children: React.ReactNode;
 }
 
-export const HistoricalFact = ({ title, date, children }: HistoricalFactProps) => {
+export const HistoricalEventBlock = ({ title, date, children }: HistoricalEventBlockProps) => {
   const { language } = useLanguage();
   
   const defaultHeaderLabels: Record<string, string> = {
@@ -273,12 +273,21 @@ export const HistoricalFact = ({ title, date, children }: HistoricalFactProps) =
           </span>
         )}
       </div>
-      <h5 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-1 pl-1">
-        {title}
-      </h5>
+      {title && (
+        <h5 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-1 pl-1">
+          {title}
+        </h5>
+      )}
       <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 pl-1">
         {children}
       </div>
     </div>
   );
+};
+
+export const HistoricalEvent = (props: any) => {
+  if (props.name || props.description) {
+    return <EntityLink {...props} type="event" />;
+  }
+  return <HistoricalEventBlock {...props} />;
 };

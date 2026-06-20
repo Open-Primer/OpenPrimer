@@ -1560,7 +1560,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'a', 'span', 'sup', 'sub', 'strong', 'em', 'img', 'br', 'code', 'pre', 'p', 'ul', 'ol', 'li', 'div', 'blockquote',
     'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'iframe',
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
-    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'EvenementHistorique',
+    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique',
     'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
@@ -1582,7 +1582,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     // Alert-style components
     'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
     // Artwork and media annotation
-    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'AnnotatedImage',
+    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage',
     // Catch-all: any unknown PascalCase JSX component will be in the allowedTags via the regex
   ];
 
@@ -1644,6 +1644,7 @@ function sanitizeAmpersandInJsxAttributes(mdx: string): string {
 const MDX_WRAPPER_TAGS = [
   'HistoricalAnecdote', 'AnecdoteHistorique',
   'HistoricalFact', 'FaitHistorique',
+  'HistoricalEvent', 'ÉvénementHistorique', 'EvenementHistorique',
   'CriticalThinking', 'EspritCritique',
   'DidYouKnow', 'LeSaviezVous',
   'ScientificMethod', 'MethodeScientifique',
@@ -1733,19 +1734,22 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     // Pedagogical Blocks
     EtApres: 'WhatsNext',
     AnecdoteHistorique: 'HistoricalAnecdote',
-    FaitHistorique: 'HistoricalFact',
+    FaitHistorique: 'HistoricalEvent',
     EspritCritique: 'CriticalThinking',
     LeSaviezVous: 'DidYouKnow',
     MethodeScientifique: 'ScientificMethod',
     PointDeVue: 'PointOfView',
     Geometrie2D: 'Geometry2D',
     IdeeBrillante: 'BrilliantIdea',
-    QuestionOuverte: 'OpenQuestion',
     DebatScientifique: 'ScientificDebate',
+    BlocCitation: 'Citation',
+    CitationBlock: 'Citation',
+    InteractiveQuote: 'Citation',
+    QuoteBlock: 'Citation',
 
     // Entity Overlays & Aliases
-    EvenementHistorique: 'HistoricalEvent',
-    ÉvénementHistorique: 'HistoricalEvent',
+    EvenementHistorique: 'HistoricalEventLink',
+    ÉvénementHistorique: 'HistoricalEventLink',
     Lieu: 'Location',
     Place: 'Location',
     PersonnageHistorique: 'HistoricalPerson',
@@ -1832,12 +1836,13 @@ function deduplicateHistoricalPersons(mdx: string): string {
 
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
-    'HistoricalPerson', 'HistoricalEvent', 'HistoricalDate', 'Location', 'EntityLink'
+    'HistoricalPerson', 'HistoricalEvent', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink'
   ];
   const blockTags = [
-    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalFact', 'WhatsNext', 'EtApres',
+    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalFact', 'HistoricalEvent', 'WhatsNext', 'EtApres',
     'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
-    'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate'
+    'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate',
+    'Citation', 'QuoteBlock', 'InteractiveQuote'
   ];
   
   const allTags = [...inlineTags, ...blockTags];
@@ -1973,8 +1978,9 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer', 'Description',
     'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer', 'Image', 'CustomFigure',
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
-    'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
+    'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'HistoricalEvent', 'ÉvénementHistorique', 'EvenementHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
+    'Citation', 'QuoteBlock', 'InteractiveQuote',
     'IdeeBrillante', 'BrilliantIdea', 'FunctionManipulator', 'EquationManipulator',
     'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
     'ExternalSandbox', 'IframeWidget', 'FillInBlanks', 'MetaNote', 'FeynmanBox',
@@ -1983,7 +1989,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'StructureViewer3D', 'GeochemicalChart', 'DataTable', 'PeriodicElement',
     'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
     'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
-    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'AnnotatedImage'
+    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage'
   ];
 
   let processed = mdx;
@@ -2616,8 +2622,83 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     processed = preGlossary + glossaryContent;
   }
 
+  // 5b. Parse Citation / InteractiveQuote / QuoteBlock tags to auto-generate references
+  const citationBlocks: {
+    author: string;
+    source: string;
+    year: string;
+    original: string;
+    quote: string;
+    refNum: number;
+    tagName: string;
+  }[] = [];
+
+  let maxRefNum = 0;
+  const existingNumMatches = processed.match(/\[(\d+)\]/g);
+  if (existingNumMatches) {
+    for (const m of existingNumMatches) {
+      const num = parseInt(m.slice(1, -1), 10);
+      if (num > maxRefNum) maxRefNum = num;
+    }
+  }
+
+  let currentRefNum = maxRefNum + 1;
+  const citationRegex = /<(Citation|InteractiveQuote|QuoteBlock)\b([^>]*?)(?:>([\s\S]*?)<\/\1>|\/>)/gi;
+  
+  processed = processed.replace(citationRegex, (match, tagName, attrs, children) => {
+    const authorMatch = attrs.match(/author=["']([^"']+)["']/i) || attrs.match(/auteur=["']([^"']+)["']/i);
+    const sourceMatch = attrs.match(/source=["']([^"']+)["']/i);
+    const yearMatch = attrs.match(/year=["']([^"']+)["']/i) || attrs.match(/annee=["']([^"']+)["']/i);
+    const originalMatch = attrs.match(/original=["']([^"']+)["']/i);
+    const quoteAttrMatch = attrs.match(/quote=["']([^"']+)["']/i) || attrs.match(/text=["']([^"']+)["']/i);
+    
+    const author = authorMatch ? authorMatch[1].trim() : '';
+    const source = sourceMatch ? sourceMatch[1].trim() : '';
+    const year = yearMatch ? yearMatch[1].trim() : '';
+    const original = originalMatch ? originalMatch[1].trim() : '';
+    const quote = (quoteAttrMatch ? quoteAttrMatch[1] : children || '').trim();
+    
+    // Check if we already have this work cited to consolidate refNum
+    let existingRef = citationBlocks.find(cb => 
+      cb.author.toLowerCase() === author.toLowerCase() &&
+      cb.source.toLowerCase() === source.toLowerCase() &&
+      cb.year === year &&
+      cb.original.toLowerCase() === original.toLowerCase()
+    );
+
+    let refNum: number;
+    if (existingRef) {
+      refNum = existingRef.refNum;
+    } else {
+      refNum = currentRefNum++;
+      citationBlocks.push({
+        author,
+        source,
+        year,
+        original,
+        quote,
+        refNum,
+        tagName
+      });
+    }
+
+    let cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
+    return `<${tagName} refNum={${refNum}} ${cleanAttrs}>${children || ''}</${tagName}>`;
+  });
+
   // 6. Fix references run-on lists, ensure individual lines, and add backlinks
-  const refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+  let refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+  if (refIndex === -1 && citationBlocks.length > 0) {
+    const currentLang = (lang || 'en').toLowerCase();
+    let heading = "### References\n\n";
+    if (currentLang === 'fr') heading = "### Références\n\n";
+    else if (currentLang === 'es') heading = "### Referencias\n\n";
+    else if (currentLang === 'de') heading = "### Referenzen\n\n";
+    else if (currentLang === 'zh') heading = "### 参考文献\n\n";
+    processed += `\n\n${heading}`;
+    refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+  }
+
   if (refIndex !== -1) {
     const preRef = processed.slice(0, refIndex);
     let refContent = processed.slice(refIndex) + '\n\n';
@@ -2647,14 +2728,20 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       const trimmedRest = rest.trim();
       
       let resolvedUrl = '';
-      const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/gi;
-      let matchUrl;
-      if ((matchUrl = markdownLinkRegex.exec(trimmedRest)) !== null) {
-        resolvedUrl = matchUrl[2].trim();
+      let processedRest = trimmedRest;
+      let linkInfo;
+      // Loop to extract and clean all markdown links
+      while ((linkInfo = parseMarkdownLink(processedRest)) !== null) {
+        if (!resolvedUrl) {
+          resolvedUrl = linkInfo.url.trim();
+        }
+        // If the link text is just a placeholder, remove it. Otherwise replace it with the text.
+        const isPlaceholder = /google\s*books|google\s*scholar|scholar|^link$|^lien$|^url$/i.test(linkInfo.text.trim());
+        const replacement = isPlaceholder ? '' : linkInfo.text;
+        processedRest = processedRest.substring(0, linkInfo.matchStart) + replacement + processedRest.substring(linkInfo.matchEnd);
       }
 
-      // 1. Convert markdown link to plain text
-      let processedRest = trimmedRest.replace(/\[([^\]]+)\]\(([^)]+)\)/gi, '$1');
+      processedRest = cleanUrlGarbage(processedRest);
 
       // 2. Remove raw HTTP/HTTPS URLs
       processedRest = processedRest.replace(/https?:\/\/[^\s)|]+/gi, '');
@@ -2677,24 +2764,33 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       // 5. Determine if it's a book vs an article
       const isBook = isBookReference(processedRest) || (resolvedUrl && /google\..*?\/books|books\.google/i.test(resolvedUrl));
 
-      // 6. Simplify search query parameters (Title + Author + Year)
+      // 6. Simplify search query parameters (Author + Title + Year)
       const queryText = simplifyCitationQuery(processedRest);
 
       // 7. Determine final URL and search button label
       let finalUrl = resolvedUrl;
-      const isStable = resolvedUrl && /^https?:\/\//i.test(resolvedUrl) && /doi\.org|ncbi\.nlm\.nih\.gov|google\..*?\/books|books\.google|sciencedirect/i.test(resolvedUrl);
+      const isStable = resolvedUrl && /^https?:\/\//i.test(resolvedUrl) && 
+        (
+          /doi\.org|ncbi\.nlm\.nih\.gov|sciencedirect/i.test(resolvedUrl) ||
+          ((/google\..*?\/books|books\.google/i.test(resolvedUrl) || /google\..*?\/scholar|scholar\.google/i.test(resolvedUrl)) && !/[?&]q=/i.test(resolvedUrl))
+        );
 
-      if (isBook) {
-        if (!isStable || !/google\..*?\/books|books\.google/i.test(resolvedUrl)) {
+      const isOriginalScholar = resolvedUrl && /google\..*?\/scholar|scholar\.google/i.test(resolvedUrl);
+      const isOriginalBooks = resolvedUrl && /google\..*?\/books|books\.google/i.test(resolvedUrl);
+
+      if (!isStable) {
+        if (isOriginalScholar) {
+          finalUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+        } else if (isOriginalBooks) {
           finalUrl = `https://books.google.com/books?q=${encodeURIComponent(queryText)}`;
-        }
-      } else {
-        if (!isStable) {
+        } else if (isBook) {
+          finalUrl = `https://books.google.com/books?q=${encodeURIComponent(queryText)}`;
+        } else {
           finalUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
         }
       }
 
-      const searchLabel = isBook ? 'Google Books' : 'Google Scholar';
+      const searchLabel = finalUrl.includes('books.google') ? 'Google Books' : 'Google Scholar';
 
       parsedItems.push({
         num: parseInt(num, 10),
@@ -2704,11 +2800,87 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       });
     }
 
-    if (parsedItems.length > 0) {
-      const base64 = Buffer.from(JSON.stringify(parsedItems)).toString('base64');
-      processed = preRef + `\n\n<References itemsBase64="${base64}" />\n\n`;
+    citationBlocks.forEach(cb => {
+      const queryText = cb.author && cb.source ? `${cb.author} ${cb.source}` : cb.author || cb.source;
+      const finalUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+      
+      const currentLang = (lang || 'en').toLowerCase();
+      let refText = `${cb.author ? `**${cb.author}**, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
+      if (cb.original) {
+        if (currentLang === 'fr') {
+          refText += ` Version originale : « ${cb.original} »`;
+        } else if (currentLang === 'es') {
+          refText += ` Versión original: « ${cb.original} »`;
+        } else if (currentLang === 'de') {
+          refText += ` Originalversion: „${cb.original}“`;
+        } else if (currentLang === 'zh') {
+          refText += ` 原文：“${cb.original}”`;
+        } else {
+          refText += ` Original version: "${cb.original}"`;
+        }
+      }
+      
+      if (!parsedItems.some(item => item.num === cb.refNum)) {
+        parsedItems.push({
+          num: cb.refNum,
+          text: refText,
+          scholarUrl: finalUrl,
+          scholarText: 'Google Scholar'
+        });
+      }
+    });
+
+    // Deduplicate parsedItems
+    const numberMap: Record<number, number> = {};
+    const deduplicatedItems: any[] = [];
+
+    for (const item of parsedItems) {
+      let duplicateOf = -1;
+      for (const existing of deduplicatedItems) {
+        if (isDuplicateReference(existing.text, item.text)) {
+          duplicateOf = existing.num;
+          break;
+        }
+      }
+
+      if (duplicateOf !== -1) {
+        numberMap[item.num] = duplicateOf;
+      } else {
+        deduplicatedItems.push(item);
+      }
+    }
+
+    // Rewrite citation numbers in preRef text
+    let updatedPreRef = preRef;
+    for (const [dupNumStr, origNum] of Object.entries(numberMap)) {
+      const dupNum = parseInt(dupNumStr, 10);
+      
+      // 1. Replace structured HTML inline citations
+      const dupCiteRegex = new RegExp(`<sup id="cite-${dupNum}" class="scroll-mt-24"><a href="#ref-${dupNum}">\\[${dupNum}\\]</a></sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupCiteRegex, `<sup id="cite-${origNum}" class="scroll-mt-24"><a href="#ref-${origNum}">[${origNum}]</a></sup>`);
+
+      // 2. Replace simple markdown inline link citations: [X](#ref-X)
+      const dupLinkRegex = new RegExp(`\\[${dupNum}\\]\\(#ref-${dupNum}\\)`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupLinkRegex, `[${origNum}](#ref-${origNum})`);
+
+      // 3. Replace raw superscript bracketed citations: <sup>[X]</sup>
+      const dupSupBracketRegex = new RegExp(`<sup>\\s*\\[${dupNum}\\]\\s*</sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupSupBracketRegex, `<sup>[${origNum}]</sup>`);
+
+      // 4. Replace raw superscript numeric citations: <sup>X</sup>
+      const dupSupRawRegex = new RegExp(`<sup>\\s*${dupNum}\\s*</sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupSupRawRegex, `<sup>[${origNum}]</sup>`);
+
+      // 5. Replace citation/quote block component references
+      const dupRefNumRegex = new RegExp(`\\brefNum=\\{${dupNum}\\}`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${origNum}}`);
+    }
+
+    if (deduplicatedItems.length > 0) {
+      const base64 = Buffer.from(JSON.stringify(deduplicatedItems)).toString('base64');
+      processed = updatedPreRef + `\n\n<References itemsBase64="${base64}" />\n\n`;
     } else {
-      processed = preRef + refContent;
+      processed = updatedPreRef + refContent;
     }
   }
 
@@ -2810,7 +2982,7 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = ['HistoricalEvent', 'EvenementHistorique', 'HistoricalPerson', 'Location', 'Artwork', 'Glossary'];
+  const inlineTags = ['HistoricalEvent', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'HistoricalPerson', 'Location', 'Artwork', 'Glossary'];
   const tagPattern = new RegExp(
     `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
     'gi'
@@ -3131,9 +3303,68 @@ function isBookReference(text: string): boolean {
   return bookScore >= articleScore;
 }
 
+function cleanUrlGarbage(text: string): string {
+  const urlEncodedMatch = text.match(/%[0-9a-fA-F]{2}/i);
+  if (!urlEncodedMatch || urlEncodedMatch.index === undefined) {
+    return text;
+  }
+  
+  const idx = urlEncodedMatch.index;
+  let cutoff = idx;
+  while (cutoff > 0 && (text[cutoff - 1] === ')' || text[cutoff - 1] === '.' || text[cutoff - 1] === ' ' || text[cutoff - 1] === ',' || text[cutoff - 1] === ';' || text[cutoff - 1] === ':')) {
+    cutoff--;
+  }
+  
+  let cleanText = text.substring(0, cutoff).trim();
+  if (cleanText && !cleanText.endsWith('.')) {
+    cleanText += '.';
+  }
+  return cleanText;
+}
+
+function isDuplicateReference(t1: string, t2: string): boolean {
+  const getCleanWords = (t: string) => {
+    const clean = t.toLowerCase()
+      .replace(/<[^>]*>/g, '')
+      .replace(/https?:\/\/[^\s]+/g, '')
+      .replace(/%[0-9a-fA-F]{2}/g, '')
+      .replace(/[^\w\s]/g, ' ')
+      .trim();
+    
+    const words = clean.split(/\s+/).filter(w => w.length >= 3);
+    const stopWords = new Set(['and', 'the', 'for', 'with', 'edit', 'edition', 'page', 'editor', 'press', 'university', 'publisher', 'published', 'vol', 'volume', 'pp', 'tome', 'version', 'originale', 'original']);
+    return new Set(words.filter(w => !stopWords.has(w)));
+  };
+
+  const w1 = getCleanWords(t1);
+  const w2 = getCleanWords(t2);
+
+  if (w1.size === 0 || w2.size === 0) return false;
+
+  const getYear = (t: string) => {
+    const m = t.match(/\b(18\d{2}|19\d{2}|20\d{2})\b/);
+    return m ? m[1] : null;
+  };
+  const y1 = getYear(t1);
+  const y2 = getYear(t2);
+  if (y1 && y2 && y1 !== y2) return false;
+
+  let intersectionSize = 0;
+  for (const w of w1) {
+    if (w2.has(w)) {
+      intersectionSize++;
+    }
+  }
+  const unionSize = w1.size + w2.size - intersectionSize;
+  const similarity = intersectionSize / unionSize;
+
+  return similarity >= 0.65;
+}
+
 function simplifyCitationQuery(citationText: string): string {
   let cleanText = citationText
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
     .replace(/<[^>]*>/g, '')
     .trim();
 
@@ -3141,15 +3372,18 @@ function simplifyCitationQuery(citationText: string): string {
   let title = '';
   let year = '';
 
+  // 1. Extract year
   const yearMatch = cleanText.match(/\b(18\d{2}|19\d{2}|20\d{2})\b/);
   if (yearMatch) {
     year = yearMatch[1];
   }
 
+  // 2. Extract title: usually enclosed in quotes, guillemets, or asterisks
   const titleMatch = cleanText.match(/[*_“"«]([^*_”"»]{5,})[*_”"»]/);
   if (titleMatch) {
     title = titleMatch[1].trim();
   } else {
+    // Fallback: try to find the longest segment that doesn't look like author/metadata
     let withoutYear = cleanText;
     if (year) {
       withoutYear = cleanText.replace(new RegExp(`\\(?${year}\\)?`), '');
@@ -3164,14 +3398,18 @@ function simplifyCitationQuery(citationText: string): string {
     }
   }
 
+  // 3. Extract first author: first word of the text before any punctuation/parenthesis
   const authorPart = cleanText.split(/[\(.,.。]/)[0].trim();
   if (authorPart) {
     const words = authorPart.split(/\s+/);
     author = words[0] || '';
+    // Clean any residual punctuation
+    author = author.replace(/[^\w]/g, '');
   }
 
+  // Clean title
   title = title
-    .replace(/[:;,\-].*$/, '')
+    .replace(/[:;,\-].*$/, '') // remove subtitle/run-on text
     .replace(/[*_`~"«»()]/g, '')
     .trim();
 
@@ -3179,14 +3417,72 @@ function simplifyCitationQuery(citationText: string): string {
     title = title.substring(0, 60).trim();
   }
 
+  // Assemble in the required order: [Author] [Title] [Year]
   const queryParts = [];
-  if (title) queryParts.push(title);
-  if (author && !title.toLowerCase().includes(author.toLowerCase())) {
+  if (author) {
     queryParts.push(author);
   }
-  if (year) queryParts.push(year);
+  
+  if (title) {
+    const titleLower = title.toLowerCase();
+    const authorLower = author.toLowerCase();
+    if (author && titleLower.startsWith(authorLower)) {
+      queryParts.push(title);
+      // Remove author from start of queryParts if we pushed it to prevent duplicate like "Campbell Campbell Biology"
+      if (queryParts[0] === author) {
+        queryParts.shift();
+      }
+    } else {
+      queryParts.push(title);
+    }
+  }
+  
+  if (year) {
+    queryParts.push(year);
+  }
 
   return queryParts.join(' ').trim();
+}
+
+/**
+ * Robust markdown link parser that counts parentheses to accurately extract links
+ * containing parentheses without breaking early.
+ */
+function parseMarkdownLink(text: string): { text: string; url: string; matchStart: number; matchEnd: number } | null {
+  const startBracket = text.indexOf('[');
+  if (startBracket === -1) return null;
+  
+  const endBracket = text.indexOf(']', startBracket);
+  if (endBracket === -1) return null;
+  
+  if (text[endBracket + 1] !== '(') return null;
+  
+  const startParen = endBracket + 1;
+  let openParens = 1;
+  let endParen = -1;
+  for (let i = startParen + 1; i < text.length; i++) {
+    if (text[i] === '(') {
+      openParens++;
+    } else if (text[i] === ')') {
+      openParens--;
+      if (openParens === 0) {
+        endParen = i;
+        break;
+      }
+    }
+  }
+  
+  if (endParen === -1) return null;
+  
+  const linkText = text.substring(startBracket + 1, endBracket);
+  const linkUrl = text.substring(startParen + 1, endParen);
+  
+  return {
+    text: linkText,
+    url: linkUrl,
+    matchStart: startBracket,
+    matchEnd: endParen + 1
+  };
 }
 
 

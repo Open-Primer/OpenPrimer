@@ -37,19 +37,75 @@ nextjs-portal {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Global Override */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3); /* Slate-400 with opacity */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+/* Color Scheme for native select dropdowns to match theme */
+select {
+  color-scheme: dark;
+}
+.theme-paper select {
+  color-scheme: light;
+}
+
+/* Theme specific overrides for scrollbars */
+.theme-paper *::-webkit-scrollbar-thumb,
+.theme-paper::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15) !important;
+}
+.theme-paper *::-webkit-scrollbar-thumb:hover,
+.theme-paper::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.3) !important;
+}
+.theme-paper * {
+  scrollbar-color: rgba(15, 23, 42, 0.15) transparent !important;
+}
+
+.theme-focus *::-webkit-scrollbar-thumb,
+.theme-focus::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.theme-focus *::-webkit-scrollbar-thumb:hover,
+.theme-focus::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+.theme-focus * {
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent !important;
+}
+
+/* Backwards-compatible utility classes */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.5);
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -346,8 +402,20 @@ nextjs-portal {
 .theme-paper .text-blue-300,
 .theme-paper .text-blue-400,
 .theme-paper .text-blue-500,
-.theme-paper .text-blue-600 {
+.theme-paper .text-blue-600,
+.theme-paper .hover\:text-blue-300:hover,
+.theme-paper .hover\:text-blue-200:hover {
   color: #1d4ed8 !important; /* Elegant Dark Indigo/Blue */
+}
+
+.theme-paper .text-sky-300,
+.theme-paper .text-sky-400,
+.theme-paper .text-sky-500,
+.theme-paper .text-sky-600,
+.theme-paper .hover\:text-sky-300:hover,
+.theme-paper .hover\:text-sky-200:hover,
+.theme-paper .hover\:text-sky-350:hover {
+  color: #0369a1 !important; /* Elegant Dark Sky Blue */
 }
 
 .theme-paper .text-yellow-450,
@@ -357,36 +425,81 @@ nextjs-portal {
   color: #92400e !important; /* Deep Golden Amber */
 }
 
+.theme-paper .text-violet-300,
 .theme-paper .text-violet-400,
 .theme-paper .text-violet-500,
-.theme-paper .text-violet-600 {
+.theme-paper .text-violet-600,
+.theme-paper .hover\:text-violet-300:hover,
+.theme-paper .hover\:text-violet-200:hover {
   color: #6d28d9 !important; /* Rich Dark Purple */
 }
 
-.theme-paper .text-emerald-450,
+.theme-paper .text-emerald-300,
+.theme-paper .text-emerald-350,
 .theme-paper .text-emerald-400,
 .theme-paper .text-emerald-500,
-.theme-paper .text-emerald-600 {
+.theme-paper .text-emerald-600,
+.theme-paper .hover\:text-emerald-300:hover,
+.theme-paper .hover\:text-emerald-200:hover {
   color: #065f46 !important; /* Rich Deep Forest Green */
 }
 
+.theme-paper .text-fuchsia-300,
 .theme-paper .text-fuchsia-400,
 .theme-paper .text-fuchsia-500,
-.theme-paper .text-fuchsia-600 {
+.theme-paper .text-fuchsia-600,
+.theme-paper .hover\:text-fuchsia-300:hover,
+.theme-paper .hover\:text-fuchsia-200:hover {
   color: #a21caf !important; /* Deep Magenta */
 }
 
+.theme-paper .text-amber-300,
+.theme-paper .text-amber-400,
 .theme-paper .text-amber-500,
-.theme-paper .text-amber-600 {
+.theme-paper .text-amber-600,
+.theme-paper .hover\:text-amber-300:hover,
+.theme-paper .hover\:text-amber-200:hover {
   color: #b45309 !important; /* Strong Amber */
 }
 
+.theme-paper .text-red-300,
 .theme-paper .text-red-400,
 .theme-paper .text-red-500,
 .theme-paper .text-red-650,
+.theme-paper .text-rose-300,
 .theme-paper .text-rose-400,
-.theme-paper .text-rose-500 {
+.theme-paper .text-rose-500,
+.theme-paper .hover\:text-red-300:hover,
+.theme-paper .hover\:text-rose-300:hover {
   color: #991b1b !important; /* Deep Crimson */
+}
+
+.theme-paper .text-pink-300,
+.theme-paper .text-pink-400,
+.theme-paper .text-pink-500,
+.theme-paper .text-pink-600,
+.theme-paper .hover\:text-pink-300:hover,
+.theme-paper .hover\:text-pink-200:hover {
+  color: #be185d !important; /* Rich Dark Pink */
+}
+
+.theme-paper .border-sky-400 {
+  border-color: #0369a1 !important;
+}
+.theme-paper .border-violet-400 {
+  border-color: #6d28d9 !important;
+}
+.theme-paper .border-fuchsia-400 {
+  border-color: #a21caf !important;
+}
+.theme-paper .border-emerald-400 {
+  border-color: #065f46 !important;
+}
+.theme-paper .border-amber-400 {
+  border-color: #b45309 !important;
+}
+.theme-paper .border-pink-400 {
+  border-color: #be185d !important;
 }
 
 /* Bulletproof Background and Border overrides for all Slate-based elements */
@@ -419,7 +532,9 @@ nextjs-portal {
 .theme-paper .bg-violet-955\/40,
 .theme-paper .bg-violet-550\/10,
 .theme-paper .bg-violet-500\/10,
-.theme-paper .bg-violet-950\/10 {
+.theme-paper .bg-violet-955\/10,
+.theme-paper .bg-violet-950\/10,
+.theme-paper .bg-violet-600\/20 {
   background-color: #f3e8ff !important;
   border-color: #e9d5ff !important;
 }
@@ -430,13 +545,17 @@ nextjs-portal {
 }
 
 .theme-paper .bg-amber-500\/10,
-.theme-paper .bg-amber-500\/20 {
+.theme-paper .bg-amber-500\/20,
+.theme-paper .bg-amber-600\/20,
+.theme-paper .bg-amber-600\/10 {
   background-color: #fef3c7 !important;
   border-color: #fde68a !important;
 }
 
 .theme-paper .bg-emerald-500\/10,
-.theme-paper .bg-emerald-600\/10 {
+.theme-paper .bg-emerald-500\/20,
+.theme-paper .bg-emerald-600\/10,
+.theme-paper .bg-emerald-600\/20 {
   background-color: #d1fae5 !important;
   border-color: #a7f3d0 !important;
 }
@@ -510,15 +629,10 @@ nextjs-portal {
 }
 
 /* Enforce flat, pure-black backgrounds with neutral borders in Focus Theme */
-.theme-focus .bg-slate-900\/40, 
-.theme-focus .bg-slate-950\/30,
-.theme-focus .bg-slate-900\/50,
-.theme-focus .bg-slate-950\/20,
-.theme-focus .bg-slate-900\/10,
-.theme-focus .bg-slate-900,
-.theme-focus .bg-slate-950,
-.theme-focus .bg-slate-950\/80,
-.theme-focus .bg-slate-900\/30 {
+.theme-focus [class*="bg-slate-950"],
+.theme-focus [class*="bg-slate-900"],
+.theme-focus [class*="bg-slate-850"],
+.theme-focus [class*="bg-slate-800"] {
   background-color: #000000 !important;
   background-image: none !important;
   border-color: #262626 !important;
@@ -528,17 +642,53 @@ nextjs-portal {
 .theme-focus svg {
   color: #737373 !important;
 }
+.theme-focus .text-blue-300,
 .theme-focus .text-blue-400,
-.theme-focus .text-emerald-400,
-.theme-focus .text-violet-400,
-.theme-focus .text-amber-500,
-.theme-focus .text-emerald-500,
 .theme-focus .text-blue-500,
-.theme-focus .text-indigo-500,
-.theme-focus .text-indigo-400,
-.theme-focus .text-emerald-600,
 .theme-focus .text-blue-600,
-.theme-focus .text-violet-500 {
+.theme-focus .text-sky-300,
+.theme-focus .text-sky-400,
+.theme-focus .text-sky-500,
+.theme-focus .text-sky-600,
+.theme-focus .text-violet-300,
+.theme-focus .text-violet-400,
+.theme-focus .text-violet-500,
+.theme-focus .text-violet-600,
+.theme-focus .text-emerald-300,
+.theme-focus .text-emerald-350,
+.theme-focus .text-emerald-400,
+.theme-focus .text-emerald-500,
+.theme-focus .text-emerald-600,
+.theme-focus .text-amber-300,
+.theme-focus .text-amber-400,
+.theme-focus .text-amber-500,
+.theme-focus .text-amber-600,
+.theme-focus .text-fuchsia-300,
+.theme-focus .text-fuchsia-400,
+.theme-focus .text-fuchsia-500,
+.theme-focus .text-fuchsia-600,
+.theme-focus .text-pink-300,
+.theme-focus .text-pink-400,
+.theme-focus .text-pink-500,
+.theme-focus .text-pink-600,
+.theme-focus .text-rose-300,
+.theme-focus .text-rose-400,
+.theme-focus .text-rose-500,
+.theme-focus .text-rose-600,
+.theme-focus .text-yellow-400,
+.theme-focus .text-yellow-450,
+.theme-focus .text-yellow-500,
+.theme-focus .text-yellow-600,
+.theme-focus .text-indigo-400,
+.theme-focus .text-indigo-500,
+.theme-focus .hover\:text-blue-200:hover,
+.theme-focus .hover\:text-sky-200:hover,
+.theme-focus .hover\:text-violet-200:hover,
+.theme-focus .hover\:text-emerald-200:hover,
+.theme-focus .hover\:text-amber-200:hover,
+.theme-focus .hover\:text-fuchsia-200:hover,
+.theme-focus .hover\:text-pink-200:hover,
+.theme-focus .hover\:text-rose-200:hover {
   color: #e5e5e5 !important;
 }
 
@@ -575,6 +725,25 @@ nextjs-portal {
 .theme-focus .border-slate-850,
 .theme-focus .border-slate-700 {
   border-color: #262626 !important;
+}
+
+.theme-focus .border-violet-500,
+.theme-focus .border-blue-500,
+.theme-focus .border-emerald-500,
+.theme-focus .border-amber-500,
+.theme-focus .border-fuchsia-500,
+.theme-focus .border-pink-500 {
+  border-color: #ffffff !important;
+}
+
+.theme-focus .bg-violet-600\/20,
+.theme-focus .bg-blue-600\/20,
+.theme-focus .bg-emerald-600\/20,
+.theme-focus .bg-amber-600\/20,
+.theme-focus .bg-fuchsia-600\/20,
+.theme-focus .bg-pink-600\/20 {
+  background-color: #262626 !important;
+  color: #ffffff !important;
 }
 
 /* Sidebar styling in Focus Theme (ultra-minimalist) */
@@ -839,19 +1008,11 @@ body:not(.theme-paper):not(.theme-focus) footer {
 }
 
 /* --- Paper Theme Overlay Backdrop-Blur fixes --- */
-.theme-paper [class*="bg-slate-950/40"],
-.theme-paper [class*="bg-slate-950/50"],
-.theme-paper [class*="bg-slate-950/60"],
-.theme-paper [class*="bg-slate-950/70"],
-.theme-paper [class*="bg-slate-950/80"],
-.theme-paper [class*="bg-slate-950/90"],
-.theme-paper [class*="bg-slate-900/40"],
-.theme-paper [class*="bg-slate-900/50"],
-.theme-paper [class*="bg-slate-900/60"],
-.theme-paper [class*="bg-slate-900/70"],
-.theme-paper [class*="bg-slate-900/80"],
-.theme-paper [class*="bg-slate-900/90"] {
-  background-color: rgba(67, 60, 48, 0.4) !important;
+.theme-paper [class*="bg-slate-950/"],
+.theme-paper [class*="bg-slate-900/"],
+.theme-paper [class*="bg-slate-850/"],
+.theme-paper [class*="bg-slate-800/"] {
+  background-color: rgba(244, 241, 229, 0.85) !important;
   backdrop-filter: blur(24px) !important;
 }
 

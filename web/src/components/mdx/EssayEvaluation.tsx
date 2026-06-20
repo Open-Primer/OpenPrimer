@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Award, PenTool, CheckCircle2, AlertCircle, RefreshCw, Play, Timer, Lock, Mic, Square, Volume2 } from 'lucide-react';
+import { Award, PenTool, CheckCircle2, AlertCircle, RefreshCw, Play, Timer, Lock, Mic, Square, Volume2, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { progressService, dbService } from '@/lib/db';
@@ -79,8 +79,15 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     prep_advice: dict.essay_prep_advice,
     time_focus: dict.essay_time_focus,
     time_focus_default: dict.essay_time_focus_default,
-    offline_evaluation: dict.essay_offline_evaluation || "Offline Evaluation",
-    offline_feedback: dict.essay_offline_feedback || "Offline Evaluation: Your response has been received and evaluated.",
+    offline_evaluation: dict.essay_offline_evaluation || "Evaluation Unavailable",
+    offline_feedback: dict.essay_offline_feedback || "The AI evaluation service is currently unavailable.",
+    eval_pending_title: (dict as any).eval_pending_title || "Evaluation Pending",
+    eval_pending_desc: (dict as any).eval_pending_desc || "The AI Tutor service is temporarily offline. Your responses have been saved locally. You can click 'Retry' to resubmit your evaluation.",
+    eval_pending_retry: (dict as any).eval_unavailable_retry || "Retry Submission",
+    eval_mode_label: (dict as any).eval_mode_label || "Evaluation Format",
+    eval_submit_early: (dict as any).eval_submit_early || "Submit Now (before time expires)",
+    eval_attempts_unlimited: (dict as any).eval_attempts_unlimited || "Unlimited retries (unless final exam)",
+    eval_attempts_single: (dict as any).eval_attempts_single || "Single attempt only — final evaluation",
     summative_single_attempt_warning: dict.summative_single_attempt_warning
   };
 
@@ -93,6 +100,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEvalBlocked, setIsEvalBlocked] = useState(false); // true when AI service is unavailable
+  const [isOfflinePending, setIsOfflinePending] = useState(false);
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
@@ -194,8 +203,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
         setAnswer(parsed.answer);
         setGrade(parsed.grade);
         setFeedback(parsed.feedback);
-        setIsReadOnly(true);
+        setIsReadOnly(parsed.isOfflinePending ? true : parsed.grade ? true : false);
         setIsStarted(true);
+        setIsOfflinePending(!!parsed.isOfflinePending);
         if (parsed.submissionType) {
           setSubmissionType(parsed.submissionType);
         }
@@ -215,6 +225,19 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
       window.removeEventListener('op_auth_state_change', handleAuthChange);
     };
   }, [prompt, resetKey]);
+
+  // Autosave draft to local storage
+  useEffect(() => {
+    if (!isStarted || grade || isOfflinePending) return;
+    const pathname = window.location.pathname;
+    const key = `op_essay_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
+    localStorage.setItem(key, JSON.stringify({
+      answer,
+      submissionType,
+      fileAttachment,
+      isDraft: true
+    }));
+  }, [answer, submissionType, fileAttachment, isStarted, grade, isOfflinePending]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -342,9 +365,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     try {
       const response = await fetch('/api/tutor/evaluate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
           answer: submissionTypeRef.current === 'file' 
@@ -355,34 +376,35 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           fileAttachment: (submissionTypeRef.current === 'file' || submissionTypeRef.current === 'audio') 
             ? (fileAttachmentRef.current || undefined) 
             : undefined,
-          gradingSystem,
-          subject,
-          level,
+          gradingSystem, subject, level,
           submissionType: submissionTypeRef.current
         }),
       });
-
-      if (!response.ok) throw new Error();
 
       const data = await response.json();
       if (data.success) {
         setGrade(data.grade);
         setFeedback(data.feedback);
-        saveGradingResult(answerRef.current, data.grade, data.feedback);
+        setIsOfflinePending(false);
+        saveGradingResult(answerRef.current, data.grade, data.feedback, false);
+      } else if (data.offline) {
+        setIsOfflinePending(true);
+        setIsReadOnly(true);
+        saveGradingResult(answerRef.current, null, null, true);
       } else {
         throw new Error(data.error);
       }
     } catch {
-      if (!isTimeUpRef.current) {
-        setIsReadOnly(false);
-      }
+      setIsOfflinePending(true);
+      setIsReadOnly(true);
+      saveGradingResult(answerRef.current, null, null, true);
       setError(language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez cliquer sur Soumettre pour réessayer." : "AI Tutor evaluation failed. Please click Submit to retry.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const saveGradingResult = async (finalAnswer: string, finalGrade: string, finalFeedback: string) => {
+  const saveGradingResult = async (finalAnswer: string, finalGrade: string | null, finalFeedback: string | null, isPending = false) => {
     const pathname = window.location.pathname;
     const parts = pathname.split('/');
     const courseSlug = parts[3] || 'Classical_Mechanics';
@@ -394,8 +416,11 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
       grade: finalGrade,
       feedback: finalFeedback,
       submissionType: submissionTypeRef.current,
-      fileAttachment: fileAttachmentRef.current
+      fileAttachment: fileAttachmentRef.current,
+      isOfflinePending: isPending
     }));
+
+    if (isPending) return;
 
     // Mark page as visited
     const visited = JSON.parse(localStorage.getItem('op_visited_pages') || '[]');
@@ -460,9 +485,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     try {
       const response = await fetch('/api/tutor/evaluate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
           answer: submissionType === 'file' 
@@ -471,31 +494,29 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
             ? (answer || `Enregistrement oral : ${fileAttachment?.name}`)
             : answer,
           fileAttachment: (submissionType === 'file' || submissionType === 'audio') ? fileAttachment : undefined,
-          gradingSystem,
-          subject,
-          level,
-          submissionType
+          gradingSystem, subject, level, submissionType
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(language === 'FR' ? 'Erreur lors de la communication avec le tuteur IA.' : 'Failed to communicate with the AI tutor.');
-      }
 
       const data = await response.json();
       if (data.success) {
         setGrade(data.grade);
         setFeedback(data.feedback);
         setIsReadOnly(true);
-        saveGradingResult(answer, data.grade, data.feedback);
+        setIsOfflinePending(false);
+        saveGradingResult(answer, data.grade, data.feedback, false);
+      } else if (data.offline) {
+        setIsOfflinePending(true);
+        setIsReadOnly(true);
+        saveGradingResult(answer, null, null, true);
       } else {
         throw new Error(data.error || 'Evaluation failed.');
       }
     } catch (err: any) {
+      setIsOfflinePending(true);
+      setIsReadOnly(true);
+      saveGradingResult(answer, null, null, true);
       setError(err.message || (language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez réessayer." : "AI Tutor evaluation failed. Please try again."));
-      if (!isTimeUpRef.current) {
-        setIsReadOnly(false);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -504,7 +525,6 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
   const handleRetry = () => {
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // Clear local storage copy
     const pathname = window.location.pathname;
     const key = `op_essay_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
     localStorage.removeItem(key);
@@ -515,6 +535,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     setAnswer('');
     setIsStarted(false);
     setIsTimeUp(false);
+    setIsEvalBlocked(false);
+    setIsOfflinePending(false);
     setTimeLeft(durationLimit || 0);
     setSubmissionType('text');
     setFileAttachment(null);
@@ -541,6 +563,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
 
   // 1. Initial State: Start Screen Cover
   if (!isStarted && !grade) {
+    const submissionTypeLabel = language === 'FR'
+      ? ('📝 Rédaction (ou enregistrement oral / dépôt de fichier)')
+      : language === 'ES' ? '📝 Redacción (o grabación oral / archivo)'
+      : language === 'DE' ? '📝 Aufsatz (oder mündliche Aufnahme / Datei)'
+      : language === 'ZH' ? '📝 作文（或口头录音 / 文件上传）'
+      : '📝 Essay (or oral recording / file upload)';
     return (
       <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-6">
         <div className="w-16 h-16 rounded-full bg-violet-500/10 text-violet-400 flex items-center justify-center mx-auto border border-violet-500/20">
@@ -551,10 +579,35 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
-        {/* Pre-flight Checklist Card */}
-        <div className="bg-slate-950/60 border border-slate-850/80 rounded-2xl p-5 text-left text-xs text-slate-350 max-w-md mx-auto space-y-2.5">
-          <p className="font-black text-violet-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
-          <ul className="list-disc list-inside space-y-2 leading-relaxed text-slate-300">
+        {/* Evaluation Mode Info Card */}
+        <div className="bg-slate-950/80 border border-violet-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
+          <p className="font-black text-violet-400 uppercase tracking-widest text-[9px]">📋 {t.eval_mode_label}</p>
+          <div className="grid grid-cols-1 gap-2 text-xs text-slate-300">
+            <div className="flex items-start gap-2">
+              <span className="text-violet-400 font-black shrink-0">▸</span>
+              <span>{submissionTypeLabel}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-violet-400 font-black shrink-0">▸</span>
+              <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
+            </div>
+            {durationLimit && (
+              <div className="flex items-start gap-2 text-amber-300 font-bold">
+                <span className="shrink-0">⏱</span>
+                <span>{t.time_limit} <strong>{formatDurationText(durationLimit)}</strong></span>
+              </div>
+            )}
+            <div className="flex items-start gap-2">
+              <span className="text-violet-400 font-black shrink-0">▸</span>
+              <span>{isFinal ? t.eval_attempts_single : t.eval_attempts_unlimited}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pre-flight Checklist */}
+        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-xs text-slate-350 max-w-md mx-auto space-y-2">
+          <p className="font-black text-slate-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
+          <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
             <li>{durationLimit ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) : t.time_focus_default}</li>
             {isFinal && (
@@ -563,20 +616,6 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               </li>
             )}
           </ul>
-        </div>
-
-        <div className="flex flex-col items-center justify-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-800 text-slate-400 rounded-xl text-xs">
-            <Award className="w-4 h-4 text-slate-500" />
-            <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
-          </div>
-
-          {durationLimit && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl text-xs font-bold animate-pulse">
-              <Timer className="w-4 h-4" />
-              <span>{t.time_limit} {formatDurationText(durationLimit)}</span>
-            </div>
-          )}
         </div>
 
         <div className="pt-2">
@@ -989,20 +1028,28 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
 
         <AnimatePresence>
           {(!isReadOnly || (isTimeUp && !grade && (answer.trim().length >= 10 || fileAttachment))) && (
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-violet-600/10 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  {t.evaluating}
-                </>
-              ) : (
-                t.submit
+            <div className="space-y-2">
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-violet-600/10 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    {t.evaluating}
+                  </>
+                ) : (
+                  t.submit
+                )}
+              </button>
+              {/* Early-submit hint when timer is running */}
+              {!!durationLimit && durationLimit > 0 && !isTimeUp && !isReadOnly && !isLoading && (answer.trim().length >= 10 || fileAttachment) && (
+                <p className="text-center text-[10px] text-slate-400 italic">
+                  {t.eval_submit_early}
+                </p>
               )}
-            </button>
+            </div>
           )}
         </AnimatePresence>
 
@@ -1040,6 +1087,59 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {t.saved_local}
                 </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isReadOnly && !grade && isOfflinePending && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 border-t border-slate-800/80 pt-6 space-y-4"
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-4 p-5 rounded-2xl bg-slate-800/30 border border-slate-700/20">
+                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-center text-amber-400">
+                  <Clock className="w-5 h-5 animate-pulse" />
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h4 className="text-white font-bold text-sm mb-0.5">{t.eval_pending_title}</h4>
+                  <p className="text-slate-350 text-xs leading-relaxed">{t.eval_pending_desc}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-800 text-white rounded-xl transition-all text-xs font-bold flex items-center gap-2 cursor-pointer border border-violet-500/30 shadow-lg shadow-violet-600/10"
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      {t.evaluating}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      {t.eval_pending_retry}
+                    </>
+                  )}
+                </button>
+
+                {!isTimeUp && !isFinal && (
+                  <button
+                    onClick={() => {
+                      setIsReadOnly(false);
+                      setIsOfflinePending(false);
+                      setError(null);
+                    }}
+                    className="px-4 py-2 text-slate-400 hover:text-white transition-all text-xs font-bold cursor-pointer"
+                  >
+                    {language === 'FR' ? 'Modifier ma réponse' : 'Edit my response'}
+                  </button>
+                )}
               </div>
             </motion.div>
           )}

@@ -362,10 +362,10 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
                </div>
             </Link>
           ) : (
-            <CourseCompletionFeedback 
-              courseId={slug[2] || 'Classical_Mechanics'} 
-              courseTitle={title} 
-              lang={lang} 
+            <CourseCompletionFeedback
+              courseId={slug[2] || 'Classical_Mechanics'}
+              courseTitle={title}
+              lang={lang}
             />
           )}
           {autoSwitched && (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { executeTask, cleanupStuckTasks } from '@/lib/tasks';
+import { verifySession } from '@/lib/authHelper';
 
 export const maxDuration = 300; // Let Next.js / Vercel allow up to 5 minutes (300 seconds)
 
@@ -13,10 +14,30 @@ export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
   const secretParam = searchParams.get('secret');
   const cronSecret = process.env.CRON_SECRET;
+  const isProd = process.env.NODE_ENV === 'production';
 
-  if (cronSecret) {
-    const isAuthorized = authHeader === `Bearer ${cronSecret}` || secretParam === cronSecret;
-    if (!isAuthorized) {
+  let isAuthorized = false;
+
+  // Option A: CRON_SECRET authorization
+  if (cronSecret && (authHeader === `Bearer ${cronSecret}` || secretParam === cronSecret)) {
+    isAuthorized = true;
+  }
+
+  // Option B: User session authorization (e.g. from Admin Dashboard)
+  if (!isAuthorized) {
+    try {
+      const user = await verifySession(request);
+      if (user) {
+        isAuthorized = true;
+      }
+    } catch (err) {
+      console.error('[SECURITY] Error during verifySession:', err);
+    }
+  }
+
+  // Enforce CRON_SECRET check in production, or if CRON_SECRET is configured
+  if (isProd || cronSecret) {
+    if (!cronSecret || !isAuthorized) {
       console.warn('[SECURITY] Unauthorized access attempt to tasks endpoint.');
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
