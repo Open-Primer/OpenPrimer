@@ -67,16 +67,43 @@ export const DiagnosticQuiz = ({
   targetSectionId,
   sectionTitle
 }: DiagnosticQuizProps) => {
-  const { language } = useLanguage();
-  const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
-
-  console.log("DiagnosticQuiz Received Props:", { question, options, correctIndex, targetSectionId, sectionTitle });
+  const isPlaceholder = (str: string) => {
+    if (!str) return true;
+    const s = str.toLowerCase().trim();
+    return (
+      s === "" ||
+      s.includes('placeholder') ||
+      s.includes('example') ||
+      s.includes('dummy') ||
+      s.includes('diagnostic question') ||
+      s.includes('section-slug-to-skip-to') ||
+      s.includes('section title to skip') ||
+      s.includes('option a|||option b')
+    );
+  };
 
   const resolvedOptions = Array.isArray(options)
     ? options
     : typeof options === 'string' && options
       ? options.split('|||')
       : [];
+
+  if (
+    !question ||
+    isPlaceholder(question) ||
+    !resolvedOptions ||
+    resolvedOptions.length === 0 ||
+    resolvedOptions.some(opt => isPlaceholder(opt)) ||
+    isPlaceholder(targetSectionId) ||
+    isPlaceholder(sectionTitle)
+  ) {
+    return null;
+  }
+
+  const { language } = useLanguage();
+  const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
+
+  console.log("DiagnosticQuiz Received Props:", { question, options, correctIndex, targetSectionId, sectionTitle });
 
   const resolvedCorrectIndex = typeof correctIndex === 'number'
     ? correctIndex

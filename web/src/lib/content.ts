@@ -1467,7 +1467,7 @@ function healQuestionTags(mdx: string): string {
     if (options.length > 0) {
       optionTags = options.map((opt, idx) => {
         const isCorr = String(idx) === String(correctIndex);
-        return `  <Option text=${JSON.stringify(opt)}${isCorr ? ' correct={true}' : ''} />`;
+        return `  <Option text=${JSON.stringify(opt)} correct={${isCorr ? 'true' : 'false'}} />`;
       }).join('\n');
       const remaining = newContent.trim();
       if (remaining) {
@@ -2479,6 +2479,48 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<Question\b[^>]*?\/>/gi, '');
   processed = processed.replace(/<Quiz\b[^>]*>(?:(?!<Question\b)[\s\S])*?<\/Quiz>/gi, '');
   processed = processed.replace(/<Quiz\b[^>]*?\/>/gi, '');
+
+  // 2b. Clean up empty/placeholder DiagnosticQuizzes
+  processed = processed.replace(/<DiagnosticQuiz\b([^>]*?)(?:\/>|>([\s\S]*?)<\/DiagnosticQuiz>)/gi, (match, attrsStr) => {
+    const questionMatch = attrsStr.match(/question=["']([^"']*)["']/i);
+    const optionsMatch = attrsStr.match(/options=["']([^"']*)["']/i);
+    const correctIndexMatch = attrsStr.match(/correctIndex=["']([^"']*)["']/i);
+    const targetSectionIdMatch = attrsStr.match(/targetSectionId=["']([^"']*)["']/i);
+    const sectionTitleMatch = attrsStr.match(/sectionTitle=["']([^"']*)["']/i);
+
+    const question = questionMatch ? questionMatch[1].trim() : '';
+    const options = optionsMatch ? optionsMatch[1].trim() : '';
+    const correctIndex = correctIndexMatch ? correctIndexMatch[1].trim() : '';
+    const targetSectionId = targetSectionIdMatch ? targetSectionIdMatch[1].trim() : '';
+    const sectionTitle = sectionTitleMatch ? sectionTitleMatch[1].trim() : '';
+
+    const isPlaceholder = (str: string) => {
+      const s = str.toLowerCase();
+      return (
+        !s ||
+        s.includes('placeholder') ||
+        s.includes('example') ||
+        s.includes('dummy') ||
+        s.includes('diagnostic question') ||
+        s.includes('section-slug-to-skip-to') ||
+        s.includes('section title to skip') ||
+        s.includes('option a|||option b')
+      );
+    };
+
+    if (
+      isPlaceholder(question) ||
+      isPlaceholder(options) ||
+      isPlaceholder(targetSectionId) ||
+      isPlaceholder(sectionTitle) ||
+      !correctIndex
+    ) {
+      console.log(`[PREPROCESSOR] Removing empty or placeholder <DiagnosticQuiz>: ${match}`);
+      return '';
+    }
+
+    return match;
+  });
 
   // 2e. Normalize invalid alert types
   processed = processed.replace(/\[!CRITICAL THINKING\]/gi, '[!NOTE]');

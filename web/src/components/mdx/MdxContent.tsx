@@ -6,7 +6,7 @@ import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { Quiz, Question, Option } from './Quiz';
 import { Glossary } from './Glossary';
 import { Video } from './Video';
-import { FillInBlanks, MetaNote, ExternalSandbox } from './Interactive';
+import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
 import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEvent, Artwork, HistoricalFact } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
@@ -1236,6 +1236,7 @@ const components = {
   Shape,
   FillInBlanks: FillInBlanksWrapper,
   'FillInBlanks.Input': FillInBlanksWrapper.Input,
+  FillInBlanksQuestion,
   MetaNote,
   SolvedProblem,
   Summary,
@@ -1521,6 +1522,9 @@ function stripJsxAndRender(rawMdx: string) {
   // 9. Clean up FillInBlanks dot notations and wrappers
   clean = clean.replace(/<FillInBlanks\.Input[^>]*?answer="([^"]+)"[^>]*?\/>/gi, ' **[ $1 ]** ');
   clean = clean.replace(/<FillInBlanks\.Input[^>]*?\/>/gi, ' **[ _______ ]** ');
+  clean = clean.replace(/<FillInBlanksQuestion\b[^>]*?q="([^"]+)"[^>]*?\/>/gi, (m, qVal) => {
+    return `\n\n📖 **[Exercice à trous]**\n${qVal}\n`;
+  });
   clean = clean.replace(/<FillInBlanks[\s\S]*?>([\s\S]*?)<\/FillInBlanks>/gi, (m, content) => {
     return `\n\n📖 **[Exercice à trous]**\n${content.replace(/<[^>]+>/g, '')}\n`;
   });

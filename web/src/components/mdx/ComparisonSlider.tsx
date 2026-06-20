@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface ComparisonSliderProps {
@@ -26,7 +25,7 @@ const SLIDER_STRINGS = {
   ES: {
     before: "Antes",
     after: "Después",
-    hint: "👈 Deslice el cursor para comparar ambos estados 👉"
+    hint: "👈 Deslice le curseur pour comparer les deux états 👉"
   },
   DE: {
     before: "Vorher",
@@ -107,21 +106,21 @@ export const ComparisonSlider = ({
       const rawText = typeof content === 'string' ? content : '';
       const text = rawText.replace(/<[^>]+>/g, '').trim();
       const gradientClass = isBefore 
-        ? "bg-gradient-to-br from-blue-950/40 via-indigo-950/30 to-slate-950" 
-        : "bg-gradient-to-br from-emerald-950/30 via-slate-900/40 to-slate-950";
+        ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950" 
+        : "bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950";
       const borderClass = isBefore ? "border-blue-500/20" : "border-emerald-500/20";
       
       return (
-        <div className={`w-full h-full flex flex-col items-center justify-center p-6 text-center border ${borderClass} ${gradientClass} transition-all duration-300`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center p-6 text-center border ${borderClass} ${gradientClass} bg-slate-950 transition-all duration-300`}>
           <div className="max-w-md space-y-3">
             <div className="flex justify-center">
               {isBefore ? (
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-history"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"/></svg>
                 </div>
               )}
             </div>
@@ -173,7 +172,10 @@ export const ComparisonSlider = ({
         ) : (
           <>
             {/* After Content (Bottom Layer) */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none">
+            <div 
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ clipPath: `inset(0px 0px 0px ${sliderPosition}%)` }}
+            >
               {renderSliderContent(afterContent, false)}
               <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-400">
                 {finalAfterLabel}

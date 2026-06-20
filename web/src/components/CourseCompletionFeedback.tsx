@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, CheckCircle, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import Link from 'next/link';
-import { dbService } from '@/lib/db';
+import { dbService, progressService } from '@/lib/db';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
 
@@ -62,6 +62,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   const [currentCourse, setCurrentCourse] = useState<any | null>(null);
   const [userId, setUserId] = useState('u1');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isEvaluationPassed, setIsEvaluationPassed] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [userComment, setUserComment] = useState<string>('');
   const [nextCoursePath, setNextCoursePath] = useState<string | null>(null);
@@ -87,22 +88,35 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       } catch (e) {}
     }
 
-    if (loggedIn) {
-      // Check user curriculum progress
-      dbService.getUserProgress(uId).then((res) => {
-        const matchingModule = res.data?.activeModules?.find(
-          (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
-        );
-        if (matchingModule) {
-          setIsEnrolled(true);
-          if (matchingModule.progress === 100) {
-            setIsCompleted(true);
+    const refreshStatus = () => {
+      if (loggedIn) {
+        dbService.getUserProgress(uId).then((res) => {
+          const matchingModule = res.data?.activeModules?.find(
+            (m: any) => m.slug.toLowerCase() === courseId.toLowerCase() || m.id.toString() === courseId.toString()
+          );
+          if (matchingModule) {
+            setIsEnrolled(true);
+            if (matchingModule.progress === 100) {
+              setIsCompleted(true);
+            } else {
+              setIsCompleted(false);
+            }
+          } else {
+            setIsEnrolled(false);
+            setIsCompleted(false);
           }
-        } else {
-          setIsEnrolled(false);
-        }
-      });
+        });
 
+        const pathname = window.location.pathname;
+        const evalStatus = (progressService as any).checkFinalEvaluationStatus(courseId, pathname);
+        setIsEvaluationPassed(evalStatus.completed && evalStatus.passed);
+      }
+    };
+
+    refreshStatus();
+    window.addEventListener('op_progress_updated', refreshStatus);
+
+    if (loggedIn) {
       // 1. Dual-read: try reading from local storage first (instant responsiveness)
       const localFeedbackKey = `op_feedback_${uId}_${courseId}`;
       const savedLocalFeedback = localStorage.getItem(localFeedbackKey);
@@ -201,6 +215,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         }
       }
     });
+
+    return () => {
+      window.removeEventListener('op_progress_updated', refreshStatus);
+    };
   }, [courseId]);
 
   // Handle toast timeout
@@ -481,70 +499,94 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
-            {/* Stars Selection */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
-              </span>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    disabled={isEvaluationCompleted}
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => !isEvaluationCompleted && setHoverRating(star)}
-                    onMouseLeave={() => !isEvaluationCompleted && setHoverRating(0)}
-                    className={`p-1 transition-transform outline-none ${isEvaluationCompleted ? 'cursor-not-allowed opacity-60' : 'hover:scale-110 cursor-pointer'}`}
-                  >
-                    <Star 
-                      className={`w-8 h-8 transition-colors ${
-                        star <= (hoverRating || rating) 
-                          ? 'fill-amber-400 text-amber-400' 
-                          : 'text-slate-700'
-                      }`} 
-                    />
-                  </button>
-                ))}
+        {(!isCompleted || !isEvaluationPassed) ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 border border-dashed border-slate-800 rounded-3xl bg-slate-950/40 backdrop-blur-sm animate-fade-in">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20 shadow-inner animate-pulse">
+              <Icons.Lock className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-slate-200 uppercase tracking-wider">
+                {langKey === 'FR' ? "Évaluation verrouillée" : "Evaluation Locked"}
+              </h4>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                {langKey === 'FR' 
+                  ? "Vous devez réussir l'évaluation finale de ce cours (obtenir une note supérieure ou égale à la moyenne) pour débloquer l'évaluation du cours."
+                  : langKey === 'ES'
+                  ? "Debes aprobar la evaluación final de este curso con una calificación igual o superior al promedio para desbloquear la evaluación del curso."
+                  : langKey === 'DE'
+                  ? "Sie müssen die Abschlussprüfung auf dieser Seite mit einer Note über oder gleich dem Durchschnitt bestehen, um die Kursbewertung freizuschalten."
+                  : langKey === 'ZH'
+                  ? "您必须通过本页面的终期评估（成绩达到或超过平均分）才能解锁课程评价。"
+                  : "You must pass the final exam on this page with a grade above or equal to average to unlock course evaluation."}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
+              {/* Stars Selection */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                  {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
+                </span>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      disabled={isEvaluationCompleted}
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => !isEvaluationCompleted && setHoverRating(star)}
+                      onMouseLeave={() => !isEvaluationCompleted && setHoverRating(0)}
+                      className={`p-1 transition-transform outline-none ${isEvaluationCompleted ? 'cursor-not-allowed opacity-60' : 'hover:scale-110 cursor-pointer'}`}
+                    >
+                      <Star 
+                        className={`w-8 h-8 transition-colors ${
+                          star <= (hoverRating || rating) 
+                            ? 'fill-amber-400 text-amber-400' 
+                            : 'text-slate-700'
+                        }`} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Comment Input */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                  {t.commentsSuggestions}
+                </span>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  disabled={isEvaluationCompleted}
+                  placeholder={t.textareaPlaceholder}
+                  rows={4}
+                  className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isEvaluationCompleted ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
+                />
               </div>
             </div>
 
-            {/* Comment Input */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                {t.commentsSuggestions}
-              </span>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                disabled={isEvaluationCompleted}
-                placeholder={t.textareaPlaceholder}
-                rows={4}
-                className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isEvaluationCompleted ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
-              />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-900/50">
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                {!isEvaluationCompleted && (
+                  <button
+                    type="submit"
+                    disabled={rating === 0}
+                    className={`w-full sm:w-auto px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
+                      rating > 0 
+                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {t.submitComplete}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-900/50">
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-              {!isEvaluationCompleted && (
-                <button
-                  type="submit"
-                  disabled={rating === 0}
-                  className={`w-full sm:w-auto px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
-                    rating > 0 
-                      ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
-                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  {t.submitComplete}
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
 
       {/* Floating Premium Success Toast Notification */}

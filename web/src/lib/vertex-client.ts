@@ -184,7 +184,10 @@ async function getAccessToken(): Promise<string | null> {
 
 export interface VertexRequest {
   task: keyof typeof TASK_MODELS;
-  contents: { role: string; parts: { text: string }[] }[];
+  contents: { 
+    role: string; 
+    parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[]; 
+  }[];
   systemInstruction?: string;
   generationConfig?: Record<string, unknown>;
   stream?: boolean;
@@ -257,14 +260,16 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
               const usage = json.usageMetadata || {};
               const promptTokens = usage.promptTokenCount || 0;
               const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
+              const firstPart = req.contents?.[0]?.parts?.[0];
+              const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
               
               await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
             } catch (e) {
               console.warn('[VERTEX] Failed to parse usage metadata from response clone:', e);
               // Fallback: estimate tokens if parsing failed
               const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
-              const promptText = req.contents?.[0]?.parts?.[0]?.text || '';
+              const firstPart = req.contents?.[0]?.parts?.[0];
+              const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
               await recordMetrics(req.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
             }
           })();

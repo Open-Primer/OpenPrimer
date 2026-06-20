@@ -427,6 +427,58 @@ export const CourseClientWrapper = ({
       }
     };
 
+    const recalculateProgress = (scrollTopVal?: number) => {
+      if (!storage) return;
+
+      const flatPages: string[] = [];
+      (navItems || []).forEach(folder => {
+        folder.children?.forEach((p: any) => {
+          if (p.path) {
+            flatPages.push(p.path);
+          }
+        });
+      });
+
+      if (flatPages.length > 0) {
+        const lessonProgressMap = JSON.parse(storage.getItem('op_lesson_scroll_progress') || '{}');
+        
+        let totalPercentageSum = 0;
+        flatPages.forEach(path => {
+          totalPercentageSum += (lessonProgressMap[path] ?? 0);
+        });
+        const calculatedCoursePercent = Math.round(totalPercentageSum / flatPages.length);
+
+        let finalProgress = calculatedCoursePercent;
+        if (finalProgress === 100) {
+          const finalPage = flatPages[flatPages.length - 1];
+          const evalStatus = (progressService as any).checkFinalEvaluationStatus(slug, finalPage);
+          if (!evalStatus.completed || !evalStatus.passed) {
+            finalProgress = 99; // Cap at 99% until passed
+          }
+        }
+
+        const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
+        const currentCourseProgress = progressMap[slug] ?? 0;
+        
+        if (finalProgress > currentCourseProgress || (finalProgress === 100 && currentCourseProgress === 99)) {
+          progressMap[slug] = finalProgress;
+          storage.setItem('op_course_progress', JSON.stringify(progressMap));
+          
+          syncCurriculumProgress(progressMap);
+          
+          window.dispatchEvent(new Event('op_progress_updated'));
+          
+          if ((progressService as any).saveLocationAndCompletion) {
+            (progressService as any).saveLocationAndCompletion(slug, scrollTopVal ?? (el ? el.scrollTop : 0), finalProgress, pathname);
+          }
+        } else {
+          if ((progressService as any).saveLocationAndCompletion) {
+            (progressService as any).saveLocationAndCompletion(slug, scrollTopVal ?? (el ? el.scrollTop : 0), currentCourseProgress, pathname);
+          }
+        }
+      }
+    };
+
     let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
       if (!el || !storage) return;
@@ -439,7 +491,6 @@ export const CourseClientWrapper = ({
         ? Math.min(100, Math.round((scrollTop / scrollableHeight) * 100))
         : 0;
 
-      // Throttle storage updates to guarantee rendering thread performance
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         storage.setItem(savedScrollKey, String(scrollTop));
@@ -448,7 +499,6 @@ export const CourseClientWrapper = ({
           return;
         }
 
-        // Get all lesson paths for this course
         const flatPages: string[] = [];
         (navItems || []).forEach(folder => {
           folder.children?.forEach((p: any) => {
@@ -459,7 +509,6 @@ export const CourseClientWrapper = ({
         });
 
         if (flatPages.length > 0) {
-          // Save progress of the current page/lesson
           const lessonProgressMap = JSON.parse(storage.getItem('op_lesson_scroll_progress') || '{}');
           const currentLessonProgress = lessonProgressMap[pathname] ?? 0;
           if (percentage > currentLessonProgress) {
@@ -467,36 +516,7 @@ export const CourseClientWrapper = ({
             storage.setItem('op_lesson_scroll_progress', JSON.stringify(lessonProgressMap));
           }
 
-          // Calculate overall course progress as the average of lesson percentages
-          let totalPercentageSum = 0;
-          flatPages.forEach(path => {
-            totalPercentageSum += (lessonProgressMap[path] ?? 0);
-          });
-          const calculatedCoursePercent = Math.round(totalPercentageSum / flatPages.length);
-
-          const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
-          const currentCourseProgress = progressMap[slug] ?? 0;
-          
-          if (calculatedCoursePercent > currentCourseProgress) {
-            progressMap[slug] = calculatedCoursePercent;
-            storage.setItem('op_course_progress', JSON.stringify(progressMap));
-            
-            // Sync containing curricula
-            syncCurriculumProgress(progressMap);
-            
-            // Dispatch dynamic progress update event to instantly refresh curriculum cards
-            window.dispatchEvent(new Event('op_progress_updated'));
-
-            // Call the Supabase sync service with the calculated course progress!
-            if ((progressService as any).saveLocationAndCompletion) {
-              (progressService as any).saveLocationAndCompletion(slug, scrollTop, calculatedCoursePercent, pathname);
-            }
-          } else {
-            // Sync location even if overall percentage didn't increase
-            if ((progressService as any).saveLocationAndCompletion) {
-              (progressService as any).saveLocationAndCompletion(slug, scrollTop, currentCourseProgress, pathname);
-            }
-          }
+          recalculateProgress(scrollTop);
         }
       }, 150);
     };
@@ -505,14 +525,19 @@ export const CourseClientWrapper = ({
       el.addEventListener('scroll', handleScroll);
     }
 
+    const handleProgressUpdated = () => {
+      recalculateProgress();
+    };
+    window.addEventListener('op_progress_updated', handleProgressUpdated);
+
     return () => {
       if (!loggedIn || isEnrolled) {
         progressService.commitLessonTime(slug, pathname);
       }
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('op_progress_updated', handleProgressUpdated);
       clearTimeout(scrollTimeout);
       
-      // Save exact location on navigating away/unmounting
       if (el && storage) {
         el.removeEventListener('scroll', handleScroll);
         const scrollTop = el.scrollTop;
@@ -529,7 +554,6 @@ export const CourseClientWrapper = ({
           ? Math.min(100, Math.round((scrollTop / scrollableHeight) * 100))
           : 0;
 
-        // Get all lesson paths for this course
         const flatPages: string[] = [];
         (navItems || []).forEach(folder => {
           folder.children?.forEach((p: any) => {
@@ -547,31 +571,7 @@ export const CourseClientWrapper = ({
             storage.setItem('op_lesson_scroll_progress', JSON.stringify(lessonProgressMap));
           }
 
-          let totalPercentageSum = 0;
-          flatPages.forEach(path => {
-            totalPercentageSum += (lessonProgressMap[path] ?? 0);
-          });
-          const calculatedCoursePercent = Math.round(totalPercentageSum / flatPages.length);
-
-          const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
-          const currentCourseProgress = progressMap[slug] ?? 0;
-          if (calculatedCoursePercent > currentCourseProgress) {
-            progressMap[slug] = calculatedCoursePercent;
-            storage.setItem('op_course_progress', JSON.stringify(progressMap));
-            
-            // Sync containing curricula
-            syncCurriculumProgress(progressMap);
-            
-            window.dispatchEvent(new Event('op_progress_updated'));
-            
-            if ((progressService as any).saveLocationAndCompletion) {
-              (progressService as any).saveLocationAndCompletion(slug, scrollTop, calculatedCoursePercent, pathname);
-            }
-          } else {
-            if ((progressService as any).saveLocationAndCompletion) {
-              (progressService as any).saveLocationAndCompletion(slug, scrollTop, currentCourseProgress, pathname);
-            }
-          }
+          recalculateProgress(scrollTop);
         }
       }
     };

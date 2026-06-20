@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Award, PenTool, CheckCircle2, AlertCircle, RefreshCw, Play, Timer, Lock } from 'lucide-react';
+import { Award, PenTool, CheckCircle2, AlertCircle, RefreshCw, Play, Timer, Lock, Mic, Square, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { progressService, dbService } from '@/lib/db';
@@ -98,12 +98,33 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
   const [resetKey, setResetKey] = useState(0);
   const [level, setLevel] = useState('L1');
 
+  // New state variables for file upload:
+  const [submissionType, setSubmissionType] = useState<'text' | 'file' | 'audio'>('text');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [fileAttachment, setFileAttachment] = useState<{ name: string; type: string; size: number; base64?: string } | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const answerRef = useRef(answer);
+  const submissionTypeRef = useRef(submissionType);
+  const fileAttachmentRef = useRef(fileAttachment);
 
   useEffect(() => {
     answerRef.current = answer;
   }, [answer]);
+
+  useEffect(() => {
+    submissionTypeRef.current = submissionType;
+  }, [submissionType]);
+
+  useEffect(() => {
+    fileAttachmentRef.current = fileAttachment;
+  }, [fileAttachment]);
 
   // Auth and completion state loading
   useEffect(() => {
@@ -151,6 +172,18 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         setFeedback(parsed.feedback);
         setIsReadOnly(true);
         setIsStarted(true);
+        if (parsed.submissionType) {
+          setSubmissionType(parsed.submissionType);
+        }
+        if (parsed.fileAttachment) {
+          setFileAttachment(parsed.fileAttachment);
+          if (parsed.fileAttachment.type?.startsWith('image/') && parsed.fileAttachment.base64) {
+            setFilePreview(parsed.fileAttachment.base64);
+          }
+          if (parsed.submissionType === 'audio' && parsed.fileAttachment.base64) {
+            setAudioUrl(parsed.fileAttachment.base64);
+          }
+        }
       } catch {}
     }
 
@@ -167,8 +200,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           if (prev <= 1) {
             clearInterval(timerRef.current!);
             setIsTimeUp(true);
-            // Trigger auto-submit on timeout if they have written something
-            if (answerRef.current.trim().length >= 10) {
+            // Trigger auto-submit on timeout if they have written or attached something
+            if (answerRef.current.trim().length >= 10 || fileAttachmentRef.current) {
               handleAutoSubmit();
             } else {
               setError(language === 'FR' ? "Temps écoulé ! Votre devoir est vide ou trop court." : "Time's up! Your response is empty or too short.");
@@ -183,6 +216,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     };
   }, [isStarted, durationLimit, isReadOnly, grade]);
 
@@ -206,10 +240,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         },
         body: JSON.stringify({
           prompt,
-          answer: answerRef.current,
+          answer: submissionTypeRef.current === 'file' ? (answerRef.current || `Fichier déposé : ${fileAttachmentRef.current?.name}`) : answerRef.current,
+          fileAttachment: submissionTypeRef.current === 'file' ? (fileAttachmentRef.current || undefined) : undefined,
           gradingSystem,
           subject,
-          level
+          level,
+          submissionType: submissionTypeRef.current
         }),
       });
 
@@ -224,18 +260,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         throw new Error(data.error);
       }
     } catch {
-      // Offline fallback grading
-      let fallbackGrade = '14/20';
-      if (gradingSystem === '0/10') fallbackGrade = '7.5/10';
-      else if (gradingSystem === '0/20') fallbackGrade = '14/20';
-      else if (gradingSystem === 'A-F') fallbackGrade = 'B';
-      else if (gradingSystem === 'pass-fail') fallbackGrade = 'Pass';
-
-      const fb = t.offline_feedback;
-      
-      setGrade(fallbackGrade);
-      setFeedback(fb);
-      saveGradingResult(answerRef.current, fallbackGrade, fb);
+      setIsReadOnly(false);
+      setError(language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez cliquer sur Soumettre pour réessayer." : "AI Tutor evaluation failed. Please click Submit to retry.");
     } finally {
       setIsLoading(false);
     }
@@ -251,7 +277,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     localStorage.setItem(key, JSON.stringify({
       answer: finalAnswer,
       grade: finalGrade,
-      feedback: finalFeedback
+      feedback: finalFeedback,
+      submissionType: submissionTypeRef.current,
+      fileAttachment: fileAttachmentRef.current
     }));
 
     // Mark page as visited
@@ -277,12 +305,22 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
   };
 
   const handleSubmit = async () => {
-    if (!answer.trim() || answer.length < 10) {
+    if (submissionType === 'text' && (!answer.trim() || answer.length < 10)) {
       let msg = 'Please write a more substantial answer (min 10 characters).';
       if (language === 'FR') msg = 'Veuillez écrire une réponse plus substantielle (min 10 caractères).';
       else if (language === 'ES') msg = 'Por favor, escribe una respuesta más sustancial (mínimo 10 caracteres).';
       else if (language === 'DE') msg = 'Bitte schreiben Sie eine aussagekräftigere Antwort (mindestens 10 Zeichen).';
       else if (language === 'ZH') msg = '请写出更充实的回答（至少10个字符）。';
+      setError(msg);
+      return;
+    }
+
+    if (submissionType === 'file' && !fileAttachment) {
+      let msg = 'Please select or upload a file (diagram, drawing, or document).';
+      if (language === 'FR') msg = 'Veuillez sélectionner ou déposer un fichier (schéma, dessin ou document).';
+      else if (language === 'ES') msg = 'Por favor, seleccione o suba un archivo (diagrama, dibujo o documento).';
+      else if (language === 'DE') msg = 'Bitte wählen Sie eine Datei aus oder laden Sie sie hoch (Diagramm, Zeichnung oder Dokument).';
+      else if (language === 'ZH') msg = '请选择或上传文件（图表、绘图或文档）。';
       setError(msg);
       return;
     }
@@ -298,10 +336,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         },
         body: JSON.stringify({
           prompt,
-          answer,
+          answer: submissionType === 'file' ? (answer || `Fichier déposé : ${fileAttachment?.name}`) : answer,
+          fileAttachment: submissionType === 'file' ? fileAttachment : undefined,
           gradingSystem,
           subject,
-          level
+          level,
+          submissionType
         }),
       });
 
@@ -319,25 +359,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         throw new Error(data.error || 'Evaluation failed.');
       }
     } catch (err: any) {
-      console.warn("AI Tutor evaluation failed, falling back to local evaluation:", err);
-      let fallbackGrade = '14/20';
-      if (gradingSystem === '0/10') fallbackGrade = '7.5/10';
-      else if (gradingSystem === '0/20') fallbackGrade = '14/20';
-      else if (gradingSystem === 'A-F') fallbackGrade = 'B';
-      else if (gradingSystem === 'pass-fail') fallbackGrade = 'Pass';
-
-      const fb = t.offline_feedback;
-      setGrade(fallbackGrade);
-      setFeedback(fb);
-      setIsReadOnly(true);
-      saveGradingResult(answer, fallbackGrade, fb);
-      
-      let warnMsg = 'Offline evaluation applied (AI tutor is offline).';
-      if (language === 'FR') warnMsg = 'Évaluation hors-ligne appliquée (le tuteur IA est indisponible).';
-      else if (language === 'ES') warnMsg = 'Evaluación fuera de línea aplicada (el tutor de IA no está disponible).';
-      else if (language === 'DE') warnMsg = 'Offline-Bewertung angewendet (KI-Tutor ist offline).';
-      else if (language === 'ZH') warnMsg = '已应用离线评估（AI导师目前离线）。';
-      setError(warnMsg);
+      setError(err.message || (language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez réessayer." : "AI Tutor evaluation failed. Please try again."));
+      setIsReadOnly(false);
     } finally {
       setIsLoading(false);
     }
@@ -358,6 +381,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     setIsStarted(false);
     setIsTimeUp(false);
     setTimeLeft(durationLimit || 0);
+    setSubmissionType('text');
+    setFileAttachment(null);
+    setFilePreview(null);
     setResetKey((prev) => prev + 1);
   };
 
@@ -492,13 +518,175 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
       </div>
 
       <div className="space-y-4">
-        <textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          disabled={isLoading || isReadOnly}
-          placeholder={t.placeholder}
-          className="w-full h-44 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-2xl p-4 text-slate-100 text-sm resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
-        />
+      {/* Tab controls */}
+      {!isReadOnly && (
+        <div className="flex gap-2 p-1 bg-slate-950 border border-slate-800 rounded-2xl mb-4 max-w-xs">
+          <button
+            onClick={() => setSubmissionType('text')}
+            type="button"
+            className={cn(
+              "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+              submissionType === 'text'
+                ? "bg-violet-600 text-white shadow-md shadow-violet-600/10"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            {language === 'FR' ? '📝 Rédiger' : language === 'ES' ? '📝 Redactar' : language === 'DE' ? '📝 Schreiben' : language === 'ZH' ? '📝 撰写' : '📝 Write'}
+          </button>
+          <button
+            onClick={() => setSubmissionType('file')}
+            type="button"
+            className={cn(
+              "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+              submissionType === 'file'
+                ? "bg-violet-600 text-white shadow-md shadow-violet-600/10"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            {language === 'FR' ? '📁 Déposer' : language === 'ES' ? '📁 Subir' : language === 'DE' ? '📁 Hochladen' : language === 'ZH' ? '📁 上传' : '📁 Upload'}
+          </button>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {/* TEXT SUBMISSION TYPE */}
+        {submissionType === 'text' && (
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            disabled={isLoading || isReadOnly}
+            placeholder={t.placeholder}
+            className="w-full h-44 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-2xl p-4 text-slate-100 text-sm resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
+          />
+        )}
+
+        {/* FILE SUBMISSION TYPE (WRITE MODE) */}
+        {submissionType === 'file' && !isReadOnly && (
+          <div className="space-y-4">
+            <div 
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setFileAttachment({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    base64: reader.result as string
+                  });
+                  if (file.type.startsWith('image/')) {
+                    setFilePreview(reader.result as string);
+                  } else {
+                    setFilePreview(null);
+                  }
+                };
+                reader.readAsDataURL(file);
+              }}
+              className="w-full min-h-36 border-2 border-dashed border-slate-800 hover:border-violet-500 bg-slate-950 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center transition-all cursor-pointer relative group"
+            >
+              <input 
+                type="file" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setFileAttachment({
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      base64: reader.result as string
+                    });
+                    if (file.type.startsWith('image/')) {
+                      setFilePreview(reader.result as string);
+                    } else {
+                      setFilePreview(null);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                disabled={isLoading || isReadOnly}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              
+              {fileAttachment ? (
+                <div className="space-y-2 z-10 pointer-events-none">
+                  {filePreview ? (
+                    <img src={filePreview} alt="Preview" className="max-h-20 mx-auto rounded-lg border border-slate-800 object-contain shadow-md" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 text-violet-400 flex items-center justify-center mx-auto text-xs font-black">
+                      {fileAttachment.name.split('.').pop()?.toUpperCase() || 'FILE'}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-slate-100 text-xs font-bold">{fileAttachment.name}</p>
+                    <p className="text-slate-500 text-[10px]">{(fileAttachment.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 pointer-events-none">
+                  <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                    <PenTool className="w-4 h-4" />
+                  </div>
+                  <p className="text-slate-300 text-xs font-medium">
+                    {language === 'FR' ? 'Glissez et déposez votre fichier ici, ou cliquez pour sélectionner' : 'Drag and drop your file here, or click to select'}
+                  </p>
+                  <p className="text-slate-500 text-[9px]">
+                    {language === 'FR' ? 'Images, Schémas, Dessins, PDFs (Max 10 Mo)' : 'Images, Diagrams, Drawings, PDFs (Max 10MB)'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest block">
+                {language === 'FR' ? "Notes d'accompagnement / description de votre travail" : "Accompanying notes / description"}
+              </label>
+              <textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                disabled={isLoading || isReadOnly}
+                placeholder={language === 'FR' ? "Décrivez brièvement votre schéma, dessin ou document pour aider le tuteur IA à l'évaluer..." : "Briefly describe your diagram, drawing, or document to help the AI tutor evaluate it..."}
+                className="w-full h-20 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-2xl p-4 text-slate-100 text-xs resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* FILE SUBMISSION TYPE (READ-ONLY/GRADE MODE) */}
+        {submissionType === 'file' && isReadOnly && (
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+            <div className="flex items-center gap-3">
+              {filePreview ? (
+                <img src={filePreview} alt="Submitted File" className="w-14 h-14 rounded-lg border border-slate-800 object-contain bg-slate-900" />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 text-violet-400 flex items-center justify-center text-xs font-black">
+                  {fileAttachment?.name.split('.').pop()?.toUpperCase() || 'FILE'}
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] font-black uppercase text-violet-500 tracking-widest">
+                  {language === 'FR' ? 'Fichier déposé' : 'Uploaded File'}
+                </p>
+                <p className="text-slate-100 text-xs font-bold">{fileAttachment?.name}</p>
+                <p className="text-slate-500 text-[10px]">{fileAttachment ? (fileAttachment.size / 1024).toFixed(1) : 0} KB</p>
+              </div>
+            </div>
+            
+            {answer.trim() && (
+              <div className="border-t border-slate-800/60 pt-3">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-1">
+                  {language === 'FR' ? "Notes d'accompagnement" : "Accompanying notes"}
+                </span>
+                <p className="text-slate-300 text-xs leading-relaxed italic">"{answer}"</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-2">

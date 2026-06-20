@@ -755,10 +755,10 @@ Format du contenu de l'Évaluation Finale :
      - Vous devez obligatoirement insérer un grand Quiz sommatif : \`<Quiz durationLimit={3600}>\` contenant entre 20 et 30 questions de haut niveau couvrant tous les chapitres du cours.
        Chaque question doit être rédigée sous la forme :
        \`<Question q="[Texte de la question]" explanation="[Explication alternative et constructive de la solution]">
-         <Option correct={true}>[Option correcte]</Option>
-         <Option correct={false}>[Option erronée 1]</Option>
-         <Option correct={false}>[Option erronée 2]</Option>
-         <Option correct={false}>[Option erronée 3]</Option>
+         <Option text="[Option correcte]" correct={true} />
+         <Option text="[Option erronée 1]" correct={false} />
+         <Option text="[Option erronée 2]" correct={false} />
+         <Option text="[Option erronée 3]" correct={false} />
        </Question>\`
      - Insérez également au moins 3 exercices résolus (\`<SolvedExercise>\`) et 3 exercices interactifs à réponse numérique (\`<UnsolvedExercise>\`).
      - Intégrez au moins un simulateur ou sandbox interactif de la discipline (\`<FunctionManipulator />\`, \`<EquationManipulator />\`, \`<Geometry2D />\`, \`<ChemicalStoichiometry />\` ou \`<CodeSandbox />\`).
@@ -911,11 +911,11 @@ Requirements:
     - **Mandatory Timed Challenges (\`durationLimit\` attribute)**: To break learning monotony and encourage focused self-assessment, you MUST systematically set a clear, reasonable duration limit on these final evaluations using the \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes, \`durationLimit={600}\` for 10 minutes, or \`durationLimit={900}\` for 15 minutes depending on the question count and complexity).
     - You MUST NOT limit evaluations to MCQ quizzes only! You MUST actively diversify the evaluation format based on the discipline, level, and context:
       * MCQ Quizzes: Use the custom \`<Quiz durationLimit={seconds}>\` component with multiple \`<Question>\` elements inside. Excellent for scientific, math, or factual topics.
-        - **STRICT SYNTAX FOR QUIZZES**: You MUST format quizzes as:
+        - **STRICT FLAT-PROP SYNTAX FOR QUIZZES**: You MUST format quizzes strictly using the Flat-Prop pattern. Option text and its correctness state MUST be passed entirely as attributes, and the \`<Option />\` tag MUST be self-closing:
           \`<Quiz>\`
             \`<Question q="Question text" explanation="Alternative helper explanation for students who get it wrong...">\`
-              \`<Option correct={true}>Correct answer option</Option>\`
-              \`<Option correct={false}>Wrong answer option</Option>\`
+              \`<Option text="Correct answer option" correct={true} />\`
+              \`<Option text="Wrong answer option" correct={false} />\`
             \`</Question>\`
           \`</Quiz>\`
         - **NO PEDAGOGICAL TAGS**: It is strictly forbidden to use tags like \`<Explanation>\`, \`<Solution>\`, \`<KeyConcept>\`, \`<Instruction>\`, or \`<Shape>\` directly inside or outside the quizzes. Always pass explanation text in the \`explanation\` attribute of the \`<Question>\` component, or use approved worked example components like \`<SolvedExercise>\` and \`<UnsolvedExercise>\`.
@@ -1151,7 +1151,7 @@ ${currentMdx}
 
 Your Checkpoints:
 1. "Zero-Placeholder & Prohibited Empty Tags & Nested Wrappers & Content Collisions":
-   - Detect if there are any skeletal placeholder formulations like "Dans cette section, nous aborderons...", "Example to complete...", "to be determined", "etc.", or generic non-developed placeholders.
+   - **STRICT ZERO-PLACEHOLDER CONSTRAINT**: Systematically reject (approved: false) if the lesson contains any placeholders, comments telling the user to write their own text, unwritten sections, or skeletons like "Insérer ici...", "[Placeholder]", "[À compléter]", "Lorem Ipsum", "..." for incomplete lists, or generic non-developed paragraphs. The text must be fully written, complete, and production-ready.
    - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Objectives></Objectives>, <CriticalThinking />, <WhatsNext />, <BrilliantIdea />, <OpenQuestion />, <ScientificDebate />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
    - Nested wrappers are strictly forbidden (e.g. self-nesting is invalid). Use only one single tag for the block.
    - Content collision: Ensure that <HistoricalAnecdote>, <HistoricalFact>, and <DidYouKnow> do NOT cover the exact same subject, discovery, or event. If they overlap or duplicate information, reject the content (set "approved": false) so they are written on distinct, non-overlapping pedagogical hooks. Ensure that <HistoricalAnecdote> is TRULY anecdotal, quirky, funny, or human (not just a dry historical milestone). Factual milestones like the founding of a laboratory or publication of a textbook MUST be placed in a <HistoricalFact> (Fait Historique) block instead.
@@ -1198,7 +1198,7 @@ Your Checkpoints:
     - Every <Question> element MUST have its question text defined in the 'q' attribute (e.g. <Question q="Question text?">) and not as raw text children.
     - Systematically reject (approved: false) any content containing deprecated pedagogical tags like <Explanation>, <Solution>, <Instruction>, or <KeyConcept>.
    - Every <Quiz> contains at least one <Question> element, and every <Question> contains at least two <Option> elements.
-   - Every <Option> tag has a "correct" boolean attribute (set to true or false) indicating whether it is the correct answer. Systematically reject any quiz question that does not define options or where no option has correct={true}.
+   - Every <Option /> tag MUST follow the Flat-Prop pattern: it must pass the option text via the 'text' attribute (e.g. <Option text="Option text" />) and its correctness state via the 'correct' boolean attribute (e.g. correct={true} or correct={false}), and it MUST be a self-closing tag. Systematically reject (approved: false) any question containing nested/wrapped text inside <Option> (like <Option>Text</Option>) or missing the 'text' attribute, or where no option has correct={true}.
    - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
    - All text content and attributes inside these assessment tags are fully written, meaningful, and not empty or skeletal. Reject any empty or placeholder assessments.
 10. "Foreign Language Quotes & Translations":

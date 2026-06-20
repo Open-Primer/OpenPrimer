@@ -3050,6 +3050,74 @@ export function compileRuleLocally(description: string, threshold: string): any 
 }
 
 export const progressService = {
+  isGradePassing: (grade: string | null | undefined): boolean => {
+    if (!grade) return false;
+    const cleanGrade = grade.trim().toLowerCase();
+    if (cleanGrade.includes('/20')) {
+      const parts = cleanGrade.split('/')[0].trim();
+      const num = parseFloat(parts);
+      return !isNaN(num) && num >= 10;
+    }
+    if (cleanGrade.includes('/10')) {
+      const parts = cleanGrade.split('/')[0].trim();
+      const num = parseFloat(parts);
+      return !isNaN(num) && num >= 5;
+    }
+    if (['pass', 'admis', 'aprobado', 'bestanden', 'oui', 'passed', 'satisfaisant'].includes(cleanGrade)) {
+      return true;
+    }
+    if (['fail', 'ajourné', 'reprobado', 'nicht bestanden', 'non', 'failed'].includes(cleanGrade)) {
+      return false;
+    }
+    // Letter grades A-F
+    const letter = cleanGrade.charAt(0);
+    if (['a', 'b', 'c', 'd'].includes(letter)) {
+      return true;
+    }
+    if (letter === 'f') {
+      return false;
+    }
+    // General fallback
+    return true;
+  },
+
+  checkFinalEvaluationStatus: (slug: string, finalPagePath: string): { completed: boolean; passed: boolean } => {
+    if (typeof window === 'undefined') return { completed: false, passed: false };
+    
+    // Check op_quiz_results
+    const quizzes = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
+    const result = quizzes[finalPagePath];
+    if (result) {
+      if (result.essayGrade !== undefined) {
+        const passed = progressService.isGradePassing(result.essayGrade);
+        return { completed: true, passed };
+      }
+      if (result.totalQuestions !== undefined && result.totalQuestions > 0) {
+        const passed = (result.correctAnswers / result.totalQuestions) >= 0.5;
+        return { completed: true, passed };
+      }
+    }
+
+    // Scan for essay evaluations locally saved (e.g. op_essay_)
+    try {
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (key && key.startsWith(`op_essay_${finalPagePath}`)) {
+          const val = window.localStorage.getItem(key);
+          if (val) {
+            const parsed = JSON.parse(val);
+            if (parsed.grade) {
+              const passed = progressService.isGradePassing(parsed.grade);
+              return { completed: true, passed };
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
+    return { completed: false, passed: false };
+  },
+
   // Page visits
   recordPageVisit: (path: string, slug: string) => {
     if (typeof window === 'undefined') return;
