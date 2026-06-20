@@ -44,3 +44,5 @@ export const IdeeBrillante = ({ title, children }: IdeeBrillanteProps) => {
     </div>
   );
 };
+
+export const BrilliantIdea = IdeeBrillante;
