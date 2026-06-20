@@ -1150,6 +1150,22 @@ FillInBlanksWrapper.Input = (props: any) => {
 };
 
 const SmartEquationManipulator = (props: any) => {
+  // Check if it's a chemical reaction
+  const isChemical = props && (
+    props.reaction ||
+    (props.equation && (
+      props.equation.includes('->') ||
+      props.equation.includes('➔') ||
+      props.equation.includes('→') ||
+      props.equation.includes('-->') ||
+      /\b(H[₂2]|O[₂2]|N[₂2]|C|CO[₂2]|H[₂2]O|NH[₃3]|CH[₄4]|C[₆6]H[₁₁12]O[₆6])\b/i.test(props.equation)
+    ))
+  );
+
+  if (isChemical) {
+    return <ChemicalStoichiometry {...props} />;
+  }
+
   // If the props imply basic arithmetic (addition, subtraction, multiplication, division),
   // we render BasicMathExplorer configured with the appropriate initial values.
   const isBasicMath = props && (

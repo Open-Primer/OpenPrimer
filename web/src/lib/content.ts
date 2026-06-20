@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { cleanPathSegment } from './translations';
+import { repairMediaOnRestitution } from './media-resolver';
 
 
 export function stripOuterCodeFences(content: string): string {
@@ -148,12 +149,13 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
 
 export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
   const sectionPatterns = [
-    { id: 'conclusion', regex: /^(##\s*(?:Conclusion|Synthèse|Discussion|Synthèse & Discussion|Synthèse &amp; Discussion|Summary & Conclusion)[^\n]*)/mi },
-    { id: 'et_apres', regex: /^(##\s*(?:Et Après|Et après\s*\??|What's Next\s*\??|What’s Next\s*\??|WhatsNext|Ouverture)[^\n]*)/mi },
-    { id: 'evaluation', regex: /^(##\s*(?:Évaluation|Evaluation|Évaluation Finale|Evaluation Finale|Summative Evaluation|Quiz)[^\n]*)/mi },
-    { id: 'glossaire', regex: /^(###\s*(?:Glossaire|Glossary|Lexique)[^\n]*)/mi },
-    { id: 'references', regex: /^(###\s*(?:Références|References|Réf\.|Réf|Bibliography)[^\n]*)/mi },
+    { id: 'conclusion', regex: /^(#{2,3}\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/mi },
+    { id: 'et_apres', regex: /^(#{2,3}\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??)[^\n]*)/mi },
+    { id: 'evaluation', regex: /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi },
+    { id: 'glossaire', regex: /^(#{2,3}\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*)/mi },
+    { id: 'references', regex: /^(#{2,3}\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/mi },
   ];
+
 
   const LOCALIZED_HEADINGS: Record<string, Record<string, string>> = {
     conclusion: {
@@ -665,8 +667,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
         const { data: meta } = matter(cleanedContent);
         
-        // Dynamic YouTube Link Repair
-        const repairedBody = await repairYouTubeVideos(cleanBody, lang);
+        // Dynamic Media Link Repair (YouTube, Audio, Images)
+        const repairedBody = await repairMediaOnRestitution(cleanBody, lang);
         if (repairedBody !== cleanBody) {
           const newDbContent = matter.stringify(repairedBody, meta || {});
           const { supabase: supabaseClient } = require('./supabase');
@@ -678,9 +680,9 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             .eq('lang', lang.toLowerCase())
             .then(({ error }: any) => {
               if (error) {
-                console.error("[YouTube Repair] Failed to update lesson in database:", error);
+                console.error("[Media Repair] Failed to update lesson in database:", error);
               } else {
-                console.log(`[YouTube Repair] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
+                console.log(`[Media Repair] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
               }
             });
         }
@@ -714,8 +716,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const { meta: manualMeta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
         const { data: meta } = matter(cleanedContent);
 
-        // Dynamic YouTube Link Repair for fallback lang
-        const repairedBody = await repairYouTubeVideos(cleanBody, fallbackLesson.lang || lang);
+        // Dynamic Media Link Repair (YouTube, Audio, Images) for fallback lang
+        const repairedBody = await repairMediaOnRestitution(cleanBody, fallbackLesson.lang || lang);
         if (repairedBody !== cleanBody) {
           const newDbContent = matter.stringify(repairedBody, meta || {});
           supabase
@@ -726,9 +728,9 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             .eq('lang', fallbackLesson.lang)
             .then(({ error }: any) => {
               if (error) {
-                console.error("[YouTube Repair Fallback] Failed to update database:", error);
+                console.error("[Media Repair Fallback] Failed to update database:", error);
               } else {
-                console.log(`[YouTube Repair Fallback] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
+                console.log(`[Media Repair Fallback] Successfully updated lesson in database for ${courseSlug}/${lessonSlug}`);
               }
             });
         }
@@ -2269,7 +2271,7 @@ function healPollinationsUrls(mdx: string): string {
   });
 }
 
-function decodeHtmlEncodedTags(mdx: string): string {
+export function decodeHtmlEncodedTags(mdx: string): string {
   let processed = mdx;
   // Convert &lt;/TagName or &lt;TagName to </TagName or <TagName
   processed = processed.replace(/&lt;\/([A-Za-z][A-Za-z0-9.-]*)/gi, '</$1');
@@ -2361,7 +2363,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         while (idx < mdx.length) {
           if (mdx[idx] === '"') {
             const rest = mdx.substring(idx + 1);
-            if (/^\s*[A-Za-z0-9_.-]+\s*=/.test(rest) || /^\s*\/>/.test(rest) || /^\s*>/.test(rest)) {
+            if (/^\s*(?:[A-Za-z0-9_.-]+\s+)*(?:[A-Za-z0-9_.-]+\s*=|\/>|>)/.test(rest)) {
               trueEndIdx = idx;
               break;
             }
@@ -2397,7 +2399,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         while (idx < mdx.length) {
           if (mdx[idx] === "'") {
             const rest = mdx.substring(idx + 1);
-            if (/^\s*[A-Za-z0-9_.-]+\s*=/.test(rest) || /^\s*\/>/.test(rest) || /^\s*>/.test(rest)) {
+            if (/^\s*(?:[A-Za-z0-9_.-]+\s+)*(?:[A-Za-z0-9_.-]+\s*=|\/>|>)/.test(rest)) {
               trueEndIdx = idx;
               break;
             }
@@ -2600,6 +2602,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Unified normalizations of components to heal any block forms or broken attributes before general self-closing processing
   processed = healFillInBlanksAttributes(processed);
   processed = normalizeQuestionAndQuizTags(processed);
+
   processed = normalizeComplexAttributeTags(processed);
 
   // Component-specific structural normalization/pre-processing (Run BEFORE escaping braces!)
@@ -2608,6 +2611,7 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = healInteractiveDiagram(processed);
   processed = healSingleQuestionQuiz(processed);
   processed = healQuestionTags(processed);
+
   processed = healWhatsNextCards(processed);
   processed = healPrerequisitesAndSummary(processed);
   processed = parseMarkdownObjectivesToJsx(processed);

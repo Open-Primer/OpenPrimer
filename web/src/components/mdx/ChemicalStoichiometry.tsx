@@ -65,21 +65,45 @@ const CHEM_PRESETS: ChemPreset[] = [
   }
 ];
 
-export const ChemicalStoichiometry = () => {
+export const ChemicalStoichiometry = ({ equation, reaction }: { equation?: string; reaction?: string }) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
 
-  const [chemIndex, setChemIndex] = useState(0);
+  const initialIndex = useMemo(() => {
+    const eq = (equation || reaction || '').toLowerCase();
+    if (!eq) return 0;
+    if (eq.includes('nh3') || eq.includes('nh₃') || eq.includes('n2') || eq.includes('n₂') || eq.includes('nitrogen') || eq.includes('azote') || eq.includes('haber')) {
+      return 2; // Haber Process
+    }
+    if (eq.includes('c6h12o6') || eq.includes('c₆h₁₂o₆') || eq.includes('photosynth') || eq.includes('glucose')) {
+      return 3; // Photosynthesis
+    }
+    if (eq.includes('ch4') || eq.includes('methane') || eq.includes('combustion')) {
+      return 1; // Methane Combustion
+    }
+    if (eq.includes('h2o') || eq.includes('h₂o') || eq.includes('water') || eq.includes('eau')) {
+      return 0; // Water Synthesis
+    }
+    return 0;
+  }, [equation, reaction]);
+
+  const [chemIndex, setChemIndex] = useState(initialIndex);
   const currentChem = CHEM_PRESETS[chemIndex];
   
   const leftCount = currentChem.left.length;
   const rightCount = currentChem.right.length;
 
   const [coefficients, setCoefficients] = useState<number[]>(() => 
-    Array(CHEM_PRESETS[0].left.length + CHEM_PRESETS[0].right.length).fill(1)
+    Array(CHEM_PRESETS[initialIndex].left.length + CHEM_PRESETS[initialIndex].right.length).fill(1)
   );
 
   const [chemSuccess, setChemSuccess] = useState(false);
+
+  React.useEffect(() => {
+    setChemIndex(initialIndex);
+    setCoefficients(Array(CHEM_PRESETS[initialIndex].left.length + CHEM_PRESETS[initialIndex].right.length).fill(1));
+    setChemSuccess(false);
+  }, [initialIndex]);
 
   const handleReactionChange = (idx: number) => {
     setChemIndex(idx);

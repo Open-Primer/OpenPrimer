@@ -696,3 +696,348 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
   return updatedContent;
 }
+
+export async function validateMediaUrl(url: string): Promise<boolean> {
+  if (!url || url.includes('example.com') || url.includes('placeholder') || url.startsWith('placeholder')) {
+    return false;
+  }
+  // Local/public assets
+  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//')) {
+    try {
+      const localPath = path.join(process.cwd(), 'public', url.startsWith('/') ? url : `/${url}`);
+      return fs.existsSync(localPath);
+    } catch {
+      return false;
+    }
+  }
+  try {
+    const res = await fetchWithTimeout(url, { method: 'HEAD' }, 2000);
+    if (res.status === 404) {
+      return false;
+    }
+    return true;
+  } catch (err) {
+    // Timeout/network issue: assume true to avoid false positive overrides
+    return true;
+  }
+}
+
+export async function searchWikimediaCommonsImage(query: string): Promise<string | null> {
+  try {
+    const cleanQuery = query.trim();
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    const res = await fetchWithTimeout(url, {}, 4000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'Wikimedia image search');
+    const pages = json.query?.pages;
+    if (!pages) return null;
+    
+    for (const key of Object.keys(pages)) {
+      const imgInfo = pages[key]?.imageinfo?.[0];
+      const fileUrl = imgInfo?.url;
+      if (fileUrl && (
+        fileUrl.endsWith('.jpg') || 
+        fileUrl.endsWith('.jpeg') || 
+        fileUrl.endsWith('.png') || 
+        fileUrl.endsWith('.svg') || 
+        fileUrl.endsWith('.webp')
+      )) {
+        return fileUrl;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] Wikimedia image search failed for "${query}":`, err);
+    return null;
+  }
+}
+
+/**
+ * Validates and repairs all media links (videos, audios, images) on the fly during course page rendering.
+ * Performs checking with HEAD requests up to MAX_CHECKS and repairs up to MAX_REPAIRS.
+ */
+export async function repairMediaOnRestitution(mdxContent: string, targetLang: string = 'fr'): Promise<string> {
+  let updatedContent = mdxContent;
+  let checkCount = 0;
+  let repairCount = 0;
+  const MAX_CHECKS = 6;
+  const MAX_REPAIRS = 3;
+
+  const targetLangLower = targetLang.toLowerCase();
+
+  // 1. Validate & Repair YouTube Videos
+  const videoRegex = /<Video\s+([^>]*?)\/>/g;
+  let videoMatch;
+  const videosToProcess: { fullTag: string; attrsStr: string }[] = [];
+  while ((videoMatch = videoRegex.exec(mdxContent)) !== null) {
+    videosToProcess.push({ fullTag: videoMatch[0], attrsStr: videoMatch[1] });
+  }
+
+  for (const { fullTag, attrsStr } of videosToProcess) {
+    if (checkCount >= MAX_CHECKS || repairCount >= MAX_REPAIRS) break;
+
+    const titleMatch = attrsStr.match(/title="([^"]+)"/);
+    const urlMatch = attrsStr.match(/url="([^"]+)"/);
+    const idMatch = attrsStr.match(/id="([^"]+)"/);
+    
+    const title = titleMatch ? titleMatch[1] : '';
+    const originalUrl = urlMatch ? urlMatch[1] : '';
+    const originalId = idMatch ? idMatch[1] : '';
+    
+    const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder');
+    const hasDummyId = !originalId || originalId.startsWith('placeholder') || originalId.length !== 11;
+    
+    let needsResolution = hasDummyUrl || hasDummyId;
+    if (!needsResolution && originalId) {
+      checkCount++;
+      const exists = await validateYouTubeVideo(originalId);
+      if (!exists) {
+        console.log(`[RESTITUTION-REPAIR] YouTube video ID ${originalId} is invalid/404. Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+
+    if (needsResolution && title) {
+      repairCount++;
+      const searchQuery = `${title} cours education ${targetLangLower === 'fr' ? 'français' : 'english'}`;
+      const realId = await searchYouTubeVideo(searchQuery);
+      
+      if (realId) {
+        const newUrl = `https://www.youtube.com/watch?v=${realId}`;
+        let updatedAttrs = attrsStr;
+        if (attrsStr.includes('id=')) {
+          updatedAttrs = updatedAttrs.replace(/id="[^"]*"/, `id="${realId}"`);
+        } else {
+          updatedAttrs += ` id="${realId}"`;
+        }
+        if (attrsStr.includes('url=')) {
+          updatedAttrs = updatedAttrs.replace(/url="[^"]*"/, `url="${newUrl}"`);
+        } else {
+          updatedAttrs += ` url="${newUrl}"`;
+        }
+        
+        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
+        console.log(`[RESTITUTION-REPAIR] Successfully repaired video "${title}" to ID: ${realId}`);
+      } else {
+        console.log(`[RESTITUTION-REPAIR] Could not resolve alternative video for "${title}". Removing broken <Video> tag.`);
+        updatedContent = updatedContent.replace(fullTag, '');
+      }
+    }
+  }
+
+  // 2. Validate & Repair Audio Players
+  const audioRegex = /<(AudioPlayer|Audio)\s+([^>]*?)\/>/g;
+  let audioMatch;
+  const audiosToProcess: { fullTag: string; tagName: string; attrsStr: string }[] = [];
+  while ((audioMatch = audioRegex.exec(mdxContent)) !== null) {
+    audiosToProcess.push({ fullTag: audioMatch[0], tagName: audioMatch[1], attrsStr: audioMatch[2] });
+  }
+
+  for (const { fullTag, tagName, attrsStr } of audiosToProcess) {
+    if (checkCount >= MAX_CHECKS || repairCount >= MAX_REPAIRS) break;
+
+    const titleMatch = attrsStr.match(/title="([^"]+)"/);
+    const urlMatch = attrsStr.match(/url="([^"]+)"/);
+    const textMatch = attrsStr.match(/text="([^"]+)"/);
+    const durationMatch = attrsStr.match(/duration="([^"]+)"/);
+
+    const title = titleMatch ? titleMatch[1] : 'Audio Track';
+    const originalUrl = urlMatch ? urlMatch[1] : '';
+    const customText = textMatch ? textMatch[1] : '';
+    const durationHint = durationMatch ? durationMatch[1] : '30s';
+
+    const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder') || originalUrl === '';
+
+    let needsResolution = hasDummyUrl;
+    if (!needsResolution && originalUrl) {
+      checkCount++;
+      const exists = await validateMediaUrl(originalUrl);
+      if (!exists) {
+        console.log(`[RESTITUTION-REPAIR] Audio URL ${originalUrl} is broken (404). Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+
+    if (needsResolution) {
+      repairCount++;
+      console.log(`[RESTITUTION-REPAIR] Resolving audio track for: "${title}"`);
+      
+      let resolvedUrl = await fetchWikimediaAudio(title);
+      let audioBuffer: Buffer | null = null;
+      let mimeType = 'audio/mpeg';
+
+      if (resolvedUrl) {
+        try {
+          const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
+          if (dlRes.ok) {
+            audioBuffer = Buffer.from(await dlRes.arrayBuffer());
+            const contentType = dlRes.headers.get('content-type') || '';
+            if (contentType.includes('ogg') || resolvedUrl.endsWith('.ogg')) mimeType = 'audio/ogg';
+            else if (contentType.includes('wav') || resolvedUrl.endsWith('.wav')) mimeType = 'audio/wav';
+            else if (contentType.includes('audio/ogg') || resolvedUrl.endsWith('.oga')) mimeType = 'audio/ogg';
+          }
+        } catch (err) {
+          console.warn(`[RESTITUTION-REPAIR] Failed to download audio from ${resolvedUrl}:`, err);
+        }
+      }
+
+      if (!audioBuffer) {
+        const lyriaPrompt = buildLyriaPrompt(title);
+        audioBuffer = await generateLyriaAudio(lyriaPrompt, durationHint);
+        if (audioBuffer) mimeType = 'audio/mpeg';
+      }
+
+      if (!audioBuffer && (customText || title)) {
+        audioBuffer = await synthesizeSpeech(customText || title, targetLangLower);
+        mimeType = 'audio/mpeg';
+      }
+
+      if (audioBuffer) {
+        const hash = crypto.createHash('md5').update(customText || title).digest('hex');
+        const ext = mimeType.split('/')[1] || 'mp3';
+        const fileName = `audio_${hash}.${ext}`;
+        const publicUrl = await uploadToSupabaseStorage(fileName, audioBuffer, mimeType);
+        
+        if (publicUrl) {
+          let updatedAttrs = attrsStr;
+          if (attrsStr.includes('url=')) {
+            updatedAttrs = updatedAttrs.replace(/url="[^"]*"/, `url="${publicUrl}"`);
+          } else {
+            updatedAttrs += ` url="${publicUrl}"`;
+          }
+          updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}/>`);
+          console.log(`[RESTITUTION-REPAIR] Successfully repaired audio to: ${publicUrl}`);
+        }
+      }
+    }
+  }
+
+  // 3. Validate & Repair Markdown Images
+  const mdImgRegex = /!\[(.*?)\]\((.*?)\)/g;
+  let mdMatch;
+  const mdImagesToProcess: { fullMatch: string; altText: string; originalUrl: string }[] = [];
+  while ((mdMatch = mdImgRegex.exec(mdxContent)) !== null) {
+    mdImagesToProcess.push({ fullMatch: mdMatch[0], altText: mdMatch[1], originalUrl: mdMatch[2] });
+  }
+
+  for (const { fullMatch, altText, originalUrl } of mdImagesToProcess) {
+    if (checkCount >= MAX_CHECKS || repairCount >= MAX_REPAIRS) break;
+
+    const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder') || originalUrl === '';
+
+    let needsResolution = hasDummyUrl;
+    if (!needsResolution && originalUrl) {
+      checkCount++;
+      const exists = await validateMediaUrl(originalUrl);
+      if (!exists) {
+        console.log(`[RESTITUTION-REPAIR] Markdown image ${originalUrl} is broken (404). Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+
+    if (needsResolution) {
+      repairCount++;
+      console.log(`[RESTITUTION-REPAIR] Repairing markdown image: "${altText}"`);
+      const queryName = altText.trim().replace(/_/g, ' ');
+      
+      let sourceUrl = await fetchWikipediaImage(queryName, targetLangLower);
+      if (!sourceUrl && queryName) {
+        sourceUrl = await searchWikimediaCommonsImage(queryName);
+      }
+
+      if (sourceUrl) {
+        try {
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
+          if (imageRes.ok) {
+            const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+            const buffer = Buffer.from(await imageRes.arrayBuffer());
+            const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+            const ext = contentType.split('/')[1] || 'jpg';
+            const fileName = `img_${hash}.${ext}`;
+            
+            const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+            if (publicUrl) {
+              updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
+              console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
+            }
+          }
+        } catch (err) {
+          console.warn(`[RESTITUTION-REPAIR] Failed to repair markdown image from ${sourceUrl}:`, err);
+        }
+      }
+    }
+  }
+
+  // 4. Validate & Repair CustomFigures
+  const figRegex = /<CustomFigure\s+([^>]*?)\/>/g;
+  let figMatch;
+  const figuresToProcess: { fullTag: string; attrsStr: string }[] = [];
+  while ((figMatch = figRegex.exec(mdxContent)) !== null) {
+    figuresToProcess.push({ fullTag: figMatch[0], attrsStr: figMatch[1] });
+  }
+
+  for (const { fullTag, attrsStr } of figuresToProcess) {
+    if (checkCount >= MAX_CHECKS || repairCount >= MAX_REPAIRS) break;
+
+    const srcMatch = attrsStr.match(/src="([^"]+)"/);
+    const altMatch = attrsStr.match(/alt="([^"]+)"/);
+    const captionMatch = attrsStr.match(/caption="([^"]+)"/);
+
+    const originalSrc = srcMatch ? srcMatch[1] : '';
+    const altText = altMatch ? altMatch[1] : '';
+    const caption = captionMatch ? captionMatch[1] : '';
+
+    const hasDummyUrl = !originalSrc || originalSrc.includes('example.com') || originalSrc.includes('placeholder') || originalSrc === '';
+
+    let needsResolution = hasDummyUrl;
+    if (!needsResolution && originalSrc) {
+      checkCount++;
+      const exists = await validateMediaUrl(originalSrc);
+      if (!exists) {
+        console.log(`[RESTITUTION-REPAIR] CustomFigure source ${originalSrc} is broken (404). Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+
+    if (needsResolution) {
+      repairCount++;
+      console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${altText || caption}"`);
+      const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
+      
+      let sourceUrl = await fetchWikipediaImage(queryName, targetLangLower);
+      if (!sourceUrl && queryName) {
+        sourceUrl = await searchWikimediaCommonsImage(queryName);
+      }
+
+      if (sourceUrl) {
+        try {
+          const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
+          if (imageRes.ok) {
+            const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+            const buffer = Buffer.from(await imageRes.arrayBuffer());
+            const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+            const ext = contentType.split('/')[1] || 'jpg';
+            const fileName = `img_${hash}.${ext}`;
+            
+            const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+            if (publicUrl) {
+              let updatedAttrs = attrsStr;
+              if (attrsStr.includes('src=')) {
+                updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
+              } else {
+                updatedAttrs += ` src="${publicUrl}"`;
+              }
+              updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+              console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
+            }
+          }
+        } catch (err) {
+          console.warn(`[RESTITUTION-REPAIR] Failed to repair CustomFigure image from ${sourceUrl}:`, err);
+        }
+      }
+    }
+  }
+
+  return updatedContent;
+}
+
