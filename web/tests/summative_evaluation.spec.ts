@@ -17,7 +17,7 @@ test.describe('Summative Evaluation Gating and Warnings', () => {
   });
 
   test('should display the single-attempt warning checklist on the start screen for a summative quiz/essay', async ({ page }) => {
-    await page.goto(`${BASE_URL}/fr/l1/histoire_de_l_art/apprendre-a-voir-analyse-oeuvre`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/fr/l1/histoire_de_l_art/apprendre-a-voir-analyse-oeuvre`);
 
     const evaluationHeading = page.locator('h3:has-text("Évaluation sommative")');
     await expect(evaluationHeading).toBeVisible();
@@ -31,7 +31,7 @@ test.describe('Summative Evaluation Gating and Warnings', () => {
   });
 
   test('start screen shows evaluation mode info card with format, time, and retry policy', async ({ page }) => {
-    await page.goto(`${BASE_URL}/fr/l1/histoire_de_l_art/apprendre-a-voir-analyse-oeuvre`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/fr/l1/histoire_de_l_art/apprendre-a-voir-analyse-oeuvre`);
 
     // The mode info card should show evaluation format label
     const modeLabel = page.locator("text=Format de l'évaluation");
@@ -56,7 +56,7 @@ test.describe('Summative Evaluation Gating and Warnings', () => {
       });
     });
 
-    await page.goto(`${BASE_URL}/fr/l1/histoire_de_l_art/apprendre-a-voir-analyse-oeuvre`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/secondary_2/Histoire/Revolution_francaise/directoire-consulat-nouvel-ordre`);
 
     // Click Start
     const startButton = page.locator("button:has-text(\"Démarrer\")").first();

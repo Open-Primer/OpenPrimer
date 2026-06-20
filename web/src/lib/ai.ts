@@ -435,7 +435,7 @@ function getCitationStyle(discipline: string): CitationStyleSpec {
 }
 
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
-  const correctedCourseName = await correctCourseTitle(courseName, targetLang);
+  const correctedCourseName = await correctCourseTitle(courseName, targetLang, false);
   console.log(`[TITLE CORRECTION] Corrected course title from "${courseName}" to "${correctedCourseName}"`);
 
   const normalizeLevel = (lvl: string): string => {

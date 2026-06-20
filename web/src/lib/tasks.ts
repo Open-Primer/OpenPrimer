@@ -280,7 +280,7 @@ CRITICAL RULES:
 
     } else {
       // === Course Content Generation Task ===
-      const correctedName = await correctCourseTitle(nextTask.name, targetLang);
+      const correctedName = await correctCourseTitle(nextTask.name, targetLang, false);
       if (correctedName !== nextTask.name) {
         logs.push(`[GENERATOR] Corrected course title from "${nextTask.name}" to "${correctedName}". Updating task in queue.`);
         try {
