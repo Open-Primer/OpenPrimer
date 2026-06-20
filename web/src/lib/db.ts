@@ -3118,6 +3118,29 @@ export const progressService = {
     return { completed: false, passed: false };
   },
 
+  getCapPercentage: (slug: string, rawPercent: number): number => {
+    if (rawPercent < 100) return rawPercent;
+    if (typeof window === 'undefined') return rawPercent;
+    
+    const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+    const coursePaths: string[] = [];
+    for (const path in lessonProgress) {
+      if (lessonProgress[path] && lessonProgress[path].slug === slug) {
+        coursePaths.push(path);
+      }
+    }
+    if (coursePaths.length === 0) return rawPercent;
+    
+    coursePaths.sort();
+    const finalPage = coursePaths[coursePaths.length - 1];
+    
+    const evalStatus = progressService.checkFinalEvaluationStatus(slug, finalPage);
+    if (!evalStatus.completed || !evalStatus.passed) {
+      return 99;
+    }
+    return 100;
+  },
+
   // Page visits
   recordPageVisit: (path: string, slug: string) => {
     if (typeof window === 'undefined') return;
@@ -3170,6 +3193,8 @@ export const progressService = {
       const userId = profile.id;
       if (!userId) return;
 
+      const cappedPercentage = progressService.getCapPercentage(slug, percentage);
+
       const { data } = await supabase
         .from('profiles')
         .select('last_visited_page')
@@ -3179,7 +3204,7 @@ export const progressService = {
       const currentLoc = data?.last_visited_page || {};
       currentLoc[slug] = {
         scrollTop,
-        percentage,
+        percentage: cappedPercentage,
         path,
         updatedAt: new Date().toISOString()
       };
@@ -3189,7 +3214,7 @@ export const progressService = {
         .update({ last_visited_page: currentLoc })
         .eq('id', userId);
         
-      console.log(`Successfully synced location in Supabase for ${slug}: scroll ${scrollTop}, progress ${percentage}%`);
+      console.log(`Successfully synced location in Supabase for ${slug}: scroll ${scrollTop}, progress ${cappedPercentage}%`);
 
       // ALSO sync the centralized progress table!
       if (userId !== 'u1') {
@@ -3222,14 +3247,14 @@ export const progressService = {
             .upsert({
               user_id: userId,
               course_id: courseId,
-              progress: percentage,
+              progress: cappedPercentage,
               lesson_progress: courseLessonProgress,
               quiz_results: courseQuizResults,
               total_minutes: totalMinutes,
               last_visited: new Date().toISOString()
             }, { onConflict: 'user_id,course_id' });
             
-          console.log(`Successfully synced progress table in Supabase for ${slug}: ${percentage}%`);
+          console.log(`Successfully synced progress table in Supabase for ${slug}: ${cappedPercentage}%`);
         }
       }
     } catch (err) {
@@ -3256,7 +3281,8 @@ export const progressService = {
 
       // Get progress percent from local storage
       const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}');
-      const percentage = progressMap[slug] ?? progressMap[courseId.toString()] ?? 0;
+      const rawPercentage = progressMap[slug] ?? progressMap[courseId.toString()] ?? 0;
+      const cappedPercentage = progressService.getCapPercentage(slug, rawPercentage);
 
       // Get course-specific lesson progress
       const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
@@ -3283,14 +3309,14 @@ export const progressService = {
         .upsert({
           user_id: userId,
           course_id: courseId,
-          progress: percentage,
+          progress: cappedPercentage,
           lesson_progress: courseLessonProgress,
           quiz_results: courseQuizResults,
           total_minutes: totalMinutes,
           last_visited: new Date().toISOString()
         }, { onConflict: 'user_id,course_id' });
         
-      console.log(`Successfully synced progress table in Supabase for ${slug}: ${percentage}%`);
+      console.log(`Successfully synced progress table in Supabase for ${slug}: ${cappedPercentage}%`);
     } catch (err) {
       console.error("Error in syncCourseProgressToDb:", err);
     }

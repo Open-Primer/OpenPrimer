@@ -2227,6 +2227,61 @@ function normalizeQuestionAndQuizTags(mdx: string): string {
     return `${tagBody.substring(0, tagBody.length - attrsPart.length)}${replacedAttrs}${tagEnd}`;
   });
 }
+function extractBracedAttribute(attrs: string, attrName: string): { fullMatch: string; insideBraces: string } | null {
+  const regex = new RegExp(`\\b${attrName}=\\{\\s*`, 'i');
+  const match = attrs.match(regex);
+  if (!match) return null;
+
+  const startIdx = match.index!;
+  const openBraceIdx = startIdx + match[0].indexOf('{');
+  
+  let braceDepth = 0;
+  let inString: '"' | "'" | '`' | null = null;
+  let isEscaped = false;
+  let endIdx = -1;
+
+  for (let i = openBraceIdx; i < attrs.length; i++) {
+    const char = attrs[i];
+    
+    if (isEscaped) {
+      isEscaped = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      isEscaped = true;
+      continue;
+    }
+
+    if (inString) {
+      if (char === inString) {
+        inString = null;
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      inString = char;
+      continue;
+    }
+
+    if (char === '{') {
+      braceDepth++;
+    } else if (char === '}') {
+      braceDepth--;
+      if (braceDepth === 0) {
+        endIdx = i;
+        break;
+      }
+    }
+  }
+
+  if (endIdx === -1) return null;
+
+  const fullMatch = attrs.substring(startIdx, endIdx + 1);
+  const insideBraces = attrs.substring(openBraceIdx + 1, endIdx);
+  return { fullMatch, insideBraces };
+}
 
 function normalizeComplexAttributeTags(mdx: string): string {
   // Matches any Prerequisites, InteractiveDiagram, DataChart, or Summary tag
@@ -2235,58 +2290,56 @@ function normalizeComplexAttributeTags(mdx: string): string {
     const tagName = tagBody.match(/^<([A-Za-z]+)/)?.[1] || '';
 
     if (tagName === 'Prerequisites') {
-      replacedAttrs = replacedAttrs.replace(/\bitems=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+      const res = extractBracedAttribute(replacedAttrs, 'items');
+      if (res) {
         try {
-          const arrStr = `[${arrayContent}]`;
-          const parsed = parseJsonLikeArray(arrStr);
+          const parsed = parseJsonLikeArray(res.insideBraces.trim());
           const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-          return `itemsBase64="${base64}"`;
+          replacedAttrs = replacedAttrs.replace(res.fullMatch, `itemsBase64="${base64}"`);
         } catch (e) {
           console.error("Failed to parse Prerequisites items in tag helper:", e);
-          return m;
         }
-      });
+      }
     }
 
     if (tagName === 'InteractiveDiagram') {
-      replacedAttrs = replacedAttrs.replace(/\bhotspots=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+      const res = extractBracedAttribute(replacedAttrs, 'hotspots');
+      if (res) {
         try {
-          const arrStr = `[${arrayContent}]`;
-          const parsed = parseJsonLikeArray(arrStr);
+          const parsed = parseJsonLikeArray(res.insideBraces.trim());
           const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-          return `hotspotsBase64="${base64}"`;
+          replacedAttrs = replacedAttrs.replace(res.fullMatch, `hotspotsBase64="${base64}"`);
         } catch (e) {
           console.error("Failed to parse InteractiveDiagram hotspots in tag helper:", e);
-          return m;
         }
-      });
+      }
     }
 
     if (tagName === 'DataChart') {
-      replacedAttrs = replacedAttrs.replace(/\bdata=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+      const res = extractBracedAttribute(replacedAttrs, 'data');
+      if (res) {
         try {
-          const arrStr = `[${arrayContent}]`;
-          const parsed = parseJsonLikeArray(arrStr);
+          const parsed = parseJsonLikeArray(res.insideBraces.trim());
           const base64 = Buffer.from(JSON.stringify(parsed)).toString('base64');
-          return `dataBase64="${base64}"`;
+          replacedAttrs = replacedAttrs.replace(res.fullMatch, `dataBase64="${base64}"`);
         } catch (e) {
           console.error("Failed to parse DataChart data in tag helper:", e);
-          return m;
         }
-      });
+      }
     }
 
     if (tagName === 'Summary') {
-      replacedAttrs = replacedAttrs.replace(/\bitems=\{\s*\[([\s\S]*?)\]\s*\}/gi, (m: string, arrayContent: string) => {
+      const res = extractBracedAttribute(replacedAttrs, 'items');
+      if (res) {
         try {
-          const arrStr = `[${arrayContent}]`;
-          const parsedArray = parseJsonLikeArray(arrStr);
-          return `itemsString="${parsedArray.join('|||')}"`;
+          const parsedArray = parseJsonLikeArray(res.insideBraces.trim());
+          replacedAttrs = replacedAttrs.replace(res.fullMatch, `itemsString="${parsedArray.join('|||')}"`);
         } catch (e) {
-          const items = arrayContent.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
-          return `itemsString="${items.join('|||')}"`;
+          // Fallback
+          const items = res.insideBraces.replace(/^\s*\[|\]\s*$/g, '').split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+          replacedAttrs = replacedAttrs.replace(res.fullMatch, `itemsString="${items.join('|||')}"`);
         }
-      });
+      }
     }
 
     return `${tagBody.substring(0, tagBody.length - attrsPart.length)}${replacedAttrs}${tagEnd}`;
@@ -2461,6 +2514,8 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   // Fix HTML entities for curly braces only inside specific attributes of components to prevent MDX expression parsing errors
   processed = processed.replace(/(options|items)=\{\s*([\s\S]*?)(?:}|&#125;)/gi, '$1={$2}');
   processed = processed.replace(/(correctIndex|durationLimit|duration)=(?:\{|&#123;)\s*(\d+)\s*(?:}|&#125;)/gi, '$1={$2}');
+  // Generic fix for any component attributes with HTML-encoded braces (e.g. tolerance=&#123;0&#125;)
+  processed = processed.replace(/\b(\w+)=(?:\{|&#123;)\s*([^{}]*?)\s*(?:\}|&#125;)/gi, '$1={$2}');
 
   // Fix non-self-closing img tags
   processed = processed.replace(/<img([^>]*?)(?<!\/)>/gi, '<img$1 />');

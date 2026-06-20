@@ -113,6 +113,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
   const answerRef = useRef(answer);
   const submissionTypeRef = useRef(submissionType);
   const fileAttachmentRef = useRef(fileAttachment);
+  const isTimeUpRef = useRef(isTimeUp);
+  const isRecordingRef = useRef(isRecording);
 
   useEffect(() => {
     answerRef.current = answer;
@@ -125,6 +127,14 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
   useEffect(() => {
     fileAttachmentRef.current = fileAttachment;
   }, [fileAttachment]);
+
+  useEffect(() => {
+    isTimeUpRef.current = isTimeUp;
+  }, [isTimeUp]);
+
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
 
   // Auth and completion state loading
   useEffect(() => {
@@ -163,7 +173,19 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
 
     // Retrieve previous local grade if exists
     const key = `op_essay_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
-    const saved = localStorage.getItem(key);
+    let saved = localStorage.getItem(key);
+    if (!saved) {
+      const quizzes = JSON.parse(localStorage.getItem('op_quiz_results') || '{}');
+      if (quizzes[pathname] && quizzes[pathname].essayGrade) {
+        saved = JSON.stringify({
+          answer: quizzes[pathname].answer || '',
+          grade: quizzes[pathname].essayGrade,
+          feedback: quizzes[pathname].feedback || '',
+          submissionType: quizzes[pathname].submissionType || 'text',
+          fileAttachment: quizzes[pathname].fileAttachment || null
+        });
+      }
+    }
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -200,12 +222,21 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           if (prev <= 1) {
             clearInterval(timerRef.current!);
             setIsTimeUp(true);
-            // Trigger auto-submit on timeout if they have written or attached something
-            if (answerRef.current.trim().length >= 10 || fileAttachmentRef.current) {
-              handleAutoSubmit();
-            } else {
-              setError(language === 'FR' ? "Temps écoulé ! Votre devoir est vide ou trop court." : "Time's up! Your response is empty or too short.");
-              setIsReadOnly(true);
+            
+            // If recording, stop it; the mediaRecorder.onstop handler will trigger handleAutoSubmit() asynchronously
+            if (isRecordingRef.current && mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+              mediaRecorderRef.current.stop();
+              if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+              setIsRecording(false);
+            }
+
+            if (!isRecordingRef.current) {
+              if (answerRef.current.trim().length >= 10 || fileAttachmentRef.current) {
+                handleAutoSubmit();
+              } else {
+                setError(language === 'FR' ? "Temps écoulé ! Votre devoir est vide ou trop court." : "Time's up! Your response is empty or too short.");
+                setIsReadOnly(true);
+              }
             }
             return 0;
           }
@@ -227,6 +258,80 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     }
   };
 
+  const startRecording = async () => {
+    try {
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+
+        // Convert blob to base64 for fileAttachment
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Data = reader.result as string;
+          const attachment = {
+            name: `oral-evaluation-${Date.now()}.webm`,
+            type: 'audio/webm',
+            size: audioBlob.size,
+            base64: base64Data
+          };
+          setFileAttachment(attachment);
+          fileAttachmentRef.current = attachment;
+
+          if (isTimeUpRef.current) {
+            handleAutoSubmit();
+          }
+        };
+        reader.readAsDataURL(audioBlob);
+
+        // Stop all audio tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+
+      // Start recording timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds((prev) => {
+          // Timed Oral response: limit to e.g. 120 seconds
+          if (prev >= 120) {
+            stopRecording();
+            return 120;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
+    } catch (err) {
+      console.error("Failed to start audio recording:", err);
+      setError(language === 'FR' ? "Impossible d'accéder au microphone. Veuillez autoriser l'accès." : "Unable to access microphone. Please grant permission.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+    }
+    setIsRecording(false);
+  };
+
   const handleAutoSubmit = async () => {
     setError(null);
     setIsLoading(true);
@@ -240,8 +345,14 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         },
         body: JSON.stringify({
           prompt,
-          answer: submissionTypeRef.current === 'file' ? (answerRef.current || `Fichier déposé : ${fileAttachmentRef.current?.name}`) : answerRef.current,
-          fileAttachment: submissionTypeRef.current === 'file' ? (fileAttachmentRef.current || undefined) : undefined,
+          answer: submissionTypeRef.current === 'file' 
+            ? (answerRef.current || `Fichier déposé : ${fileAttachmentRef.current?.name}`) 
+            : submissionTypeRef.current === 'audio'
+            ? (answerRef.current || `Enregistrement oral : ${fileAttachmentRef.current?.name}`)
+            : answerRef.current,
+          fileAttachment: (submissionTypeRef.current === 'file' || submissionTypeRef.current === 'audio') 
+            ? (fileAttachmentRef.current || undefined) 
+            : undefined,
           gradingSystem,
           subject,
           level,
@@ -260,7 +371,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         throw new Error(data.error);
       }
     } catch {
-      setIsReadOnly(false);
+      if (!isTimeUpRef.current) {
+        setIsReadOnly(false);
+      }
       setError(language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez cliquer sur Soumettre pour réessayer." : "AI Tutor evaluation failed. Please click Submit to retry.");
     } finally {
       setIsLoading(false);
@@ -295,8 +408,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     quizzes[pathname] = { 
       slug: courseSlug, 
       essayGrade: finalGrade, 
+      feedback: finalFeedback,
       gradingSystem,
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      answer: finalAnswer,
+      submissionType: submissionTypeRef.current,
+      fileAttachment: fileAttachmentRef.current
     };
     localStorage.setItem('op_quiz_results', JSON.stringify(quizzes));
 
@@ -325,6 +442,16 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
       return;
     }
 
+    if (submissionType === 'audio' && !fileAttachment) {
+      let msg = 'Please record your oral response.';
+      if (language === 'FR') msg = 'Veuillez enregistrer votre réponse orale.';
+      else if (language === 'ES') msg = 'Por favor, grabe su réponse orale.';
+      else if (language === 'DE') msg = 'Bitte nehmen Sie Ihre mündliche Antwort auf.';
+      else if (language === 'ZH') msg = '请录制您的口头回答。';
+      setError(msg);
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
 
@@ -336,8 +463,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         },
         body: JSON.stringify({
           prompt,
-          answer: submissionType === 'file' ? (answer || `Fichier déposé : ${fileAttachment?.name}`) : answer,
-          fileAttachment: submissionType === 'file' ? fileAttachment : undefined,
+          answer: submissionType === 'file' 
+            ? (answer || `Fichier déposé : ${fileAttachment?.name}`) 
+            : submissionType === 'audio'
+            ? (answer || `Enregistrement oral : ${fileAttachment?.name}`)
+            : answer,
+          fileAttachment: (submissionType === 'file' || submissionType === 'audio') ? fileAttachment : undefined,
           gradingSystem,
           subject,
           level,
@@ -360,7 +491,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
       }
     } catch (err: any) {
       setError(err.message || (language === 'FR' ? "L'évaluation par le tuteur IA a échoué. Veuillez réessayer." : "AI Tutor evaluation failed. Please try again."));
-      setIsReadOnly(false);
+      if (!isTimeUpRef.current) {
+        setIsReadOnly(false);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -384,6 +517,9 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
     setSubmissionType('text');
     setFileAttachment(null);
     setFilePreview(null);
+    setAudioUrl(null);
+    setIsRecording(false);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     setResetKey((prev) => prev + 1);
   };
 
@@ -519,8 +655,8 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
 
       <div className="space-y-4">
       {/* Tab controls */}
-      {!isReadOnly && (
-        <div className="flex gap-2 p-1 bg-slate-950 border border-slate-800 rounded-2xl mb-4 max-w-xs">
+      {!isReadOnly && !isTimeUp && (
+        <div className="flex gap-2 p-1 bg-slate-950 border border-slate-800 rounded-2xl mb-4 max-w-md">
           <button
             onClick={() => setSubmissionType('text')}
             type="button"
@@ -545,6 +681,18 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           >
             {language === 'FR' ? '📁 Déposer' : language === 'ES' ? '📁 Subir' : language === 'DE' ? '📁 Hochladen' : language === 'ZH' ? '📁 上传' : '📁 Upload'}
           </button>
+          <button
+            onClick={() => setSubmissionType('audio')}
+            type="button"
+            className={cn(
+              "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+              submissionType === 'audio'
+                ? "bg-violet-600 text-white shadow-md shadow-violet-600/10"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            {language === 'FR' ? '🎙️ Oral' : language === 'ES' ? '🎙️ Oral' : language === 'DE' ? '🎙️ Mündlich' : language === 'ZH' ? '🎙️ 口试' : '🎙️ Oral'}
+          </button>
         </div>
       )}
 
@@ -554,7 +702,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            disabled={isLoading || isReadOnly}
+            disabled={isLoading || isReadOnly || isTimeUp}
             placeholder={t.placeholder}
             className="w-full h-44 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-2xl p-4 text-slate-100 text-sm resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
           />
@@ -567,8 +715,14 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
+                if (isLoading || isReadOnly || isTimeUp) return;
                 const file = e.dataTransfer.files?.[0];
                 if (!file) return;
+                if (file.size > 10 * 1024 * 1024) {
+                  setError(language === 'FR' ? "Le fichier dépasse la limite autorisée de 10 Mo." : "File exceeds the maximum size limit of 10MB.");
+                  return;
+                }
+                setError(null);
                 const reader = new FileReader();
                 reader.onloadend = () => {
                   setFileAttachment({
@@ -592,6 +746,11 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  if (file.size > 10 * 1024 * 1024) {
+                    setError(language === 'FR' ? "Le fichier dépasse la limite autorisée de 10 Mo." : "File exceeds the maximum size limit of 10MB.");
+                    return;
+                  }
+                  setError(null);
                   const reader = new FileReader();
                   reader.onloadend = () => {
                     setFileAttachment({
@@ -608,7 +767,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
                   };
                   reader.readAsDataURL(file);
                 }}
-                disabled={isLoading || isReadOnly}
+                disabled={isLoading || isReadOnly || isTimeUp}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
               
@@ -648,7 +807,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
               <textarea
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                disabled={isLoading || isReadOnly}
+                disabled={isLoading || isReadOnly || isTimeUp}
                 placeholder={language === 'FR' ? "Décrivez brièvement votre schéma, dessin ou document pour aider le tuteur IA à l'évaluer..." : "Briefly describe your diagram, drawing, or document to help the AI tutor evaluate it..."}
                 className="w-full h-20 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-2xl p-4 text-slate-100 text-xs resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
               />
@@ -686,6 +845,125 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
             )}
           </div>
         )}
+
+        {/* AUDIO SUBMISSION TYPE (WRITE MODE) */}
+        {submissionType === 'audio' && !isReadOnly && (
+          <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center text-center gap-4 min-h-[220px]">
+            {isRecording ? (
+              <div className="space-y-4">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-20 h-20 rounded-full bg-red-500/20 animate-ping" />
+                  <button
+                    onClick={stopRecording}
+                    type="button"
+                    className="w-16 h-16 rounded-full bg-red-600 border border-red-500 text-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-red-500 transition-colors z-10"
+                  >
+                    <Square className="w-6 h-6 fill-white" />
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-red-400 text-xs font-black uppercase tracking-wider">
+                    {language === 'FR' ? 'Enregistrement en cours...' : 'Recording live...'}
+                  </p>
+                  <p className="text-white text-lg font-mono font-bold">
+                    {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')} / 2:00
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 w-full">
+                {audioUrl ? (
+                  <div className="space-y-4 flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                      <Volume2 className="w-6 h-6" />
+                    </div>
+                    <p className="text-slate-300 text-xs font-bold">
+                      {language === 'FR' ? 'Votre réponse orale est prête' : 'Your oral response is ready'}
+                    </p>
+                    <audio src={audioUrl} controls className="mx-auto max-w-xs w-full accent-violet-600 bg-slate-900 border border-slate-800 rounded-xl" />
+                    <button
+                      onClick={startRecording}
+                      disabled={isLoading || isReadOnly || isTimeUp}
+                      type="button"
+                      className="px-4 py-2 border border-slate-800 hover:border-red-500/40 text-slate-400 hover:text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer bg-slate-900/60 disabled:opacity-50"
+                    >
+                      {language === 'FR' ? '🎙️ Réenregistrer' : '🎙️ Record Again'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <button
+                      onClick={startRecording}
+                      disabled={isLoading || isReadOnly || isTimeUp}
+                      type="button"
+                      className="w-16 h-16 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-600/20 cursor-pointer transition-all hover:scale-105 mx-auto disabled:opacity-50"
+                    >
+                      <Mic className="w-7 h-7" />
+                    </button>
+                    <div className="space-y-1">
+                      <p className="text-slate-300 text-xs font-bold">
+                        {language === 'FR' ? 'Commencer l\'enregistrement oral' : 'Start oral recording'}
+                      </p>
+                      <p className="text-slate-500 text-[10px] max-w-xs mx-auto leading-relaxed">
+                        {language === 'FR'
+                          ? 'Répondez de vive voix à la question ci-dessus. Limite de 2 minutes. Assurez-vous d\'être dans un endroit calme.'
+                          : 'Answer the question above verbally. 2-minute limit. Ensure you are in a quiet environment.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {!isRecording && (
+              <div className="w-full text-left space-y-2 border-t border-slate-905 pt-4 mt-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest block">
+                  {language === 'FR' ? "Notes écrites complémentaires (Facultatif)" : "Complementary written notes (Optional)"}
+                </label>
+                <textarea
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  disabled={isLoading || isReadOnly || isTimeUp}
+                  placeholder={language === 'FR' ? "Ajoutez des notes écrites ou une transcription si nécessaire..." : "Add written notes or a transcript if needed..."}
+                  className="w-full h-16 bg-slate-950 border border-slate-800 focus:border-violet-500 outline-none rounded-xl p-3 text-slate-200 text-xs resize-none transition-all disabled:opacity-75 disabled:text-slate-350"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AUDIO SUBMISSION TYPE (READ-ONLY/GRADE MODE) */}
+        {submissionType === 'audio' && isReadOnly && (
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 text-violet-400 flex items-center justify-center shrink-0">
+                <Mic className="w-5 h-5" />
+              </div>
+              <div className="flex-1 w-full space-y-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-violet-500 tracking-widest">
+                    {language === 'FR' ? 'Réponse Orale Enregistrée' : 'Recorded Oral Response'}
+                  </p>
+                  <p className="text-slate-500 text-[9px] font-medium leading-none mt-0.5">
+                    {fileAttachment?.name || 'oral-submission.webm'}
+                  </p>
+                </div>
+                {audioUrl && (
+                  <audio src={audioUrl} controls className="w-full max-w-xs accent-violet-600 bg-slate-900 border border-slate-800 rounded-xl h-9" />
+                )}
+              </div>
+            </div>
+            
+            {answer.trim() && (
+              <div className="border-t border-slate-800/60 pt-3">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-1">
+                  {language === 'FR' ? "Notes complémentaires" : "Complementary notes"}
+                </span>
+                <p className="text-slate-300 text-xs leading-relaxed italic">"{answer}"</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
         {error && (
@@ -703,7 +981,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit 
         )}
 
         <AnimatePresence>
-          {!isReadOnly && (
+          {(!isReadOnly || (isTimeUp && !grade && (answer.trim().length >= 10 || fileAttachment))) && (
             <button
               onClick={handleSubmit}
               disabled={isLoading}

@@ -1,4 +1,4 @@
-﻿import { dbService } from './db';
+import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
@@ -207,10 +207,13 @@ Rules:
         generationConfig: { temperature: 0.1 }
       });
       if (res && res.ok) {
-        const json = await res.json();
-        const corrected = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        const json = await safeResponseJson(res, 'correctCourseTitle (Vertex AI)');
+        const corrected = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         if (corrected) {
-          return corrected.replace(/^["']|["']$/g, '').replace(/```/g, '').trim();
+          const sanitized = corrected.replace(/^["'«“‘]|["'»”’]$/g, '').replace(/```/g, '').trim();
+          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 2 + 10 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
+            return sanitized;
+          }
         }
       }
     }
@@ -227,10 +230,13 @@ Rules:
         })
       });
       if (res.ok) {
-        const json = await res.json();
-        const corrected = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        const json = await safeResponseJson(res, 'correctCourseTitle (API Fallback)');
+        const corrected = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         if (corrected) {
-          return corrected.replace(/^["']|["']$/g, '').replace(/```/g, '').trim();
+          const sanitized = corrected.replace(/^["'«“‘]|["'»”’]$/g, '').replace(/```/g, '').trim();
+          if (sanitized && sanitized.length >= 3 && sanitized.length <= cleanTitle.length * 2 + 10 && !/sorry|error|apologize|cannot|unable/i.test(sanitized)) {
+            return sanitized;
+          }
         }
       }
     }

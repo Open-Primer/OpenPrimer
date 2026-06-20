@@ -525,8 +525,15 @@ export const CourseClientWrapper = ({
       el.addEventListener('scroll', handleScroll);
     }
 
+    let isRecalculating = false;
     const handleProgressUpdated = () => {
-      recalculateProgress();
+      if (isRecalculating) return;
+      isRecalculating = true;
+      try {
+        recalculateProgress();
+      } finally {
+        isRecalculating = false;
+      }
     };
     window.addEventListener('op_progress_updated', handleProgressUpdated);
 

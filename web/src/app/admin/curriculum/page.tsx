@@ -4047,6 +4047,7 @@ export default function AdminCurriculumPage() {
             }
 
             const taskLang = (runningTask.targetLang || lang || 'EN').toUpperCase();
+            let correctedTitle = runningTask.title;
             try {
               if (runningTask.type === 'generation') {
                 const isCurriculum = runningTask.details?.includes('(CURRICULUM)') || runningTask.type === 'curriculum';
@@ -4061,35 +4062,48 @@ export default function AdminCurriculumPage() {
                     name: runningTask.title,
                     level: runningTask.level || 'L1',
                     targetLang: taskLang.toLowerCase(),
-                    isCurriculum
+                    isCurriculum,
+                    taskId: runningTask.id
                   })
                 });
                 
-                const data = await res.json();
+                let data: any;
+                try {
+                  data = await res.json();
+                } catch (e: any) {
+                  const text = await res.clone().text().catch(() => '');
+                  throw new Error(`Server returned non-JSON response. Status: ${res.status}. Error: ${e.message}. Snippet: "${text.slice(0, 150)}"`);
+                }
                 if (!res.ok || !data.success) {
                   throw new Error(data.error || 'Generation failed');
+                }
+
+                if (data.title) {
+                  correctedTitle = data.title;
                 }
 
                 if (!isCurriculum) {
                   const isOpt = runningTask.courseType === 'optional' || runningTask.courseType === 'optionnel';
                   const childCourseId = (Date.now() % 10000000) + Math.floor(Math.random() * 1000);
+                  const finalSlug = data.slug || (() => {
+                    const asciiClean = correctedTitle
+                      .normalize("NFD")
+                      .replace(/[\u0300-\u036f]/g, "")
+                      .toLowerCase()
+                      .replace(/[^a-z0-9\s_-]/g, '')
+                      .trim()
+                      .replace(/\s+/g, '_');
+                    return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
+                      ? asciiClean
+                      : correctedTitle.toLowerCase().trim().replace(/\s+/g, '_');
+                  })();
+
                   await dbService.saveCourse({
                     id: childCourseId,
-                    title: runningTask.title,
-                    slug: (() => {
-                      const asciiClean = runningTask.title
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s_-]/g, '')
-                        .trim()
-                        .replace(/\s+/g, '_');
-                      return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
-                        ? asciiClean
-                        : runningTask.title.toLowerCase().trim().replace(/\s+/g, '_');
-                    })(),
+                    title: correctedTitle,
+                    slug: finalSlug,
                     subject: runningTask.subject || 'General',
-                    description: runningTask.description || `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+                    description: runningTask.description || `Dynamic sovereign course on "${correctedTitle}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
                     level: runningTask.level || 'L1',
                     archivingLevel: 0,
                     badge: 'badge_1',
@@ -4100,8 +4114,8 @@ export default function AdminCurriculumPage() {
                     langs: [taskLang],
                     translations: {
                       [taskLang]: {
-                        title: runningTask.title,
-                        description: runningTask.description || `Dynamic sovereign course on "${runningTask.title}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
+                        title: correctedTitle,
+                        description: runningTask.description || `Dynamic sovereign course on "${correctedTitle}". Self-contained academic curriculum synthesized autonomously by Episteme.`,
                         isOptional: isOpt,
                         volume: runningTask.volume || '30 hours'
                       }
@@ -4138,11 +4152,18 @@ export default function AdminCurriculumPage() {
                       body: JSON.stringify({
                         type: 'translation',
                         courseSlug: foundCourse.slug,
-                        targetLang: langCode.toLowerCase()
+                        targetLang: langCode.toLowerCase(),
+                        taskId: runningTask.id
                       })
                     });
 
-                    const data = await res.json();
+                    let data: any;
+                    try {
+                      data = await res.json();
+                    } catch (e: any) {
+                      const text = await res.clone().text().catch(() => '');
+                      throw new Error(`Server returned non-JSON response for translation. Status: ${res.status}. Error: ${e.message}. Snippet: "${text.slice(0, 150)}"`);
+                    }
                     if (!res.ok || !data.success) {
                       throw new Error(data.error || 'Translation failed');
                     }
@@ -4194,6 +4215,7 @@ export default function AdminCurriculumPage() {
                   if (t.id === runningTask.id) {
                     return {
                       ...t,
+                      title: correctedTitle,
                       status: 'completed',
                       progress: 100,
                       completedAt: new Date().toISOString(),

@@ -207,10 +207,7 @@ const PreCodeInterceptor = (props: any) => {
 const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
   const [failed, setFailed] = React.useState(false);
   React.useEffect(() => {
-    if (!src) return;
-    const img = new Image();
-    img.onerror = () => setFailed(true);
-    img.src = src;
+    setFailed(false);
   }, [src]);
   if (failed) return null;
   return (

@@ -17,7 +17,7 @@ const evaluationSchema = z.object({
   gradingSystem: z.enum(['0/10', '0/20', 'A-F', 'pass-fail']),
   subject: z.string().optional(),
   level: z.string().optional(),
-  submissionType: z.enum(['text', 'file']).optional().default('text')
+  submissionType: z.enum(['text', 'file', 'audio']).optional().default('text')
 });
 
 export async function POST(request: Request) {
@@ -96,18 +96,18 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
     let userPrompt = '';
     const parts: any[] = [];
 
-    if (submissionType === 'file' && fileAttachment) {
+    if ((submissionType === 'file' || submissionType === 'audio') && fileAttachment) {
       userPrompt = `Assessment Prompt: "${cleanPrompt}"
-The student has submitted a file for this assessment.
+The student has submitted a ${submissionType === 'audio' ? 'recorded oral response' : 'file'} for this assessment.
 File Name: "${fileAttachment.name}"
 File Type: "${fileAttachment.type}"
 File Size: ${fileAttachment.size} bytes
 
 Student's Accompanying Notes/Answer: "${cleanAnswer || 'No accompanying notes.'}"`;
 
-      if (fileAttachment.base64 && fileAttachment.type.startsWith('image/')) {
+      if (fileAttachment.base64 && (fileAttachment.type.startsWith('image/') || fileAttachment.type.startsWith('audio/'))) {
         try {
-          const base64Data = fileAttachment.base64.replace(/^data:image\/\w+;base64,/, '');
+          const base64Data = fileAttachment.base64.replace(/^data:\w+\/\w+;base64,/, '');
           parts.push({
             inlineData: {
               mimeType: fileAttachment.type,
@@ -115,7 +115,7 @@ Student's Accompanying Notes/Answer: "${cleanAnswer || 'No accompanying notes.'}
             }
           });
         } catch (e) {
-          console.warn("[TUTOR EVALUATOR] Failed to extract image data from base64:", e);
+          console.warn("[TUTOR EVALUATOR] Failed to extract media data from base64:", e);
         }
       }
     } else {

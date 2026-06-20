@@ -11,18 +11,24 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { type, name, level, targetLang, courseSlug, isCurriculum } = body;
+    const { type, name, level, targetLang, courseSlug, isCurriculum, taskId } = body;
 
     if (type === 'translation') {
-      await translateCourseContent(courseSlug, targetLang || 'fr');
+      await translateCourseContent(courseSlug, targetLang || 'fr', taskId);
       return NextResponse.json({ success: true, message: 'Translation complete.' });
     } else {
+      let result: any = null;
       if (isCurriculum) {
         await generateCurriculum(name, level || 'L1', targetLang || 'en');
       } else {
-        await generateCourseContent(name, level || 'L1', targetLang || 'en');
+        result = await generateCourseContent(name, level || 'L1', targetLang || 'en', taskId);
       }
-      return NextResponse.json({ success: true, message: 'Generation complete.' });
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Generation complete.', 
+        title: result?.title, 
+        slug: result?.slug 
+      });
     }
   } catch (error: any) {
     console.error('[GENERATE ERROR]', error);
