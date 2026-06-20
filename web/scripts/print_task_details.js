@@ -23,7 +23,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const taskId = 'ed30303f-1710-4924-bc5c-92538675dfb1';
+  const taskId = process.argv[2] || 'ed30303f-1710-4924-bc5c-92538675dfb1';
   const { data, error } = await supabase
     .from('task_queue')
     .select('*')

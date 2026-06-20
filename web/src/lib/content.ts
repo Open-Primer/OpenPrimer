@@ -312,179 +312,6 @@ export function getLocalizedCoreModuleText(currentLang: string) {
   return "Core Module";
 }
 
-export const SUBJECT_TRANSLATIONS: Record<string, Record<string, string>> = {
-  mathematics: {
-    en: "mathematics",
-    fr: "les mathématiques",
-    es: "las matemáticas",
-    de: "die Mathematik",
-    zh: "数学"
-  },
-  statistics: {
-    en: "statistics & probability",
-    fr: "les statistiques et probabilités",
-    es: "la estadística y probabilidad",
-    de: "die Statistik und Wahrscheinlichkeit",
-    zh: "统计与概率论"
-  },
-  physics: {
-    en: "physics",
-    fr: "la physique",
-    es: "la física",
-    de: "die Physik",
-    zh: "物理学"
-  },
-  chemistry: {
-    en: "chemistry",
-    fr: "la chimie",
-    es: "la química",
-    de: "die Chemie",
-    zh: "化学"
-  },
-  biology: {
-    en: "biology",
-    fr: "la biologie",
-    es: "la biología",
-    de: "die Biologie",
-    zh: "生物学"
-  },
-  biochemistry: {
-    en: "biochemistry",
-    fr: "la biochimie",
-    es: "la bioquímica",
-    de: "die Biochemie",
-    zh: "生物化学"
-  },
-  genetics: {
-    en: "genetics",
-    fr: "la génétique",
-    es: "la genética",
-    de: "die Genetik",
-    zh: "遗传学"
-  },
-  computer_science: {
-    en: "computer science",
-    fr: "l'informatique",
-    es: "la informática",
-    de: "die Informatik",
-    zh: "计算机科学"
-  },
-  data_science: {
-    en: "data science & analytics",
-    fr: "la science des données",
-    es: "la ciencia de datos",
-    de: "die Datenwissenschaft",
-    zh: "数据科学"
-  },
-  law: {
-    en: "law",
-    fr: "le droit",
-    es: "el derecho",
-    de: "die Rechtswissenschaften",
-    zh: "法学"
-  },
-  criminology: {
-    en: "criminology",
-    fr: "la criminologie",
-    es: "la criminología",
-    de: "die Kriminologie",
-    zh: "犯罪学"
-  },
-  political_science: {
-    en: "political science",
-    fr: "la science politique",
-    es: "la ciencia política",
-    de: "die Politikwissenschaft",
-    zh: "政治学"
-  },
-  economics: {
-    en: "economics",
-    fr: "l'économie",
-    es: "la economía",
-    de: "die Wirtschaftswissenschaften",
-    zh: "经济学"
-  },
-  sociology: {
-    en: "sociology",
-    fr: "la sociologie",
-    es: "la sociología",
-    de: "die Soziologie",
-    zh: "社会学"
-  },
-  psychology: {
-    en: "psychology",
-    fr: "la psychologie",
-    es: "la psicología",
-    de: "die Psychologie",
-    zh: "心理学"
-  },
-  social_psychology: {
-    en: "social psychology",
-    fr: "la psychologie sociale",
-    es: "la psicología social",
-    de: "die Sozialpsychologie",
-    zh: "社会心理学"
-  },
-  cognitive_science: {
-    en: "cognitive science",
-    fr: "les sciences cognitives",
-    es: "la ciencia cognitiva",
-    de: "die Kognitionswissenschaft",
-    zh: "认知科学"
-  },
-  history: {
-    en: "history",
-    fr: "l'histoire",
-    es: "la historia",
-    de: "die Geschichte",
-    zh: "历史学"
-  },
-  philosophy: {
-    en: "philosophy",
-    fr: "la philosophie",
-    es: "la filosofía",
-    de: "die Philosophie",
-    zh: "哲学"
-  },
-  theology: {
-    en: "theology",
-    fr: "la théologie",
-    es: "la teología",
-    de: "die Teologie",
-    zh: "神学"
-  },
-  social: {
-    en: "social sciences",
-    fr: "les sciences sociales",
-    es: "las ciencias sociales",
-    de: "die Sozialwissenschaften",
-    zh: "社会科学"
-  },
-  general: {
-    en: "general knowledge",
-    fr: "la culture générale",
-    es: "la cultura general",
-    de: "die Allgemeinbildung",
-    zh: "一般知识"
-  }
-};
-
-export function getTranslatedSubject(subject: string, lang: string): string {
-  const cleanSubject = (subject || '').trim().toLowerCase().replace(/\s+/g, '_');
-  const langKey = (lang || 'en').trim().toLowerCase();
-  
-  const translations = SUBJECT_TRANSLATIONS[cleanSubject];
-  if (translations && translations[langKey]) {
-    return translations[langKey];
-  }
-  
-  if (cleanSubject === 'social_sciences' || cleanSubject === 'social' || cleanSubject === 'sociales') {
-    return SUBJECT_TRANSLATIONS['social'][langKey] || 'social sciences';
-  }
-  
-  return subject || '';
-}
-
 export interface NavItem {
   name: string;
   type: 'folder' | 'file';
@@ -539,118 +366,6 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
     }];
   }
   return [];
-}
-
-async function validateYouTubeVideo(videoId: string): Promise<boolean> {
-  if (!videoId || videoId.length !== 11 || videoId.startsWith('placeholder') || videoId.includes('example')) {
-    return false;
-  }
-  try {
-    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' });
-    if (res.status === 404 || res.status === 400) {
-      return false; // Definitively non-existent
-    }
-    return true; // Assume OK for any other status (e.g. 429, 500) to avoid false positives
-  } catch (err) {
-    return true; // Network error or rate limiting: assume OK
-  }
-}
-
-async function searchYouTubeVideo(query: string): Promise<string | null | 'network_error'> {
-  try {
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-    const res = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-      }
-    });
-    if (!res.ok) {
-      if (res.status === 429 || res.status >= 500) {
-        return 'network_error';
-      }
-      return null;
-    }
-    const html = await res.text();
-    const match = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
-    if (match && match[1]) {
-      return match[1];
-    }
-    return null;
-  } catch (err) {
-    return 'network_error';
-  }
-}
-
-export async function repairYouTubeVideos(content: string, lang: string): Promise<string> {
-  let updatedContent = content;
-  const videoRegex = /<Video\s+([^>]*?)\/>/g;
-  let match;
-  
-  const tagsToProcess: { fullTag: string; attrsStr: string }[] = [];
-  while ((match = videoRegex.exec(content)) !== null) {
-    tagsToProcess.push({ fullTag: match[0], attrsStr: match[1] });
-  }
-
-  let repairCount = 0;
-  for (const { fullTag, attrsStr } of tagsToProcess) {
-    // Limit to max 3 repairs/searches per page load to protect performance and avoid rate limiting
-    if (repairCount >= 3) break;
-
-    const titleMatch = attrsStr.match(/title="([^"]+)"/);
-    const urlMatch = attrsStr.match(/url="([^"]+)"/);
-    const idMatch = attrsStr.match(/id="([^"]+)"/);
-    
-    const title = titleMatch ? titleMatch[1] : '';
-    const originalUrl = urlMatch ? urlMatch[1] : '';
-    const originalId = idMatch ? idMatch[1] : '';
-    
-    const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder');
-    const hasDummyId = !originalId || originalId.startsWith('placeholder') || originalId.length !== 11;
-    
-    let needsResolution = hasDummyUrl || hasDummyId;
-    
-    if (!needsResolution && originalId) {
-      const exists = await validateYouTubeVideo(originalId);
-      if (!exists) {
-        console.log(`[YouTube Validation] Video ${originalId} does not exist. Triggering repair.`);
-        needsResolution = true;
-      }
-    }
-    
-    if (needsResolution && title) {
-      repairCount++;
-      const searchQuery = `${title} cours education ${lang.toLowerCase() === 'fr' ? 'français' : 'english'}`;
-      const realId = await searchYouTubeVideo(searchQuery);
-      
-      if (realId === 'network_error') {
-        console.log(`[YouTube Validation] Network/rate-limit error during search for "${title}". Skipping repair to prevent accidental deletion.`);
-        continue;
-      }
-
-      if (realId) {
-        const newUrl = `https://www.youtube.com/watch?v=${realId}`;
-        let updatedAttrs = attrsStr;
-        if (attrsStr.includes('id=')) {
-          updatedAttrs = updatedAttrs.replace(/id="[^"]*"/, `id="${realId}"`);
-        } else {
-          updatedAttrs += ` id="${realId}"`;
-        }
-        if (attrsStr.includes('url=')) {
-          updatedAttrs = updatedAttrs.replace(/url="[^"]*"/, `url="${newUrl}"`);
-        } else {
-          updatedAttrs += ` url="${newUrl}"`;
-        }
-        
-        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
-        console.log(`[YouTube Validation] Successfully repaired video "${title}" to ID: ${realId}`);
-      } else {
-        console.log(`[YouTube Validation] Could not find a replacement for video "${title}". Removing broken <Video> tag.`);
-        updatedContent = updatedContent.replace(fullTag, '');
-      }
-    }
-  }
-  
-  return updatedContent;
 }
 
 export async function getPageContent(slug: string[], lang: string = 'en') {
@@ -2013,6 +1728,7 @@ function healWrapperTagNesting(mdx: string): string {
 
 function normalizeFrenchPedagogicalTags(mdx: string): string {
   const mapping: Record<string, string> = {
+    // Pedagogical Blocks
     EtApres: 'WhatsNext',
     AnecdoteHistorique: 'HistoricalAnecdote',
     FaitHistorique: 'HistoricalFact',
@@ -2023,7 +1739,27 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     Geometrie2D: 'Geometry2D',
     IdeeBrillante: 'BrilliantIdea',
     QuestionOuverte: 'OpenQuestion',
-    DebatScientifique: 'ScientificDebate'
+    DebatScientifique: 'ScientificDebate',
+
+    // Entity Overlays & Aliases
+    EvenementHistorique: 'HistoricalEvent',
+    ÉvénementHistorique: 'HistoricalEvent',
+    Lieu: 'Location',
+    Place: 'Location',
+    PersonnageHistorique: 'HistoricalPerson',
+    OeuvreDArt: 'Artwork',
+    ŒuvreDArt: 'Artwork',
+    OeuvreDart: 'Artwork',
+    ŒuvreDart: 'Artwork',
+
+    // Interactive Widgets
+    ManipulateurFonction: 'FunctionManipulator',
+    ExplorateurFonctions: 'FunctionManipulator',
+    ManipulateurEquation: 'EquationManipulator',
+    ExplorateurEquations: 'EquationManipulator',
+    EquilibrageChimique: 'ChemicalStoichiometry',
+    StoichiometrieChimique: 'ChemicalStoichiometry',
+    ExplorateurMathsBase: 'BasicMathExplorer'
   };
 
   let processed = mdx;
