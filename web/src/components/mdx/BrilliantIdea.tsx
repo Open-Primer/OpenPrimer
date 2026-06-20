@@ -4,12 +4,12 @@ import React from 'react';
 import { Lightbulb } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-interface IdeeBrillanteProps {
+interface BrilliantIdeaProps {
   title?: string;
   children: React.ReactNode;
 }
 
-export const IdeeBrillante = ({ title, children }: IdeeBrillanteProps) => {
+export const BrilliantIdea = ({ title, children }: BrilliantIdeaProps) => {
   const { language } = useLanguage();
   
   const defaultHeaderLabels: Record<string, string> = {
@@ -45,4 +45,4 @@ export const IdeeBrillante = ({ title, children }: IdeeBrillanteProps) => {
   );
 };
 
-export const BrilliantIdea = IdeeBrillante;
+export const IdeeBrillante = BrilliantIdea;

@@ -2474,6 +2474,12 @@ export function preprocessMdx(content: string, lang: string = 'en'): string {
   processed = processed.replace(/<FillInBlanks[\s\S]*?<\/FillInBlanks>/gi, '');
   processed = processed.replace(/<FillInBlanks[^>]*?blanks=\{[\s\S]*?\}[^>]*?\/>/gi, '');
 
+  // Safety checks: remove empty or invalid assessments/quizzes/questions to prevent rendering gaps or compilation crashes
+  processed = processed.replace(/<Question\b[^>]*>(?:(?!<Option\b)[\s\S])*?<\/Question>/gi, '');
+  processed = processed.replace(/<Question\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<Quiz\b[^>]*>(?:(?!<Question\b)[\s\S])*?<\/Quiz>/gi, '');
+  processed = processed.replace(/<Quiz\b[^>]*?\/>/gi, '');
+
   // 2e. Normalize invalid alert types
   processed = processed.replace(/\[!CRITICAL THINKING\]/gi, '[!NOTE]');
   processed = processed.replace(/\[!THINKING\]/gi, '[!NOTE]');
@@ -2752,8 +2758,15 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   const registry: Record<string, any> = {};
   let currentId = 0;
 
+  // Pre-process and flatten interactive components (like Question/Option tags) so they are in consistent flat-prop formats
+  let processed = mdx;
+  processed = normalizeQuestionAndQuizTags(processed);
+  processed = healSelfClosingComponents(processed);
+  processed = healFillInBlanks(processed);
+  processed = healQuestionTags(processed);
+
   // Step 1: Replace all closing custom JSX tags
-  let processed = mdx.replace(/<\/([A-Z][A-Za-z0-9.]*)>/g, (match, tagName) => {
+  processed = processed.replace(/<\/([A-Z][A-Za-z0-9.]*)>/g, (match, tagName) => {
     const placeholder = `__JSX_CLOSE_${tagName}_${currentId++}__`;
     registry[placeholder] = { type: 'close', tagName, original: match };
     return placeholder;
@@ -2868,8 +2881,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const sentence = match[1].trim();
-        const answer = match[2].trim();
+        const sentence = match[1].trim() || entry.attrs.sentence || '';
+        const answer = match[2].trim() || entry.attrs.answer || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'sentence' && k !== 'answer') {
@@ -2885,8 +2898,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const term = match[1].trim();
-        const definition = match[2].trim();
+        const term = match[1].trim() || entry.attrs.term || '';
+        const definition = match[2].trim() || entry.attrs.definition || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'term' && k !== 'definition') {
@@ -2902,8 +2915,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const prompt = match[1].trim();
-        const subject = match[2].trim();
+        const prompt = match[1].trim() || entry.attrs.prompt || '';
+        const subject = match[2].trim() || entry.attrs.subject || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'prompt' && k !== 'subject') {
@@ -2919,7 +2932,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const name = match[1].trim();
+        const name = match[1].trim() || entry.attrs.name || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'name') {
@@ -2935,7 +2948,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const text = match[1].trim();
+        const text = match[1].trim() || entry.attrs.text || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'text') {
@@ -2951,8 +2964,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const q = match[1].trim();
-        const explanation = match[2].trim();
+        const q = match[1].trim() || entry.attrs.q || entry.attrs.questionText || entry.attrs.text || entry.attrs.question || '';
+        const explanation = match[2].trim() || entry.attrs.explanation || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'explanation') {

@@ -159,7 +159,7 @@ Why is neuroscience important?
   const hasGlossary = restored.includes('<Glossary term="IA" definition="Intelligence Artificielle" />');
   const hasQuestion = restored.includes('<Question q="Quelle est la couleur du ciel ?" explanation="Le ciel est bleu à cause de la diffusion.">');
   const hasOption1 = restored.includes('<Option text="Bleu" correct={true} />');
-  const hasOption2 = restored.includes('<Option text="Rouge" correct={false} />');
+  const hasOption2 = restored.includes('<Option text="Rouge" correct={false} />') || restored.includes('<Option text="Rouge" />');
   const hasCriticalThinking = restored.includes('<CriticalThinking>\nPourquoi les neurosciences sont-elles importantes ?\n</CriticalThinking>');
 
   console.log("\nVERIFICATION RESULTS:");

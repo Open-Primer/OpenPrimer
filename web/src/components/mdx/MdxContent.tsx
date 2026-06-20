@@ -40,7 +40,7 @@ import { HistoricalAnecdote } from './HistoricalAnecdote';
 import { ScientificMethod } from './ScientificMethod';
 import { WhatsNext } from './WhatsNext';
 import { PointOfView } from './PointOfView';
-import { IdeeBrillante } from './IdeeBrillante';
+import { BrilliantIdea, IdeeBrillante } from './BrilliantIdea';
 import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
 import { OpenQuestion } from './OpenQuestion';
@@ -1301,8 +1301,8 @@ const components = {
   PointDeVue: PointOfView,
   Geometry2D,
   Geometrie2D: Geometry2D,
-  IdeeBrillante,
-  BrilliantIdea: IdeeBrillante,
+  BrilliantIdea,
+  IdeeBrillante: BrilliantIdea,
   OpenQuestion,
   ScientificDebate,
 
