@@ -8,31 +8,31 @@ import { GraduationCap, ArrowRight, Compass } from 'lucide-react';
 const NOT_FOUND_STRINGS = {
   FR: {
     title: "Page ou cours introuvable",
-    description: "Le document ou la leçon que vous essayez de consulter n'existe pas ou a été déplacé. Nous vous invitons à parcourir notre catalogue académique.",
+    description: "Le document ou la leçon que vous essayez de consulter n'existe pas ou a été déplacé. Il est possible que cette URL ait été utilisée auparavant pour un cours, mais que ce cours ait été supprimé pour différentes raisons, telles qu'un manque de qualité, une mise à jour de notre programme ou d'autres mesures d'amélioration académique.",
     cta: "Parcourir le catalogue",
     home: "Retour à l'accueil"
   },
   EN: {
     title: "Page or Course Not Found",
-    description: "The document or lesson you are trying to view does not exist or has been moved. We invite you to browse our academic catalog.",
+    description: "The document or lesson you are trying to view does not exist or has been moved. It is possible that this URL was previously used for a course, but this course has been deleted for various reasons, such as a lack of quality, syllabus updates, or other academic quality improvement measures.",
     cta: "Browse the Catalog",
     home: "Back to Home"
   },
   ES: {
     title: "Página o curso no encontrado",
-    description: "El documento o la lección que intenta consultar no existe o ha sido movido. Le invitons a explorar nuestro catálogo académico.",
+    description: "El documento o la lección que intenta consultar no existe o ha sido movido. Es posible que esta URL se haya utilizado anteriormente para un curso, pero este curso fue eliminado por diversas razones, como la falta de calidad, actualizaciones del plan de estudios u otras medidas de mejora de la calidad académica.",
     cta: "Explorar el Catálogo",
     home: "Volver al Inicio"
   },
   DE: {
     title: "Seite oder Kurs nicht gefunden",
-    description: "Das gesuchte Dokument oder die Lektion existiert nicht oder wurde verschoben. Wir laden Sie ein, unseren akademischen Katalog zu durchsuchen.",
+    description: "Das gesuchte Dokument oder die Lektion existiert nicht oder wurde verschoben. Es ist möglich, dass diese URL zuvor für einen Kurs verwendet wurde, dieser Kurs jedoch aus verschiedenen Gründen gelöscht wurde, wie beispielsweise mangelnder Qualität, Aktualisierungen des Lehrplans oder anderen akademischen Qualitätsverbesserungsmaßnahmen.",
     cta: "Katalog durchsuchen",
     home: "Zurück zur Startseite"
   },
   ZH: {
     title: "找不到该页面或课程",
-    description: "您尝试查看的文档或课程不存在或已被移动。我们邀请您浏览我们的学术课程目录。",
+    description: "您尝试查看的文档或课程不存在或已被移动。此 URL 之前可能已被用于某个课程，但该课程已由于各种原因被删除，例如质量不足、课程大纲更新或其他学术质量改进措施。",
     cta: "浏览课程目录",
     home: "返回首页"
   }
@@ -45,11 +45,12 @@ export default function NotFound() {
     // Detect user preference from localStorage or navigator
     const saved = localStorage.getItem('openprimer_lang');
     if (saved) {
-      setLang(saved.toUpperCase());
+      const savedLang = saved.toUpperCase();
+      setTimeout(() => setLang(savedLang), 0);
     } else {
       const browserLang = navigator.language.split('-')[0].toUpperCase();
       if (['FR', 'EN', 'ES', 'DE', 'ZH'].includes(browserLang)) {
-        setLang(browserLang);
+        setTimeout(() => setLang(browserLang), 0);
       }
     }
   }, []);

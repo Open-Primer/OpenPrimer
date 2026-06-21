@@ -32,6 +32,75 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     // Proactively switch language if the requested language has no lessons in the DB for this course
     if (slug.length >= 3) {
       const courseSlug = slug[2];
+
+      // Strict Barrier: Check if the course actually exists, is active, and check archiving level authorization
+      const { data: courseData } = await dbService.getSyllabus(courseSlug);
+      console.log(`[CoursePage Guard] getSyllabus returned courseData:`, courseData ? { id: courseData.id, slug: courseData.slug, archivingLevel: courseData.archivingLevel, is_active: courseData.is_active, isActive: courseData.isActive } : null);
+      if (!courseData) {
+        console.log(`[CoursePage] Blocked direct access because course '${courseSlug}' does not exist.`);
+        return notFound();
+      }
+
+      const cookieStore = await cookies();
+      const userId = cookieStore.get('op_user_id')?.value;
+      const userRole = cookieStore.get('op_user_role')?.value;
+      const isAdmin = userRole === 'admin';
+
+      const archivingLevel = typeof courseData.archivingLevel === 'number'
+        ? courseData.archivingLevel
+        : (courseData.archiving_level || 0);
+
+      const isActive = courseData.is_active !== false && courseData.isActive !== false;
+      
+      console.log(`[CoursePage Guard] evaluates values:`, { userId, userRole, isAdmin, archivingLevel, isActive });
+
+      // 1. Inactive check (if not active and not archived, only admin can bypass)
+      if (!isActive && archivingLevel === 0 && !isAdmin) {
+        console.log(`[CoursePage] Blocked direct access to course '${courseSlug}' because it is inactive and user is not admin.`);
+        return notFound();
+      }
+
+      // 2. Archiving Level 2 check (only admin can bypass)
+      if (archivingLevel >= 2 && !isAdmin) {
+        console.log(`[CoursePage] Blocked direct access to course '${courseSlug}' because it is Level 2 archived and user is not admin.`);
+        return notFound();
+      }
+
+      // 3. Archiving Level 1 check (only old/enrolled users and admins can access)
+      if (archivingLevel === 1 && !isAdmin) {
+        let isEnrolled = false;
+
+        // First check the op_enrolled_courses cookie (instant and reliable for both mock and remote sessions)
+        const enrolledCookie = cookieStore.get('op_enrolled_courses')?.value;
+        console.log(`[CoursePage Guard] enrolledCookie raw value:`, enrolledCookie);
+        if (enrolledCookie) {
+          try {
+            const enrolledList = JSON.parse(enrolledCookie);
+            console.log(`[CoursePage Guard] enrolledList parsed:`, enrolledList, `courseData.id:`, courseData.id);
+            if (Array.isArray(enrolledList) && enrolledList.includes(courseData.id)) {
+              isEnrolled = true;
+            }
+          } catch (e) {}
+        }
+
+        // If not found in cookie and userId exists, do a DB query fallback to be extra robust
+        if (!isEnrolled && userId) {
+          const { data: progressData } = await dbService.getUserProgress(userId, lang);
+          console.log(`[CoursePage Guard] dbService.getUserProgress returned progressData:`, progressData);
+          if (progressData) {
+            isEnrolled = progressData.enrolled?.includes(courseData.id) || 
+                         progressData.activeModules?.some((m: any) => m.id === courseData.id);
+          }
+        }
+
+        console.log(`[CoursePage Guard] isEnrolled resolved to:`, isEnrolled);
+
+        if (!isEnrolled) {
+          console.log(`[CoursePage] Blocked direct access to Level 1 archived course '${courseSlug}' because user is not enrolled/old and not admin.`);
+          return notFound();
+        }
+      }
+
       try {
         const { count } = await supabase
           .from('lessons')
@@ -398,6 +467,14 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       </CourseClientWrapper>
     );
   } catch (err: any) {
+    if (
+      err.digest === 'NEXT_NOT_FOUND' ||
+      err.message === 'NEXT_NOT_FOUND' ||
+      (err.digest && err.digest.startsWith('NEXT_REDIRECT')) ||
+      (err.message && err.message.startsWith('NEXT_REDIRECT'))
+    ) {
+      throw err;
+    }
     unstable_rethrow(err);
     console.error("CRITICAL ERROR IN CoursePage:", err);
     

@@ -106,26 +106,80 @@ const parseMermaidFallbackNodes = (chartText: string): { id: string; label: stri
   const nodes: { id: string; label: string }[] = [];
   const seenIds = new Set<string>();
 
-  // Match ID followed by bracket/parentheses and a quoted or unquoted string
-  const regex = /\b([a-zA-Z0-9_-]+)(?:\["|\[|\|"|\("|\()([^"\]\)\n\r]+)(?:"\]|\]|"\||"\)|\))/g;
-  let match;
-  while ((match = regex.exec(chartText)) !== null) {
-    const id = match[1];
-    const label = match[2].trim();
-    if (!seenIds.has(id) && label && !['graph', 'flowchart', 'subgraph', 'end', 'click', 'style', 'classdef'].includes(id.toLowerCase())) {
-      seenIds.add(id);
-      nodes.push({ id, label });
+  const lines = chartText.split(/\r?\n/);
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('%%') || line.toLowerCase() === 'timeline' || line.toLowerCase().startsWith('graph') || line.toLowerCase().startsWith('flowchart')) {
+      continue;
+    }
+
+    // Split line by connectors: -->, ---, ==>, -.->, ->, to
+    const parts = line.split(/\s*(?:-->|---|==>|-\.-\s*>|->|to)\s*/);
+    for (const part of parts) {
+      const trimmedPart = part.trim();
+      if (!trimmedPart) continue;
+
+      // Skip connection labels like |text|
+      if (trimmedPart.startsWith('|') && trimmedPart.endsWith('|')) {
+        continue;
+      }
+      
+      const idMatch = trimmedPart.match(/^([a-zA-Z0-9_-]+)/);
+      if (!idMatch) continue;
+
+      const id = idMatch[1];
+      if (['graph', 'flowchart', 'subgraph', 'end', 'click', 'style', 'classdef', 'direction', 'tb', 'td', 'lr', 'rl', 'bt'].includes(id.toLowerCase())) {
+        continue;
+      }
+
+      const rest = trimmedPart.substring(id.length).trim();
+      if (!rest) {
+        continue;
+      }
+
+      let label = '';
+      // Look for brackets or quotes
+      const quotedMatch = rest.match(/^[\[\({]+"(.*?)"[\]\)}]+/);
+      if (quotedMatch) {
+        label = quotedMatch[1].trim();
+      } else {
+        // Strip various Mermaid bracket shapes: ((...)), (text), [...], {...}, >...]
+        if (rest.startsWith('((') && rest.endsWith('))')) {
+          label = rest.substring(2, rest.length - 2).trim();
+        } else if (rest.startsWith('([') && rest.endsWith('])')) {
+          label = rest.substring(2, rest.length - 2).trim();
+        } else if (rest.startsWith('[[') && rest.endsWith(']]')) {
+          label = rest.substring(2, rest.length - 2).trim();
+        } else if (rest.startsWith('[(') && rest.endsWith(')]')) {
+          label = rest.substring(2, rest.length - 2).trim();
+        } else if (rest.startsWith('[') && rest.endsWith(']')) {
+          label = rest.substring(1, rest.length - 1).trim();
+        } else if (rest.startsWith('(') && rest.endsWith(')')) {
+          label = rest.substring(1, rest.length - 1).trim();
+        } else if (rest.startsWith('{') && rest.endsWith('}')) {
+          label = rest.substring(1, rest.length - 1).trim();
+        } else {
+          label = rest;
+        }
+      }
+
+      if (label && !seenIds.has(id)) {
+        seenIds.add(id);
+        nodes.push({ id, label });
+      }
     }
   }
 
-  // If no nodes found, try to extract any quoted strings as labels
+  // If no nodes found, fallback to extracting anything inside quotes
   if (nodes.length === 0) {
     const quoteRegex = /"([^"]+)"/g;
     let index = 0;
+    let match;
     while ((match = quoteRegex.exec(chartText)) !== null) {
       const label = match[1].trim();
       const id = `node-${index++}`;
-      if (label && label.length > 1) {
+      if (label && label.length > 1 && !seenIds.has(id)) {
+        seenIds.add(id);
         nodes.push({ id, label });
       }
     }
@@ -134,9 +188,19 @@ const parseMermaidFallbackNodes = (chartText: string): { id: string; label: stri
   return nodes;
 };
 
+const STATUS_STRINGS: Record<string, { initial: string; transition: string; target: string }> = {
+  EN: { initial: "Initial State", transition: "Transition Step", target: "Target Milestone" },
+  FR: { initial: "État Initial", transition: "Étape de Transition", target: "Objectif Final" },
+  ES: { initial: "Estado Inicial", transition: "Paso de Transición", target: "Meta Final" },
+  DE: { initial: "Ausgangszustand", transition: "Übergangsschritt", target: "Endziel" },
+  ZH: { initial: "初始状态", transition: "过渡阶段", target: "最终目标" }
+};
+
 const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
   const { language } = useLanguage();
-  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const langKey = (language || 'EN').toUpperCase();
+  const t = STATIC_UI_STRINGS[langKey as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const statusT = STATUS_STRINGS[langKey] || STATUS_STRINGS.EN;
   const nodes = parseMermaidFallbackNodes(chartText);
 
   if (nodes.length === 0) {
@@ -144,14 +208,14 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
   }
 
   return (
-    <div className="my-8 w-full p-8 rounded-[40px] bg-slate-950/40 border border-slate-900 backdrop-blur-xl shadow-2xl relative overflow-hidden text-left">
+    <div className="my-8 w-full p-8 rounded-[40px] bg-slate-950/40 border border-slate-900 backdrop-blur-xl shadow-2xl relative overflow-hidden text-left select-none">
       {/* Background Decorative Glow */}
       <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
       <div className="absolute -left-24 -bottom-24 w-48 h-48 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
 
       <div className="flex items-center gap-3 mb-10 border-b border-slate-900 pb-5">
-        <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-route"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-route"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
         </div>
         <div>
           <h4 className="text-slate-200 text-xs font-black uppercase tracking-[0.2em]">{t.learning_sequence}</h4>
@@ -163,24 +227,67 @@ const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
         {/* Connector Line */}
         <div className="absolute left-[15px] top-3 bottom-3 w-0.5 border-l-2 border-dashed border-slate-800" />
 
-        {nodes.map((node, index) => (
-          <div key={node.id} className="relative group flex items-start gap-6 transition-all duration-300">
-            {/* Dot Indicator */}
-            <div className="absolute -left-[31px] mt-1 w-8 h-8 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center z-10 group-hover:border-indigo-500/50 group-hover:bg-indigo-950/20 transition-all duration-300 shadow-md">
-              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 group-hover:scale-125 transition-transform" />
-            </div>
+        {nodes.map((node, index) => {
+          // Parse title and parenthetical formula/subtitle if available
+          const match = node.label.match(/^([^(]+)\s*\(([^)]+)\)$/);
+          let title = node.label;
+          let formula = '';
+          if (match) {
+            title = match[1].trim();
+            formula = match[2].trim();
+          }
 
-            {/* Content Card */}
-            <div className="flex-1 p-5 rounded-2xl border border-slate-900/60 bg-slate-900/10 hover:bg-slate-900/30 hover:border-slate-800/80 transition-all duration-300 backdrop-blur-md">
-              <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-1 select-none">
-                {t.concept_step} {index + 1}
-              </span>
-              <h5 className="text-slate-200 font-bold text-sm group-hover:text-white transition-colors">
-                {node.label}
-              </h5>
+          // Dynamic badge info
+          let badgeText = statusT.transition;
+          let badgeClass = "text-amber-400 bg-amber-500/5 border-amber-500/10";
+          let dotClass = "bg-amber-400";
+
+          if (index === 0) {
+            badgeText = statusT.initial;
+            badgeClass = "text-indigo-400 bg-indigo-500/5 border-indigo-500/10";
+            dotClass = "bg-indigo-400";
+          } else if (index === nodes.length - 1) {
+            badgeText = statusT.target;
+            badgeClass = "text-emerald-400 bg-emerald-500/5 border-emerald-500/10";
+            dotClass = "bg-emerald-400";
+          }
+
+          return (
+            <div key={node.id} className="relative group flex items-start gap-6 transition-all duration-300">
+              {/* Dot Indicator */}
+              <div className="absolute -left-[31px] mt-1 w-8 h-8 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center z-10 group-hover:border-indigo-500/50 group-hover:bg-indigo-950/20 transition-all duration-300 shadow-md">
+                <div className={`w-2.5 h-2.5 rounded-full ${dotClass} group-hover:scale-125 transition-transform`} />
+              </div>
+
+              {/* Content Card */}
+              <div className="flex-1 p-6 rounded-3xl border border-slate-900/80 bg-slate-900/10 hover:bg-slate-950/40 hover:border-indigo-500/30 transition-all duration-300 backdrop-blur-md relative group/card shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className={`absolute left-0 top-6 bottom-6 w-1 rounded-r-lg group-hover/card:scale-y-110 transition-transform duration-300 ${index === 0 ? 'bg-indigo-500' : index === nodes.length - 1 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <div className="pl-4">
+                  <span className="text-[10px] font-black text-slate-500 group-hover/card:text-indigo-400 uppercase tracking-widest block mb-1 select-none transition-colors">
+                    {t.concept_step} {index + 1}
+                  </span>
+                  <h5 className="text-slate-200 font-extrabold text-base group-hover/card:text-white transition-colors leading-tight select-text">
+                    {title}
+                  </h5>
+                  {formula && (
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-500/5 border border-indigo-500/10 group-hover/card:border-indigo-500/20 group-hover/card:bg-indigo-500/10 text-indigo-300 font-mono text-xs transition-all duration-300 shadow-sm select-text">
+                      <span className="opacity-80">🧪</span>
+                      <span className="font-semibold tracking-wide">{formula}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Dynamic Status Badge */}
+                <div className="shrink-0">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border tracking-wide uppercase shadow-sm select-none ${badgeClass}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                    {badgeText}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

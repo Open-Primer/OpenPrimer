@@ -23,7 +23,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const taskId = 'ed30303f-1710-4924-bc5c-92538675dfb1';
+  const taskId = 'bc57f91c-0782-495f-9169-d1906a0e9c38';
   console.log(`Resetting task ${taskId} to queued...`);
   const { error } = await supabase
     .from('task_queue')

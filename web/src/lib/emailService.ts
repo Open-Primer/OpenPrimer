@@ -39,31 +39,8 @@ const DEFAULT_EN_TEMPLATES: Record<string, {
 };
 
 async function translateText(text: string, targetLang: string): Promise<string> {
-  if (!text) return '';
-  const placeholderMap: Record<string, string> = {
-    '{{firstName}}': '_FN_',
-    '{{lastName}}': '_LN_',
-    '{{fullName}}': '_FULL_'
-  };
-  let processed = text;
-  for (const [key, val] of Object.entries(placeholderMap)) {
-    processed = processed.replace(new RegExp(key, 'g'), val);
-  }
-
-  try {
-    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang.toLowerCase()}&dt=t&q=${encodeURIComponent(processed)}`);
-    if (!res.ok) throw new Error(`Google Translate responded with ${res.status}`);
-    const data = await res.json();
-    let translated = data[0].map((x: any) => x[0]).join('');
-    
-    for (const [key, val] of Object.entries(placeholderMap)) {
-      translated = translated.replace(new RegExp(val, 'g'), key);
-    }
-    return translated;
-  } catch (err) {
-    console.warn(`[TRANSLATE EMAIL HELPER] Failed to translate "${text}" to ${targetLang}:`, err);
-    return text;
-  }
+  // Rely on pre-translated database templates or fall back to English text
+  return text;
 }
 
 export async function getOrTranslateTemplate(templateType: string, lang: string) {

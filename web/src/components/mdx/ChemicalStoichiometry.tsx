@@ -65,7 +65,7 @@ const CHEM_PRESETS: ChemPreset[] = [
   }
 ];
 
-export const ChemicalStoichiometry = ({ equation, reaction }: { equation?: string; reaction?: string }) => {
+export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equation?: string; reaction?: string; gradeLevel?: 'middle_school' | 'high_school' | 'university' }) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
 
@@ -201,7 +201,7 @@ export const ChemicalStoichiometry = ({ equation, reaction }: { equation?: strin
       <div className="p-6 md:p-8 space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex flex-wrap gap-2">
-            {CHEM_PRESETS.map((p, idx) => (
+            {(gradeLevel === 'middle_school' ? CHEM_PRESETS.slice(0, 2) : CHEM_PRESETS).map((p, idx) => (
               <button
                 key={idx}
                 onClick={() => handleReactionChange(idx)}

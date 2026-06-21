@@ -11,13 +11,15 @@ interface BasicMathExplorerProps {
   initialMode?: 'add' | 'sub' | 'mul' | 'div';
   initialNumA?: number;
   initialNumB?: number;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
 export const BasicMathExplorer = ({
   initialTab,
   initialMode,
   initialNumA,
-  initialNumB
+  initialNumB,
+  gradeLevel
 }: BasicMathExplorerProps = {}) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
@@ -159,6 +161,27 @@ export const BasicMathExplorer = ({
       });
     }
   };
+
+  if (gradeLevel === 'university') {
+    return (
+      <div className="my-10 p-8 rounded-[40px] border border-slate-800 bg-slate-900/50 backdrop-blur-3xl text-center max-w-xl mx-auto shadow-2xl">
+        <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+        <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wider animate-pulse">
+          {isFR ? "Niveau non adapté" : "Incompatible Grade Level"}
+        </h3>
+        <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+          {isFR 
+            ? "Ce module d'exploration mathématique élémentaire est conçu pour les élèves du collège et lycée. Les concepts abordés (fractions, arithmétique de base) ne sont pas adaptés au niveau universitaire."
+            : "This basic math exploration module is designed for middle and high school students. The concepts covered (fractions, basic arithmetic) are not suited for university level."}
+        </p>
+        <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-2xl p-3">
+          {isFR
+            ? "💡 Conseil pour l'Agent de Niveau 3 : Utilisez plutôt <FunctionPlotter />, <FunctionManipulator /> ou <EquationManipulator /> pour le niveau universitaire."
+            : "💡 Suggestion for Level 3 Agent: Please use <FunctionPlotter />, <FunctionManipulator />, or <EquationManipulator /> for university level."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="my-10 rounded-[40px] border border-slate-800 bg-slate-900/50 backdrop-blur-3xl shadow-2xl overflow-hidden">

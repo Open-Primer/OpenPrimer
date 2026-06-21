@@ -111,6 +111,29 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: null };
   },
   getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
+    if (courseSlug === 'Classical_Mechanics' && lessonSlug === 'newtons_laws_of_motion') {
+      return {
+        data: {
+          course_slug: courseSlug,
+          lesson_slug: lessonSlug,
+          lang: lang.toLowerCase(),
+          title: "Newton's Laws of Motion",
+          content: `---
+title: "Newton's Laws of Motion"
+subject: "Physics"
+level: "L1"
+module: "Classical Mechanics"
+---
+Welcome to Newton's Laws of Motion!
+This lesson covers:
+- First law: Inertia
+- Second law: F = ma
+- Third law: Action and reaction
+`
+        },
+        error: null
+      };
+    }
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
   },
 
@@ -119,7 +142,46 @@ export const mockDatabaseProvider: DatabaseService = {
   },
 
   getSyllabus: async (id: string) => {
-    const course = getMockCourses().find(c => c.slug === id);
+    let course = getMockCourses().find(c => c.slug === id);
+    console.log(`[MOCK PROVIDER] getSyllabus called for id/slug: '${id}'. Found course:`, course ? { id: course.id, slug: course.slug, archivingLevel: course.archivingLevel } : null);
+    if (course) {
+      let mockLevels: Record<string, number> = {};
+      if (typeof window === 'undefined') {
+        try {
+          const { cookies } = require('next/headers');
+          const cookieStore = await cookies();
+          const levelsCookie = cookieStore.get('op_mock_archiving_levels')?.value;
+          console.log(`[MOCK PROVIDER] Server-side op_mock_archiving_levels cookie value:`, levelsCookie);
+          if (levelsCookie) {
+            mockLevels = JSON.parse(levelsCookie);
+          }
+        } catch (e: any) {
+          console.error(`[MOCK PROVIDER] Server-side cookie retrieval failed:`, e.message);
+        }
+      } else {
+        try {
+          const match = document.cookie.match(/op_mock_archiving_levels=([^;]+)/);
+          console.log(`[MOCK PROVIDER] Client-side op_mock_archiving_levels match:`, match);
+          if (match) {
+            mockLevels = JSON.parse(decodeURIComponent(match[1]));
+          }
+        } catch (e: any) {
+          console.error(`[MOCK PROVIDER] Client-side cookie retrieval failed:`, e.message);
+        }
+      }
+
+      const overrideLvl = mockLevels[String(course.id)];
+      console.log(`[MOCK PROVIDER] parsed mockLevels:`, mockLevels, `overrideLvl for course.id ${course.id}:`, overrideLvl);
+      if (typeof overrideLvl === 'number') {
+        course = {
+          ...course,
+          archivingLevel: overrideLvl,
+          is_active: overrideLvl < 2,
+          isActive: overrideLvl < 2
+        };
+        console.log(`[MOCK PROVIDER] Overrode course archivingLevel to:`, overrideLvl);
+      }
+    }
     return { data: course || null, error: null };
   },
   
@@ -131,6 +193,25 @@ export const mockDatabaseProvider: DatabaseService = {
           setMockCourses(JSON.parse(stored));
         } catch (e) {}
       }
+    }
+
+    let mockLevels: Record<string, number> = {};
+    if (typeof window === 'undefined') {
+      try {
+        const { cookies } = require('next/headers');
+        const cookieStore = await cookies();
+        const levelsCookie = cookieStore.get('op_mock_archiving_levels')?.value;
+        if (levelsCookie) {
+          mockLevels = JSON.parse(levelsCookie);
+        }
+      } catch (e: any) {}
+    } else {
+      try {
+        const match = document.cookie.match(/op_mock_archiving_levels=([^;]+)/);
+        if (match) {
+          mockLevels = JSON.parse(decodeURIComponent(match[1]));
+        }
+      } catch (e: any) {}
     }
 
     const computedCourses = getMockCourses()
@@ -156,13 +237,25 @@ export const mockDatabaseProvider: DatabaseService = {
       });
       const totalValidations = courseCompletions.length;
 
-      return {
+      let course = {
         ...c,
         credits: (c.ects || 6) * 100,
         validations: totalValidations > 0 ? totalValidations : (c.validations || 0),
         ratingCount,
         averageRating
       };
+
+      const overrideLvl = mockLevels[String(course.id)];
+      if (typeof overrideLvl === 'number') {
+        course = {
+          ...course,
+          archivingLevel: overrideLvl,
+          is_active: overrideLvl < 2,
+          isActive: overrideLvl < 2
+        };
+      }
+
+      return course;
     });
 
     return { data: computedCourses, error: null };
@@ -303,8 +396,12 @@ export const mockDatabaseProvider: DatabaseService = {
     };
   },
 
-  getUserProgress: async (userId: string, lang?: string) => {
+  getUserProgress: async (userId: string, lang?: string, currentCourseSlug?: string) => {
     const isBrowser = typeof window !== 'undefined';
+    if (isBrowser) {
+      console.log(`[MOCK PROVIDER] getUserProgress raw enrolled in localStorage:`, window.localStorage.getItem('op_enrolled_courses'));
+      console.log(`[MOCK PROVIDER] mockCourses count:`, getMockCourses().length);
+    }
     let enrolled = isBrowser ? JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]') : [];
     
     // Self-healing: auto-enroll missing mandatory child courses of enrolled curricula
@@ -429,7 +526,8 @@ export const mockDatabaseProvider: DatabaseService = {
       totalMinutes,
       activeLang,
       tutorId,
-      quizResults
+      quizResults,
+      currentCourseSlug
     );
 
     return {
@@ -615,7 +713,7 @@ export const mockDatabaseProvider: DatabaseService = {
       addCourseTombstone(courseId);
       courses = courses.filter(c => c.id !== courseId);
     } else {
-      courses = courses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level === 0 } : c);
+      courses = courses.map(c => c.id === courseId ? { ...c, archivingLevel: level, is_active: level < 2 } : c);
     }
     setMockCourses(courses);
     setLocalStorageItem('openprimer_courses', courses);

@@ -8,13 +8,15 @@ interface FunctionPlotterProps {
   title?: string;
   xLabel?: string;
   yLabel?: string;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
 export const FunctionPlotter = ({
   mode = "linear",
   title = "Simulateur Graphique 2D",
   xLabel = "X",
-  yLabel = "Y"
+  yLabel = "Y",
+  gradeLevel
 }: FunctionPlotterProps) => {
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
   const svgRef = useRef<SVGSVGElement>(null);

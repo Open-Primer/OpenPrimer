@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { dbService } from '@/lib/db';
 
 interface RevisionTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   autoRevision: boolean;
   revThreshold: number;

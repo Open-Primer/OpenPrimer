@@ -88,6 +88,18 @@ function getWikipediaLabel(lang: string): string {
   return 'Wikipedia';
 }
 
+function getLearnMoreWikipediaLabel(lang: string): string {
+  const l = lang.toLowerCase();
+  if (l === 'fr') return 'En savoir plus sur Wikipédia';
+  if (l === 'es') return 'Saber más en Wikipedia';
+  if (l === 'de') return 'Mehr erfahren auf Wikipedia';
+  if (l === 'it') return 'Scopri di più su Wikipedia';
+  if (l === 'pt') return 'Saiba mais na Wikipedia';
+  if (l === 'zh') return '在维基百科上了解更多';
+  return 'Learn more on Wikipedia';
+}
+
+
 export async function enrichGlossaryWithWikipediaLinks(content: string, lang: string): Promise<string> {
   const glossaryIndex = content.search(/###\s*(Glossaire|Glossary)/i);
   if (glossaryIndex === -1) return content;
@@ -335,7 +347,11 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
         .order('order', { ascending: true });
       
       if (dbLessons && dbLessons.length > 0) {
-        const hasIntro = dbLessons.some((l: any) => l.lesson_slug.toLowerCase() === 'introduction');
+        const hasIntro = dbLessons.some((l: any) => {
+          const s = l.lesson_slug.toLowerCase();
+          const t = (l.title || '').toLowerCase();
+          return s === 'introduction' || s.startsWith('introduction-') || s.startsWith('intro-') || t.startsWith('introduction');
+        });
         
         const navItems: NavItem[] = dbLessons.map((l: any) => ({
           name: l.title || l.lesson_slug.replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()),
@@ -1140,10 +1156,10 @@ function healObjectivesTags(mdx: string): string {
 function healSelfClosingComponents(mdx: string): string {
   let processed = mdx;
   const components = [
-    'CodeSandbox', 'FunctionPlotter', 'FunctionManipulator', 'EquationManipulator',
+    'FunctionPlotter', 'FunctionManipulator', 'EquationManipulator',
     'Geometry2D', 'DataChart', 'StructureViewer3D', 'DynamicSimulation',
     'BasicMathExplorer', 'ChemicalStoichiometry', 'Video', 'Audio',
-    'FillInBlanks', 'InteractiveDiagram'
+    'FillInBlanks'
   ];
   
   for (const comp of components) {
@@ -1754,8 +1770,8 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
 
   let processed = mdx;
   for (const [french, english] of Object.entries(mapping)) {
-    const openRegex = new RegExp(`<${french}(\\b[^>]*?)>`, 'gi');
-    processed = processed.replace(openRegex, `<${english}$1>`);
+    const openRegex = new RegExp("<" + french + "(\\b(?:[^'\"\\x60]|\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'|\\x60(?:[^\\x60\\\\]|\\\\.)*\\x60)*?)(\\/?>|>)", 'gi');
+    processed = processed.replace(openRegex, "<" + english + "$1$2");
     
     const closeRegex = new RegExp(`</${french}>`, 'gi');
     processed = processed.replace(closeRegex, `</${english}>`);
@@ -1826,7 +1842,7 @@ function balancePedagogicalTags(mdx: string): string {
     'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres',
     'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate',
-    'Citation', 'QuoteBlock', 'InteractiveQuote'
+    'Citation', 'QuoteBlock', 'InteractiveQuote', 'CodeSandbox'
   ];
   
   const allTags = [...inlineTags, ...blockTags];
@@ -1834,7 +1850,7 @@ function balancePedagogicalTags(mdx: string): string {
 
   for (const tag of allTags) {
     const isInline = inlineTags.includes(tag);
-    const regex = new RegExp(`<(\\/?)(${tag})\\b([^>]*?)(\\/?)>`, 'gi');
+    const regex = new RegExp("<(\\/?)(" + tag + ")\\b((?:[^'\"\\x60]|\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'|\\x60(?:[^\\x60\\\\]|\\\\.)*\\x60)*?)(\\/?)>", 'gi');
     
     interface Token {
       index: number;
@@ -2342,10 +2358,23 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
 
+  // Fix AI-generated syntax errors in code attributes/blocks where `>=` or `<=` was mistyped with a slash (e.g. `/>=` or `/<=`)
+  processed = processed.replace(/\/>=/g, '>=');
+  processed = processed.replace(/\/<=/g, '<=');
+
   // Fix AI-generated double-bracket Wikipedia links that produce a stray closing parenthesis.
   // Pattern: [[Wikipédia](url)] or [[Wikipedia](url)] → [Wikipédia](url)
   // The outer brackets were intended as a Markdown link wrapper but produce literal "[text](url)]"
   processed = processed.replace(/\[\[([^\]]+)\]\(([^)]+)\)\]/g, '[$1]($2)');
+
+  // Normalize Wikipedia / Wikipédia link text based on current language
+  const wikiLabel = getWikipediaLabel(lang);
+  processed = processed.replace(/\[Wikip[eé]dia\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${wikiLabel}]($1)`);
+
+  // Normalize "En savoir plus sur Wikipédia" / "Learn more on Wikipedia" link labels
+  const learnMoreLabel = getLearnMoreWikipediaLabel(lang);
+  processed = processed.replace(/\[(?:En savoir plus sur Wikipédia|Learn more on Wikipedia|Saber más en Wikipedia|Mehr erfahren auf Wikipedia|Scopri di più su Wikipedia|Saiba mais na Wikipedia|在维基百科上了解更多)\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${learnMoreLabel}]($1)`);
+
 
   // Remove markdown wrapping (emphasis/strong) around JSX tags to prevent MDX parser escaping them as raw text
   processed = processed.replace(/\*\*<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>\*\*/g, '<$1$2>$3</$1>');
@@ -2477,7 +2506,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/\[\/[nN]ote\]/g, '');
 
   // Strip heading custom identifiers like {#section-id} that crash MDX/acorn
-  processed = processed.replace(/\s*{#[\w\-]+}/g, '');
+  processed = processed.replace(/\s*(?:{#[\w\-]+}|&#123;#[\w\-]+&#125;)/g, '');
 
   // Remove AI-generated orphaned intro sentences that precede <Objectives> blocks.
   // floating paragraphs when <Objectives> is empty and returns null.
@@ -2886,8 +2915,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
  */
 function removeOrphanedCloseTags(mdx: string): string {
   const HTML_SELF_CLOSING = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-  // Quote-aware and escape-aware regex to ensure that < and > inside string attributes do not interfere with tag extraction
-  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)(\/?)>/g;
+  // Quote-aware, backtick-aware, and escape-aware regex to ensure that < and > inside string attributes do not interfere with tag extraction
+  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b((?:[^'">`]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)*?)(\/?)>/g;
   
   const stack: { name: string; start: number; end: number }[] = [];
   const toRemove: { start: number; end: number }[] = [];
@@ -3033,7 +3062,7 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   });
 
   // Step 2: Replace all opening or self-closing custom JSX tags
-  const tagRegex = /<([A-Z][A-Za-z0-9.]*)\b((?:[^'">]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')*?)(\/?>)/g;
+  const tagRegex = /<([A-Z][A-Za-z0-9.]*)\b((?:[^'">`]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)*?)(\/?>)/g;
   processed = processed.replace(tagRegex, (match, tagName, attrsStr, tagEnd) => {
     const isSelfClosing = tagEnd.trim() === '/>';
     const attrs = parseAttributes(attrsStr);
@@ -3382,13 +3411,30 @@ function simplifyCitationQuery(citationText: string): string {
     }
   }
 
-  // 3. Extract first author: first word of the text before any punctuation/parenthesis
-  const authorPart = cleanText.split(/[\(.,.。]/)[0].trim();
+  // 3. Extract first author's family name (skipping single-letter initials and suffixes)
+  let textBeforeTitle = cleanText;
+  const quoteIndex = cleanText.search(/[*_“"«]/);
+  if (quoteIndex !== -1) {
+    textBeforeTitle = cleanText.substring(0, quoteIndex);
+  }
+  
+  const authorPart = textBeforeTitle.split(/,|\band\b|&|;|\(/i)[0].trim();
   if (authorPart) {
-    const words = authorPart.split(/\s+/);
-    author = words[0] || '';
-    // Clean any residual punctuation
-    author = author.replace(/[^\w]/g, '');
+    const rawTokens = authorPart.split(/[\s.]+/).map(t => t.trim()).filter(Boolean);
+    const suffixes = new Set(['jr', 'sr', 'ii', 'iii', 'iv', 'v', 'esq', 'dr', 'prof']);
+    const cleanTokens = rawTokens.filter(token => {
+      const lower = token.toLowerCase();
+      if (token.length <= 1) return false;
+      if (suffixes.has(lower)) return false;
+      const pureAlpha = token.replace(/[^a-zA-Z]/g, '');
+      if (pureAlpha.length <= 1) return false;
+      return true;
+    });
+    if (cleanTokens.length > 0) {
+      author = cleanTokens.join(' ');
+    } else {
+      author = rawTokens[0] || '';
+    }
   }
 
   // Clean title
@@ -3401,24 +3447,14 @@ function simplifyCitationQuery(citationText: string): string {
     title = title.substring(0, 60).trim();
   }
 
-  // Assemble in the required order: [Author] [Title] [Year]
+  // Assemble in the required order: [Author] "[Title]" [Year]
   const queryParts = [];
   if (author) {
     queryParts.push(author);
   }
   
   if (title) {
-    const titleLower = title.toLowerCase();
-    const authorLower = author.toLowerCase();
-    if (author && titleLower.startsWith(authorLower)) {
-      queryParts.push(title);
-      // Remove author from start of queryParts if we pushed it to prevent duplicate like "Campbell Campbell Biology"
-      if (queryParts[0] === author) {
-        queryParts.shift();
-      }
-    } else {
-      queryParts.push(title);
-    }
+    queryParts.push(`"${title}"`);
   }
   
   if (year) {

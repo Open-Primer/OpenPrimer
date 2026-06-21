@@ -7,7 +7,7 @@ interface ArchivingLevelButtonsProps {
   currentLevel: number;
   onChange: (level: number) => void;
   disableLevel3?: boolean;
-  lang?: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang?: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
 }
 
 export const ArchivingLevelButtons: React.FC<ArchivingLevelButtonsProps> = ({

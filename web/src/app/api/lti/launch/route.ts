@@ -264,7 +264,59 @@ export async function POST(request: Request) {
       }
     }
 
-    // 9. Generate high-fidelity HTML launcher response
+    // Sync user session details to browser cookies immediately to ensure seamless route guard validation on direct redirect
+    try {
+      const { data: progressRecords } = await supabaseAdmin
+        .from('progress')
+        .select('course_id')
+        .eq('user_id', profile.id);
+      const enrolledIds = progressRecords ? progressRecords.map((r: any) => r.course_id) : [];
+
+      cookieStore.set('op_user_id', profile.id, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+      cookieStore.set('op_user_role', profile.role || 'student', { path: '/', maxAge: 31536000, sameSite: 'lax' });
+      cookieStore.set('op_enrolled_courses', JSON.stringify(enrolledIds), { path: '/', maxAge: 31536000, sameSite: 'lax' });
+    } catch (cookieErr) {
+      console.error('[LTI-LAUNCH] Failed to write session cookies during API launch:', cookieErr);
+    }
+
+    // 9. Generate and symmetrically sign a Custom Supabase JWT for Option 2 (Secure LTI Auth)
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+    if (!jwtSecret) {
+      console.warn('[LTI-LAUNCH] WARNING: SUPABASE_JWT_SECRET environment variable is not defined. Using a temporary fallback signature. Authenticated client-side queries will fail signature validation in Supabase.');
+    }
+    const secretToUse = jwtSecret || 'super-secret-jwt-token-with-at-least-32-characters-long';
+
+    const jwtHeader = {
+      alg: 'HS256',
+      typ: 'JWT'
+    };
+
+    const jwtNowSeconds = Math.floor(Date.now() / 1000);
+    const jwtPayload = {
+      aud: 'authenticated',
+      exp: jwtNowSeconds + 3600 * 24, // 24 hours expiry
+      sub: profile.id,
+      email: profile.email,
+      app_metadata: {
+        provider: 'lti',
+        providers: ['lti']
+      },
+      user_metadata: {
+        name: profile.name
+      },
+      role: 'authenticated'
+    };
+
+    const jwtHeaderB64 = Buffer.from(JSON.stringify(jwtHeader)).toString('base64url');
+    const jwtPayloadB64 = Buffer.from(JSON.stringify(jwtPayload)).toString('base64url');
+    const signature = crypto
+      .createHmac('sha256', secretToUse)
+      .update(`${jwtHeaderB64}.${jwtPayloadB64}`)
+      .digest('base64url');
+
+    const signedJwt = `${jwtHeaderB64}.${jwtPayloadB64}.${signature}`;
+
+    // 10. Generate high-fidelity HTML launcher response with Supabase setSession integration
     const profileToInject = {
       id: profile.id,
       firstName: profile.name.split(' ')[0],
@@ -381,25 +433,52 @@ export async function POST(request: Request) {
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    try {
-      localStorage.setItem('op_session', 'true');
-      localStorage.setItem('op_user_profile', JSON.stringify(${JSON.stringify(profileToInject)}));
-      localStorage.setItem('op_logged_in_before', 'true');
+    async function initializeSession() {
+      try {
+        localStorage.setItem('op_session', 'true');
+        localStorage.setItem('op_user_profile', JSON.stringify(${JSON.stringify(profileToInject)}));
+        localStorage.setItem('op_logged_in_before', 'true');
 
-      if (window.opener) {
-        window.opener.postMessage({ type: 'LTI_LOGIN_SUCCESS', profile: ${JSON.stringify(profileToInject)} }, '*');
+        // Retrieve config passed from the server
+        const supabaseUrl = ${JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL || '')};
+        const supabaseAnonKey = ${JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '')};
+        const jwtToken = ${JSON.stringify(signedJwt)};
+
+        if (supabaseUrl && supabaseAnonKey && jwtToken && window.supabase) {
+          try {
+            const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            const { error } = await supabaseClient.auth.setSession({
+              access_token: jwtToken,
+              refresh_token: null
+            });
+            if (error) {
+              console.error('Supabase setSession error:', error);
+            } else {
+              console.log('Supabase authenticated session established successfully.');
+            }
+          } catch (supErr) {
+            console.error('Failed to initialize Supabase client:', supErr);
+          }
+        }
+
+        if (window.opener) {
+          window.opener.postMessage({ type: 'LTI_LOGIN_SUCCESS', profile: ${JSON.stringify(profileToInject)} }, '*');
+        }
+
+        document.getElementById('status').innerText = 'Session initialized. Redirecting to lesson...';
+        
+        setTimeout(() => {
+          window.location.href = ${JSON.stringify(redirectPath)};
+        }, 800);
+      } catch (e) {
+        console.error('Storage access error:', e);
+        document.getElementById('status').innerText = 'Failed to write session. Please check browser settings.';
       }
-
-      document.getElementById('status').innerText = 'Session initialized. Redirecting to lesson...';
-      
-      setTimeout(() => {
-        window.location.href = ${JSON.stringify(redirectPath)};
-      }, 800);
-    } catch (e) {
-      console.error('Storage access error:', e);
-      document.getElementById('status').innerText = 'Failed to write session. Please check browser settings.';
     }
+
+    initializeSession();
   </script>
 </body>
 </html>`;

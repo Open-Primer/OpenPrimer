@@ -16,7 +16,7 @@ import {
 import { dbService } from '@/lib/db';
 
 interface GenerationTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   t: any;
   tr: (key: string) => string;
   autoApprove: boolean;
@@ -38,6 +38,7 @@ interface GenerationTabProps {
   setQueue: React.Dispatch<React.SetStateAction<any[]>>;
   loadData: () => Promise<void>;
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void;
+  isQueueLoaded?: boolean;
 }
 
 export const GenerationTab: React.FC<GenerationTabProps> = ({
@@ -60,7 +61,8 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
   queue,
   setQueue,
   loadData,
-  showToast
+  showToast,
+  isQueueLoaded = true
 }) => {
   // Manual curriculum / course proposal form states
   const [manualTitle, setManualTitle] = useState('');
@@ -157,7 +159,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
 
     const updated = [...queue, newTask];
     setQueue(updated);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     
     // Clear form
     setManualTitle('');
@@ -415,6 +420,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
               <option value="ES">Español 🇪🇸</option>
               <option value="DE">Deutsch 🇩🇪</option>
               <option value="ZH">中文 🇨🇳</option>
+              <option value="PT">Português 🇧🇷</option>
+              <option value="AR">العربية 🇸🇦</option>
+              <option value="HI">हिन्दी 🇮🇳</option>
+              <option value="UR">اردو 🇵🇰</option>
             </select>
           </div>
           <div className="space-y-2">
@@ -445,16 +454,18 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
         <div className="flex justify-end pt-2">
           <button
             type="button"
+            disabled={!isQueueLoaded}
             onClick={() => {
+              if (!isQueueLoaded) return;
               if (!manualTitle.trim()) {
                 showToast(tr("Title cannot be empty!"), 'error');
                 return;
               }
               setShowManualConfirm(true);
             }}
-            className="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+            className={`py-3 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${!isQueueLoaded ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'}`}
           >
-            <Zap className="w-4 h-4" /> {tr("Create Academic Proposal")}
+            <Zap className="w-4 h-4" /> {!isQueueLoaded ? tr("Loading Queue...") : tr("Create Academic Proposal")}
           </button>
         </div>
       </div>

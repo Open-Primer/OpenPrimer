@@ -42,11 +42,13 @@ const PARAMETERS: Record<PresetType, Parameter[]> = {
   ]
 };
 
-export const FunctionManipulator = () => {
+export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_school' | 'high_school' | 'university' } = {}) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
 
-  const [preset, setPreset] = useState<PresetType>('sinusoidal');
+  const [preset, setPreset] = useState<PresetType>(() => {
+    return gradeLevel === 'middle_school' ? 'linear' : 'sinusoidal';
+  });
   const [params, setParams] = useState<Record<string, number>>({
     m: 1, p: 0,
     a: 0.5, b: 0, c: -1,
@@ -251,7 +253,7 @@ export const FunctionManipulator = () => {
 
       {/* Preset tabs */}
       <div className="flex flex-wrap gap-2">
-        {(['linear', 'quadratic', 'sinusoidal', 'exponential', 'logarithmic'] as PresetType[]).map(type => (
+        {((gradeLevel === 'middle_school' ? ['linear', 'quadratic'] : ['linear', 'quadratic', 'sinusoidal', 'exponential', 'logarithmic']) as PresetType[]).map(type => (
           <button
             key={type}
             onClick={() => {

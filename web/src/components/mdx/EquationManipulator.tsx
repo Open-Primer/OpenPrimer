@@ -218,7 +218,7 @@ const MATH_PRESETS: MathPreset[] = [
   }
 ];
 
-export const EquationManipulator = () => {
+export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_school' | 'high_school' | 'university' } = {}) => {
   const { language } = useLanguage();
   const isFR = language === 'FR';
 

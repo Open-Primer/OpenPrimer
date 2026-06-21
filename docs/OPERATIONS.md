@@ -7,13 +7,13 @@ This document details the operational governance, cost management, code contribu
 
 ## 1. The Administrative Governance Cockpit
 
-OpenPrimer includes a centralized, tabbed administrative dashboard (`/admin`) designed to monitor search patterns, manage tutor parameters, review translations, and configure platform settings:
+OpenPrimer includes a centralized, tabbed administrative dashboard (`/admin`) designed to monitor search patterns, manage tutor parameters, review translations, and configure platform settings. The cockpit UI is **fully internationalized** in 9 languages (EN, FR, ES, DE, ZH, PT, AR, HI, UR) with automatic RTL layout for Arabic and Urdu:
 
 1.  **Search History Autonomy (Tab 1):** Real-time monitoring of failed queries (`dbService.getSearchHistory()` where `wasSuccessful: false`). If a missing course topic crosses the configured threshold, the Autonomy Engine automatically queues it for creation.
 2.  **Side-by-Side Translation Workspace (Tab 2):** Admin review drawer displaying original English MDX side-by-side with localized drafts, allowing instant edits and confirmation.
 3.  **AI Tutor Personality Controls (Tab 3):** Global system instructions panel to configure Socratic, Direct, or Gamified prompt personas. Tracks total Vertex AI tokens consumed and cost estimations.
 4.  **Syllabus Topology Viewer (Tab 4):** Collapsible graphical tree detailing prerequisite dependencies across disciplines.
-5.  **AI Badge Builder Engine (Tab 6):** Automated badge generator. Analyzes user actions (e.g. "streak" triggers Flame icons) and automatically compiles multilingual dictionary entries. *Strict validation blocks zero or negative threshold parameters.*
+5.  **AI Badge Builder Engine (Tab 6):** Automated badge generator. Analyzes user actions (e.g. \"streak\" triggers Flame icons) and automatically compiles multilingual dictionary entries. *Strict validation blocks zero or negative threshold parameters.*
 6.  **Granular Retention Sliders:** Placed directly inside active views (Tab 1 for search, Tab 2 for translations, Tab 3 for feedback) to instantly vacuum and prune expired history logs.
 
 ---

@@ -56,7 +56,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // Layer 1: Instant synchronous browser-locale check
         if (typeof navigator !== 'undefined' && navigator.language) {
           const browserLang = navigator.language.split('-')[0].toUpperCase();
-          if (['FR', 'ES', 'DE', 'ZH'].includes(browserLang)) {
+          if (['FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'].includes(browserLang)) {
             fallbackLang = browserLang;
           }
         }
@@ -75,12 +75,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
               
               if (['FR', 'MC', 'GP', 'MQ', 'RE', 'YT'].includes(cc)) {
                 detectedLang = 'FR';
-              } else if (['ES', 'MX', 'AR', 'CO', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'UY', 'PA', 'GQ'].includes(cc)) {
+              } else if (['ES', 'MX', 'CO', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'UY', 'PA', 'GQ'].includes(cc)) {
                 detectedLang = 'ES';
               } else if (['DE', 'AT', 'CH', 'LI'].includes(cc)) {
                 detectedLang = 'DE';
               } else if (['CN', 'TW', 'HK'].includes(cc)) {
                 detectedLang = 'ZH';
+              } else if (['PT', 'BR', 'AO', 'MZ', 'CV', 'ST'].includes(cc)) {
+                detectedLang = 'PT';
+              } else if (['SA', 'EG', 'DZ', 'MA', 'IQ', 'SY', 'YE', 'TN', 'JO', 'LB', 'LY', 'OM', 'AE', 'QA', 'KW', 'BH', 'SD'].includes(cc)) {
+                detectedLang = 'AR';
+              } else if (['IN'].includes(cc)) {
+                detectedLang = 'HI';
+              } else if (['PK'].includes(cc)) {
+                detectedLang = 'UR';
               }
               
               const stillNotSaved = !localStorage.getItem('openprimer_lang');
@@ -103,8 +111,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const langUpper = language.toUpperCase();
     
-    // Skip statically compiled dictionaries
-    if (['EN', 'FR', 'ES', 'DE', 'ZH'].includes(langUpper)) {
+    // Skip statically compiled dictionaries (only EN is static)
+    if (langUpper === 'EN') {
       return;
     }
     

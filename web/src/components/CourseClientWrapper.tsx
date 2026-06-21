@@ -171,7 +171,7 @@ export const CourseClientWrapper = ({
           setSelection({
             text,
             x: rect.left + rect.width / 2,
-            y: rect.top - 45
+            y: rect.bottom + 10
           });
         }
       } catch (e) {
@@ -470,7 +470,9 @@ export const CourseClientWrapper = ({
           
           syncCurriculumProgress(progressMap);
           
-          window.dispatchEvent(new Event('op_progress_updated'));
+          setTimeout(() => {
+            window.dispatchEvent(new Event('op_progress_updated'));
+          }, 0);
           
           if ((progressService as any).saveLocationAndCompletion) {
             (progressService as any).saveLocationAndCompletion(slug, scrollTopVal ?? (el ? el.scrollTop : 0), finalProgress, pathname);
@@ -533,11 +535,13 @@ export const CourseClientWrapper = ({
     const handleProgressUpdated = () => {
       if (isRecalculating) return;
       isRecalculating = true;
-      try {
-        recalculateProgress();
-      } finally {
-        isRecalculating = false;
-      }
+      setTimeout(() => {
+        try {
+          recalculateProgress();
+        } finally {
+          isRecalculating = false;
+        }
+      }, 0);
     };
     window.addEventListener('op_progress_updated', handleProgressUpdated);
 

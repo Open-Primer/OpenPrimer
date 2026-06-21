@@ -9,28 +9,29 @@ interface ComparisonSliderProps {
   beforeContent: React.ReactNode;
   afterContent: React.ReactNode;
   layout?: 'clip' | 'split';
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
 const SLIDER_STRINGS = {
   EN: {
     before: "Before",
     after: "After",
-    hint: "👈 Drag slider to compare both states 👉"
+    hint: "👈 Drag slider to compare states 👉"
   },
   FR: {
     before: "Avant",
     after: "Après",
-    hint: "👈 Glissez le curseur pour comparer les deux états 👉"
+    hint: "👈 Glissez le curseur pour comparer 👉"
   },
   ES: {
     before: "Antes",
     after: "Después",
-    hint: "👈 Deslice le curseur pour comparer les deux états 👉"
+    hint: "👈 Arrastre el control deslizante para comparar 👉"
   },
   DE: {
     before: "Vorher",
     after: "Nachher",
-    hint: "👈 Schieben Sie den Regler, um beide Zustände zu vergleichen 👉"
+    hint: "👈 Regler ziehen, um zu vergleichen 👉"
   },
   ZH: {
     before: "之前",
@@ -44,7 +45,8 @@ export const ComparisonSlider = ({
   afterLabel,
   beforeContent,
   afterContent,
-  layout
+  layout,
+  gradeLevel
 }: ComparisonSliderProps) => {
   const { language } = useLanguage();
   const [sliderPosition, setSliderPosition] = useState(50); // 0 to 100

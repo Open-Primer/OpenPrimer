@@ -26,6 +26,7 @@ import { SolvedExercise, UnsolvedExercise } from './InteractiveExercises';
 import { GestaltInteractive } from './GestaltInteractive';
 import { DataChart } from './DataChart';
 import { StructureViewer3D } from './StructureViewer3D';
+import { QuantumOrbitalExplorer } from './QuantumOrbitalExplorer';
 import { DynamicSimulation } from './DynamicSimulation';
 import { GoingFurther, GoingFurtherItem } from './GoingFurther';
 import { Citation, QuoteBlock, InteractiveQuote } from './Citation';
@@ -1364,6 +1365,8 @@ const components = {
   GestaltLab: GestaltInteractive, // Alias
   DataChart,
   StructureViewer3D,
+  QuantumOrbitalExplorer,
+  ExplorateurOrbitalesQuantiques: QuantumOrbitalExplorer,
   DynamicSimulation,
   GoingFurther,
   GoingFurtherItem,
@@ -1594,7 +1597,7 @@ function getAffectedComponentsList(rawMdx: string | undefined, lang: string): st
   if (/<DynamicTableChart/i.test(rawMdx)) {
     detected.push('tables');
   }
-  if (/<StructureViewer3D/i.test(rawMdx)) {
+  if (/<(StructureViewer3D|QuantumOrbitalExplorer)/i.test(rawMdx)) {
     detected.push('models3d');
   }
 

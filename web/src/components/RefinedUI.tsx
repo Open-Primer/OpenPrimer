@@ -443,7 +443,8 @@ export const AITutorOverlay = ({
       }
       
       try {
-        const { data: progressData } = await dbService.getUserProgress(userId, lang);
+        const currentCourseSlug = segments[2];
+        const { data: progressData } = await dbService.getUserProgress(userId, lang, currentCourseSlug);
         if (progressData && progressData.aiSummary && active) {
           setCoachAdvice(progressData.aiSummary);
           
@@ -463,7 +464,7 @@ export const AITutorOverlay = ({
     return () => {
       active = false;
     };
-  }, [lang, isCurriculumPage]);
+  }, [lang, isCurriculumPage, pathname]);
 
   const handleDismissCoachPopover = () => {
     setShowCoachPopover(false);

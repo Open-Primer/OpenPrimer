@@ -357,10 +357,6 @@ export const CatalogPage = () => {
   const [filterType, setFilterType] = useState<'All' | 'Course' | 'Curriculum'>('All');
   const [sortBy, setSortBy] = useState<'popularity' | 'validations'>('popularity');
 
-  // Free Client-Side Translation States for Courses
-  const [translatedCourses, setTranslatedCourses] = useState<Record<number, { title: string; description: string }>>({});
-  const [translatingCourseIds, setTranslatingCourseIds] = useState<Record<number, boolean>>({});
-
   // Dynamic Enrollment States
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
@@ -380,42 +376,6 @@ export const CatalogPage = () => {
     }
     // Production enrolled IDs come from loadCoursesAndProgress() via Supabase below
   }, []);
-
-  const translateCourse = async (courseId: number, title: string, description: string) => {
-    if (translatedCourses[courseId]) {
-      // Toggle back to original
-      setTranslatedCourses(prev => {
-        const copy = { ...prev };
-        delete copy[courseId];
-        return copy;
-      });
-      return;
-    }
-    if (translatingCourseIds[courseId]) return;
-
-    setTranslatingCourseIds(prev => ({ ...prev, [courseId]: true }));
-    try {
-      const targetLang = lang.toLowerCase();
-      // Translate title
-      const resTitle = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(title)}`);
-      const dataTitle = await resTitle.json();
-      const translatedTitle = dataTitle[0].map((x: any) => x[0]).join('');
-
-      // Translate description
-      const resDesc = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(description)}`);
-      const dataDesc = await resDesc.json();
-      const translatedDesc = dataDesc[0].map((x: any) => x[0]).join('');
-
-      setTranslatedCourses(prev => ({
-        ...prev,
-        [courseId]: { title: translatedTitle, description: translatedDesc }
-      }));
-    } catch (error) {
-      console.error("Course translation failed", error);
-    } finally {
-      setTranslatingCourseIds(prev => ({ ...prev, [courseId]: false }));
-    }
-  };
 
   // Delegates to the canonical 90-day rule in progressService
   const isCourseNew = (course: any) => progressService.isNewCourse(course.created_at);
@@ -1010,10 +970,10 @@ export const CatalogPage = () => {
                     })()}
                     
                     <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
-                      {translatedCourses[course.id]?.title || getLocalizedCourseTitle(course)}
+                      {getLocalizedCourseTitle(course)}
                     </h3>
                     <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
-                      {translatedCourses[course.id]?.description || getLocalizedCourseDescription(course)}
+                      {getLocalizedCourseDescription(course)}
                     </p>
 
 

@@ -71,12 +71,64 @@ export const FEEDBACK_STRINGS = {
     reply: "通过邮件回复",
     empty_title: "未找到咨询信息",
     empty_desc: "您的联系邮箱目前干净且空无一物。"
+  },
+  PT: {
+    title: "Consultas & Feedback",
+    subtitle: "Registro somente leitura das consultas enviadas pelo formulário de contato. Política de retenção automática estricta de 90 dias.",
+    refresh: "Atualizar",
+    loading: "Carregando feed de feedback...",
+    days_left: "dias restantes",
+    translating: "Traduzindo...",
+    show_original: "Mostrar Original",
+    translate: "Traduzir",
+    reply: "Responder via E-mail",
+    empty_title: "Nenhuma consulta encontrada",
+    empty_desc: "Sua caixa de correio de contato está limpa e vazia."
+  },
+  AR: {
+    title: "الاستفسارات والتعليقات",
+    subtitle: "سجل للقراءة فقط للاستفسارات المرسلة من نموذج الاتصال. سياسة احتفاظ تلقائي صارمة لمدة 90 يوماً.",
+    refresh: "تحديث",
+    loading: "جاري تحميل التعليقات...",
+    days_left: "أيام متبقية",
+    translating: "جاري الترجمة...",
+    show_original: "عرض الأصل",
+    translate: "ترجم",
+    reply: "الرد عبر البريد الإلكتروني",
+    empty_title: "لم يتم العثور على أي استفسارات",
+    empty_desc: "صندوق بريد الاتصال الخاص بك نظيف وفارغ حالياً."
+  },
+  HI: {
+    title: "पूछताछ और प्रतिक्रिया",
+    subtitle: "वेबसाइट संपर्क फ़ॉर्म पूछताछ का केवल-पठन लॉग। सख्त 90-दिवसीय स्वचालित प्रतिधारण नीति।",
+    refresh: "ताज़ा करें",
+    loading: "प्रतिक्रिया लोड हो रही है...",
+    days_left: "दिन बचे हैं",
+    translating: "अनुवाद किया जा रहा है...",
+    show_original: "मूल दिखाएं",
+    translate: "अनुवाद करें",
+    reply: "ईमेल के माध्यम से उत्तर दें",
+    empty_title: "कोई पूछताछ नहीं मिली",
+    empty_desc: "आपका संपर्क मेलबॉक्स वर्तमान में साफ और खाली है।"
+  },
+  UR: {
+    title: "پوچھ گچھ اور تاثرات",
+    subtitle: "رابطہ فارم سے موصول ہونے والی پوچھ گچھ کا صرف پڑھنے کے قابل لاگ۔ سخت 90 روزہ خودکار برقراری کی پالیسی۔",
+    refresh: "تازہ کریں",
+    loading: "تاثرات لوڈ ہو رہے ہیں...",
+    days_left: "دن باقی ہیں",
+    translating: "ترجمہ ہو رہا ہے...",
+    show_original: "اصل دکھائیں",
+    translate: "ترجمہ کریں",
+    reply: "ای میل کے ذریعے جواب دیں",
+    empty_title: "کوئی پوچھ گچھ نہیں ملی",
+    empty_desc: "آپ کا رابطہ میل بکس فی الحال صاف اور خالی ہے۔"
   }
 };
 
 export default function AdminFeedbackPage() {
   const { language: globalLang } = useLanguage();
-  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
   const t = FEEDBACK_STRINGS[lang] || FEEDBACK_STRINGS.EN;
 
   const [contactFeedbacks, setContactFeedbacks] = useState<ContactFeedback[]>([]);

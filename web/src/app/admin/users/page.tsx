@@ -187,6 +187,150 @@ export const USERS_STRINGS = {
     theme_default: "✨ 默认极黑 (深色)",
     theme_paper: "📜 羊皮纸张 (褐色)",
     theme_focus: "👁️ 专注模式 (纯黑)"
+  },
+  PT: {
+    title: "Controle de Identidade",
+    subtitle: "Gerencie a segurança da plataforma e funções administrativas.",
+    add_student: "Adicionar Estudante",
+    search_placeholder: "Buscar estudantes...",
+    col_identity: "Identidade",
+    col_privileges: "Privilégios",
+    col_progress: "Progresso",
+    col_status: "Status",
+    col_access: "Controle de Acesso",
+    admin_role: "Admin",
+    student_role: "Estudante",
+    status_blocked: "Bloqueado",
+    status_active: "Ativo",
+    confirm_title: "Confirmar Ação",
+    confirm_msg: "Tem certeza de que deseja realizar esta ação? Esta ação é irreversível.",
+    cancel: "Cancelar",
+    execute: "Executar",
+    add_title: "Adicionar Novo Estudante",
+    first_name: "Primeiro Nome",
+    last_name: "Sobrenome",
+    email_address: "Endereço de E-mail",
+    password: "Senha",
+    system_role: "Função do Sistema",
+    lang_pref: "Preferência de Idioma",
+    visual_theme: "Tema Visual",
+    create_profile: "Criar Perfil de Estudante",
+    error_required: "Primeiro Nome, Sobrenome e E-mail são estritamente necessários.",
+    error_email: "Por favor, forneça um endereço de e-mail corporativo ou acadêmico válido.",
+    error_password: "A senha deve ter pelo menos 12 caracteres, incluindo uma letra maiúscula, uma letra minúscula, um número e um caractere especial.",
+    student_opt: "🎓 Perfil de Estudante (Padrão)",
+    admin_opt: "🛡️ Privilégios de Administrador",
+    theme_default: "✨ Padrão (Escuro)",
+    theme_paper: "📜 Papel (Sépia)",
+    theme_focus: "👁️ Foco (Preto)"
+  },
+  AR: {
+    title: "التحكم في الهوية",
+    subtitle: "إدارة أمن المنصة والأدوار الإدارية.",
+    add_student: "إضافة طالب",
+    search_placeholder: "البحث عن الطلاب...",
+    col_identity: "الهوية",
+    col_privileges: "الامتيازات",
+    col_progress: "التقدم",
+    col_status: "الحالة",
+    col_access: "التحكم في الوصول",
+    admin_role: "مسؤول",
+    student_role: "طالب",
+    status_blocked: "محظور",
+    status_active: "نشط",
+    confirm_title: "تأكيد الإجراء",
+    confirm_msg: "هل أنت متأكد من رغبتك في اتخاذ هذا الإجراء؟ هذا الإجراء غير قابل للتراجع.",
+    cancel: "إلغاء",
+    execute: "تنفيذ",
+    add_title: "إضافة طالب جديد",
+    first_name: "الاسم الأول",
+    last_name: "اسم العائلة",
+    email_address: "عنوان البريد الإلكتروني",
+    password: "كلمة المرور",
+    system_role: "دور النظام",
+    lang_pref: "اللغة المفضلة",
+    visual_theme: "المظهر المرئي",
+    create_profile: "إنشاء ملف تعريف الطالب",
+    error_required: "الاسم الأول واسم العائلة والبريد الإلكتروني مطلوبة بشكل صارم.",
+    error_email: "يرجى تقديم عنوان بريد إلكتروني صالح للمؤسسة أو الأكاديمية.",
+    error_password: "يجب أن تتكون كلمة المرور من 12 حرفاً على الأقل، بما في ذلك حرف كبير وحرف صغير ورقم ورمز خاص.",
+    student_opt: "🎓 ملف تعريف الطالب (افتراضي)",
+    admin_opt: "🛡️ امتيازات المسؤول",
+    theme_default: "✨ الافتراضي (داكن)",
+    theme_paper: "📜 ورقي (سبيا)",
+    theme_focus: "👁️ التركيز (أسود)"
+  },
+  HI: {
+    title: "पहचान नियंत्रण",
+    subtitle: "प्लेटफ़ॉर्म सुरक्षा और व्यवस्थापकीय भूमिकाओं का प्रबंधन करें।",
+    add_student: "छात्र जोड़ें",
+    search_placeholder: "छात्रों को खोजें...",
+    col_identity: "पहचान",
+    col_privileges: "विशेषाधिकार",
+    col_progress: "प्रगति",
+    col_status: "स्थिति",
+    col_access: "पहुंच नियंत्रण",
+    admin_role: "एडमिन",
+    student_role: "छात्र",
+    status_blocked: "अवरुद्ध",
+    status_active: "सक्रिय",
+    confirm_title: "कार्रवाई की पुष्टि करें",
+    confirm_msg: "क्या आप निश्चित रूप से यह कार्रवाई करना चाहते हैं? यह कार्रवाई अपरिवर्तनीय है।",
+    cancel: "रद्द करें",
+    execute: "निष्पादित करें",
+    add_title: "नया छात्र जोड़ें",
+    first_name: "पहला नाम",
+    last_name: "अंतिम नाम",
+    email_address: "ईमेल पता",
+    password: "पासवर्ड",
+    system_role: "सिस्टम भूमिका",
+    lang_pref: "भाषा प्राथमिकता",
+    visual_theme: "दृश्य थीम",
+    create_profile: "छात्र प्रोफ़ाइल बनाएं",
+    error_required: "पहला नाम, अंतिम नाम और ईमेल कड़ाई से आवश्यक हैं।",
+    error_email: "कृपया एक मान्य कॉर्पोरेट या शैक्षणिक ईमेल पता प्रदान करें।",
+    error_password: "पासवर्ड कम से कम 12 वर्ण लंबा होना चाहिए, जिसमें एक बड़ा अक्षर, एक छोटा अक्षर, एक संख्या और एक विशेष वर्ण शामिल होना चाहिए।",
+    student_opt: "🎓 छात्र प्रोफ़ाइल (डिफ़ॉल्ट)",
+    admin_opt: "🛡️ व्यवस्थापक विशेषाधिकार",
+    theme_default: "✨ डिफ़ॉल्ट (डार्क)",
+    theme_paper: "📜 पेपर (सेपिया)",
+    theme_focus: "👁️ फोकस (ब्लैक)"
+  },
+  UR: {
+    title: "شناخت کا کنٹرول",
+    subtitle: "پلیٹ فارم کی حفاظت اور انتظامی کرداروں کا انتظام کریں۔",
+    add_student: "طالب علم شامل کریں",
+    search_placeholder: "طلباء تلاش کریں...",
+    col_identity: "شناخت",
+    col_privileges: "مراعات",
+    col_progress: "ترقی",
+    col_status: "حالت",
+    col_access: "رسائی کا کنٹرول",
+    admin_role: "ایڈمن",
+    student_role: "طالب علم",
+    status_blocked: "بلاک شدہ",
+    status_active: "فعال",
+    confirm_title: "کارروائی کی تصدیق کریں",
+    confirm_msg: "کیا آپ واقعی یہ کارروائی کرنا چاہتے ہیں؟ یہ کارروائی ناقابل واپسی ہے۔",
+    cancel: "منسوخ کریں",
+    execute: "عمل درآمد کریں",
+    add_title: "نیا طالب علم شامل کریں",
+    first_name: "پہلا نام",
+    last_name: "آخری نام",
+    email_address: "ای میل ایڈریس",
+    password: "پاس ورڈ",
+    system_role: "سسٹم کا کردار",
+    lang_pref: "زبان کی ترجیح",
+    visual_theme: "بصری تھیم",
+    create_profile: "طالب علم کا پروفائل بنائیں",
+    error_required: "پہلا نام، آخری نام اور ای میل سختی سے لازمی ہیں۔",
+    error_email: "براہ کرم ایک درست کارپوریٹ یا تعلیمی ای میل ایڈریس فراہم کریں۔",
+    error_password: "پاس ورڈ کم از کم 12 حروف کا ہونا چاہیے، جس میں ایک بڑا حرف، ایک چھوٹا حرف، ایک ہندسہ اور ایک خاص علامت شامل ہو۔",
+    student_opt: "🎓 طالب علم کا پروفائل (ڈیفالٹ)",
+    admin_opt: "🛡️ انتظامی مراعات",
+    theme_default: "✨ ڈیفالٹ (ڈارک)",
+    theme_paper: "📜 کاغذ (سیپیا)",
+    theme_focus: "👁️ فوکس (سیاہ)"
   }
 };
 
@@ -201,7 +345,11 @@ const VANGUARD_LOCK_MSG: Record<string, string> = {
   FR: "Le compte super-administrateur Vanguard Mysterious est le compte d'amorçage de la plateforme. Il ne peut pas être supprimé afin de prévenir tout blocage administratif.",
   ES: "La cuenta de superadministrador Vanguard Mysterious es la cuenta semilla de la plataforma. No se puede eliminar para evitar el bloqueo administrativo.",
   DE: "Das Vanguard Mysterious Super-Administrator-Konto ist das Seed-Konto der Plattform. Es kann nicht gelöscht werden, um eine administrative Aussperrung zu verhindern.",
-  ZH: "Vanguard Mysterious 超级管理员账户是平台的系统种子账户。为了防止系统死锁，此账户无法被删除。"
+  ZH: "Vanguard Mysterious 超级管理员账户是平台的系统种子账户。为了防止 system_role 死锁，此账户无法被删除。",
+  PT: "A conta de superadministrador Vanguard Mysterious é a conta semente da plataforma. Ela não pode ser excluída para evitar bloqueio administrativo.",
+  AR: "إن حساب المسؤول الفائق Vanguard Mysterious هو حساب البداية للمنصة. ولا يمكن حذفه لمنع الإغلاق الإداري.",
+  HI: "Vanguard Mysterious सुपर-व्यवस्थापक खाता प्लेटफ़ॉर्म का सीड खाता है। व्यवस्थापकीय तालाबंदी को रोकने के लिए इसे हटाया नहीं जा सकता है।",
+  UR: "وینگارڈ مسٹیریس (Vanguard Mysterious) سپر ایڈمنسٹریٹر اکاؤنٹ پلیٹ فارم کا بنیادی اکاؤنٹ ہے۔ انتظامی لاک آؤٹ کو روکنے کے لیے اسے حذف نہیں کیا جا سکتا۔"
 };
 
 const VANGUARD_LOCK_TITLE: Record<string, string> = {
@@ -209,7 +357,11 @@ const VANGUARD_LOCK_TITLE: Record<string, string> = {
   FR: "Compte Protégé",
   ES: "Cuenta Protegida",
   DE: "Geschütztes Konto",
-  ZH: "受保护的账户"
+  ZH: "受保护的账户",
+  PT: "Conta Protegida",
+  AR: "الحساب المحمي",
+  HI: "सुरक्षित खाता",
+  UR: "محفوظ اکاؤنٹ"
 };
 
 const DELETE_OWN_WARN: Record<string, string> = {
@@ -217,22 +369,31 @@ const DELETE_OWN_WARN: Record<string, string> = {
   FR: "⚠️ Vous êtes en train de supprimer votre propre compte admin. Vous serez déconnecté immédiatement à la suite de cette opération et vous ne pourrez plus accéder à l'administration.",
   ES: "⚠️ Está a punto de eliminar su propia cuenta de administrador. Se cerrará su sesión inmediatamente después de esta operación y perderá todo el acceso administrativo.",
   DE: "⚠️ Sie sind im Begriff, Ihr eigenes Administrator-Konto zu löschen. Sie werden unmittelbar nach diesem Vorgang abgemeldet und verlieren jeglichen administrativen Zugriff.",
-  ZH: "⚠️ 您正在删除您自己的管理员账户。操作完成后您将被立即登出，且将失去所有管理员访问权限。"
+  ZH: "⚠️ 您正在删除您自己的管理员账户。操作完成后您将被立即登出，且将失去所有管理员访问权限。",
+  PT: "⚠️ Você está prestes a excluir sua própria conta de administrador. Você será desconectado imediatamente após esta operação e perderá todo o acesso administrativo.",
+  AR: "⚠️ أنت على وشك حذف حساب المسؤول الخاص بك. سيتم تسجيل خروجك فوراً بعد هذه العملية وستفقد كل صلاحيات الوصول الإدارية.",
+  HI: "⚠️ आप अपना खुद का एडमिन खाता हटाने वाले हैं। इस प्रक्रिया के तुरंत बाद आपको लॉग आउट कर दिया जाएगा और आप सभी व्यवस्थापकीय पहुंच खो देंगे।",
+  UR: "⚠️ آپ اپنا ایڈمن اکاؤنٹ حذف کرنے والے ہیں۔ اس عمل کے فوراً بعد آپ کو لاگ آؤٹ کر دیا جائے گا اور آپ تمام انتظامی رسائی کھو دیں گے۔"
 };
 
 const getDeleteTitle = (name: string, langKey: string) => {
   switch (langKey) {
     case 'FR': return `Supprimer le compte de ${name}`;
     case 'ES': return `Eliminar cuenta de ${name}`;
-    case 'DE': return `Konto von ${name} löschen`;
+    case 'DE': return `Konto von ${name} lischen`;
     case 'ZH': return `删除 ${name} 的账户`;
+    case 'PT': return `Excluir conta de ${name}`;
+    case 'AR': return `حذف حساب ${name}`;
+    case 'HI': return `${name} का खाता हटाएं`;
+    case 'UR': return `${name} کا اکاؤنٹ حذف کریں`;
     default: return `Delete account of ${name}`;
   }
 };
 
+
 export default function AdminUsers() {
   const { language: globalLang } = useLanguage();
-  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  const lang = (globalLang || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
   const t = USERS_STRINGS[lang] || USERS_STRINGS.EN;
 
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -725,6 +886,10 @@ export default function AdminUsers() {
                       <option value="ES" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇪🇸 Español (ES)</option>
                       <option value="DE" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇩🇪 Deutsch (DE)</option>
                       <option value="ZH" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇨🇳 中文 (ZH)</option>
+                      <option value="PT" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇧🇷 Português (PT)</option>
+                      <option value="AR" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇸🇦 العربية (AR)</option>
+                      <option value="HI" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇮🇳 हिन्दी (HI)</option>
+                      <option value="UR" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇵🇰 اردو (UR)</option>
                     </select>
                   </div>
  

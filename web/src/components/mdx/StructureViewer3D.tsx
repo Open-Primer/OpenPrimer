@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, HelpCircle } from 'lucide-react';
+import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, HelpCircle, Info } from 'lucide-react';
 
 interface Atom {
   x: number;
@@ -24,6 +24,20 @@ interface Preset {
   description: string;
   atoms: Atom[];
   bonds: Bond[];
+}
+
+interface StructureViewer3DProps {
+  presetId?: string;
+  name?: string;
+  description?: string;
+  atoms?: Atom[];
+  bonds?: Bond[];
+  atomsBase64?: string;
+  bondsBase64?: string;
+  xyz?: string;
+  xyzBase64?: string;
+  showMenu?: boolean;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
 // Generate NaCl grid
@@ -76,18 +90,13 @@ const generateGraphene = (): { atoms: Atom[]; bonds: Bond[] } => {
   const bonds: Bond[] = [];
   const scale = 0.45;
 
-  // Let's create a 4x4 hexagonal grid
-  // In a hexagonal grid, coordinates can be defined on a triangular lattice
   const rows = 4;
   const cols = 5;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; cols > c; c++) {
-      // Calculate hexagonal layout
       let x = (c * 1.5) - (cols * 0.75);
       let y = (r * Math.sqrt(3) + (c % 2 === 0 ? 0 : Math.sqrt(3) / 2)) - (rows * Math.sqrt(3) * 0.5);
-      
-      // Add a slight sine ripple on Z axis for amazing 3D aesthetic depth
       const z = Math.sin(x * 1.5) * Math.cos(y * 1.5) * 0.25;
 
       atoms.push({
@@ -101,8 +110,7 @@ const generateGraphene = (): { atoms: Atom[]; bonds: Bond[] } => {
     }
   }
 
-  // Detect and connect adjacent atoms within hexagonal distance threshold
-  const distanceThreshold = scale * 1.15; // Hexagon side length is roughly scale
+  const distanceThreshold = scale * 1.15;
   for (let i = 0; i < atoms.length; i++) {
     for (let j = i + 1; j < atoms.length; j++) {
       const dx = atoms[i].x - atoms[j].x;
@@ -166,6 +174,50 @@ const PRESETS: Preset[] = [
     ]
   },
   {
+    name: "Chloromethane (CH₃Cl)",
+    id: "ch3cl",
+    description: "Simple organic halogen compound with a tetrahedral carbon bonded to three hydrogens and one chlorine.",
+    atoms: [
+      { x: 0, y: -0.2, z: 0, color: '#475569', radius: 15, label: 'C' },         // Carbon
+      { x: 0, y: 1.2, z: 0, color: '#84cc16', radius: 19, label: 'Cl' },        // Chlorine (Lime Green)
+      { x: 1.03, y: -0.6, z: 0, color: '#f8fafc', radius: 10, label: 'H' },     // H1
+      { x: -0.51, y: -0.6, z: 0.89, color: '#f8fafc', radius: 10, label: 'H' },  // H2
+      { x: -0.51, y: -0.6, z: -0.89, color: '#f8fafc', radius: 10, label: 'H' } // H3
+    ],
+    bonds: [
+      { atomA: 0, atomB: 1 },
+      { atomA: 0, atomB: 2 },
+      { atomA: 0, atomB: 3 },
+      { atomA: 0, atomB: 4 }
+    ]
+  },
+  {
+    name: "Ethanol (C₂H₅OH)",
+    id: "ethanol",
+    description: "Clear, colorless alcohol featuring a methyl group, a methylene group, and a polar hydroxyl functional group.",
+    atoms: [
+      { x: -0.75, y: -0.1, z: 0, color: '#475569', radius: 15, label: 'C' },      // Carbon 1
+      { x: 0.75, y: -0.1, z: 0, color: '#475569', radius: 15, label: 'C' },       // Carbon 2
+      { x: 1.45, y: 1.1, z: 0, color: '#ef4444', radius: 18, label: 'O' },        // Oxygen
+      { x: 2.35, y: 0.9, z: 0, color: '#f8fafc', radius: 10, label: 'H' },        // Hydrogen (hydroxyl)
+      { x: -1.15, y: -0.6, z: 0.89, color: '#f8fafc', radius: 10, label: 'H' },   // H (on C1)
+      { x: -1.15, y: -0.6, z: -0.89, color: '#f8fafc', radius: 10, label: 'H' },  // H (on C1)
+      { x: -1.15, y: 0.9, z: 0, color: '#f8fafc', radius: 10, label: 'H' },       // H (on C1)
+      { x: 1.15, y: -0.6, z: 0.89, color: '#f8fafc', radius: 10, label: 'H' },    // H (on C2)
+      { x: 1.15, y: -0.6, z: -0.89, color: '#f8fafc', radius: 10, label: 'H' }   // H (on C2)
+    ],
+    bonds: [
+      { atomA: 0, atomB: 1 },
+      { atomA: 1, atomB: 2 },
+      { atomA: 2, atomB: 3 },
+      { atomA: 0, atomB: 4 },
+      { atomA: 0, atomB: 5 },
+      { atomA: 0, atomB: 6 },
+      { atomA: 1, atomB: 7 },
+      { atomA: 1, atomB: 8 }
+    ]
+  },
+  {
     name: "Salt Lattice (NaCl)",
     id: "nacl",
     description: "FCC (Face-Centered Cubic) crystalline arrangement of alternating sodium and chlorine ions.",
@@ -179,15 +231,178 @@ const PRESETS: Preset[] = [
   }
 ];
 
-export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) => {
+const ELEMENT_DETAILS: Record<string, {
+  nameEN: string;
+  nameFR: string;
+  num: number;
+  weight: number;
+  config: string;
+  electronegativity: number;
+  categoryFR: string;
+  categoryEN: string;
+  color: string;
+}> = {
+  'H': { nameEN: 'Hydrogen', nameFR: 'Hydrogène', num: 1, weight: 1.008, config: '1s¹', electronegativity: 2.20, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#f8fafc' },
+  'C': { nameEN: 'Carbon', nameFR: 'Carbone', num: 6, weight: 12.011, config: '[He] 2s² 2p²', electronegativity: 2.55, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#475569' },
+  'O': { nameEN: 'Oxygen', nameFR: 'Oxygène', num: 8, weight: 15.999, config: '[He] 2s² 2p⁴', electronegativity: 3.44, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#ef4444' },
+  'N': { nameEN: 'Nitrogen', nameFR: 'Azote', num: 7, weight: 14.007, config: '[He] 2s² 2p³', electronegativity: 3.04, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#3b82f6' },
+  'Cl': { nameEN: 'Chlorine', nameFR: 'Chlore', num: 17, weight: 35.45, config: '[Ne] 3s² 3p⁵', electronegativity: 3.16, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#84cc16' },
+  'Na': { nameEN: 'Sodium', nameFR: 'Sodium', num: 11, weight: 22.990, config: '[Ne] 3s¹', electronegativity: 0.93, categoryFR: 'Métal alcalin', categoryEN: 'Alkali Metal', color: '#10b981' }
+};
+
+const decodeBase64 = (str: string): any => {
+  try {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(decodeURIComponent(window.atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    } else {
+      return JSON.parse(Buffer.from(str, 'base64').toString('utf-8'));
+    }
+  } catch (e) {
+    console.error("Failed to decode base64:", e);
+    return null;
+  }
+};
+
+const parseXYZ = (xyzString: string): { atoms: Atom[]; bonds: Bond[] } | null => {
+  try {
+    const lines = xyzString.trim().split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    if (lines.length < 3) return null;
+    
+    const atoms: Atom[] = [];
+    const bonds: Bond[] = [];
+    
+    const elementProps: Record<string, { color: string; radius: number }> = {
+      'H': { color: '#f8fafc', radius: 10 },
+      'C': { color: '#475569', radius: 15 },
+      'O': { color: '#ef4444', radius: 18 },
+      'N': { color: '#3b82f6', radius: 15 },
+      'CL': { color: '#84cc16', radius: 19 },
+      'NA': { color: '#10b981', radius: 10 },
+      'S': { color: '#eab308', radius: 17 },
+      'P': { color: '#f97316', radius: 17 },
+      'F': { color: '#06b6d4', radius: 12 }
+    };
+
+    // Standard XYZ file starts at line 2
+    for (let i = 2; i < lines.length; i++) {
+      const parts = lines[i].split(/\s+/);
+      if (parts.length < 4) continue;
+      
+      const label = parts[0];
+      const x = parseFloat(parts[1]);
+      const y = parseFloat(parts[2]);
+      const z = parseFloat(parts[3]);
+      
+      if (isNaN(x) || isNaN(y) || isNaN(z)) continue;
+      
+      const lookupLabel = label.toUpperCase();
+      const props = elementProps[lookupLabel] || { color: '#a855f7', radius: 14 };
+      
+      atoms.push({
+        x,
+        y,
+        z,
+        color: props.color,
+        radius: props.radius,
+        label
+      });
+    }
+
+    // Auto-calculate covalent bonds
+    for (let i = 0; i < atoms.length; i++) {
+      for (let j = i + 1; j < atoms.length; j++) {
+        const a1 = atoms[i];
+        const a2 = atoms[j];
+        const dist = Math.sqrt(
+          (a1.x - a2.x) ** 2 + 
+          (a1.y - a2.y) ** 2 + 
+          (a1.z - a2.z) ** 2
+        );
+        
+        if (dist > 0.4 && dist < 1.95) {
+          bonds.push({ atomA: i, atomB: j });
+        }
+      }
+    }
+    
+    return { atoms, bonds };
+  } catch (e) {
+    console.error("Failed to parse XYZ format:", e);
+    return null;
+  }
+};
+
+export const StructureViewer3D = ({
+  presetId = "h2o",
+  name,
+  description,
+  atoms,
+  bonds,
+  atomsBase64,
+  bondsBase64,
+  xyz,
+  xyzBase64,
+  showMenu,
+  gradeLevel = "high_school"
+}: StructureViewer3DProps) => {
+
   const [activePreset, setActivePreset] = useState<Preset>(() => {
-    return PRESETS.find(p => p.id === presetId) || PRESETS[0];
+    const found = PRESETS.find(p => p.id === presetId) || PRESETS[0];
+    
+    // Resolve standard XYZ format
+    let xyzContent = xyz;
+    if (xyzBase64) {
+      try {
+        if (typeof window !== 'undefined') {
+          xyzContent = decodeURIComponent(window.atob(xyzBase64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        } else {
+          xyzContent = Buffer.from(xyzBase64, 'base64').toString('utf-8');
+        }
+      } catch (e) {
+        console.error("Failed to decode xyzBase64:", e);
+      }
+    }
+
+    if (xyzContent) {
+      const parsed = parseXYZ(xyzContent);
+      if (parsed) {
+        return {
+          name: name || "Custom XYZ Molecule",
+          id: "custom",
+          description: description || "Interactive XYZ molecular coordinate rendering.",
+          atoms: parsed.atoms,
+          bonds: parsed.bonds
+        };
+      }
+    }
+
+    // Resolve dynamic inputs
+    let resolvedAtoms = atoms;
+    if (atomsBase64) {
+      resolvedAtoms = decodeBase64(atomsBase64);
+    }
+    
+    let resolvedBonds = bonds;
+    if (bondsBase64) {
+      resolvedBonds = decodeBase64(bondsBase64);
+    }
+
+    return {
+      name: name || (resolvedAtoms ? "Custom Molecule" : found.name),
+      id: resolvedAtoms ? "custom" : found.id,
+      description: description || (resolvedAtoms ? "Interactive visualization of a custom molecular assembly." : found.description),
+      atoms: resolvedAtoms || found.atoms,
+      bonds: resolvedBonds || found.bonds
+    };
   });
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [zoom, setZoom] = useState(100);
   const [autoRotate, setAutoRotate] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
+  
+  // Track selected atom index from clicking
+  const [selectedAtomIndex, setSelectedAtomIndex] = useState<number | null>(null);
 
   // Euler angles for 3D rotation tracking
   const [angleX, setAngleX] = useState(-0.4); // Pitch
@@ -196,14 +411,37 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
   const isDragging = useRef(false);
   const lastMouseX = useRef(0);
   const lastMouseY = useRef(0);
+  const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
+
+  // Ref to hold projected atom coordinates to detect clicks accurately
+  const projectedAtomsRef = useRef<Array<{ sx: number; sy: number; sz: number; drawRadius: number; atom: Atom; index: number }>>([]);
 
   // React to preset updates from MDX props
   useEffect(() => {
-    const found = PRESETS.find(p => p.id === presetId);
-    if (found) {
-      setActivePreset(found);
+    let resolvedAtoms = atoms;
+    if (atomsBase64) resolvedAtoms = decodeBase64(atomsBase64);
+
+    let resolvedBonds = bonds;
+    if (bondsBase64) resolvedBonds = decodeBase64(bondsBase64);
+
+    if (resolvedAtoms) {
+      setActivePreset({
+        name: name || "Custom Molecule",
+        id: "custom",
+        description: description || "Interactive visualization of a custom molecular assembly.",
+        atoms: resolvedAtoms,
+        bonds: resolvedBonds || []
+      });
+      setSelectedAtomIndex(null);
+    } else {
+      const found = PRESETS.find(p => p.id === presetId);
+      if (found) {
+        setActivePreset(found);
+        setSelectedAtomIndex(null);
+      }
     }
-  }, [presetId]);
+  }, [presetId, name, description, atoms, bonds, atomsBase64, bondsBase64]);
 
   // Canvas Drawing & Rendering Logic
   useEffect(() => {
@@ -216,7 +454,6 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
     let animId: number;
 
     const render = () => {
-      // Handle canvas resolution and size
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
@@ -228,41 +465,45 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
       const canvasWidth = rect.width;
       const canvasHeight = rect.height;
 
-      // Clear layout
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      // Trigonometric cache for Euler angle projection
       const cosX = Math.cos(angleX);
       const sinX = Math.sin(angleX);
       const cosY = Math.cos(angleY);
       const sinY = Math.sin(angleY);
 
       // Depth projection helper
-      const project = (atom: Atom) => {
-        // Rotate around Y axis (Yaw)
+      const project = (atom: Atom, index: number) => {
         const x1 = atom.x * cosY - atom.z * sinY;
         const z1 = atom.z * cosY + atom.x * sinY;
 
-        // Rotate around X axis (Pitch)
         const y2 = atom.y * cosX - z1 * sinX;
         const z2 = z1 * cosX + atom.y * sinX;
 
-        // Apply scale & viewport center offset
-        const scaleFactor = zoom / (3.5 + z2 * 0.4); // Subtle orthographic perspective feel
+        const scaleFactor = zoom / (3.5 + z2 * 0.4);
         const sx = canvasWidth / 2 + x1 * scaleFactor;
         const sy = canvasHeight / 2 + y2 * scaleFactor;
 
-        return { sx, sy, sz: z2, atom };
+        return { sx, sy, sz: z2, atom, index };
       };
 
-      // Project all atoms
-      const projectedAtoms = activePreset.atoms.map(project);
+      const projectedAtoms = activePreset.atoms.map((atom, idx) => project(atom, idx));
 
-      // Depth sorting (Painters algorithm: back-to-front rendering)
-      // Elements with larger `sz` (further away) are drawn first, elements with smaller `sz` (closer) are drawn last.
-      // We sort items in descending order of sz so they draw back-to-front.
-      
-      // Let's pre-project the bonds to sort them relative to atoms
+      // Cache projected coordinates for click handler
+      projectedAtomsRef.current = projectedAtoms.map((p) => {
+        const depthMultiplier = 3.5 / (3.5 + p.sz * 0.4);
+        const drawRadius = Math.max(p.atom.radius * (zoom / 100) * depthMultiplier, 3);
+        return {
+          sx: p.sx,
+          sy: p.sy,
+          sz: p.sz,
+          drawRadius,
+          atom: p.atom,
+          index: p.index
+        };
+      });
+
+      // Project bonds
       const projectedBonds = activePreset.bonds.map(bond => {
         const pA = projectedAtoms[bond.atomA];
         const pB = projectedAtoms[bond.atomB];
@@ -276,13 +517,11 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
         };
       });
 
-      const atomRenderObjects = projectedAtoms.map((pAtom, idx) => ({
+      const atomRenderObjects = projectedAtoms.map((pAtom) => ({
         type: 'atom' as const,
-        idx,
         ...pAtom
       }));
 
-      // Combine both lists and sort them by sz descending (back-to-front)
       const renderQueue = [...projectedBonds, ...atomRenderObjects];
       renderQueue.sort((a, b) => b.sz - a.sz);
 
@@ -291,10 +530,8 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
         if (item.type === 'bond') {
           const { pA, pB, bond } = item;
           ctx.beginPath();
-          ctx.strokeStyle = '#475569';
 
           if (bond.isDouble) {
-            // Draw dual offset double lines
             const dx = pB.sx - pA.sx;
             const dy = pB.sy - pA.sy;
             const len = Math.sqrt(dx * dx + dy * dy);
@@ -313,7 +550,6 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
             ctx.lineTo(pB.sx - ox, pB.sy - oy);
             ctx.stroke();
           } else {
-            // Standard single covalent bond
             ctx.lineWidth = 3.5;
             ctx.strokeStyle = 'rgba(100, 116, 139, 0.65)';
             ctx.moveTo(pA.sx, pA.sy);
@@ -321,12 +557,11 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
             ctx.stroke();
           }
         } else if (item.type === 'atom') {
-          const { sx, sy, sz, atom } = item;
-          // Dynamically scale atom size based on perspective depth
+          const { sx, sy, sz, atom, index } = item;
           const depthMultiplier = 3.5 / (3.5 + sz * 0.4);
           const drawRadius = Math.max(atom.radius * (zoom / 100) * depthMultiplier, 3);
 
-          // Draw shiny spherical gradient
+          // Specular highlights
           const grad = ctx.createRadialGradient(
             sx - drawRadius * 0.28,
             sy - drawRadius * 0.28,
@@ -336,7 +571,6 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
             drawRadius
           );
           
-          // Highlights mapping for organic 3D glossy feel
           grad.addColorStop(0, '#ffffff');
           grad.addColorStop(0.2, atom.color);
           grad.addColorStop(0.85, darkenColor(atom.color, 40));
@@ -347,12 +581,17 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
           ctx.arc(sx, sy, drawRadius, 0, Math.PI * 2);
           ctx.fill();
 
-          // Delicate outer contour stroke
-          ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          // Highlight selected atom with an outer halo ring
+          if (selectedAtomIndex === index) {
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+          } else {
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
 
-          // Render atom chemical symbol label
           if (showLabels) {
             ctx.fillStyle = '#ffffff';
             ctx.font = `bold ${Math.max(9, drawRadius * 0.6)}px system-ui, sans-serif`;
@@ -361,12 +600,11 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
             ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
             ctx.shadowBlur = 4;
             ctx.fillText(atom.label, sx, sy);
-            ctx.shadowBlur = 0; // Reset shadow
+            ctx.shadowBlur = 0;
           }
         }
       });
 
-      // Update angles if auto-rotating
       if (autoRotate && !isDragging.current) {
         setAngleY((prev) => (prev + 0.006) % (Math.PI * 2));
       }
@@ -379,9 +617,8 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [activePreset, zoom, autoRotate, showLabels, angleX, angleY]);
+  }, [activePreset, zoom, autoRotate, showLabels, angleX, angleY, selectedAtomIndex]);
 
-  // Utility to darken hex colors for Canvas specular lighting rendering
   const darkenColor = (hex: string, percent: number) => {
     const num = parseInt(hex.replace("#",""), 16),
           amt = Math.round(2.55 * percent),
@@ -391,11 +628,12 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
     return "#" + (0x1000000 + (R<0?0:R>255?255:R)*0x10000 + (G<0?0:G>255?255:G)*0x100 + (B<0?0:B>255?255:B)).toString(16).slice(1);
   };
 
-  // Drag interaction handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
     lastMouseX.current = e.clientX;
     lastMouseY.current = e.clientY;
+    dragStartX.current = e.clientX;
+    dragStartY.current = e.clientY;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -410,11 +648,43 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
     setAngleX((prev) => Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, prev + deltaY * 0.01)));
   };
 
-  const handleMouseUpOrLeave = () => {
+  const handleMouseUpOrLeave = (e?: React.MouseEvent) => {
     isDragging.current = false;
+    if (!e || dragStartX.current === 0) return;
+
+    // Detect Click (negligible dragging)
+    const dx = e.clientX - dragStartX.current;
+    const dy = e.clientY - dragStartY.current;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 5) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let foundIndex = -1;
+      let closestZ = Infinity;
+
+      projectedAtomsRef.current.forEach((p) => {
+        const adx = clickX - p.sx;
+        const ady = clickY - p.sy;
+        const dist = Math.sqrt(adx * adx + ady * ady);
+        if (dist <= p.drawRadius) {
+          if (p.sz < closestZ) {
+            closestZ = p.sz;
+            foundIndex = p.index;
+          }
+        }
+      });
+
+      setSelectedAtomIndex((prev) => (prev === foundIndex ? null : foundIndex));
+    }
+    dragStartX.current = 0;
+    dragStartY.current = 0;
   };
 
-  // Touch handlers for mobile/tablet responsive drags
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     isDragging.current = true;
@@ -434,6 +704,14 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
     setAngleX((prev) => Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, prev + deltaY * 0.01)));
   };
 
+  // Determine if we should show the preset selection list
+  const isCustomOrSpecific = presetId !== "h2o" || atomsBase64 !== undefined || atoms !== undefined;
+  const shouldShowPresetsMenu = showMenu !== undefined ? showMenu : !isCustomOrSpecific;
+
+  const selectedAtom = selectedAtomIndex !== null ? activePreset.atoms[selectedAtomIndex] : null;
+  const cleanedLabel = selectedAtom ? selectedAtom.label.replace(/[⁺⁻\d]/g, '') : '';
+  const selectedElement = selectedAtom ? ELEMENT_DETAILS[cleanedLabel] : null;
+
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Molecule Details Header Row */}
@@ -444,46 +722,51 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
             <span>Interactive 3D Structure Viewer</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            Drag to rotate molecule, use scroll or slider to zoom.
+            Drag to rotate molecule. Scroll/slider to zoom. Click an atom to inspect properties.
           </p>
         </div>
 
         {/* Preset pill list */}
-        <div className="flex flex-wrap gap-1.5">
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setActivePreset(p)}
-              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-                activePreset.id === p.id
-                  ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-                  : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {p.name.split(' ')[0]} {/* Grab short name */}
-            </button>
-          ))}
-        </div>
+        {shouldShowPresetsMenu && (
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setActivePreset(p);
+                  setSelectedAtomIndex(null);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                  activePreset.id === p.id
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                    : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {p.name.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Main interactive viewport container */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
         
         {/* Canvas Render Panel (3 cols) */}
-        <div className="lg:col-span-3 relative h-[320px] rounded-2xl border border-slate-850 bg-slate-950 overflow-hidden group select-none">
+        <div className="lg:col-span-3 relative h-[340px] rounded-2xl border border-slate-850 bg-slate-950 overflow-hidden group select-none">
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUpOrLeave}
-            onMouseLeave={handleMouseUpOrLeave}
+            onMouseUp={(e) => handleMouseUpOrLeave(e)}
+            onMouseLeave={() => handleMouseUpOrLeave()}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
-            onTouchEnd={handleMouseUpOrLeave}
+            onTouchEnd={() => handleMouseUpOrLeave()}
             className="w-full h-full cursor-grab active:cursor-grabbing block"
           />
 
-          {/* Quick HUD controls overlay (Watermark detail + toggles) */}
+          {/* Quick HUD controls overlay */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-auto">
             <button
               onClick={() => setAutoRotate(!autoRotate)}
@@ -531,15 +814,71 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
 
         {/* Compound details & Info card (1 col) */}
         <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-850 rounded-2xl p-5 space-y-4">
-          <div className="space-y-3">
-            <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max">
-              Active Specimen
-            </span>
-            <h5 className="text-sm font-extrabold text-slate-100">{activePreset.name}</h5>
-            <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-              {activePreset.description}
-            </p>
-          </div>
+          
+          {selectedAtom && selectedElement ? (
+            /* Premium Atom Inspector Panel */
+            <div className="space-y-3.5 animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max block">
+                  Atom Inspector
+                </span>
+                <button 
+                  onClick={() => setSelectedAtomIndex(null)}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 bg-slate-950/40 border border-slate-850 p-3 rounded-xl">
+                <div 
+                  className="w-11 h-11 rounded-lg flex items-center justify-center text-lg font-black text-white shadow-md border border-slate-800"
+                  style={{ backgroundColor: selectedAtom.color }}
+                >
+                  {selectedAtom.label}
+                </div>
+                <div>
+                  <h5 className="text-xs font-black text-white">{selectedElement.nameFR}</h5>
+                  <p className="text-[10px] text-slate-400 font-bold">{selectedElement.categoryFR}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 border-t border-slate-850/80 pt-3">
+                <div className="flex justify-between items-center text-[10px] font-bold">
+                  <span className="text-slate-500 uppercase tracking-wide">Numéro Atomique</span>
+                  <span className="text-slate-300 font-black">{selectedElement.num}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold">
+                  <span className="text-slate-500 uppercase tracking-wide">Masse Atomique</span>
+                  <span className="text-slate-300 font-black">{selectedElement.weight} u</span>
+                </div>
+                
+                {gradeLevel !== "middle_school" && (
+                  <>
+                    <div className="flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-slate-500 uppercase tracking-wide">Configuration</span>
+                      <span className="text-slate-300 font-mono font-black">{selectedElement.config}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-slate-500 uppercase tracking-wide">Électronégativité</span>
+                      <span className="text-slate-300 font-black">{selectedElement.electronegativity}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Default Compound description card */
+            <div className="space-y-3">
+              <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max">
+                Active Specimen
+              </span>
+              <h5 className="text-sm font-extrabold text-slate-100">{activePreset.name}</h5>
+              <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                {activePreset.description}
+              </p>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-slate-850/80 space-y-2">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
@@ -557,6 +896,7 @@ export const StructureViewer3D = ({ presetId = "h2o" }: { presetId?: string }) =
               ))}
             </div>
           </div>
+
         </div>
 
       </div>

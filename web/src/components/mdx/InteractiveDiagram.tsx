@@ -17,6 +17,7 @@ interface InteractiveDiagramProps {
   hotspots?: Hotspot[];
   type?: 'cell' | 'neuron' | 'custom';
   hotspotsBase64?: string;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
 const DEFAULT_CELL_HOTSPOTS: Hotspot[] = [
@@ -99,7 +100,8 @@ export const InteractiveDiagram = ({
   title,
   hotspots,
   type,
-  hotspotsBase64
+  hotspotsBase64,
+  gradeLevel = "high_school"
 }: InteractiveDiagramProps) => {
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const [showLabels, setShowLabels] = useState(false);
@@ -237,22 +239,29 @@ export const InteractiveDiagram = ({
               )}
             </svg>
           ) : resolvedType === 'neuron' ? (
+            /* Premium, High-Fidelity Realistic Multipolar Neuron vector model */
             <svg 
               viewBox="0 0 400 400" 
               className="w-full h-full max-w-[340px] drop-shadow-[0_0_30px_rgba(16,185,129,0.15)]"
             >
               <defs>
                 <radialGradient id="somaGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.5" />
                   <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                 </radialGradient>
                 <radialGradient id="nucleusGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.2" />
+                  <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
                 </radialGradient>
                 <linearGradient id="axonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="0%" stopColor="#059669" />
+                  <stop offset="40%" stopColor="#10b981" />
                   <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+                <linearGradient id="myelineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="50%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
                 </linearGradient>
               </defs>
 
@@ -261,92 +270,128 @@ export const InteractiveDiagram = ({
               <line x1="200" y1="20" x2="200" y2="380" stroke="#334155" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="5,5" />
               <line x1="20" y1="200" x2="380" y2="200" stroke="#334155" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="5,5" />
 
-              {/* Dendrites (drawn first behind soma) */}
-              {/* Top-Left Dendrite Branch */}
-              <path d="M 120 170 C 90 140, 70 120, 40 100" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-              <path d="M 75 130 C 60 115, 55 100, 35 90" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-              <path d="M 60 113 C 50 113, 40 120, 25 110" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+              {/* Dendrites - Organic, Complex Branching Tree (drawn behind soma) */}
+              <g stroke="#0f766e" strokeLinecap="round" fill="none" strokeWidth="2.5" opacity="0.85">
+                {/* Dendrite Branch 1: Top-Left */}
+                <path d="M 120 165 C 95 140, 80 125, 45 105" />
+                <path d="M 85 133 C 70 115, 60 95, 35 90" strokeWidth="1.8" />
+                <path d="M 62 114 C 50 115, 40 120, 25 108" strokeWidth="1.2" />
+                <path d="M 98 150 C 90 125, 85 105, 75 80" strokeWidth="1.8" />
 
-              {/* Middle-Left Dendrite Branch */}
-              <path d="M 100 200 C 70 195, 50 185, 20 180" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-              <path d="M 55 190 C 45 195, 35 205, 15 205" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+                {/* Dendrite Branch 2: Mid-Left */}
+                <path d="M 105 195 C 75 190, 50 180, 20 175" />
+                <path d="M 55 186 C 45 192, 35 200, 15 200" strokeWidth="1.8" />
+                <path d="M 72 188 C 65 175, 50 160, 30 155" strokeWidth="1.5" />
 
-              {/* Bottom-Left Dendrite Branch */}
-              <path d="M 115 225 C 85 255, 65 275, 35 295" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-              <path d="M 70 260 C 55 270, 50 285, 30 295" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-              <path d="M 50 275 C 40 275, 35 265, 20 265" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+                {/* Dendrite Branch 3: Bottom-Left */}
+                <path d="M 115 225 C 90 250, 70 270, 40 290" />
+                <path d="M 72 258 C 55 268, 48 282, 30 292" strokeWidth="1.8" />
+                <path d="M 50 273 C 40 273, 35 262, 20 262" strokeWidth="1.2" />
+                <path d="M 88 238 C 75 258, 62 278, 55 305" strokeWidth="1.8" />
 
-              {/* Top-Middle Dendrite Branch */}
-              <path d="M 135 160 C 130 120, 120 90, 110 50" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-              <path d="M 127 100 C 115 85, 105 75, 95 60" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+                {/* Dendrite Branch 4: Top-Middle */}
+                <path d="M 132 155 C 128 115, 118 85, 105 45" />
+                <path d="M 125 95 C 112 80, 102 70, 90 55" strokeWidth="1.8" />
+                <path d="M 129 125 C 115 120, 100 110, 85 105" strokeWidth="1.8" />
 
-              {/* Bottom-Middle Dendrite Branch */}
-              <path d="M 140 240 C 135 280, 125 310, 115 350" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-              <path d="M 132 300 C 120 315, 110 325, 100 340" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+                {/* Dendrite Branch 5: Bottom-Middle */}
+                <path d="M 142 245 C 137 285, 127 315, 115 355" />
+                <path d="M 134 305 C 122 320, 112 330, 100 345" strokeWidth="1.8" />
+                <path d="M 140 275 C 125 280, 110 290, 95 295" strokeWidth="1.8" />
+              </g>
 
-              {/* Axon (main cable) */}
+              {/* Dendritic Spines (Épines Dendritiques) - Tiny realistic neural inputs */}
+              <g fill="#14b8a6" opacity="0.6">
+                <circle cx="65" cy="118" r="2" />
+                <circle cx="50" cy="108" r="2" />
+                <circle cx="30" cy="92" r="1.5" />
+                <circle cx="78" cy="122" r="2" />
+                <circle cx="48" cy="184" r="2" />
+                <circle cx="35" cy="190" r="1.5" />
+                <circle cx="62" cy="180" r="2" />
+                <circle cx="80" cy="245" r="2" />
+                <circle cx="60" cy="265" r="2" />
+                <circle cx="42" cy="280" r="1.5" />
+                <circle cx="122" cy="105" r="2" />
+                <circle cx="112" cy="72" r="2" />
+                <circle cx="130" cy="285" r="2" />
+                <circle cx="124" cy="320" r="1.5" />
+              </g>
+
+              {/* Axon Hillock (Cône d'implantation de l'axone) - smooth realistic transition */}
+              <path d="M 165 188 Q 185 196, 192 198 L 192 202 Q 185 204, 165 212 Z" fill="#10b981" fillOpacity="0.4" />
+
+              {/* Axon (glowing neural core cable) */}
               <path d="M 175 200 L 330 200" fill="none" stroke="url(#axonGrad)" strokeWidth="4" strokeLinecap="round" />
 
-              {/* Myelin Sheaths */}
-              {/* Sheath 1 */}
-              <rect x="190" y="186" width="35" height="28" rx="6" fill="#f59e0b" fillOpacity="0.15" stroke="#f59e0b" strokeWidth="1.5" />
-              <circle cx="207.5" cy="200" r="2.5" fill="#f59e0b" fillOpacity="0.7" />
+              {/* Myelin Sheaths with realistic Schwann Cell nucleuses */}
+              <g stroke="#d97706" strokeWidth="1.5">
+                {/* Sheath 1 */}
+                <rect x="195" y="185" width="32" height="30" rx="7" fill="url(#myelineGrad)" fillOpacity="0.4" />
+                <ellipse cx="211" cy="200" rx="3.5" ry="2" fill="#78350f" stroke="none" /> {/* Schwann nucleus */}
 
-              {/* Sheath 2 */}
-              <rect x="235" y="186" width="35" height="28" rx="6" fill="#f59e0b" fillOpacity="0.15" stroke="#f59e0b" strokeWidth="1.5" />
-              <circle cx="252.5" cy="200" r="2.5" fill="#f59e0b" fillOpacity="0.7" />
+                {/* Sheath 2 */}
+                <rect x="240" y="185" width="32" height="30" rx="7" fill="url(#myelineGrad)" fillOpacity="0.4" />
+                <ellipse cx="256" cy="200" rx="3.5" ry="2" fill="#78350f" stroke="none" />
 
-              {/* Sheath 3 */}
-              <rect x="280" y="186" width="35" height="28" rx="6" fill="#f59e0b" fillOpacity="0.15" stroke="#f59e0b" strokeWidth="1.5" />
-              <circle cx="297.5" cy="200" r="2.5" fill="#f59e0b" fillOpacity="0.7" />
+                {/* Sheath 3 */}
+                <rect x="285" y="185" width="32" height="30" rx="7" fill="url(#myelineGrad)" fillOpacity="0.4" />
+                <ellipse cx="301" cy="200" rx="3.5" ry="2" fill="#78350f" stroke="none" />
+              </g>
 
               {/* Action Potential Signal Animation */}
               <motion.circle
                 cx="175"
                 cy="200"
-                r="5"
-                fill="#67e8f9"
-                filter="drop-shadow(0 0 4px #06b6d4)"
+                r="5.5"
+                fill="#22d3ee"
+                filter="drop-shadow(0 0 5px #06b6d4)"
                 animate={{ cx: [175, 330] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
               />
 
-              {/* Soma (Corps Cellulaire) - Organic Starburst Shape */}
+              {/* Soma (Corps Cellulaire) - Detailed scientifically realistic multipolar body */}
               <path 
-                d="M 140 155 
-                   C 145 165, 160 165, 165 170 
-                   C 175 175, 175 185, 170 190 
-                   C 165 195, 180 200, 180 205 
-                   C 180 215, 165 210, 160 215 
-                   C 155 220, 155 235, 145 235 
-                   C 135 235, 135 220, 125 215 
-                   C 115 210, 105 215, 105 205 
-                   C 105 195, 115 195, 115 190 
-                   C 115 185, 105 175, 115 170 
-                   C 125 165, 125 155, 135 155 Z" 
+                d="M 140 152 
+                   C 146 160, 158 162, 164 168 
+                   C 176 174, 180 186, 172 195 
+                   C 165 200, 182 204, 180 210 
+                   C 178 220, 165 214, 160 220 
+                   C 152 226, 154 238, 145 238 
+                   C 135 238, 134 226, 125 220 
+                   C 114 214, 102 220, 102 210 
+                   C 102 200, 114 198, 114 192 
+                   C 114 184, 102 174, 112 168 
+                   C 124 162, 126 152, 134 152 Z" 
                 fill="#10b981" 
-                fillOpacity="0.2" 
+                fillOpacity="0.3" 
                 stroke="#10b981" 
                 strokeWidth="2.5" 
               />
-              <circle cx="140" cy="200" r="30" fill="url(#somaGlow)" />
+              <circle cx="140" cy="200" r="32" fill="url(#somaGlow)" />
 
-              {/* Nucleus (Noyau) */}
-              <circle cx="140" cy="200" r="14" fill="url(#nucleusGlow)" stroke="#c084fc" strokeWidth="1.5" />
-              <circle cx="140" cy="200" r="5" fill="#c084fc" />
+              {/* Nucleus & Nucleolus (Noyau et nucléole) */}
+              <circle cx="140" cy="200" r="13" fill="url(#nucleusGlow)" stroke="#c084fc" strokeWidth="1.5" />
+              <circle cx="140" cy="200" r="4.5" fill="#6d28d9" />
 
-              {/* Synaptic Terminals (Boutons Terminaux) */}
-              {/* Branch 1 */}
-              <path d="M 330 200 C 345 190, 355 180, 370 180" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="370" cy="180" r="4" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+              {/* Synaptic Terminals (Terminaisons axonales) - Realistic Terminal Arborization */}
+              <g stroke="#db2777" strokeWidth="2" strokeLinecap="round" fill="none">
+                {/* Branch 1 */}
+                <path d="M 330 200 C 342 192, 350 180, 368 180" />
+                <path d="M 352 186 C 358 178, 362 170, 366 166" strokeWidth="1.5" />
+                <circle cx="368" cy="180" r="3.5" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+                <circle cx="366" cy="166" r="3" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
 
-              {/* Branch 2 */}
-              <path d="M 330 200 C 345 200, 355 210, 370 210" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="370" cy="210" r="4" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+                {/* Branch 2 */}
+                <path d="M 330 200 C 342 200, 350 212, 368 212" />
+                <path d="M 352 206 C 358 214, 362 222, 365 228" strokeWidth="1.5" />
+                <circle cx="368" cy="212" r="3.5" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+                <circle cx="365" cy="228" r="3" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
 
-              {/* Branch 3 */}
-              <path d="M 330 200 C 340 215, 345 230, 355 245" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="355" cy="245" r="4" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+                {/* Branch 3 */}
+                <path d="M 330 200 C 338 215, 342 230, 354 245" />
+                <circle cx="354" cy="245" r="3.5" fill="#f472b6" stroke="#db2777" strokeWidth="1" />
+              </g>
 
               {/* Technical Indicator Line */}
               <path d="M 288 176 L 260 176 L 252 186" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="2,2" strokeOpacity="0.5" />
@@ -486,10 +531,6 @@ export const InteractiveDiagram = ({
                 <p className="text-xs text-slate-300 leading-relaxed font-medium">
                   {selectedHotspot.description}
                 </p>
-                <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-400 font-bold">
-                  <Award className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Analyse mémorisée dans votre curriculum</span>
-                </div>
               </motion.div>
             ) : (
               <motion.div

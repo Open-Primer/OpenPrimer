@@ -290,7 +290,8 @@ export function generatePedagogicalSummary(
   totalMinutes: number, 
   activeLang: string, 
   tutorId: string,
-  quizResults?: any
+  quizResults?: any,
+  currentCourseSlug?: string
 ): string {
   const isFr = activeLang === 'FR';
   const isEs = activeLang === 'ES';
@@ -368,14 +369,29 @@ export function generatePedagogicalSummary(
   let lowestRatio = 1.0;
 
   if (quizResults) {
-    for (const key in quizResults) {
-      const q = quizResults[key];
-      if (q && q.totalQuestions > 0) {
-        const ratio = q.correctAnswers / q.totalQuestions;
-        if (ratio < 1.0 && ratio < lowestRatio) {
-          lowestRatio = ratio;
-          lowestScoreQuiz = q;
-          hasDifficulties = true;
+    if (currentCourseSlug) {
+      for (const key in quizResults) {
+        const q = quizResults[key];
+        if (q && q.totalQuestions > 0 && q.slug === currentCourseSlug) {
+          const ratio = q.correctAnswers / q.totalQuestions;
+          if (ratio < 1.0 && ratio < lowestRatio) {
+            lowestRatio = ratio;
+            lowestScoreQuiz = q;
+            hasDifficulties = true;
+          }
+        }
+      }
+    }
+    if (!hasDifficulties) {
+      for (const key in quizResults) {
+        const q = quizResults[key];
+        if (q && q.totalQuestions > 0) {
+          const ratio = q.correctAnswers / q.totalQuestions;
+          if (ratio < 1.0 && ratio < lowestRatio) {
+            lowestRatio = ratio;
+            lowestScoreQuiz = q;
+            hasDifficulties = true;
+          }
         }
       }
     }
@@ -702,9 +718,13 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
     const isLocalhost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-     const sandboxAllowed = isSandboxFallbackAllowed();
+    const sandboxAllowed = isSandboxFallbackAllowed();
     const useSupabase = isProduction || (isDatabaseConfigured && !isOffline && !sandboxAllowed && (!isLocalhost || !dynamicOffline));
     const activeProvider = useSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
+
+    if (typeof window !== 'undefined' && prop === 'getUserProgress') {
+      console.log(`[DB PROXY] getUserProgress called. activeProvider: ${useSupabase ? 'Supabase' : 'Mock'}, isOffline: ${isOffline}, sandboxAllowed: ${sandboxAllowed}, isDatabaseConfigured: ${isDatabaseConfigured}`);
+    }
 
     const value = Reflect.get(activeProvider, prop, receiver);
 
@@ -734,10 +754,31 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
 
         const blockFallback = isWriteMethod(propStr);
 
+        let resolvedSandboxAllowed = isSandboxFallbackAllowed();
+        if (typeof window === 'undefined') {
+          try {
+            const { cookies } = require('next/headers');
+            const cookieStore = await cookies();
+            if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
+              resolvedSandboxAllowed = true;
+            }
+          } catch (e) {}
+        }
+
+        const resolvedUseSupabase = isProduction || (isDatabaseConfigured && !isOffline && !resolvedSandboxAllowed && (!isLocalhost || !dynamicOffline));
+        const resolvedProvider = resolvedUseSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
+        const targetFn = Reflect.get(resolvedProvider, prop, receiver);
+
+        if (typeof targetFn !== 'function') {
+          throw new Error(`Method '${propStr}' does not exist on the resolved database provider.`);
+        }
 
         try {
-          const res = await value.apply(activeProvider, args);
-          if (useSupabase && isLocalhost && sandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
+          const res = await targetFn.apply(resolvedProvider, args);
+          if (typeof window !== 'undefined' && propStr === 'getUserProgress') {
+            console.log(`[DB PROXY RES] getUserProgress resolved. Args: ${JSON.stringify(args)}. Result: ${JSON.stringify(res)}`);
+          }
+          if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
             if (blockFallback) {
               console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' failed on remote database. Fallback is disabled to preserve data integrity.`, res.error);
               return res;
@@ -751,7 +792,7 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
           }
           return res;
         } catch (err) {
-          if (useSupabase && isLocalhost && sandboxAllowed && isConnectionFailure(err)) {
+          if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && isConnectionFailure(err)) {
             if (blockFallback) {
               console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' threw an error on remote database. Fallback is disabled to preserve data integrity.`, err);
               throw err;

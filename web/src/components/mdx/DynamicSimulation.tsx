@@ -300,7 +300,7 @@ const LOCALIZED_PRESETS: Record<string, Record<string, SimulationPreset>> = {
   }
 };
 
-export const DynamicSimulation = ({ presetId = "mitosis" }: { presetId?: string }) => {
+export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { presetId?: string; gradeLevel?: 'middle_school' | 'high_school' | 'university' }) => {
   const [lang, setLang] = useState('en');
   const [activePreset, setActivePreset] = useState<SimulationPreset>(() => {
     return PRESETS.find(p => p.id === presetId) || PRESETS[0];

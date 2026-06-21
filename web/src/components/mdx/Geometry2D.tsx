@@ -6,9 +6,10 @@ import { Compass, Sparkles } from 'lucide-react';
 interface Geometry2DProps {
   preset: 'triangle' | 'circle' | 'vector';
   title?: string;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
-export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D" }: Geometry2DProps) => {
+export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeLevel }: Geometry2DProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   
   const [points, setPoints] = useState<Record<string, { x: number; y: number }>>(() => {

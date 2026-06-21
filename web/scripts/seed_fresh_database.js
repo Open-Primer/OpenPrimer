@@ -207,6 +207,54 @@ async function main() {
         CONSTRAINT unique_type_lang UNIQUE (template_type, lang)
       );
 
+      CREATE TABLE IF NOT EXISTS public.refused_courses (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        searches INTEGER NOT NULL DEFAULT 0,
+        priority VARCHAR(50) NOT NULL DEFAULT 'Medium',
+        previously_refused BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.refused_translations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        source_lang VARCHAR(10) NOT NULL,
+        target_lang VARCHAR(10) NOT NULL,
+        requests INTEGER NOT NULL DEFAULT 0,
+        priority VARCHAR(50) NOT NULL DEFAULT 'Medium',
+        previously_refused BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.refused_revisions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        course VARCHAR(255) NOT NULL,
+        issue_summary TEXT NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+        ai_proposal TEXT,
+        previously_refused BOOLEAN NOT NULL DEFAULT FALSE,
+        priority VARCHAR(50) NOT NULL DEFAULT 'Medium',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.course_completions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        course_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS public.translation_emails (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        course_title VARCHAR(255) NOT NULL,
+        target_lang VARCHAR(10) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Apply RLS policies & permissions
       CREATE OR REPLACE FUNCTION public.is_admin()
       RETURNS BOOLEAN SECURITY DEFINER AS $$
@@ -230,13 +278,13 @@ async function main() {
 
       ALTER TABLE public.progress ENABLE ROW LEVEL SECURITY;
       DROP POLICY IF EXISTS "Users can read own progress" ON public.progress;
-      CREATE POLICY "Users can read own progress" ON public.progress FOR SELECT USING (true);
+      CREATE POLICY "Users can read own progress" ON public.progress FOR SELECT TO authenticated USING (auth.uid()::text = user_id OR auth.uid()::text = 'u1');
       DROP POLICY IF EXISTS "Users can update own progress" ON public.progress;
-      CREATE POLICY "Users can update own progress" ON public.progress FOR UPDATE USING (auth.uid()::text = user_id OR user_id = 'u1');
+      CREATE POLICY "Users can update own progress" ON public.progress FOR UPDATE USING (auth.uid()::text = user_id OR auth.uid()::text = 'u1');
       DROP POLICY IF EXISTS "Users can insert own progress" ON public.progress;
-      CREATE POLICY "Users can insert own progress" ON public.progress FOR INSERT WITH CHECK (auth.uid()::text = user_id OR user_id = 'u1');
+      CREATE POLICY "Users can insert own progress" ON public.progress FOR INSERT WITH CHECK (auth.uid()::text = user_id OR auth.uid()::text = 'u1');
       DROP POLICY IF EXISTS "Users can delete own progress" ON public.progress;
-      CREATE POLICY "Users can delete own progress" ON public.progress FOR DELETE USING (auth.uid()::text = user_id OR user_id = 'u1');
+      CREATE POLICY "Users can delete own progress" ON public.progress FOR DELETE USING (auth.uid()::text = user_id OR auth.uid()::text = 'u1');
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.progress TO public, anon, authenticated;
 
       ALTER TABLE public.translation_requests ENABLE ROW LEVEL SECURITY;
@@ -285,6 +333,40 @@ async function main() {
       DROP POLICY IF EXISTS "Allow all access to email_templates" ON public.email_templates;
       CREATE POLICY "Allow all access to email_templates" ON public.email_templates FOR ALL USING (true) WITH CHECK (true);
       GRANT SELECT, INSERT, UPDATE, DELETE ON public.email_templates TO public, anon, authenticated;
+
+      -- Apply RLS & grants to missing feature tables
+      ALTER TABLE public.refused_courses ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Admins can access refused_courses" ON public.refused_courses;
+      CREATE POLICY "Admins can access refused_courses" ON public.refused_courses
+        FOR ALL TO public USING (public.is_admin() = true) WITH CHECK (public.is_admin() = true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.refused_courses TO public, anon, authenticated;
+
+      ALTER TABLE public.refused_translations ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Admins can access refused_translations" ON public.refused_translations;
+      CREATE POLICY "Admins can access refused_translations" ON public.refused_translations
+        FOR ALL TO public USING (public.is_admin() = true) WITH CHECK (public.is_admin() = true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.refused_translations TO public, anon, authenticated;
+
+      ALTER TABLE public.refused_revisions ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Admins can access refused_revisions" ON public.refused_revisions;
+      CREATE POLICY "Admins can access refused_revisions" ON public.refused_revisions
+        FOR ALL TO public USING (public.is_admin() = true) WITH CHECK (public.is_admin() = true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.refused_revisions TO public, anon, authenticated;
+
+      ALTER TABLE public.course_completions ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Users can read own completions" ON public.course_completions;
+      CREATE POLICY "Users can read own completions" ON public.course_completions
+        FOR SELECT TO authenticated USING (auth.uid()::text = user_id OR public.is_admin() = true);
+      DROP POLICY IF EXISTS "Users can insert own completions" ON public.course_completions;
+      CREATE POLICY "Users can insert own completions" ON public.course_completions
+        FOR INSERT WITH CHECK (auth.uid()::text = user_id OR public.is_admin() = true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.course_completions TO public, anon, authenticated;
+
+      ALTER TABLE public.translation_emails ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS "Admins can access translation_emails" ON public.translation_emails;
+      CREATE POLICY "Admins can access translation_emails" ON public.translation_emails
+        FOR ALL TO public USING (public.is_admin() = true) WITH CHECK (public.is_admin() = true);
+      GRANT SELECT, INSERT, UPDATE, DELETE ON public.translation_emails TO public, anon, authenticated;
     `);
 
     // A. PURGE ALL TRANSACTIONAL AND PROGRESS DATA (Clean canvas, 0 courses completed)
@@ -314,14 +396,18 @@ async function main() {
     console.log("âœ… Authentication table fully purged.");
 
     // C. SEED SYSTEM LANGUAGES
-    console.log("ðŸŒ± Seeding Core Languages...");
+    console.log("🌱 Seeding Core Languages...");
     await pgClient.query(`
       INSERT INTO public.languages (code, flag, label, archiving_level) VALUES
-        ('FR', 'ðŸ‡«ðŸ‡·', 'FranÃ§ais', 0),
-        ('EN', 'ðŸ‡ºðŸ‡¸', 'English', 0),
-        ('ES', 'ðŸ‡ªðŸ‡¸', 'EspaÃ±ol', 0),
-        ('DE', 'ðŸ‡©ðŸ‡ª', 'Deutsch', 0),
-        ('ZH', 'ðŸ‡¨ðŸ‡³', 'ä¸­æ–‡', 0)
+        ('FR', '🇫🇷', 'Français', 0),
+        ('EN', '🇺🇸', 'English', 0),
+        ('ES', '🇪🇸', 'Español', 0),
+        ('DE', '🇩🇪', 'Deutsch', 0),
+        ('ZH', '🇨🇳', '中文', 0),
+        ('PT', '🇧🇷', 'Português', 0),
+        ('AR', '🇸🇦', 'العربية', 0),
+        ('HI', '🇮🇳', 'हिन्दी', 0),
+        ('UR', '🇵🇰', 'اردو', 0)
       ON CONFLICT (code) DO UPDATE SET flag = EXCLUDED.flag, label = EXCLUDED.label;
     `);
     console.log("✅ System languages seeded.");
@@ -389,6 +475,54 @@ async function main() {
         fallback_text: '如果下方的按钮无法点击，请复制并粘贴以下链接到浏览器中：',
         footer: '© 2026 OpenPrimer. 保留所有权利。'
       },
+      {
+        id: 'verify_email_PT',
+        template_type: 'verify_email',
+        lang: 'PT',
+        subject: 'Ative a sua conta OpenPrimer',
+        subtitle: 'A SUA UNIVERSIDADE ACADÉMICA DE PONTA',
+        welcome: 'Bem-vindo a bordo!',
+        body: 'Obrigado por se registar no OpenPrimer. Para iniciar a sua jornada de aprendizagem personalizada desde o ensino primário até ao nível L3, confirme o seu endereço de e-mail clicando no botão abaixo:',
+        button: 'Ativar a minha conta',
+        fallback_text: 'Se o botão acima não funcionar, copie e cole o seguinte link no seu navegador:',
+        footer: '© 2026 OpenPrimer. Todos os direitos reservados.'
+      },
+      {
+        id: 'verify_email_AR',
+        template_type: 'verify_email',
+        lang: 'AR',
+        subject: 'تفعيل حساب OpenPrimer الخاص بك',
+        subtitle: 'جامعتك الأكاديمية الرائدة',
+        welcome: 'مرحباً بك معنا!',
+        body: 'شكراً لتسجيلك في OpenPrimer. لبدء رحلة التعلم المخصصة لك من المدرسة الابتدائية إلى مستوى L3، يرجى تأكيد عنوان بريدك الإلكتروني بالنقر على الزر أدناه:',
+        button: 'تفعيل حسابي',
+        fallback_text: 'إذا لم يعمل الزر أعلاه، قم بنسخ الرابط التالي ولصقه في متصفحك:',
+        footer: '© 2026 OpenPrimer. جميع الحقوق محفوظة.'
+      },
+      {
+        id: 'verify_email_HI',
+        template_type: 'verify_email',
+        lang: 'HI',
+        subject: 'अपना OpenPrimer खाता सक्रिय करें',
+        subtitle: 'आपका अग्रणी शैक्षणिक विश्वविद्यालय',
+        welcome: 'स्वागत है!',
+        body: 'OpenPrimer पर साइन अप करने के लिए धन्यवाद। प्राथमिक विद्यालय से स्तर L3 तक अपनी व्यक्तिगत शिक्षण यात्रा शुरू करने के लिए, कृपया नीचे दिए गए बटन पर क्लिक करके अपने ईमेल पते की पुष्टि करें:',
+        button: 'मेरा खाता सक्रिय करें',
+        fallback_text: 'यदि उपरोक्त बटन काम नहीं करता है, तो निम्नलिखित लिंक को कॉपी करके अपने ब्राउज़र में पेस्ट करें:',
+        footer: '© 2026 OpenPrimer. सभी अधिकार सुरक्षित।'
+      },
+      {
+        id: 'verify_email_UR',
+        template_type: 'verify_email',
+        lang: 'UR',
+        subject: 'اپنا OpenPrimer اکاؤنٹ فعال کریں',
+        subtitle: 'آپ کا معروف تعلیمی ادارہ',
+        welcome: 'خوش آمدید!',
+        body: 'OpenPrimer پر سائن اپ کرنے کے لیے شکریہ۔ پرائمری اسکول سے لے کر L3 لیول تک اپنے ذاتی نوعیت کے تعلیمی سفر کا آغاز کرنے کے لیے، براہ کرم نیچے دیے گئے بٹن پر کلک کر کے اپنے ای میل ایڈریس کی تصدیق کریں:',
+        button: 'میرا اکاؤنٹ فعال کریں',
+        fallback_text: 'اگر اوپر دیا گیا بٹن کام نہیں کرتا ہے، تو درج ذیل لنک کو کاپی کر کے اپنے براؤزر میں پیسٹ کریں:',
+        footer: '© 2026 OpenPrimer. جملہ حقوق محفوظ ہیں۔'
+      },
       // lost_password
       {
         id: 'lost_password_FR',
@@ -450,6 +584,54 @@ async function main() {
         fallback_text: '如果下方的按钮无法点击，请复制并粘贴以下链接到浏览器中：',
         footer: '© 2026 OpenPrimer. 保留所有权利。'
       },
+      {
+        id: 'lost_password_PT',
+        template_type: 'lost_password',
+        lang: 'PT',
+        subject: 'Redefina a sua palavra-passe OpenPrimer',
+        subtitle: 'A SUA UNIVERSIDADE ACADÉMICA DE PONTA',
+        welcome: 'Olá {{firstName}}!',
+        body: 'Recebemos um pedido para redefinir a palavra-passe da sua conta OpenPrimer. Se não fez este pedido, pode ignorar este e-mail com segurança. Para redefinir a sua palavra-passe, clique no botão abaixo:',
+        button: 'Redefinir palavra-passe',
+        fallback_text: 'Se o botão acima não funcionar, copie e cole o seguinte link no seu navegador:',
+        footer: '© 2026 OpenPrimer. Todos os direitos reservados.'
+      },
+      {
+        id: 'lost_password_AR',
+        template_type: 'lost_password',
+        lang: 'AR',
+        subject: 'إعادة تعيين كلمة مرور OpenPrimer الخاصة بك',
+        subtitle: 'جامعتك الأكاديمية الرائدة',
+        welcome: 'مرحباً {{firstName}}!',
+        body: 'تلقينا طلباً لإعادة تعيين كلمة المرور لحساب OpenPrimer الخاص بك. إذا لم تقم بتقديم هذا الطلب، يمكنك تجاهل هذا البريد الإلكتروني بأمان. لإعادة تعيين كلمة المرور الخاصة بك، يرجى النقر على الزر أدناه:',
+        button: 'إعادة تعيين كلمة المرور',
+        fallback_text: 'إذا لم يعمل الزر أعلاه، قم بنسخ الرابط التالي ولصقه في متصفحك:',
+        footer: '© 2026 OpenPrimer. جميع الحقوق محفوظة.'
+      },
+      {
+        id: 'lost_password_HI',
+        template_type: 'lost_password',
+        lang: 'HI',
+        subject: 'अपना OpenPrimer पासवर्ड रीसेट करें',
+        subtitle: 'आपका अग्रणी शैक्षणिक विश्वविद्यालय',
+        welcome: 'नमस्ते {{firstName}}!',
+        body: 'हमें आपके OpenPrimer खाते का पासवर्ड रीसेट करने का अनुरोध प्राप्त हुआ है। यदि आपने यह अनुरोध नहीं किया है, तो आप सुरक्षित रूप से इस ईमेल को अनदेखा कर सकते हैं। अपना पासवर्ड रीसेट करने के लिए, कृपया नीचे दिए गए बटन पर क्लिक करें:',
+        button: 'पासवर्ड रीसेट करें',
+        fallback_text: 'यदि उपरोक्त बटन काम नहीं करता है, तो निम्नलिखित लिंक को कॉपी करके अपने ब्राउज़र में पेस्ट करें:',
+        footer: '© 2026 OpenPrimer. सभी अधिकार सुरक्षित।'
+      },
+      {
+        id: 'lost_password_UR',
+        template_type: 'lost_password',
+        lang: 'UR',
+        subject: 'اپنا OpenPrimer پاس ورڈ ری سیٹ کریں',
+        subtitle: 'آپ کا معروف تعلیمی ادارہ',
+        welcome: 'ہیلو {{firstName}}!',
+        body: 'ہمیں آپ کے OpenPrimer اکاؤنٹ کا پاس ورڈ ری سیٹ کرنے کی درخواست موصول ہوئی ہے۔ اگر آپ نے یہ درخواست نہیں کی ہے، تو آپ محفوظ طریقے سے اس ای میل کو نظر انداز کر سکتے ہیں۔ اپنا پاس ورڈ ری سیٹ کرنے کے لیے، براہ کرم نیچے دیے گئے بٹن پر کلک کریں:',
+        button: 'پاس ورڈ ری سیٹ کریں',
+        fallback_text: 'اگر اوپر دیا گیا بٹن کام نہیں کرتا ہے، تو درج ذیل لنک کو کاپی کر کے اپنے براؤزر میں پیسٹ کریں:',
+        footer: '© 2026 OpenPrimer. جملہ حقوق محفوظ ہیں۔'
+      },
       // feedback
       {
         id: 'feedback_FR',
@@ -510,6 +692,54 @@ async function main() {
         button: '访问 OpenPrimer',
         fallback_text: '如有任何紧急情况，您可以直接回复此邮件。',
         footer: '© 2026 OpenPrimer. 保留所有权利。'
+      },
+      {
+        id: 'feedback_PT',
+        template_type: 'feedback',
+        lang: 'PT',
+        subject: 'Recebemos a sua mensagem - OpenPrimer',
+        subtitle: 'A SUA UNIVERSIDADE ACADÉMICA DE PONTA',
+        welcome: 'Obrigado pela sua mensagem {{firstName}}!',
+        body: 'Agradecemos o seu contacto com o OpenPrimer. Recebemos com sucesso os seus comentários ou dúvida, e a nossa equipa entrará em contacto consigo o mais breve possível. Aqui está uma cópia da sua mensagem:',
+        button: 'Visitar o OpenPrimer',
+        fallback_text: 'Para qualquer urgência, pode responder diretamente a este e-mail.',
+        footer: '© 2026 OpenPrimer. Todos os direitos reservados.'
+      },
+      {
+        id: 'feedback_AR',
+        template_type: 'feedback',
+        lang: 'AR',
+        subject: 'لقد استلمنا رسالتك - OpenPrimer',
+        subtitle: 'جامعتك الأكاديمية الرائدة',
+        welcome: 'شكراً لرسالتك {{firstName}}!',
+        body: 'نشكرك على تواصلك مع OpenPrimer. لقد تلقينا ملاحظاتك أو استفسارك بنجاح، وسيقوم فريقنا بالرد عليك في أقرب وقت ممكن. إليك نسخة من رسالتك:',
+        button: 'زيارة OpenPrimer',
+        fallback_text: 'لأي حالة طارئة، يمكنك الرد مباشرة على هذا البريد الإلكتروني.',
+        footer: '© 2026 OpenPrimer. جميع الحقوق محفوظة.'
+      },
+      {
+        id: 'feedback_HI',
+        template_type: 'feedback',
+        lang: 'HI',
+        subject: 'हमें आपका संदेश प्राप्त हो गया है - OpenPrimer',
+        subtitle: 'आपका अग्रणी शैक्षणिक विश्वविद्यालय',
+        welcome: 'आपके संदेश के लिए धन्यवाद {{firstName}}!',
+        body: 'OpenPrimer से संपर्क करने के लिए धन्यवाद। हमें आपकी प्रतिक्रिया या पूछताछ सफलतापूर्वक प्राप्त हो गई है, और हमारी टीम जल्द से जल्द आपसे संपर्क करेगी। यहाँ आपके संदेश की एक प्रति है:',
+        button: 'OpenPrimer पर जाएँ',
+        fallback_text: 'किसी भी आपातकालीन स्थिति के लिए, आप सीधे इस ईमेल का उत्तर दे सकते हैं।',
+        footer: '© 2026 OpenPrimer. सभी अधिकार सुरक्षित।'
+      },
+      {
+        id: 'feedback_UR',
+        template_type: 'feedback',
+        lang: 'UR',
+        subject: 'ہمیں آپ کا پیغام موصول ہو گیا ہے - OpenPrimer',
+        subtitle: 'آپ کا معروف تعلیمی ادارہ',
+        welcome: 'آپ کے پیغام کا شکریہ {{firstName}}!',
+        body: 'OpenPrimer سے رابطہ کرنے کا شکریہ۔ ہمیں آپ کا فیڈ بیک یا انکوائری کامیابی کے ساتھ موصول ہو گئی ہے، اور ہماری ٹیم جلد از جلد آپ سے رابطہ کرے گی۔ یہاں آپ کے پیغام کی ایک کاپی ہے:',
+        button: 'OpenPrimer ملاحظہ کریں',
+        fallback_text: 'کسی بھی ہنگامی صورت حال میں، آپ براہ راست اس ای میل کا جواب دے سکتے ہیں۔',
+        footer: '© 2026 OpenPrimer. جملہ حقوق محفوظ ہیں۔'
       }
     ];
 
@@ -648,13 +878,13 @@ async function main() {
           USING ((auth.uid())::text = id OR public.is_admin() = true);
 
         CREATE POLICY "Users can update own profile" ON public.profiles 
-          FOR UPDATE USING ((auth.uid())::text = id OR id = 'u1');
+          FOR UPDATE USING ((auth.uid())::text = id);
 
         CREATE POLICY "Users can insert own profile" ON public.profiles 
-          FOR INSERT WITH CHECK (true);
+          FOR INSERT WITH CHECK ((auth.uid())::text = id);
 
         CREATE POLICY "Users can delete own profile" ON public.profiles 
-          FOR DELETE USING ((auth.uid())::text = id OR id = 'u1');
+          FOR DELETE USING ((auth.uid())::text = id);
 
         GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO public, anon, authenticated;
      `);

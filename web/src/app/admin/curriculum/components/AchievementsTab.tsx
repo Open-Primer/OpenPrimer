@@ -48,7 +48,7 @@ const getSuggestedBadges = (name: string, desc: string, achievements: any[], cur
 };
 
 interface AchievementsTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   achievements: Achievement[];
   completions: any[];

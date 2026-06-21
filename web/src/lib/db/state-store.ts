@@ -160,14 +160,16 @@ export let systemParametersList: SystemParameter[] = [
 if (isBrowser) {
   // If openprimer_users doesn't exist, we treat it as a fresh start and clear any residual user progress data
   if (!window.localStorage.getItem('openprimer_users')) {
-    window.localStorage.removeItem('op_enrolled_courses');
-    window.localStorage.removeItem('op_course_progress');
-    window.localStorage.removeItem('op_quiz_results');
-    window.localStorage.removeItem('op_earned_achievements');
-    window.localStorage.removeItem('openprimer_lesson_progress');
-    window.localStorage.removeItem('op_tutor_question_count');
-    window.localStorage.removeItem('op_custom_syllabus_created');
-    window.localStorage.removeItem('op_feedback_submitted');
+    if (window.localStorage.getItem('op_allow_sandbox') !== 'true') {
+      window.localStorage.removeItem('op_enrolled_courses');
+      window.localStorage.removeItem('op_course_progress');
+      window.localStorage.removeItem('op_quiz_results');
+      window.localStorage.removeItem('op_earned_achievements');
+      window.localStorage.removeItem('openprimer_lesson_progress');
+      window.localStorage.removeItem('op_tutor_question_count');
+      window.localStorage.removeItem('op_custom_syllabus_created');
+      window.localStorage.removeItem('op_feedback_submitted');
+    }
     window.localStorage.setItem('openprimer_users', JSON.stringify(users));
   } else {
     try {

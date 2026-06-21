@@ -210,19 +210,89 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   getAllCourseCompletions: async () => {
-    return { data: [], error: null };
+    try {
+      const { data, error } = await supabase.from('course_completions').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(r => ({
+        id: String(r.id),
+        courseId: String(r.course_id),
+        timestamp: r.completed_at
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
+    }
   },
   getTranslationEmails: async () => {
-    return { data: [], error: null };
+    try {
+      const { data, error } = await supabase.from('translation_emails').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(r => ({
+        id: String(r.id),
+        courseTitle: r.course_title,
+        targetLang: r.target_lang,
+        email: r.email,
+        timestamp: r.timestamp
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
+    }
   },
   saveTranslationEmail: async (email: TranslationEmailNotification) => {
-    return { data: email, error: null };
+    try {
+      const isValidUUID = email.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email.id);
+      const { data, error } = await supabase
+        .from('translation_emails')
+        .upsert({
+          id: isValidUUID ? email.id : undefined,
+          course_title: email.courseTitle,
+          target_lang: email.targetLang,
+          email: email.email,
+          timestamp: email.timestamp || new Date().toISOString()
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const mapped = {
+        id: String(data.id),
+        courseTitle: data.course_title,
+        targetLang: data.target_lang,
+        email: data.email,
+        timestamp: data.timestamp
+      };
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: email, error: e as any };
+    }
   },
   deleteTranslationEmail: async (id: string) => {
-    return { data: null, error: null };
+    try {
+      const { error } = await supabase.from('translation_emails').delete().eq('id', id);
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
   },
   cleanupTranslationEmails: async (retentionDays: number) => {
-    return { data: null, error: null };
+    try {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - retentionDays);
+      const { error } = await supabase
+        .from('translation_emails')
+        .delete()
+        .lt('timestamp', cutoff.toISOString());
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
   },
   getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
     try {
@@ -533,7 +603,25 @@ export const supabaseDatabaseProvider: DatabaseService = {
         })();
       }
 
-      return { data: queue, error: null };
+      // Map rows back to the client queue format with correct UUIDs
+      const clientQueue = rows.map(r => {
+        let extra = {};
+        try {
+          extra = JSON.parse(r.description || '{}');
+        } catch {}
+        return {
+          id: String(r.id),
+          title: r.name,
+          type: r.target,
+          status: r.status,
+          priority: r.priority,
+          progress: r.progress,
+          logs: r.logs || [],
+          ...extra
+        };
+      });
+
+      return { data: clientQueue, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: [], error: e as any };
@@ -724,7 +812,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  getUserProgress: async (userId: string, lang?: string) => {
+  getUserProgress: async (userId: string, lang?: string, currentCourseSlug?: string) => {
     try {
       let courses = getMockCourses();
       if (!courses || courses.length === 0) {
@@ -926,7 +1014,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
         totalMinutes,
         activeLang,
         tutorId,
-        quizResults
+        quizResults,
+        currentCourseSlug
       );
 
       try {
@@ -1227,7 +1316,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
     const issueSummary = cleanComment ? `Page: ${cleanPage}. Comment: ${cleanComment}` : `Page: ${cleanPage}. General report.`;
     try {
-      const { data, error } = await supabase.from('report_clusters').insert({
+      const { data, error } = await supabaseAdmin.from('report_clusters').insert({
         course: cleanCourse,
         issue_summary: issueSummary,
         count: 1,
@@ -1241,7 +1330,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       if (comment && comment.includes('MDX_RENDERING_FAILURE')) {
         let courseTitle = cleanCourse;
         try {
-          const { data: courseData } = await supabase
+          const { data: courseData } = await supabaseAdmin
             .from('courses')
             .select('title')
             .eq('slug', cleanCourse)
@@ -1265,7 +1354,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           targetLang = 'zh';
         }
 
-        await supabase.from('task_queue').insert({
+        await supabaseAdmin.from('task_queue').insert({
           name: `${courseTitle} - Revise: MDX_RENDERING_FAILURE on page "${cleanPage}"`,
           description: JSON.stringify({
             targetLang: targetLang,
@@ -1883,31 +1972,196 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   getRefusedCourses: async () => {
-    return { data: [], error: null };
+    try {
+      const { data, error } = await supabase.from('refused_courses').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(r => ({
+        id: String(r.id),
+        name: r.name,
+        subject: r.subject,
+        searches: r.searches,
+        priority: r.priority,
+        previouslyRefused: r.previously_refused,
+        timestamp: r.created_at
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
+    }
   },
   addRefusedCourse: async (course: RefusedCourseEntry) => {
-    return { data: course, error: null };
+    try {
+      const isValidUUID = course.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(course.id);
+      const { data, error } = await supabase
+        .from('refused_courses')
+        .upsert({
+          id: isValidUUID ? course.id : undefined,
+          name: course.name,
+          subject: course.subject,
+          searches: course.searches,
+          priority: course.priority,
+          previously_refused: course.previouslyRefused,
+          created_at: course.timestamp || new Date().toISOString()
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const mapped = {
+        id: String(data.id),
+        name: data.name,
+        subject: data.subject,
+        searches: data.searches,
+        priority: data.priority,
+        previouslyRefused: data.previously_refused,
+        timestamp: data.created_at
+      };
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: course, error: e as any };
+    }
   },
   deleteRefusedCourse: async (id: string) => {
-    return { data: null, error: null };
+    try {
+      const { error } = await supabase.from('refused_courses').delete().eq('id', id);
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
   },
   getRefusedTranslations: async () => {
-    return { data: [], error: null };
+    try {
+      const { data, error } = await supabase.from('refused_translations').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(r => ({
+        id: String(r.id),
+        name: r.name,
+        sourceLang: r.source_lang,
+        targetLang: r.target_lang,
+        requests: r.requests,
+        priority: r.priority,
+        previouslyRefused: r.previously_refused,
+        timestamp: r.created_at
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
+    }
   },
   addRefusedTranslation: async (trans: RefusedTranslationEntry) => {
-    return { data: trans, error: null };
+    try {
+      const isValidUUID = trans.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trans.id);
+      const { data, error } = await supabase
+        .from('refused_translations')
+        .upsert({
+          id: isValidUUID ? trans.id : undefined,
+          name: trans.name,
+          source_lang: trans.sourceLang,
+          target_lang: trans.targetLang,
+          requests: trans.requests,
+          priority: trans.priority,
+          previously_refused: trans.previouslyRefused,
+          created_at: trans.timestamp || new Date().toISOString()
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const mapped = {
+        id: String(data.id),
+        name: data.name,
+        sourceLang: data.source_lang,
+        targetLang: data.target_lang,
+        requests: data.requests,
+        priority: data.priority,
+        previouslyRefused: data.previously_refused,
+        timestamp: data.created_at
+      };
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: trans, error: e as any };
+    }
   },
   deleteRefusedTranslation: async (id: string) => {
-    return { data: null, error: null };
+    try {
+      const { error } = await supabase.from('refused_translations').delete().eq('id', id);
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
   },
   getRefusedRevisions: async () => {
-    return { data: [], error: null };
+    try {
+      const { data, error } = await supabase.from('refused_revisions').select('*');
+      if (error) throw error;
+      const mapped = (data || []).map(r => ({
+        id: String(r.id),
+        course: r.course,
+        issueSummary: r.issue_summary,
+        count: r.count,
+        status: r.status,
+        aiProposal: r.ai_proposal,
+        previouslyRefused: r.previously_refused,
+        priority: r.priority,
+        timestamp: r.created_at
+      }));
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: [], error: e as any };
+    }
   },
   addRefusedRevision: async (rev: RefusedRevisionEntry) => {
-    return { data: rev, error: null };
+    try {
+      const isValidUUID = rev.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rev.id);
+      const { data, error } = await supabase
+        .from('refused_revisions')
+        .upsert({
+          id: isValidUUID ? rev.id : undefined,
+          course: rev.course,
+          issue_summary: rev.issueSummary,
+          count: rev.count,
+          status: rev.status,
+          ai_proposal: rev.aiProposal,
+          previously_refused: rev.previouslyRefused,
+          priority: rev.priority,
+          created_at: rev.timestamp || new Date().toISOString()
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const mapped = {
+        id: String(data.id),
+        course: data.course,
+        issueSummary: data.issue_summary,
+        count: data.count,
+        status: data.status,
+        aiProposal: data.ai_proposal,
+        previouslyRefused: data.previously_refused,
+        priority: data.priority,
+        timestamp: data.created_at
+      };
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: rev, error: e as any };
+    }
   },
   deleteRefusedRevision: async (id: string) => {
-    return { data: null, error: null };
+    try {
+      const { error } = await supabase.from('refused_revisions').delete().eq('id', id);
+      if (error) throw error;
+      return { data: null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
   },
 
   getTutorPersonalities: async () => {

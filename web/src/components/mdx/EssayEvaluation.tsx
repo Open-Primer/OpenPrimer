@@ -108,7 +108,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     return () => window.removeEventListener('op_accessibility_preferences_changed', handlePrefsChange);
   }, []);
 
-  const actualDurationLimit = durationLimit ? (extendTime ? durationLimit * 2 : durationLimit) : undefined;
+  const actualDurationLimit = durationLimit ? (extendTime ? Math.round(durationLimit * 1.25) : durationLimit) : undefined;
 
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(actualDurationLimit || 0);
@@ -616,15 +616,13 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
             </div>
-            {actualDurationLimit && (
-              <div className="flex items-start gap-2 text-amber-300 font-bold">
-                <span className="shrink-0">⏱</span>
-                <span>{t.time_limit} <strong>{formatDurationText(actualDurationLimit)}</strong></span>
-              </div>
-            )}
-            <div className="flex items-start gap-2">
-              <span className="text-violet-400 font-black shrink-0">▸</span>
-              <span>{isFinal ? t.eval_attempts_single : t.eval_attempts_unlimited}</span>
+            <div className={cn("flex items-start gap-2", isFinal && "text-red-400 font-bold text-sm bg-red-500/10 p-3 rounded-xl border border-red-500/20 my-1 w-full")}>
+              {isFinal ? (
+                <span className="shrink-0 text-red-400 text-base">⚠️</span>
+              ) : (
+                <span className="text-violet-400 font-black shrink-0">▸</span>
+              )}
+              <span>{isFinal ? t.eval_attempts_single.toUpperCase() : t.eval_attempts_unlimited}</span>
             </div>
           </div>
         </div>

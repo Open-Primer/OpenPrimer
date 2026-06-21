@@ -318,7 +318,7 @@ export interface DatabaseService {
   hashPassword(password: string): string;
   createUser(user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>): Promise<{ data: UserProfile | null; error: any }>;
   getSiteStats(): Promise<{ data: any; error: any }>;
-  getUserProgress(userId: string, lang?: string): Promise<{ data: any; error: any }>;
+  getUserProgress(userId: string, lang?: string, currentCourseSlug?: string): Promise<{ data: any; error: any }>;
   enrollInCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
   abandonCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
   getReportClusters(): Promise<{ data: any[]; error: any }>;

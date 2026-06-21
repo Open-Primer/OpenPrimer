@@ -81,7 +81,7 @@ This is text.
     expect(items[0].text).toContain('Carlson, N. R., &amp; Heth, C. D. (2010). « Physiological Psychology » (10e éd.). Pearson Education.');
     // Check that "Google Books" placeholder text was removed from the reference text to avoid duplicates
     expect(items[0].text).not.toContain('Google Books');
-    expect(items[0].scholarUrl).toContain('books.google.com/books?q=Carlson%20Physiological%20Psychology%202010');
+    expect(items[0].scholarUrl).toContain('books.google.com/books?q=Carlson%20%22Physiological%20Psychology%22%202010');
   });
 
   test('should correctly handle and extract Markdown links containing nested parentheses', () => {
@@ -161,7 +161,7 @@ This is a cite<sup>[1](#ref-1)</sup> and another cite<sup>[2](#ref-2)</sup>.
     expect(items[0].text).not.toContain('%2C');
 
     // Verify Google Books search URL is rebuilt cleanly as [First Author] [Book Title] [Year]
-    expect(items[0].scholarUrl).toBe('https://books.google.com/books?q=Carlson%20Physiological%20Psychology%202010');
+    expect(items[0].scholarUrl).toBe('https://books.google.com/books?q=Carlson%20%22Physiological%20Psychology%22%202010');
   });
 
   test('should handle url-encoded garbage in Google Scholar search link and rebuild clean query', () => {
@@ -185,7 +185,7 @@ This is a cite<sup>[1](#ref-1)</sup>.
     expect(items[0].text).not.toContain('%20');
 
     // Verify Google Scholar search URL is rebuilt cleanly as [First Author] [Book Title] [Year]
-    expect(items[0].scholarUrl).toBe('https://scholar.google.com/scholar?q=Carlson%20Physiological%20Psychology%202010');
+    expect(items[0].scholarUrl).toBe('https://scholar.google.com/scholar?q=Carlson%20%22Physiological%20Psychology%22%202010');
   });
 
   test.describe('Pedagogical Enrichment and Interactive Components validation', () => {

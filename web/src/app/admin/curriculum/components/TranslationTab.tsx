@@ -15,7 +15,7 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
 };
 
 interface TranslationTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   t: any;
   tr: (key: string) => string;
   autoTranslate: boolean;

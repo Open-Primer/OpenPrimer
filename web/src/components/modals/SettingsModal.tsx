@@ -184,8 +184,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "Deuteranopia (Green-Red Deficient)",
     cb_tritanopia: "Tritanopia (Blue-Yellow Deficient)",
     cb_achromatopsia: "Achromatopsia (Total Monochrome)",
-    extend_time: "Extend Assessment Time Limits",
-    extend_time_desc: "Doubles the allocated time limit for summative module validations and quizzes to accommodate cognitive needs."
+    extend_time: "Extend Assessment Time (+25%)",
+    extend_time_desc: "Increases time limit by 25% for all quizzes and summative validations. Strictly reserved for users with certified disabilities."
   },
   FR: {
     section_title: "Configuration Active de l'Accessibilité",
@@ -206,8 +206,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "Deutéranopie (Déficience Vert-Rouge)",
     cb_tritanopia: "Tritanopie (Déficience Bleu-Jaune)",
     cb_achromatopsia: "Achromatopsie (Monochrome Total)",
-    extend_time: "Prolonger le Temps des Évaluations",
-    extend_time_desc: "Double le temps alloué pour les examens et quiz afin de s'adapter aux besoins spécifiques."
+    extend_time: "Temps Majoré pour Handicap (+25%)",
+    extend_time_desc: "Augmente le temps alloué de 25% pour tous les quiz et examens. Ce paramètre est strictement réservé aux personnes en situation de handicap ou ayant des besoins spécifiques certifiés."
   },
   ES: {
     section_title: "Configuración Activa de Accesibilidad",
@@ -228,8 +228,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "Deuteranopía (Deficiencia Verde-Rojo)",
     cb_tritanopia: "Tritanopía (Deficiencia Azul-Amarillo)",
     cb_achromatopsia: "Acromatopsia (Monocromo Total)",
-    extend_time: "Ampliar el Tiempo de Evaluación",
-    extend_time_desc: "Duplica el límite de tiempo asignado para cuestionarios y validaciones sumativas de módulos."
+    extend_time: "Tiempo Adicional por Discapacidad (+25%)",
+    extend_time_desc: "Aumenta el tiempo asignado en un 25% para cuestionarios y evaluaciones. Reservado estrictamente para estudiantes con necesidades de accesibilidad certificadas."
   },
   DE: {
     section_title: "Aktive Barrierefreiheit-Konfiguration",
@@ -272,8 +272,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "绿色盲 (绿色弱/红色弱偏斜)",
     cb_tritanopia: "蓝色盲 (蓝色/黄色偏斜)",
     cb_achromatopsia: "全色盲 (极致黑白单色)",
-    extend_time: "延长评估时间限制",
-    extend_time_desc: "将总结性模块验证和测验的分配时间限制延长一倍，以适应认知需要。"
+    extend_time: "残障考试时间延长 (+25%)",
+    extend_time_desc: "为所有测验和总结性评估延长25%的时间。此设置严格限于有认证残障或特殊认知需求的学生使用。"
   },
   PT: {
     section_title: "Configuração de Acessibilidade Ativa",
@@ -294,8 +294,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "Deuteranopia (Deficiência de Verde)",
     cb_tritanopia: "Tritanopia (Deficiência de Azul)",
     cb_achromatopsia: "Acromatopsia (Monocromático Total)",
-    extend_time: "Prolongar Tempo de Avaliação",
-    extend_time_desc: "Duplica o limite de tempo para questionários e avaliações cognitivas."
+    extend_time: "Tempo Adicional por Deficiência (+25%)",
+    extend_time_desc: "Aumenta o limite de tempo em 25% para todos os questionários e avaliações. Reservado estritamente para alunos com necessidades de acessibilidade certificadas."
   },
   AR: {
     section_title: "إعدادات إمكانية الوصول النشطة",
@@ -316,8 +316,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "عمى اللون الأخضر (ديوترانوبيا)",
     cb_tritanopia: "عمى اللون الأزرق (تريتانوبيا)",
     cb_achromatopsia: "عمى الألوان التام (أحادية اللون)",
-    extend_time: "تمديد وقت التقييم",
-    extend_time_desc: "يضاعف الوقت المخصص للاختبارات والتقييمات التراكمية."
+    extend_time: "تمديد الوقت لذوي الاحتياجات الخاصة (+25%)",
+    extend_time_desc: "يزيد الوقت المخصص للاختبارات والتقييمات بنسبة 25٪. هذا الإعداد مخصص حصريًا للطلاب ذوي الاحتياجات الخاصة المثبتة."
   },
   HI: {
     section_title: "सक्रिय सुगमता कॉन्फ़िगरेशन",
@@ -338,8 +338,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "ड्यूटेरानोपिया (हरा-लाल अंधता)",
     cb_tritanopia: "ट्रिटानोपिया (नीला-पीला अंधता)",
     cb_achromatopsia: "एक्रोमैटोप्सिया (पूर्ण मोनोक्रोम)",
-    extend_time: "मूल्यांकन का समय बढ़ाएं",
-    extend_time_desc: "प्रश्नोत्तरी और मूल्यांकन के लिए आवंटित समय को दोगुना करें।"
+    extend_time: "दिव्यांगता के लिए अतिरिक्त समय (+25%)",
+    extend_time_desc: "सभी प्रश्नोत्तरी and मूल्यांकन के लिए आवंटित समय को 25% बढ़ाता है। यह सेटिंग विशेष रूप से प्रमाणित दिव्यांगता या विशिष्ट आवश्यकताओं वाले छात्रों के लिए आरक्षित है।"
   },
   UR: {
     section_title: "فعال رسائی کی ترتیبات",
@@ -360,8 +360,8 @@ const ACC_TRANSLATIONS = {
     cb_deuteranopia: "ڈیوٹرانوپیا (سبز-سرخ کی کمزوری)",
     cb_tritanopia: "ٹریٹانوپیا (نیلا-پیلا کی کمزوری)",
     cb_achromatopsia: "ایکروماٹوپسیہ (مکمل رنگ اندھا پن)",
-    extend_time: "امتحان کا وقت بڑھائیں",
-    extend_time_desc: "ٹیسٹ اور جائزوں کے مختص وقت کو دوگنا کرتا ہے۔"
+    extend_time: "معذوری کے لیے اضافی وقت (+25%)",
+    extend_time_desc: "ٹیسٹ اور جائزوں کے مختص وقت میں 25٪ اضافہ کرتا ہے۔ یہ ترتیبات صرف تصدیق شدہ معذوری والے طلباء کے لیے مخصوص ہیں۔"
   }
 };
 

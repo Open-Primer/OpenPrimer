@@ -50,6 +50,9 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
 
   test('should display Organic Chemistry in French curriculum page and auto-switch language on click', async ({ page, context }) => {
     test.slow();
+    // Forward browser console logs
+    page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+
     // 1. Setup mock user session enrolled in course 9 in French session
     await context.addCookies([{
       name: 'openprimer_lang',
@@ -70,13 +73,23 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
     await page.waitForLoadState('networkidle');
 
     // Verify curriculum page is in French
-    await expect(page.locator('h1')).toContainText(/Mon Curriculum/i, { timeout: 15000 });
+    try {
+      await expect(page.locator('h1')).toContainText(/Mon Curriculum/i, { timeout: 15000 });
+    } catch (e) {
+      console.log("PAGE CONTENT ON H1 FAILURE:", await page.content());
+      throw e;
+    }
 
     // Verify Organic Chemistry is visible (it uses getLocalizedTitle which returns French translation if present,
     // which is "Chimie : Chimie Organique" or "Organic Chemistry")
     // Let's check for either title to be safe
     const chemistryCard = page.locator('h3:has-text("Chimie Organique"), h3:has-text("Organic Chemistry")');
-    await expect(chemistryCard).toBeVisible();
+    try {
+      await expect(chemistryCard).toBeVisible();
+    } catch (e) {
+      console.log("PAGE CONTENT ON CHEMISTRY CARD FAILURE:", await page.content());
+      throw e;
+    }
 
     // Verify the "EN" badge is visible because the course is not available in the active language (FR)
     await expect(page.locator('span:has-text("EN")').first()).toBeVisible();
@@ -92,3 +105,4 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
     expect(currentLang).toBe('EN');
   });
 });
+

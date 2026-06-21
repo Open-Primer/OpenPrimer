@@ -16,7 +16,7 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
 };
 
 interface ArchivingTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   courses: any[];
   completions: any[];

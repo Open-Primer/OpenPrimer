@@ -67,7 +67,7 @@ graph TD
 3.  **✍️ Agent 3 (Academic Writer):** Generates dense, comprehensive, professional MDX course content with LaTeX, component blocks (`<Prerequisites>`, `<DiagnosticQuiz>`, `<Epistemology>`, `<Quiz>`), respecting Socratic/Feynman heuristics and strict anti-placeholder constraints.
 4.  **🔍 Agent 4 (Verifier/Critic):** Quality gate agent checking the generated MDX content for zero-placeholder and academic density compliance. Employs a revision feedback loop (max 3 cycles) to correct and refine sections before persistence.
 5.  **💬 Interactive Socratic Tutor Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode, guiding rather than giving answers.
-6.  **🌐 Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, and **ZH** without altering mathematical LaTeX markup or React code blocks.
+6.  **🌐 Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, **ZH**, **PT**, **AR**, **HI**, and **UR** without altering mathematical LaTeX markup or React code blocks. Arabic and Urdu outputs are automatically flagged as RTL (`dir="rtl"`) in the UI rendering layer.
 7.  **⚖️ Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
 
 ---
@@ -237,3 +237,65 @@ The following columns were added via `scripts/alter_profiles.ts` migration (June
 | `colorblind_theme` | VARCHAR(100) | `'none'` | Applies CSS color-correction filter |
 
 These are synced in real-time from the `/profile/settings` page via the `syncAccessibilityToCloud()` helper, which writes directly to the `profiles` table using the Supabase JS client.
+
+---
+
+## 6. Internationalization (i18n) Architecture
+
+OpenPrimer implements a **two-tier localization system** that cleanly separates compile-time static dictionaries from runtime dynamic translations.
+
+### Supported Locales
+
+| Code | Language | Script | Direction | Detection Method |
+|------|----------|--------|-----------|-----------------|
+| `EN` | English | Latin | LTR | Default fallback |
+| `FR` | French | Latin | LTR | Browser locale / IP (FR, MC, GP…) |
+| `ES` | Spanish | Latin | LTR | Browser locale / IP (ES, MX, CO…) |
+| `DE` | German | Latin | LTR | Browser locale / IP (DE, AT, CH, LI) |
+| `ZH` | Chinese | CJK | LTR | Browser locale / IP (CN, TW, HK) |
+| `PT` | Portuguese | Latin | LTR | Browser locale / IP (PT, BR, AO…) |
+| `AR` | Arabic | Arabic | **RTL** | Browser locale / IP (SA, EG, DZ…) |
+| `HI` | Hindi | Devanagari | LTR | Browser locale / IP (IN) |
+| `UR` | Urdu | Nastaliq | **RTL** | Browser locale / IP (PK) |
+
+### Tier 1 — Static Compiled Dictionaries
+
+Statically bundled into the JavaScript client at build time. No network round-trip required.
+
+*   **Source files:**
+    -   `web/src/app/admin/curriculum/strings.ts` — Master dictionary for the Admin Curriculum Control Center (`CURRICULUM_STRINGS`, `COCKPIT_DICTIONARY`, `LOCALIZED_POPUPS`, `EXTRA_TOOLTIP_STRINGS`).
+    -   `web/src/lib/translations.ts` — Shared global UI dictionary (`DYNAMIC_UI_STRINGS`, `ADMIN_STRINGS`, academic level & discipline label helpers).
+*   **Scope:** EN, FR, ES, DE, ZH are always statically available. PT, AR, HI, UR are also statically embedded in the Admin dashboard dictionaries.
+*   **Fallback rule:** All dictionary lookups use `dict[lang] || dict.EN` — if a key is missing in a locale, it silently degrades to English. This prevents placeholder UI errors.
+
+### Tier 2 — Dynamic DB-Fetched Translations
+
+For languages beyond the five static ones, a lazy-loading mechanism fetches translations at runtime.
+
+*   **Trigger:** `LanguageContext.tsx` — when the active language changes to a non-static code, it fires `GET /api/translate/ui?lang={code}`.
+*   **Storage:** Responses are written to the in-memory `DYNAMIC_UI_STRINGS[langCode]` map and cached for the session.
+*   **Academic metadata:** `translateMetadataForLanguage()` in `strings.ts` dynamically translates academic levels, disciplines, Socratic game labels, and philosophical quotes via the Google Translate API and caches results in `localStorage`.
+
+### RTL Layout Support
+
+Arabic (`AR`) and Urdu (`UR`) trigger automatic RTL layout switching:
+
+```typescript
+// LanguageContext.tsx — applied on every language change
+const isRtl = ['AR', 'UR'].includes(language.toUpperCase());
+document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+document.documentElement.lang = language.toLowerCase();
+```
+
+This propagates to all CSS `dir`-aware properties (`margin-inline-start`, `text-align`, flexbox) without requiring component-level changes.
+
+### Language Auto-Detection (Two-Layer Engine)
+
+1.  **Layer 1 (Synchronous):** Reads `navigator.language`, extracts the ISO 639-1 code, and sets the UI language instantly if it matches a supported locale.
+2.  **Layer 2 (Async — IP Geolocation):** Calls `https://ipapi.co/json/` to refine the detected language based on country code — particularly useful for disambiguating browser locale vs. user geography (e.g., a French speaker in Brazil who should get PT).
+
+Priority order: `op_user_profile.preferredLang` → `localStorage.openprimer_lang` → cookie → IP geolocation → browser locale → `EN`.
+
+### Zero-Placeholder Parity Rule
+
+A strict **zero-placeholder constraint** is enforced across all admin dictionaries: every string key present in the EN block must have a corresponding entry in every other language block. When adding new UI labels, always update **all** language blocks simultaneously. The `COCKPIT_DICTIONARY` (large, ~300 keys) falls back gracefully to EN for PT/AR/HI/UR where dynamic content labels are not yet fully translated.

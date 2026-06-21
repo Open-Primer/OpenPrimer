@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useId, useRef, createContext, useContext } from 'react';
 import { Info, CheckCircle2, XCircle, RefreshCw, Volume2, Sparkles, Loader2, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
@@ -212,19 +212,53 @@ const GuestFootnote = () => {
   );
 };
 
-// Composant Texte à Trous (standalone, une seule question)
+export interface FillInBlanksContextType {
+  isSubmitted: boolean;
+  registerInput: (
+    id: string,
+    answer: string,
+    value: string,
+    setValue: (val: string) => void,
+    setCorrectness: (isCorrect: boolean | null) => void
+  ) => () => void;
+  updateValue: (id: string, value: string) => void;
+}
+
+export const FillInBlanksContext = createContext<FillInBlanksContextType | null>(null);
+
+const extractAnswersFromChildren = (node: React.ReactNode): string[] => {
+  if (!node) return [];
+  if (Array.isArray(node)) {
+    return node.flatMap(n => extractAnswersFromChildren(n));
+  }
+  if (React.isValidElement(node)) {
+    const props = node.props as any;
+    const typeName = (node.type as any)?.name || '';
+    if (typeName === 'Input') {
+      return [props.answer || ''];
+    }
+    if (props && 'children' in props) {
+      return extractAnswersFromChildren(props.children);
+    }
+  }
+  return [];
+};
+
+// Composant Texte à Trous (standalone, une seule question, ou block de questions inline)
 export const FillInBlanks = ({
   sentence = '',
   answer = '',
   question = '',
   blanks = '',
-  isFinal = false
+  isFinal = false,
+  children
 }: {
   sentence?: string;
   answer?: string;
   question?: string;
   blanks?: string | string[];
   isFinal?: boolean;
+  children?: React.ReactNode;
 }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
@@ -236,7 +270,21 @@ export const FillInBlanks = ({
     return pathname.includes('/evaluation') || pathname.includes('/exam') || pathname.includes('/final');
   }, [isFinal]);
 
-  // 1. Determine answers list
+  // Block/children mode states
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [registry, setRegistry] = useState<Record<string, {
+    answer: string;
+    value: string;
+    setValue: (v: string) => void;
+    setCorrectness: (c: boolean | null) => void;
+    index: number;
+  }>>({});
+
+  const savedValuesRef = useRef<string[]>([]);
+  const savedIsSubmittedRef = useRef<boolean>(false);
+  const nextIndexRef = useRef<number>(0);
+
+  // 1. Determine answers list (standalone mode)
   const answersList = React.useMemo(() => {
     if (blanks) {
       if (Array.isArray(blanks)) return blanks;
@@ -253,7 +301,131 @@ export const FillInBlanks = ({
     return [];
   }, [blanks, answer]);
 
-  // 2. Determine segments list
+  // Block answers
+  const blockAnswers = React.useMemo(() => {
+    if (!children) return [];
+    return extractAnswersFromChildren(children);
+  }, [children]);
+
+  // Build storage key
+  const storageKey = React.useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    if (children) {
+      const hashStr = blockAnswers.join('-');
+      const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      return `op_fib_block_${window.location.pathname}_${sentenceHash}`;
+    }
+    const hashStr = (question || sentence) + answersList.join('-');
+    const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return `op_fib_${window.location.pathname}_${sentenceHash}`;
+  }, [question, sentence, answersList, children, blockAnswers]);
+
+  // Load from localStorage for block-level on mount
+  useEffect(() => {
+    if (children && storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (saved && Array.isArray(saved.values)) {
+          savedValuesRef.current = saved.values;
+          if (saved.isSubmitted === true) {
+            setIsSubmitted(true);
+            savedIsSubmittedRef.current = true;
+          }
+        }
+      } catch {}
+    }
+  }, [children, storageKey]);
+
+  // Reset nextIndexRef when children/storageKey changes (e.g. on new render)
+  useEffect(() => {
+    nextIndexRef.current = 0;
+  }, [children, storageKey]);
+
+  const registerInput = useCallback((
+    id: string,
+    answer: string,
+    value: string,
+    setValue: (v: string) => void,
+    setCorrectness: (c: boolean | null) => void
+  ) => {
+    const index = nextIndexRef.current++;
+    
+    // Initialize value and correctness if saved state exists
+    let initialValue = value;
+    if (savedValuesRef.current && savedValuesRef.current[index] !== undefined) {
+      initialValue = savedValuesRef.current[index];
+      setValue(initialValue);
+      if (savedIsSubmittedRef.current) {
+        const correct = initialValue.trim().toLowerCase() === answer.trim().toLowerCase();
+        setCorrectness(correct);
+      }
+    }
+
+    setRegistry(prev => ({
+      ...prev,
+      [id]: { answer, value: initialValue, setValue, setCorrectness, index }
+    }));
+
+    return () => {
+      setRegistry(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    };
+  }, []);
+
+  const updateValue = useCallback((id: string, value: string) => {
+    setRegistry(prev => {
+      if (!prev[id]) return prev;
+      return {
+        ...prev,
+        [id]: { ...prev[id], value }
+      };
+    });
+  }, []);
+
+  const checkBlock = () => {
+    const sortedItems = Object.values(registry).sort((a, b) => a.index - b.index);
+    const valuesArray: string[] = [];
+
+    sortedItems.forEach(item => {
+      const correct = item.value.trim().toLowerCase() === item.answer.trim().toLowerCase();
+      item.setCorrectness(correct);
+      valuesArray.push(item.value);
+    });
+
+    setIsSubmitted(true);
+    savedIsSubmittedRef.current = true;
+
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify({
+        values: valuesArray,
+        isSubmitted: true
+      }));
+    }
+  };
+
+  const handleBlockRetry = () => {
+    setIsSubmitted(false);
+    savedIsSubmittedRef.current = false;
+    savedValuesRef.current = [];
+    
+    Object.values(registry).forEach(item => {
+      item.setValue('');
+      item.setCorrectness(null);
+    });
+
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  };
+
+  const hasUnfilledBlock = React.useMemo(() => {
+    return Object.values(registry).some(item => !item.value.trim());
+  }, [registry]);
+
+  // 2. Determine segments list (standalone mode)
   const segments = React.useMemo(() => {
     const textToSplit = question || sentence || '';
     if (!textToSplit) return [];
@@ -268,14 +440,6 @@ export const FillInBlanks = ({
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Build a per-question storage key using pathname + a hash of the sentence/question
-  const storageKey = React.useMemo(() => {
-    if (typeof window === 'undefined') return '';
-    const hashStr = (question || sentence) + answersList.join('-');
-    const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    return `op_fib_${window.location.pathname}_${sentenceHash}`;
-  }, [question, sentence, answersList]);
-
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -289,27 +453,29 @@ export const FillInBlanks = ({
     const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
-    // Restore per-question saved state
-    const storage = getProgressionStorage();
-    if (storage && storageKey) {
-      try {
-        const saved = JSON.parse(storage.getItem(storageKey) || 'null');
-        if (saved && Array.isArray(saved.userInputs)) {
-          setUserInputs(saved.userInputs);
-          if (Array.isArray(saved.inputCorrectness)) {
-            setInputCorrectness(saved.inputCorrectness);
+    if (!children) {
+      // Restore per-question saved state for standalone mode
+      const storage = getProgressionStorage();
+      if (storage && storageKey) {
+        try {
+          const saved = JSON.parse(storage.getItem(storageKey) || 'null');
+          if (saved && Array.isArray(saved.userInputs)) {
+            setUserInputs(saved.userInputs);
+            if (Array.isArray(saved.inputCorrectness)) {
+              setInputCorrectness(saved.inputCorrectness);
+            }
+            if (saved.isReadOnly === true) {
+              setIsReadOnly(true);
+            }
           }
-          if (saved.isReadOnly === true) {
-            setIsReadOnly(true);
-          }
-        }
-      } catch {}
+        } catch {}
+      }
     }
 
     return () => {
       window.removeEventListener('op_auth_state_change', handleAuthChange);
     };
-  }, [storageKey]);
+  }, [storageKey, children]);
 
   const handleInputChange = (idx: number, val: string) => {
     if (isReadOnly) return;
@@ -331,7 +497,6 @@ export const FillInBlanks = ({
     setInputCorrectness(correctness);
     setIsReadOnly(true);
 
-    // Persist exact state
     const storage = getProgressionStorage();
     if (storage && storageKey) {
       storage.setItem(
@@ -374,6 +539,57 @@ export const FillInBlanks = ({
     return false;
   }, [userInputs, numBlanks]);
 
+  // Block rendering
+  if (children) {
+    return (
+      <FillInBlanksContext.Provider value={{ isSubmitted, registerInput, updateValue }}>
+        <div className={`my-4 p-5 rounded-2xl border ${
+          isSubmitted
+            ? 'border-slate-800 bg-slate-900/10 opacity-90'
+            : 'border-slate-800 bg-slate-900/30'
+        } transition-all shadow-lg`}>
+          <div className="text-slate-300 font-medium leading-relaxed">
+            {children}
+          </div>
+
+          {!isSubmitted && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={checkBlock}
+                disabled={hasUnfilledBlock}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+              >
+                {t.validate}
+              </button>
+            </div>
+          )}
+
+          {isSubmitted && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/60 pt-3">
+              <div className="flex items-center gap-3">
+                <span className="text-slate-400 text-xs font-semibold">
+                  {language === 'FR' ? 'Exercice complété' : 'Exercise completed'}
+                </span>
+              </div>
+              
+              {!isFinalExam && (
+                <button
+                  onClick={handleBlockRetry}
+                  className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+                </button>
+              )}
+            </div>
+          )}
+          {!isLoggedIn && !isSubmitted && <GuestFootnote />}
+        </div>
+      </FillInBlanksContext.Provider>
+    );
+  }
+
+  // Standalone mode rendering
   if (numBlanks === 0) return null;
 
   const score = inputCorrectness.filter(Boolean).length;
@@ -481,13 +697,22 @@ export const FillInBlanks = ({
   );
 };
 
-// Inline sub-component for paragraph fill-in-the-blanks
-// On validation (Enter/blur): correct → green border + checkmark overlay; wrong → red border + show correct answer below
 FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
+  
+  const id = useId();
+  const context = useContext(FillInBlanksContext);
+
   const [val, setVal] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  // Register in Context on mount
+  useEffect(() => {
+    if (context) {
+      return context.registerInput(id, answer, val, setVal, setIsCorrect);
+    }
+  }, [context, id, answer]);
 
   const validate = (v: string) => {
     if (!v.trim()) return;
@@ -495,33 +720,51 @@ FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (context) return; // Do nothing if in context/block mode
     if (e.key === 'Enter') validate(val);
   };
 
   const handleBlur = () => {
+    if (context) return; // Do nothing if in context/block mode
     if (val.trim()) validate(val);
   };
+
+  const isDisabled = context ? context.isSubmitted : (isCorrect === true);
+  const showIncorrectCorrection = context ? (context.isSubmitted && isCorrect === false) : (isCorrect === false);
+
+  const borderClass = context
+    ? context.isSubmitted
+      ? isCorrect === true
+        ? 'border-emerald-500 text-emerald-400 font-semibold'
+        : 'border-red-500 text-slate-300'
+      : 'border-slate-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20'
+    : isCorrect === true
+      ? 'border-emerald-500 text-emerald-400 font-semibold'
+      : isCorrect === false
+        ? 'border-red-500 text-slate-300'
+        : 'border-slate-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20';
 
   return (
     <span className="inline-flex flex-col items-start mx-1 align-middle">
       <input
         type="text"
         value={val}
-        onChange={(e) => { setVal(e.target.value); if (isCorrect !== null) setIsCorrect(null); }}
+        onChange={(e) => {
+          const newVal = e.target.value;
+          setVal(newVal);
+          if (isCorrect !== null) setIsCorrect(null);
+          if (context) {
+            context.updateValue(id, newVal);
+          }
+        }}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
-        disabled={isCorrect === true}
-        className={`bg-slate-950 border ${
-          isCorrect === true
-            ? 'border-emerald-500 text-emerald-400 font-semibold'
-            : isCorrect === false
-              ? 'border-red-500 text-slate-300'
-              : 'border-slate-700 text-white'
-        } rounded-lg px-2.5 py-0.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20`}
+        disabled={isDisabled}
+        className={`bg-slate-950 border ${borderClass} rounded-lg px-2.5 py-0.5 text-sm outline-none transition-all`}
         style={{ width: `${Math.max(80, answer.length * 10 + 20)}px` }}
         placeholder={t.placeholder_answer}
       />
-      {isCorrect === false && (
+      {showIncorrectCorrection && (
         <span className="text-[10px] text-emerald-400 font-bold mt-0.5 pl-1">
           {language === 'FR' ? '→' : '→'} {answer}
         </span>

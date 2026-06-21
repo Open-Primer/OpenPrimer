@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Sliders, HelpCircle, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-export const GestaltInteractive = () => {
+export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school' | 'high_school' | 'university' } = {}) => {
   const { language } = useLanguage();
   const lang = language.toUpperCase();
 

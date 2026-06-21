@@ -22,7 +22,7 @@ const formatCourseLevelGlobal = (level: string | undefined | null, lang: string)
 };
 
 interface QueueTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   courses: any[];
   queueAutoRetry: boolean;
@@ -37,6 +37,7 @@ interface QueueTabProps {
   loadData: () => Promise<void>;
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void;
   removeTriggeredTaskId: (id: string) => void;
+  isQueueLoaded?: boolean;
 }
 
 export const QueueTab: React.FC<QueueTabProps> = ({
@@ -53,7 +54,8 @@ export const QueueTab: React.FC<QueueTabProps> = ({
   setQueue,
   loadData,
   showToast,
-  removeTriggeredTaskId
+  removeTriggeredTaskId,
+  isQueueLoaded = true
 }) => {
   // Search & Pagination & Sort States
   const [queueSearch, setQueueSearch] = useState('');
@@ -130,7 +132,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
         activeStatuses.includes(t.status) ? { ...t, status: 'paused' } : t
       );
       setQueue(updated);
-      await dbService.savePipelineQueue(updated);
+      const res = await dbService.savePipelineQueue(updated);
+      if (res && res.data) {
+        setQueue(res.data);
+      }
       showToast(`${tr("Paused")} ${activeTasks.length} ${tr("tasks.")}`, 'success');
       await loadData();
     } catch (err: any) {
@@ -151,7 +156,11 @@ export const QueueTab: React.FC<QueueTabProps> = ({
         const updated = prev.map(t =>
           t.status === 'paused' ? { ...t, status: 'queued' } : t
         );
-        dbService.savePipelineQueue(updated).catch(e => console.error("[RESUME ALL] savePipelineQueue error:", e));
+        dbService.savePipelineQueue(updated)
+          .then(res => {
+            if (res && res.data) setQueue(res.data);
+          })
+          .catch(e => console.error("[RESUME ALL] savePipelineQueue error:", e));
         return updated;
       });
 
@@ -178,7 +187,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
 
     const updated = queue.filter(t => t.id !== id);
     setQueue(updated);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     
     if (taskToCancel.type === 'generation') {
       await dbService.addRefusedCourse({
@@ -207,7 +219,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
     });
     setQueue(updated);
     removeTriggeredTaskId(id);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     await loadData();
     showToast(tr("Task queued for retry."), "success");
   };
@@ -223,7 +238,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
       return t;
     });
     setQueue(updated);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     await loadData();
   };
 
@@ -242,7 +260,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
     });
     setQueue(updated);
     removeTriggeredTaskId(id);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     await loadData();
     showToast(tr("Task forced to failed state."), "info");
   };
@@ -266,7 +287,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
       return t;
     });
     setQueue(updated);
-    await dbService.savePipelineQueue(updated);
+    const res = await dbService.savePipelineQueue(updated);
+    if (res && res.data) {
+      setQueue(res.data);
+    }
     await loadData();
   };
 
@@ -839,13 +863,22 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                   </tr>
                 );
               })}
-              {filteredQueue.length === 0 && (
+              {!isQueueLoaded ? (
+                <tr>
+                  <td colSpan={9} className="px-6 py-24 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="w-8 h-8 rounded-full border-4 border-t-blue-500 border-r-transparent border-slate-800 animate-spin" />
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{tr("Synchronizing Task Queue...")}</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredQueue.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-16 text-center text-slate-655 italic">
                     <p className="mb-4 text-xs font-medium text-slate-500">{queueSearch ? tr('No tasks match your search.') : tr('No tasks currently executing in the sovereign loop queue.')}</p>
                   </td>
                 </tr>
-              )}
+              ) : null}
             </tbody>
           </table>
         </div>
