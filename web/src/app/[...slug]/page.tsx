@@ -56,26 +56,39 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     if (slug.length === 3 || (slug.length === 4 && slug[3] === 'introduction')) {
       const courseSlug = slug[2];
       try {
-        const { data: introLesson } = await supabase
-          .from('lessons')
-          .select('lesson_slug')
-          .eq('course_slug', courseSlug)
-          .eq('lesson_slug', 'introduction')
-          .eq('lang', lang.toLowerCase())
-          .maybeSingle();
+        // Check if the slug corresponds to a curriculum
+        const { data: courseData } = await dbService.getSyllabus(courseSlug);
+        if (courseData?.isCurriculum && courseData.childCourses && courseData.childCourses.length > 0) {
+          const { data: allCourses } = await dbService.getAllCourses();
+          const firstChildId = courseData.childCourses[0];
+          const firstChild = allCourses?.find(c => c.id === firstChildId);
+          if (firstChild) {
+            redirectUrl = `/${cleanPathSegment(firstChild.level)}/${cleanPathSegment(firstChild.subject)}/${firstChild.slug}/introduction`;
+          }
+        }
 
-        if (!introLesson) {
-          const { data: firstLesson } = await supabase
+        if (!redirectUrl) {
+          const { data: introLesson } = await supabase
             .from('lessons')
             .select('lesson_slug')
             .eq('course_slug', courseSlug)
+            .eq('lesson_slug', 'introduction')
             .eq('lang', lang.toLowerCase())
-            .order('order', { ascending: true })
-            .limit(1)
             .maybeSingle();
 
-          if (firstLesson) {
-            redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+          if (!introLesson) {
+            const { data: firstLesson } = await supabase
+              .from('lessons')
+              .select('lesson_slug')
+              .eq('course_slug', courseSlug)
+              .eq('lang', lang.toLowerCase())
+              .order('order', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+
+            if (firstLesson) {
+              redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+            }
           }
         }
       } catch (err) {
@@ -371,8 +384,8 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           {autoSwitched && (
             <script dangerouslySetInnerHTML={{ __html: `
               document.cookie = "openprimer_lang=${lang.toUpperCase()}; path=/; max-age=31536000; SameSite=Lax";
-              localStorage.setItem("openprimer_lang", "${lang.toUpperCase()}");
               try {
+                localStorage.setItem("openprimer_lang", "${lang.toUpperCase()}");
                 const profile = JSON.parse(localStorage.getItem("op_user_profile") || "{}");
                 if (profile && Object.keys(profile).length > 0) {
                   profile.preferredLang = "${lang.toLowerCase()}";

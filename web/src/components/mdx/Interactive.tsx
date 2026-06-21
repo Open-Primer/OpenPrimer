@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Info, CheckCircle2, Volume2, Sparkles, Loader2, Maximize2 } from 'lucide-react';
+import { Info, CheckCircle2, XCircle, RefreshCw, Volume2, Sparkles, Loader2, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -213,21 +213,68 @@ const GuestFootnote = () => {
 };
 
 // Composant Texte à Trous (standalone, une seule question)
-export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string, answer?: string }) => {
-  if (!sentence) return null;
+export const FillInBlanks = ({
+  sentence = '',
+  answer = '',
+  question = '',
+  blanks = '',
+  isFinal = false
+}: {
+  sentence?: string;
+  answer?: string;
+  question?: string;
+  blanks?: string | string[];
+  isFinal?: boolean;
+}) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
-  const [input, setInput] = useState('');
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // Build a per-question storage key using pathname + a hash of the sentence
+  const isFinalExam = React.useMemo(() => {
+    if (isFinal) return true;
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    return pathname.includes('/evaluation') || pathname.includes('/exam') || pathname.includes('/final');
+  }, [isFinal]);
+
+  // 1. Determine answers list
+  const answersList = React.useMemo(() => {
+    if (blanks) {
+      if (Array.isArray(blanks)) return blanks;
+      try {
+        const parsed = JSON.parse(blanks);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return blanks.split(/\|\|\||[,;]+/).map(s => s.trim());
+      }
+    }
+    if (answer) {
+      return answer.split('|||').map(s => s.trim());
+    }
+    return [];
+  }, [blanks, answer]);
+
+  // 2. Determine segments list
+  const segments = React.useMemo(() => {
+    const textToSplit = question || sentence || '';
+    if (!textToSplit) return [];
+    const placeholderRegex = /_{2,}|-{2,}|\.{3,}|\[\.\.\.\]/g;
+    return textToSplit.split(placeholderRegex);
+  }, [question, sentence]);
+
+  const numBlanks = Math.min(answersList.length, Math.max(0, segments.length - 1));
+
+  const [userInputs, setUserInputs] = useState<string[]>([]);
+  const [inputCorrectness, setInputCorrectness] = useState<boolean[]>([]);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Build a per-question storage key using pathname + a hash of the sentence/question
   const storageKey = React.useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const sentenceHash = sentence.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const hashStr = (question || sentence) + answersList.join('-');
+    const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     return `op_fib_${window.location.pathname}_${sentenceHash}`;
-  }, [sentence]);
+  }, [question, sentence, answersList]);
 
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
@@ -242,24 +289,21 @@ export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string
     const loggedIn = session === 'true';
     setIsLoggedIn(loggedIn);
 
-    // Restore per-question saved state (input + correctness)
+    // Restore per-question saved state
     const storage = getProgressionStorage();
     if (storage && storageKey) {
       try {
         const saved = JSON.parse(storage.getItem(storageKey) || 'null');
-        if (saved && typeof saved.input === 'string') {
-          setInput(saved.input);
-          if (typeof saved.isCorrect === 'boolean') {
-            setIsCorrect(saved.isCorrect);
+        if (saved && Array.isArray(saved.userInputs)) {
+          setUserInputs(saved.userInputs);
+          if (Array.isArray(saved.inputCorrectness)) {
+            setInputCorrectness(saved.inputCorrectness);
           }
-          // Only lock the field if the answer was correct
-          if (saved.isCorrect === true) {
+          if (saved.isReadOnly === true) {
             setIsReadOnly(true);
           }
         }
-      } catch {
-        // Ignore malformed stored state
-      }
+      } catch {}
     }
 
     return () => {
@@ -267,84 +311,168 @@ export const FillInBlanks = ({ sentence = '', answer = '' }: { sentence?: string
     };
   }, [storageKey]);
 
+  const handleInputChange = (idx: number, val: string) => {
+    if (isReadOnly) return;
+    setUserInputs(prev => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  };
+
   const check = () => {
     if (isReadOnly) return;
-    const correct = input.toLowerCase().trim() === answer.toLowerCase().trim();
-    setIsCorrect(correct);
+    const correctness = answersList.map((correctAnswer, idx) => {
+      const val = (userInputs[idx] || '').trim().toLowerCase();
+      const ans = correctAnswer.trim().toLowerCase();
+      return val === ans;
+    });
 
-    // Persist the exact state (input + correctness) for this question
+    setInputCorrectness(correctness);
+    setIsReadOnly(true);
+
+    // Persist exact state
     const storage = getProgressionStorage();
     if (storage && storageKey) {
-      storage.setItem(storageKey, JSON.stringify({ input, isCorrect: correct }));
+      storage.setItem(
+        storageKey,
+        JSON.stringify({
+          userInputs,
+          inputCorrectness: correctness,
+          isReadOnly: true
+        })
+      );
     }
 
-    // Mark page as visited only on first correct answer
-    if (correct) {
-      setIsReadOnly(true);
-      if (storage) {
-        const pathname = window.location.pathname;
-        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
-        if (!visited.includes(pathname)) {
-          visited.push(pathname);
-          storage.setItem('op_visited_pages', JSON.stringify(visited));
-          window.dispatchEvent(new Event('op_progress_updated'));
-        }
+    const score = correctness.filter(Boolean).length;
+    const total = answersList.length;
+    if (score === total && storage) {
+      const pathname = window.location.pathname;
+      const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+      if (!visited.includes(pathname)) {
+        visited.push(pathname);
+        storage.setItem('op_visited_pages', JSON.stringify(visited));
+        window.dispatchEvent(new Event('op_progress_updated'));
       }
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && isCorrect === null && !isReadOnly) check();
+  const handleRetry = () => {
+    setUserInputs([]);
+    setInputCorrectness([]);
+    setIsReadOnly(false);
+    const storage = getProgressionStorage();
+    if (storage && storageKey) {
+      storage.removeItem(storageKey);
+    }
   };
+
+  const hasUnfilled = React.useMemo(() => {
+    for (let i = 0; i < numBlanks; i++) {
+      if (!(userInputs[i] || '').trim()) return true;
+    }
+    return false;
+  }, [userInputs, numBlanks]);
+
+  if (numBlanks === 0) return null;
+
+  const score = inputCorrectness.filter(Boolean).length;
+  const total = answersList.length;
+  const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
   return (
     <div className={`my-4 p-4 rounded-2xl border ${
-      isCorrect === true || isReadOnly
-        ? 'border-emerald-500/30 bg-emerald-500/5'
-        : isCorrect === false
-          ? 'border-red-500/25 bg-red-500/5'
-          : 'border-slate-800 bg-slate-900/30'
+      isReadOnly
+        ? 'border-slate-800 bg-slate-900/10 opacity-90'
+        : 'border-slate-800 bg-slate-900/30'
     } transition-all`}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[0] : ''}</span>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className={`bg-slate-950 border ${
-            isCorrect || isReadOnly
-              ? 'border-emerald-500 text-emerald-300'
-              : isCorrect === false
-                ? 'border-red-500 text-white'
-                : 'border-slate-700 text-white'
-          } rounded-lg px-3 py-1 outline-none transition-all disabled:opacity-70 text-sm`}
-          placeholder={t.placeholder_answer}
-          disabled={isReadOnly || isCorrect !== null}
-        />
-        <span className="text-slate-300 font-medium">{sentence ? sentence.split('[...]')[1] : ''}</span>
+      <div className="flex flex-wrap items-center gap-y-2 leading-relaxed">
+        {segments.map((seg, idx) => {
+          if (idx < numBlanks) {
+            return (
+              <React.Fragment key={idx}>
+                <span className="text-slate-300 font-medium">{seg}</span>
+                <input
+                  value={userInputs[idx] || ''}
+                  onChange={(e) => handleInputChange(idx, e.target.value)}
+                  disabled={isReadOnly}
+                  className={`bg-slate-950 border ${
+                    isReadOnly
+                      ? inputCorrectness[idx]
+                        ? 'border-emerald-500 text-emerald-300'
+                        : 'border-red-500 text-white'
+                      : 'border-slate-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20'
+                  } rounded-lg px-2.5 py-0.5 outline-none transition-all disabled:opacity-75 text-sm mx-1.5 align-middle`}
+                  style={{ width: `${Math.max(90, (answersList[idx] || '').length * 10 + 15)}px` }}
+                  placeholder={t.placeholder_answer}
+                />
+              </React.Fragment>
+            );
+          }
+          return <span key={idx} className="text-slate-300 font-medium">{seg}</span>;
+        })}
+      </div>
 
-        {isCorrect === null && !isReadOnly && (
+      {!isReadOnly && (
+        <div className="mt-4 flex justify-end">
           <button
             onClick={check}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+            disabled={hasUnfilled}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
           >
             {t.validate}
           </button>
-        )}
+        </div>
+      )}
 
-        {(isReadOnly && isCorrect === true) && (
-          <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 select-none">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
-          </span>
-        )}
-      </div>
+      {isReadOnly && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/60 pt-3">
+          <div className="flex items-center gap-3">
+            <div className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider text-center flex items-center gap-1.5 ${
+              score === total ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'
+            }`}>
+              {score === total ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+              Score: {score} / {total} ({percentage}%)
+            </div>
+            <span className="text-slate-400 text-xs font-semibold">
+              {score === total 
+                ? (language === 'FR' ? 'Validé' : 'Validated')
+                : (language === 'FR' ? 'Complété' : 'Completed')}
+            </span>
+          </div>
+          
+          {!isFinalExam && (
+            <button
+              onClick={handleRetry}
+              className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+            </button>
+          )}
+        </div>
+      )}
 
-      {/* On error only: show the correct answer, no score, no per-answer tutor comment */}
-      {isCorrect === false && (
-        <div className="mt-2 flex items-center gap-2 text-xs">
-          <span className="text-slate-400">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
-          <span className="text-emerald-400 font-bold">{answer}</span>
+      {isReadOnly && score < total && (
+        <div className="mt-3 space-y-1.5 border-t border-slate-800/40 pt-2 text-xs">
+          <p className="text-slate-400 font-medium">
+            {language === 'FR' ? 'Correction :' : 'Correction:'}
+          </p>
+          {answersList.map((ans, idx) => {
+            if (!inputCorrectness[idx]) {
+              return (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-slate-500 font-mono">#{idx + 1}:</span>
+                  <span className="text-red-400 line-through">
+                    {userInputs[idx] || (language === 'FR' ? '(vide)' : '(empty)')}
+                  </span>
+                  <span className="text-slate-400">→</span>
+                  <span className="text-emerald-400 font-bold">{ans}</span>
+                </div>
+              );
+            }
+            return null;
+          })}
         </div>
       )}
 
@@ -393,7 +521,6 @@ FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
         style={{ width: `${Math.max(80, answer.length * 10 + 20)}px` }}
         placeholder={t.placeholder_answer}
       />
-      {/* On error: show only the correct answer, not the wrong one */}
       {isCorrect === false && (
         <span className="text-[10px] text-emerald-400 font-bold mt-0.5 pl-1">
           {language === 'FR' ? '→' : '→'} {answer}
@@ -403,7 +530,6 @@ FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
   );
 };
 
-// Composant Méta-Commentaire
 export const MetaNote = ({ title, children }: { title: string, children: React.ReactNode }) => (
   <div className="my-10 p-8 rounded-[40px] bg-blue-600/5 border border-blue-600/20 relative overflow-hidden group">
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -418,8 +544,7 @@ export const MetaNote = ({ title, children }: { title: string, children: React.R
   </div>
 );
 
-// Composant Feynman (Expliquez à l'IA)
-export const FeynmanBox = ({ concept }: { concept: string }) => {
+export const FeynmanBox = ({ concept, isFinal = false }: { concept: string; isFinal?: boolean }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [text, setText] = useState('');
@@ -427,6 +552,13 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
+
+  const isFinalExam = React.useMemo(() => {
+    if (isFinal) return true;
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    return pathname.includes('/evaluation') || pathname.includes('/exam') || pathname.includes('/final');
+  }, [isFinal]);
 
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
@@ -465,7 +597,19 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
     setIsLoading(true);
     setTimeout(() => {
       setFeedback(`${t.feynman_feedback} "${concept}" : ${t.feynman_feedback_text}`);
+      setIsReadOnly(true);
       setIsLoading(false);
+      
+      const storage = getProgressionStorage();
+      if (storage) {
+        const pathname = window.location.pathname;
+        const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+        if (!visited.includes(pathname)) {
+          visited.push(pathname);
+          storage.setItem('op_visited_pages', JSON.stringify(visited));
+          window.dispatchEvent(new Event('op_progress_updated'));
+        }
+      }
     }, 2000);
   };
 
@@ -474,7 +618,7 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
     EN: "The Feynman technique requires a personal AI tutor to analyze and validate your explanation. A free account is available to allow you to follow the curriculum, save your progress, and benefit from a personal AI tutor!",
     ES: "La técnica de Feynman requiere un tutor de IA personal para analizar y validar tu explicación. ¡Hay una cuenta gratuita disponible para permitirte seguir el plan de estudios, guardar tu progreso y beneficiarte de un tutor de IA personal!",
     DE: "Die Feynman-Methode erfordert einen persönlichen KI-Tutor, um Ihre Erklärung zu analysieren und zu validieren. Ein kostenloses Konto ist verfügbar, mit dem Sie dem Lehrplan folgen, Ihren Fortschritt speichern und von einem persönlichen KI-Tutor profitieren können!",
-    ZH: "费曼学习法需要专属AI导师来分析和验证您的解释。我们提供免费账户，让您能够完整体验课程、记录学习进度，并享有专属个人AI导师！"
+    ZH: "费曼学习法需要专属AI导师来分析 and 验证您的解释。我们提供免费账户，让您能够完整体验课程、记录 learning 进度，并享有专属个人AI导师！"
   };
 
   const feynmanDesc = feynmanDescMap[language.toUpperCase()] || feynmanDescMap.EN;
@@ -505,8 +649,31 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
       )}
 
       {isReadOnly && (
-        <div className="mt-4 flex items-center gap-1.5 select-none text-emerald-400 font-bold text-xs">
-          <CheckCircle2 className="w-4 h-4" /> {t.tutor_validated}
+        <div className="mt-4 flex items-center justify-between gap-4 border-t border-slate-800/40 pt-3">
+          <div className="flex items-center gap-1.5 select-none text-emerald-400 font-bold text-xs">
+            <CheckCircle2 className="w-4 h-4" /> {t.tutor_validated}
+          </div>
+          {!isFinalExam && (
+            <button
+              onClick={() => {
+                setIsReadOnly(false);
+                setText('');
+                setFeedback('');
+                const storage = getProgressionStorage();
+                if (storage) {
+                  const pathname = window.location.pathname;
+                  const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+                  const filtered = visited.filter((p: string) => p !== pathname);
+                  storage.setItem('op_visited_pages', JSON.stringify(filtered));
+                  window.dispatchEvent(new Event('op_progress_updated'));
+                }
+              }}
+              className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+            </button>
+          )}
         </div>
       )}
 
@@ -544,7 +711,7 @@ export const FeynmanBox = ({ concept }: { concept: string }) => {
 };
 
 // Composant Prédiction (Avant la théorie)
-export const PredictOutcome = ({ scenario, options }: { scenario: string, options?: string[] }) => {
+export const PredictOutcome = ({ scenario, options, isFinal = false }: { scenario: string; options?: string[]; isFinal?: boolean }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
   const [selected, setSelected] = useState<number | null>(null);
@@ -552,6 +719,13 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
   const safeOptions = Array.isArray(options) ? options : [];
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
+
+  const isFinalExam = React.useMemo(() => {
+    if (isFinal) return true;
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    return pathname.includes('/evaluation') || pathname.includes('/exam') || pathname.includes('/final');
+  }, [isFinal]);
 
   useEffect(() => {
     const handleAuthChange = (e: Event) => {
@@ -589,6 +763,7 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
   const revealPrediction = () => {
     if (isReadOnly) return;
     setRevealed(true);
+    setIsReadOnly(true); // Lock to read-only after submission
 
     // Save progression in correct storage adapter
     const storage = getProgressionStorage();
@@ -632,14 +807,39 @@ export const PredictOutcome = ({ scenario, options }: { scenario: string, option
       )}
       
       {revealed && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-6 p-6 rounded-2xl bg-emerald-600/10 border border-emerald-600/20 text-emerald-200 text-sm"
-        >
-          <span className="font-bold uppercase text-[10px] block mb-2 tracking-widest">{t.predict_explanation}</span>
-          {t.predict_exp_desc}
-        </motion.div>
+        <div className="space-y-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 p-6 rounded-2xl bg-emerald-600/10 border border-emerald-600/20 text-emerald-200 text-sm"
+          >
+            <span className="font-bold uppercase text-[10px] block mb-2 tracking-widest">{t.predict_explanation}</span>
+            {t.predict_exp_desc}
+          </motion.div>
+          {!isFinalExam && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setRevealed(false);
+                  setSelected(null);
+                  setIsReadOnly(false);
+                  const storage = getProgressionStorage();
+                  if (storage) {
+                    const pathname = window.location.pathname;
+                    const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+                    const filtered = visited.filter((p: string) => p !== pathname);
+                    storage.setItem('op_visited_pages', JSON.stringify(filtered));
+                    window.dispatchEvent(new Event('op_progress_updated'));
+                  }
+                }}
+                className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {!isLoggedIn && !isReadOnly && <GuestFootnote />}
@@ -808,7 +1008,7 @@ export const ExternalSandbox = ({ url, title, type = 'generic' }: ExternalSandbo
   );
 };
 
-export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; solutions?: string[] }) => {
+export const FillInBlanksQuestion = ({ q = '', solutions = [], isFinal = false }: { q?: string; solutions?: string[]; isFinal?: boolean }) => {
   if (!q) return null;
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
@@ -817,6 +1017,13 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
+
+  const isFinalExam = React.useMemo(() => {
+    if (isFinal) return true;
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    return pathname.includes('/evaluation') || pathname.includes('/exam') || pathname.includes('/final');
+  }, [isFinal]);
 
   const segments = React.useMemo(() => {
     return q.split(/_{3,}|\[\.\.\.\]/g);
@@ -850,7 +1057,7 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
           if (typeof saved.isCorrect === 'boolean') {
             setIsCorrect(saved.isCorrect);
           }
-          if (saved.isCorrect === true) {
+          if (saved.isReadOnly === true || saved.isCorrect === true) {
             setIsReadOnly(true);
           }
         }
@@ -872,14 +1079,14 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
     });
     const allCorrect = results.every(r => r === true);
     setIsCorrect(allCorrect);
+    setIsReadOnly(true);
 
     const storage = getProgressionStorage();
     if (storage && storageKey) {
-      storage.setItem(storageKey, JSON.stringify({ inputs, isCorrect: allCorrect }));
+      storage.setItem(storageKey, JSON.stringify({ inputs, isCorrect: allCorrect, isReadOnly: true }));
     }
 
     if (allCorrect) {
-      setIsReadOnly(true);
       if (storage) {
         const pathname = window.location.pathname;
         const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
@@ -892,11 +1099,22 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
     }
   };
 
+  const handleRetry = () => {
+    setInputs(Array(solutions.length).fill(''));
+    setIsCorrect(null);
+    setIsReadOnly(false);
+    const storage = getProgressionStorage();
+    if (storage && storageKey) {
+      storage.removeItem(storageKey);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && isCorrect !== true && !isReadOnly) check();
+    if (e.key === 'Enter' && !isReadOnly) check();
   };
 
   const handleInputChange = (val: string, idx: number) => {
+    if (isReadOnly) return;
     const nextInputs = [...inputs];
     nextInputs[idx] = val;
     setInputs(nextInputs);
@@ -905,13 +1123,14 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
     }
   };
 
+  const computedCorrectCount = inputs.filter((inp, idx) => inp.toLowerCase().trim() === (solutions[idx] || '').toLowerCase().trim()).length;
+  const scorePercent = solutions.length > 0 ? Math.round((computedCorrectCount / solutions.length) * 100) : 0;
+
   return (
     <div className={`my-6 p-5 rounded-[24px] border ${
-      isCorrect === true || isReadOnly
-        ? 'border-emerald-500/30 bg-emerald-500/5'
-        : isCorrect === false
-          ? 'border-red-500/25 bg-red-500/5'
-          : 'border-slate-800 bg-slate-900/30'
+      isReadOnly
+        ? 'border-slate-800 bg-slate-900/10 opacity-80'
+        : 'border-slate-800 bg-slate-900/30'
     } transition-all duration-300`}>
       <div className="flex items-center gap-2 text-blue-400 mb-3 select-none">
         <Sparkles className="w-4 h-4 text-blue-400" />
@@ -925,7 +1144,7 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
           const showInput = idx < solutions.length;
           const sol = solutions[idx] || '';
           const val = inputs[idx] || '';
-          const singleCorrect = isCorrect === null ? null : (val.toLowerCase().trim() === sol.toLowerCase().trim());
+          const singleCorrect = isReadOnly ? (val.toLowerCase().trim() === sol.toLowerCase().trim()) : null;
           
           return (
             <React.Fragment key={idx}>
@@ -937,18 +1156,18 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
                     value={val}
                     onChange={(e) => handleInputChange(e.target.value, idx)}
                     onKeyDown={handleKeyDown}
-                    disabled={isReadOnly || isCorrect === true}
+                    disabled={isReadOnly}
                     className={`bg-slate-950 border ${
-                      isCorrect === true || isReadOnly
-                        ? 'border-emerald-500 text-emerald-300 font-semibold'
-                        : singleCorrect === false
-                          ? 'border-red-500 text-white'
-                          : 'border-slate-700 text-white'
+                      isReadOnly
+                        ? singleCorrect
+                          ? 'border-emerald-500 text-emerald-300 font-semibold'
+                          : 'border-red-500 text-white'
+                        : 'border-slate-700 text-white'
                     } rounded-lg px-2 py-0.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 text-center`}
                     style={{ width: `${Math.max(90, sol.length * 10 + 20)}px` }}
                     placeholder={t.placeholder_answer}
                   />
-                  {singleCorrect === false && (
+                  {isReadOnly && !singleCorrect && (
                     <span className="text-[10px] text-emerald-400 font-bold mt-0.5 animate-fade-in">
                       → {sol}
                     </span>
@@ -960,21 +1179,44 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [] }: { q?: string; s
         })}
       </div>
 
-      <div className="flex items-center justify-between gap-4 mt-2">
-        {isCorrect !== true && !isReadOnly ? (
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-4 mt-2">
           <button
             onClick={check}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-colors cursor-pointer"
           >
             {t.validate}
           </button>
-        ) : (
-          <span className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-xl border border-emerald-500/20 flex items-center gap-1.5 select-none">
-            <CheckCircle2 className="w-4 h-4" />
-            {t.validated || (language === 'FR' ? 'Validé' : 'Validated')}
-          </span>
-        )}
-      </div>
+        </div>
+      )}
+
+      {isReadOnly && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/60 pt-4">
+          <div className="flex items-center gap-3">
+            <div className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider text-center flex items-center gap-1.5 ${
+              isCorrect ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+            }`}>
+              {isCorrect ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+              Score: {computedCorrectCount} / {solutions.length} ({scorePercent}%)
+            </div>
+            <span className="text-slate-400 text-xs font-semibold">
+              {isCorrect 
+                ? (language === 'FR' ? 'Validé' : 'Validated')
+                : (language === 'FR' ? 'Complété' : 'Completed')}
+            </span>
+          </div>
+          
+          {!isFinalExam && (
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+            </button>
+          )}
+        </div>
+      )}
 
       {!isLoggedIn && !isReadOnly && <GuestFootnote />}
     </div>

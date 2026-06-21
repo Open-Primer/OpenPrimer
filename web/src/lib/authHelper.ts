@@ -10,7 +10,7 @@ export interface AuthenticatedUser {
  * Automatically handles offline/sandbox mode cleanly when database credentials are not configured or are set to placeholders.
  */
 export async function verifySession(request: Request): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get('Authorization');
+  const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
   const isOfflineMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
                         process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') ||
                         (!authHeader && (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'));
@@ -20,7 +20,7 @@ export async function verifySession(request: Request): Promise<AuthenticatedUser
     return { id: 'mock-offline-user-id', email: 'mock@openprimer.org' };
   }
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
     return null;
   }
   

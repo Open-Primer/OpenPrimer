@@ -43,7 +43,14 @@ test.describe('LTI 1.3 Integration Suite', () => {
     });
 
     // 3. Register platform trust relationship in Supabase database
+    // Clear out any old records that might block insertions (including dependent lti_users)
+    const { data: oldPlatforms } = await supabaseAdmin.from('lti_platforms').select('id').eq('issuer', testIssuer);
+    if (oldPlatforms && oldPlatforms.length > 0) {
+      const oldIds = oldPlatforms.map(p => p.id);
+      await supabaseAdmin.from('lti_users').delete().in('platform_id', oldIds);
+    }
     await supabaseAdmin.from('lti_platforms').delete().eq('issuer', testIssuer);
+
     const { error: insertErr } = await supabaseAdmin.from('lti_platforms').insert({
       id: testPlatformId,
       issuer: testIssuer,
@@ -224,8 +231,8 @@ test.describe('LTI 1.3 Integration Suite', () => {
     });
 
     test('UI Verification: should render export button and display the premium modal with descriptions', async ({ page }) => {
-      // Navigate directly to the seeded introductory microeconomics course page
-      await page.goto(`${BASE_URL}/L1/Economics/introductory_microeconomics/introduction`);
+      // Navigate directly to a valid seeded course page
+      await page.goto(`${BASE_URL}/secondary_2/Histoire/Revolution_francaise/annee-1789-rupture-fondatrice`);
       
       // Check if Export button exists and click it
       const exportBtn = page.locator('#export-menu-button');

@@ -554,6 +554,9 @@ export const COCKPIT_DICTIONARY = {
     "Seed Sample Pipeline Tasks": "Seed Sample Pipeline Tasks",
     "Pause": "Pause",
     "Resume": "Resume",
+    "Deleted course": "Deleted course",
+    "Pause All": "Pause All",
+    "Resume All": "Resume All",
     "From:": "From:",
     "To:": "To:",
     "Earned": "Earned",
@@ -990,6 +993,9 @@ export const COCKPIT_DICTIONARY = {
     "Seed Sample Pipeline Tasks": "Générer des tâches d'exemple",
     "Pause": "Suspendre",
     "Resume": "Reprendre",
+    "Deleted course": "Cours supprimé",
+    "Pause All": "Tout Suspendre",
+    "Resume All": "Tout Reprendre",
     "From:": "Du :",
     "To:": "Au :",
     "Earned": "Obtenus",
@@ -5418,58 +5424,55 @@ export default function AdminCurriculumPage() {
 
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
-  const handleForceRunQueue = async () => {
+  const handlePauseAll = async () => {
     if (isProcessingQueue) return;
-
-    const runningCount = queue.filter(t => t.status === 'running').length;
-    if (runningCount >= maxParallelTasks) {
-      const proceed = window.confirm(
-        `${tr("Already running max parallel tasks:")} ${maxParallelTasks}. ` +
-        `${tr("Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?")}`
-      );
-      if (!proceed) return;
+    const activeStatuses = ['queued', 'running'];
+    const activeTasks = queue.filter(t => activeStatuses.includes(t.status));
+    if (activeTasks.length === 0) {
+      showToast(tr("No active tasks to pause."), 'info');
+      return;
     }
-
     setIsProcessingQueue(true);
-    showToast(tr("Triggering worker execution..."), 'info');
     try {
-      let token: string | undefined;
-      try {
-        const { supabase } = await import("@/lib/supabase");
-        const { data: { session } } = await supabase.auth.getSession();
-        token = session?.access_token;
-      } catch (err) {
-        console.warn("[QUEUE FORCE] Failed to retrieve client auth session token:", err);
-      }
-
-      const res = await fetch('/api/tasks/run', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
-      });
-
-      let data: any;
-      try {
-        data = await res.json();
-      } catch (e: any) {
-        throw new Error(`Worker returned non-JSON response: ${res.status}`);
-      }
-
-      if (!res.ok) {
-        throw new Error(data.error || `Failed with status ${res.status}`);
-      }
-
-      if (data.message === 'No tasks to process') {
-        showToast(tr("Queue check complete: No pending tasks in queue."), 'info');
-      } else {
-        showToast(tr("Worker completed task processing successfully!"), 'success');
-      }
+      const updated = queue.map(t =>
+        activeStatuses.includes(t.status) ? { ...t, status: 'paused' } : t
+      );
+      setQueue(updated);
+      await dbService.savePipelineQueue(updated);
+      showToast(`${tr("Paused")} ${activeTasks.length} ${tr("tasks.")}`, 'success');
       await loadData();
     } catch (err: any) {
-      console.error("[QUEUE FORCE ERROR]", err);
-      showToast(`${tr("Failed to run task worker:")} ${err.message || String(err)}`, 'error');
+      console.error("[PAUSE ALL ERROR]", err);
+      showToast(`${tr("Failed to pause tasks:")} ${err.message || String(err)}`, 'error');
+    } finally {
+      setIsProcessingQueue(false);
+    }
+  };
+
+  // Resume All: re-reads fresh state from DB, re-applies latest priorities, then re-queues paused tasks and triggers the worker.
+  const handleResumeAll = async () => {
+    if (isProcessingQueue) return;
+    setIsProcessingQueue(true);
+    showToast(tr("Reloading queue and resuming tasks..."), 'info');
+    try {
+      // 1. Reload authoritative state from DB
+      await loadData();
+
+      // 2. Set all paused tasks back to queued (re-evaluates priority from current queue state)
+      setQueue(prev => {
+        const updated = prev.map(t =>
+          t.status === 'paused' ? { ...t, status: 'queued' } : t
+        );
+        // Persist asynchronously
+        dbService.savePipelineQueue(updated).catch(e => console.error("[RESUME ALL] savePipelineQueue error:", e));
+        return updated;
+      });
+
+      showToast(tr("Tasks resumed. Worker will pick them up by priority."), 'success');
+      await loadData();
+    } catch (err: any) {
+      console.error("[RESUME ALL ERROR]", err);
+      showToast(`${tr("Failed to resume tasks:")} ${err.message || String(err)}`, 'error');
     } finally {
       setIsProcessingQueue(false);
     }
@@ -6149,6 +6152,13 @@ export default function AdminCurriculumPage() {
   });
   // Sort filteredQueue in the computed section so paginatedQueue is correctly sorted+sliced
   const sortedQueue = [...filteredQueue].sort((a, b) => {
+    // Put running tasks on top
+    const isRunningA = a.status === 'running' ? 1 : 0;
+    const isRunningB = b.status === 'running' ? 1 : 0;
+    if (isRunningA !== isRunningB) {
+      return isRunningB - isRunningA; // 1 (running) comes first
+    }
+
     if (queueSortField === 'priority') {
       const pw: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
       const wA = pw[a.priority || 'Medium'] || 0;
@@ -8076,7 +8086,7 @@ export default function AdminCurriculumPage() {
                                     />
                                   </td>
                                   <td className="px-6 py-4">
-                                    <span className={`px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider ${statusColor}`}>
+                                    <span className={"px-2.5 py-1 border text-[8px] font-black rounded-full uppercase tracking-wider " + statusColor}>
                                       {statusLabel}
                                     </span>
                                   </td>
@@ -8228,16 +8238,29 @@ export default function AdminCurriculumPage() {
                        <button
                          type="button"
                          disabled={isProcessingQueue}
-                         onClick={handleForceRunQueue}
+                         onClick={handlePauseAll}
                          className={`flex items-center gap-2 px-4 py-2 border rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                           isProcessingQueue 
-                             ? 'bg-slate-950 border-slate-900 text-slate-600' 
-                             : 'bg-gradient-to-r from-cyan-600 to-blue-600 border-cyan-500/30 text-white hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-600/10 hover:shadow-cyan-500/20'
+                           isProcessingQueue
+                             ? 'bg-slate-950 border-slate-900 text-slate-600'
+                             : 'bg-slate-900 border-slate-800 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/30'
                          }`}
-                         title={tr("Refresh & Force Run Queue")}
+                         title={tr("Pause all queued and running tasks")}
+                       >
+                         ⏸ {tr("Pause All")}
+                       </button>
+                       <button
+                         type="button"
+                         disabled={isProcessingQueue}
+                         onClick={handleResumeAll}
+                         className={`flex items-center gap-2 px-4 py-2 border rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                           isProcessingQueue
+                             ? 'bg-slate-950 border-slate-900 text-slate-600'
+                             : 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-500/30 text-white hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-600/10 hover:shadow-emerald-500/20'
+                         }`}
+                         title={tr("Reload queue from DB and resume all paused tasks")}
                        >
                          <RefreshCw className={`w-3.5 h-3.5 ${isProcessingQueue ? 'animate-spin' : ''}`} />
-                         {isProcessingQueue ? tr("Processing...") : tr("Force Run Queue")}
+                         {isProcessingQueue ? tr("Processing...") : tr("Resume All")}
                        </button>
                        {queue.length > 0 && (
                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider shrink-0">
@@ -8362,7 +8385,7 @@ export default function AdminCurriculumPage() {
                               </td>
                               <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{tr(task.type)}</td>
                               <td className="px-6 py-4">
-                                <span className={`px-2.5 py-1 text-[8px] font-black rounded-full uppercase border ${statusColor}`}>
+                                <span className={"px-2.5 py-1 text-[8px] font-black rounded-full uppercase border " + statusColor}>
                                   {tr(task.status)}
                                 </span>
                               </td>
@@ -8402,6 +8425,32 @@ export default function AdminCurriculumPage() {
                                           .replace(/[^a-z0-9]/g, '')
                                           .trim();
                                       };
+                                      let taskTitleToMatch = task.title;
+                                      const isRevision = task.type === 'revision' || task.title.includes(' - Revise');
+                                      const isTranslation = task.type === 'translation';
+                                      if (isRevision) {
+                                        const splitIdx = task.title.indexOf(' - Revise');
+                                        if (splitIdx !== -1) {
+                                          taskTitleToMatch = task.title.substring(0, splitIdx).trim();
+                                        }
+                                      } else if (isTranslation) {
+                                        // Strip trailing language suffix like " (FR)" or " (EN)"
+                                        taskTitleToMatch = task.title.replace(/\s*\([A-Z]{2,3}\)\s*$/, '').trim();
+                                      }
+                                      const cleanTT = cleanForCompare(taskTitleToMatch);
+                                      const matched = courses.find(c => {
+                                        const cleanCT = cleanForCompare(c.title);
+                                        const cleanCS = cleanForCompare(c.slug);
+                                        const cleanTS = cleanForCompare(taskTitleToMatch.replace(/\s+/g, '_'));
+                                        return cleanCT === cleanTT || cleanCS === cleanTT || cleanCT === cleanTS || cleanCS === cleanTS;
+                                      });
+                                      if (!matched) {
+                                        return (
+                                          <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-rose-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
+                                            {tr("Deleted course")}
+                                          </span>
+                                        );
+                                      }
                                       const isOutdated = checkIsTaskOutdated(task);
                                       if (isOutdated) {
                                         return (
@@ -8413,44 +8462,27 @@ export default function AdminCurriculumPage() {
                                           </span>
                                         );
                                       }
-                                      let taskTitleToMatch = task.title;
-                                      const isRevision = task.type === 'revision' || task.title.includes(' - Revise');
+                                      const safeSubject = (matched.subject || 'General').replace(/\s+/g, '_');
                                       if (isRevision) {
-                                        const splitIdx = task.title.indexOf(' - Revise');
-                                        if (splitIdx !== -1) {
-                                          taskTitleToMatch = task.title.substring(0, splitIdx).trim();
-                                        }
-                                      }
-                                      const cleanTT = cleanForCompare(taskTitleToMatch);
-                                      const matched = courses.find(c => {
-                                        const cleanCT = cleanForCompare(c.title);
-                                        const cleanCS = cleanForCompare(c.slug);
-                                        const cleanTS = cleanForCompare(taskTitleToMatch.replace(/\s+/g, '_'));
-                                        return cleanCT === cleanTT || cleanCS === cleanTT || cleanCT === cleanTS || cleanCS === cleanTS;
-                                      });
-                                      if (matched) {
-                                        const safeSubject = (matched.subject || 'General').replace(/\s+/g, '_');
-                                        if (isRevision) {
-                                          return (
-                                            <button 
-                                              onClick={() => handleGoToRevision(task, matched)}
-                                              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-500 hover:to-teal-550 border border-emerald-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
-                                            >
-                                              📖 {tr('Go to Chapter')}
-                                            </button>
-                                          );
-                                        } else if (task.type === 'generation') {
-                                          return (
-                                            <a 
-                                              href={`/${matched.level}/${safeSubject}/${matched.slug}/introduction`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
-                                            >
-                                              🚀 {tr('Go to Course')}
-                                            </a>
-                                          );
-                                        }
+                                        return (
+                                          <button 
+                                            onClick={() => handleGoToRevision(task, matched)}
+                                            className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-500 hover:to-teal-550 border border-emerald-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
+                                          >
+                                            📖 {tr('Go to Chapter')}
+                                          </button>
+                                        );
+                                      } else if (task.type === 'generation' || task.type === 'translation') {
+                                        return (
+                                          <a 
+                                            href={`/${matched.level}/${safeSubject}/${matched.slug}/introduction`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-550 border border-blue-500/30 text-white rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25"
+                                          >
+                                            🚀 {tr('Go to Course')}
+                                          </a>
+                                        );
                                       }
                                       return (
                                         <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">

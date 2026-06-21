@@ -193,10 +193,11 @@ export async function correctCourseTitle(title: string, targetLang: string = 'en
   // When translateToTargetLang is true (default for English targets), translate AND correct.
   // When false (used during non-English course generation), only correct in original language.
   const systemInstruction = translateToTargetLang
-    ? `You are an elite academic copyeditor and translator. Produce a final, publication-ready course title in English (${langLabel}).
+    ? `You are an elite academic copyeditor and translator. Produce a final, publication-ready course title in the target language: ${langLabel}.
 Rules:
-- If the title is already in English, only correct spelling, grammar, and apply proper Title Case.
-- If the title is in another language (French, Spanish, German, Chinese, etc.), translate it to English AND apply Title Case (e.g. "chimie organique" → "Organic Chemistry", "droit des affaires" → "Business Law").
+- Translate the title into the target language (${langLabel}) if it is in a different language.
+- Apply standard, appropriate capitalization (Title Case or localized standard) and spacing for academic course titles in the target language (${langLabel}).
+- Correct all spelling, grammar, and typing mistakes.
 - Keep academic level prefixes if present (e.g. L1, L2, M1, M2).
 - Respond with ONLY the corrected/translated title. No quotes, no markdown, no explanations.`
     : `You are an elite academic copyeditor. Correct the spelling, grammar, accentuation, and capitalization of the course title in the language '${langLabel}'.
@@ -435,8 +436,28 @@ function getCitationStyle(discipline: string): CitationStyleSpec {
 }
 
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
+  const appendTaskLog = async (msg: string) => {
+    const timestampedMsg = `[${new Date().toISOString()}] ${msg}`;
+    console.log(timestampedMsg);
+    if (!taskId) return;
+    try {
+      const { data: currentTask } = await supabaseAdmin
+        .from('task_queue')
+        .select('logs')
+        .eq('id', taskId)
+        .single();
+      const existingLogs = currentTask?.logs || [];
+      await supabaseAdmin
+        .from('task_queue')
+        .update({ logs: [...existingLogs, timestampedMsg] })
+        .eq('id', taskId);
+    } catch (err) {
+      console.warn(`[LOG UPDATE ERROR] Failed to append log for task ${taskId}:`, err);
+    }
+  };
+
   const correctedCourseName = await correctCourseTitle(courseName, targetLang, false);
-  console.log(`[TITLE CORRECTION] Corrected course title from "${courseName}" to "${correctedCourseName}"`);
+  await appendTaskLog(`[TITLE CORRECTION] Corrected course title from "${courseName}" to "${correctedCourseName}"`);
 
   const normalizeLevel = (lvl: string): string => {
     if (!lvl) return 'beginner';
@@ -537,7 +558,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       if (!taskError && taskData?.description) {
         const extra = JSON.parse(taskData.description || '{}');
         if (extra.syllabus) {
-          console.log(`[AI GENERATOR] Found cached syllabus in task description for task ${taskId}. Reusing to prevent duplicate chapters.`);
+          await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
           parsedSyllabus = extra.syllabus;
         }
       }
@@ -549,14 +570,14 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
   // If we have a lessonOffset > 0, but no cached syllabus, we have a mismatch hazard!
   // In this case, we reset lessonOffset to 0 and start from scratch to guarantee course consistency.
   if (lessonOffset > 0 && !parsedSyllabus) {
-    console.warn(`[AI GENERATOR WARNING] lessonOffset is ${lessonOffset} but no cached syllabus was found. Resetting offset to 0 to avoid duplicates and syllabus mismatch.`);
+    await appendTaskLog(`[AI GENERATOR WARNING] lessonOffset is ${lessonOffset} but no cached syllabus was found. Resetting offset to 0 to avoid duplicates.`);
     lessonOffset = 0;
   }
 
   // If lessonOffset is 0, clear any existing lessons for this course and language to avoid duplicates from previous failed runs.
   if (lessonOffset === 0) {
     const cleanSlug = cleanPathSegment(correctedCourseName);
-    console.log(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
+    await appendTaskLog(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
     try {
       const { error: deleteError } = await supabaseAdmin
         .from('lessons')
@@ -676,7 +697,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
             if (updateError) {
               console.error(`[AI GENERATOR] Failed to save syllabus to task description:`, updateError.message);
             } else {
-              console.log(`[AI GENERATOR] Successfully persisted generated syllabus to task description for task ${taskId}.`);
+              await appendTaskLog(`[AI GENERATOR] Successfully persisted generated syllabus to task description.`);
             }
           }
         } catch (err) {
@@ -684,26 +705,28 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
         }
       }
     } catch (err) {
-      console.error("AI Generation failed:", err);
+      await appendTaskLog(`[AI GENERATOR ERROR] Syllabus generation failed: ${err}`);
       throw err;
     }
   }
 
-    let completedLessons = lessonOffset;
-    const updateTaskProgress = async () => {
-      if (!taskId) return;
-      completedLessons++;
-      const currentProgress = 20 + Math.floor((completedLessons / lessonsList.length) * 70);
-      try {
-        await supabaseAdmin
-          .from('task_queue')
-          .update({ progress: Math.min(99, currentProgress) })
-          .eq('id', taskId);
-        console.log(`[TASK PROGRESS] Task ${taskId} updated to ${currentProgress}%`);
-      } catch (err) {
-        console.warn(`[PROGRESS UPDATE ERROR] Failed to update task ${taskId} progress to ${currentProgress}:`, err);
-      }
-    };
+  await appendTaskLog(`[AI GENERATOR] Syllabus loaded. Total lessons to generate: ${lessonsList.length}. Offset: ${lessonOffset}.`);
+
+  let completedLessons = lessonOffset;
+  const updateTaskProgress = async (lessonTitle: string) => {
+    completedLessons++;
+    const currentProgress = 20 + Math.floor((completedLessons / lessonsList.length) * 70);
+    await appendTaskLog(`[AI GENERATOR] Finished lesson "${lessonTitle}" (${completedLessons}/${lessonsList.length}). Progress: ${currentProgress}%.`);
+    if (!taskId) return;
+    try {
+      await supabaseAdmin
+        .from('task_queue')
+        .update({ progress: Math.min(99, currentProgress) })
+        .eq('id', taskId);
+    } catch (err) {
+      console.warn(`[PROGRESS UPDATE ERROR] Failed to update task ${taskId} progress to ${currentProgress}:`, err);
+    }
+  };
 
     // ─────────────────────────────────────────────────────────────────
     // INTER-LESSON THROTTLE — prevents burst of Vertex AI calls within a run.
@@ -728,8 +751,8 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
           targetLang.toLowerCase()
         );
         if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
-          console.log(`[INCREMENTAL] Skipping generation for already existing lesson: "${item.title}" (${item.slug})`);
-          await updateTaskProgress();
+          await appendTaskLog(`[INCREMENTAL] Skipping generation for already existing lesson: "${item.title}" (${item.slug})`);
+          await updateTaskProgress(item.title);
           return;
         }
       } catch (err) {
@@ -893,7 +916,13 @@ Requirements:
 8. Radical Accessibility, Captions, Figuring & Failures (Accessibilité Radicale, Légendes, Numérotations et Secours) :
    - Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility for screen readers and TTS (Text-To-Speech) voice synthesizers.
    - **Systematic Proportional Visual Enrichment & Decorative AI Ban**: Visual impact is crucial for learner appeal and engagement. However, you MUST strictly adhere to the following rules:
+     * **Age-Adapted Text/Image Ratio (Rapport Texte/Image inversement proportionnel à l'âge)**: The younger the student audience (e.g. Primary CP-CM2), the higher the density of images, illustrations, and interactive games must be. For Primary level (CP-CM2), the text/image ratio must be reversed: let visuals and simulations dominate, and keep text explanations short and simple.
+     * **Mandatory Media Diversity Baseline**: Even for advanced university levels (Licence L1-L3), a text-heavy layout is not allowed. Each lesson must contain at least:
+       - 1 conceptual illustration/schematic/diagram (using Wikimedia Commons or Pollinations.ai).
+       - 1 or 2 data graphs, curves, or coordinate plots (using \`<FunctionPlotter />\`, \`<FunctionManipulator />\`, \`<Geometry2D />\`, or auto-rendered Markdown tables).
+       - 1 or 2 source images (painting, sculpture, historical photo, monument photo, map, or scientific experiment photo) to illustrate the topic.
      * **STRICT BAN ON GENERIC/DECORATIVE AI IMAGES (INTERDICTION DES FIGURES DÉCORATIVES SANS VALEUR AJOUTÉE)**: You are strictly forbidden from generating or including low-value, simple, or generic decorative AI-generated illustrations (such as a simple balance to symbolize justice in a business law course, a generic gear for physics, or a lightbulb for ideas). All figures, images, and diagrams must have strong pedagogical, technical, or historical value (e.g., technical schematics, structural details, complex conceptual models, maps, or real artworks). Simple symbolic illustrations (like a balance) are tolerated ONLY for primary/elementary levels (CP-CM2). For high school (Lycée) and university levels (Supérieur), prioritize high-quality Wikimedia Commons diagrams, conceptual flowcharts ("Mermaid"), or specific, detailed academic illustrations.
+     * **STRICT BAN ON AI GENERATED REAL ARTWORKS / PAINTINGS / SCULPTURES (INTERDICTION FORMELLE DE GÉNÉRER DES IMAGES D'ART EXISTANTES PAR IA)**: You are strictly forbidden from generating or including AI image URLs (such as Pollinations.ai prompts) to represent real, existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You must NEVER generate images via AI for existing historical artworks (e.g. Mona Lisa, The Last Supper, Starry Night, La Venus de Milo, etc.). Doing so is a major pedagogical integrity violation. For any real historical artwork, you must either find and use a high-quality Wikimedia Commons direct image URL, or not include the image at all.
      * *Minimum Baseline*: Include at least 2 to 3 high-impact illustrative images for abstract, formal, or symbolic courses (e.g., mathematics, logic, theoretical physics) to set the context or show direct visual applications of the concepts.
      * *High Visual Density (5 to 10+ images)*: For visual, spatial, empirical, or historical subjects (e.g., visual arts, geography, history, biology, architecture, geology, cinema), you MUST systematically include a much larger density of illustrative images directly related to the local context (e.g., specific artworks, maps, geographical features, historical artifacts, biological structures).
      * *Adaptation to Level*: For Primary levels (CP-CM2), maintain an extremely high illustration density (images every few paragraphs) to scaffold reading comprehension. For advanced levels (Lycée to L3), prioritize highly detailed visual figures illustrating specific, complex academic aspects.
@@ -913,12 +942,12 @@ Requirements:
    - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically using a SINGLE-bracket Markdown link (NOT double-bracket) like: **Term** : Definition. [Wikipédia](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores). CRITICAL: Use ONLY a single pair of square brackets \`[Wikipédia](url)\` — NEVER double brackets \`[[Wikipédia](url)]\` as this produces a stray closing parenthesis \`)\` on screen. The Wikipedia link MUST NOT be wrapped in bold asterisks. Correct format: **Term** : Definition. [Wikipédia](url). Incorrect formats: **Term** : Definition. **[Wikipédia](url)** OR **Term** : Definition. [[Wikipédia](url)]. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
 10. Connected Entities: Historical Figures, Fictional Characters, Key Geographic Places, and Artworks (Personnalités, Personnages Fictifs, Lieux Clés, et Œuvres d'art) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects. To ensure complete resilience and avoid empty cards/warning boxes when Wikipedia summary requests fail client-side (e.g. due to minor spelling or casing mismatches), you MUST systematically define a high-quality 2-3 line fallback description in the "bio" (for persons) or "description" (for non-persons) attribute:
-      * **Historical Figures, Authors, and Scientists**: For EVERY historical figure, scientist, writer, director, or real person mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures, or "(1769 - 1821)"). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute (built on the fly) as a secure network fallback:
-        \`<HistoricalPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography generated on the fly detailing their major achievements and relevance to the course.">DisplayName (Dates)</HistoricalPerson>\`.
-        *IMPORTANT*: Do NOT require or place '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<HistoricalPerson>' tags inside markdown image captions or figure titles, as these are transformed into JSX attributes and will display the raw HTML/JSX tags literally on the page. Keep captions as plain text.
-        *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a historical figure in a '<HistoricalPerson>' tag if they are already wrapped in one, and do NOT place a '<HistoricalPerson>' tag inside the bold title of a '**Mini-Biographie**' block (keep the title simple as plain text, e.g., '**Mini-Biographie : DisplayName (Dates)**', and only wrap the first mention of the person in the actual biography content/text below the title). Duplicate or nested '<HistoricalPerson>' tags for the same person are strictly prohibited.
-        - Examples (French): \`<HistoricalPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
-        - Examples (English): \`<HistoricalPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</HistoricalPerson>\`
+      * **Real & Historical Persons, Authors, and Scientists (Personnes réelles)**: For EVERY real person (historical figure, scientist, writer, director, living expert, etc.) mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute:
+        \`<RealPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography detailing their major achievements and relevance to the course.">DisplayName (Dates)</RealPerson>\`.
+        *IMPORTANT*: Do NOT require or place '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<RealPerson>' tags inside markdown image captions or figure titles.
+        *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a person in a '<RealPerson>' tag if they are already wrapped in one, and do NOT place a '<RealPerson>' tag inside the bold title of a '**Mini-Biographie**' block. Duplicate or nested '<RealPerson>' tags for the same person are strictly prohibited.
+        - Examples (French): \`<RealPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</RealPerson>\`
+        - Examples (English): \`<RealPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</RealPerson>\`
       * **Artworks and Works of Art (Œuvres d'art)**: For notable artworks mentioned in the text (e.g. paintings, sculptures, literary works, monuments like "L'Homme de Vitruve", "La Joconde", "La Cène", "La Nuit étoilée"), you MUST wrap them in \`<Artwork>\` and ALWAYS include a \`description\` attribute:
         \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the artwork, its creator, dates, and significance.">DisplayName</Artwork>\`.
         - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr" description="Célèbre dessin annoté de Léonard de Vinci datant de 1490, représentant les proportions idéales du corps humain selon Vitruve.">l'Homme de Vitruve</Artwork>\`
@@ -930,9 +959,10 @@ Requirements:
       * **Key Geographic Places (Lieux géographiques)**: For key cities, countries, regions, monuments, or geographical features (like "Château de Versailles", "Paris"), wrap them in the custom component and ALWAYS include a \`description\` attribute: \`<Location name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the location, its geography or history, and relevance.">PlaceName</Location>\`.
         - Example (French): \`<Location name="Château_de_Versailles" lang="fr" description="Résidence royale et monument historique situé à Versailles, symbole du pouvoir absolu de Louis XIV et joyau de l'art classique français.">Château de Versailles</Location>\`
         - Example (English): \`<Location name="Palace_of_Versailles" lang="en" description="Royal residence and historical monument located in Versailles, symbol of Louis XIV's absolute power and French classical art.">Palace of Versailles</Location>\`
-      * **Historical Events (Événements historiques)**: For major historical events, revolutions, battles, or scientific milestones (like "Prise de la Bastille", "Storming of the Bastille"), wrap them in the custom component and ALWAYS include a \`description\` attribute: \`<HistoricalEvent name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the event, its dates, key participants, and historical impact.">EventName</HistoricalEvent>\`.
-        - Example (French): \`<HistoricalEvent name="Prise_de_la_Bastille" lang="fr" description="Événement révolutionnaire survenu le 14 juillet 1789 à Paris, marquant la chute du symbole de l'absolutisme royal et le début de la Révolution française.">Prise de la Bastille</HistoricalEvent>\`
-        - Example (English): \`<HistoricalEvent name="Storming_of_the_Bastille" lang="en" description="Key revolutionary event on July 14, 1789 in Paris, marquant la chute du symbole de l'absolutisme royal et le début de la Révolution française.">Storming of the Bastille</HistoricalEvent>\`
+      * **Historical Events and Key Milestones (Entités événementielles)**: For major historical events, revolutions, battles, or scientific milestones mentioned inline in the text (like "Prise de la Bastille", "Storming of the Bastille"), wrap the event name with the \`<EventLink>\` overlay component and ALWAYS include a \`description\` attribute:
+        \`<EventLink name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the event, its dates, key participants, and historical impact.">EventName</EventLink>\`.
+        - Example (French): \`<EventLink name="Prise_de_la_Bastille" lang="fr" description="Événement révolutionnaire survenu le 14 juillet 1789 à Paris, marquant la chute du symbole de l'absolutisme royal et le début de la Révolution française.">Prise de la Bastille</EventLink>\`
+        - Example (English): \`<EventLink name="Storming_of_the_Bastille" lang="en" description="Key revolutionary event on July 14, 1789 in Paris that marked the beginning of the French Revolution.">Storming of the Bastille</EventLink>\`
     - Note: The \`name\` attribute must be the exact Wikipedia page title in the target language of the course (using underscores for spaces), and the \`lang\` attribute must be the language of the course ("${targetLang.toLowerCase()}").
 11. Intermediate Formative Scale-Based Evaluations (Évaluations formatives proportionnelles) :
     - Throughout the body of the lesson, place a custom \`<Quiz>\` block after each key sub-concept (every 5-10 minutes of reading).
@@ -1066,11 +1096,11 @@ Requirements:
         * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
  18. Special Pedagogical Enrichment Blocks (Balises JSX d'Enrichissement) :
        You MUST dynamically and contextually enrich the lesson body using the following custom tags.
-       *CRITICAL COMPONENT TAG NAME REQUIREMENT*: Regardless of the target language of the lesson (French, Spanish, German, Chinese, or any new language we may add), you MUST write the JSX tag names EXACTLY as specified below in canonical English (e.g. write '<CriticalThinking>', '<HistoricalFact>', '<DidYouKnow>', etc. NEVER translate the tag names themselves). This is strict and mandatory.
+       *CRITICAL COMPONENT TAG NAME REQUIREMENT*: Regardless of the target language of the lesson (French, Spanish, German, Chinese, or any new language we may add), you MUST write the JSX tag names EXACTLY as specified below in canonical English (e.g. write '<CriticalThinking>', '<HistoricalEvent>', '<DidYouKnow>', etc. NEVER translate the tag names themselves). This is strict and mandatory.
        - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
        - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
-       - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (e.g. a funny misconception, an unusual experiment mishap, or a witty quote; NOT just a plain history event like the creation of a lab or the publication of a book). This should be a fun, social-gathering conversational snippet. Crucial: The HistoricalAnecdote and LeSaviezVous blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
-       - **Événement Historique** (\`<HistoricalFact title="..." date="...">...</HistoricalFact>\`): Add a 2-4 sentence description of a landmark historical event, foundational experiment, or crucial historical milestone (such as the opening of a famous laboratory or the publication of a seminal textbook) that is important for academic context but is a factual milestone rather than a quirky anecdote.
+       - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (e.g. a funny misconception, an unusual experiment mishap, or a witty quote; NOT just a plain history event like the creation of a lab or the publication of a book). This should be a fun, social-gathering conversational snippet. Crucial: The HistoricalAnecdote and DidYouKnow blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
+       - **Événement Historique** (\`<HistoricalEvent title="..." date="...">...</HistoricalEvent>\`): Add a 2-4 sentence description of a landmark historical event, foundational experiment, or crucial historical milestone (such as the opening of a famous laboratory or the publication of a seminal textbook) that is important for academic context but is a factual milestone rather than a quirky anecdote.
        - **Idée Brillante** (\`<BrilliantIdea title="...">...</BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
        - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
        - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
@@ -1101,7 +1131,7 @@ Requirements:
       let studioError = 'N/A';
 
       if (isVertexConfigured()) {
-        console.log(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
+        await appendTaskLog(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
         vertexStatus = 'Attempted';
         try {
           const contentRes = await callVertexAI({
@@ -1129,7 +1159,7 @@ Requirements:
       }
       
       if (!contentSuccess && apiKey) {
-        console.log(`[AI GENERATOR] Generating lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
+        await appendTaskLog(`[AI GENERATOR] Generating lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
         studioStatus = 'Attempted';
         const startTime = Date.now();
         try {
@@ -1176,7 +1206,7 @@ Requirements:
 
       while (!approved && iteration < maxIterations) {
         iteration++;
-        console.log(`[AI GENERATOR - AGENT 4] Verifying lesson "${item.title}" (Attempt ${iteration}/${maxIterations})...`);
+        await appendTaskLog(`[AI GENERATOR - AGENT 4] Verifying lesson "${item.title}" (Attempt ${iteration}/${maxIterations})...`);
         
         const verifierPrompt = `You are the Verifier/Critic Agent (Agent 4). Your job is to strictly review the generated academic course content (MDX) to ensure it complies with the "Zero-Placeholder" and "Academic Density" policies.
 
@@ -1206,6 +1236,8 @@ Your Checkpoints:
      If any of these required structural sections/components are missing or malformed, you MUST reject the content (set "approved": false) and request the writer to add or correct them.
 4. "Multimedia, Illustrations, & Non-Text Media Density":
    This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${correctedCourseName}"):
+   - Verify that the image density conforms to age-adaptation: for primary CP-CM2, reject if text dominates over visuals/simulators (the text/image ratio must be reversed: let visuals, games, and simulations dominate, and keep text explanations short and simple).
+   - Check that the minimum media baseline/diversity is respected: even for advanced university levels (Licence L1-L3), reject if the lesson lacks at least 1 illustration/diagram, 1 or 2 graphs/curves/simulations (e.g. using \`<FunctionPlotter />\` or a Markdown table chart toggle), and 1 or 2 source images (painting, sculpture, historical photo, monument, map).
    - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
    - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', '<StructureViewer3D />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'. Reject if NONE of these are present.
    - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
@@ -1214,7 +1246,8 @@ Your Checkpoints:
      * Each specifies a 'duration' attribute (e.g. duration="2 min" or duration="1:45") and that this duration does NOT exceed 3 minutes, in line with the micro-learning constraint.
      * Each has a caption line directly below it (italicized, e.g. *Audio 1 : Title - Description.*) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
    - Regardless of discipline: Verify that audio players ('<AudioPlayer />' / '<Audio />') or video players ('<Video />') are incorporated where spoken context or audio demonstrations are pedagogically valuable (e.g. listening comprehension for language courses, spoken philosophical lectures, or historical audio documents).
-5. "Section Interactivity and Sandboxes":
+   - "Existing Artwork AI-Generation Block Check": Verify that the content contains absolutely NO AI-generated images (e.g., Pollinations.ai prompts) of real/existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You MUST reject (set "approved": false) if the writer attempted to use an AI-generated image URL for an existing real historical artwork (such as Mona Lisa, David, Starry Night, etc.). Real historical artworks must only use Wikimedia Commons links or have no image at all.
+ 5. "Section Interactivity and Sandboxes":
    5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
    5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
      * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' (for anatomical or cellular structures) or '<StructureViewer3D presetId="..." />' (for molecular/crystal structures). A lesson in these disciplines without either component MUST be rejected.
@@ -1223,10 +1256,10 @@ Your Checkpoints:
      * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
      * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />', '<PointOfView />', '<HistoricalAnecdote />', or '<HistoricalFact />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
 6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
-7. "Connected Entities (Historical Figures, Places, Artworks) & Mini-Biographies":
-   - Verify that EVERY historical figure, scientist, writer, director, or notable person mentioned in the main body text is wrapped in '<HistoricalPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute as a fallback. IMPORTANT: Do NOT require or check for '<HistoricalPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
-     - Verify that \`<Location>\`, \`<Place>\`, \`<HistoricalEvent>\`, \`<EvenementHistorique>\`, \`<Artwork>\`, and \`<FictionalCharacter>\` tags systematically contain a non-empty \`description\` attribute detailing their background and relevance as a secure fallback. Reject if missing or empty.
-   - Verify that there are no duplicate or nested '<HistoricalPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<HistoricalPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
+7. "Connected Entities (Real Persons, Fictional Characters, Locations, Events, Artworks) & Mini-Biographies":
+   - Verify that EVERY real person (historical figure, scientist, writer, director, or notable person) mentioned in the main body text is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute as a fallback. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
+     - Verify that \`<Location>\`, \`<Place>\`, \`<EventLink>\`, \`<EvenementHistorique>\`, \`<Artwork>\`, and \`<FictionalCharacter>\` tags systematically contain a non-empty \`description\` attribute detailing their background and relevance as a secure fallback. Reject if missing or empty.
+   - Verify that there are no duplicate or nested '<RealPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<RealPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
    - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="..." description="...">'.
      - Verify that any Contextual Mini-Biography block (using \`> [!INFO]\` or \`> [!NOTE]\` titled \`Mini-Biographie\` or \`Mini-Biography\`) is substantial: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) and university levels (Supérieur). Verify that it systematically includes a direct Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
 8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources (like Pollinations.ai images), and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
@@ -1304,11 +1337,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           const verificationResult = safeJsonParse(cleanedVJson, 'generateCourseContent (Agent 4 Verification)');
 
           if (verificationResult && verificationResult.approved === true) {
-            console.log(`[AI GENERATOR - AGENT 4] Content approved for "${item.title}" on attempt ${iteration}!`);
+            await appendTaskLog(`[AI GENERATOR - AGENT 4] Content approved for "${item.title}" on attempt ${iteration}!`);
             approved = true;
           } else {
             const critique = verificationResult?.critique || 'Invalid or empty verification response from AI critic.';
-            console.warn(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
+            await appendTaskLog(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
             
             const refinerPrompt = `You are a world-class academic professor (Agent 1/2/3). The verifier/critic (Agent 4) has rejected your previous output.
 You must now rewrite, expand, and fully correct the MDX lesson content based on their feedback, ensuring zero placeholders and high academic density.
@@ -1388,10 +1421,11 @@ title: "${item.title}"
 subject: "${correctedCourseName}"
 level: "${level}"
 module: "${item.title}"
-order: ${index + 1}
+order: ${index + 1}${isLastLesson ? '\nsummative: true' : ''}
 ---
 
 ${validatedMdx}`;
+
 
       // Apply preprocessMdx BEFORE validation so common AI-generation issues
       // (bare & in JSX attrs, unescaped braces, etc.) are fixed deterministically
@@ -1460,7 +1494,7 @@ ${validatedMdx}`;
         content: resolvedMdx,
         order: index + 1
       });
-      await updateTaskProgress();
+      await updateTaskProgress(item.title);
     });
 
     // Save/Update the Course card in the database
@@ -2629,8 +2663,20 @@ Return ONLY the revised MDX content. Do not include markdown code block wrappers
         const patch = parseInt(match[3], 10) + 1;
         nextVersion = `v${major}.${minor}.${patch}`;
       }
+      const originalLanguages = course.languages || [];
+      const updatedLanguages = originalLanguages.includes(targetLang.toLowerCase())
+        ? originalLanguages
+        : [...originalLanguages, targetLang.toLowerCase()];
+
+      const originalLangsUpper = course.langs || [];
+      const updatedLangsUpper = originalLangsUpper.includes(targetLang.toUpperCase())
+        ? originalLangsUpper
+        : [...originalLangsUpper, targetLang.toUpperCase()];
+
       await dbService.saveCourse({
         ...course,
+        languages: updatedLanguages,
+        langs: updatedLangsUpper,
         version: nextVersion,
         last_revision_date: new Date().toISOString()
       });
@@ -3643,10 +3689,10 @@ function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [
     // Core & Structural
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
-    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson',
-    'HistoricalEvent', 'HistoricalDate', 'Location', 'EntityLink',
+    'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson',
+    'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink',
     'Artwork', 'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote',
-    'HistoricalFact', 'WhatsNext', 'EtApres', 'IdeeBrillante', 'BrilliantIdea',
+    'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres', 'IdeeBrillante', 'BrilliantIdea',
     'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'OpenQuestion', 'ScientificDebate', 'Epistemology',
     'Video', 'Audio', 'Mermaid', 'ComparisonSlider', 'FunctionPlotter',

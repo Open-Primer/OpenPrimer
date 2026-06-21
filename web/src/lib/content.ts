@@ -1228,24 +1228,8 @@ function healFillInBlanks(mdx: string): string {
     if (attrs.question && attrs.blanks) {
       const question = attrs.question;
       const blanksStr = attrs.blanks;
-      
-      const answers = extractAnswers(blanksStr);
-      const placeholderRegex = /_{2,}|-{2,}|\.{3,}|\[\.\.\.\]/g;
-      const segments = question.split(placeholderRegex);
-      
-      const resultComponents = [];
-      for (let i = 0; i < answers.length; i++) {
-        const answer = answers[i];
-        let prevSeg = (segments[i] || '').trim();
-        let nextSeg = (segments[i+1] || '').trim();
-        
-        const sentence = `${prevSeg} [...] ${nextSeg}`;
-        const safeSentence = (sentence || '').replace(/"/g, '&quot;');
-        const safeAnswer = (answer || '').replace(/"/g, '&quot;');
-        resultComponents.push(`<FillInBlanks sentence="${safeSentence}" answer="${safeAnswer}" />`);
-      }
-      
-      return resultComponents.join('\n');
+      const questionEscaped = question.replace(/"/g, '&quot;');
+      return `<FillInBlanks question="${questionEscaped}" blanks='${blanksStr}' />`;
     }
     
     if (attrs.sentences) {
@@ -1643,8 +1627,7 @@ function sanitizeAmpersandInJsxAttributes(mdx: string): string {
  */
 const MDX_WRAPPER_TAGS = [
   'HistoricalAnecdote', 'AnecdoteHistorique',
-  'HistoricalFact', 'FaitHistorique',
-  'HistoricalEvent', 'ÉvénementHistorique', 'EvenementHistorique',
+  'HistoricalEvent', 'HistoricalFact', 'FaitHistorique',
   'CriticalThinking', 'EspritCritique',
   'DidYouKnow', 'LeSaviezVous',
   'ScientificMethod', 'MethodeScientifique',
@@ -1748,11 +1731,12 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     QuoteBlock: 'Citation',
 
     // Entity Overlays & Aliases
-    EvenementHistorique: 'HistoricalEventLink',
-    ÉvénementHistorique: 'HistoricalEventLink',
+    EvenementHistorique: 'EventLink',
+    ÉvénementHistorique: 'EventLink',
     Lieu: 'Location',
     Place: 'Location',
-    PersonnageHistorique: 'HistoricalPerson',
+    PersonnageHistorique: 'RealPerson',
+    PersonnageHistoriqueLien: 'RealPerson',
     OeuvreDArt: 'Artwork',
     ŒuvreDArt: 'Artwork',
     OeuvreDart: 'Artwork',
@@ -1836,10 +1820,10 @@ function deduplicateHistoricalPersons(mdx: string): string {
 
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
-    'HistoricalPerson', 'HistoricalEvent', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink'
+    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink'
   ];
   const blockTags = [
-    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalFact', 'HistoricalEvent', 'WhatsNext', 'EtApres',
+    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres',
     'IdeeBrillante', 'BrilliantIdea', 'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',
     'Geometry2D', 'Glossary', 'Quiz', 'Question', 'Option', 'OpenQuestion', 'ScientificDebate',
     'Citation', 'QuoteBlock', 'InteractiveQuote'
@@ -1970,7 +1954,7 @@ function balancePedagogicalTags(mdx: string): string {
 function normalizeCustomTagsCasing(mdx: string): string {
   const customTags = [
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
-    'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'EvenementHistorique',
+    'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique',
     'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
@@ -1978,7 +1962,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer', 'Description',
     'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer', 'Image', 'CustomFigure',
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
-    'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'HistoricalEvent', 'ÉvénementHistorique', 'EvenementHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
+    'AnecdoteHistorique', 'HistoricalEvent', 'HistoricalFact', 'FaitHistorique', 'EvenementHistorique', 'ÉvénementHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
     'Citation', 'QuoteBlock', 'InteractiveQuote',
     'IdeeBrillante', 'BrilliantIdea', 'FunctionManipulator', 'EquationManipulator',
@@ -2982,7 +2966,7 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = ['HistoricalEvent', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'HistoricalPerson', 'Location', 'Artwork', 'Glossary'];
+  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary'];
   const tagPattern = new RegExp(
     `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
     'gi'

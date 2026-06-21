@@ -1072,7 +1072,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                {!isCourseCompleted && !isFinal ? (
+                {!isFinal ? (
                   <button
                     onClick={handleRetry}
                     className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"

@@ -25,36 +25,32 @@ const LOCATION   = process.env.VERTEX_LOCATION   || 'us-central1';
 // If you increase your Vertex AI quota in Google Cloud Console,
 // raise this value proportionally (e.g. 20 for 60 RPM quota).
 const VERTEX_RATE_LIMIT_RPM = Number(process.env.VERTEX_RATE_LIMIT_RPM) || 8;
-
-const _rateLimiter = {
-  tokens: VERTEX_RATE_LIMIT_RPM,
-  maxTokens: VERTEX_RATE_LIMIT_RPM,
-  refillRatePerMs: VERTEX_RATE_LIMIT_RPM / 60000, // tokens per millisecond
-  lastRefill: Date.now(),
-};
+let _lastRequestTime = 0;
 
 /**
- * Acquire one token from the bucket before making a Vertex AI call.
- * If no tokens are available, waits until one is refilled.
+ * Acquire rate-limit spacing before making a Vertex AI call.
+ * Ensures calls are spaced out to stay within the VERTEX_RATE_LIMIT_RPM.
  */
 async function acquireRateLimitToken(): Promise<void> {
-  const now = Date.now();
-  const elapsed = now - _rateLimiter.lastRefill;
-  const refilled = elapsed * _rateLimiter.refillRatePerMs;
-  _rateLimiter.tokens = Math.min(_rateLimiter.maxTokens, _rateLimiter.tokens + refilled);
-  _rateLimiter.lastRefill = now;
+  const rpm = Number(process.env.VERTEX_RATE_LIMIT_RPM) || VERTEX_RATE_LIMIT_RPM;
+  const minIntervalMs = 60000 / rpm;
 
-  if (_rateLimiter.tokens >= 1) {
-    _rateLimiter.tokens -= 1;
-    return;
+  const now = Date.now();
+  // If the last request was a long time ago, reset to prevent sudden catch-up delay
+  if (_lastRequestTime < now - minIntervalMs * 2) {
+    _lastRequestTime = now - minIntervalMs;
   }
 
-  // Calculate wait time to accumulate 1 token
-  const waitMs = Math.ceil((1 - _rateLimiter.tokens) / _rateLimiter.refillRatePerMs);
-  console.log(`[RATE LIMITER] Token bucket empty — throttling for ${Math.ceil(waitMs / 1000)}s (${VERTEX_RATE_LIMIT_RPM} RPM limit).`);
-  await new Promise(resolve => setTimeout(resolve, waitMs));
-  // Recurse to confirm token is now available
-  return acquireRateLimitToken();
+  const expectedTime = _lastRequestTime + minIntervalMs;
+  const waitMs = expectedTime - now;
+
+  if (waitMs > 0) {
+    _lastRequestTime = expectedTime;
+    console.log(`[RATE LIMITER] Spacing request — throttling for ${Math.ceil(waitMs / 1000)}s (${rpm} RPM limit).`);
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+  } else {
+    _lastRequestTime = now;
+  }
 }
 
 interface ServiceAccountCredentials {

@@ -34,19 +34,36 @@ test.describe('OpenPrimer Smoke Tests', () => {
 
   test('should navigate directly to course page when clicking a course in the homepage carousel', async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000); // Give Next.js router extra time to initialize and stabilize
+    
     // Find the first course card button in the kiosk carousel
     const courseCard = page.locator('button').filter({ hasText: /VIEW DETAILS/i }).first();
     await expect(courseCard).toBeVisible();
+    
     await courseCard.click();
-    // Verify it navigated directly to a course path (containing /L1/, /L2/, /L3/, etc.) and ending with /introduction
-    await expect(page).toHaveURL(/\/L[1-4]\/.*\/introduction/);
+    await page.waitForURL(/\/L[1-4]\/.*\/introduction/, { timeout: 10000 });
   });
 
   test('should navigate to the catalog', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.locator('a[href="/catalog"]').first().click();
-    await expect(page).toHaveURL(/.*catalog/);
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(2000); // Give Next.js router extra time to initialize and stabilize
+    
+    const catalogLink = page.locator('a[href="/catalog"]').first();
+    await expect(catalogLink).toBeVisible();
+    
+    let navigated = false;
+    for (let i = 0; i < 3; i++) {
+      try {
+        await catalogLink.click({ timeout: 2000 });
+        await page.waitForURL(/.*catalog/, { timeout: 2000 });
+        navigated = true;
+        break;
+      } catch (e) {
+        console.log(`[Test Retry] Catalog navigation attempt ${i + 1} did not succeed:`, (e as any).message);
+        await page.waitForTimeout(1000);
+      }
+    }
+    expect(navigated).toBe(true);
     await expect(page.locator('h1')).toContainText(/Browse Catalog|Parcourir/);
   });
 

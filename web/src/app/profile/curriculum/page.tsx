@@ -915,7 +915,7 @@ export default function CurriculumPage() {
                             key={course.id} 
                             onClick={() => { 
                               handleCourseClick(courseDetails || course); 
-                              router.push(getCoursePath(courseDetails || course)); 
+                              window.location.href = getCoursePath(courseDetails || course); 
                             }} 
                             className="group cursor-pointer" 
                           >
@@ -1167,7 +1167,7 @@ export default function CurriculumPage() {
                             key={course.id} 
                             onClick={() => { 
                               handleCourseClick(courseDetails || course); 
-                              router.push(getCoursePath(courseDetails || course)); 
+                              window.location.href = getCoursePath(courseDetails || course); 
                             }} 
                             className="group cursor-pointer" 
                           >
@@ -1735,7 +1735,7 @@ export default function CurriculumPage() {
                                     }
                                     handleCourseClick(cc);
                                     setSelectedCurriculumForDrillDown(null);
-                                    router.push(getCoursePath(cc));
+                                    window.location.href = getCoursePath(cc);
                                   }}
                                   className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105 cursor-pointer"
                                 >

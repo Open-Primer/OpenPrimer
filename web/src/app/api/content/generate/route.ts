@@ -10,12 +10,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized: Session missing or invalid token.' }, { status: 401 });
     }
 
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     const body = await req.json();
     const { type, name, level, targetLang, courseSlug, isCurriculum, taskId } = body;
 
     if (type === 'translation') {
       await translateCourseContent(courseSlug, targetLang || 'fr', taskId);
-      triggerTaskWorker(req.url);
+      triggerTaskWorker(req.url, authHeader);
       return NextResponse.json({ success: true, message: 'Translation complete.' });
     } else {
       let result: any = null;
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       } else {
         result = await generateCourseContent(name, level || 'L1', targetLang || 'en', taskId);
       }
-      triggerTaskWorker(req.url);
+      triggerTaskWorker(req.url, authHeader);
       return NextResponse.json({ 
         success: true, 
         message: 'Generation complete.', 
@@ -38,24 +39,30 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function triggerTaskWorker(requestUrl: string) {
+async function triggerTaskWorker(requestUrl: string, userAuthHeader?: string | null) {
   try {
     const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-      console.warn('[EAGER TRIGGER] CRON_SECRET is not configured. Skipping worker trigger.');
-      return;
-    }
     const origin = new URL(requestUrl).origin;
     const triggerUrl = `${origin}/api/tasks/run`;
     console.log(`[EAGER TRIGGER] Triggering worker endpoint at ${triggerUrl}...`);
     
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    if (cronSecret) {
+      headers['Authorization'] = `Bearer ${cronSecret}`;
+    } else if (userAuthHeader) {
+      headers['Authorization'] = userAuthHeader;
+    } else {
+      console.warn('[EAGER TRIGGER] Neither CRON_SECRET nor user session is available. Skipping worker trigger.');
+      return;
+    }
+
     // We run the fetch asynchronously and do not await it so it doesn't block the request response
     fetch(triggerUrl, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${cronSecret}`,
-        'Content-Type': 'application/json'
-      }
+      headers
     }).then(async (res) => {
       if (!res.ok) {
         const text = await res.text();

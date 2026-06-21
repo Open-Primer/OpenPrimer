@@ -100,6 +100,76 @@ export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ da
   }
 }
 
+export async function performCascadeCourseDeletion(courseId: number): Promise<{ data: any; error: any }> {
+  try {
+    addCourseTombstone(courseId);
+
+    // 1. Fetch target course slug and title to cleanup related tables
+    const { data: courseData, error: fetchError } = await supabase
+      .from('courses')
+      .select('slug, title')
+      .eq('id', courseId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      return { data: null, error: fetchError };
+    }
+
+    const slug = courseData?.slug;
+    const title = courseData?.title;
+
+    if (slug) {
+      // A. Purge orphaned Storage media BEFORE deleting lessons (need lesson content to scan URLs)
+      try {
+        await purgeOrphanedCourseMedia(slug);
+      } catch (mediaErr) {
+        console.error('[CASCADE DELETE] Error purging media:', mediaErr);
+      }
+
+      // B. Cascade delete lessons belonging to this course
+      const { error: lessonErr } = await supabaseAdmin.from('lessons').delete().eq('course_slug', slug);
+      if (lessonErr) console.error('[CASCADE DELETE] Error deleting lessons:', lessonErr);
+
+      // C. Cascade delete progress entries
+      const { error: progErr } = await supabaseAdmin.from('progress').delete().eq('course_id', courseId);
+      if (progErr) console.error('[CASCADE DELETE] Error deleting progress:', progErr);
+
+      // D. Cascade delete course feedbacks (can reference by courseId or slug)
+      const { error: fbErr } = await supabaseAdmin.from('course_feedbacks').delete().or(`course_id.eq.${courseId},course_id.eq.${slug}`);
+      if (fbErr) console.error('[CASCADE DELETE] Error deleting feedbacks:', fbErr);
+
+      // E. Cascade delete report clusters (can reference by slug)
+      const { error: repErr } = await supabaseAdmin.from('report_clusters').delete().eq('course', slug);
+      if (repErr) console.error('[CASCADE DELETE] Error deleting report clusters:', repErr);
+
+      // F. Cascade delete translation requests
+      if (title) {
+        const { error: transErr } = await supabaseAdmin.from('translation_requests').delete().or(`course_name.eq.${slug},course_name.eq.${title}`);
+        if (transErr) console.error('[CASCADE DELETE] Error deleting translation requests:', transErr);
+      } else {
+        const { error: transErr } = await supabaseAdmin.from('translation_requests').delete().eq('course_name', slug);
+        if (transErr) console.error('[CASCADE DELETE] Error deleting translation requests:', transErr);
+      }
+    }
+
+    // 2. Perform the physical delete of the course itself
+    const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
+    if (error) throw error;
+
+    // 3. Sync local cache
+    const localCourses = getMockCourses().filter(c => c.id !== courseId);
+    setMockCourses(localCourses);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
+    }
+
+    return { data, error: null };
+  } catch (e) {
+    handleDatabaseError(e);
+    return { data: null, error: e as any };
+  }
+}
+
 export const supabaseDatabaseProvider: DatabaseService = {
   getSystemParameters: async () => {
     try {
@@ -231,6 +301,16 @@ export const supabaseDatabaseProvider: DatabaseService = {
           last_revision_date: c.last_revision_date || c.created_at || null
         };
 
+        let tombstoneIds: number[] = [];
+        if (typeof window !== 'undefined') {
+          try {
+            tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+          } catch (e) {}
+        }
+        if (tombstoneIds.includes(mapped.id)) {
+          return { data: null, error: null };
+        }
+
         // Option A (Strict Barrier) Filter for single curriculum syllabus fetch:
         if (mapped.isCurriculum) {
           const children = mapped.childCourses || [];
@@ -262,9 +342,19 @@ export const supabaseDatabaseProvider: DatabaseService = {
   
   getAllCourses: async () => {
     try {
-      const { data, error } = await supabase.from('courses').select('*').eq('is_active', true);
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('is_active', true)
+        .lt('archiving_level', 2);
       if (error) throw error;
       if (data) {
+        let tombstoneIds: number[] = [];
+        if (typeof window !== 'undefined') {
+          try {
+            tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+          } catch (e) {}
+        }
         const dbCourses: MockCourse[] = data.map((c: any) => ({
           id: c.id,
           title: c.title,
@@ -290,7 +380,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           translations: c.translations || {},
           version: c.version || 'v1.0.0',
           last_revision_date: c.last_revision_date || c.created_at || null
-        })).filter((c: MockCourse) => !/test/i.test(c.slug));
+        })).filter((c: MockCourse) => !/test/i.test(c.slug) && !tombstoneIds.includes(c.id));
 
         // Option A (Strict Barrier): Filter out Curriculums where any child course is not present/active
         const activeCourseIds = new Set(dbCourses.filter(c => !c.isCurriculum).map(c => c.id));
@@ -428,7 +518,31 @@ export const supabaseDatabaseProvider: DatabaseService = {
         const { error: upsertError } = await supabase.from('task_queue').upsert(rows);
         if (upsertError) throw upsertError;
       }
-      
+
+      // Eager-trigger the task worker if any newly saved task is queued.
+      // This bridges the gap between enqueuing a task and it actually running,
+      // without depending on CRON_SECRET or a cloudRunUrl DB trigger being configured.
+      const hasQueuedTasks = rows.some(r => r.status === 'queued');
+      if (hasQueuedTasks && typeof window !== 'undefined') {
+        (async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            if (token) {
+              fetch('/api/tasks/run', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              }).catch(() => { /* silently ignore - background trigger */ });
+            }
+          } catch {
+            // silently ignore — this is a best-effort background trigger
+          }
+        })();
+      }
+
       return { data: queue, error: null };
     } catch (e) {
       handleDatabaseError(e);
@@ -624,8 +738,18 @@ export const supabaseDatabaseProvider: DatabaseService = {
     try {
       let courses = getMockCourses();
       if (!courses || courses.length === 0) {
-        const { data: dbCoursesData } = await supabase.from('courses').select('*');
+        const { data: dbCoursesData } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('is_active', true)
+          .lt('archiving_level', 2);
         if (dbCoursesData) {
+          let tombstoneIds: number[] = [];
+          if (typeof window !== 'undefined') {
+            try {
+              tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
+            } catch (e) {}
+          }
           const dbCourses = dbCoursesData.map((c: any) => ({
             id: c.id,
             title: c.title,
@@ -649,7 +773,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
             isCurriculum: c.is_curriculum || false,
             childCourses: c.child_courses || [],
             translations: c.translations || {}
-          }));
+          })).filter((c: MockCourse) => !tombstoneIds.includes(c.id));
           setMockCourses(dbCourses);
           courses = dbCourses;
         }
@@ -1076,25 +1200,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       }
       
       if (level === 3) {
-        addCourseTombstone(courseId);
-
-        // Purge orphaned Storage media before deleting the course
-        const { data: slugRow } = await supabase.from('courses').select('slug').eq('id', courseId).single();
-        if (slugRow?.slug) {
-          await purgeOrphanedCourseMedia(slugRow.slug);
-        }
-
-        const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
-        if (error) throw error;
-
-        // Also update local cache
-        const localCourses = getMockCourses().filter(c => c.id !== courseId);
-        setMockCourses(localCourses);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
-        }
-
-        return { data, error };
+        return await performCascadeCourseDeletion(courseId);
       }
       const { data, error } = await supabaseAdmin.from('courses').update({ archiving_level: level, is_active: level === 0 }).eq('id', courseId);
       if (error) throw error;
@@ -1122,32 +1228,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   purgeCourse: async (courseId: number) => {
-    try {
-      addCourseTombstone(courseId);
-      
-      // Purge orphaned Storage media BEFORE deleting lessons (need content to scan URLs)
-      const { data: courseData } = await supabase.from('courses').select('slug').eq('id', courseId).single();
-      if (courseData?.slug) {
-        await purgeOrphanedCourseMedia(courseData.slug);
-        // Cascade delete lessons belonging to this course
-        await supabaseAdmin.from('lessons').delete().eq('course_slug', courseData.slug);
-      }
-
-      const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
-      if (error) throw error;
-
-      // Also update local cache
-      const localCourses = getMockCourses().filter(c => c.id !== courseId);
-      setMockCourses(localCourses);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
-      }
-
-      return { data, error };
-    } catch (e) {
-      handleDatabaseError(e);
-      return { data: null, error: e as any };
-    }
+    return await performCascadeCourseDeletion(courseId);
   },
 
   submitReport: async (course: string, page: string, comment: string) => {
@@ -1956,30 +2037,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
   },
 
   deleteCourse: async (courseId: number) => {
-    try {
-      addCourseTombstone(courseId);
-
-      // Purge orphaned Storage media before hard-deleting the course
-      const { data: slugRow } = await supabase.from('courses').select('slug').eq('id', courseId).single();
-      if (slugRow?.slug) {
-        await purgeOrphanedCourseMedia(slugRow.slug);
-      }
-
-      const { data, error } = await supabaseAdmin.from('courses').delete().eq('id', courseId);
-      if (error) throw error;
-
-      // Also update local cache
-      const localCourses = getMockCourses().filter(c => c.id !== courseId);
-      setMockCourses(localCourses);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('openprimer_courses', JSON.stringify(localCourses));
-      }
-
-      return { data, error };
-    } catch (e) {
-      handleDatabaseError(e);
-      return { data: null, error: e as any };
-    }
+    return await performCascadeCourseDeletion(courseId);
   },
 
   getContactFeedbacks: async () => {

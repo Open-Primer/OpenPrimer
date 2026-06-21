@@ -527,7 +527,7 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
                   : (language === 'FR' ? 'Voir les réponses' : 'Show Answers')}
               </button>
 
-              {!isCourseCompleted && !isFinal && (
+              {!isFinal && (
                 <button
                   onClick={handleRetry}
                   className="px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"

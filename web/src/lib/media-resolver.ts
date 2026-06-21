@@ -408,6 +408,27 @@ async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buff
   }
 }
 
+export function isExistingArtwork(src: string, label: string): boolean {
+  const text = `${src} ${label}`.toLowerCase();
+  const decoded = decodeURIComponent(text);
+  
+  const keywords = [
+    'peinture', 'painting', 'tableau', 'fresco', 'fresque', 'oil on canvas', 'huile sur toile', 'watercolor', 'aquarelle',
+    'sculpture', 'statue', 'bust', 'buste', 'marble', 'marbre', 'bronze',
+    'photo', 'photograph', 'photographie', 'daguerreotype',
+    'mona lisa', 'joconde', 'starry night', 'nuit étoilée', 'nuit etoilee', 'ménines', 'menines', 'guernica', 
+    'last supper', 'cène', 'cene', 'david', 'venus de milo', 'penseur', 'thinker', 'laocoon', 'nefertiti', 'scream', 'cri',
+    'birth of venus', 'naissance de vénus', 'naissance de venus', 'girl with a pearl earring', 'jeune fille à la perle',
+    'liberté guidant le peuple', 'liberty leading the people', 'le baiser', 'the kiss',
+    'da vinci', 'leonardo da vinci', 'vincent van gogh', 'van gogh', 'michelangelo', 'michel-ange', 'picasso', 
+    'velázquez', 'velazquez', 'rembrandt', 'vermeer', 'claude monet', 'monet', 'edouard manet', 'manet', 
+    'auguste renoir', 'renoir', 'edgar degas', 'degas', 'salvador dali', 'dali', 'rene magritte', 'magritte', 
+    'gustav klimt', 'klimt', 'edvard munch', 'munch', 'auguste rodin', 'rodin', 'botticelli'
+  ];
+  
+  return keywords.some(kw => decoded.includes(kw));
+}
+
 /**
  * Parses and replaces media links in MDX Content:
  * - Resolves Pollinations/placeholder images with official Wikipedia/Wikimedia Commons images when applicable.
@@ -448,20 +469,20 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
     }
     
     if (title && needsResolution) {
-      console.log(`[MEDIA-RESOLVER] Resolving video for: "${title}"`);
       const searchQuery = `${title} cours education ${targetLang === 'fr' ? 'français' : 'english'}`;
       const realId = await searchYouTubeVideo(searchQuery);
       
       if (realId) {
         const newUrl = `https://www.youtube.com/watch?v=${realId}`;
-        let updatedAttrs = attrsStr
-          .replace(/id="[^"]*"/, `id="${realId}"`)
-          .replace(/url="[^"]*"/, `url="${newUrl}"`);
-        
-        if (!attrsStr.includes('id=')) {
+        let updatedAttrs = attrsStr;
+        if (attrsStr.includes('id=')) {
+          updatedAttrs = updatedAttrs.replace(/id="[^"]*"/, `id="${realId}"`);
+        } else {
           updatedAttrs += ` id="${realId}"`;
         }
-        if (!attrsStr.includes('url=')) {
+        if (attrsStr.includes('url=')) {
+          updatedAttrs = updatedAttrs.replace(/url="[^"]*"/, `url="${newUrl}"`);
+        } else {
           updatedAttrs += ` url="${newUrl}"`;
         }
         
@@ -489,8 +510,17 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
     const hasDummyUrl = !originalUrl || originalUrl.includes('example.com') || originalUrl.includes('placeholder') || originalUrl === '';
 
-    if (hasDummyUrl) {
-      console.log(`[MEDIA-RESOLVER] Resolving audio for: "${title}"`);
+    let needsResolution = hasDummyUrl;
+    if (!needsResolution && originalUrl) {
+      const exists = await validateMediaUrl(originalUrl);
+      if (!exists) {
+        console.log(`[MEDIA-RESOLVER] Audio URL ${originalUrl} is broken (404). Triggering repair.`);
+        needsResolution = true;
+      }
+    }
+
+    if (needsResolution) {
+      console.log(`[MEDIA-RESOLVER] Resolving audio track for: "${title}"`);
       
       // Step A: Search for real audio file on Wikimedia Commons first
       let resolvedUrl = await fetchWikimediaAudio(title);
@@ -573,6 +603,13 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         sourceUrl = wikiImage;
       }
 
+      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs
+      if (sourceUrl.includes('pollinations.ai') && isExistingArtwork(sourceUrl, altText)) {
+        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork: "${altText}"`);
+        updatedContent = updatedContent.replace(fullMatch, `\n\n> ⚠️ *La génération par IA de l'œuvre d'art "${altText}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.* \n\n`);
+        continue;
+      }
+
       // Download and upload to Supabase Storage
       try {
         let buffer: Buffer | null = null;
@@ -645,6 +682,13 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
           sourceUrl = wikiImage;
         }
+      }
+
+      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs
+      if (sourceUrl.includes('pollinations.ai') && isExistingArtwork(sourceUrl, altText || caption)) {
+        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork Figure: "${altText || caption}"`);
+        updatedContent = updatedContent.replace(fullTag, `\n\n> ⚠️ *La génération par IA de l'œuvre d'art "${altText || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.* \n\n`);
+        continue;
       }
 
       // Download and upload to Supabase Storage

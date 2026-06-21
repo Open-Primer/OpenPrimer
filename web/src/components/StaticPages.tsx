@@ -346,6 +346,7 @@ export const CatalogPage = () => {
   }, [lang]);
 
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [deletedCourseIds, setDeletedCourseIds] = useState<number[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   // isLoading starts true — stays true until the first DB response arrives.
   // This prevents the 'no courses found' flash on mount.
@@ -501,7 +502,45 @@ export const CatalogPage = () => {
     if (savedBookmarks) {
       try { setBookmarks(JSON.parse(savedBookmarks)); } catch {}
     }
+
+    const savedDeleted = typeof window !== 'undefined' ? localStorage.getItem('openprimer_deleted_courses') : null;
+    if (savedDeleted) {
+      try { setDeletedCourseIds(JSON.parse(savedDeleted)); } catch {}
+    }
   }, [lang]);
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'openprimer_deleted_courses') {
+        if (e.newValue) {
+          try {
+            setDeletedCourseIds(JSON.parse(e.newValue));
+          } catch {}
+        } else {
+          setDeletedCourseIds([]);
+        }
+      }
+    };
+
+    const handleCoursePurged = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const purgedId = customEvent.detail?.courseId;
+      if (purgedId) {
+        setDeletedCourseIds(prev => {
+          if (prev.includes(purgedId)) return prev;
+          return [...prev, purgedId];
+        });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('openprimer_course_purged', handleCoursePurged);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('openprimer_course_purged', handleCoursePurged);
+    };
+  }, []);
 
   // Debounce search logging to database search history
   useEffect(() => {
@@ -586,6 +625,8 @@ export const CatalogPage = () => {
 
 
   const filteredCourses = courses.filter(c => {
+    if (deletedCourseIds.includes(c.id)) return false;
+
     // Respect standardized archiving levels:
     // Level 0: Active, visible for all
     // Level 1: Invisible for new selection (can't select, doesn't appear unless already in bookmarks)

@@ -399,6 +399,12 @@ CRITICAL RULES:
       console.warn(`[TASK RUNNER DB WARNING] Failed to fetch/merge latest description before completion:`, e);
     }
     finalExtra.completedAt = new Date().toISOString();
+    // Persist the computed slug for generation tasks so the admin dashboard can link directly
+    if (nextTask.target !== 'revision' && !nextTask.name.toLowerCase().includes('translation') && !nextTask.target?.includes('translate') && nextTask.target !== 'ui_translation') {
+      if (!finalExtra.slug) {
+        finalExtra.slug = cleanPathSegment(nextTask.name);
+      }
+    }
 
     try {
       const { error: compError } = await supabase

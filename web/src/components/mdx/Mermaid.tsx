@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, Maximize2, Minimize2, ZoomIn, ZoomOut, Move, X, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
@@ -344,6 +345,12 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
+  const dragMoveAmount = useRef(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Theme detector MutationObserver
   useEffect(() => {
@@ -636,14 +643,20 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     if (!isFullscreen) return;
     setIsDragging(true);
     dragStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    dragMoveAmount.current = 0;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !isFullscreen) return;
-    setOffset({
-      x: e.clientX - dragStart.current.x,
-      y: e.clientY - dragStart.current.y
-    });
+    if (!isFullscreen) return;
+    if (isDragging) {
+      const dx = (e.clientX - offset.x) - dragStart.current.x;
+      const dy = (e.clientY - offset.y) - dragStart.current.y;
+      dragMoveAmount.current += Math.sqrt(dx * dx + dy * dy);
+      setOffset({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y
+      });
+    }
   };
 
   const handleMouseUp = () => {
@@ -653,9 +666,22 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const handleWheel = (e: React.WheelEvent) => {
     if (!isFullscreen) return;
     e.preventDefault();
-    const zoomFactor = 1.1;
+    
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    const zoomFactor = 1.15;
     const nextScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
-    setScale(Math.max(0.1, Math.min(10, nextScale)));
+    const boundedScale = Math.max(0.1, Math.min(10, nextScale));
+    
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    
+    const nextOffsetX = offset.x + (clientX - cx - offset.x) * (1 - boundedScale / scale);
+    const nextOffsetY = offset.y + (clientY - cy - offset.y) * (1 - boundedScale / scale);
+    
+    setScale(boundedScale);
+    setOffset({ x: nextOffsetX, y: nextOffsetY });
   };
 
   const resetPanZoom = () => {
@@ -663,7 +689,107 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     setOffset({ x: 0, y: 0 });
   };
 
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    if (dragMoveAmount.current >= 5) return;
+    
+    const target = e.target as HTMLElement;
+    const isCanvasBg = target.classList.contains('canvas-bg') || target === e.currentTarget;
+    const isRootSvg = target.tagName.toLowerCase() === 'svg';
+    
+    if (isCanvasBg || isRootSvg) {
+      setIsFullscreen(false);
+    }
+  };
+
   // Extracted and moved useEffects above early returns
+
+  const modalContent = isFullscreen && (
+    <div 
+      className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
+      onWheel={handleWheel}
+    >
+      {/* Sleek Floating Top Right Close Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsFullscreen(false);
+        }}
+        className="absolute top-6 right-6 p-3 rounded-full bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-30 shadow-2xl cursor-pointer"
+        title={language === 'FR' ? "Fermer (Échap)" : "Close (Esc)"}
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Floating Controls (Bottom Center) */}
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-slate-900/90 border border-slate-800/85 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-5 z-20 select-none"
+      >
+        <div className="flex flex-col text-left border-r border-slate-800/80 pr-5">
+          <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest">
+            {language === 'FR' ? "Carte Cognitive" : "Cognitive Map"}
+          </span>
+          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+            {language === 'FR' ? "Glisser pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setScale(prev => Math.min(10, prev * 1.25));
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Zoomer" : "Zoom In"}
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setScale(prev => Math.max(0.1, prev / 1.25));
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              resetPanZoom();
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Réinitialiser" : "Reset View"}
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Map canvas */}
+      <div 
+        className={`w-full h-full flex items-center justify-center overflow-hidden canvas-bg ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onClick={handleCanvasClick}
+      >
+        <div 
+          style={{
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+            willChange: 'transform'
+          }}
+          className="max-w-[95vw] max-h-[90vh] flex items-center justify-center pointer-events-auto"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className={`${getContainerClassName()} relative group/mermaid`}>
@@ -751,7 +877,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           setIsFullscreen(true);
           resetPanZoom();
         }}
-        className="absolute top-3 right-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all opacity-100 md:opacity-0 md:group-hover/mermaid:opacity-100 z-10 cursor-pointer shadow-md"
+        className="absolute top-3 right-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-30 cursor-pointer shadow-md opacity-100"
         title={language === 'FR' ? "Plein écran" : "Fullscreen"}
       >
         <Maximize2 className="w-4 h-4" />
@@ -763,81 +889,9 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         dangerouslySetInnerHTML={{ __html: svg }}
       />
 
-      {isFullscreen && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
-          onWheel={handleWheel}
-        >
-          {/* Top toolbar */}
-          <div className="absolute top-0 left-0 right-0 p-4 bg-slate-900/60 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-20">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Move className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <h4 className="text-white text-xs font-black uppercase tracking-wider">
-                  {language === 'FR' ? "Explorateur de Carte Cognitive" : "Cognitive Map Explorer"}
-                </h4>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                  {language === 'FR' ? "Glissez pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
-                </p>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setScale(prev => Math.min(10, prev * 1.2))}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
-                title={language === 'FR' ? "Zoomer" : "Zoom In"}
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setScale(prev => Math.max(0.1, prev / 1.2))}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
-                title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <button
-                onClick={resetPanZoom}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-all cursor-pointer"
-                title={language === 'FR' ? "Réinitialiser" : "Reset View"}
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setIsFullscreen(false)}
-                className="p-2 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white rounded-lg border border-rose-500/30 transition-all cursor-pointer ml-4"
-                title={language === 'FR' ? "Fermer" : "Close (Esc)"}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Map canvas */}
-          <div 
-            className={`w-full h-full flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            <div 
-              style={{
-                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                transformOrigin: 'center center',
-                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
-                willChange: 'transform'
-              }}
-              className="max-w-[95vw] max-h-[90vh] flex items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
-          </div>
-        </div>
-      )}
+      {mounted && isFullscreen && typeof document !== 'undefined'
+        ? createPortal(modalContent, document.body)
+        : null}
     </div>
   );
 };

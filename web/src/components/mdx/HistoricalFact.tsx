@@ -10,10 +10,18 @@ interface HistoricalEventProps {
   children: React.ReactNode;
 }
 
+/**
+ * HistoricalEvent — Pedagogical block callout.
+ * Displays a landmark historical milestone, foundational experiment,
+ * or crucial historical fact in a styled teal encadré.
+ *
+ * Different from the <Event> inline overlay (which wraps entity names
+ * with a Wikipedia hover card). This is a standalone block component.
+ */
 export const HistoricalEvent = ({ title, date, children }: HistoricalEventProps) => {
   const { language } = useLanguage();
   
-  const defaultHeaderLabels: Record<string, string> = {
+  const headerLabels: Record<string, string> = {
     fr: "Événement Historique",
     en: "Historical Event",
     es: "Evento Histórico",
@@ -22,7 +30,7 @@ export const HistoricalEvent = ({ title, date, children }: HistoricalEventProps)
   };
   
   const normalizedLang = (language || 'en').toLowerCase().split('-')[0];
-  const displayHeaderLabel = defaultHeaderLabels[normalizedLang] || defaultHeaderLabels['en'];
+  const displayHeaderLabel = headerLabels[normalizedLang] || headerLabels['en'];
 
   return (
     <div className="my-6 p-5 bg-teal-500/5 dark:bg-teal-500/[0.02] border-l-4 border-l-teal-500 border border-slate-200 dark:border-slate-800 rounded-r-2xl shadow-sm hover:shadow-md transition-all duration-300">
@@ -41,12 +49,17 @@ export const HistoricalEvent = ({ title, date, children }: HistoricalEventProps)
           </span>
         )}
       </div>
-      <h5 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-1 pl-1">
-        {title}
-      </h5>
+      {title && (
+        <h5 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-1 pl-1">
+          {title}
+        </h5>
+      )}
       <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 pl-1">
         {children}
       </div>
     </div>
   );
 };
+
+/** Backward-compatible alias — was previously named HistoricalFact in prompts */
+export const HistoricalFact = HistoricalEvent;

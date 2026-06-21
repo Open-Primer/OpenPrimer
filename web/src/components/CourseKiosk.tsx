@@ -370,7 +370,10 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                     return (
                       <button
                         key={item.id}
-                        onClick={() => onCourseClick(item)}
+                        onClick={() => {
+                          console.log("[Client Click] Course button clicked in Kiosk:", item.title || item.slug);
+                          onCourseClick(item);
+                        }}
                         type="button"
                         className="text-left w-full h-full cursor-pointer bg-transparent border-none p-0 outline-none block"
                       >

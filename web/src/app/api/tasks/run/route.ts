@@ -35,9 +35,9 @@ export async function POST(request: Request) {
     }
   }
 
-  // Enforce CRON_SECRET check in production, or if CRON_SECRET is configured
+  // Enforce authorization check in production, or if CRON_SECRET is configured
   if (isProd || cronSecret) {
-    if (!cronSecret || !isAuthorized) {
+    if (!isAuthorized) {
       console.warn('[SECURITY] Unauthorized access attempt to tasks endpoint.');
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }

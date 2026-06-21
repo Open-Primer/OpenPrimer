@@ -26,8 +26,21 @@ test.describe('Essay Evaluation Upload & Grading Test', () => {
   });
 
   test('should allow switching to file upload tab, dropping a file, and submitting for grading', async ({ page }) => {
+    // Intercept evaluate API to return mock grade
+    await page.route('**/api/tutor/evaluate', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          grade: '16/20',
+          feedback: 'Excellent travail. Les concepts clés sont bien compris et illustrés par le schéma.'
+        })
+      });
+    });
+
     // Navigate directly to the final lesson of droit_des_entreprises
-    await page.goto(`${BASE_URL}/fr/l1/droit_des_entreprises/difficultes-procedures-collectives`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/fr/l1/droit_des_entreprises/difficultes-procedures-collectives`);
     
     // Scroll down to the essay evaluation section
     const essayHeading = page.locator('h3:has-text("Évaluation Rédactionnelle")');
@@ -36,9 +49,7 @@ test.describe('Essay Evaluation Upload & Grading Test', () => {
 
     // Check if evaluation is not started yet and click "Démarrer l'Évaluation"
     const startButton = page.locator('button:has-text("Démarrer l\'Évaluation")');
-    if (await startButton.isVisible()) {
-      await startButton.click();
-    }
+    await startButton.click();
 
     // Verify Tab buttons are present
     const writeTab = page.locator('button:has-text("Rédiger")');

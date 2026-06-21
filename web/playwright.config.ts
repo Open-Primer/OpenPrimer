@@ -27,5 +27,9 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      PLAYWRIGHT_TEST: 'true',
+      NEXT_PUBLIC_PLAYWRIGHT_TEST: 'true',
+    },
   },
 });

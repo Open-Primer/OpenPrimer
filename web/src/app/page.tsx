@@ -865,7 +865,11 @@ export default function Home() {
             lang={lang} 
             title={s.popular_curricula}
             subtitle={lang.toUpperCase() === 'FR' ? "Découvrez nos cursus universitaires et cours interactifs d'élite" : "Explore our elite university curricula and interactive courses"}
-            onCourseClick={(course) => router.push(`/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`)}
+            onCourseClick={(course) => {
+              const targetPath = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
+              console.log("[Client Navigation] Course clicked in kiosk. Navigating to:", targetPath);
+              window.location.href = targetPath;
+            }}
           />
         </div>
 

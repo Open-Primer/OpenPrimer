@@ -8,7 +8,7 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
-import { HistoricalPerson, FictionalCharacter, Location, EntityLink, HistoricalEventLink, Artwork, HistoricalEvent } from './HistoricalPerson';
+import { RealPerson, HistoricalPerson, FictionalCharacter, Location, EntityLink, EventLink, HistoricalEventLink, EvenementHistorique, Artwork } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
@@ -37,6 +37,7 @@ import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, B
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
 import { HistoricalAnecdote } from './HistoricalAnecdote';
+import { HistoricalEvent as HistoricalFactBlock, HistoricalFact } from './HistoricalFact';
 
 import { ScientificMethod } from './ScientificMethod';
 import { WhatsNext } from './WhatsNext';
@@ -206,12 +207,51 @@ const PreCodeInterceptor = (props: any) => {
   return <pre {...props} />;
 };
 
+const isExistingArtwork = (src: string, label: string): boolean => {
+  const text = `${src} ${label}`.toLowerCase();
+  const decoded = decodeURIComponent(text);
+  
+  const keywords = [
+    'peinture', 'painting', 'tableau', 'fresco', 'fresque', 'oil on canvas', 'huile sur toile', 'watercolor', 'aquarelle',
+    'sculpture', 'statue', 'bust', 'buste', 'marble', 'marbre', 'bronze',
+    'photo', 'photograph', 'photographie', 'daguerreotype',
+    'mona lisa', 'joconde', 'starry night', 'nuit étoilée', 'nuit etoilee', 'ménines', 'menines', 'guernica', 
+    'last supper', 'cène', 'cene', 'david', 'venus de milo', 'penseur', 'thinker', 'laocoon', 'nefertiti', 'scream', 'cri',
+    'birth of venus', 'naissance de vénus', 'naissance de venus', 'girl with a pearl earring', 'jeune fille à la perle',
+    'liberté guidant le peuple', 'liberty leading the people', 'le baiser', 'the kiss',
+    'da vinci', 'leonardo da vinci', 'vincent van gogh', 'van gogh', 'michelangelo', 'michel-ange', 'picasso', 
+    'velázquez', 'velazquez', 'rembrandt', 'vermeer', 'claude monet', 'monet', 'edouard manet', 'manet', 
+    'auguste renoir', 'renoir', 'edgar degas', 'degas', 'salvador dali', 'dali', 'rene magritte', 'magritte', 
+    'gustav klimt', 'klimt', 'edvard munch', 'munch', 'auguste rodin', 'rodin', 'botticelli'
+  ];
+  
+  return keywords.some(kw => decoded.includes(kw));
+};
+
 const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
   const [failed, setFailed] = React.useState(false);
   React.useEffect(() => {
     setFailed(false);
   }, [src]);
+
   if (failed) return null;
+
+  if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '')) {
+    return (
+      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200">
+        <div className="flex items-center gap-2 mb-2 select-none">
+          <AlertTriangle className="w-4 h-4 text-amber-500" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+            Intégrité Pédagogique
+          </span>
+        </div>
+        <div className="text-[13px] leading-relaxed font-medium italic">
+          La génération par IA de l'œuvre d'art "{alt || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300">
       <img 
@@ -1250,14 +1290,18 @@ const components = {
   Summary,
   SelfEval,
   SelfAssessment,
-  HistoricalPerson,
-  FictionalCharacter,
+  // ─── Entity Overlays (inline hover cards) ────────────────────────────────
+  RealPerson,                            // Canonical: real/existing person
+  HistoricalPerson,                      // Backward-compat alias for RealPerson
+  PersonnageHistorique: RealPerson,      // French alias
+  FictionalCharacter,                    // Fictional/mythological character
+  PersonnageFictif: FictionalCharacter,  // French alias
   Location,
-  Place: Location, // alias for Place
-  HistoricalEvent,
-  HistoricalEventLink,
-  EvenementHistorique: HistoricalEvent,
-  ÉvénementHistorique: HistoricalEvent,
+  Place: Location,
+  Event: EventLink,                      // Canonical: event entity overlay
+  HistoricalEventLink,                   // Backward-compat alias
+  EvenementHistorique,                   // French alias
+  ÉvénementHistorique: EvenementHistorique,
   EntityLink,
   Artwork,
   EssayEvaluation,
@@ -1302,8 +1346,10 @@ const components = {
   LeSaviezVous: DidYouKnow,
   HistoricalAnecdote,
   AnecdoteHistorique: HistoricalAnecdote,
-  HistoricalFact: HistoricalEvent,
-  FaitHistorique: HistoricalEvent,
+  // ─── Pedagogical Block Components ─────────────────────────────────────────
+  HistoricalEvent: HistoricalFactBlock,  // Canonical: historical event block callout
+  HistoricalFact,                        // Backward-compat alias
+  FaitHistorique: HistoricalFactBlock,   // French alias
   ScientificMethod,
   MethodeScientifique: ScientificMethod,
   WhatsNext,
@@ -1340,6 +1386,27 @@ const components = {
       );
     }
     return <a {...props} />;
+  },
+
+  img: (props: any) => {
+    const src = props.src || '';
+    const alt = props.alt || '';
+    if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt)) {
+      return (
+        <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200">
+          <div className="flex items-center gap-2 mb-2 select-none">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+              Intégrité Pédagogique
+            </span>
+          </div>
+          <div className="text-[13px] leading-relaxed font-medium italic">
+            La génération par IA de l'œuvre d'art "{alt}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.
+          </div>
+        </div>
+      );
+    }
+    return <img className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50 my-8" {...props} />;
   },
 
   // Overriding standard table to render dynamic graphs on toggle
@@ -1750,7 +1817,7 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 10. Replace inline named components with text formatting
-  clean = clean.replace(/<(?:HistoricalPerson|HistoricalEvent|HistoricalEventLink|Location|Place|EvenementHistorique|ÉvénementHistorique)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '**$1**');
+  clean = clean.replace(/<(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '**$1**');
   clean = clean.replace(/<Artwork\b[^>]*?>([\s\S]*?)<\/Artwork>/gi, '*$1*');
   
   // Strip remaining custom tag structures but preserve their content

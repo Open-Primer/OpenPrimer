@@ -1800,7 +1800,9 @@ const isSandboxModeActive = typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
   window.localStorage.getItem('op_allow_sandbox') === 'true';
 
-if (isDatabaseConfigured && !isSandboxModeActive) {
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction || (isDatabaseConfigured && !isSandboxModeActive)) {
   // 100% Direct Database Mode: No cached mocks or preseeded local storages
   mockCourses = [];
   achievementsList = [];
@@ -1816,6 +1818,31 @@ if (isDatabaseConfigured && !isSandboxModeActive) {
   searchHistoryList = [];
   reportClusters = [];
   availableLanguagesList = [];
+
+  if (typeof window !== 'undefined') {
+    const keysToPurge = [
+      'openprimer_courses',
+      'openprimer_users',
+      'openprimer_achievements',
+      'openprimer_tutor_personalities',
+      'openprimer_translation_requests',
+      'openprimer_refused_courses',
+      'openprimer_refused_translations',
+      'openprimer_refused_revisions',
+      'openprimer_course_feedbacks',
+      'openprimer_agent_metrics',
+      'openprimer_languages',
+      'openprimer_course_completions',
+      'openprimer_search_history',
+      'openprimer_reports',
+      'openprimer_uvs'
+    ];
+    keysToPurge.forEach(key => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {}
+    });
+  }
 }
 export const isConnectionFailure = (error: any): boolean => {
   if (!error) return false;
@@ -1919,8 +1946,16 @@ if (isBrowser) {
     const defaultContactFeedbacks = initialContactFeedbacks;
 
     const rawStoredCourses = window.localStorage.getItem('openprimer_courses');
+    let isPolluted = false;
+    if (rawStoredCourses) {
+      try {
+        const parsed = JSON.parse(rawStoredCourses);
+        isPolluted = Array.isArray(parsed) && parsed.some(c => c.id >= 100);
+      } catch (e) {}
+    }
+
     let mergedCourses: MockCourse[] = [];
-    if (!rawStoredCourses) {
+    if (!rawStoredCourses || isPolluted) {
       // First-time seeding: use the filtered default courses list
       const filteredDefaults = defaultCourses.filter((c: any) => {
         const slug = (c.slug || '').toLowerCase();
@@ -2014,6 +2049,8 @@ export const authService = {
 export let dynamicOffline = false;
 
 export const isSandboxFallbackAllowed = (): boolean => {
+  if (process.env.NODE_ENV === 'production') return false;
+  if (process.env.PLAYWRIGHT_TEST === 'true' || process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === 'true') return true;
   if (typeof window !== 'undefined') {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isLocalhost) return false;
@@ -2471,6 +2508,8 @@ export const addCourseTombstone = (courseId: number) => {
       tombstones.push(courseId);
       window.localStorage.setItem('openprimer_deleted_courses', JSON.stringify(tombstones));
     }
+    // Dispatch a custom event to notify current window immediately
+    window.dispatchEvent(new CustomEvent('openprimer_course_purged', { detail: { courseId } }));
   } catch (e) {
     console.error('Error adding course tombstone:', e);
   }
@@ -2782,11 +2821,12 @@ import { supabaseDatabaseProvider } from './db/supabase-provider';
 
 export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
   get(target, prop, receiver) {
+    const isProduction = process.env.NODE_ENV === 'production';
     const isLocalhost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    const sandboxAllowed = isSandboxFallbackAllowed();
-    const useSupabase = isDatabaseConfigured && !isOffline && (!isLocalhost || !dynamicOffline || !sandboxAllowed);
+     const sandboxAllowed = isSandboxFallbackAllowed();
+    const useSupabase = isProduction || (isDatabaseConfigured && !isOffline && !sandboxAllowed && (!isLocalhost || !dynamicOffline));
     const activeProvider = useSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
 
     const value = Reflect.get(activeProvider, prop, receiver);
