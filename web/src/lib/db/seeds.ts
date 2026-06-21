@@ -19,6 +19,8 @@ import {
   AgentMetric
 } from './types';
 
+export const DEFAULT_MOCK_PASSWORD_HASH = '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80';
+
 // 1. POPULATED SEED DATA - 10+ RICH USER ACCOUNTS WITH ENGAGEMENT DATA
 export const users: UserProfile[] = [
   { 
@@ -1083,7 +1085,11 @@ export const initialLanguages: LanguageInfo[] = [
   { code: 'FR', flag: '🇫🇷', label: 'Français' },
   { code: 'ES', flag: '🇪🇸', label: 'Español' },
   { code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
-  { code: 'ZH', flag: '🇨🇳', label: '中文' }
+  { code: 'ZH', flag: '🇨🇳', label: '中文' },
+  { code: 'PT', flag: '🇧🇷', label: 'Português' },
+  { code: 'AR', flag: '🇸🇦', label: 'العربية' },
+  { code: 'HI', flag: '🇮🇳', label: 'हिन्दी' },
+  { code: 'UR', flag: '🇵🇰', label: 'اردو' }
 ];
 
 export const initialRefusedTranslations: RefusedTranslationEntry[] = [

@@ -12,3 +12,4 @@ paths = [
   '''web/src/lib/db\.ts''',
   '''web/src/lib/db/seeds\.ts'''
 ]
+

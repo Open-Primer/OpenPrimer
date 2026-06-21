@@ -184,7 +184,7 @@ if (isBrowser) {
       updatedUsers = true;
       return {
         ...u,
-        password: '832a760c' + '15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80'
+        password: seeds.DEFAULT_MOCK_PASSWORD_HASH
       };
     }
     return u;
