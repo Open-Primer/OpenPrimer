@@ -92,7 +92,75 @@ const ACCESSIBILITY_GUIDE = {
     key_admin: "Alt + A : 教务管理控制台",
     key_theme: "Alt + B : 一键切换阅读主题（深色、纸张、专注）",
     cognitive: "认知减负与专注主题",
-    cognitive_desc: "利用顶部导航栏的专属阅读主题。选择“纸张模式”享受温暖的书本纸张般对比度，或选择“专注模式”进入极致纯黑、过滤一切杂质的沉浸式界面。"
+    cognitive_desc: "利用顶部导航栏 of 阅读主题。选择“纸张模式”享受温暖的书本纸张般对比度，或选择“专注模式”进入极致纯黑、过滤一切杂质的沉浸式界面。"
+  },
+  PT: {
+    title: "Guia de Acessibilidade Radical",
+    subtitle: "Como navegar e utilizar o OpenPrimer com base nas suas necessidades específicas.",
+    visual: "Deficiências Visuais (Leitores de Tela & Zoom)",
+    visual_desc: "O OpenPrimer é construído com HTML5 semântico e recursos baseados apenas em SVG. Ao usar leitores de tela como NVDA ou VoiceOver, você pode navegar pelos cabeçalhos de forma lógica. As imagens supérfluas são substituídas por ícones sémanticos ou desenhos CSS puros.",
+    auditory: "Deficiências Auditivas (Indicadores Visuais)",
+    auditory_desc: "Toda notificação ou sinal auditivo tem um equivalente visual correspondente. A conquista de medalhas exibe cartões animados e avisos do banco de dados aparecem como alertas coloridos.",
+    keyboard: "Navegação por Teclado Avançada & Atalhos",
+    keyboard_desc: "Pressione 'Tab' para mover-se entre itens, destacados pelo nosso anel de foco de alto contraste. Use combinações de teclas Alt para saltar instantaneamente:",
+    key_home: "Alt + H : Retornar à página inicial",
+    key_catalog: "Alt + C : Navegar pelo catálogo de cursos",
+    key_settings: "Alt + P : Preferências de perfil e configurações",
+    key_admin: "Alt + A : Painel de administração de currículos",
+    key_theme: "Alt + B : Alternar modos de leitura (Escuro, Papel, Foco)",
+    cognitive: "Carga Cognitiva & Temas de Foco",
+    cognitive_desc: "Utilize temas de leitura na barra de navegação superior. Selecione 'Modo Papel' para leitura de alto contraste literário ou 'Modo Foco' para uma interface puramente preta livre de distrações."
+  },
+  AR: {
+    title: "دليل إمكانية الوصول الجذري",
+    subtitle: "كيفية التنقل واستخدام OpenPrimer بناءً على احتياجاتك المحددة.",
+    visual: "الإعاقات البصرية (قارئات الشاشة والتكبير)",
+    visual_desc: "تم بناء OpenPrimer باستخدام HTML5 الدلالي ومكونات SVG فقط. عند استخدام قارئات الشاشة مثل NVDA أو VoiceOver، يمكنك التنقل بين العناوين منطقياً. يتم استبدال الصور غير الضرورية بأيقونات دلالية أو رسومات CSS لتجنب الفوضى.",
+    auditory: "الإعاقات السمعية (المؤشرات البصرية)",
+    auditory_desc: "كل إخطار صوتي له معادل بصري. يظهر فتح الإنجازات في بطاقات متحركة منزلقة، وتعرض اتصالات قاعدة البيانات شارات تحذيرية مرئية.",
+    keyboard: "التنقل المتقدم بلوحة المفاتيح والاختصارات",
+    keyboard_desc: "اضغط على 'Tab' للتنقل بين العناصر، مميزة بحلقات التركيز عالية التباين. استخدم مفتاح Alt للوصول السريع:",
+    key_home: "Alt + H : العودة إلى الصفحة الرئيسية",
+    key_catalog: "Alt + C : تصفح دليل الدورات",
+    key_settings: "Alt + P : تفضيلات الملف الشخصي والإعدادات",
+    key_admin: "Alt + A : لوحة تحكم إدارة المناهج",
+    key_theme: "Alt + B : تبديل سمات القراءة (داكن، ورقي، تركيز)",
+    cognitive: "العبء المعرفي وسمات التركيز",
+    cognitive_desc: "استخدم سمات القراءة في شريط التنقل العلوي. اختر 'الوضع الورقي' للقراءة المريحة ذات التباين الشبيه بالكتاب، أو 'وضع التركيز' لواجهة سوداء خالية من التشتيت."
+  },
+  HI: {
+    title: "कट्टरपंथी सुगमता गाइड",
+    subtitle: "अपनी विशिष्ट आवश्यकताओं के आधार पर OpenPrimer को नेविगेट और उपयोग करने का तरीका।",
+    visual: "दृष्टि दोष (स्क्रीन रीडर और ज़ूम)",
+    visual_desc: "OpenPrimer को सिमेंटिक HTML5 और शुद्ध SVG ग्राफिक्स के साथ बनाया गया है। NVDA या VoiceOver जैसे स्क्रीन रीडर का उपयोग करते समय आप शीर्षकों को तार्किक रूप से नेविगेट कर सकते हैं। बिना लेबल वाली छवियों की अव्यवस्था से बचने के लिए छवियों को सिमेंटिक आइकन या शुद्ध CSS डिज़ाइनों से बदल दिया गया है।",
+    auditory: "श्रवण दोष (दृश्य संकेतक)",
+    auditory_desc: "हर ध्वनि सूचना का एक दृश्य विकल्प उपलब्ध है। सफलता की आवाज़ें एनिमेटेड कार्ड स्लाइड करती हैं, और डेटाबेस कनेक्शन विफलताएं चेतावनी संकेत दिखाती हैं।",
+    keyboard: "उन्नत कीबोर्ड नेविगेशन और शॉर्टकट",
+    keyboard_desc: "मदों के बीच जाने के लिए 'Tab' दबाएं, जो हमारे उच्च-कंट्रास्ट फोकस रिंग द्वारा हाइलाइट होते हैं। किसी भी स्थान पर तुरंत जाने के लिए Alt-कुंजी संयोजनों का उपयोग करें:",
+    key_home: "Alt + H : होम पेज पर लौटें",
+    key_catalog: "Alt + C : कोर्स कैटलॉग ब्राउज़ करें",
+    key_settings: "Alt + P : प्रोफ़ाइल प्राथमिकताएं और सेटिंग्स",
+    key_admin: "Alt + A : पाठ्यक्रम व्यवस्थापक कॉकपिट",
+    key_theme: "Alt + B : पठन थीम चक्र (डार्क, पेपर, फोकस)",
+    cognitive: "संज्ञानात्मक भार और फोकस थीम",
+    cognitive_desc: "शीर्ष नेविगेशन बार में पठन थीम का उपयोग करें। उच्च-कंट्रास्ट पठन के लिए 'पेपर मोड' या विचलित-मुक्त शुद्ध ब्लैक इंटरफ़ेस के लिए 'फोकस मोड' चुनें।"
+  },
+  UR: {
+    title: "بنیادی رسائی کا رہنما",
+    subtitle: "اپنی مخصوص ضروریات کی بنیاد پر OpenPrimer کو نیویگیٹ اور استعمال کرنے کا طریقہ۔",
+    visual: "بصری معذوری (اسکرین ریڈرز اور زوم)",
+    visual_desc: "OpenPrimer کو سیمنٹک HTML5 اور خالص SVG گرافکس کے ساتھ بنایا گیا ہے۔ اسکرین ریڈرز جیسے NVDA یا VoiceOver کا استعمال کرتے ہوئے آپ عنوانات کو منطقی طور پر نیویگیٹ کر سکتے ہیں۔ تصاویر کو سیمنٹک آئیکنز یا خالص CSS ڈیزائنز سے بدل دیا گیا ہے۔",
+    auditory: "سماعت کی معذوری (بصری اشارے)",
+    auditory_desc: "ہر آواز کی اطلاع کا ایک بصری متبادل ہے۔ کامیابی کے صوتی اثرات متحرک کارڈز سلائیڈ کرتے ہیں، اور ڈیٹا بیس کنکشن فیل ہونے پر وارننگ بیجز دکھائے جاتے ہیں۔",
+    keyboard: "جدید کی بورڈ نیویگیشن اور شارٹ کٹس",
+    keyboard_desc: "آئٹمز کے درمیان جانے کے لیے 'Tab' دبائیں، جو ہمارے ہائی کنٹراسٹ فوکس رنگ سے ہائی لائٹ ہوتے ہیں۔ کسی بھی جگہ فوری جانے کے لیے Alt شارٹ کٹ استعمال کریں:",
+    key_home: "Alt + H : ہوم پیج پر واپس جائیں",
+    key_catalog: "Alt + C : کورس کیٹلاگ دیکھیں",
+    key_settings: "Alt + P : پروفائل کی ترتیبات",
+    key_admin: "Alt + A : نصاب ایڈمن پینل",
+    key_theme: "Alt + B : پڑھنے کے تھیمز کو تبدیل کریں (ڈارک، پیپر، فوکس)",
+    cognitive: "علمی بوجھ اور فوکس تھیمز",
+    cognitive_desc: "اوپری نیویگیشن بار میں پڑھنے کے تھیمز استعمال کریں۔ ہائی کنٹراسٹ پڑھنے کے لیے 'پیپر موڈ' یا بغیر کسی خلفشار کے خالص بلیک انٹرفیس کے لیے 'فوکس موڈ' کا انتخاب کریں۔"
   }
 };
 
@@ -115,7 +183,9 @@ const ACC_TRANSLATIONS = {
     cb_protanopia: "Protanopia (Red-Green Deficient)",
     cb_deuteranopia: "Deuteranopia (Green-Red Deficient)",
     cb_tritanopia: "Tritanopia (Blue-Yellow Deficient)",
-    cb_achromatopsia: "Achromatopsia (Total Monochrome)"
+    cb_achromatopsia: "Achromatopsia (Total Monochrome)",
+    extend_time: "Extend Assessment Time Limits",
+    extend_time_desc: "Doubles the allocated time limit for summative module validations and quizzes to accommodate cognitive needs."
   },
   FR: {
     section_title: "Configuration Active de l'Accessibilité",
@@ -135,7 +205,9 @@ const ACC_TRANSLATIONS = {
     cb_protanopia: "Protanopie (Déficience Rouge-Vert)",
     cb_deuteranopia: "Deutéranopie (Déficience Vert-Rouge)",
     cb_tritanopia: "Tritanopie (Déficience Bleu-Jaune)",
-    cb_achromatopsia: "Achromatopsie (Monochrome Total)"
+    cb_achromatopsia: "Achromatopsie (Monochrome Total)",
+    extend_time: "Prolonger le Temps des Évaluations",
+    extend_time_desc: "Double le temps alloué pour les examens et quiz afin de s'adapter aux besoins spécifiques."
   },
   ES: {
     section_title: "Configuración Activa de Accesibilidad",
@@ -155,7 +227,9 @@ const ACC_TRANSLATIONS = {
     cb_protanopia: "Protanopía (Deficiencia Rojo-Verde)",
     cb_deuteranopia: "Deuteranopía (Deficiencia Verde-Rojo)",
     cb_tritanopia: "Tritanopía (Deficiencia Azul-Amarillo)",
-    cb_achromatopsia: "Acromatopsia (Monocromo Total)"
+    cb_achromatopsia: "Acromatopsia (Monocromo Total)",
+    extend_time: "Ampliar el Tiempo de Evaluación",
+    extend_time_desc: "Duplica el límite de tiempo asignado para cuestionarios y validaciones sumativas de módulos."
   },
   DE: {
     section_title: "Aktive Barrierefreiheit-Konfiguration",
@@ -175,7 +249,9 @@ const ACC_TRANSLATIONS = {
     cb_protanopia: "Protanopie (Rot-Grün-Schwäche)",
     cb_deuteranopia: "Deuteranopie (Grün-Rot-Schwäche)",
     cb_tritanopia: "Tritanopie (Blau-Gelb-Schwäche)",
-    cb_achromatopsia: "Achromatopsie (Vollständige Monochromie)"
+    cb_achromatopsia: "Achromatopsie (Vollständige Monochromie)",
+    extend_time: "Bewertungszeitlimits verlängern",
+    extend_time_desc: "Verdoppelt das Zeitlimit für summative Modulvalidierungen und Quizzes zur kognitiven Unterstützung."
   },
   ZH: {
     section_title: "无障碍功能主动配置",
@@ -195,7 +271,97 @@ const ACC_TRANSLATIONS = {
     cb_protanopia: "红色盲 (红色弱/绿色弱偏斜)",
     cb_deuteranopia: "绿色盲 (绿色弱/红色弱偏斜)",
     cb_tritanopia: "蓝色盲 (蓝色/黄色偏斜)",
-    cb_achromatopsia: "全色盲 (极致黑白单色)"
+    cb_achromatopsia: "全色盲 (极致黑白单色)",
+    extend_time: "延长评估时间限制",
+    extend_time_desc: "将总结性模块验证和测验的分配时间限制延长一倍，以适应认知需要。"
+  },
+  PT: {
+    section_title: "Configuração de Acessibilidade Ativa",
+    reduce_motion: "Reduzir Movimento da Interface",
+    reduce_motion_desc: "Desativa todas as transições e animações de movimento da interface.",
+    dyslexia: "Layout Amigável para Dislexia",
+    dyslexia_desc: "Substitui as fontes por uma fonte altamente legível e aumenta o espaçamento das palavras.",
+    visual_ctrl: "Controles de Leitura Precisos",
+    visual_ctrl_desc: "Aumenta o tamanho base do texto acadêmico para melhor visualização.",
+    tutor_toggle: "Ativar Tutor de IA",
+    tutor_toggle_desc: "Exibe o ícone flutuante do Tutor de IA nas páginas para suporte de estudos.",
+    tts_toggle: "Ativar Leitor de Áudio (TTS)",
+    tts_toggle_desc: "Exibe o controle de reprodução de voz na parte inferior para leitura em voz alta.",
+    colorblind: "Filtros Temáticos para Daltonismo",
+    colorblind_desc: "Selecione um filtro de correção de cor calibrado cientificamente.",
+    cb_none: "Nenhum (Cores Padrão)",
+    cb_protanopia: "Protanopia (Deficiência de Vermelho)",
+    cb_deuteranopia: "Deuteranopia (Deficiência de Verde)",
+    cb_tritanopia: "Tritanopia (Deficiência de Azul)",
+    cb_achromatopsia: "Acromatopsia (Monocromático Total)",
+    extend_time: "Prolongar Tempo de Avaliação",
+    extend_time_desc: "Duplica o limite de tempo para questionários e avaliações cognitivas."
+  },
+  AR: {
+    section_title: "إعدادات إمكانية الوصول النشطة",
+    reduce_motion: "تقليل حركة الواجهة",
+    reduce_motion_desc: "يعطل جميع الحركات والانتقالات وتأثيرات التمرير.",
+    dyslexia: "تخطيط مناسب لعسر القراءة",
+    dyslexia_desc: "يستبدل خطوط القراءة بخطوط عريضة ومتباعدة لتسهيل القراءة.",
+    visual_ctrl: "عناصر التحكم الدقيقة في القراءة",
+    visual_ctrl_desc: "يكبر حجم الخط وتكبير تباعد الأسطر لراحة بصرية.",
+    tutor_toggle: "تمكين معلم الذكاء الاصطناعي",
+    tutor_toggle_desc: "يظهر المعلم العائم للمساعدة في المناهج.",
+    tts_toggle: "تمكين تحويل النص إلى كلام (TTS)",
+    tts_toggle_desc: "يعرض مشغل الصوت لقراءة النصوص بصوت عالٍ.",
+    colorblind: "فلاتر عمى الألوان",
+    colorblind_desc: "اختر فلتراً علمياً معايراً لتصحيح الألوان وتحسين التباين.",
+    cb_none: "لا شيء (الألوان الافتراضية)",
+    cb_protanopia: "عمى اللون الأحمر (بروتانوبيا)",
+    cb_deuteranopia: "عمى اللون الأخضر (ديوترانوبيا)",
+    cb_tritanopia: "عمى اللون الأزرق (تريتانوبيا)",
+    cb_achromatopsia: "عمى الألوان التام (أحادية اللون)",
+    extend_time: "تمديد وقت التقييم",
+    extend_time_desc: "يضاعف الوقت المخصص للاختبارات والتقييمات التراكمية."
+  },
+  HI: {
+    section_title: "सक्रिय सुगमता कॉन्फ़िगरेशन",
+    reduce_motion: "इंटरफ़ेस मोशन कम करें",
+    reduce_motion_desc: "सभी बैकग्राउंड मोशन और एनिमेशन बंद करता है।",
+    dyslexia: "डिस्लेक्सिया-अनुकूल लेआउट",
+    dyslexia_desc: "पढ़ने वाले फ़ॉन्ट को स्पष्ट अक्षरों और अधिक स्पेस वाले फ़ॉन्ट से बदलता है।",
+    visual_ctrl: "पठन नियंत्रण सूक्ष्मता",
+    visual_ctrl_desc: "बेहतर दृश्य आराम के लिए मुख्य पाठ आकार को बढ़ाता है।",
+    tutor_toggle: "एआई ट्यूटर सक्षम करें",
+    tutor_toggle_desc: "सीखने में मदद के लिए स्क्रीन पर तैरता हुआ एआई ट्यूटर दिखाता है।",
+    tts_toggle: "पाठ-टू-भाषण (TTS) सक्षम करें",
+    tts_toggle_desc: "पाठ को ज़ोर से पढ़ने के लिए ऑडियो रीडर कंट्रोल दिखाता है।",
+    colorblind: "वर्णांधता थीम फ़िल्टर",
+    colorblind_desc: "कंट्रास्ट को बेहतर बनाने के लिए वैज्ञानिक रूप से कैलिब्रेटेड कलर फ़िल्टर चुनें।",
+    cb_none: "कोई नहीं (डिफ़ॉルト थीम रंग)",
+    cb_protanopia: "प्रोटानोपिया (लाल-हरा अंधता)",
+    cb_deuteranopia: "ड्यूटेरानोपिया (हरा-लाल अंधता)",
+    cb_tritanopia: "ट्रिटानोपिया (नीला-पीला अंधता)",
+    cb_achromatopsia: "एक्रोमैटोप्सिया (पूर्ण मोनोक्रोम)",
+    extend_time: "मूल्यांकन का समय बढ़ाएं",
+    extend_time_desc: "प्रश्नोत्तरी और मूल्यांकन के लिए आवंटित समय को दोगुना करें।"
+  },
+  UR: {
+    section_title: "فعال رسائی کی ترتیبات",
+    reduce_motion: "انٹرفیس حرکت کو کم کریں",
+    reduce_motion_desc: "تمام پس منظر کی حرکت اور متحرک تصاویر کو غیر فعال کرتا ہے۔",
+    dyslexia: "ڈیسلیکسیا دوستانہ لے آؤٹ",
+    dyslexia_desc: "پڑھنے والے فونٹس کو زیادہ واضح اور زیادہ فاصلے والے فونٹس سے بدلتا ہے۔",
+    visual_ctrl: "پڑھنے کے کنٹرول",
+    visual_ctrl_desc: "بہتر بصری آرام کے لیے تحریر کا سائز بڑھاتا ہے۔",
+    tutor_toggle: "AI ٹیوٹر فعال کریں",
+    tutor_toggle_desc: "پڑھنے میں مدد کے لیے فلوٹنگ AI ٹیوٹر آئیکن دکھاتا ہے۔",
+    tts_toggle: "ٹیکسٹ ٹو اسپیچ (TTS) فعال کریں",
+    tts_toggle_desc: "تحریر کو اونچی آواز میں پڑھنے کے لیے آڈیو ریڈر دکھاتا ہے۔",
+    colorblind: "کلر بلائنڈ تھیم فلٹرز",
+    colorblind_desc: "رنگوں اور کنٹراسٹ کو بہتر بنانے کے لیے سائنسی طور پر کیلیبریٹڈ فلٹر منتخب کریں۔",
+    cb_none: "کوئی نہیں (پہلے سے طے شدہ رنگ)",
+    cb_protanopia: "پروٹانوپیا (سرخ-سبز کی کمزوری)",
+    cb_deuteranopia: "ڈیوٹرانوپیا (سبز-سرخ کی کمزوری)",
+    cb_tritanopia: "ٹریٹانوپیا (نیلا-پیلا کی کمزوری)",
+    cb_achromatopsia: "ایکروماٹوپسیہ (مکمل رنگ اندھا پن)",
+    extend_time: "امتحان کا وقت بڑھائیں",
+    extend_time_desc: "ٹیسٹ اور جائزوں کے مختص وقت کو دوگنا کرتا ہے۔"
   }
 };
 
@@ -372,6 +538,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [tutorEnabled, setTutorEnabled] = useState(true);
   const [colorblindTheme, setColorblindTheme] = useState('none');
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [extendAssessmentTime, setExtendAssessmentTime] = useState(false);
   const [tutorType, setTutorType] = useState<'internal' | 'personal'>('internal');
   const [personalTutorProvider, setPersonalTutorProvider] = useState<'openai' | 'anthropic' | 'gemini'>('openai');
   const [personalTutorApiKey, setPersonalTutorApiKey] = useState('');
@@ -397,6 +564,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     tutorEnabled?: boolean;
     ttsEnabled?: boolean;
     colorblindTheme?: string;
+    extendAssessmentTime?: boolean;
     name?: string;
   }) => {
     if (typeof window === 'undefined') return;
@@ -416,6 +584,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           if (updates.tutorEnabled !== undefined) dbUpdates.tutor_enabled = updates.tutorEnabled;
           if (updates.ttsEnabled !== undefined) dbUpdates.tts_enabled = updates.ttsEnabled;
           if (updates.colorblindTheme !== undefined) dbUpdates.colorblind_theme = updates.colorblindTheme;
+          if (updates.extendAssessmentTime !== undefined) dbUpdates.extend_assessment_time = updates.extendAssessmentTime;
           if (updates.name !== undefined) dbUpdates.name = updates.name;
 
           const { error } = await supabase
@@ -454,6 +623,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         setTutorEnabled(p.tutorEnabled !== false);
         setTtsEnabled(p.ttsEnabled !== false);
         setColorblindTheme(p.colorblindTheme || 'none');
+        setExtendAssessmentTime(!!p.extendAssessmentTime);
         setTutorType(p.tutorType || 'internal');
         setPersonalTutorProvider(p.personalTutorProvider || 'openai');
         setPersonalTutorApiKey(p.personalTutorApiKey || '');
@@ -469,7 +639,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           import('@/lib/supabase').then(async ({ supabase }) => {
             const { data, error } = await supabase
               .from('profiles')
-              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, tutor_enabled, tts_enabled, colorblind_theme')
+              .select('name, reduce_motion, dyslexia_friendly, fine_visual_controls, tutor_enabled, tts_enabled, colorblind_theme, extend_assessment_time')
               .eq('id', userId)
               .single();
             if (data && !error) {
@@ -479,6 +649,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               setTutorEnabled(data.tutor_enabled !== false);
               setTtsEnabled(data.tts_enabled !== false);
               setColorblindTheme(data.colorblind_theme || 'none');
+              setExtendAssessmentTime(!!data.extend_assessment_time);
 
               let firstName = p.firstName || "";
               let lastName = p.lastName || "";
@@ -505,7 +676,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 fineVisualControls: !!data.fine_visual_controls,
                 tutorEnabled: data.tutor_enabled !== false,
                 ttsEnabled: data.tts_enabled !== false,
-                colorblindTheme: data.colorblind_theme || 'none'
+                colorblindTheme: data.colorblind_theme || 'none',
+                extendAssessmentTime: !!data.extend_assessment_time
               };
               localStorage.setItem('op_user_profile', JSON.stringify(updatedProfile));
               window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
@@ -582,6 +754,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       tutorEnabled: tutorEnabled,
       ttsEnabled: ttsEnabled,
       colorblindTheme: colorblindTheme,
+      extendAssessmentTime: extendAssessmentTime,
       tutorType: tutorType,
       personalTutorProvider: personalTutorProvider,
       personalTutorApiKey: personalTutorApiKey,
@@ -597,6 +770,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       tutorEnabled,
       ttsEnabled,
       colorblindTheme,
+      extendAssessmentTime,
       name: fName || lName ? `${fName} ${lName}`.trim() : ""
     });
 
@@ -1051,6 +1225,38 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         role="switch"
                       >
                         <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${ttsEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    {/* Extend Assessment Time Limits */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                      <div className="space-y-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                          {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.extend_time || ACC_TRANSLATIONS.EN.extend_time}
+                        </span>
+                        <p className="text-[11px] text-slate-550 leading-normal">
+                          {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.extend_time_desc || ACC_TRANSLATIONS.EN.extend_time_desc}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = !extendAssessmentTime;
+                          setExtendAssessmentTime(val);
+                          const savedProfile = localStorage.getItem('op_user_profile');
+                          if (savedProfile) {
+                            const p = JSON.parse(savedProfile);
+                            p.extendAssessmentTime = val;
+                            localStorage.setItem('op_user_profile', JSON.stringify(p));
+                            window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
+                            syncAccessibilityToCloud({ extendAssessmentTime: val });
+                          }
+                        }}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${extendAssessmentTime ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        aria-checked={extendAssessmentTime}
+                        role="switch"
+                      >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-all duration-300 ${extendAssessmentTime ? 'translate-x-6' : 'translate-x-0'}`} />
                       </button>
                     </div>
 

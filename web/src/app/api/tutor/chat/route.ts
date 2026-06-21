@@ -27,6 +27,12 @@ const chatSchema = z.object({
     provider: z.enum(['openai', 'anthropic', 'gemini']),
     apiKey: z.string().min(1),
     model: z.string().min(1)
+  }).optional(),
+  readingProgress: z.object({
+    textSnippet: z.string(),
+    index: z.number(),
+    total: z.number(),
+    tagName: z.string()
   }).optional()
 });
 
@@ -59,7 +65,8 @@ export async function POST(request: Request) {
       courseSubject,
       selfEvalPre,
       selfEvalPost,
-      personalTutor
+      personalTutor,
+      readingProgress
     } = parsed.data;
     const langUpper = (language || 'EN').toUpperCase();
 
@@ -124,6 +131,15 @@ export async function POST(request: Request) {
     const contextInstruction = pageContext
       ? `Context of the studied page:\n---\n${pageContext}\n---\n`
       : "";
+
+    // Build user reading progress context block if available
+    let readingProgressContext = "";
+    if (readingProgress) {
+      readingProgressContext = `\n--- STUDENT ACTIVE VIEWPORT / READING PROGRESS ---\n`;
+      readingProgressContext += `The student is currently viewing block #${readingProgress.index + 1} of ${readingProgress.total} in the lesson (element tag: <${readingProgress.tagName}>).\n`;
+      readingProgressContext += `The passage they are looking at or have just scrolled past contains this text snippet:\n"${readingProgress.textSnippet}"\n`;
+      readingProgressContext += `You can use this context to understand what part of the lesson they are reading, so that if they ask a context-dependent question like "What does this mean?" or "Explain this paragraph", you know exactly what they are referring to. Do not mention the paragraph numbers or index to the student unless they ask.\n---\n`;
+    }
 
     // Build Spaced Repetition (SRS) cognitive context block if available
     let srsDirective = "";
@@ -194,7 +210,7 @@ export async function POST(request: Request) {
       ? `The student's name is ${firstName}. Address them naturally and warmly using their first name occasionally.`
       : `The student's name is not provided. Use a professional, neutral tone.`;
 
-    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${levelContext}${srsDirective}${directive}\n\n${personalizationDirective}`;
+    const systemInstruction = `${systemPrompt}\n\n${contextInstruction}${levelContext}${readingProgressContext}${srsDirective}${directive}\n\n${personalizationDirective}`;
 
     const contents = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'model' : 'user',

@@ -91,9 +91,34 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     summative_single_attempt_warning: dict.summative_single_attempt_warning
   };
 
+  const [extendTime, setExtendTime] = useState(false);
+
+  useEffect(() => {
+    const handlePrefsChange = () => {
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          setExtendTime(!!p.extendAssessmentTime);
+        } catch {}
+      }
+    };
+    handlePrefsChange();
+    window.addEventListener('op_accessibility_preferences_changed', handlePrefsChange);
+    return () => window.removeEventListener('op_accessibility_preferences_changed', handlePrefsChange);
+  }, []);
+
+  const actualDurationLimit = durationLimit ? (extendTime ? durationLimit * 2 : durationLimit) : undefined;
+
   const [isStarted, setIsStarted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(durationLimit || 0);
+  const [timeLeft, setTimeLeft] = useState(actualDurationLimit || 0);
   const [isTimeUp, setIsTimeUp] = useState(false);
+
+  useEffect(() => {
+    if (!isStarted && actualDurationLimit) {
+      setTimeLeft(actualDurationLimit);
+    }
+  }, [actualDurationLimit, isStarted]);
 
   const [answer, setAnswer] = useState('');
   const [grade, setGrade] = useState<string | null>(null);
@@ -241,7 +266,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
 
   // Countdown timer logic
   useEffect(() => {
-    if (isStarted && durationLimit && timeLeft > 0 && !isReadOnly && !grade) {
+    if (isStarted && actualDurationLimit && timeLeft > 0 && !isReadOnly && !grade) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -274,12 +299,12 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
       if (timerRef.current) clearInterval(timerRef.current);
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     };
-  }, [isStarted, durationLimit, isReadOnly, grade]);
+  }, [isStarted, actualDurationLimit, isReadOnly, grade]);
 
   const handleStart = () => {
     setIsStarted(true);
-    if (durationLimit) {
-      setTimeLeft(durationLimit);
+    if (actualDurationLimit) {
+      setTimeLeft(actualDurationLimit);
     }
   };
 
@@ -537,7 +562,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     setIsTimeUp(false);
     setIsEvalBlocked(false);
     setIsOfflinePending(false);
-    setTimeLeft(durationLimit || 0);
+    setTimeLeft(actualDurationLimit || 0);
     setSubmissionType('text');
     setFileAttachment(null);
     setFilePreview(null);
@@ -591,10 +616,10 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
             </div>
-            {durationLimit && (
+            {actualDurationLimit && (
               <div className="flex items-start gap-2 text-amber-300 font-bold">
                 <span className="shrink-0">⏱</span>
-                <span>{t.time_limit} <strong>{formatDurationText(durationLimit)}</strong></span>
+                <span>{t.time_limit} <strong>{formatDurationText(actualDurationLimit)}</strong></span>
               </div>
             )}
             <div className="flex items-start gap-2">
@@ -609,7 +634,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           <p className="font-black text-slate-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
           <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
-            <li>{durationLimit ? t.time_focus.replace('{time}', formatDurationText(durationLimit)) : t.time_focus_default}</li>
+            <li>{actualDurationLimit ? t.time_focus.replace('{time}', formatDurationText(actualDurationLimit)) : t.time_focus_default}</li>
             {isFinal && (
               <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
                 <span>{t.summative_single_attempt_warning}</span>
@@ -632,13 +657,13 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
   }
 
   // 2. Active Writing State
-  const isTwentyPercentLeft = durationLimit ? (timeLeft <= durationLimit * 0.20) : false;
-  const isFifteenPercentLeft = durationLimit ? (timeLeft <= durationLimit * 0.15) : false;
+  const isTwentyPercentLeft = actualDurationLimit ? (timeLeft <= actualDurationLimit * 0.20) : false;
+  const isFifteenPercentLeft = actualDurationLimit ? (timeLeft <= actualDurationLimit * 0.15) : false;
 
   return (
     <div className="my-10 p-6 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6 relative">
       {/* Floating Sticky Countdown Corner */}
-      {isStarted && durationLimit && !isReadOnly && !grade && (
+      {isStarted && actualDurationLimit && !isReadOnly && !grade && (
         <div className={cn(
           "fixed top-6 right-6 z-50 px-4 py-2.5 rounded-2xl border shadow-2xl backdrop-blur-md flex items-center gap-2 transition-all duration-300 select-none scale-100 active:scale-95",
           isFifteenPercentLeft 
@@ -658,7 +683,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           <h3 className="text-xl font-bold text-violet-400">{t.title}</h3>
         </div>
 
-        {durationLimit && !grade && !isReadOnly && (
+        {actualDurationLimit && !grade && !isReadOnly && (
           <div className={cn(
             "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-colors border",
             isFifteenPercentLeft 
@@ -674,7 +699,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
       </div>
 
       {/* 20% & 15% Dynamic Alert Warners */}
-      {durationLimit && isTwentyPercentLeft && timeLeft > 0 && !isReadOnly && !grade && (
+      {actualDurationLimit && isTwentyPercentLeft && timeLeft > 0 && !isReadOnly && !grade && (
         <div className={cn(
           "p-4 rounded-2xl text-xs font-bold flex items-center gap-2.5 border transition-all duration-300",
           isFifteenPercentLeft 

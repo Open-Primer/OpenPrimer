@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MDXRemote } from 'next-mdx-remote';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { Quiz, Question, Option } from './Quiz';
@@ -1868,6 +1868,54 @@ interface MdxContentProps {
 
 export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxContentProps) {
   const { language } = useLanguage();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !containerRef.current) return;
+
+    const container = containerRef.current;
+    
+    // Select elements we want to track (excluding components wrappers that might double count)
+    // We observe headers, paragraphs, and list items, plus major widgets
+    const elementsToObserve = container.querySelectorAll(
+      'p, h1, h2, h3, h4, h5, h6, blockquote, li, pre, .custom-alert'
+    );
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const textSnippet = el.textContent?.trim().slice(0, 150) || '';
+          const index = Array.from(elementsToObserve).indexOf(el);
+          const total = elementsToObserve.length;
+
+          // Dispatch a custom event to notify other components (e.g. AITutorOverlay)
+          const progressEvent = new CustomEvent('op_reading_progress', {
+            detail: {
+              textSnippet,
+              index,
+              total,
+              tagName: el.tagName.toLowerCase(),
+              courseSlug,
+              lessonSlug
+            }
+          });
+          window.dispatchEvent(progressEvent);
+        }
+      });
+    }, {
+      root: null, // viewport
+      rootMargin: '-10% 0px -65% 0px', // Focused reading zone in the upper middle
+      threshold: 0.1
+    });
+
+    elementsToObserve.forEach(el => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [source, rawMdx, courseSlug, lessonSlug]);
+
   const runtimeComponents = React.useMemo(() => {
     // Create a client-side wrapper function component
     const wrapper = (props: any) => {
@@ -1896,14 +1944,16 @@ export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxConten
   }, []);
 
   return (
-    <MdxErrorBoundary 
-      fallback={rawMdx ? stripJsxAndRender(rawMdx) : undefined}
-      courseSlug={courseSlug}
-      lessonSlug={lessonSlug}
-      language={language}
-      rawMdx={rawMdx}
-    >
-      <MDXRemote {...source} components={runtimeComponents as any} />
-    </MdxErrorBoundary>
+    <div ref={containerRef} className="mdx-content-container">
+      <MdxErrorBoundary 
+        fallback={rawMdx ? stripJsxAndRender(rawMdx) : undefined}
+        courseSlug={courseSlug}
+        lessonSlug={lessonSlug}
+        language={language}
+        rawMdx={rawMdx}
+      >
+        <MDXRemote {...source} components={runtimeComponents as any} />
+      </MdxErrorBoundary>
+    </div>
   );
 }

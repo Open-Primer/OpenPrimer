@@ -375,6 +375,28 @@ export const AITutorOverlay = ({
   const [showTutorModal, setShowTutorModal] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
   const [input, setInput] = useState('');
+  const [readingProgress, setReadingProgress] = useState<{
+    textSnippet: string;
+    index: number;
+    total: number;
+    tagName: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleProgress = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setReadingProgress({
+          textSnippet: customEvent.detail.textSnippet,
+          index: customEvent.detail.index,
+          total: customEvent.detail.total,
+          tagName: customEvent.detail.tagName
+        });
+      }
+    };
+    window.addEventListener('op_reading_progress', handleProgress);
+    return () => window.removeEventListener('op_reading_progress', handleProgress);
+  }, []);
   const [persona, setPersona] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('op_active_tutor_personality') || 'socratic';
@@ -745,7 +767,8 @@ export const AITutorOverlay = ({
           courseSubject,
           selfEvalPre,
           selfEvalPost,
-          personalTutor: personalTutorParam
+          personalTutor: personalTutorParam,
+          readingProgress: readingProgress || undefined
         })
       });
 

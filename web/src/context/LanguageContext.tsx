@@ -139,6 +139,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Synchronize layout direction and language code
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const isRtl = ['AR', 'UR'].includes(language.toUpperCase());
+      document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+      document.documentElement.lang = language.toLowerCase();
+    }
+  }, [language]);
+
   return (
     <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, translationVersion }}>
       {children}
