@@ -129,15 +129,7 @@ export const mockDatabaseProvider: DatabaseService = {
       }
     }
 
-    let tombstoneIds: number[] = [];
-    if (typeof window !== 'undefined') {
-      try {
-        tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-      } catch (e) {}
-    }
-
     const computedCourses = getMockCourses()
-      .filter(c => !tombstoneIds.includes(c.id))
       .filter(c => !/test/i.test(c.slug))
       .map(c => {
       const feedbacks = getCourseFeedbacks().filter(f => {

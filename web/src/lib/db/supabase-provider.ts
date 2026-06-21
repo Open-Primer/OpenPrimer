@@ -301,15 +301,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           last_revision_date: c.last_revision_date || c.created_at || null
         };
 
-        let tombstoneIds: number[] = [];
-        if (typeof window !== 'undefined') {
-          try {
-            tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-          } catch (e) {}
-        }
-        if (tombstoneIds.includes(mapped.id)) {
-          return { data: null, error: null };
-        }
+
 
         // Option A (Strict Barrier) Filter for single curriculum syllabus fetch:
         if (mapped.isCurriculum) {
@@ -349,12 +341,6 @@ export const supabaseDatabaseProvider: DatabaseService = {
         .lt('archiving_level', 2);
       if (error) throw error;
       if (data) {
-        let tombstoneIds: number[] = [];
-        if (typeof window !== 'undefined') {
-          try {
-            tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-          } catch (e) {}
-        }
         const dbCourses: MockCourse[] = data.map((c: any) => ({
           id: c.id,
           title: c.title,
@@ -380,7 +366,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           translations: c.translations || {},
           version: c.version || 'v1.0.0',
           last_revision_date: c.last_revision_date || c.created_at || null
-        })).filter((c: MockCourse) => !/test/i.test(c.slug) && !tombstoneIds.includes(c.id));
+        })).filter((c: MockCourse) => !/test/i.test(c.slug));
 
         // Option A (Strict Barrier): Filter out Curriculums where any child course is not present/active
         const activeCourseIds = new Set(dbCourses.filter(c => !c.isCurriculum).map(c => c.id));
@@ -744,12 +730,6 @@ export const supabaseDatabaseProvider: DatabaseService = {
           .eq('is_active', true)
           .lt('archiving_level', 2);
         if (dbCoursesData) {
-          let tombstoneIds: number[] = [];
-          if (typeof window !== 'undefined') {
-            try {
-              tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-            } catch (e) {}
-          }
           const dbCourses = dbCoursesData.map((c: any) => ({
             id: c.id,
             title: c.title,
@@ -773,7 +753,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
             isCurriculum: c.is_curriculum || false,
             childCourses: c.child_courses || [],
             translations: c.translations || {}
-          })).filter((c: MockCourse) => !tombstoneIds.includes(c.id));
+          }));
           setMockCourses(dbCourses);
           courses = dbCourses;
         }

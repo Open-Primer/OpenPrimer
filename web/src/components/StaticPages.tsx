@@ -346,7 +346,7 @@ export const CatalogPage = () => {
   }, [lang]);
 
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [deletedCourseIds, setDeletedCourseIds] = useState<number[]>([]);
+
   const [courses, setCourses] = useState<any[]>([]);
   // isLoading starts true — stays true until the first DB response arrives.
   // This prevents the 'no courses found' flash on mount.
@@ -503,21 +503,16 @@ export const CatalogPage = () => {
       try { setBookmarks(JSON.parse(savedBookmarks)); } catch {}
     }
 
-    const savedDeleted = typeof window !== 'undefined' ? localStorage.getItem('openprimer_deleted_courses') : null;
-    if (savedDeleted) {
-      try { setDeletedCourseIds(JSON.parse(savedDeleted)); } catch {}
-    }
+
   }, [lang]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'openprimer_deleted_courses') {
+      if (e.key === 'openprimer_courses') {
         if (e.newValue) {
           try {
-            setDeletedCourseIds(JSON.parse(e.newValue));
+            setCourses(JSON.parse(e.newValue));
           } catch {}
-        } else {
-          setDeletedCourseIds([]);
         }
       }
     };
@@ -526,10 +521,7 @@ export const CatalogPage = () => {
       const customEvent = e as CustomEvent;
       const purgedId = customEvent.detail?.courseId;
       if (purgedId) {
-        setDeletedCourseIds(prev => {
-          if (prev.includes(purgedId)) return prev;
-          return [...prev, purgedId];
-        });
+        setCourses(prev => prev.filter(c => c.id !== purgedId));
       }
     };
 
@@ -625,7 +617,7 @@ export const CatalogPage = () => {
 
 
   const filteredCourses = courses.filter(c => {
-    if (deletedCourseIds.includes(c.id)) return false;
+
 
     // Respect standardized archiving levels:
     // Level 0: Active, visible for all

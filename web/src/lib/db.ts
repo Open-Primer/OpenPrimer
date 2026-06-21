@@ -1933,7 +1933,7 @@ if (isBrowser) {
     setLocalStorageItem('openprimer_users', users);
   }
   
-  if (!isDatabaseConfigured || isSandboxModeActive) {
+  if (!isProduction && (!isDatabaseConfigured || isSandboxModeActive)) {
     // Hybrid local sandbox mode with full mock preseeding
     const defaultCourses = mockCourses;
     const defaultSearchHistory = generatePreseededSearchHistory();
@@ -1975,11 +1975,7 @@ if (isBrowser) {
         mergedCourses = defaultCourses;
       }
     }
-    let tombstoneIds: number[] = [];
-    try {
-      tombstoneIds = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-    } catch (e) {}
-    mockCourses = mergedCourses.filter(c => !tombstoneIds.includes(c.id));
+    mockCourses = mergedCourses;
     setLocalStorageItem('openprimer_courses', mockCourses);
     
     reportClusters = getLocalStorageItem('openprimer_reports', reportClusters);
@@ -2502,28 +2498,12 @@ export const purgePipelineAndRequestsForCourseOrCurriculum = (courseId: number) 
 
 export const addCourseTombstone = (courseId: number) => {
   if (typeof window === 'undefined') return;
-  try {
-    const tombstones = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-    if (!tombstones.includes(courseId)) {
-      tombstones.push(courseId);
-      window.localStorage.setItem('openprimer_deleted_courses', JSON.stringify(tombstones));
-    }
-    // Dispatch a custom event to notify current window immediately
-    window.dispatchEvent(new CustomEvent('openprimer_course_purged', { detail: { courseId } }));
-  } catch (e) {
-    console.error('Error adding course tombstone:', e);
-  }
+  // Dispatch a custom event to notify current window immediately
+  window.dispatchEvent(new CustomEvent('openprimer_course_purged', { detail: { courseId } }));
 };
 
 export const removeCourseTombstone = (courseId: number) => {
-  if (typeof window === 'undefined') return;
-  try {
-    const tombstones = JSON.parse(window.localStorage.getItem('openprimer_deleted_courses') || '[]');
-    const filtered = tombstones.filter((id: number) => id !== courseId);
-    window.localStorage.setItem('openprimer_deleted_courses', JSON.stringify(filtered));
-  } catch (e) {
-    console.error('Error removing course tombstone:', e);
-  }
+  // Deprecated
 };
 export interface SystemParameter {
   key: string;

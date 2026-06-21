@@ -98,15 +98,15 @@ test.describe('OpenPrimer Anti-Corruption Archival Cascade Integration Suite', (
 
     // 2. Simulate course purge in another tab by modifying localStorage and dispatching storage event
     await page.evaluate(() => {
-      const deletedKey = 'openprimer_deleted_courses';
-      const currentDeleted = JSON.parse(localStorage.getItem(deletedKey) || '[]');
-      currentDeleted.push(1); // ID of Classical Mechanics
-      localStorage.setItem(deletedKey, JSON.stringify(currentDeleted));
+      const coursesKey = 'openprimer_courses';
+      const currentCourses = JSON.parse(localStorage.getItem(coursesKey) || '[]');
+      const updatedCourses = currentCourses.filter((c: any) => c.id !== 1); // ID of Classical Mechanics
+      localStorage.setItem(coursesKey, JSON.stringify(updatedCourses));
       
       // Dispatch storage event to simulate cross-tab updates
       window.dispatchEvent(new StorageEvent('storage', {
-        key: deletedKey,
-        newValue: JSON.stringify(currentDeleted)
+        key: coursesKey,
+        newValue: JSON.stringify(updatedCourses)
       }));
     });
 
