@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { BADGE_LIBRARY } from "@/lib/db";
@@ -122,17 +121,28 @@ const TOAST_TRANSLATIONS = {
 
 let lastDbFailureToastTime = 0;
 
+interface ToastItem {
+  toastId: number;
+  badge?: string;
+  name?: string;
+  description?: string;
+  icon?: string;
+  isGlitch?: boolean;
+}
+
 export function ClientProviders({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<any[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [dbFailed, setDbFailed] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [activeLang, setActiveLang] = useState("EN");
-  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedLang = localStorage.getItem("openprimer_lang") || "EN";
-      setActiveLang(savedLang.toUpperCase());
+      const lang = savedLang.toUpperCase();
+      setTimeout(() => {
+        setActiveLang(lang);
+      }, 0);
     }
 
     const applyTheme = (theme: string) => {
@@ -209,7 +219,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           if (p.colorblindTheme && p.colorblindTheme !== "none") {
             root.classList.add(`cb-${p.colorblindTheme}`);
           }
-        } catch (err) {}
+        } catch {}
       }
     };
 
@@ -218,11 +228,42 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     applyTheme(savedTheme);
     applyAccessibility();
 
+    // Sync user session, role, and enrolled courses to document cookies for Server Component checks
+    const syncCookies = () => {
+      if (typeof window === "undefined") return;
+      const profileStr = localStorage.getItem("op_user_profile");
+      const sessionActive = localStorage.getItem("op_session") === "true";
+      if (profileStr && sessionActive) {
+        try {
+          const p = JSON.parse(profileStr);
+          if (p.id) {
+            document.cookie = `op_user_id=${p.id}; path=/; max-age=31536000; SameSite=Lax`;
+            document.cookie = `op_user_role=${p.role || "student"}; path=/; max-age=31536000; SameSite=Lax`;
+            
+            // Also sync enrolled courses to cookie
+            const storage = localStorage.getItem("op_session") !== "false" ? localStorage : sessionStorage;
+            const enrolled = storage.getItem("op_enrolled_courses") || "[]";
+            document.cookie = `op_enrolled_courses=${enrolled}; path=/; max-age=31536000; SameSite=Lax`;
+          }
+        } catch {}
+      } else {
+        // Clear cookies
+        document.cookie = "op_user_id=; path=/; max-age=0; SameSite=Lax";
+        document.cookie = "op_user_role=; path=/; max-age=0; SameSite=Lax";
+        document.cookie = "op_enrolled_courses=; path=/; max-age=0; SameSite=Lax";
+      }
+    };
+    syncCookies();
+
     // Listen to theme changes dynamically
     const handleThemeChange = (e: Event) => {
       const customEvent = e as CustomEvent;
       applyTheme(customEvent.detail);
     };
+
+    window.addEventListener("op_auth_state_change", syncCookies);
+    window.addEventListener("op_auth_state_changed", syncCookies);
+    window.addEventListener("op_progress_updated", syncCookies);
 
     // Listen to real-time achievements unlocks
     const handleAchievement = (e: Event) => {
@@ -261,7 +302,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
             isAdmin = true;
           }
         }
-      } catch (err) {}
+      } catch {}
 
       if (!isAdmin) {
         return;
@@ -364,6 +405,9 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       window.removeEventListener("op_achievement_unlocked", handleAchievement);
       window.removeEventListener("op_database_connection_failure", handleDbFailure);
       window.removeEventListener("op_language_changed", handleLanguageChange);
+      window.removeEventListener("op_auth_state_change", syncCookies);
+      window.removeEventListener("op_auth_state_changed", syncCookies);
+      window.removeEventListener("op_progress_updated", syncCookies);
     };
   }, []);
 
@@ -380,7 +424,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           isAdmin = true;
         }
       }
-    } catch (e) {}
+    } catch {}
 
     if (!isAdmin) {
       const segments = window.location.pathname.split('/').filter(Boolean);

@@ -5,6 +5,48 @@ import { Lightbulb, ChevronDown, ChevronUp, CheckCircle2, XCircle, HelpCircle, A
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+const normalizeStringResponse = (str: string): string => {
+  if (!str) return '';
+  let clean = str
+    .toLowerCase()
+    // Remove LaTeX math formatting characters like $, _, {, }, ^, \, etc.
+    .replace(/[$_{}^\\#&%]/g, '')
+    // Replace french or other accents with standard equivalents
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  // If there are no obvious delimiters like commas, semicolons, arrows, or comparison operators,
+  // but there are spaces, let's normalize spaces to commas.
+  if (!/[;,><\-→]/.test(clean)) {
+    // Replace sequence of spaces with a comma
+    clean = clean.replace(/\s+/g, ',');
+  } else {
+    // Otherwise, normalize delimiters to commas and remove remaining spaces
+    clean = clean.replace(/[;><\-→]+/g, ',').replace(/\s+/g, '');
+  }
+
+  // Remove any trailing dot, trailing commas, or consecutive commas
+  return clean
+    .replace(/\.$/, '')
+    .replace(/,+/g, ',')
+    .replace(/^,|,$/g, '');
+};
+
+const getNoAttemptsMessage = (correctAnswer: string | number, language: string) => {
+  const l = language.toUpperCase();
+  if (l === 'FR') return `Incorrect. Plus de tentatives restantes. La bonne réponse était : ${correctAnswer}`;
+  if (l === 'ES') return `Incorrecto. No quedan intentos. La respuesta correcta era: ${correctAnswer}`;
+  if (l === 'DE') return `Falsch. Keine Versuche mehr. Die richtige Antwort war: ${correctAnswer}`;
+  if (l === 'ZH') return `不正确。没有剩余尝试机会。正确答案是：${correctAnswer}`;
+  return `Incorrect. No attempts left. The correct answer was: ${correctAnswer}`;
+};
 
 interface SolvedExerciseProps {
   title: string;
@@ -50,6 +92,30 @@ const isNodeEmpty = (node: React.ReactNode): boolean => {
   return false;
 };
 
+const isSolutionElement = (child: React.ReactElement): boolean => {
+  const type = child.type as any;
+  if (!type) return false;
+  return (
+    type.isSolution === true ||
+    type.displayName === 'Solution' ||
+    type.name === 'Solution' ||
+    type.mdxType === 'Solution'
+  );
+};
+
+const isInstructionElement = (child: React.ReactElement): boolean => {
+  const type = child.type as any;
+  if (!type) return false;
+  return (
+    type.isInstruction === true ||
+    type.displayName === 'Instruction' ||
+    type.name === 'Instruction' ||
+    type.mdxType === 'Instruction' ||
+    type.displayName === 'Instructions' ||
+    type.name === 'Instructions'
+  );
+};
+
 export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -76,8 +142,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
   if (children) {
     React.Children.toArray(children).forEach((child) => {
       if (React.isValidElement(child)) {
-        const typeName = (child.type as any)?.name || String(child.type);
-        if (typeName === 'Solution') {
+        if (isSolutionElement(child)) {
           solutionChild = (child as React.ReactElement<any>).props.children;
         } else {
           otherChildren.push(child);
@@ -164,6 +229,7 @@ interface UnsolvedExerciseProps {
   unit?: string;     // unit label e.g., "m/s"
   id?: string;
   title?: string;
+  choices?: string[];
 }
 
 export const UnsolvedExercise = ({
@@ -176,7 +242,8 @@ export const UnsolvedExercise = ({
   solution,
   unit,
   id,
-  title
+  title,
+  choices
 }: UnsolvedExerciseProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -203,10 +270,9 @@ export const UnsolvedExercise = ({
   if (children) {
     React.Children.toArray(children).forEach((child) => {
       if (React.isValidElement(child)) {
-        const typeName = (child.type as any)?.name || String(child.type);
-        if (typeName === 'Instruction' || typeName === 'Instructions') {
+        if (isInstructionElement(child)) {
           resolvedQuestion = resolvedQuestion || (child as React.ReactElement<any>).props.children;
-        } else if (typeName === 'Solution') {
+        } else if (isSolutionElement(child)) {
           solutionChild = (child as React.ReactElement<any>).props.children;
         } else {
           otherChildren.push(child);
@@ -277,8 +343,8 @@ export const UnsolvedExercise = ({
       // Numeric check with tolerance
       checkResult = Math.abs(numInput - numTarget) <= tolerance;
     } else {
-      // Direct string comparison
-      checkResult = cleanInput.toLowerCase() === targetVal.toLowerCase();
+      // Direct string comparison with ultra-permissive normalizer
+      checkResult = normalizeStringResponse(inputVal) === normalizeStringResponse(String(correctAnswer));
     }
 
     if (checkResult) {
@@ -331,7 +397,7 @@ export const UnsolvedExercise = ({
         )}
 
         {/* Input area */}
-        <div className={`flex flex-col ${isReflection ? 'space-y-4' : 'sm:flex-row items-center gap-3'}`}>
+        <div className={`flex flex-col ${isReflection || (choices && choices.length > 0) ? 'space-y-4' : 'sm:flex-row items-center gap-3'}`}>
           <div className="relative flex-1 w-full flex items-center">
             {isReflection ? (
               <textarea
@@ -342,6 +408,38 @@ export const UnsolvedExercise = ({
                 rows={4}
                 className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 outline-none rounded-xl py-3 px-4 text-slate-200 text-sm font-medium transition-all disabled:opacity-75 disabled:text-slate-400 resize-y min-h-[100px]"
               />
+            ) : choices && choices.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                {choices.map((choice, index) => {
+                  const letter = String.fromCharCode(65 + index); // A, B, C...
+                  const isSelected = inputVal === choice;
+                  return (
+                    <button
+                      key={index}
+                      disabled={revealed}
+                      onClick={() => setInputVal(choice)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl border text-left text-xs sm:text-sm font-semibold transition-all cursor-pointer w-full select-none",
+                        isSelected
+                          ? "bg-blue-600/10 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/5"
+                          : "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/40",
+                        revealed && isSelected && isCorrect && "bg-emerald-500/10 border-emerald-500 text-emerald-400",
+                        revealed && isSelected && !isCorrect && "bg-red-500/10 border-red-500 text-red-400"
+                      )}
+                    >
+                      <span className={cn(
+                        "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 border",
+                        isSelected
+                          ? "bg-blue-500 border-blue-400 text-white"
+                          : "bg-slate-900 border-slate-800 text-slate-400"
+                      )}>
+                        {letter}
+                      </span>
+                      <span className="flex-1">{choice}</span>
+                    </button>
+                  );
+                })}
+              </div>
             ) : (
               <>
                 <input
@@ -361,11 +459,11 @@ export const UnsolvedExercise = ({
             )}
           </div>
 
-          <div className={`flex items-center gap-2 w-full ${isReflection ? 'justify-end sm:w-auto' : 'sm:w-auto'}`}>
+          <div className={`flex items-center gap-2 w-full ${isReflection || (choices && choices.length > 0) ? 'justify-end sm:w-auto' : 'sm:w-auto'}`}>
             <button
               onClick={handleCheck}
               disabled={revealed || !inputVal.trim()}
-              className={`${isReflection ? 'w-full sm:w-auto' : 'flex-1 sm:flex-initial'} px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-850 disabled:text-slate-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2`}
+              className={`${isReflection || (choices && choices.length > 0) ? 'w-full sm:w-auto' : 'flex-1 sm:flex-initial'} px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-850 disabled:text-slate-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2`}
             >
               <span>{checkButtonLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -422,7 +520,11 @@ export const UnsolvedExercise = ({
               ) : (
                 <>
                   <XCircle className="w-4 h-4 shrink-0 animate-bounce" />
-                  <span>{t.incorrect}</span>
+                  <span>
+                    {revealed && attempts <= 0
+                      ? getNoAttemptsMessage(correctAnswer || '', language)
+                      : t.incorrect}
+                  </span>
                 </>
               )}
             </motion.div>

@@ -346,6 +346,17 @@ const Objectives = ({ children }: { children: React.ReactNode }) => {
   let renderedContent: React.ReactNode;
 
   if (hasStructuredBoxes) {
+    // Ensure at least one structured box has visible, non-empty children
+    const hasAnyContent = childrenArray.some(child => {
+      if (React.isValidElement(child)) {
+        if (child.type === Knowledge || child.type === Skills || child.type === Attitudes) {
+          return !isChildrenEmpty((child.props as any)?.children);
+        }
+        return !isChildrenEmpty(child);
+      }
+      return !isChildrenEmpty(child);
+    });
+    if (!hasAnyContent) return null;
     renderedContent = children;
   } else {
     // Distribute linear children into Knowledge, Skills, Attitudes boxes
@@ -374,6 +385,7 @@ const Objectives = ({ children }: { children: React.ReactNode }) => {
     };
 
     const items = extractLinearItems(children).filter(item => !isChildrenEmpty(item));
+    if (items.length === 0) return null;
 
     const knowledgeItems: React.ReactNode[] = [];
     const skillsItems: React.ReactNode[] = [];
@@ -616,9 +628,28 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
 
   const prompts = React.useMemo(() => extractPrompts(childrenArray), [childrenArray]);
 
+  const [extendTime, setExtendTime] = React.useState(false);
+
+  React.useEffect(() => {
+    const handlePrefsChange = () => {
+      const savedProfile = localStorage.getItem('op_user_profile');
+      if (savedProfile) {
+        try {
+          const p = JSON.parse(savedProfile);
+          setExtendTime(!!p.extendAssessmentTime);
+        } catch {}
+      }
+    };
+    handlePrefsChange();
+    window.addEventListener('op_accessibility_preferences_changed', handlePrefsChange);
+    return () => window.removeEventListener('op_accessibility_preferences_changed', handlePrefsChange);
+  }, []);
+
+  const actualDurationLimit = durationLimit ? (extendTime ? Math.round(durationLimit * 1.25) : durationLimit) : undefined;
+
   const [selectedIdx, setSelectedIdx] = React.useState(0);
   const [isStarted, setIsStarted] = React.useState(false);
-  const [timeLeft, setTimeLeft] = React.useState(durationLimit);
+  const [timeLeft, setTimeLeft] = React.useState(actualDurationLimit || durationLimit);
   const [answer, setAnswer] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [grade, setGrade] = React.useState<string | null>(null);
@@ -652,10 +683,16 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
         setFeedback(null);
         setIsReadOnly(false);
         setIsStarted(false);
-        setTimeLeft(durationLimit);
+        setTimeLeft(actualDurationLimit || durationLimit);
       }
     }
-  }, [storageKey, durationLimit]);
+  }, [storageKey, durationLimit, actualDurationLimit]);
+
+  React.useEffect(() => {
+    if (!isStarted && actualDurationLimit) {
+      setTimeLeft(actualDurationLimit);
+    }
+  }, [actualDurationLimit, isStarted]);
 
   React.useEffect(() => {
     if (!isStarted || isReadOnly || timeLeft <= 0) return;
@@ -739,7 +776,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
       setFeedback(null);
       setIsReadOnly(false);
       setIsStarted(false);
-      setTimeLeft(durationLimit);
+      setTimeLeft(actualDurationLimit || durationLimit);
       setError(null);
     }
   };
@@ -1170,6 +1207,8 @@ const Solution = ({ children }: { children: React.ReactNode }) => {
     </div>
   );
 };
+(Solution as any).isSolution = true;
+Solution.displayName = 'Solution';
 
 const KeyConcept = ({ title, children }: { title?: string; children: React.ReactNode }) => {
   if (isChildrenEmpty(children)) return null;
@@ -1185,6 +1224,8 @@ const Instruction = ({ children }: { children: React.ReactNode }) => {
   if (isChildrenEmpty(children)) return null;
   return <div className="text-slate-400 text-xs italic my-1 select-text">{children}</div>;
 };
+(Instruction as any).isInstruction = true;
+Instruction.displayName = 'Instruction';
 
 const Shape = () => null;
 

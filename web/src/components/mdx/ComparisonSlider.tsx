@@ -58,11 +58,18 @@ export const ComparisonSlider = ({
   const finalAfterLabel = afterLabel || t.after;
   const finalHint = t.hint;
 
-  const isSplit = layout === 'split' || (
-    layout !== 'clip' &&
-    typeof beforeContent === 'string' &&
-    typeof afterContent === 'string'
-  );
+  const isSplit = layout === 'split';
+
+  const isImageUrl = (val: any): boolean => {
+    if (typeof val !== 'string') return false;
+    const s = val.trim();
+    return (
+      s.startsWith('/') ||
+      s.startsWith('http://') ||
+      s.startsWith('https://') ||
+      /\.(png|jpe?g|gif|svg|webp)($|\?)/i.test(s)
+    );
+  };
 
   const handleMove = (clientX: number) => {
     if (!containerRef.current) return;
@@ -102,6 +109,16 @@ export const ComparisonSlider = ({
   }, [isDragging]);
 
   const renderSliderContent = (content: React.ReactNode, isBefore: boolean) => {
+    if (isImageUrl(content)) {
+      return (
+        <img 
+          src={content as string} 
+          alt="" 
+          className="w-full h-full object-cover object-center pointer-events-none" 
+        />
+      );
+    }
+
     if (typeof content === 'string' || content === null || content === undefined) {
       const rawText = typeof content === 'string' ? content : '';
       const text = rawText.replace(/<[^>]+>/g, '').trim();
@@ -113,17 +130,6 @@ export const ComparisonSlider = ({
       return (
         <div className={`w-full h-full flex flex-col items-center justify-center p-6 text-center border ${borderClass} ${gradientClass} bg-slate-950 transition-all duration-300`}>
           <div className="max-w-md space-y-3">
-            <div className="flex justify-center">
-              {isBefore ? (
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"/></svg>
-                </div>
-              )}
-            </div>
             <p className="text-slate-200 text-xs md:text-sm font-semibold leading-relaxed font-sans px-2 overflow-y-auto max-h-[140px] custom-scrollbar">
               {text}
             </p>
