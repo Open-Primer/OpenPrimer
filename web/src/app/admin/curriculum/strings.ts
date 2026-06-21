@@ -1849,7 +1849,7 @@ export const DISCIPLINES = [
   { value: 'astronomy',          EN: 'Astronomy & Astrophysics', FR: 'Astronomie & Astrophysique', ES: 'Astronomía', DE: 'Astronomie', ZH: '\u5929\u6587\u5b66' },
   { value: 'medicine',           EN: 'Medicine & Surgery', FR: 'Médecine & Chirurgie', ES: 'Medicina', DE: 'Medizin', ZH: '\u533b\u5b66' },
   { value: 'pharmacology',       EN: 'Pharmacology', FR: 'Pharmacologie', ES: 'Farmacología', DE: 'Pharmakologie', ZH: '\u836f\u7406\u5b66' },
-  { value: 'neuroscience',       EN: 'Neuroscience', FR: 'Neurosciences', ES: 'Neurociencia', DE: 'Neurowissenschaften', ZH: '\u79神\u7ecf\u79d1\u5b66' },
+  { value: 'neuroscience',       EN: 'Neuroscience', FR: 'Neurosciences', ES: 'Neurociencia', DE: 'Neurowissenschaften', ZH: '\u795e\u7ecf\u79d1\u5b66' },
   { value: 'mechanical_eng',     EN: 'Mechanical Engineering', FR: 'Génie Mécanique', ES: 'Ingeniería Mecánica', DE: 'Maschinenbau', ZH: '\u673a\u68b0\u5de5\u7a0b' },
   { value: 'electrical_eng',     EN: 'Electrical Engineering', FR: 'Génie Électrique', ES: 'Ingeniería Eléctrica', DE: 'Elektrotechnik', ZH: '\u7535\u6c14\u5de5\u7a0b' },
   { value: 'chemical_eng',       EN: 'Chemical Engineering', FR: 'Génie Chimique', ES: 'Ingeniería Química', DE: 'Chemieingenieurwesen', ZH: '\u5316\u5b66\u5de5\u7a0b' },
