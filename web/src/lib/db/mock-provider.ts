@@ -15,7 +15,9 @@ import {
   TutorPersonality,
   AgentMetric,
   ContactFeedback,
-  UserRole,
+  UserRole
+} from './types';
+import {
   getMockCourses,
   setMockCourses,
   getUsers,
@@ -50,7 +52,9 @@ import {
   setTranslationEmailsList,
   getSystemParametersList,
   setSystemParametersList,
-  setLocalStorageItem,
+  setLocalStorageItem
+} from './state-store';
+import {
   getLocalizedCourseTitleInternal,
   generatePedagogicalSummary,
   progressService,

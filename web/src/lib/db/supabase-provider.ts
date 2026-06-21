@@ -16,13 +16,17 @@ import {
   TutorPersonality,
   AgentMetric,
   ContactFeedback,
-  UserRole,
+  UserRole
+} from './types';
+import {
   getMockCourses,
   setMockCourses,
+  getAvailableLanguagesList
+} from './state-store';
+import {
   handleDatabaseError,
   getLocalizedCourseTitleInternal,
   generatePedagogicalSummary,
-  getAvailableLanguagesList,
   getCanonicalCourseId,
   purgePipelineAndRequestsForCourseOrCurriculum,
   addCourseTombstone,
