@@ -9,5 +9,6 @@ paths = [
   '''docs/GCP_CLOUD_RUN_DEPLOYMENT\.md''',
   '''web/scripts/register_parameters\.ts''',
   '''web/db_deploy\.js''',
-  '''web/src/lib/db\.ts'''
+  '''web/src/lib/db\.ts''',
+  '''web/src/lib/db/seeds\.ts'''
 ]

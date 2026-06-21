@@ -88,6 +88,7 @@ async function runMigrations() {
     "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_read_course BOOLEAN DEFAULT true",
     "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS audio_read_tutor BOOLEAN DEFAULT true",
     "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tts_enabled BOOLEAN DEFAULT true",
+    "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS extend_assessment_time BOOLEAN DEFAULT false",
     // Lessons
     "ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS \"order\" INTEGER",
     // Admin user password hash (SHA-256 of default password)
