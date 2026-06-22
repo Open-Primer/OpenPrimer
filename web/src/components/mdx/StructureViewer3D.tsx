@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, HelpCircle, Info } from 'lucide-react';
+import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, HelpCircle, Info, AlertCircle } from 'lucide-react';
 
 interface Atom {
   x: number;
@@ -243,11 +243,29 @@ const ELEMENT_DETAILS: Record<string, {
   color: string;
 }> = {
   'H': { nameEN: 'Hydrogen', nameFR: 'Hydrogène', num: 1, weight: 1.008, config: '1s¹', electronegativity: 2.20, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#f8fafc' },
+  'HE': { nameEN: 'Helium', nameFR: 'Hélium', num: 2, weight: 4.0026, config: '1s²', electronegativity: 0, categoryFR: 'Gaz noble', categoryEN: 'Noble Gas', color: '#c084fc' },
+  'LI': { nameEN: 'Lithium', nameFR: 'Lithium', num: 3, weight: 6.94, config: '[He] 2s¹', electronegativity: 0.98, categoryFR: 'Métal alcalin', categoryEN: 'Alkali Metal', color: '#a855f7' },
+  'BE': { nameEN: 'Beryllium', nameFR: 'Béryllium', num: 4, weight: 9.0122, config: '[He] 2s²', electronegativity: 1.57, categoryFR: 'Métal alcalino-terreux', categoryEN: 'Alkaline Earth Metal', color: '#9333ea' },
+  'B': { nameEN: 'Boron', nameFR: 'Bore', num: 5, weight: 10.81, config: '[He] 2s² 2p¹', electronegativity: 2.04, categoryFR: 'Métalloïde', categoryEN: 'Metalloid', color: '#fb923c' },
   'C': { nameEN: 'Carbon', nameFR: 'Carbone', num: 6, weight: 12.011, config: '[He] 2s² 2p²', electronegativity: 2.55, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#475569' },
-  'O': { nameEN: 'Oxygen', nameFR: 'Oxygène', num: 8, weight: 15.999, config: '[He] 2s² 2p⁴', electronegativity: 3.44, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#ef4444' },
   'N': { nameEN: 'Nitrogen', nameFR: 'Azote', num: 7, weight: 14.007, config: '[He] 2s² 2p³', electronegativity: 3.04, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#3b82f6' },
-  'Cl': { nameEN: 'Chlorine', nameFR: 'Chlore', num: 17, weight: 35.45, config: '[Ne] 3s² 3p⁵', electronegativity: 3.16, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#84cc16' },
-  'Na': { nameEN: 'Sodium', nameFR: 'Sodium', num: 11, weight: 22.990, config: '[Ne] 3s¹', electronegativity: 0.93, categoryFR: 'Métal alcalin', categoryEN: 'Alkali Metal', color: '#10b981' }
+  'O': { nameEN: 'Oxygen', nameFR: 'Oxygène', num: 8, weight: 15.999, config: '[He] 2s² 2p⁴', electronegativity: 3.44, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#ef4444' },
+  'F': { nameEN: 'Fluorine', nameFR: 'Fluor', num: 9, weight: 18.998, config: '[He] 2s² 2p⁵', electronegativity: 3.98, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#06b6d4' },
+  'NE': { nameEN: 'Neon', nameFR: 'Néon', num: 10, weight: 20.180, config: '[He] 2s² 2p⁶', electronegativity: 0, categoryFR: 'Gaz noble', categoryEN: 'Noble Gas', color: '#f472b6' },
+  'NA': { nameEN: 'Sodium', nameFR: 'Sodium', num: 11, weight: 22.990, config: '[Ne] 3s¹', electronegativity: 0.93, categoryFR: 'Métal alcalin', categoryEN: 'Alkali Metal', color: '#10b981' },
+  'MG': { nameEN: 'Magnesium', nameFR: 'Magnésium', num: 12, weight: 24.305, config: '[Ne] 3s²', electronegativity: 1.31, categoryFR: 'Métal alcalino-terreux', categoryEN: 'Alkaline Earth Metal', color: '#047857' },
+  'AL': { nameEN: 'Aluminium', nameFR: 'Aluminium', num: 13, weight: 26.982, config: '[Ne] 3s² 3p¹', electronegativity: 1.61, categoryFR: 'Métal de pauvre transition', categoryEN: 'Post-Transition Metal', color: '#94a3b8' },
+  'SI': { nameEN: 'Silicon', nameFR: 'Silicium', num: 14, weight: 28.085, config: '[Ne] 3s² 3p²', electronegativity: 1.90, categoryFR: 'Métalloïde', categoryEN: 'Metalloid', color: '#e2e8f0' },
+  'P': { nameEN: 'Phosphorus', nameFR: 'Phosphore', num: 15, weight: 30.974, config: '[Ne] 3s² 3p³', electronegativity: 2.19, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#f97316' },
+  'S': { nameEN: 'Sulfur', nameFR: 'Soufre', num: 16, weight: 32.06, config: '[Ne] 3s² 3p⁴', electronegativity: 2.58, categoryFR: 'Non-métal réactif', categoryEN: 'Reactive Nonmetal', color: '#eab308' },
+  'CL': { nameEN: 'Chlorine', nameFR: 'Chlore', num: 17, weight: 35.45, config: '[Ne] 3s² 3p⁵', electronegativity: 3.16, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#84cc16' },
+  'K': { nameEN: 'Potassium', nameFR: 'Potassium', num: 19, weight: 39.098, config: '[Ar] 4s¹', electronegativity: 0.82, categoryFR: 'Métal alcalin', categoryEN: 'Alkali Metal', color: '#8b5cf6' },
+  'CA': { nameEN: 'Calcium', nameFR: 'Calcium', num: 20, weight: 40.078, config: '[Ar] 4s²', electronegativity: 1.00, categoryFR: 'Métal alcalino-terreux', categoryEN: 'Alkaline Earth Metal', color: '#64748b' },
+  'FE': { nameEN: 'Iron', nameFR: 'Fer', num: 26, weight: 55.845, config: '[Ar] 3d⁶ 4s²', electronegativity: 1.83, categoryFR: 'Métal de transition', categoryEN: 'Transition Metal', color: '#b45309' },
+  'CU': { nameEN: 'Copper', nameFR: 'Cuivre', num: 29, weight: 63.546, config: '[Ar] 3d¹⁰ 4s¹', electronegativity: 1.90, categoryFR: 'Métal de transition', categoryEN: 'Transition Metal', color: '#ea580c' },
+  'ZN': { nameEN: 'Zinc', nameFR: 'Zinc', num: 30, weight: 65.38, config: '[Ar] 3d¹⁰ 4s²', electronegativity: 1.65, categoryFR: 'Métal de transition', categoryEN: 'Transition Metal', color: '#4f46e5' },
+  'BR': { nameEN: 'Bromine', nameFR: 'Brome', num: 35, weight: 79.904, config: '[Ar] 3d¹⁰ 4s² 4p⁵', electronegativity: 2.96, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#9a3412' },
+  'I': { nameEN: 'Iodine', nameFR: 'Iode', num: 53, weight: 126.90, config: '[Kr] 4d¹⁰ 5s² 5p⁵', electronegativity: 2.66, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#6b21a8' }
 };
 
 const decodeBase64 = (str: string): any => {
@@ -259,6 +277,139 @@ const decodeBase64 = (str: string): any => {
     }
   } catch (e) {
     console.error("Failed to decode base64:", e);
+    return null;
+  }
+};
+
+const centerCoordinates = (atoms: Atom[]): Atom[] => {
+  if (atoms.length === 0) return atoms;
+  
+  let sumX = 0, sumY = 0, sumZ = 0;
+  atoms.forEach(a => {
+    sumX += a.x;
+    sumY += a.y;
+    sumZ += a.z;
+  });
+  const avgX = sumX / atoms.length;
+  const avgY = sumY / atoms.length;
+  const avgZ = sumZ / atoms.length;
+  
+  let maxDist = 0;
+  const shifted = atoms.map(a => {
+    const x = a.x - avgX;
+    const y = a.y - avgY;
+    const z = a.z - avgZ;
+    const dist = Math.sqrt(x*x + y*y + z*z);
+    if (dist > maxDist) maxDist = dist;
+    return { ...a, x, y, z };
+  });
+  
+  if (maxDist === 0) return shifted;
+  const targetScale = 1.35;
+  const scaleFactor = targetScale / maxDist;
+  
+  return shifted.map(a => ({
+    ...a,
+    x: a.x * scaleFactor,
+    y: a.y * scaleFactor,
+    z: a.z * scaleFactor
+  }));
+};
+
+const parseSDF = (sdfString: string): { atoms: Atom[]; bonds: Bond[] } | null => {
+  try {
+    const lines = sdfString.split('\n');
+    if (lines.length < 4) return null;
+    
+    const countsLine = lines[3];
+    const numAtoms = parseInt(countsLine.substring(0, 3).trim(), 10);
+    const numBonds = parseInt(countsLine.substring(3, 6).trim(), 10);
+    
+    if (isNaN(numAtoms) || numAtoms <= 0) return null;
+    
+    const atoms: Atom[] = [];
+    const bonds: Bond[] = [];
+    
+    const elementProps: Record<string, { color: string; radius: number }> = {
+      'H': { color: '#f8fafc', radius: 10 },
+      'C': { color: '#475569', radius: 15 },
+      'O': { color: '#ef4444', radius: 18 },
+      'N': { color: '#3b82f6', radius: 15 },
+      'CL': { color: '#84cc16', radius: 19 },
+      'NA': { color: '#10b981', radius: 10 },
+      'S': { color: '#eab308', radius: 17 },
+      'P': { color: '#f97316', radius: 17 },
+      'F': { color: '#06b6d4', radius: 12 },
+      'BR': { color: '#9a3412', radius: 19 },
+      'I': { color: '#6b21a8', radius: 21 },
+      'K': { color: '#8b5cf6', radius: 18 },
+      'CA': { color: '#64748b', radius: 20 },
+      'FE': { color: '#b45309', radius: 20 },
+      'MG': { color: '#047857', radius: 17 }
+    };
+    
+    for (let i = 0; i < numAtoms; i++) {
+      const line = lines[4 + i];
+      if (!line) continue;
+      
+      const x = parseFloat(line.substring(0, 10).trim());
+      const y = parseFloat(line.substring(10, 20).trim());
+      const z = parseFloat(line.substring(20, 30).trim());
+      const label = line.substring(31, 34).trim();
+      
+      if (isNaN(x) || isNaN(y) || isNaN(z) || !label) continue;
+      
+      const lookupLabel = label.toUpperCase();
+      const props = elementProps[lookupLabel] || { color: '#a855f7', radius: 14 };
+      
+      atoms.push({
+        x,
+        y,
+        z,
+        color: props.color,
+        radius: props.radius,
+        label
+      });
+    }
+    
+    for (let i = 0; i < numBonds; i++) {
+      const line = lines[4 + numAtoms + i];
+      if (!line) continue;
+      
+      const atomAIdx = parseInt(line.substring(0, 3).trim(), 10) - 1;
+      const atomBIdx = parseInt(line.substring(3, 6).trim(), 10) - 1;
+      const bondType = parseInt(line.substring(6, 9).trim(), 10);
+      
+      if (isNaN(atomAIdx) || isNaN(atomBIdx) || atomAIdx < 0 || atomBIdx < 0) continue;
+      
+      bonds.push({
+        atomA: atomAIdx,
+        atomB: atomBIdx,
+        isDouble: bondType === 2
+      });
+    }
+    
+    if (bonds.length === 0) {
+      for (let i = 0; i < atoms.length; i++) {
+        for (let j = i + 1; j < atoms.length; j++) {
+          const a1 = atoms[i];
+          const a2 = atoms[j];
+          const dist = Math.sqrt(
+            (a1.x - a2.x) ** 2 + 
+            (a1.y - a2.y) ** 2 + 
+            (a1.z - a2.z) ** 2
+          );
+          
+          if (dist > 0.4 && dist < 1.95) {
+            bonds.push({ atomA: i, atomB: j });
+          }
+        }
+      }
+    }
+    
+    return { atoms, bonds };
+  } catch (e) {
+    console.error("Failed to parse SDF format:", e);
     return null;
   }
 };
@@ -280,10 +431,15 @@ const parseXYZ = (xyzString: string): { atoms: Atom[]; bonds: Bond[] } | null =>
       'NA': { color: '#10b981', radius: 10 },
       'S': { color: '#eab308', radius: 17 },
       'P': { color: '#f97316', radius: 17 },
-      'F': { color: '#06b6d4', radius: 12 }
+      'F': { color: '#06b6d4', radius: 12 },
+      'BR': { color: '#9a3412', radius: 19 },
+      'I': { color: '#6b21a8', radius: 21 },
+      'K': { color: '#8b5cf6', radius: 18 },
+      'CA': { color: '#64748b', radius: 20 },
+      'FE': { color: '#b45309', radius: 20 },
+      'MG': { color: '#047857', radius: 17 }
     };
 
-    // Standard XYZ file starts at line 2
     for (let i = 2; i < lines.length; i++) {
       const parts = lines[i].split(/\s+/);
       if (parts.length < 4) continue;
@@ -308,7 +464,6 @@ const parseXYZ = (xyzString: string): { atoms: Atom[]; bonds: Bond[] } | null =>
       });
     }
 
-    // Auto-calculate covalent bonds
     for (let i = 0; i < atoms.length; i++) {
       for (let j = i + 1; j < atoms.length; j++) {
         const a1 = atoms[i];
@@ -346,10 +501,12 @@ export const StructureViewer3D = ({
   gradeLevel = "high_school"
 }: StructureViewer3DProps) => {
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [activePreset, setActivePreset] = useState<Preset>(() => {
     const found = PRESETS.find(p => p.id === presetId) || PRESETS[0];
     
-    // Resolve standard XYZ format
     let xyzContent = xyz;
     if (xyzBase64) {
       try {
@@ -376,7 +533,6 @@ export const StructureViewer3D = ({
       }
     }
 
-    // Resolve dynamic inputs
     let resolvedAtoms = atoms;
     if (atomsBase64) {
       resolvedAtoms = decodeBase64(atomsBase64);
@@ -401,10 +557,8 @@ export const StructureViewer3D = ({
   const [autoRotate, setAutoRotate] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   
-  // Track selected atom index from clicking
   const [selectedAtomIndex, setSelectedAtomIndex] = useState<number | null>(null);
 
-  // Euler angles for 3D rotation tracking
   const [angleX, setAngleX] = useState(-0.4); // Pitch
   const [angleY, setAngleY] = useState(0.5);  // Yaw
 
@@ -414,10 +568,9 @@ export const StructureViewer3D = ({
   const dragStartX = useRef(0);
   const dragStartY = useRef(0);
 
-  // Ref to hold projected atom coordinates to detect clicks accurately
   const projectedAtomsRef = useRef<Array<{ sx: number; sy: number; sz: number; drawRadius: number; atom: Atom; index: number }>>([]);
 
-  // React to preset updates from MDX props
+  // React to preset updates from MDX props, and dynamically fetch from PubChem if not a built-in preset
   useEffect(() => {
     let resolvedAtoms = atoms;
     if (atomsBase64) resolvedAtoms = decodeBase64(atomsBase64);
@@ -435,10 +588,45 @@ export const StructureViewer3D = ({
       });
       setSelectedAtomIndex(null);
     } else {
-      const found = PRESETS.find(p => p.id === presetId);
-      if (found) {
-        setActivePreset(found);
-        setSelectedAtomIndex(null);
+      const builtInIds = ["h2o", "co2", "ch4", "ch3cl", "ethanol", "nacl", "graphene"];
+      if (!builtInIds.includes(presetId) && presetId !== 'custom') {
+        setIsLoading(true);
+        setErrorMsg(null);
+        
+        fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(presetId)}/record/SDF/?record_type=3d`)
+          .then(res => {
+            if (!res.ok) throw new Error(`Molécule "${presetId}" introuvable ou indisponible en 3D sur PubChem.`);
+            return res.text();
+          })
+          .then(sdfText => {
+            const parsed = parseSDF(sdfText);
+            if (parsed && parsed.atoms.length > 0) {
+              const centeredAtoms = centerCoordinates(parsed.atoms);
+              setActivePreset({
+                name: name || presetId.charAt(0).toUpperCase() + presetId.slice(1),
+                id: presetId,
+                description: description || `Modèle moléculaire de ${presetId} chargé automatiquement en temps réel via la base de données PubChem.`,
+                atoms: centeredAtoms,
+                bonds: parsed.bonds
+              });
+              setSelectedAtomIndex(null);
+            } else {
+              throw new Error("Impossible de lire les coordonnées tridimensionnelles de cette molécule.");
+            }
+          })
+          .catch(err => {
+            console.error("[PubChem fetch failure]:", err);
+            setErrorMsg(err.message || "Erreur de connexion à la base de données PubChem.");
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      } else {
+        const found = PRESETS.find(p => p.id === presetId);
+        if (found) {
+          setActivePreset(found);
+          setSelectedAtomIndex(null);
+        }
       }
     }
   }, [presetId, name, description, atoms, bonds, atomsBase64, bondsBase64]);
@@ -765,6 +953,35 @@ export const StructureViewer3D = ({
             onTouchEnd={() => handleMouseUpOrLeave()}
             className="w-full h-full cursor-grab active:cursor-grabbing block"
           />
+
+          {isLoading && (
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+              <RotateCw className="w-8 h-8 text-amber-500 animate-spin" />
+              <p className="text-xs font-black text-slate-300 uppercase tracking-widest animate-pulse">Chargement de la molécule...</p>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-4 z-10">
+              <AlertCircle className="w-10 h-10 text-rose-500" />
+              <div className="space-y-1 max-w-sm">
+                <h5 className="text-xs font-black text-rose-400 uppercase tracking-wider">Erreur de chargement</h5>
+                <p className="text-[11px] font-semibold text-slate-400 leading-relaxed">{errorMsg}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setErrorMsg(null);
+                  setIsLoading(false);
+                  // fallback to PRESETS[0] (water)
+                  setActivePreset(PRESETS[0]);
+                  setSelectedAtomIndex(null);
+                }}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-xs font-black text-slate-300 uppercase rounded-xl transition-all cursor-pointer"
+              >
+                Retour à l'eau (H₂O)
+              </button>
+            </div>
+          )}
 
           {/* Quick HUD controls overlay */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-auto">

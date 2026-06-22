@@ -107,6 +107,14 @@ export default function AdminCurriculumPage() {
   const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
   const [queue, setQueue] = useState<any[]>([]);
   const [isQueueLoaded, setIsQueueLoaded] = useState(false);
+  const [isSandboxMode, setIsSandboxMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsSandboxMode(window.localStorage.getItem('op_allow_sandbox') === 'true');
+    }
+  }, []);
+
 
   // Autonomy settings
   const [autoApprove, setAutoApprove] = useState(false);
@@ -2516,6 +2524,33 @@ export default function AdminCurriculumPage() {
 
   return (
     <div className="space-y-12 pb-20">
+      {isSandboxMode && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-[0_8px_32px_rgba(245,158,11,0.05)] backdrop-blur-xl animate-fade-in">
+          <div className="space-y-2">
+            <h4 className="text-amber-400 font-black text-xs uppercase tracking-widest flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+              Mode Bac à sable Actif (Bypass Local Storage)
+            </h4>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+              Votre navigateur utilise actuellement un stockage simulé en mémoire/local (<code className="text-amber-400/80 font-mono">op_allow_sandbox</code> hérité des tests Playwright E2E). C'est pourquoi la file d'attente réelle de Supabase s'affiche comme vide.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem('op_allow_sandbox');
+              setIsSandboxMode(false);
+              window.location.reload();
+            }}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-amber-500/10 whitespace-nowrap cursor-pointer"
+          >
+            Se reconnecter à Supabase
+          </button>
+        </div>
+      )}
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6">
         <div className="space-y-2 w-full">

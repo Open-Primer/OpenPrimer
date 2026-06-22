@@ -630,8 +630,10 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
   const handleOpenEditAchievement = (ach: Achievement) => {
     setBadgeError(null);
     setSelectedAchievement(ach);
-    setEditName(ach.name);
-    setEditDesc(ach.description);
+    const activeLang = (lang || 'EN').toUpperCase();
+    const trans = ach.translations?.[activeLang] || ach.translations?.[activeLang.toLowerCase()];
+    setEditName(trans?.name || ach.name);
+    setEditDesc(trans?.description || ach.description);
     setEditThreshold(ach.threshold);
     setEditIcon(ach.icon);
     setEditStartDate(ach.startDate || '');
@@ -648,90 +650,77 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
     setBadgeError(null);
 
     try {
-      const crucialFieldsChanged = 
-        editName !== selectedAchievement.name || 
-        editDesc !== selectedAchievement.description || 
-        editThreshold !== selectedAchievement.threshold;
+      const activeLang = (lang || 'EN').toUpperCase();
+      const isEnglish = activeLang === 'EN';
 
-      if (crucialFieldsChanged) {
-        if (!editName || !editDesc || !editThreshold) {
-          setBadgeError(tr("Strict Parameter Error: All fields are required!"));
-          return;
-        }
+      if (!editName || !editDesc || !editThreshold) {
+        setBadgeError(tr("Strict Parameter Error: All fields are required!"));
+        return;
+      }
 
-        const numeric = Number(editThreshold);
-        const hasNumber = /\d+/.test(editThreshold);
-        if ((hasNumber && numeric <= 0) || (editThreshold.startsWith('-'))) {
-          setBadgeError(tr("Strict Validation Reject: Threshold must be positive!"));
-          return;
-        }
+      const numeric = Number(editThreshold);
+      const hasNumber = /\d+/.test(editThreshold);
+      if ((hasNumber && numeric <= 0) || (editThreshold.startsWith('-'))) {
+        setBadgeError(tr("Strict Validation Reject: Threshold must be positive!"));
+        return;
+      }
 
-        await dbService.saveAchievement({
-          ...selectedAchievement,
-          status: 'inactive'
-        });
+      const formattedThreshold = editThreshold.includes(' ') ? editThreshold : `${editThreshold} streak`;
 
-        let rule = null;
-        let transMap: Record<string, { name: string; description: string }> = {};
+      // Check if description or threshold changed to recompile evaluation rule
+      let rule = selectedAchievement.evaluationRule;
+      const crucialRuleFieldsChanged = 
+        editDesc !== (isEnglish ? selectedAchievement.description : (selectedAchievement.translations?.[activeLang]?.description || selectedAchievement.description)) ||
+        formattedThreshold !== selectedAchievement.threshold;
 
+      if (crucialRuleFieldsChanged) {
         try {
           const compileRes = await fetch('/api/badges/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: editName,
-              description: editDesc,
-              threshold: editThreshold,
+              name: isEnglish ? editName : selectedAchievement.name,
+              description: isEnglish ? editDesc : selectedAchievement.description,
+              threshold: formattedThreshold,
               sandbox: typeof window !== 'undefined' && window.localStorage.getItem('op_allow_sandbox') === 'true'
             })
           });
           if (compileRes.ok) {
             const compiled = await compileRes.json();
             rule = compiled.evaluationRule;
-            if (compiled.translations && Object.keys(compiled.translations).length > 0) {
-              transMap = compiled.translations;
-            }
           }
         } catch (err) {
           console.warn("Vertex AI badge compiler failed/offline, utilizing offline fallback engine:", err);
         }
 
         if (!rule) {
-          rule = compileRuleLocally(editDesc, editThreshold);
+          rule = compileRuleLocally(isEnglish ? editDesc : selectedAchievement.description, formattedThreshold);
         }
-        if (Object.keys(transMap).length === 0) {
-          const translationsList = getCompiledTranslations(editName, editDesc, editThreshold);
-          translationsList.forEach(t => {
-            transMap[t.code] = { name: t.name, description: t.desc };
-          });
-        }
-
-        const finalIcon = await resolveBadgeIconToBase64(editIcon);
-        const newId = achievements.length > 0 ? Math.max(...achievements.map(a => a.id)) + 1 : 1;
-
-        await dbService.saveAchievement({
-          id: newId,
-          name: editName,
-          description: editDesc,
-          threshold: editThreshold.includes(' ') ? editThreshold : `${editThreshold} streak`,
-          count: 0,
-          status: 'active',
-          startDate: editStartDate || null,
-          endDate: editEndDate || null,
-          icon: finalIcon,
-          translations: transMap,
-          evaluationRule: rule
-        });
-      } else {
-        const finalIcon = await resolveBadgeIconToBase64(editIcon);
-        
-        await dbService.saveAchievement({
-          ...selectedAchievement,
-          icon: finalIcon,
-          startDate: editStartDate || null,
-          endDate: editEndDate || null
-        });
       }
+
+      // Update the translation dictionary
+      const updatedTranslations = { ...(selectedAchievement.translations || {}) };
+      if (isEnglish) {
+        updatedTranslations['EN'] = { name: editName, description: editDesc };
+        updatedTranslations['en'] = { name: editName, description: editDesc };
+      } else {
+        updatedTranslations[activeLang] = { name: editName, description: editDesc };
+        updatedTranslations[activeLang.toLowerCase()] = { name: editName, description: editDesc };
+      }
+
+      const finalIcon = await resolveBadgeIconToBase64(editIcon);
+
+      await dbService.saveAchievement({
+        ...selectedAchievement,
+        name: isEnglish ? editName : selectedAchievement.name,
+        description: isEnglish ? editDesc : selectedAchievement.description,
+        icon: finalIcon,
+        startDate: editStartDate || null,
+        endDate: editEndDate || null,
+        threshold: formattedThreshold,
+        evaluationRule: rule,
+        translations: updatedTranslations
+      });
 
       setSelectedAchievement(null);
       setEditStartDate('');
@@ -807,8 +796,8 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-xl font-black">{ach.translations?.[lang.toUpperCase()]?.name || ach.name}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{ach.translations?.[lang.toUpperCase()]?.description || ach.description}</p>
+                  <h3 className="text-xl font-black">{(ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name) || ach.name}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">{(ach.translations?.[lang.toUpperCase()]?.description || ach.translations?.[lang.toLowerCase()]?.description) || ach.description}</p>
                 </div>
               </div>
 

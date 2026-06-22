@@ -1010,13 +1010,13 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
 
 // ── ACADEMIC LEVEL SYSTEM (10 levels: Foundation→L3) ─────────────────────────
 export const ACADEMIC_LEVELS = [
-  { value: 'foundation_1', EN: 'Foundation 1 (Ages 6–9)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundacional 1 (6–9 años)', DE: 'Grundstufe 1 (6–9 J.)', ZH: '\u57fa\u7840\u4e00\u9636\uff086\u20139\u5c81\uff09' },
-  { value: 'foundation_2', EN: 'Foundation 2 (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundacional 2 (9–11 años)', DE: 'Grundstufe 2 (9–11 J.)', ZH: '\u57fa\u7840\u4e8c\u9636\uff089\u201311\u5c81\uff09' },
-  { value: 'secondary_1', EN: 'Secondary 1 (Ages 11–13)', FR: 'Secondaire 1 (6ème–5ème)', ES: 'Secundaria 1 (11–13 años)', DE: 'Sekundarstufe I-1 (11–13 J.)', ZH: '\u521d\u4e2d\u4e00\u9636\uff0811\u201313\u5c81\uff09' },
-  { value: 'secondary_2', EN: 'Secondary 2 (Ages 13–15)', FR: 'Secondaire 2 (4ème–3ème)', ES: 'Secundaria 2 (13–15 años)', DE: 'Sekundarstufe I-2 (13–15 J.)', ZH: '\u521d\u4e2d\u4e8c\u9636\uff0813\u201315\u5c81\uff09' },
-  { value: 'preuni_1',     EN: 'Pre-University 1 (Age 15–16)', FR: 'Lycée 1 — Seconde', ES: 'Bachillerato 1 (15–16 años)', DE: 'Gymnasium — Klasse 10', ZH: '\u9ad8\u4e2d\u4e00\u5e74\u7ea7\uff0815\u201316\u5c81\uff09' },
-  { value: 'preuni_2',     EN: 'Pre-University 2 (Age 16–17)', FR: 'Lycée 2 — Première', ES: 'Bachillerato 2 (16–17 años)', DE: 'Gymnasium — Klasse 11', ZH: '\u9ad8\u4e2d\u4e8c\u5e74\u7ea7\uff0816\u201317\u5c81\uff09' },
-  { value: 'preuni_3',     EN: 'Pre-University 3 — Final Year', FR: 'Lycée 3 — Terminale', ES: 'Bachillerato 3 — Selectividad', DE: 'Abitur — Abschlussklasse', ZH: '\u9ad8\u4e2d\u4e09\u5e74\u7ea7\uff08\u9ad8\u8003\uff09' },
+  { value: 'foundation_1', EN: 'Primary School 1 (Ages 6–9)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundacional 1 (6–9 años)', DE: 'Grundstufe 1 (6–9 J.)', ZH: '\u57fa\u7840\u4e00\u9636\uff086\u20139\u5c81\uff09' },
+  { value: 'foundation_2', EN: 'Primary School 2 (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundacional 2 (9–11 años)', DE: 'Grundstufe 2 (9–11 J.)', ZH: '\u57fa\u7840\u4e8c\u9636\uff089\u201311\u5c81\uff09' },
+  { value: 'secondary_1', EN: 'Middle School 1 (Ages 11–13)', FR: 'Secondaire 1 (6ème–5ème)', ES: 'Secundaria 1 (11–13 años)', DE: 'Sekundarstufe I-1 (11–13 J.)', ZH: '\u521d\u4e2d\u4e00\u9636\uff0811\u201313\u5c81\uff09' },
+  { value: 'secondary_2', EN: 'Middle School 2 (Ages 13–15)', FR: 'Secondaire 2 (4ème–3ème)', ES: 'Secundaria 2 (13–15 años)', DE: 'Sekundarstufe I-2 (13–15 J.)', ZH: '\u521d\u4e2d\u4e8c\u9636\uff0813\u201315\u5c81\uff09' },
+  { value: 'preuni_1',     EN: 'Pre-University 1 (Ages 15–16)', FR: 'Lycée 1 — Seconde', ES: 'Bachillerato 1 (15–16 años)', DE: 'Gymnasium — Klasse 10', ZH: '\u9ad8\u4e2d\u4e00\u5e74\u7ea7\uff0815\u201316\u5c81\uff09' },
+  { value: 'preuni_2',     EN: 'Pre-University 2 (Ages 16–17)', FR: 'Lycée 2 — Première', ES: 'Bachillerato 2 (16–17 años)', DE: 'Gymnasium — Klasse 11', ZH: '\u9ad8\u4e2d\u4e8c\u5e74\u7ea7\uff0816\u201317\u5c81\uff09' },
+  { value: 'preuni_3',     EN: 'Pre-University 3 (Ages 17–18)', FR: 'Lycée 3 — Terminale', ES: 'Bachillerato 3 — Selectividad', DE: 'Abitur — Abschlussklasse', ZH: '\u9ad8\u4e2d\u4e09\u5e74\u7ea7\uff08\u9ad8\u8003\uff09' },
   { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Primer Año', DE: 'L1 — 1. Studienjahr', ZH: 'L1 — \u5927\u4e00' },
   { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Segundo Año', DE: 'L2 — 2. Studienjahr', ZH: 'L2 — \u5927\u4e8c' },
   { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — \u5927\u4e09\uff08\u5b68\u58eb\uff09' },
@@ -1449,6 +1449,11 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
   localStorage.setItem(`op_lang_game_${targetLang}`, JSON.stringify(gameTranslations));
 
   // 5. Dynamic translation of the cockpit dictionaries: COCKPIT_DICTIONARY, LOCALIZED_POPUPS, CURRICULUM_STRINGS, EXTRA_TOOLTIP_STRINGS
+  if (['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'].includes(targetUpper)) {
+    console.log(`[translateMetadataForLanguage] Skipping dynamic translation of cockpit dictionary for statically supported language: ${targetUpper}`);
+    return;
+  }
+
   try {
     console.log(`[translateMetadataForLanguage] Dynamic batch translation started for cockpit dictionary to: ${targetUpper}`);
     
@@ -1517,12 +1522,14 @@ export const POTENTIAL_CURRICULA = [
 // Initialize dynamic cockpit dictionaries from localStorage on startup in the browser
 if (typeof window !== 'undefined') {
   try {
+    const staticLangs = ['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (!key) continue;
       
       if (key.startsWith('op_lang_cockpit_dict_')) {
         const langCode = key.substring('op_lang_cockpit_dict_'.length).toUpperCase();
+        if (staticLangs.includes(langCode)) continue;
         try {
           const dict = JSON.parse(localStorage.getItem(key) || '{}');
           (COCKPIT_DICTIONARY as any)[langCode] = dict;
@@ -1533,6 +1540,7 @@ if (typeof window !== 'undefined') {
       
       if (key.startsWith('op_lang_localized_popups_')) {
         const langCode = key.substring('op_lang_localized_popups_'.length).toUpperCase();
+        if (staticLangs.includes(langCode)) continue;
         try {
           const dict = JSON.parse(localStorage.getItem(key) || '{}');
           (LOCALIZED_POPUPS as any)[langCode] = dict;
@@ -1543,6 +1551,7 @@ if (typeof window !== 'undefined') {
       
       if (key.startsWith('op_lang_curriculum_strings_')) {
         const langCode = key.substring('op_lang_curriculum_strings_'.length).toUpperCase();
+        if (staticLangs.includes(langCode)) continue;
         try {
           const dict = JSON.parse(localStorage.getItem(key) || '{}');
           (CURRICULUM_STRINGS as any)[langCode] = dict;
@@ -1553,6 +1562,7 @@ if (typeof window !== 'undefined') {
       
       if (key.startsWith('op_lang_extra_tooltips_')) {
         const langCode = key.substring('op_lang_extra_tooltips_'.length).toUpperCase();
+        if (staticLangs.includes(langCode)) continue;
         try {
           const dict = JSON.parse(localStorage.getItem(key) || '{}');
           (EXTRA_TOOLTIP_STRINGS as any)[langCode] = dict;

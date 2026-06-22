@@ -347,27 +347,11 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
         .order('order', { ascending: true });
       
       if (dbLessons && dbLessons.length > 0) {
-        const hasIntro = dbLessons.some((l: any) => {
-          const s = l.lesson_slug.toLowerCase();
-          const t = (l.title || '').toLowerCase();
-          return s === 'introduction' || s.startsWith('introduction-') || s.startsWith('intro-') || t.startsWith('introduction');
-        });
-        
-        const navItems: NavItem[] = dbLessons.map((l: any) => ({
+        return dbLessons.map((l: any) => ({
           name: l.title || l.lesson_slug.replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()),
           type: 'file',
           path: '/' + [level, subject, courseSlug, l.lesson_slug].join('/')
         }));
-
-        if (!hasIntro) {
-          navItems.unshift({
-            name: 'Introduction',
-            type: 'file',
-            path: '/' + [level, subject, courseSlug, 'introduction'].join('/')
-          });
-        }
-        
-        return navItems.sort((a, b) => a.type === 'folder' ? -1 : 1);
       }
     } catch (err) {
       console.error("[Navigation Tree DB] Failed to fetch lessons from database:", err);

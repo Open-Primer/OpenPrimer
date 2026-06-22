@@ -144,10 +144,14 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
       if (!activeSlug) return;
       
       const flatPages: any[] = [];
-      items.forEach(module => {
-        module.children?.forEach(page => {
-          flatPages.push(page);
-        });
+      items.forEach(item => {
+        if (item.type === 'file') {
+          flatPages.push(item);
+        } else {
+          item.children?.forEach(page => {
+            flatPages.push(page);
+          });
+        }
       });
 
       const useSupabase = isDatabaseConfigured && !isSandboxFallbackAllowed();
@@ -221,10 +225,14 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   if (!isOpen) return null;
 
   const flatPages: any[] = [];
-  items.forEach(module => {
-    module.children?.forEach(page => {
-      flatPages.push(page);
-    });
+  items.forEach(item => {
+    if (item.type === 'file') {
+      flatPages.push(item);
+    } else {
+      item.children?.forEach(page => {
+        flatPages.push(page);
+      });
+    }
   });
 
   // Filter nav items based on search query
@@ -232,13 +240,22 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
   const qNorm = normalizeSearch(searchQuery);
   const filteredItems = searchQuery.trim()
     ? items
-        .map(module => ({
-          ...module,
-          children: (module.children || []).filter(page =>
-            normalizeSearch(page.name).includes(qNorm)
-          )
-        }))
-        .filter(module => (module.children?.length ?? 0) > 0)
+        .map(item => {
+          if (item.type === 'file') {
+            return normalizeSearch(item.name).includes(qNorm) ? item : null;
+          }
+          return {
+            ...item,
+            children: (item.children || []).filter(page =>
+              normalizeSearch(page.name).includes(qNorm)
+            )
+          };
+        })
+        .filter(item => {
+          if (!item) return false;
+          if (item.type === 'file') return true;
+          return (item.children?.length ?? 0) > 0;
+        }) as NavItem[]
     : items;
 
   return (
@@ -396,40 +413,70 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
              lang.toUpperCase() === 'DE' ? 'Keine Ergebnisse' :
              lang.toUpperCase() === 'ZH' ? '无结果' : 'No results'}
           </p>
-        ) : filteredItems.map((module) => (
-          <div key={module.name} className="space-y-4">
-            <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{module.name}</h4>
-            <div className="space-y-1">
-              {module.children?.map((page) => {
-                const isActive = cleanPath(pathname) === cleanPath(page.path);
-                const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(page.path));
+        ) : filteredItems.map((item) => {
+          if (item.type === 'file') {
+            const isActive = cleanPath(pathname) === cleanPath(item.path);
+            const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(item.path));
+            return (
+              <Link
+                key={item.name}
+                href={item.path || '#'}
+                className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
+                  isActive
+                    ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                    : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                ) : isActive ? (
+                  <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" />
+                ) : (
+                  <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
+                )}
+                <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-blue-400 font-extrabold' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          }
 
-                return (
-                  <Link
-                    key={page.name}
-                    href={page.path || '#'}
-                    className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
-                      isActive
-                        ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
-                        : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                    ) : isActive ? (
-                      <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" />
-                    ) : (
-                      <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
-                    )}
-                    <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-blue-400 font-extrabold' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {page.name}
-                    </span>
-                  </Link>
-                );
-              })}
+          // Otherwise it is a module with children
+          return (
+            <div key={item.name} className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{item.name}</h4>
+              <div className="space-y-1">
+                {item.children?.map((page) => {
+                  const isActive = cleanPath(pathname) === cleanPath(page.path);
+                  const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(page.path));
+
+                  return (
+                    <Link
+                      key={page.name}
+                      href={page.path || '#'}
+                      className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
+                        isActive
+                          ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                          : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      ) : isActive ? (
+                        <CheckCircle2 className="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-slate-800 group-hover:text-slate-600 flex-shrink-0" />
+                      )}
+                      <span className={`text-[11px] font-bold ${isActive ? 'tracking-tight text-blue-400 font-extrabold' : isCompleted ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {page.name}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {isLoggedIn && isEnrolled && (

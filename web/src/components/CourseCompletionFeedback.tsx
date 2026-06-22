@@ -501,10 +501,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="text-xs font-black text-slate-200 line-clamp-1">
-                      {ach.translations?.[lang.toUpperCase()]?.name || ach.name}
+                      {ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name || ach.name}
                     </h4>
                     <p className="text-[10px] text-slate-500 leading-normal line-clamp-2">
-                      {ach.translations?.[lang.toUpperCase()]?.description || ach.description}
+                      {ach.translations?.[lang.toUpperCase()]?.description || ach.translations?.[lang.toLowerCase()]?.description || ach.description}
                     </p>
                   </div>
                 </div>

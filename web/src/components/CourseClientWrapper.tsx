@@ -442,12 +442,18 @@ export const CourseClientWrapper = ({
       if (!storage) return;
 
       const flatPages: string[] = [];
-      (navItems || []).forEach(folder => {
-        folder.children?.forEach((p: any) => {
-          if (p.path) {
-            flatPages.push(p.path);
+      (navItems || []).forEach(item => {
+        if (item.type === 'file') {
+          if (item.path) {
+            flatPages.push(item.path);
           }
-        });
+        } else {
+          item.children?.forEach((p: any) => {
+            if (p.path) {
+              flatPages.push(p.path);
+            }
+          });
+        }
       });
 
       if (flatPages.length > 0) {
@@ -506,12 +512,18 @@ export const CourseClientWrapper = ({
         }
 
         const flatPages: string[] = [];
-        (navItems || []).forEach(folder => {
-          folder.children?.forEach((p: any) => {
-            if (p.path) {
-              flatPages.push(p.path);
+        (navItems || []).forEach(item => {
+          if (item.type === 'file') {
+            if (item.path) {
+              flatPages.push(item.path);
             }
-          });
+          } else {
+            item.children?.forEach((p: any) => {
+              if (p.path) {
+                flatPages.push(p.path);
+              }
+            });
+          }
         });
 
         if (flatPages.length > 0) {
@@ -570,12 +582,18 @@ export const CourseClientWrapper = ({
           : 0;
 
         const flatPages: string[] = [];
-        (navItems || []).forEach(folder => {
-          folder.children?.forEach((p: any) => {
-            if (p.path) {
-              flatPages.push(p.path);
+        (navItems || []).forEach(item => {
+          if (item.type === 'file') {
+            if (item.path) {
+              flatPages.push(item.path);
             }
-          });
+          } else {
+            item.children?.forEach((p: any) => {
+              if (p.path) {
+                flatPages.push(p.path);
+              }
+            });
+          }
         });
 
         if (flatPages.length > 0) {

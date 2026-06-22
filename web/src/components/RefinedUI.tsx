@@ -564,8 +564,9 @@ export const AITutorOverlay = ({
   const getPersonaName = (pId: string) => {
     const selected = personalities.find(p => p.id === pId || p.name === pId);
     if (selected) {
-      if (selected.translations?.[lang.toUpperCase()]?.name) {
-        return selected.translations[lang.toUpperCase()].name;
+      const transName = selected.translations?.[lang.toUpperCase()]?.name || selected.translations?.[lang.toLowerCase()]?.name;
+      if (transName) {
+        return transName;
       }
       return selected.name;
     }

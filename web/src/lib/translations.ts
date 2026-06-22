@@ -496,10 +496,10 @@ export const STATIC_UI_STRINGS: Record<string, typeof RAW_STATIC_UI_STRINGS.EN> 
 }) as any;
 
 export const STATIC_ACADEMIC_LEVELS = [
-  { value: 'foundation_1', EN: 'Foundation 1 (CP-CE2)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundamental 1', DE: 'Grundstufe 1', ZH: '基础 1' },
-  { value: 'foundation_2', EN: 'Foundation 2 (CM1-CM2)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundamental 2', DE: 'Grundstufe 2', ZH: '基础 2' },
-  { value: 'secondary_1',  EN: 'Secondary 1 (6e-3e)', FR: 'Secondaire 1 (6ème–3ème)', ES: 'Secundaria 1', DE: 'Sekundarstufe 1', ZH: '中学 1' },
-  { value: 'secondary_2',  EN: 'Secondary 2 (2de-Tle)', FR: 'Secondaire 2 (Seconde–Terminale)', ES: 'Secundaria 2', DE: 'Sekundarstufe 2', ZH: '中学 2' },
+  { value: 'foundation_1', EN: 'Primary School (Ages 6–8)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundamental 1', DE: 'Grundstufe 1', ZH: '基础 1' },
+  { value: 'foundation_2', EN: 'Primary School (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundamental 2', DE: 'Grundstufe 2', ZH: '基础 2' },
+  { value: 'secondary_1',  EN: 'Middle School (Ages 11–14)', FR: 'Secondaire 1 (6ème–3ème)', ES: 'Secundaria 1', DE: 'Sekundarstufe 1', ZH: '中学 1' },
+  { value: 'secondary_2',  EN: 'High School (Ages 15–18)', FR: 'Secondaire 2 (Seconde–Terminale)', ES: 'Secundaria 2', DE: 'Sekundarstufe 2', ZH: '中学 2' },
   { value: 'preuni_1',     EN: 'Pre-University (Bachelor Prep)', FR: 'Pré-Universitaire (Licence)', ES: 'Pre-Universitario (Prep. Grado)', DE: 'Voruniversitär', ZH: '大学预科' },
   { value: 'preuni_2',     EN: 'Pre-University (Master Prep)', FR: 'Pré-Universitaire (Master)', ES: 'Pre-Universitario (Prep. Máster)', DE: 'Vor-Master', ZH: '硕士预科' },
   { value: 'preuni_3',     EN: 'Pre-University (Doctoral Prep)', FR: 'Pré-Universitaire (Doctorat)', ES: 'Pre-Universitario (Prep. Doctorado)', DE: 'Vor-Doktorat', ZH: '博士预科' },

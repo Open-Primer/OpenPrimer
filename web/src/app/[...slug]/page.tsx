@@ -196,19 +196,17 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     
     const coursePath = slug.slice(0, 3).join('/');
     const rawNav = await getNavigationTree(coursePath, lang);
-    const files = rawNav.filter(item => item.type === 'file');
-    const folders = rawNav.filter(item => item.type === 'folder');
-    
-    const navItems = [
-      ...(files.length > 0 ? [{ name: t.overview || STATIC_UI_STRINGS.EN.overview, type: 'folder', children: files }] : []),
-      ...folders
-    ];
+    const navItems = rawNav;
 
     const flatPages: any[] = [];
-    navItems.forEach(folder => {
-      folder.children?.forEach((p: any) => {
-        flatPages.push(p);
-      });
+    navItems.forEach(item => {
+      if (item.type === 'file') {
+        flatPages.push(item);
+      } else {
+        item.children?.forEach((p: any) => {
+          flatPages.push(p);
+        });
+      }
     });
 
     const currentPath = `/${slug.join('/')}`;
