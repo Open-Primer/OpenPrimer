@@ -153,9 +153,12 @@ const safeEvaluate = (expression: string, xVal: number): number => {
 interface MathPreset {
   id: string;
   name: string;
+  nameFR: string;
   formula: string;
   description: string;
+  descriptionFR: string;
   category: 'Probability & Stats' | 'Waves & Signal' | 'Analysis & Growth';
+  categoryFR: string;
   xMin: number;
   xMax: number;
   yMin: number;
@@ -166,9 +169,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'sigmoid',
     name: 'Sigmoid (Logistic)',
+    nameFR: 'Sigmoïde (Logistique)',
     formula: '1 / (1 + exp(-x))',
     description: 'A smooth, S-shaped activation function mapping values between 0 and 1. Commonly used in biology population models and neural networks.',
+    descriptionFR: 'Une fonction d\'activation douce en forme de S qui associe les valeurs entre 0 et 1. Couramment utilisée dans les modèles de population en biologie et les réseaux de neurones.',
     category: 'Probability & Stats',
+    categoryFR: 'Probabilités & Stats',
     xMin: -6,
     xMax: 6,
     yMin: -0.2,
@@ -177,9 +183,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'gaussian',
     name: 'Gaussian (Normal)',
+    nameFR: 'Gaussienne (Normale)',
     formula: 'exp(-x^2)',
     description: 'The classical bell curve of normal distribution describing random natural variations and statistical probabilities.',
+    descriptionFR: 'La courbe en cloche classique de la distribution normale décrivant les variations naturelles aléatoires et les probabilités statistiques.',
     category: 'Probability & Stats',
+    categoryFR: 'Probabilités & Stats',
     xMin: -4,
     xMax: 4,
     yMin: -0.2,
@@ -188,9 +197,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'lorentzian',
     name: 'Lorentzian Distribution',
+    nameFR: 'Distribution Lorentzienne',
     formula: '1 / (1 + x^2)',
     description: 'A probability distribution and line shape frequently describing resonance curves, spectral frequencies, and physical systems.',
+    descriptionFR: 'Une distribution de probabilité et une forme de raie décrivant fréquemment les courbes de résonance, les fréquences spectrales et les systèmes physiques.',
     category: 'Waves & Signal',
+    categoryFR: 'Ondes & Signaux',
     xMin: -5,
     xMax: 5,
     yMin: -0.2,
@@ -199,9 +211,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'sinusoid',
     name: 'Sinc (Sinusoid)',
+    nameFR: 'Sinus Cardinal (Sinc)',
     formula: 'sin(x)/x',
     description: 'The cardinal sine function, widely used in signal processing, diffraction light patterns, and Fourier analysis.',
+    descriptionFR: 'La fonction sinus cardinal, largement utilisée en traitement du signal, en figures de diffraction lumineuse et en analyse de Fourier.',
     category: 'Waves & Signal',
+    categoryFR: 'Ondes & Signaux',
     xMin: -12,
     xMax: 12,
     yMin: -0.4,
@@ -210,9 +225,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'sine',
     name: 'Sine Wave',
+    nameFR: 'Onde Sinusoïdale',
     formula: 'sin(x)',
     description: 'The fundamental periodic oscillation modeling alternating current, sound propagation, and mechanical waves.',
+    descriptionFR: 'L\'oscillation périodique fondamentale modélisant le courant alternatif, la propagation du son et les ondes mécaniques.',
     category: 'Waves & Signal',
+    categoryFR: 'Ondes & Signaux',
     xMin: -6.28,
     xMax: 6.28,
     yMin: -1.5,
@@ -221,9 +239,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'exp',
     name: 'Exponential Growth',
+    nameFR: 'Croissance Exponentielle',
     formula: 'exp(x/3)',
     description: 'A curve representing unrestricted compounding growth, modeling epidemics, cell division, and nuclear reactions.',
+    descriptionFR: 'Une courbe représentant une croissance composée illimitée, modélisant les épidémies, la division cellulaire et les réactions nucléaires.',
     category: 'Analysis & Growth',
+    categoryFR: 'Analyse & Croissance',
     xMin: -5,
     xMax: 5,
     yMin: -0.5,
@@ -232,9 +253,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'log',
     name: 'Logarithmic Curve',
+    nameFR: 'Courbe Logarithmique',
     formula: 'ln(x)',
     description: 'The inverse of the exponential function, representing slow and decelerating growth such as sound decibels or sensor responses.',
+    descriptionFR: 'L\'inverse de la fonction exponentielle, représentant une croissance lente et décélérante comme les décibels sonores ou les réponses des capteurs.',
     category: 'Analysis & Growth',
+    categoryFR: 'Analyse & Croissance',
     xMin: 0.1,
     xMax: 10,
     yMin: -3,
@@ -243,9 +267,12 @@ const MATH_PRESETS: MathPreset[] = [
   {
     id: 'cubic',
     name: 'Cubic Polynomial',
+    nameFR: 'Polynôme Cubique',
     formula: 'x^3 - 3*x',
     description: 'A third-degree polynomial displaying local minima and maxima, illustrating mathematical inflections and extrema.',
+    descriptionFR: 'Un polynôme du troisième degré présentant des minima et maxima locaux, illustrant les inflexions et extrema mathématiques.',
     category: 'Analysis & Growth',
+    categoryFR: 'Analyse & Croissance',
     xMin: -3,
     xMax: 3,
     yMin: -5,

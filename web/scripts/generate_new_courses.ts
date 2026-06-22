@@ -13,25 +13,25 @@ interface CourseSpec {
 
 const coursesToGenerate: CourseSpec[] = [
   {
-    name: "Histoire de l'Art",
+    name: "Introduction à l'Histoire Ancienne",
     subject: "History",
-    level: "Beginner",
+    level: "L1",
     targetLang: "fr",
-    description: "Introduction générale à l'histoire de l'art, couvrant les grandes périodes artistiques de la préhistoire à l'art contemporain, avec une exploration des chefs-d'œuvre et des mouvements fondateurs."
+    description: "Une étude introductive approfondie de l'essor et de la chute des premières sociétés humaines, de la Mésopotamie et l'Égypte à la Grèce classique."
   },
   {
-    name: "Introduction à la Psychologie",
-    subject: "Social",
-    level: "Beginner",
-    targetLang: "fr",
-    description: "Introduction aux concepts fondamentaux de la psychologie scientifique, couvrant les approches comportementales, cognitives, développementales et sociales de la compréhension du comportement humain."
+    name: "Introduction to Human Anatomy",
+    subject: "Medicine",
+    level: "L2",
+    targetLang: "en",
+    description: "A comprehensive foundational course covering the structural organization of the human body, tissues, skeletal and muscular systems."
   },
   {
-    name: "Biologie Cellulaire Fondamentale",
-    subject: "Biology",
-    level: "Beginner",
-    targetLang: "fr",
-    description: "Étude des structures cellulaires, de la division cellulaire, et des mécanismes fondamentaux de la vie au niveau moléculaire et cellulaire."
+    name: "Fundamentos de la Filosofía",
+    subject: "Philosophy",
+    level: "L3",
+    targetLang: "es",
+    description: "Un viaje sistemático y avanzado a través de las cuestiones centrales de la existencia, el conocimiento, la ética y la metafísica."
   }
 ];
 

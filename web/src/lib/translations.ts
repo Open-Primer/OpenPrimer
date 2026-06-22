@@ -496,22 +496,22 @@ export const STATIC_UI_STRINGS: Record<string, typeof RAW_STATIC_UI_STRINGS.EN> 
 }) as any;
 
 export const STATIC_ACADEMIC_LEVELS = [
-  { value: 'foundation_1', EN: 'Primary School (Ages 6–8)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundamental 1', DE: 'Grundstufe 1', ZH: '基础 1' },
-  { value: 'foundation_2', EN: 'Primary School (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundamental 2', DE: 'Grundstufe 2', ZH: '基础 2' },
-  { value: 'secondary_1',  EN: 'Middle School (Ages 11–14)', FR: 'Secondaire 1 (6ème–3ème)', ES: 'Secundaria 1', DE: 'Sekundarstufe 1', ZH: '中学 1' },
-  { value: 'secondary_2',  EN: 'High School (Ages 15–18)', FR: 'Secondaire 2 (Seconde–Terminale)', ES: 'Secundaria 2', DE: 'Sekundarstufe 2', ZH: '中学 2' },
-  { value: 'preuni_1',     EN: 'Pre-University (Bachelor Prep)', FR: 'Pré-Universitaire (Licence)', ES: 'Pre-Universitario (Prep. Grado)', DE: 'Voruniversitär', ZH: '大学预科' },
-  { value: 'preuni_2',     EN: 'Pre-University (Master Prep)', FR: 'Pré-Universitaire (Master)', ES: 'Pre-Universitario (Prep. Máster)', DE: 'Vor-Master', ZH: '硕士预科' },
-  { value: 'preuni_3',     EN: 'Pre-University (Doctoral Prep)', FR: 'Pré-Universitaire (Doctorat)', ES: 'Pre-Universitario (Prep. Doctorado)', DE: 'Vor-Doktorat', ZH: '博士预科' },
-  { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Universidad (1er Año)', DE: 'L1 — Universität (1. Jahr)', ZH: 'L1 — 大一' },
-  { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Universidad (2o Año)', DE: 'L2 — Universität (2. Jahr)', ZH: 'L2 — 大二' },
-  { value: 'L3',           EN: 'L3 — 3rd Year (University)', FR: 'L3 — 3ème Année Universitaire', ES: 'L3 — Universidad (3er Año)', DE: 'L3 — Universität (3. Jahr)', ZH: 'L3 — 大三' },
+  { value: 'foundation_1', EN: 'Primary School 1 (Ages 6–9)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundacional 1 (6–9 años)', DE: 'Grundstufe 1 (6–9 J.)', ZH: '基础一阶（6–9岁）' },
+  { value: 'foundation_2', EN: 'Primary School 2 (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundacional 2 (9–11 años)', DE: 'Grundstufe 2 (9–11 J.)', ZH: '基础二阶（9–11岁）' },
+  { value: 'secondary_1', EN: 'Middle School 1 (Ages 11–13)', FR: 'Secondaire 1 (6ème–5ème)', ES: 'Secundaria 1 (11–13 años)', DE: 'Sekundarstufe I-1 (11–13 J.)', ZH: '初中一阶（11–13岁）' },
+  { value: 'secondary_2', EN: 'Middle School 2 (Ages 13–15)', FR: 'Secondaire 2 (4ème–3ème)', ES: 'Secundaria 2 (13–15 años)', DE: 'Sekundarstufe I-2 (13–15 J.)', ZH: '初中二阶（13–15岁）' },
+  { value: 'preuni_1',     EN: 'Pre-University 1 (Ages 15–16)', FR: 'Lycée 1 — Seconde', ES: 'Bachillerato 1 (15–16 años)', DE: 'Gymnasium — Klasse 10', ZH: '高中一年级（15–16岁）' },
+  { value: 'preuni_2',     EN: 'Pre-University 2 (Ages 16–17)', FR: 'Lycée 2 — Première', ES: 'Bachillerato 2 (16–17 años)', DE: 'Gymnasium — Klasse 11', ZH: '高中二年级（16–17岁）' },
+  { value: 'preuni_3',     EN: 'Pre-University 3 (Ages 17–18)', FR: 'Lycée 3 — Terminale', ES: 'Bachillerato 3 — Selectividad', DE: 'Abitur — Abschlussklasse', ZH: '高中三年级（高考）' },
+  { value: 'L1',           EN: 'L1 — 1st Year (University)', FR: 'L1 — 1ère Année Universitaire', ES: 'L1 — Primer Año', DE: 'L1 — 1. Studienjahr', ZH: 'L1 — 大一' },
+  { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Segundo Año', DE: 'L2 — 2. Studienjahr', ZH: 'L2 — 大二' },
+  { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — 大三（学士）' },
   { value: 'M1',           EN: 'M1 — 1st Year (Master)', FR: 'M1 — 1ère Année de Master', ES: 'M1 — Máster (1er Año)', DE: 'M1 — Master (1. Jahr)', ZH: 'M1 — 研一' },
   { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — 研二' },
   { value: 'beginner',     EN: 'Beginner', FR: 'Débutant', ES: 'Principiante', DE: 'Anfänger', ZH: '初学者' },
   { value: 'intermediate', EN: 'Intermediate', FR: 'Intermédiaire', ES: 'Intermedio', DE: 'Mittelstufe', ZH: '中级' },
   { value: 'advanced',     EN: 'Advanced', FR: 'Avancé', ES: 'Avanzado', DE: 'Fortgeschritten', ZH: '高级' },
-  { value: 'expert',       EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' }
+  { value: 'expert',       EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' },
 ] as const;
 
 export const formatCourseLevel = (level: string | number | undefined | null, lang: string): string => {
@@ -533,13 +533,10 @@ export const formatCourseLevel = (level: string | number | undefined | null, lan
     }
   }
 
-  // 2. Try static list match (excluding L1-M2 codes if we want to display shorter codes like '101' for them)
-  const isL1toM2 = ['l1', 'l2', 'l3', 'm1', 'm2'].includes(lvlStr);
-  if (!isL1toM2) {
-    const found = STATIC_ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === lvlStr);
-    if (found) {
-      return (found as any)[langKey] || found.EN;
-    }
+  // 2. Try static list match (including L1-M2 etc. to keep everything aligned with STATIC_ACADEMIC_LEVELS)
+  const found = STATIC_ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === lvlStr);
+  if (found) {
+    return (found as any)[langKey] || found.EN;
   }
 
   const isEn = langKey === 'EN';
@@ -548,56 +545,6 @@ export const formatCourseLevel = (level: string | number | undefined | null, lan
   const isDe = langKey === 'DE';
   const isFr = langKey === 'FR';
 
-  if (lvlStr === 'beginner') {
-    if (isFr) return 'Débutant';
-    if (isEs) return 'Principiante';
-    if (isDe) return 'Anfänger';
-    if (isZh) return '初学者';
-    return 'Beginner';
-  }
-  if (lvlStr === 'intermediate') {
-    if (isFr) return 'Intermédiaire';
-    if (isEs) return 'Intermedio';
-    if (isDe) return 'Mittelstufe';
-    if (isZh) return '中级';
-    return 'Intermediate';
-  }
-  if (lvlStr === 'advanced') {
-    if (isFr) return 'Avancé';
-    if (isEs) return 'Avanzado';
-    if (isDe) return 'Fortgeschritten';
-    if (isZh) return '高级';
-    return 'Advanced';
-  }
-  if (lvlStr === 'expert') {
-    if (isFr) return 'Expert';
-    if (isEs) return 'Experto';
-    if (isDe) return 'Experte';
-    if (isZh) return '专家';
-    return 'Expert';
-  }
-
-  if (lvlStr === 'secondary_1') {
-    if (isFr) return 'Secondaire 1 (6ème–3ème)';
-    if (isZh) return '中学 1';
-    if (isEs) return 'Secundaria 1';
-    if (isDe) return 'Sekundarstufe 1';
-    return 'Secondary 1';
-  }
-  if (lvlStr === 'secondary_2') {
-    if (isFr) return 'Secondaire 2 (Seconde–Terminale)';
-    if (isZh) return '中学 2';
-    if (isEs) return 'Secundaria 2';
-    if (isDe) return 'Sekundarstufe 2';
-    return 'Secondary 2';
-  }
-  if (lvlStr === 'secondary_3') {
-    if (isFr) return 'Secondaire 3';
-    if (isZh) return '中学 3';
-    if (isEs) return 'Secundaria 3';
-    if (isDe) return 'Sekundarstufe 3';
-    return 'Secondary 3';
-  }
   if (lvlStr.startsWith('secondary_')) {
     const num = lvlStr.split('_')[1];
     if (isFr) return `Secondaire ${num}`;
@@ -615,47 +562,6 @@ export const formatCourseLevel = (level: string | number | undefined | null, lan
     return `Primary ${num}`;
   }
 
-  if (lvlStr === 'l1') {
-    if (isFr) return 'Niveau L1';
-    if (isEn) return 'L1 (101)';
-    if (isZh) return '大一 (101)';
-    if (isEs) return 'L1 (101)';
-    if (isDe) return 'Klasse L1';
-    return 'L1';
-  }
-  if (lvlStr === 'l2') {
-    if (isFr) return 'Niveau L2';
-    if (isEn) return 'L2 (201)';
-    if (isZh) return '大二 (201)';
-    if (isEs) return 'L2 (201)';
-    if (isDe) return 'Klasse L2';
-    return 'L2';
-  }
-  if (lvlStr === 'l3') {
-    if (isFr) return 'Niveau L3';
-    if (isEn) return 'L3 (301)';
-    if (isZh) return '大三 (301)';
-    if (isEs) return 'L3 (301)';
-    if (isDe) return 'Klasse L3';
-    return 'L3';
-  }
-  if (lvlStr === 'm1') {
-    if (isEn) return '501';
-    if (isZh) return '研一 (501)';
-    if (isEs) return 'M1 (501)';
-    if (isDe) return 'M1 (501)';
-    if (isFr) return 'M1 (501)';
-    return 'M1';
-  }
-  if (lvlStr === 'm2') {
-    if (isEn) return '502';
-    if (isZh) return '研二 (502)';
-    if (isEs) return 'M2 (502)';
-    if (isDe) return 'M2 (502)';
-    if (isFr) return 'M2 (502)';
-    return 'M2';
-  }
-
   if (/^\d+$/.test(lvlStr)) {
     const num = parseInt(lvlStr, 10);
     if (isZh) return `${num}年级`;
@@ -663,12 +569,6 @@ export const formatCourseLevel = (level: string | number | undefined | null, lan
     if (isFr) return `Niveau ${num}`;
     if (isEs) return `Grado ${num}`;
     if (isDe) return `Klasse ${num}`;
-  }
-  
-  // Try static list match fallback for any other level not handled by overrides
-  const foundFallback = STATIC_ACADEMIC_LEVELS.find(l => l.value.toLowerCase() === lvlStr);
-  if (foundFallback) {
-    return (foundFallback as any)[langKey] || foundFallback.EN;
   }
 
   return lvlStr.toUpperCase();
