@@ -102,6 +102,17 @@ And a duplicate citation to test consolidation:
   <GoingFurtherItem title="Copenhagen" type="movie" director="Howard Davies" year="2002" imdb="https://www.imdb.com/title/tt0340057/" description="A film adaptation of the 1941 Bohr-Heisenberg meeting." />
   <GoingFurtherItem title="CERN Website" type="website" url="https://home.cern/" description="The official portal of the European Organization for Nuclear Research." />
 </GoingFurther>`
+    },
+    {
+      name: "15. Objectives block conversion from plain paragraphs",
+      input: `### Objectifs d'apprentissage
+Analyser les mécanismes biophysiques qui établissent et maintiennent le potentiel de repos membranaire.
+
+Expliquer le rôle des gradients ioniques, de la perméabilité membranaire et des pompes ioniques dans la genèse du potentiel de repos.
+
+Distinguer les différentes phases du potentiel d'action et les canaux ioniques voltage-dépendants impliqués dans chacune d'elles.
+
+Évaluer l'importance des équations de Nernst et de Goldman-Hodgkin-Katz pour prédire les potentiels d'équilibre et de membrane.`
     }
   ];
 

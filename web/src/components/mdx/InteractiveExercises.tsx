@@ -5,6 +5,100 @@ import { Lightbulb, ChevronDown, ChevronUp, CheckCircle2, XCircle, HelpCircle, A
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import katex from 'katex';
+
+const renderTextSegmentWithMath = (text: string) => {
+  if (!text) return [];
+  const mathRegex = /(\$\$[\s\S]+?\$\$|\$[^\n$]+?\$)/g;
+  const parts = text.split(mathRegex);
+  
+  return parts.map((part, i) => {
+    if (part.startsWith('$$') && part.endsWith('$$')) {
+      const formula = part.slice(2, -2).trim();
+      try {
+        const html = katex.renderToString(formula, { displayMode: true, throwOnError: false });
+        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} className="block my-3 overflow-x-auto" />;
+      } catch (e) {
+        console.error("KaTeX error:", e);
+        return <code key={i} className="text-rose-400">{part}</code>;
+      }
+    } else if (part.startsWith('$') && part.endsWith('$')) {
+      const formula = part.slice(1, -1).trim();
+      try {
+        const html = katex.renderToString(formula, { displayMode: false, throwOnError: false });
+        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} className="inline-block" />;
+      } catch (e) {
+        console.error("KaTeX error:", e);
+        return <code key={i} className="text-rose-400">{part}</code>;
+      }
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
+const renderTextWithMathAndMarkdown = (text: string, inParagraph: boolean): React.ReactNode => {
+  if (!text) return null;
+  const lines = text.split(/\n/);
+  
+  const renderedLines = lines.map((line, li) => {
+    const isBullet = /^(\*|-|\d+\.) /.test(line.trim());
+    const content = line.replace(/^(\*|-|\d+\.) /, '');
+    
+    const parts = content.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/);
+    const rendered = parts.map((part, pi) => {
+      if (/^\*\*[^*]+\*\*$/.test(part)) {
+        return <strong key={pi}>{renderTextSegmentWithMath(part.slice(2, -2))}</strong>;
+      }
+      if (/^\*[^*]+\*$/.test(part)) {
+        return <em key={pi}>{renderTextSegmentWithMath(part.slice(1, -1))}</em>;
+      }
+      return <React.Fragment key={pi}>{renderTextSegmentWithMath(part)}</React.Fragment>;
+    });
+
+    if (isBullet) {
+      return <li key={li} className="ml-6 list-disc mb-2 text-slate-300">{rendered}</li>;
+    }
+    if (!line.trim()) {
+      return inParagraph ? <span key={li} className="block h-2" /> : <br key={li} />;
+    }
+    
+    if (inParagraph) {
+      return <span key={li} className="inline">{rendered}</span>;
+    }
+    
+    return <p key={li} className="mb-4 text-slate-300">{rendered}</p>;
+  });
+
+  return <>{renderedLines}</>;
+};
+
+export const renderNodeWithMath = (node: React.ReactNode, inParagraph = false): React.ReactNode => {
+  if (node === null || node === undefined) return node;
+
+  if (typeof node === 'string') {
+    return renderTextWithMathAndMarkdown(node, inParagraph);
+  }
+
+  if (typeof node === 'number' || typeof node === 'boolean') {
+    return node;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, index) => <React.Fragment key={index}>{renderNodeWithMath(child, inParagraph)}</React.Fragment>);
+  }
+
+  if (React.isValidElement(node)) {
+    const element = node as React.ReactElement<any>;
+    const isP = element.type === 'p';
+    if (element.props && element.props.children) {
+      const processedChildren = renderNodeWithMath(element.props.children, isP || inParagraph);
+      return React.cloneElement(element, { ...element.props }, processedChildren);
+    }
+    return node;
+  }
+
+  return node;
+};
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -60,28 +154,7 @@ interface SolvedExerciseProps {
  */
 const InlineMd = ({ text }: { text: string }) => {
   if (!text) return null;
-  const lines = text.split(/\n/);
-  return (
-    <>
-      {lines.map((line, li) => {
-        // Detect unordered list items
-        const isBullet = /^(\*|-|\d+\.) /.test(line.trim());
-        const content = line.replace(/^(\*|-|\d+\.) /, '');
-        // Inline formatting: **bold** and *italic*
-        const parts = content.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/);
-        const rendered = parts.map((part, pi) => {
-          if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={pi}>{part.slice(2, -2)}</strong>;
-          if (/^\*[^*]+\*$/.test(part)) return <em key={pi}>{part.slice(1, -1)}</em>;
-          return <span key={pi}>{part}</span>;
-        });
-        if (isBullet) {
-          return <li key={li} className="ml-4 list-disc">{rendered}</li>;
-        }
-        if (!line.trim()) return <br key={li} />;
-        return <p key={li} className="mb-1">{rendered}</p>;
-      })}
-    </>
-  );
+  return <>{renderTextWithMathAndMarkdown(text, false)}</>;
 };
 
 /** Checks if a ReactNode is non-empty (has meaningful content) */
@@ -177,7 +250,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
         </div>
         {/* Problem formulation */}
         <div className="text-slate-200 text-sm leading-relaxed space-y-1">
-          {finalChildren}
+          {renderNodeWithMath(finalChildren)}
         </div>
       </div>
 
@@ -386,13 +459,13 @@ export const UnsolvedExercise = ({
 
         {resolvedQuestion && (
           <div className="text-slate-100 text-sm font-bold leading-relaxed">
-            {resolvedQuestion}
+            {renderNodeWithMath(resolvedQuestion)}
           </div>
         )}
 
         {otherChildren.length > 0 && (
           <div className="space-y-4">
-            {otherChildren}
+            {otherChildren.map((child, index) => <React.Fragment key={index}>{renderNodeWithMath(child)}</React.Fragment>)}
           </div>
         )}
 
@@ -491,7 +564,7 @@ export const UnsolvedExercise = ({
               className="p-4 bg-slate-950/40 border border-slate-850/80 rounded-xl text-xs text-slate-350 flex items-start gap-2.5 leading-relaxed"
             >
               <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-              <span>{hint}</span>
+              <span>{renderNodeWithMath(hint)}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -544,7 +617,7 @@ export const UnsolvedExercise = ({
               {t.unlocked_sol}
             </span>
             <div className="text-slate-300 text-xs sm:text-sm leading-relaxed italic border-l-2 border-blue-500/50 pl-4">
-              {resolvedSolution || solutionChild}
+              {renderNodeWithMath(resolvedSolution || solutionChild)}
             </div>
           </motion.div>
         )}

@@ -1003,6 +1003,7 @@ function parseMarkdownObjectivesToJsx(content: string): string {
       const lower = trimmed.toLowerCase();
       
       // Categorize based on keywords
+      let isCategoryHeader = false;
       if (
         lower.includes('savoir-faire') || 
         lower.includes('compétence') || 
@@ -1010,6 +1011,7 @@ function parseMarkdownObjectivesToJsx(content: string): string {
         lower.includes('skills')
       ) {
         currentCategory = 'skills';
+        isCategoryHeader = true;
       } else if (
         lower.includes('posture') || 
         lower.includes('attitude') || 
@@ -1017,38 +1019,77 @@ function parseMarkdownObjectivesToJsx(content: string): string {
         lower.includes('savoir-etre')
       ) {
         currentCategory = 'attitudes';
+        isCategoryHeader = true;
       } else if (
         lower.includes('savoir') || 
         lower.includes('connaissance') || 
         lower.includes('knowledge')
       ) {
         currentCategory = 'knowledge';
+        isCategoryHeader = true;
       }
       
-      // If it matches a bullet point line, extract the clean item
+      // Check if this line is purely a category header (e.g. "### Savoir-faire" or "**Savoirs**")
+      const isPureHeader = trimmed.startsWith('#') || 
+                           (trimmed.startsWith('**') && trimmed.endsWith('**')) ||
+                           (trimmed.startsWith('__') && trimmed.endsWith('__')) ||
+                           (trimmed.length < 40 && (
+                             lower.endsWith(':') || 
+                             lower.startsWith('savoir') || 
+                             lower.startsWith('compétence') || 
+                             lower.startsWith('connaissance') || 
+                             lower.startsWith('attitude') || 
+                             lower.startsWith('skills') || 
+                             lower.startsWith('knowledge') || 
+                             lower.startsWith('posture') ||
+                             lower.startsWith('learning objectives') ||
+                             lower.startsWith('objectifs d')
+                           ));
+
+      if (isCategoryHeader && isPureHeader) {
+        continue;
+      }
+      
+      // Extract bullet text if it's a bullet point, otherwise use the whole trimmed line
       const bulletMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+      let text = '';
       if (bulletMatch) {
-        let text = bulletMatch[1].trim();
-        
-        // Clean any bold headings/prefixes from the bullet itself (e.g. "**Savoir :** Décrire..." -> "Décrire...")
-        text = text.replace(/^\*\*.*?\*\*\s*[:\-]?\s*/, '');
-        
-        // Skip empty or purely categorical bullets (e.g. if the bullet was just "- **Savoir**")
-        if (!text || text.toLowerCase() === 'savoir' || text.toLowerCase() === 'savoir-faire' || text.toLowerCase() === 'posture' || text.toLowerCase() === 'attitudes') {
-          continue;
-        }
-        
-        if (currentCategory === 'knowledge') {
-          knowledgeItems.push(text);
-        } else if (currentCategory === 'skills') {
-          skillsItems.push(text);
-        } else {
-          attitudesItems.push(text);
-        }
+        text = bulletMatch[1].trim();
+      } else {
+        text = trimmed;
+      }
+      
+      // Clean any bold headings/prefixes from the bullet/paragraph itself (e.g. "**Savoir :** Décrire..." -> "Décrire...")
+      text = text.replace(/^\*\*.*?\*\*\s*[:\-]?\s*/, '');
+      text = text.replace(/^[-*+]\s+/, '').trim();
+      
+      // Skip empty or purely categorical lines
+      const cleanLower = text.toLowerCase();
+      if (!text || 
+          cleanLower === 'savoir' || 
+          cleanLower === 'savoir-faire' || 
+          cleanLower === 'posture' || 
+          cleanLower === 'attitudes' ||
+          cleanLower === 'connaissances' ||
+          cleanLower === 'compétences' ||
+          cleanLower === 'savoir-être' ||
+          cleanLower === 'savoir-etre' ||
+          cleanLower === 'learning objectives' ||
+          cleanLower === 'objectifs d\'apprentissage'
+      ) {
+        continue;
+      }
+      
+      if (currentCategory === 'knowledge') {
+        knowledgeItems.push(text);
+      } else if (currentCategory === 'skills') {
+        skillsItems.push(text);
+      } else {
+        attitudesItems.push(text);
       }
     }
     
-    // If we didn't find any bullet points, return the match unchanged
+    // If we didn't find any objectives, return the match unchanged
     if (knowledgeItems.length === 0 && skillsItems.length === 0 && attitudesItems.length === 0) {
       return match;
     }
@@ -2600,6 +2641,19 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
   });
 
+export function cleanGlossaryDefinition(def: string): string {
+  if (!def) return '';
+  const colonIndex = def.indexOf(':');
+  if (colonIndex !== -1) {
+    const part1 = def.substring(0, colonIndex).trim();
+    const part2 = def.substring(colonIndex + 1).trim();
+    if (part2.startsWith(part1)) {
+      return part2;
+    }
+  }
+  return def;
+}
+
   // 5. Render Glossary as static list at the bottom of the page
   const glossaryIndex = processed.search(/###\s*(Glossaire|Glossary)/i);
   if (glossaryIndex !== -1) {
@@ -2613,7 +2667,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       const term = termMatch ? termMatch[1] : '';
       const def = defMatch ? defMatch[1] : '';
       const displayName = (content || term || '').trim();
-      return `\n- **${displayName}** : ${def}\n`;
+      const cleanedDef = cleanGlossaryDefinition(def);
+      return `\n- **${displayName}** : ${cleanedDef}\n`;
     });
     
     processed = preGlossary + glossaryContent;

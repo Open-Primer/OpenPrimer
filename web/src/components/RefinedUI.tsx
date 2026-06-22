@@ -869,6 +869,19 @@ export const AITutorOverlay = ({
 
   // Flashcards extraction from pageContext
   useEffect(() => {
+    const cleanGlossaryDefinition = (def: string): string => {
+      if (!def) return '';
+      const colonIndex = def.indexOf(':');
+      if (colonIndex !== -1) {
+        const part1 = def.substring(0, colonIndex).trim();
+        const part2 = def.substring(colonIndex + 1).trim();
+        if (part2.startsWith(part1)) {
+          return part2;
+        }
+      }
+      return def;
+    };
+
     if (pageContext) {
       const cards: { term: string; definition: string }[] = [];
       const regex = /<Glossary\s+term=["']([^"']+)["']\s+definition=["']([^"']+)["']/g;
@@ -880,7 +893,7 @@ export const AITutorOverlay = ({
         const key = `${term}::${definition}`;
         if (!seen.has(key)) {
           seen.add(key);
-          cards.push({ term, definition });
+          cards.push({ term, definition: cleanGlossaryDefinition(definition) });
         }
       }
       setFlashcards(cards);

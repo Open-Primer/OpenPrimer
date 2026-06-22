@@ -215,6 +215,22 @@ export const CourseClientWrapper = ({
   }, [pathname]);
 
   useEffect(() => {
+    if (activeCourse && language) {
+      const supportedLangs = (activeCourse.languages || activeCourse.langs || []).map((l: string) => l.toUpperCase().trim());
+      const currentLang = language.toUpperCase().trim();
+      
+      if (supportedLangs.length > 0 && !supportedLangs.includes(currentLang)) {
+        const loggedIn = localStorage.getItem('op_session') !== 'false' && localStorage.getItem('op_session') !== null;
+        if (loggedIn) {
+          window.location.href = '/profile/curriculum';
+        } else {
+          window.location.href = '/catalog';
+        }
+      }
+    }
+  }, [language, activeCourse]);
+
+  useEffect(() => {
     let active = true;
     async function checkEnrollment() {
       const segments = pathname.split('/').filter(Boolean);

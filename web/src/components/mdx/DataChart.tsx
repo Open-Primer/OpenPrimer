@@ -286,10 +286,9 @@ export const DataChart = ({
                       stroke={grad.end}
                       strokeWidth={isHovered ? "2" : "1"}
                       filter={isHovered ? "url(#shadow)" : ""}
-                      initial={{ scaleY: 0, y: height - paddingBottom }}
-                      animate={{ scaleY: 1, y: barY }}
+                      initial={{ height: 0, y: height - paddingBottom }}
+                      animate={{ height: Math.max(barHeight, 2), y: barY }}
                       transition={{ duration: 0.8, ease: "easeOut", delay: gIdx * 0.04 }}
-                      style={{ transformOrigin: "bottom" }}
                     />
                   </g>
                 );
@@ -393,10 +392,9 @@ export const DataChart = ({
                     stroke={grad.end}
                     strokeWidth={isHovered ? "2" : "1"}
                     filter={isHovered ? "url(#shadow)" : ""}
-                    initial={{ scaleY: 0, y: height - paddingBottom }}
-                    animate={{ scaleY: 1, y }}
+                    initial={{ height: 0, y: height - paddingBottom }}
+                    animate={{ height: Math.max(barHeight, 2), y }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.05 }}
-                    style={{ transformOrigin: "bottom" }}
                   />
 
                   {isHovered && (

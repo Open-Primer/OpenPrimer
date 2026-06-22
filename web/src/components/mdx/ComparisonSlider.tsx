@@ -122,7 +122,10 @@ export const ComparisonSlider = ({
     }
 
     if (typeof content === 'string' || content === null || content === undefined) {
-      const rawText = typeof content === 'string' ? content : '';
+      let rawText = typeof content === 'string' ? content : '';
+      if (rawText.startsWith('!')) {
+        rawText = rawText.substring(1);
+      }
       const text = rawText.replace(/<[^>]+>/g, '').trim();
       const gradientClass = isBefore 
         ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950" 

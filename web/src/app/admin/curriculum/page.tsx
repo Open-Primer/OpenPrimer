@@ -915,7 +915,7 @@ export default function AdminCurriculumPage() {
 
   // Compute Active Generation Proposals
   useEffect(() => {
-    if (historyList.length === 0) return;
+    if (courses.length === 0) return;
     
     // Group failed searches within the log retention limit period
     const failed = historyList.filter(h => {

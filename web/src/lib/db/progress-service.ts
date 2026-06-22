@@ -260,6 +260,74 @@ export function compileRuleLocally(description: string, threshold: string): any 
 }
 
 export const progressService = {
+  recordCompletionIfFirstTime: async (userId: string, courseId: string) => {
+    try {
+      const localCompletionsStr = window.localStorage.getItem('openprimer_course_completions') || '[]';
+      let localCompletions: any[] = [];
+      try {
+        localCompletions = JSON.parse(localCompletionsStr);
+      } catch (e) {
+        localCompletions = [];
+      }
+
+      const { data: dbCompletions, error: selectError } = await supabase
+        .from('course_completions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('course_id', courseId);
+        
+      if (selectError) {
+        console.error("Error checking course completions in Supabase:", selectError);
+      }
+
+      const alreadyInDb = dbCompletions && dbCompletions.length > 0;
+      
+      if (!alreadyInDb) {
+        const newId = crypto.randomUUID ? crypto.randomUUID() : 'comp_' + Math.random().toString(36).substring(2, 11);
+        const timestamp = new Date().toISOString();
+        
+        const { error: insertError } = await supabase
+          .from('course_completions')
+          .insert({
+            id: newId,
+            course_id: courseId,
+            user_id: userId,
+            completed_at: timestamp
+          });
+          
+        if (insertError) {
+          console.error("Error inserting course completion into Supabase:", insertError);
+        } else {
+          console.log(`Successfully recorded course completion in Supabase for user ${userId}, course ${courseId}`);
+          
+          const hasLocal = localCompletions.some(c => String(c.courseId) === String(courseId));
+          if (!hasLocal) {
+            localCompletions.push({
+              id: newId,
+              courseId: courseId,
+              timestamp: timestamp
+            });
+            window.localStorage.setItem('openprimer_course_completions', JSON.stringify(localCompletions));
+            window.dispatchEvent(new Event('op_progress_updated'));
+          }
+        }
+      } else {
+        const hasLocal = localCompletions.some(c => String(c.courseId) === String(courseId));
+        if (!hasLocal && dbCompletions && dbCompletions[0]) {
+          localCompletions.push({
+            id: String(dbCompletions[0].id),
+            courseId: String(dbCompletions[0].course_id),
+            timestamp: dbCompletions[0].completed_at
+          });
+          window.localStorage.setItem('openprimer_course_completions', JSON.stringify(localCompletions));
+          window.dispatchEvent(new Event('op_progress_updated'));
+        }
+      }
+    } catch (err) {
+      console.error("Error in recordCompletionIfFirstTime:", err);
+    }
+  },
+
   resetEvaluationState: (assessmentId: string) => {
     resetEvaluationState(assessmentId);
   },
@@ -431,45 +499,47 @@ export const progressService = {
       console.log(`Successfully synced location in Supabase for ${slug}: scroll ${scrollTop}, progress ${cappedPercentage}%`);
 
       // ALSO sync the centralized progress table!
-      if (userId !== 'u1') {
-        const course = getCourses().find(c => c.slug === slug);
-        if (course) {
-          const courseId = course.id;
-          
-          // Get course-specific lesson progress
-          const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
-          const courseLessonProgress: Record<string, any> = {};
-          for (const k in lessonProgress) {
-            if (lessonProgress[k].slug === slug) {
-              courseLessonProgress[k] = lessonProgress[k];
-            }
-          }
-          
-          // Get course-specific quiz results
-          const quizResults = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
-          const courseQuizResults: Record<string, any> = {};
-          for (const k in quizResults) {
-            if (quizResults[k].slug === slug) {
-              courseQuizResults[k] = quizResults[k];
-            }
-          }
-
-          const totalMinutes = progressService.getLessonTimeForCourse(slug);
-
-          await supabase
-            .from('progress')
-            .upsert({
-              user_id: userId,
-              course_id: courseId,
-              progress: cappedPercentage,
-              lesson_progress: courseLessonProgress,
-              quiz_results: courseQuizResults,
-              total_minutes: totalMinutes,
-              last_visited: new Date().toISOString()
-            }, { onConflict: 'user_id,course_id' });
-            
-          console.log(`Successfully synced progress table in Supabase for ${slug}: ${cappedPercentage}%`);
+      const course = getCourses().find(c => c.slug === slug);
+      if (course) {
+        const courseId = course.id;
+        
+        if (cappedPercentage === 100) {
+          await progressService.recordCompletionIfFirstTime(userId, String(courseId));
         }
+        
+        // Get course-specific lesson progress
+        const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');
+        const courseLessonProgress: Record<string, any> = {};
+        for (const k in lessonProgress) {
+          if (lessonProgress[k].slug === slug) {
+            courseLessonProgress[k] = lessonProgress[k];
+          }
+        }
+        
+        // Get course-specific quiz results
+        const quizResults = JSON.parse(window.localStorage.getItem('op_quiz_results') || '{}');
+        const courseQuizResults: Record<string, any> = {};
+        for (const k in quizResults) {
+          if (quizResults[k].slug === slug) {
+            courseQuizResults[k] = quizResults[k];
+          }
+        }
+
+        const totalMinutes = progressService.getLessonTimeForCourse(slug);
+
+        await supabase
+          .from('progress')
+          .upsert({
+            user_id: userId,
+            course_id: courseId,
+            progress: cappedPercentage,
+            lesson_progress: courseLessonProgress,
+            quiz_results: courseQuizResults,
+            total_minutes: totalMinutes,
+            last_visited: new Date().toISOString()
+          }, { onConflict: 'user_id,course_id' });
+          
+        console.log(`Successfully synced progress table in Supabase for ${slug}: ${cappedPercentage}%`);
       }
     } catch (err) {
       console.error("Error syncing location/progress to Supabase:", err);
@@ -487,7 +557,7 @@ export const progressService = {
     try {
       const profile = JSON.parse(savedProfile);
       const userId = profile.id;
-      if (!userId || userId === 'u1') return;
+      if (!userId) return;
 
       const course = getCourses().find(c => c.slug === slug);
       if (!course) return;
@@ -497,6 +567,10 @@ export const progressService = {
       const progressMap = JSON.parse(window.localStorage.getItem('op_course_progress') || '{}');
       const rawPercentage = progressMap[slug] ?? progressMap[courseId.toString()] ?? 0;
       const cappedPercentage = progressService.getCapPercentage(slug, rawPercentage);
+
+      if (cappedPercentage === 100) {
+        await progressService.recordCompletionIfFirstTime(userId, String(courseId));
+      }
 
       // Get course-specific lesson progress
       const lessonProgress = JSON.parse(window.localStorage.getItem('openprimer_lesson_progress') || '{}');

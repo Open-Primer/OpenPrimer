@@ -16,15 +16,32 @@ const GLOSSARY_DATA: Record<string, string> = {
   "cytosol": "The aqueous component of the cytoplasm of a cell, within which various organelles and particles are suspended."
 };
 
+const cleanGlossaryDefinition = (def: string): string => {
+  if (!def) return '';
+  const colonIndex = def.indexOf(':');
+  if (colonIndex !== -1) {
+    const part1 = def.substring(0, colonIndex).trim();
+    const part2 = def.substring(colonIndex + 1).trim();
+    if (part2.startsWith(part1)) {
+      return part2;
+    }
+  }
+  return def;
+};
+
 export const Glossary = ({ 
   word, 
   term, 
   definition, 
+  wikipedia,
+  wikipediaUrl,
   children 
 }: { 
   word?: string; 
   term?: string; 
   definition?: string; 
+  wikipedia?: string;
+  wikipediaUrl?: string;
   children: React.ReactNode; 
 }) => {
   const { language } = useLanguage();
@@ -32,19 +49,49 @@ export const Glossary = ({
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [wikiUrl, setWikiUrl] = useState<string | null>(null);
 
-  const finalTerm = term || word || (typeof children === 'string' ? children : '');
+  const finalTerm = (term || word || (typeof children === 'string' ? children : '')).trim();
   const glossaryKey = finalTerm.toLowerCase().trim();
-  const finalDefinition = definition || GLOSSARY_DATA[glossaryKey];
+  const rawDefinition = definition || GLOSSARY_DATA[glossaryKey];
+  const finalDefinition = cleanGlossaryDefinition(rawDefinition || '');
 
-  const fallbackWikiUrl = language ? `https://${language.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(finalTerm.trim().replace(/ /g, '_'))}` : null;
-  const resolvedWikiUrl = wikiUrl || fallbackWikiUrl;
+  // Extract Wikipedia link from definition if present
+  let extractedWikiUrl: string | null = null;
+  if (finalDefinition) {
+    const mdLinkMatch = finalDefinition.match(/\[[^\]]*\]\((https?:\/\/[^\)]*wikipedia\.org[^\)]*)\)/i);
+    if (mdLinkMatch) {
+      extractedWikiUrl = mdLinkMatch[1];
+    } else {
+      const htmlLinkMatch = finalDefinition.match(/href=["'](https?:\/\/[^"']*wikipedia\.org[^"']*)["']/i);
+      if (htmlLinkMatch) {
+        extractedWikiUrl = htmlLinkMatch[1];
+      }
+    }
+  }
+
+  const customWikiUrl = wikipedia || wikipediaUrl || extractedWikiUrl;
+  const langCode = (language || 'en').toLowerCase().trim();
+  const fallbackWikiUrl = language ? `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTerm.replace(/ /g, '_'))}` : null;
+  const resolvedWikiUrl = customWikiUrl || wikiUrl || fallbackWikiUrl;
 
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const glossaryHeader = t.glossary_definition || "Glossary Definition";
   const readWikiLabel = language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia';
 
+  // Clean definition formatting for popover content
+  let displayDefinition = finalDefinition || '';
+  if (displayDefinition) {
+    // Strip Wikipedia markdown links
+    displayDefinition = displayDefinition.replace(/\[+Wikip[ée]dia\]+\(https?:\/\/[^\)]+\)/gi, '');
+    // Clean any other markdown links
+    displayDefinition = displayDefinition.replace(/\[+([^\]]+)\]+\([^\)]+\)/g, '$1');
+    // Strip HTML tags
+    displayDefinition = displayDefinition.replace(/<[^>]*>/g, '');
+    // Normalize punctuation/spaces
+    displayDefinition = displayDefinition.trim().replace(/\s*([.,;:])\s*$/, '$1');
+  }
+
   useEffect(() => {
-    if (!finalTerm || !language) return;
+    if (customWikiUrl || !finalTerm || !language) return;
 
     let isMounted = true;
     const fetchWiki = async () => {
@@ -70,7 +117,7 @@ export const Glossary = ({
     return () => {
       isMounted = false;
     };
-  }, [finalTerm, language]);
+  }, [finalTerm, language, customWikiUrl]);
 
   if (!finalDefinition) return <>{children}</>;
 
@@ -118,7 +165,7 @@ export const Glossary = ({
               </div>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed italic mb-3">
-              &ldquo;{finalDefinition}&rdquo;
+              &ldquo;{displayDefinition}&rdquo;
             </p>
             {resolvedWikiUrl && (
               <a 

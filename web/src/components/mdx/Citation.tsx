@@ -96,6 +96,18 @@ export const Citation = ({
             </>
           )}
           
+          {refNum && (
+            <sup className="ml-0.5 text-[10px] font-bold select-none">
+              <a 
+                href={`#ref-${refNum}`}
+                className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors no-underline font-extrabold"
+                title="Go to reference"
+              >
+                [{refNum}]
+              </a>
+            </sup>
+          )}
+          
           {/* Toggle for original version */}
           {original && (
             <button

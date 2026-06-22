@@ -1369,21 +1369,31 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   }, [sentences]);
 
   const togglePlay = () => {
-    if (!isSupported) return;
+    if (!isSupported || !synthRef.current) return;
 
-    if (isReadingTutor) {
-      if (tutorSentences.length === 0) return;
-      setIsPlaying(true);
-      setIsPaused(false);
-      const startIndex = currentTutorSentenceIndex >= 0 ? currentTutorSentenceIndex : 0;
-      speakTutorSentence(startIndex, tutorSentences);
+    if (isPlaying) {
+      if (isPaused) {
+        setIsPaused(false);
+        synthRef.current.resume();
+      } else {
+        setIsPaused(true);
+        synthRef.current.pause();
+      }
     } else {
-      if (!readCourseRef.current) return;
-      if (sentences.length === 0) return;
-      setIsPlaying(true);
-      setIsPaused(false);
-      const startIndex = getFirstVisibleSentenceIndex();
-      speakSentence(startIndex);
+      if (isReadingTutor) {
+        if (tutorSentences.length === 0) return;
+        setIsPlaying(true);
+        setIsPaused(false);
+        const startIndex = currentTutorSentenceIndex >= 0 ? currentTutorSentenceIndex : 0;
+        speakTutorSentence(startIndex, tutorSentences);
+      } else {
+        if (!readCourseRef.current) return;
+        if (sentences.length === 0) return;
+        setIsPlaying(true);
+        setIsPaused(false);
+        const startIndex = currentSentenceIndex >= 0 ? currentSentenceIndex : getFirstVisibleSentenceIndex();
+        speakSentence(startIndex);
+      }
     }
   };
 
@@ -1405,10 +1415,14 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const nextSentence = () => {
     if (isReadingTutor) {
       if (currentTutorSentenceIndex < tutorSentences.length - 1) {
+        setIsPlaying(true);
+        setIsPaused(false);
         speakTutorSentence(currentTutorSentenceIndex + 1, tutorSentences);
       }
     } else {
       if (currentSentenceIndex < sentences.length - 1) {
+        setIsPlaying(true);
+        setIsPaused(false);
         speakSentence(currentSentenceIndex + 1);
       }
     }
@@ -1417,10 +1431,14 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const prevSentence = () => {
     if (isReadingTutor) {
       if (currentTutorSentenceIndex > 0) {
+        setIsPlaying(true);
+        setIsPaused(false);
         speakTutorSentence(currentTutorSentenceIndex - 1, tutorSentences);
       }
     } else {
       if (currentSentenceIndex > 0) {
+        setIsPlaying(true);
+        setIsPaused(false);
         speakSentence(currentSentenceIndex - 1);
       }
     }
@@ -1650,21 +1668,29 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
           <button
             onClick={togglePlay}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center animate-fade-in"
-            title="Play / Restart from Viewport Top (Alt+S)"
-            aria-label="Play or restart speech from top of screen"
+            className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center animate-fade-in cursor-pointer"
+            title={isPlaying && !isPaused ? "Pause (Alt+S)" : "Play / Resume (Alt+S)"}
+            aria-label={isPlaying && !isPaused ? "Pause speech" : "Play or resume speech"}
           >
-            <Play className="w-3 h-3 fill-white ml-0.5" />
+            {isPlaying && !isPaused ? (
+              <Pause className="w-3 h-3 fill-white" />
+            ) : (
+              <Play className="w-3 h-3 fill-white ml-0.5" />
+            )}
           </button>
 
           <button
             onClick={stop}
             disabled={!isPlaying}
-            className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+            className={`p-1.5 rounded-full transition-all duration-300 flex items-center justify-center ${
+              isPlaying
+                ? 'bg-slate-800/80 text-rose-400 hover:text-rose-100 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-400/50 shadow-lg cursor-pointer'
+                : 'bg-slate-950/40 text-slate-600 border border-transparent opacity-30 cursor-not-allowed'
+            }`}
             title="Stop (Alt+Q)"
             aria-label="Stop speech"
           >
-            <Square className="w-2.5 h-2.5 fill-current" />
+            <Square className={`w-2.5 h-2.5 ${isPlaying ? 'fill-rose-400' : 'fill-slate-600'}`} />
           </button>
 
           <button

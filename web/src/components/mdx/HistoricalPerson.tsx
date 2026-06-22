@@ -43,9 +43,11 @@ export const EntityLink = ({
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
+  const cleanName = (name || '').trim();
+  const langCode = (activeLang || 'en').toLowerCase().trim();
   const fallbackUrl = exists === false
-    ? `https://${activeLang.toLowerCase().trim()}.wikipedia.org/w/index.php?search=${encodeURIComponent(name)}`
-    : `https://${activeLang.toLowerCase().trim()}.wikipedia.org/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
+    ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanName)}`
+    : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(cleanName.replace(/ /g, '_'))}`;
   const resolvedUrl = url || fallbackUrl;
   const staticBio = bio || description;
   const resolvedSummary = summary || staticBio;
@@ -59,7 +61,7 @@ export const EntityLink = ({
     const fetchWiki = async () => {
       try {
         const langCode = activeLang.toLowerCase().trim();
-        const formattedName = name.replace(/ /g, '_');
+        const formattedName = name.trim().replace(/ /g, '_');
         const wikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
         
         const res = await fetch(wikiUrl);
