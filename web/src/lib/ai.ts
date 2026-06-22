@@ -124,8 +124,6 @@ const syllabusSchema = {
   required: ["courseContext", "lessons"]
 };
 
-};
-
 const verificationSchema = {
   type: "object",
   properties: {
@@ -1247,447 +1245,264 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       const isPrimary = levelInput.toLowerCase().includes('primary') || levelInput.toLowerCase().includes('primaire');
       const isLastLesson = index === lessonsList.length - 1 && lessonsList.length > 1;
 
-      let promptPreamble = '';
-      if (isLastLesson) {
-        promptPreamble = `### EXIGENCE ABSOLUE : CONCLUSION GÉNÉRALE DU COURS + ÉVALUATION FINALE SOMMATIVE EXHAUSTIVE (ZÉRO VIDE)
-Règle d'or : Cette dernière leçon est structurée en DEUX PARTIES OBLIGATOIRES et distinctes, dans l'ordre suivant :
+      await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 1] Generating Widgets JSON for lesson "${item.title}"...`);
+      
+      // Construct a very precise prompt for Stage 1 Widgets generation
+      const widgetsPrompt = `You are a world-class educational curriculum architect (Agent 3 - Widgets Designer).
+Your task is to generate ALL interactive widgets, objectives, prerequisites, final evaluations, glossary, and reference resources for the academic lesson "${item.title}" in the course "${correctedCourseName}" (Level: ${levelInput}).
 
-═══════════════════════════════════════════
-PARTIE I : CONCLUSION GÉNÉRALE DU COURS (OBLIGATOIRE — À PLACER EN PREMIER)
-═══════════════════════════════════════════
-Avant tout examen, cette dernière leçon doit comporter une section de conclusion générale du cours "${correctedCourseName}". Cette conclusion générale est un temps de synthèse, de recul et d'ouverture sur l'ensemble du parcours pédagogique. Elle doit être rédigée avec le même soin académique que n'importe quelle leçon du cours.
+Course Discipline: ${courseContext.discipline || 'General'}
+Course Epistemological Matrix: ${courseContext.epistemologicalMatrix || 'N/A'}
+Lesson Cognitive Artifact: ${item.cognitiveArtifact || 'N/A'}
+Lesson Technical Depth / Expected Guidelines: ${item.technicalDepth || 'N/A'}
+Target Language: ${targetLang.toUpperCase()}
 
-Contenu obligatoire de la Conclusion Générale :
-1. Un paragraphe introductif de la conclusion générale, présentant ce que l'étudiant a accompli en suivant ce cours dans son intégralité.
-2. Un bilan des apprentissages clés (sous forme de composant \`<Summary items={["Point 1 complet...", "Point 2 complet...", ...]} />\`) : 4 à 6 points-clés qui résument les acquis fondamentaux de l'ensemble du cours. Chaque item doit être une phrase complète et autonome.
-3. Une synthèse narrative (2 à 4 paragraphes) reliant les grandes thématiques et les leçons entre elles — montrant la cohérence et l'architecture conceptuelle du cours dans son ensemble.
-4. Des questions d'ouverture et de réflexion : 4 à 6 questions philosophiques, critiques ou appliquées qui invitent l'étudiant à prolonger sa réflexion bien au-delà du cours. Ces questions ne doivent pas avoir de réponse univoque — elles ouvrent un espace de pensée. Formatez-les sous forme de liste numérotée à l'intérieur d'un bloc \`> [!NOTE]\`.
-5. Des perspectives et prolongements : orienter l'étudiant vers des domaines connexes, des lectures avancées, des applications professionnelles ou des axes de recherche. Utilisez ici le composant \`<GoingFurther>\` avec au moins 3 \`<GoingFurtherItem>\` (livres, articles ou vidéos recommandés).
-6. Un mot final de conclusion — un paragraphe conclusif fort, inspirant et mémorable qui clôture dignement le parcours pédagogique.
+### DISCIPLINARY & PEDAGOGICAL REQUIREMENTS FOR INTERACTIVE COMPONENTS:
+Ensure you include highly relevant components in "interactiveComponents" that match the discipline and level:
+1. **Life Sciences / Anatomy / Biology / Medicine**: You MUST systematically include at least one \<InteractiveDiagram\> of type "cell", "neuron" or "custom" with 3-6 distinct detailed hotspots.
+2. **Mathematics / Physics / Economics / Finance**: You MUST systematically include at least one dynamic graph, equation sandbox or basic math explorer component: "FunctionPlotter", "FunctionManipulator", "EquationManipulator", "Geometry2D", or "BasicMathExplorer". You MUST also include at least one Solved Worked Example ("SolvedExercise") and one Unsolved Numeric Challenge ("UnsolvedExercise" with tolerance).
+3. **Computer Science / Software Engineering**: You MUST systematically include at least one \<CodeSandbox\> for real-time coding with initial code.
+4. **History / Geography / Social Sciences / Processes**: You MUST systematically include at least one process/timeline flowchart using Mermaid ("Mermaid" component with "chart" syntax).
+5. **Statistical / Analytical Data (All disciplines)**: You MUST systematically include at least one gradient chart ("DataChart" component of type "bar" or "donut" with data array).
+6. **Auditory & Video Enrichment**: You MUST systematically include at least one short audio or video resource ("Video" with empty ID to search on YouTube, or "Audio" with precise searchable title).
 
-Cette Conclusion Générale doit être substantielle et dense (minimum 600 à 1000 mots selon le niveau du cours), et NE DOIT PAS être un simple résumé en liste. Elle doit montrer la profondeur pédagogique du cours et laisser l'étudiant avec une vision claire des connexions entre les différentes leçons.
+### OTHER REQUIRED SECTIONS:
+- **prerequisites**: 1 to 2 logical prerequisite courses.
+- **diagnosticQuiz**: A single multiple-choice question before the introduction allowing learners to skip sections.
+- **learningObjectives**: KSA model objectives (Knowledge, Skills, Attitudes). If university level, use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer).
+- **conclusionSummary**: Exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each must end with a period).
+- **finalEvaluation**: A substantial, timed summative evaluation adapted to the discipline (MCQ Quiz with 5-10 questions in Flat-Prop format, or EssayEvaluation with a deep prompt).
+- **glossary**: At least 3 key academic terms with clear definitions.
+- **references**: At least 3-5 complete, real, authoritative academic references (exclude for primary school level). Ensure book/article titles are in standard quotes, not asterisks, and conform to **${getCitationStyle(courseContext.discipline || correctedCourseName).name}** style.
 
-═══════════════════════════════════════════
-PARTIE II : ÉVALUATION FINALE SOMMATIVE (À PLACER APRÈS LA CONCLUSION GÉNÉRALE)
-═══════════════════════════════════════════
-Après la Conclusion Générale, génerez l'Évaluation Finale globale du cours "${correctedCourseName}". Elle ne doit PAS introduire de nouveaux concepts, mais servir d'examen complet et sérieux de validation qui couvre l'intégralité des concepts abordés dans l'ensemble des leçons précédentes.
+Return a valid JSON object matching the requested schema. Ensure all fields are in "${targetLang.toUpperCase()}".`;
 
-Vous devez concevoir un examen d'évaluation final de haut niveau, qui prendra entre plusieurs dizaines de minutes et deux heures à réaliser. L'évitement ou la paresse textuelle (comme un quiz vide ou comportant seulement 2 ou 3 questions) sont strictement interdits et entraîneront le rejet immédiat du contenu.
-
-Zéro Placeholder (Interdiction des squelettes) : Toutes les questions, options, explications, et consignes doivent être rédigées de manière exhaustive et complète.
-
-Introduction de l'Évaluation :
-   - Un paragraphe d'introduction de l'examen, distinct de la Conclusion Générale, rappelant les consignes et la structure de l'examen final.
-   - Les objectifs pédagogiques de l'évaluation wrapped dans le composant custom \`<Objectives>\` (avec \`<Knowledge>\`, \`<Skills>\` et \`<Attitudes>\`).
-
-Corps de l'Évaluation Finale :
-   Générez un examen sommatif de qualité adapté à la discipline et au niveau du cours :
-   
-   * DISCIPLINE HUMANISTE / DISCURSIVE (Philosophie, Littérature, Histoire, Droit, Sciences Sociales, etc.) :
-     - Vous devez obligatoirement insérer le composant de rédaction académique tutoré par IA :
-       \`<EssayEvaluation prompt="[Un sujet d'examen final extrêmement complet, profond et structuré en plusieurs sous-questions couvrant l'ensemble du cours, obligeant l'étudiant à rédiger une synthèse approfondie]" gradingSystem="${targetLang.toLowerCase() === 'fr' ? '0/20' : 'A-F'}" subject="${correctedCourseName}" durationLimit={7200} />\`
-     - Ajoutez également une série de 5 à 10 questions de réflexion critique à réponse ouverte.
-     
-   * DISCIPLINE SCIENTIFIQUE / TECHNIQUE / QUANTITATIVE (Mathématiques, Physique, Chimie, Informatique, Économie, etc.) :
-     - Vous devez obligatoirement insérer un grand Quiz sommatif : \`<Quiz durationLimit={3600}>\` contenant entre 20 et 30 questions de haut niveau couvrant tous les chapitres du cours.
-       Chaque question doit être rédigée sous la forme :
-       \`<Question q="[Texte de la question]" explanation="[Explication alternative et constructive de la solution]">
-         <Option text="[Option correcte]" correct={true} />
-         <Option text="[Option erronée 1]" correct={false} />
-         <Option text="[Option erronée 2]" correct={false} />
-         <Option text="[Option erronée 3]" correct={false} />
-       </Question>\`
-     - Insérez également au moins 3 exercices résolus (\`<SolvedExercise>\`) et 3 exercices interactifs à réponse numérique (\`<UnsolvedExercise>\`).
-     - Intégrez au moins un simulateur ou sandbox interactif de la discipline (\`<FunctionManipulator />\`, \`<EquationManipulator />\`, \`<Geometry2D />\`, \`<ChemicalStoichiometry />\` ou \`<CodeSandbox />\`).
-     
-   * NIVEAU PRIMAIRE (CP - CM2) :
-     - Proposez un grand Quiz de 10 à 15 questions sous forme de défis (\`<Quiz durationLimit={1800}>\`) et des textes à trous (\`<FillInBlanks sentence="..." answer="..." />\`).
-     
- 3. Glossaire et Références (comme d'habitude) :
-    - Un glossaire complet réunissant tous les termes clés de l'évaluation et du cours.
-    - Les références académiques de base du cours (pour les niveaux supérieurs, au moins 8 à 12 références).`;
-      } else {
-        promptPreamble = `### EXIGENCE ABSOLUE : DENSITÉ ACADÉMIQUE & INCOMPLÉTUDE INTERDITE
-Règle d'or : Chaque cours doit être un produit d'apprentissage fini, autonome, exhaustif et immédiatement exploitable. L'évitement, la paresse textuelle et le résumé vague sont considérés comme des fautes critiques de génération.
-
-Zéro Placeholder (Interdiction des squelettes) : Il est strictement interdit d'utiliser des formulations de type "Dans cette section, nous aborderons...", "Exemple à compléter...", ou "etc.". Tout concept introduit doit être intégralement développé, expliqué et illustré dans le corps du texte.
-
-Interdiction absolue des balises de composants vides : Il est strictement proscrit de générer des balises de composants vides ou squelettiques (comme <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Assignment></Assignment>, <Objectives></Objectives>, <Callout></Callout>, <CalloutContainer></CalloutContainer>, etc.). Si tu utilises l'un de ces composants, tu dois impérativement rédiger de manière détaillée et complète tout son contenu interne (questions, critères, textes, instructions). Tout composant vide ou partiellement rédigé sera rejeté.
-
-Rigueur Factuelle et Précision Scientifique : Le ton doit être académique, précis et pédagogique. Utilisez les termes techniques exacts, immédiatement suivis de leur vulgarisation ou de leur ancrage dans le glossaire. Pas de généralités floues.
-
-Profondeur Pédagogique : Si un cours nécessite 3 000 mots pour être traité avec la rigueur d'un niveau L3 (ou la clarté adaptée à un niveau Primaire), génerez l'intégralité du contenu requis. Ne sacrifiez jamais la substance pour la concision.
-
-Critère de Rejet (Quality Gate) : Tout cours comportant des sections ou balises vides, des listes à puces non développées, des approximations factuelles ou des conclusions hâtives sera détecté par le script de validation, immédiatement rejeté sans paiement/crédit, et détruira la réputation de l'infrastructure. Tu agis ici en tant qu'expert académique mondial.`;
-      }
-
-      const promptContent = `${promptPreamble}
-
----
-
-You are a world-class academic professor (Agent 3 - Academic Writer). Generate the complete, professional, extremely detailed academic MDX lesson content for the lesson "${item.title}" in the course "${correctedCourseName}" (${level}).
-
-Pedagogical Context and Strategy (from Pedagogical Architect Agent 1 & 2):
-${courseContext.pedagogicalStrategy ? `- Pedagogical Strategy: ${courseContext.pedagogicalStrategy}` : ''}
-${courseContext.epistemologicalMatrix ? `- Epistemological Matrix / Discipline ADN: ${courseContext.epistemologicalMatrix}` : ''}
-${item.cognitiveArtifact ? `- Expected Cognitive Artifact for this lesson: ${item.cognitiveArtifact}` : ''}
-${item.technicalDepth ? `- Expected Guidelines and Technical Depth: ${item.technicalDepth}` : ''}
-
-Requirements:
-1. Use professional, premium academic styling.
-2. Structure it beautifully using markdown headers, bullet points, and high-impact custom alerts like:
-> [!NOTE]
-> Detailed academic contextualization.
-3. Level-Appropriate Content and Pedagogical Tone:
-   - Carefully tailor the text density (number of paragraphs), vocabulary complexity, conceptual depth, and mathematical/scientific formulas strictly to the student's presumed level ("${level}").
-   - The pedagogical tone must be highly engaging, educational, and respectful: it must be neither oversimplifying (dumbed-down), nor condescending, nor pedantic.
-   - Use simpler, intuitive conceptual analogies and foundational mathematics for lower levels, and high formal rigor and advanced academic notation only for university levels, maintaining clarity and academic dignity at all levels.
-   - Pedagogical Toolset & Disciplinary Adaptation (Outils Pédagogiques & Adaptations Disciplinaires) : Depending on the level, discipline, and context, you must dynamically align your pedagogical delivery:
-       * Biology / Anatomy / Life Sciences: Prioritize visual illustrations, functional anatomical mappings, and physiological transport flow metaphors.
-       * Mathematics / Theoretical Physics: Focus on absolute formal rigor; systematically declare precise definitions, lemmas, theorems, and corollaries, backed by clean mathematical proofs.
-       * Philosophy / Humanities: Focus on rhetoric, comparative dialectics, historical controversy analysis, and conceptual debates.
-       * Experimental Sciences (Chemistry, Physics): Deliver concepts following the empirical cycle: Hypothesis → Observation → Experimentation → Conclusion.
-       * Engineering / Computer Science: Focus on applied sandboxes, algorithm tracing, engineering design patterns, and retroactive problem-solving exercises.
-4. Systematic Course Structure (Prerequisites, Diagnostic Quiz, Introduction, Objectives, and Conclusion):
-   - At the very beginning of the MDX content (before the Introduction), you MUST systematically insert a \`Prerequisites\` block:
-     \`<Prerequisites items={[{ title: "Prerequisite Course Title", slug: "slug_of_prerequisite", level: "level_of_prerequisite", subject: "subject_of_prerequisite" }]} />\`
-     List 1 to 2 logical strict prerequisite courses from lower levels or earlier progression.
-   - Immediately after the Prerequisites block (and before the Introduction), you MUST insert a single diagnostic test flash block to allow adaptive skipping:
-     \`<DiagnosticQuiz question="Diagnostic Question text" options={["Option A", "Option B", "Option C"]} correctIndex={0} targetSectionId="section-slug-to-skip-to" sectionTitle="Section Title to Skip" />\`
-     This question should test the entry concepts of the first sections. If the user answers correctly, it lets them skip directly to the target section.
-   - You MUST start the lesson with a clear, engaging "Introduction" or "Présentation" section (using a heading like "## Introduction" or "## Présentation" in the course language). This section must set the stage, define the learning objectives, and present the scope of the lesson.
-   - Immediately after the introduction section, you MUST systematically insert the explicit learning objectives following the KSA (Knowledge, Skills, Attitudes) model. You MUST wrap the objectives inside the custom \`<Objectives>\` component, using the \`<Knowledge>\`, \`<Skills>\`, and \`<Attitudes>\` sub-components:
-      \`<Objectives>
-        <Knowledge>
-          <ul className="list-disc pl-4 space-y-1">
-            <li>Distinguer...</li>
-            <li>Expliquer...</li>
-          </ul>
-        </Knowledge>
-        <Skills>
-          <ul className="list-disc pl-4 space-y-1">
-            <li>Résoudre...</li>
-            <li>Calculer...</li>
-          </ul>
-        </Skills>
-        <Attitudes>
-          <ul className="list-disc pl-4 space-y-1">
-            <li>Apprécier...</li>
-            <li>Analyser de manière critique...</li>
-          </ul>
-        </Attitudes>
-      </Objectives>\`
-      Segment the learning targets into three distinct axes: Knowledge (Savoir - concepts), Skills (Savoir-faire - application), and Attitudes (Posture/Analyse). If the course level is L3 (Bachelor 3ème année ou Senior Undergraduate), you MUST use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer) for these objectives.
-   - You MUST conclude the lesson content (immediately before the evaluation) with a concluding section (using the heading "## Conclusion" or localized equivalent). Do NOT use headings like "## Synthèse & Discussion" or "## Synthèse & Ouverture", but the concluding section itself must contain the synthesis, discussion, questioning, and opening (synthèse, discussion, questionnement, ouverture) written in a natural, flowing manner.
-    - This concluding section must contain:
-      * A structured summary of the key takeaways using the custom \`<Summary items={["Key point 1", "Key point 2", ...]} />\` component. Each item in the array MUST be a complete, grammatically whole, and self-contained sentence in the course's language. Under NO circumstances should you split a single sentence, clause, or paragraph across multiple items or artificial bullet points. Provide exactly 3 to 4 points, each representing a distinct, complete educational takeaway.
-      * A structured content block covering the synthesis, discussion, questioning, and opening (synthèse, discussion, questionnement, et ouverture) toward further study or neighboring fields. You can write multiple, lengthy paragraphs if appropriate for the course level and subject, but the text must flow naturally and you MUST NOT use any sub-headings or labels (do NOT write sub-headings like "Synthèse" or "Discussion").
-5. Conceptual framework, historical perspective, and concrete real-world applications in the body of the lesson.
-   - **Author Quotes (Citations d'auteurs, complete academic citations required)**: To capture student interest, anchor theoretical claims, and break text monotony, you MUST systematically weave high-impact, contextually relevant quotes from notable authors, scientists, and philosophers directly into the text. Format these quotes as standard markdown blockquotes, providing a complete bibliographic citation as the source (author, book title, publishing house, city, year, and page numbers):
-     \`> "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. PageNumber\`
-     Ensure every quote is beautifully integrated. If a quote is in a language other than the lesson's target language (e.g., an English quote in a French lesson), you MUST systematically translate it into the target language of the lesson and display the translation in brackets (e.g., [Traduction : ...] or [Translation: ...]) immediately following the quote. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
-6. Controlled Digressions (Encadrés Epistémologiques):
-   - If the course level is university level (L1, L2, L3 / undergraduate_1, undergraduate_2, undergraduate_3), you MUST systematically insert at least one controlled digression box in the body of the lesson using the custom component:
-     \`<Epistemology title="Title of Digression">...</Epistemology>\`
-     This box must explore the history of the concept, past controversies, or current limits/criticisms, breaking the dogmatic tone of the AI-generated text.
-7. Include some math formulas in LaTeX (using $ or $$ wrappers) where appropriate for the level.
-8. Radical Accessibility, Captions, Figuring & Failures (Accessibilité Radicale, Légendes, Numérotations et Secours) :
-   - Guarantee that EVERY SINGLE image, diagram, table, code block, or visual/multimedia container systematically includes detailed, descriptive, and meaningful alt tags, aria-labels, and semantic text summaries to ensure total accessibility for screen readers and TTS (Text-To-Speech) voice synthesizers.
-   - **Systematic Proportional Visual Enrichment & Decorative AI Ban**: Visual impact is crucial for learner appeal and engagement. However, you MUST strictly adhere to the following rules:
-     * **Age-Adapted Text/Image Ratio (Rapport Texte/Image inversement proportionnel à l'âge)**: The younger the student audience (e.g. Primary CP-CM2), the higher the density of images, illustrations, and interactive games must be. For Primary level (CP-CM2), the text/image ratio must be reversed: let visuals and simulations dominate, and keep text explanations short and simple.
-     * **Mandatory Media Diversity Baseline**: Even for advanced university levels (Licence L1-L3), a text-heavy layout is not allowed. Each lesson must contain at least:
-       - 1 conceptual illustration/schematic/diagram (using Wikimedia Commons or Pollinations.ai).
-       - 1 or 2 data graphs, curves, or coordinate plots (using \`<FunctionPlotter />\`, \`<FunctionManipulator />\`, \`<Geometry2D />\`, or auto-rendered Markdown tables).
-       - 1 or 2 source images (painting, sculpture, historical photo, monument photo, map, or scientific experiment photo) to illustrate the topic.
-     * **STRICT BAN ON GENERIC/DECORATIVE AI IMAGES (INTERDICTION DES FIGURES DÉCORATIVES SANS VALEUR AJOUTÉE)**: You are strictly forbidden from generating or including low-value, simple, or generic decorative AI-generated illustrations (such as a simple balance to symbolize justice in a business law course, a generic gear for physics, or a lightbulb for ideas). All figures, images, and diagrams must have strong pedagogical, technical, or historical value (e.g., technical schematics, structural details, complex conceptual models, maps, or real artworks). Simple symbolic illustrations (like a balance) are tolerated ONLY for primary/elementary levels (CP-CM2). For high school (Lycée) and university levels (Supérieur), prioritize high-quality Wikimedia Commons diagrams, conceptual flowcharts ("Mermaid"), or specific, detailed academic illustrations.
-     * **STRICT BAN ON AI GENERATED REAL ARTWORKS / PAINTINGS / SCULPTURES (INTERDICTION FORMELLE DE GÉNÉRER DES IMAGES D'ART EXISTANTES PAR IA)**: You are strictly forbidden from generating or including AI image URLs (such as Pollinations.ai prompts) to represent real, existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You must NEVER generate images via AI for existing historical artworks (e.g. Mona Lisa, The Last Supper, Starry Night, La Venus de Milo, etc.). Doing so is a major pedagogical integrity violation. For any real historical artwork, you must either find and use a high-quality Wikimedia Commons direct image URL, or not include the image at all.
-     * *Minimum Baseline*: Include at least 2 to 3 high-impact illustrative images for abstract, formal, or symbolic courses (e.g., mathematics, logic, theoretical physics) to set the context or show direct visual applications of the concepts.
-     * *High Visual Density (5 to 10+ images)*: For visual, spatial, empirical, or historical subjects (e.g., visual arts, geography, history, biology, architecture, geology, cinema), you MUST systematically include a much larger density of illustrative images directly related to the local context (e.g., specific artworks, maps, geographical features, historical artifacts, biological structures).
-     * *Adaptation to Level*: For Primary levels (CP-CM2), maintain an extremely high illustration density (images every few paragraphs) to scaffold reading comprehension. For advanced levels (Lycée to L3), prioritize highly detailed visual figures illustrating specific, complex academic aspects.
-   - **Secure Pollinations.ai Image Generation**: All images must be securely loaded using the following markdown URL syntax:
-     \`![Alt Text](https://image.pollinations.ai/prompt/{descriptive_english_prompt_with_underscores}?width=800&height=600&nologo=true)\`
-     *The prompt inside the curly braces MUST be written in English (the image generator's native language) for high aesthetic quality, be highly specific and illustrative, and use ONLY underscores (\`_\`) or hyphens (\`-\`) instead of spaces. Do NOT include raw spaces, quotes, or special characters in the URL, as they break rendering.*
-   - **Prefer Wikimedia Commons for Real/Complex Illustrations**: For complex biological, chemical, physical, geographical, or anatomical diagrams (such as the plasma membrane structure, cell anatomy, molecular models, or historical maps), you MUST prefer using high-quality public domain images from Wikimedia Commons instead of generating lower-quality AI images (via Pollinations.ai) or building overly simplistic/incomplete custom interactive diagram components. Specify the real Wikimedia Commons image URL in the markdown syntax (e.g. \`![Structure of the Plasma Membrane](https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Cell_membrane_detailed_diagram_en.svg/1024px-Cell_membrane_detailed_diagram_en.svg.png)\`) and link to it in the references section.
-   - **Systematic captions & sequential numbering (Légendage et Titrage)**: Every image/figure, video player, and audio player MUST be sequentially captioned and numbered directly below the element using italicized text:
-     * For an Image/Figure: \`*Figure X : [Titre explicite] - [Description détaillée de ce qu'affiche l'image]. Source : [Spécifier systématiquement la source, par exemple "Wikimedia Commons" ou "Image générée par une intelligence artificielle à titre d'illustration"].*\`
-     * For a Video: \`*Vidéo X : [Titre de la vidéo] - [Résumé structuré du contenu de la vidéo]. Source : [Spécifier systématiquement la source, par exemple "YouTube", "Vimeo", ou "Vidéo générée par une intelligence artificielle"].*\`
-     * For an Audio track: \`*Audio X : [Titre de la piste audio] - [Transcription textuelle complète de ce qui est prononcé]. Source : [Spécifier systématiquement la source, par exemple "Enregistrement historique" ou "Audio généré par synthèse vocale d'intelligence artificielle"].*\`
-   - **Footnote referencing**: Link every major actual external illustration, audio, or video resource to a reference/source at the bottom of the page using inline footnote superscript tags, e.g. <sup><a id="ref-src-1" href="#ref-1">1</a></sup>. Do NOT add footnotes or source references for system-generated flowcharts, interactive diagrams, sandboxes, equation solvers, or simulators, as they are constructed programmatically on the fly.
-   - **Failures and Redirect links**: Directly below the caption of actual external resources that possess a real external origin (e.g. external images, audio, or video files with URLs), systematically insert a very short, non-intrusive source link in the format [Source](url) (or translated equivalent in the course's target language: e.g., [Source](url) in French/English, [Fuente](url) in Spanish, [Quelle](url) in German, [来源](url) in Chinese). Under NO circumstances should you use long verbose phrases like "Accéder directement à la ressource" or combine multiple languages. If the resource was generated by an artificial intelligence (e.g., Pollinations.ai images, AI-synthesized audio, or AI-generated video simulations), you MUST NOT insert any redirect link (as there is no external URL), but instead ensure the italicized caption itself explicitly states it was generated by an artificial intelligence.
-9. Glossary and Highlighted Terms with Wikipedia integration :
-   - For every key, complex, or specific academic term introduced or highlighted in the text, you MUST wrap it in the custom \`<Glossary term="Term" definition="Clear, concise academic definition...">Term</Glossary>\` component.
-   - At the bottom of the page (after the main content), systematically add a Glossary section (using the heading \`### Glossaire\` if writing in French, or \`### Glossary\` if in English/other languages) that lists all of these glossary terms alphabetically.
-   - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically using a SINGLE-bracket Markdown link (NOT double-bracket) like: **Term** : Definition. [${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores). CRITICAL: Use ONLY a single pair of square brackets \`[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)\` — NEVER double brackets \`[[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)]\` as this produces a stray closing parenthesis \`)\` on screen. The Wikipedia link MUST NOT be wrapped in bold asterisks. Correct format: **Term** : Definition. [${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url). Incorrect formats: **Term** : Definition. **[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)** OR **Term** : Definition. [[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)]. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
-10. Connected Entities: Historical Figures, Fictional Characters, Key Geographic Places, and Artworks (Personnalités, Personnages Fictifs, Lieux Clés, et Œuvres d'art) :
-    - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects. To ensure complete resilience and avoid empty cards/warning boxes when Wikipedia summary requests fail client-side (e.g. due to minor spelling or casing mismatches), you MUST systematically define a high-quality 2-3 line fallback description in the "bio" (for persons) or "description" (for non-persons) attribute:
-      * **Real & Historical Persons, Authors, and Scientists (Personnes réelles)**: For EVERY real person (historical figure, scientist, writer, director, living expert, etc.) mentioned in the lesson content (such as in the body text, blockquotes, quotes, citations, footnotes, info boxes, etc.), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute:
-        \`<RealPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography detailing their major achievements and relevance to the course.">DisplayName (Dates)</RealPerson>\`.
-        *IMPORTANT ON PLACEMENT*: You are fully authorized and encouraged to place '<RealPerson>', '<Location>', '<Place>', '<EventLink>', '<Artwork>', and '<FictionalCharacter>' tags anywhere in the content (including inside blockquotes, citations, list items, footnotes, info boxes). The ONLY strict prohibition is that you must NOT require or place these tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<RealPerson>' tags inside markdown image captions or figure titles.
-        *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a person in a '<RealPerson>' tag if they are already wrapped in one, and do NOT place a '<RealPerson>' tag inside the bold title of a '**Mini-Biographie**' block. Duplicate or nested '<RealPerson>' tags for the same person are strictly prohibited.
-        - Examples (French): \`<RealPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</RealPerson>\`
-        - Examples (English): \`<RealPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</RealPerson>\`
-      * **Artworks and Works of Art (Œuvres d'art)**: For notable artworks mentioned in the text (e.g. paintings, sculptures, literary works, monuments like "L'Homme de Vitruve", "La Joconde", "La Cène", "La Nuit étoilée"), you MUST wrap them in \`<Artwork>\` and ALWAYS include a \`description\` attribute:
-        \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the artwork, its creator, dates, and significance.">DisplayName</Artwork>\`.
-        - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr" description="Célèbre dessin annoté de Léonard de Vinci datant de 1490, représentant les proportions idéales du corps humain selon Vitruve.">l'Homme de Vitruve</Artwork>\`
-        - Example (English): \`<Artwork name="Vitruvian_Man" lang="en" description="Famous pen and ink drawing by Leonardo da Vinci around 1490, illustrating human body proportions according to Vitruvius.">Vitruvian Man</Artwork>\`
-      * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\`). This mini-biography must be substantial and detailed: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) or university levels (Supérieur), highlighting their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson. At the end of the mini-biography text, you MUST systematically and obligatorily include a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\` or \`[Learn more on Wikipedia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
-      * **Fictional Characters (Personnages de fiction)**: For fictional or mythological characters (like "Sherlock Holmes", "Mickey Mouse"), wrap them in the custom component and ALWAYS include a \`description\` attribute: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the character, their creator, source work, and role.">CharacterName</FictionalCharacter>\`.
-        - Example (French): \`<FictionalCharacter name="Mickey_Mouse" lang="fr" description="Personnage de dessin animé emblématique de la Walt Disney Company créé en 1928, une souris anthropomorphe mondialement connue.">Mickey Mouse</FictionalCharacter>\`
-        - Example (English): \`<FictionalCharacter name="Sherlock_Holmes" lang="en" description="Personnage de fiction britannique créé par Sir Arthur Conan Doyle en 1887, détective privé doté d'une mémoire et d'un esprit de déduction exceptionnels.">Sherlock Holmes</FictionalCharacter>\`
-      * **Key Geographic Places (Lieux géographiques)**: For key cities, countries, regions, monuments, or geographical features (like "Château de Versailles", "Paris"), wrap them in the custom component and ALWAYS include a \`description\` attribute: \`<Location name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the location, its geography or history, and relevance.">PlaceName</Location>\`.
-        - Example (French): \`<Location name="Château_de_Versailles" lang="fr" description="Résidence royale et monument historique situé à Versailles, symbole du pouvoir absolu de Louis XIV et joyau de l'art classique français.">Château de Versailles</Location>\`
-        - Example (English): \`<Location name="Palace_of_Versailles" lang="en" description="Royal residence and historical monument located in Versailles, symbol of Louis XIV's absolute power and French classical art.">Palace of Versailles</Location>\`
-      * **Historical Events and Key Milestones (Entités événementielles)**: For major historical events, revolutions, battles, or scientific milestones mentioned inline in the text (like "Prise de la Bastille", "Storming of the Bastille"), wrap the event name with the \`<EventLink>\` overlay component and ALWAYS include a \`description\` attribute:
-        \`<EventLink name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the event, its dates, key participants, and historical impact.">EventName</EventLink>\`.
-        - Example (French): \`<EventLink name="Prise_de_la_Bastille" lang="fr" description="Événement révolutionnaire survenu le 14 juillet 1789 à Paris, marquant la chute du symbole de l'absolutisme royal et le début de la Révolution française.">Prise de la Bastille</EventLink>\`
-        - Example (English): \`<EventLink name="Storming_of_the_Bastille" lang="en" description="Key revolutionary event on July 14, 1789 in Paris that marked the beginning of the French Revolution.">Storming of the Bastille</EventLink>\`
-    - Note: The \`name\` attribute must be the exact Wikipedia page title in the target language of the course (using underscores for spaces), and the \`lang\` attribute must be the language of the course ("${targetLang.toLowerCase()}").
-11. Intermediate Formative Scale-Based Evaluations (Évaluations formatives proportionnelles) :
-    - Throughout the body of the lesson, place a custom \`<Quiz>\` block after each key sub-concept (every 5-10 minutes of reading).
-    - Crucially, every single quiz and question generated MUST be fully filled and contains quality questions and options/answers directly related to the target course level, the length, and the complexity of the subject. There should be absolutely no empty, generic, or trivial quizzes.
-    - The size of these quizzes MUST scale and be proportional to the complexity and length of the concept: use 1 to 2 \`<Question>\` elements for simple introductory sections, but 3 to 4 \`<Question>\` elements for deep, dense academic sections.
-    - For every question in these intermediate quizzes, you MUST provide a detailed, supportive, and alternative explanation using the \`explanation\` attribute on the \`<Question>\` component:
-      \`<Question q="Question text" explanation="Detailed alternative explanation, using different analogies, breaking down the steps simply, to help learners who fail to understand.">...\`
-      This acts as pedagogical rerouting: if the student fails the question, the tutor will spontaneously react by showing this custom rerouting explanation.
-12. Mandatory Proportional, Long & Timed End-of-Lesson Evaluation (Évaluation finale proportionnelle, validante et chronométrée) :
-    - You MUST systematically place an evaluation block at the very end of the main lesson content (after the Conclusion/Synthèse section, but before the Glossary and References sections).
-    - **Enforce longer, validating evaluation**: The end-of-lesson/end-of-course evaluations must be comprehensive, fully validating, and high-quality. Provide a substantial set of questions or essay prompts (e.g. at least 4 to 6 questions for typical lessons, and 8 to 12 comprehensive questions for deep, university-level chapters) to thoroughly assess all key lesson concepts.
-    - **Mandatory Timed Challenges (\`durationLimit\` attribute)**: To break learning monotony and encourage focused self-assessment, you MUST systematically set a clear, reasonable duration limit on these final evaluations using the \`durationLimit={seconds}\` attribute (e.g. \`durationLimit={300}\` for 5 minutes, \`durationLimit={600}\` for 10 minutes, or \`durationLimit={900}\` for 15 minutes depending on the question count and complexity).
-    - You MUST NOT limit evaluations to MCQ quizzes only! You MUST actively diversify the evaluation format based on the discipline, level, and context:
-      * MCQ Quizzes: Use the custom \`<Quiz durationLimit={seconds}>\` component with multiple \`<Question>\` elements inside. Excellent for scientific, math, or factual topics.
-        - **STRICT FLAT-PROP SYNTAX FOR QUIZZES**: You MUST format quizzes strictly using the Flat-Prop pattern. Option text and its correctness state MUST be passed entirely as attributes, and the \`<Option />\` tag MUST be self-closing:
-          \`<Quiz>\`
-            \`<Question q="Question text" explanation="Alternative helper explanation for students who get it wrong...">\`
-              \`<Option text="Correct answer option" correct={true} />\`
-              \`<Option text="Wrong answer option" correct={false} />\`
-            \`</Question>\`
-          \`</Quiz>\`
-        - **NO PEDAGOGICAL TAGS**: It is strictly forbidden to use tags like \`<Explanation>\`, \`<Solution>\`, \`<KeyConcept>\`, \`<Instruction>\`, or \`<Shape>\` directly inside or outside the quizzes. Always pass explanation text in the \`explanation\` attribute of the \`<Question>\` component, or use approved worked example components like \`<SolvedExercise>\` and \`<UnsolvedExercise>\`.
-      * Essay & Written Evaluations (Manual Tutor Grading): Use the custom \`<EssayEvaluation prompt="..." gradingSystem="..." subject="..." durationLimit={seconds} />\` component. You MUST systematically select this format for humanities, literature, history, social sciences, philosophy, law, or any deep conceptual/theoretical discussions where students are expected to write a structured analysis or synthesis. This will be manually reviewed, critiqued, and graded by the AI tutor.
-        - The \`prompt\` must be the essay question/topic in "${targetLang.toUpperCase()}".
-        - The \`gradingSystem\` attribute MUST be chosen based on the course's country/cultural context: use "0/20" for French/Francophone settings, "A-F" for US/UK/International settings, "0/10" for general European settings, or "pass-fail" for introductory courses.
-        - The \`subject\` attribute must be the name of the subject (e.g. "Physics", "Biology", "Philosophy", "Law").
-13. Evaluation Matrix by Level (Matrice d'Évaluation par Niveau):
-    You MUST strictly select the appropriate evaluation form and objectives depending on the target student level ("${level}"):
-    - Primaire (CP-CM2): Gamification, visual identification, short fill-in-the-blanks (\`<FillInBlanks sentence="..." answer="..." />\`). Cognitive Objective: Recognition and simple retrieval (Reconnaissance et Restitution simple). Tutor Role: Immediate binary validation.
-    - Collège (6e-3e): Complex multiple-choice questions (real MCQs using \`<Quiz>\` and \`<Question>\`), causal matching, short-answer questions. Cognitive Objective: Comprehension and direct application (Compréhension et Application directe). Tutor Role: Distractor analysis (explaining why a specific wrong option was chosen).
-    - Lycée au Supérieur (L1-L3): Case studies, open-ended problem solving, essays/synthesis writing (\`<EssayEvaluation />\`), document/code analysis. Cognitive Objective: Analysis, critical thinking, and transfer of knowledge to unfamiliar contexts (Analyse, Critique, Transfert à un contexte inconnu). Tutor Role: Multi-criteria evaluation (Rubrics) via LLM grading with detailed feedback.
-14. Clickable Footnotes and References:
-   ${isPrimary ? `
-   - Since this is a primary school level course, DO NOT include any bibliography or references section.` : `
-   - Systematically include a bibliography/references section at the very end of the page (after the Glossary), using the heading \`### Références\` if writing in French, or \`### References\` if in English/other languages.
-   
-   - **Academic Level Scaling for Reference Counts**:
-     The number of references must scale proportionally with the academic depth of the course level ("${level}"):
-     * *Collège / Lycée (Secondary school)*: Must systematically include exactly 3 to 5 references.
-     * *University Level (L1, L2, L3, Master, Doctorat, undergraduate_1, undergraduate_2, undergraduate_3, graduate)*: Must systematically include at least 8 to 12 references (une bonne dizaine). Since this course level is "${level}", you must STRICTLY respect this reference count requirement.
-   
-   - **Citation Completeness — Discipline-Specific Bibliographic Standard**:
-      Do NOT generate simple titles or placeholders. You MUST apply the **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}** citation standard to ALL references in this lesson, as it is the internationally recognised standard for this discipline.
-
-      **Bibliographic format to use strictly: ${getCitationStyle(courseContext.discipline || correctedCourseName).name}**
-
-      Format examples:
-      * *Book*: ${getCitationStyle(courseContext.discipline || correctedCourseName).bookExample}
-      * *Journal Article*: ${getCitationStyle(courseContext.discipline || correctedCourseName).articleExample}
-      * *Book Chapter*: ${getCitationStyle(courseContext.discipline || correctedCourseName).chapterExample}
-      * *Website / Online resource*: ${getCitationStyle(courseContext.discipline || correctedCourseName).websiteExample}
-
-      Additional rules: ${getCitationStyle(courseContext.discipline || correctedCourseName).notes}
-
-      Every reference MUST contain a real, high-quality link using Markdown link syntax \`[Citation details.](URL)\` with real, active URLs from databases, DOIs, publisher pages, or academic websites. Crucial: Do NOT include raw URLs in the bracketed link text. The bracketed link text must contain ONLY the formatted citation details following the ${getCitationStyle(courseContext.discipline || correctedCourseName).name} format above. The bracketed link text MUST end with a trailing period. Ensure all citations include complete bibliographic details for academic credibility.
-   
-   - **Active Bidirectional Links**:
-     Every reference in the bibliography section MUST correspond to a footnote citation in the text.
-     * *In the Body Text*: Place inline superscript/link citations exactly like this: \`<sup><a id="ref-src-X" href="#ref-X">X</a></sup>\` where X is the sequential footnote number starting at 1.
-     * *In the References Section*: Each reference item must be its own distinct paragraph separated by a double newline. Prefix each item with its return-link anchor: \`<a id="ref-X" href="#ref-src-X">**[X]**</a> [Complete Academic Citation.](https://example.org/article-url)\` (where the bracketed text contains NO raw URLs, and the citation uses standard quotes rather than asterisks), so that clicking the inline superscript number smoothly scrolls down to the reference at the bottom, and clicking the \`**[X]**\` in the reference at the bottom smoothly scrolls back up to the exact footnote position in the body text.
-   
-   - Just before the References section, you CAN optionally include a "Pour aller plus loin" (Going Further) block to suggest deep-dive academic or research references (books, articles, videos, websites). Use the \`<GoingFurther>\` and \`<GoingFurtherItem>\` components as follows:
-      \`\`\`mdx
-     <GoingFurther title="Pour aller plus loin...">
-       <GoingFurtherItem title="Title of Book" type="book" description="Brief description of why this book is relevant and highly recommended." />
-       <GoingFurtherItem title="Academic Research Paper" type="research" url="https://doi.org/...or-real-url" description="Detailed description of this paper's advanced concepts." />
-       <GoingFurtherItem title="Recommended Video Explainer" type="video" url="https://youtube.com/..." description="Short summary of this excellent 2-minute video visual breakdown." />
-     </GoingFurther>
-      \`\`\``}
- 15. Audio and Video Durations and Language Fallbacks:
-     - The strict duration limit for any audio or video content is between **1 minute and 1 hour (60 minutes)**. If a topic requires a deep 15-minute, 30-minute, or 45-minute video breakdown to be treated with proper academic depth, that is fully authorized and encouraged! Durations under 1 minute are prohibited.
-     - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\`, \`duration="15:45"\`, or \`duration="45 min"\`).
-     - **Language Fallback & Subtitles**: If high-quality, relevant videos or audios in the course's target language are scarce or unavailable, you MUST gracefully fall back to selecting highly relevant English resources (e.g., YouTube videos) and recommend them, specifically noting in the description that the resource supports auto-generated subtitles.
- 16. Authentic Resource References:
-     - All external resources, including video IDs, audio URLs, and bibliography references, will be automatically checked for reachability and validated against live APIs (e.g. Crossref, Google Books, YouTube). Do not invent fake or hallucinated URLs or media IDs.
- 17. Mandatory and Discipline-Specific Visual, Interactive & Auditory Elements (Éléments visuels, interactifs et auditifs obligatoires par discipline) :
-      - You MUST systematically integrate highly interactive and visual elements into the lesson content to enhance comprehension and engagement. These are NOT optional for their respective disciplines and are critical to visual and auditory learning:
-        * Biology, Anatomy, Medicine, or Life Sciences: You MUST systematically insert at least one highly detailed custom \`<InteractiveDiagram>\` component. Do NOT use default placeholders. You MUST specify a custom \`title\`, a \`type\` (choose 'cell' for cellular structures, 'neuron' for neurons/nervous cells, or 'custom' for any other structures, organs, or pathways), and a custom \`hotspots\` array defining 3 to 6 distinct elements relevant to the topic.
-           Example for a neuron:
-           \`<InteractiveDiagram title="Anatomie du neurone moteur" type="neuron" hotspots={[
-             { id: "soma", name: "Soma", x: 35, y: 50, description: "Corps cellulaire contenant le noyau et assurant la synthèse des protéines." },
-             { id: "dendrites", name: "Dendrites", x: 15, y: 25, description: "Antennes réceptrices de signaux chimiques d'autres neurones." },
-             { id: "axone", name: "Axone", x: 55, y: 52, description: "Câble conducteur de l'influx nerveux sous forme de potentiel d'action." },
-             { id: "myeline", name: "Gaine de myéline", x: 72, y: 44, description: "Gaine protectrice lipidique qui accélère la conduction électrique." },
-             { id: "synapse", name: "Terminaisons synaptiques", x: 90, y: 62, description: "Zones de contact libérant des neurotransmetteurs dans la fente synaptique." }
-           ]} />\`
-           Example for any other system (using type="custom"):
-           \`<InteractiveDiagram title="La Synapse Chimique" type="custom" hotspots={[
-             { id: "pre", name: "Membrane présynaptique", x: 25, y: 35, description: "Extrémité axonale où sont stockées les vésicules contenant les neurotransmetteurs." },
-             { id: "ves", name: "Vésicules synaptiques", x: 40, y: 40, description: "Saccules membranaires libérant les neurotransmetteurs sous l'effet du calcium." },
-             { id: "fente", name: "Fente synaptique", x: 55, y: 50, description: "Espace intercellulaire de 20 nm traversé par diffusion passive par les neurotransmetteurs." },
-             { id: "recepteur", name: "Récepteurs postsynaptiques", x: 75, y: 65, description: "Canaux ioniques ou RCPG s'ouvrant après liaison du neurotransmetteur." }
-           ]} />\`
-           Coordinates x and y are integer percentages from 0 to 100 on a 2D canvas. Choose locations logically matching the underlying animated SVG layout.
-        * Economics, Finance, Mathematics, or Physics: You MUST systematically insert at least one dynamic 2D graph simulator or interactive function coefficients manipulator tag:
-             - \`<FunctionPlotter mode="linear|compound-interest|supply-demand" title="Graph Title" xLabel="X-Axis" yLabel="Y-Axis" />\` (plots supply-demand curves, compound interest, or linear growth, equipped with interactive parameter slider controls) OR
-             - \`<FunctionManipulator />\` (stunning curves sandbox plotting linear, quadratic, sinusoidal wave, exponential, and logarithmic functions, equipped with interactive parameter sliders, explicit graduated linear/log axes, units, and zero origin point).
-        * Step-by-Step Processes, Workflows, Chronological Events, Systems Pathways, or Logical Flows (All Disciplines): You MUST systematically include a visual flowchart written directly inside standard \`\`\`mermaid code blocks (parsed and rendered automatically in the client).
-        * Quantitative, Mathematical, Scientific, or Economic Exercises: For any lesson with calculation steps, numerical derivations, formula applications, or mathematical proofs, you MUST systematically include:
-             - At least one Solved Worked Example:
-               \`<SolvedExercise title="Name of Example" solution="Detailed multi-line step-by-step mathematical or scientific derivation resolution details...">Full problem statement/text here...</SolvedExercise>\`
-             - At least one Unsolved Interactive Calculation Challenge:
-               \`<UnsolvedExercise question="Calculated challenge question requiring a numeric value response" correctAnswer={5.2} tolerance={0.05} placeholder="Enter numerical result..." hint="Helpful formula/clue hint..." solution="Step-by-step worked resolution revealed after correct answer or no attempts left..." unit="m/s" />\`
-             - For lessons teaching basic subtraction (elementary levels like CP/CE), you MUST include:
-               \`<BasicMathExplorer />\` (an interactive subtraction explorer with a curved step-jump number line and visual objects to cross out/manipulate).
-             - For chemistry lessons teaching chemical reaction balancing, you MUST include:
-               \`<ChemicalStoichiometry />\` (an elegant chemical reaction balancing sandbox).
-             - For algebra or higher-level mathematics teaching equation solving, factoring, or isolating variables, you MUST include:
-               \`<EquationManipulator />\` (an elegant sandbox supporting step-by-step algebraic equation solver pathways).
-        * Chemistry, Biology, Material Sciences, Crystallography, or Molecular Physics: You MUST systematically include at least one interactive 3D particle structure viewer:
-             - \`<StructureViewer3D presetId="h2o|co2|ch4|nacl|graphene" />\`
-             - Support presets: "h2o" (bent water structure), "co2" (linear double-bond carbon dioxide), "ch4" (tetrahedral methane), "nacl" (Alternating ionic salt FCC crystal grid), or "graphene" (rippled carbon hexagonal sheet).
-        * Physics, Biology, Optics, Thermodynamics, or Biochemical Reactions: You MUST systematically include at least one playable dynamic simulation with progress-scrubbing playback:
-             - \`<DynamicSimulation presetId="mitosis|carnot|waves|doubleslit|enzyme" />\`
-             - Support presets: "mitosis" (cell division phases), "carnot" (ideal heat engine PV cycle and piston), "waves" (sine wave traveling with sliders), "doubleslit" (diffraction wave interference fringes with laser wavelength slider), or "enzyme" (induced-fit lock-and-key substrate splitting).
-        * Statistical, Analytical, Financial, or Measurement Data (All Disciplines): To display distributions, proportions, or comparative statistics, you MUST systematically include an elegant, high-impact SVG gradient chart:
-             - \`<DataChart title="Chart Title" type="bar|donut" xAxisLabel="Label X" yAxisLabel="Label Y" unit="%" data={[{"label":"Name A","value":40},{"label":"Name B","value":60}]} />\`
-        * Complex Transitions, Before-After comparisons, or state changes (e.g., cell division/mitosis phases, chemical reaction steps, or economic inflation comparison): You MUST systematically include a draggable before-after reveal slider component: \`<ComparisonSlider beforeLabel="Avant" afterLabel="Après" beforeContent="Description of before state..." afterContent="Description of after state..." />\`.
-        * Computer Science, Software Engineering, Coding, or Web Development: You MUST systematically insert at least one interactive client-side coding sandbox block: \`<CodeSandbox initialCode="..." title="Titre du Bac à Sable" language="html|javascript|css" />\` where students can edit and execute HTML/CSS/JS code in real-time right inside the page.
-         * Auditory and Video Enrichment (All Disciplines): You MUST systematically embed at least one short audio or video resource:
-              - For **video**: use \`<Video id="" title="..." provider="YouTube" duration="..." />\`. Leave \`id\` empty — it will be auto-resolved from YouTube search.
-              - For **audio**: use \`<Audio url="" title="..." duration="..." />\`. Leave \`url\` empty — the system will search Wikimedia Commons for a real CC-licensed file matching the title, or fall back to TTS synthesis.
-              - The \`title\` is CRITICAL for audio resolution. It MUST be precise and searchable:
-                * Music: exact instrument + work (e.g. \`title="Bach Prelude BWV 846 harpsichord"\`, \`title="Piano note Middle C"\`, \`title="Beethoven Symphony 5 opening"\`)
-                * Languages: exact phrase to hear (e.g. \`title="French pronunciation Bonjour comment allez-vous"\`, \`title="Spanish Buenos dias")\`)
-                * Natural sciences: taxonomy or event names (e.g. \`title="Nightingale Luscinia megarhynchos song"\`, \`title="Thunderstorm rain"\`, \`title="Wolf howling"\`)
-                * History: speaker + event (e.g. \`title="Charles de Gaulle appel 18 juin 1940"\`, \`title="Martin Luther King I have a dream 1963"\`)
-                * Other: most specific English/French description (e.g. \`title="Normal heartbeat sinus rhythm stethoscope"\`)
-              - The duration of the video or audio can be up to 1 hour (60 minutes) if the complexity of the subject warrants a comprehensive deep-dive tutorial.
-        * Geometry/Mathematics/Physics Chapters (Draggable 2D Sandbox): For any chapter teaching coordinate systems, triangle trigonometry, vectors, or trigonometric circles, you MUST systematically insert at least one 2D Geometry sandbox widget:
-             - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\`. Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
-        * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
- 18. Special Pedagogical Enrichment Blocks (Balises JSX d'Enrichissement) :
-       You MUST dynamically and contextually enrich the lesson body using the following custom tags.
-       *CRITICAL COMPONENT TAG NAME REQUIREMENT*: Regardless of the target language of the lesson (French, Spanish, German, Chinese, or any new language we may add), you MUST write the JSX tag names EXACTLY as specified below in canonical English (e.g. write '<CriticalThinking>', '<HistoricalEvent>', '<DidYouKnow>', etc. NEVER translate the tag names themselves). This is strict and mandatory.
-       - **Esprit Critique** (\`<CriticalThinking title="Titre">...</CriticalThinking>\`): Use this block to prompt the student to question an assumption, analyze methodological limits, think about potential biases, or consider counter-arguments.
-       - **Le saviez-vous ?** (\`<DidYouKnow>...</DidYouKnow>\`): Insert exactly 1 highly surprising trivia, statistical fact, or analogy per lesson to capture interest.
-       - **Anecdote Historique** (\`<HistoricalAnecdote title="..." date="...">...</HistoricalAnecdote>\`): Add a 2-4 sentence historical narrative detailing a TRULY anecdotal, unexpected, human, quirky, or surprising event or story (e.g. a funny misconception, an unusual experiment mishap, or a witty quote; NOT just a plain history event like the creation of a lab or the publication of a book). This should be a fun, social-gathering conversational snippet. Crucial: The HistoricalAnecdote and DidYouKnow blocks in the same lesson must NEVER cover the exact same subject, discovery, or event.
-       - **Événement Historique** (\`<HistoricalEvent title="..." date="...">...</HistoricalEvent>\`): Add a 2-4 sentence description of a landmark historical event, foundational experiment, or crucial historical milestone (such as the opening of a famous laboratory or the publication of a seminal textbook) that is important for academic context but is a factual milestone rather than a quirky anecdote.
-       - **Idée Brillante** (\`<BrilliantIdea title="...">...</BrilliantIdea>\`): Highlight a highly creative, brilliant, or counter-intuitive idea, solution, or theory related to the concept.
-       - **Point de vue** (\`<PointOfView topic="Titre" perspectives={[{"author":"Auteur A","view":"Avis A"},{"author":"Auteur B","view":"Avis B"}]} />\`): Use this block to compare differing theories, models, or socio-historical viewpoints.
-       - **Et après ?** (\`<WhatsNext title="...">...</WhatsNext>\`): Place this systematically at the very end of the core lesson body (just before the final evaluation) to project students forward into next concepts or advanced career paths.
-  19. Optional Pedagogical Enriching Elements (Éléments d'enrichissement pédagogiques facultatifs) :
-     - The following features are completely OPTIONAL. You should organically choose to use just one or two of them if they fit the level and subject, to avoid drowning the content:
-       * L'Ancre Problématique (The Hook): A real-world story, scene, or case study demonstrating the necessity of the concept.
-       * Le Guide des Idées Reçues (Debunking Grid): 3 to 5 common misconceptions dismantled by the lesson.
-       * Le Résumé "Skimmable" (Lecture Rapide): A bulleted/bolded ultra-condensed overview at the start/end of modules.
-       * Analogies Transversales: Creative cross-discipline analogies to explain abstract concepts.
-       * Bac à Sable Interactif (Sandbox / Simulator): Simulation guides or interactive parameter manipulation cues.
-       * L'Invite de Journalisation Métacognitive: A short metacognitive journal prompt encouraging self-reflection.
-  20. Write the response in "${targetLang.toUpperCase()}".
-  21. Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`\`).
-  22. CRITICAL MDX COMPILER COMPLIANCE RULES:
-      - Absolutely NO orphaned JSX tags or unclosed tags. Ensure all tags (such as <Objectives>, <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <Epistemology>, <GoingFurther>, <GoingFurtherItem>, <ComparisonSlider>, <CodeSandbox>, <InteractiveDiagram>, <FunctionPlotter>, <FunctionManipulator>, <SolvedExercise>, <UnsolvedExercise>, <BasicMathExplorer>, <ChemicalStoichiometry>, <EquationManipulator>, <StructureViewer3D>, <DynamicSimulation>, <DataChart>, <ComparisonSlider>, <Geometry2D>) are closed correctly.
-      - JSX Attributes MUST be formatted strictly as: name="value". Do NOT use single quotes for attributes (like name='value'). Do NOT use braces without values.
-      - Inside JSX attributes (like term, definition, bio, prompt, subject, q, explanation, title, beforeContent, afterContent), do NOT use raw double quotes. Use &quot; or escape them properly, or just use single quotes inside the double-quoted attribute.
-      - Inside JSX attributes, do NOT use raw ampersands '&'. Use the word 'and' or wrap/escape it as '&amp;'.
-      - Never nest a custom component inside itself (e.g. do NOT put <WhatsNext> inside <WhatsNext>).
-      - Do NOT generate empty components like '<CriticalThinking />' or '<WhatsNext />' without text or children.
-      - Frontmatter headers are allowed, but the main body must be raw MDX. Do NOT wrap the entire output in markdown block wrappers like \`\`\`html or \`\`\`mdx.`;
-
-      let rawMdx = '';
-      let contentSuccess = false;
-      let vertexStatus = 'Not Attempted';
-      let vertexError = 'N/A';
-      let studioStatus = 'Not Attempted';
-      let studioError = 'N/A';
+      let widgetsJsonStr = '';
+      let widgetsSuccess = false;
+      let widgetsError = 'N/A';
 
       if (isVertexConfigured()) {
-        await appendTaskLog(`[AI GENERATOR] Generating lesson "${item.title}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
-        vertexStatus = 'Attempted';
         try {
-          const contentRes = await callVertexAI({
+          const widgetsRes = await callVertexAI({
             task: 'course_generation',
-            contents: [{ role: 'user', parts: [{ text: promptContent }] }],
-            generationConfig: { temperature: 0.3 }
+            contents: [{ role: 'user', parts: [{ text: widgetsPrompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: "application/json",
+              responseSchema: lessonWidgetsSchema
+            }
           });
-
-          if (contentRes && contentRes.ok) {
-            const contentJson = await safeResponseJson(contentRes, 'Vertex lesson generation');
-            rawMdx = contentJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            contentSuccess = true;
-            vertexStatus = 'Success';
+          if (widgetsRes && widgetsRes.ok) {
+            const resJson = await widgetsRes.json();
+            widgetsJsonStr = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            widgetsSuccess = true;
           } else {
-            const status = contentRes ? contentRes.status : 'unknown';
-            const statusText = contentRes ? contentRes.statusText : '';
-            vertexError = `HTTP Error ${status}: ${statusText}`;
-            console.error(`[AI GENERATOR] Vertex AI response error. Status: ${status}`);
+            widgetsError = widgetsRes ? `HTTP ${widgetsRes.status} ${widgetsRes.statusText}` : 'Null Response';
           }
-        } catch (err) {
-          const error = err as Error;
-          vertexError = error.message || String(err);
-          console.warn(`[AI GENERATOR] Vertex AI lesson generation failed.`, err);
+        } catch (err: any) {
+          widgetsError = err.message || String(err);
+          console.warn("[AI GENERATOR - WFTA] Vertex Stage 1 widgets call exception:", err);
         }
       }
-      
-      if (!contentSuccess && apiKey) {
-        await appendTaskLog(`[AI GENERATOR] Generating lesson "${item.title}" via AI Studio fallback (gemini-2.5-flash)...`);
-        studioStatus = 'Attempted';
+
+      if (!widgetsSuccess && apiKey) {
         const startTime = Date.now();
         try {
-          const contentRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          const widgetsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: promptContent }] }]
+              contents: [{ parts: [{ text: widgetsPrompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: lessonWidgetsSchema,
+                temperature: 0.2
+              }
             })
           });
-          if (contentRes.ok) {
-            const contentJson = await safeResponseJson(contentRes, 'AI Studio lesson generation fallback');
-            rawMdx = contentJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            contentSuccess = true;
-            studioStatus = 'Success';
+          if (widgetsRes.ok) {
+            const resJson = await widgetsRes.json();
+            widgetsJsonStr = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            widgetsSuccess = true;
 
             const durationMs = Date.now() - startTime;
-            const usage = contentJson.usageMetadata || {};
-            const promptTokens = usage.promptTokenCount || 0;
-            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptContent);
+            const usage = resJson.usageMetadata || {};
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, widgetsPrompt);
           } else {
-            studioError = `HTTP Error ${contentRes.status}: ${contentRes.statusText}`;
-            console.error(`[AI GENERATOR] AI Studio response error. Status: ${contentRes.status}`);
+            widgetsError = `HTTP ${widgetsRes.status} ${widgetsRes.statusText}`;
           }
-        } catch (err) {
-          const error = err as Error;
-          studioError = error.message || String(err);
-          console.error(`[AI GENERATOR] AI Studio lesson content fetch exception:`, err);
+        } catch (err: any) {
+          widgetsError = err.message || String(err);
+          console.error(`[AI GENERATOR - WFTA] AI Studio Stage 1 widgets fallback exception:`, err);
         }
       }
 
-      if (!rawMdx) {
-        const errorMsg = `[AI GENERATOR CRITICAL ERROR] Failed to generate content for lesson "${item.title}" in course "${correctedCourseName}". Vertex AI Status: ${vertexStatus} (${vertexError}), AI Studio Status: ${studioStatus} (${studioError}).`;
-        console.error(errorMsg);
-        throw new Error(errorMsg);
+      if (!widgetsJsonStr) {
+        throw new Error(`[AI GENERATOR CRITICAL ERROR] Failed to generate Widgets JSON for lesson "${item.title}". Error: ${widgetsError}`);
       }
 
-      // Agent 4 (Verifier/Critic) refinement loop
-      let currentMdx = rawMdx;
-      let approved = !contentSuccess;
+      // Parse and clean the generated widgets locally
+      let parsedWidgets: any = {};
+      try {
+        const cleanedJson = widgetsJsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+        parsedWidgets = safeJsonParse(cleanedJson, 'generateCourseContent (WFTA Stage 1 Widgets)');
+        parsedWidgets = validateAndFixWidgets(parsedWidgets);
+      } catch (err: any) {
+        await appendTaskLog(`[AI GENERATOR ERROR] Failed to parse/validate widgets: ${err.message || err}. Falling back to default mock widgets.`);
+        parsedWidgets = validateAndFixWidgets({});
+      }
+
+      await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 2] Generating academic narrative text for lesson "${item.title}"...`);
+
+      // Describe the generated widgets to the narrative writer so they can weave them perfectly
+      const widgetsDescription = `
+We have pre-generated and verified the following highly interactive educational widgets for this lesson.
+You MUST write your academic course text directly around these widgets.
+To insert a widget at the best educational moment, write its exact bracketed anchor tag like this: [[WIDGET:id]].
+Directly before and after each widget, provide a paragraph of high-quality narrative context, explaining what the widget demonstrates, how it relates to the theory, or prompting the student on what to observe or solve.
+
+LIST OF GENERATED WIDGETS AT YOUR DISPOSAL (INSERT EACH EXACTLY ONCE):
+- **Prerequisites block**: [[WIDGET:prerequisites]] (Insert at the very beginning, before the introduction).
+- **Diagnostic Quiz skip-block**: [[WIDGET:diagnosticQuiz]] (Insert immediately after the Prerequisites block, before the introduction).
+- **Learning Objectives block**: [[WIDGET:learningObjectives]] (Insert immediately after the Introduction section).
+- **Conclusion Summary block**: [[WIDGET:conclusionSummary]] (Insert at the beginning of the "## Conclusion" section).
+- **What's Next steps block**: [[WIDGET:whatsNext]] (Insert at the very end of the Conclusion section).
+- **Final Exam block**: [[WIDGET:finalEvaluation]] (Insert after the Conclusion section, as the ultimate validation).
+
+INTERACTIVE COMPONENTS (INSERT EACH EXACTLY ONCE IN THE RESPECTIVE SECTION BODY):
+${parsedWidgets.interactiveComponents.map((comp: any) => `
+- Component ID: "\${comp.id}"
+  Anchor tag to insert: [[WIDGET:\${comp.id}]]
+  Component Type: "\${comp.componentType}"
+  Planned Section: "\${comp.sectionAnchor}"
+  Props/Data summary: \${JSON.stringify(comp.props).slice(0, 300)}...
+`).join('\n')}
+`;
+
+      const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3 - Academic Writer).
+Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the lesson "${item.title}" in the course "${correctedCourseName}" (Level: ${levelInput}).
+
+Course Context and Disciplinary Strategy:
+${courseContext.pedagogicalStrategy ? `- Pedagogical Strategy: ${courseContext.pedagogicalStrategy}` : ''}
+${courseContext.epistemologicalMatrix ? `- Epistemological Matrix: ${courseContext.epistemologicalMatrix}` : ''}
+${item.cognitiveArtifact ? `- Expected Cognitive Artifact for this lesson: ${item.cognitiveArtifact}` : ''}
+${item.technicalDepth ? `- Expected Guidelines and Technical Depth: ${item.technicalDepth}` : ''}
+
+### WIDGET PLACEMENT MANDATE (THE WFTA SYSTEM):
+${widgetsDescription}
+
+### RIGOROUS WRITING & PEDAGOGICAL STYLING CONSTRAINTS:
+1. **Academic Density & Zero-Placeholders**:
+   - Write fully developed paragraphs. Skeletons, placeholders, comments like "write your section here", vague lists, and bullet points without substance are strictly prohibited and will cause immediate failure.
+   - You must write the actual text of all sections (Introduction, the main concepts body, and Conclusion). Do NOT write headings like '## Glossaire' or '## Références', as these are appended programmatically from the pre-generated widgets!
+2. **Author Quotes with Citations**:
+   - Systematically weave high-impact, contextually relevant quotes from notable thinkers and scientists formatted as:
+     > "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. Page
+     Every quote must be in the course language (or translated in brackets immediately following the quote) and must be followed by a dedicated paragraph explaining its conceptual implications.
+3. **Controlled Digressions (Encadrés Épistémologiques)**:
+   - If the level is university level (L1, L2, L3), systematically insert at least one historical controversy or limits-of-concept box:
+     <Epistemology title="Title of Digression">Detailed epistemological discussion...</Epistemology>
+4. **Contextual Mini-Biographies (Minibios)**:
+   - Include at least one detailed biographical box inside the main text using:
+     > [!INFO] **Mini-Biographie : Name (Dates)**
+     Write 8-12 lines of biography (4-6 for primary level) and systematically include a direct, working Wikipedia markdown link at the end: \`[En savoir plus sur Wikipédia](...)\`.
+5. **Connected Entities Hover-Cards**:
+   - Wrap every historical figure, author, artwork, geographic location, fictional character, or historical event mentioned inline in their respective custom overlay component with a 2-3 line biographical/description attribute as fallback:
+     - <RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>
+     - <Artwork name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Title</Artwork>
+     - <Location name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</Location>
+     - <EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>
+     - <FictionalCharacter name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</FictionalCharacter>
+     *Constraint*: Do NOT require or place these tags inside JSX attribute properties (like inside component props or diagnostic quiz questions), as nesting JSX is syntactically invalid there. Keep names as plain text when inside properties. Do not wrap names inside markdown image captions.
+6. **Visual Assets Accessibility & Captions**:
+   - For decorative/illustrative imagery (Pollinations.ai), use English prompts with underscores:
+     ![Alt Text](https://image.pollinations.ai/prompt/english_descriptive_prompt?width=800&height=600&nologo=true)
+   - Caption every single image, audio or video player immediately below using:
+     *Figure X : [Title] - [Description]. Source : ...* (use "Wikimedia Commons" or specify AI-generated origin).
+     For external resources, link them with a footnote tag: <sup><a id="ref-src-X" href="#ref-X">X</a></sup>. No link for flowcharts or AI images.
+   - For complex scientific, anatomical, biological or geographical diagrams, prefer using a real Wikipedia/Wikimedia Commons direct image URL.
+7. **Discipline Adaptation**:
+   - biology/anatomy: focus on visual illustrations and anatomical mapping.
+   - math/physics: use advanced LaTeX formulas ($ and $$), systematic definitions, and proof.
+   - humanities/philosophy: focus on comparative dialectics, historical controversy, and rhetoric.
+8. **Level Adaptation**:
+   - Tailor vocabulary, tone, mathematical rigor and paragraph density strictly to the presumption of "${levelInput}".
+9. **No Code Block Wrappers**:
+   - Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).
+   - Write in "${targetLang.toUpperCase()}".`;
+
+      let narrativeText = '';
+      let narrativeSuccess = false;
+      let narrativeError = 'N/A';
+
+      if (isVertexConfigured()) {
+        try {
+          const narrativeRes = await callVertexAI({
+            task: 'course_generation',
+            contents: [{ role: 'user', parts: [{ text: narrativePrompt }] }],
+            generationConfig: {
+              temperature: 0.3
+            }
+          });
+          if (narrativeRes && narrativeRes.ok) {
+            const resJson = await narrativeRes.json();
+            narrativeText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            narrativeSuccess = true;
+          } else {
+            narrativeError = narrativeRes ? `HTTP ${narrativeRes.status} ${narrativeRes.statusText}` : 'Null Response';
+          }
+        } catch (err: any) {
+          narrativeError = err.message || String(err);
+          console.warn("[AI GENERATOR - WFTA] Vertex Stage 2 narrative call exception:", err);
+        }
+      }
+
+      if (!narrativeSuccess && apiKey) {
+        const startTime = Date.now();
+        try {
+          const narrativeRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: narrativePrompt }] }],
+              generationConfig: {
+                temperature: 0.3
+              }
+            })
+          });
+          if (narrativeRes.ok) {
+            const resJson = await narrativeRes.json();
+            narrativeText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            narrativeSuccess = true;
+
+            const durationMs = Date.now() - startTime;
+            const usage = resJson.usageMetadata || {};
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, narrativePrompt);
+          } else {
+            narrativeError = `HTTP ${narrativeRes.status} ${narrativeRes.statusText}`;
+          }
+        } catch (err: any) {
+          narrativeError = err.message || String(err);
+          console.error(`[AI GENERATOR - WFTA] AI Studio Stage 2 narrative fallback exception:`, err);
+        }
+      }
+
+      if (!narrativeText) {
+        throw new Error(`[AI GENERATOR CRITICAL ERROR] Failed to generate Narrative text for lesson "${item.title}". Error: ${narrativeError}`);
+      }
+
+      // STAGE 3: Stitching the narrative and widgets programmatically
+      let currentMdx = stitchLessonContent(narrativeText, parsedWidgets);
+
+      let approved = false;
       let iteration = 0;
       const maxIterations = 3;
 
       while (!approved && iteration < maxIterations) {
         iteration++;
-        await appendTaskLog(`[AI GENERATOR - AGENT 4] Verifying lesson "${item.title}" (Attempt ${iteration}/${maxIterations})...`);
-        
-        const verifierPrompt = `You are the Verifier/Critic Agent (Agent 4). Your job is to strictly review the generated academic course content (MDX) to ensure it complies with the "Zero-Placeholder" and "Academic Density" policies.
+        await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 4] Verifying stitched content (Attempt ${iteration}/${maxIterations})...`);
+
+        const verifierPrompt = `You are the Verifier/Critic Agent (Agent 4). Your job is to strictly review the generated academic course content (MDX) to ensure it complies with the "Zero-Placeholder", "Academic Density", and "Styling/Structure" policies.
 
 MDX CONTENT TO VERIFY:
 ---
@@ -1695,68 +1510,60 @@ ${currentMdx}
 ---
 
 Your Checkpoints:
-1. "Zero-Placeholder & Prohibited Empty Tags & Nested Wrappers & Content Collisions":
-   - **STRICT ZERO-PLACEHOLDER CONSTRAINT**: Systematically reject (approved: false) if the lesson contains any placeholders, comments telling the user to write their own text, unwritten sections, or skeletons like "Insérer ici...", "[Placeholder]", "[À compléter]", "Lorem Ipsum", "..." for incomplete lists, or generic non-developed paragraphs. The text must be fully written, complete, and production-ready.
-   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <SummativeEvaluation></SummativeEvaluation>, <Objectives></Objectives>, <CriticalThinking />, <WhatsNext />, <BrilliantIdea />, <OpenQuestion />, <ScientificDebate />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
-   - Nested wrappers are strictly forbidden (e.g. self-nesting is invalid). Use only one single tag for the block.
-   - Content collision: Ensure that <HistoricalAnecdote>, <HistoricalFact>, and <DidYouKnow> do NOT cover the exact same subject, discovery, or event. If they overlap or duplicate information, reject the content (set "approved": false) so they are written on distinct, non-overlapping pedagogical hooks. Ensure that <HistoricalAnecdote> is TRULY anecdotal, quirky, funny, or human (not just a dry historical milestone). Factual milestones like the founding of a laboratory or publication of a textbook MUST be placed in a <HistoricalFact> (Événement Historique) block instead.
-2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${level}"). Look for lazy summaries or text-avoidance patterns.
+1. "Zero-Placeholder & Prohibited Empty Tags & Content Collisions":
+   - **STRICT ZERO-PLACEHOLDER CONSTRAINT**: Systematically reject (approved: false) if the lesson contains any placeholders, comments telling the user to write their own text, unwritten sections, or skeletons like "Insérer ici...", "[Placeholder]", "[À compléter]", "Lorem Ipsum", or generic non-developed paragraphs. The text must be fully written, complete, and production-ready.
+   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <Objectives></Objectives>, <CriticalThinking />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
+   - Content collision: Ensure that <HistoricalAnecdote>, <HistoricalFact>, and <DidYouKnow> do NOT cover the exact same subject or discover. Ensure that <HistoricalAnecdote> is TRULY anecdotal, quirky, funny, or human (not just a dry historical milestone). Factual milestones like the founding of a laboratory or publication of a textbook MUST be placed in a <HistoricalFact> (Événement Historique) block instead.
+2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${levelInput}"). Look for lazy summaries or text-avoidance patterns.
 3. "Structural Completeness & Mandated Sections":
    - Ensure the presence of prerequisites at the very beginning (using '<Prerequisites items={[...]} />').
    - Ensure the presence of diagnostic quizzes (using '<DiagnosticQuiz ... />') before the introduction.
-   - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading like '## Présentation').
+   - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading).
    - Ensure the presence of learning objectives (using '<Objectives>' containing '<Knowledge>', '<Skills>', and '<Attitudes>' sub-components).
    - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' component) before the final evaluation.
    - Ensure the presence of a concluding section (using the heading '## Conclusion' or localized equivalent) containing the '<Summary items={[...]} />' component.
-   - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>', '<SummativeEvaluation>', or '<EssayEvaluation ... />').
+   - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>' or '<EssayEvaluation ... />').
    - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
-   - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary ("${level}" indicates if it's primary).
-    - Check formatting of bibliography references: verify that (a) they do NOT contain raw URLs, hyperlinks, or markdown link syntax in the citation text; (b) book/article titles inside the citation text must be wrapped in standard quotation marks (or French guillemets « ... » for French lessons) and NEVER in asterisks (*) or underscores (_); and (c) the citation format matches the discipline-appropriate style expected for the course (i.e., **${getCitationStyle(courseContext.discipline || correctedCourseName).name}**) — for example, APA 7 for psychology/social sciences, Vancouver for medicine, Chicago Notes-Bibliography for history/philosophy, IEEE for engineering/CS, CSE for biology, Bluebook/OSCOLA for law, etc. Reject if references are in plainly wrong format for the discipline.
-     If any of these required structural sections/components are missing or malformed, you MUST reject the content (set "approved": false) and request the writer to add or correct them.
+   - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary.
+     - Check formatting of bibliography references: verify that (a) they do NOT contain raw URLs, hyperlinks, or markdown link syntax in the citation text; (b) book/article titles inside the citation text must be wrapped in standard quotation marks (or French guillemets « ... » for French lessons) and NEVER in asterisks (*) or underscores (_); and (c) the citation format matches the discipline-appropriate style expected for the course (i.e., **${getCitationStyle(courseContext.discipline || correctedCourseName).name}**) — for example, APA 7 for psychology/social sciences, Vancouver for medicine, Chicago Notes-Bibliography for history/philosophy, IEEE for engineering/CS, CSE for biology, Bluebook/OSCOLA for law, etc. Reject if references are in plainly wrong format for the discipline.
 4. "Multimedia, Illustrations, & Non-Text Media Density":
-   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${level}", course: "${correctedCourseName}"):
+   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${levelInput}", course: "${correctedCourseName}"):
    - Verify that the image density conforms to age-adaptation: for primary CP-CM2, reject if text dominates over visuals/simulators (the text/image ratio must be reversed: let visuals, games, and simulations dominate, and keep text explanations short and simple).
    - Check that the minimum media baseline/diversity is respected: even for advanced university levels (Licence L1-L3), reject if the lesson lacks at least 1 illustration/diagram, 1 or 2 graphs/curves/simulations (e.g. using \`<FunctionPlotter />\` or a Markdown table chart toggle), and 1 or 2 source images (painting, sculpture, historical photo, monument, map).
-   - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines (visual arts, architecture, geography, geology, anatomy, biology, cinema, history of art, design, engineering diagrams): A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'. These disciplines require high illustration density by design.
-   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components: '<Mermaid />', '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<DataChart />', '<StructureViewer3D />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'. Reject if NONE of these are present.
-   - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
-   - "Audio/Video Integrity": When '<AudioPlayer />', '<Audio />', or '<Video />' components are present in the content, verify that:
+   - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines: A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'.
+   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components. Reject if NONE of these are present.
+   - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines: A text-dominant lesson is pedagogically acceptable. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment would still be beneficial.
+   - "Audio/Video Integrity": When '<Audio />' or '<Video />' components are present, verify that:
      * Each has a non-empty 'src' or 'url' attribute (not a placeholder like "url_here" or "").
-     * Each specifies a 'duration' attribute (e.g. duration="2 min" or duration="15:45") and that this duration is strictly between 1 minute and 60 minutes. Any audio or video under 1 minute or exceeding 60 minutes must be rejected.
-     * Each has a caption line directly below it (italicized, e.g. *Audio 1 : Title - Description.*) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
-   - Regardless of discipline: Verify that audio players ('<AudioPlayer />' / '<Audio />') or video players ('<Video />') are incorporated where spoken context or audio demonstrations are pedagogically valuable (e.g. listening comprehension for language courses, spoken philosophical lectures, or historical audio documents).
+     * Each specifies a 'duration' attribute and that this duration is strictly between 1 minute and 60 minutes. Any audio or video under 1 minute or exceeding 60 minutes must be rejected.
+     * Each has a caption line directly below it (italicized) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
    - "Existing Artwork AI-Generation Block Check": Verify that the content contains absolutely NO AI-generated images (e.g., Pollinations.ai prompts) of real/existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You MUST reject (set "approved": false) if the writer attempted to use an AI-generated image URL for an existing real historical artwork (such as Mona Lisa, David, Starry Night, etc.). Real historical artworks must only use Wikimedia Commons links or have no image at all.
- 5. "Section Interactivity and Sandboxes":
-   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
+5. "Section Interactivity and Sandboxes":
+   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited.
    5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
-     * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' (for anatomical or cellular structures) or '<StructureViewer3D presetId="..." />' (for molecular/crystal structures). A lesson in these disciplines without either component MUST be rejected.
-     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', '<StructureViewer3D />', '<Geometry2D />', or '<BasicMathExplorer />'. A lesson in these disciplines without any of these MUST be rejected.
-     * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />' for active code execution. A lesson without it MUST be rejected.
+     * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' or '<StructureViewer3D presetId="..." />'. A lesson in these disciplines without either component MUST be rejected.
+     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component. A lesson in these disciplines without any of these MUST be rejected.
+     * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />'. A lesson without it MUST be rejected.
      * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
-     * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />', '<PointOfView />', '<HistoricalAnecdote />', or '<HistoricalFact />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
 6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
 7. "Connected Entities (Real Persons, Fictional Characters, Locations, Events, Artworks) & Mini-Biographies":
-   - Verify that EVERY real person (historical figure, scientist, writer, director, or notable person) mentioned in the lesson content (including in main body text, blockquotes, quotes, citations, footnotes, info boxes, etc.) is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute as a fallback. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
-     - Verify that \`<Location>\`, \`<Place>\`, \`<EventLink>\`, \`<EvenementHistorique>\`, \`<Artwork>\`, and \`<FictionalCharacter>\` tags systematically contain a non-empty \`description\` attribute detailing their background and relevance as a secure fallback. Reject if missing or empty.
-   - Verify that there are no duplicate or nested '<RealPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<RealPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
-   - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="..." description="...">'.
-     - Verify that any Contextual Mini-Biography block (using \`> [!INFO]\` or \`> [!NOTE]\` titled \`Mini-Biographie\` or \`Mini-Biography\`) is substantial: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) and university levels (Supérieur). Verify that it systematically and obligatorily includes a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\` or \`[Learn more on Wikipedia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
-8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources (like Pollinations.ai images), and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
+   - Verify that EVERY real person mentioned in the lesson content is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid.
+   - Verify that there are no duplicate or nested '<RealPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<RealPerson>' tags. Reject content (set "approved": false) if duplicate/nested tags are found.
+   - Verify that any Contextual Mini-Biography block is substantial (at least 8-12 lines for secondary/university, 4-6 lines for primary) and systematically and obligatorily includes a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
+8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources, and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
 9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
-    - Every <Question> element MUST have its question text defined in the 'q' attribute (e.g. <Question q="Question text?">) and not as raw text children.
+    - Every <Question> element MUST have its question text defined in the 'q' attribute and not as raw text children.
     - Systematically reject (approved: false) any content containing deprecated pedagogical tags like <Explanation>, <Solution>, <Instruction>, or <KeyConcept>.
-   - Every <Quiz> contains at least one <Question> element, and every <Question> contains at least two <Option> elements.
-   - Every <Option /> tag MUST follow the Flat-Prop pattern: it must pass the option text via the 'text' attribute (e.g. <Option text="Option text" />) and its correctness state via the 'correct' boolean attribute (e.g. correct={true} or correct={false}), and it MUST be a self-closing tag. Systematically reject (approved: false) any question containing nested/wrapped text inside <Option> (like <Option>Text</Option>) or missing the 'text' attribute, or where no option has correct={true}.
-   - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
-   - All text content and attributes inside these assessment tags are fully written, meaningful, and not empty or skeletal. Reject any empty or placeholder assessments.
+    - Every <Option /> tag MUST follow the Flat-Prop pattern: it must pass the option text via the 'text' attribute and its correctness state via the 'correct' boolean attribute, and it MUST be a self-closing tag. Systematically reject any question containing nested/wrapped text inside <Option> or missing the 'text' attribute, or where no option has correct={true}.
+    - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
 10. "Foreign Language Quotes & Translations":
-    - Verify that any quote in a language other than the lesson's target language (e.g., an English quote in a French lesson) is systematically translated into the target language of the lesson, and that this translation is displayed in brackets (e.g., [Traduction : ...] or [Translation: ...]) immediately following the quote. Reject if a foreign quote is not followed by its bracketed translation. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
+    - Verify that any quote in a language other than the lesson's target language is systematically translated into the target language of the lesson, and that this translation is displayed in brackets immediately following the quote. Reject if a foreign quote is not followed by its bracketed translation. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
 11. "Wikimedia Commons Preference for Complex Diagrams":
-    - For complex biological, chemical, physical, geographical, or anatomical diagrams (such as the plasma membrane structure, cell anatomy, molecular models, or historical maps), verify that high-quality public domain images from Wikimedia Commons are preferred over low-quality Pollinations.ai images or simple placeholders. Verify that the Wikimedia Commons image URL is correctly used in the markdown image syntax and linked/credited in the references section.
+    - For complex biological, chemical, physical, geographical, or anatomical diagrams, verify that high-quality public domain images from Wikimedia Commons are preferred over low-quality Pollinations.ai images. Verify that the Wikimedia Commons image URL is correctly used in the markdown image syntax and linked/credited in the references section.
 12. "DataChart Data Integrity":
-    - Every \`<DataChart />\` tag MUST have a \`data={[...]}\` attribute with at least 2 valid data point objects (each with a label string and value number). A \`<DataChart />\` without a data attribute, with an empty data array, or with a string instead of a JSX array MUST be rejected (approved: false). Zero tolerance: no DataChart with invalid or missing data is acceptable at generation time.
+    - Every \`<DataChart />\` tag MUST have a \`data={[...]}\` attribute with at least 2 valid data point objects (each with a label string and value number). A \`<DataChart />\` without a data attribute, with an empty data array, or with a string instead of a JSX array MUST be rejected.
 13. "SolvedExercise Completeness":
-    - Every \`<SolvedExercise>\` block MUST have: (a) a non-empty \`title\` attribute, (b) non-empty problem statement children (clearly formulating a concrete problem with enough context), AND (c) a non-empty \`solution="..."\` attribute or \`<Solution>...</Solution>\` child with step-by-step resolution. An empty \`<SolvedExercise>\` (missing children, missing solution, or where problem and solution are identical text) MUST be rejected (approved: false).
+    - Every \`<SolvedExercise>\` block MUST have: (a) a non-empty \`title\` attribute, (b) non-empty problem statement children (clearly formulating a concrete problem with enough context), AND (c) a non-empty \`solution="..."\` attribute or \`<Solution>...</Solution>\` child with step-by-step resolution. An empty \`<SolvedExercise>\` MUST be rejected.
 
 You must return a valid JSON object with the following keys:
 - "approved": boolean (true if it perfectly complies with the policies; false if there are violations).
@@ -1768,47 +1575,44 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
         let verifierSuccess = false;
         try {
           if (isVertexConfigured()) {
-            try {
-              const vRes = await callVertexAI({
-                task: 'course_generation',
-                contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
-                generationConfig: {
-                  temperature: 0.1,
-                  responseMimeType: "application/json",
-                  responseSchema: verificationSchema
-                }
-              });
-              if (vRes && vRes.ok) {
-                const vJson = await vRes.json();
-                verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-                verifierSuccess = true;
+            const vRes = await callVertexAI({
+              task: 'course_generation',
+              contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: "application/json",
+                responseSchema: verificationSchema
               }
-            } catch (err) {
-              console.warn("[AI GENERATOR - AGENT 4] Vertex verification call exception:", err);
+            });
+            if (vRes && vRes.ok) {
+              const vJson = await vRes.json();
+              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+              verifierSuccess = true;
             }
           }
           
           if (!verifierSuccess && apiKey) {
             const startTime = Date.now();
-            try {
-              const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: verifierPrompt }] }],
-                  generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: verificationSchema
-                  }
-                })
-              });
-              if (vRes.ok) {
-                const vJson = await vRes.json();
-                verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-                verifierSuccess = true;
-              }
-            } catch (err) {
-              console.error(`[AI GENERATOR - AGENT 4] AI Studio verification fetch exception:`, err);
+            const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: verifierPrompt }] }],
+                generationConfig: {
+                  responseMimeType: "application/json",
+                  responseSchema: verificationSchema,
+                  temperature: 0.1
+                }
+              })
+            });
+            if (vRes.ok) {
+              const vJson = await vRes.json();
+              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+              verifierSuccess = true;
+
+              const durationMs = Date.now() - startTime;
+              const usage = vJson.usageMetadata || {};
+              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, verifierPrompt);
             }
           }
 
@@ -1822,22 +1626,38 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
             const critique = verificationResult?.critique || 'Invalid or empty verification response from AI critic.';
             await appendTaskLog(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
             
-            const refinerPrompt = `You are a world-class academic professor (Agent 1/2/3). The verifier/critic (Agent 4) has rejected your previous output.
-You must now rewrite, expand, and fully correct the MDX lesson content based on their feedback, ensuring zero placeholders and high academic density.
+            if (iteration >= maxIterations) {
+              await appendTaskLog(`[AI GENERATOR - AGENT 4] Max verification attempts reached. Moving forward with current MDX.`);
+              break;
+            }
+
+            const refinerPrompt = `You are a world-class academic professor (Agent 3 - Academic Writer).
+The verifier/critic (Agent 4) has rejected your previously generated academic narrative text.
+You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
 
 CRITIQUE FROM AGENT 4:
 "${critique}"
 
-PREVIOUS MDX CONTENT:
+PREVIOUS ACADEMIC NARRATIVE TEXT:
 ---
-${currentMdx}
+${narrativeText}
 ---
 
-Generate the complete, updated, fully-fledged lesson content incorporating all corrections.
-Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).`;
+LIST OF PRE-GENERATED WIDGETS AT YOUR DISPOSAL (YOU MUST PRESERVE AND INSERT EACH WIDGET ANCHOR [[WIDGET:id]] EXACTLY ONCE):
+- Prerequisites block: [[WIDGET:prerequisites]]
+- Diagnostic Quiz skip-block: [[WIDGET:diagnosticQuiz]]
+- Learning Objectives block: [[WIDGET:learningObjectives]]
+- Conclusion Summary block: [[WIDGET:conclusionSummary]]
+- What's Next steps block: [[WIDGET:whatsNext]]
+- Final Exam block: [[WIDGET:finalEvaluation]]
+${parsedWidgets.interactiveComponents.map((comp: any) => `- Component ID: "${comp.id}" -> Anchor: [[WIDGET:${comp.id}]] (Component Type: "${comp.componentType}", planned for "${comp.sectionAnchor}")`).join('\n')}
 
-            let refinedMdx = '';
+Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
+Return ONLY the raw narrative text. Do not wrap the response in markdown code blocks (\`\`\`).`;
+
+            let refinedNarrative = '';
             let refineSuccess = false;
+            
             if (isVertexConfigured()) {
               try {
                 const refRes = await callVertexAI({
@@ -1847,10 +1667,10 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
                 });
                 if (refRes && refRes.ok) {
                   const refJson = await refRes.json();
-                  refinedMdx = refJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  refinedNarrative = refJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
                   refineSuccess = true;
                 }
-              } catch (err) {
+              } catch (err: any) {
                 console.warn("[AI GENERATOR - AGENT 4] Vertex refinement call exception:", err);
               }
             }
@@ -1867,20 +1687,21 @@ Return ONLY the raw MDX content. Do not wrap the response in markdown code block
                 });
                 if (refRes.ok) {
                   const refJson = await refRes.json();
-                  refinedMdx = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  refinedNarrative = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
                   refineSuccess = true;
                   
                   const durationMs = Date.now() - startTime;
                   const usage = refJson.usageMetadata || {};
                   await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, refinerPrompt);
                 }
-              } catch (err) {
+              } catch (err: any) {
                 console.error(`[AI GENERATOR - REFINE] AI Studio refinement fetch exception:`, err);
               }
             }
 
-            if (refinedMdx) {
-              currentMdx = refinedMdx;
+            if (refinedNarrative) {
+              narrativeText = refinedNarrative;
+              currentMdx = stitchLessonContent(narrativeText, parsedWidgets);
             } else {
               console.warn("[AI GENERATOR - AGENT 4] Refinement failed to return content, keeping previous MDX.");
             }
