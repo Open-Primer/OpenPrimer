@@ -2392,9 +2392,129 @@ export function cleanGlossaryDefinition(def: string): string {
   return def;
 }
 
+function detectLanguage(text: string): string {
+  const clean = text.toLowerCase().replace(/[^\w\s]/g, ' ');
+  const words = clean.split(/\s+/);
+  
+  const counts = {
+    fr: 0,
+    en: 0,
+    es: 0,
+    de: 0
+  };
+  
+  const frStop = new Set(['le', 'la', 'les', 'de', 'des', 'un', 'une', 'et', 'est', 'en', 'que', 'qui', 'dans', 'du', 'pour', 'sur', 'se', 'au']);
+  const enStop = new Set(['the', 'of', 'and', 'to', 'a', 'in', 'is', 'that', 'it', 'was', 'for', 'on', 'with', 'by', 'as', 'at', 'this']);
+  const esStop = new Set(['el', 'las', 'los', 'del', 'un', 'una', 'y', 'en', 'que', 'es', 'con', 'para', 'por', 'su', 'sus', 'como']);
+  const deStop = new Set(['der', 'die', 'das', 'und', 'ist', 'in', 'zu', 'den', 'dem', 'mit', 'von', 'ein', 'eine', 'auf', 'für']);
+
+  for (const w of words) {
+    if (frStop.has(w)) counts.fr++;
+    if (enStop.has(w)) counts.en++;
+    if (esStop.has(w)) counts.es++;
+    if (deStop.has(w)) counts.de++;
+  }
+  
+  let maxLang = 'fr'; // default fallback
+  let maxCount = 0;
+  for (const [lang, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      maxLang = lang;
+    }
+  }
+  
+  return maxLang;
+}
+
+function cleanCitationTranslations(mdx: string, courseLang: string): string {
+  const lines = mdx.split('\n');
+  const processedLines = lines.map(line => {
+    const translationRegex = /\[(?:Traduction|Translation|Traducci[oó]n|Tradu[çc][aã]o|Übersetzung|\u7ffb\u8bd1)\s*[:：]\s*([\s\S]*?)\]/gi;
+    const match = translationRegex.exec(line);
+    if (!match) return line;
+
+    const fullTranslationBlock = match[0];
+    let translationText = match[1].trim();
+
+    translationText = translationText.replace(/^["'«“\s]+|["'»”\s]+$/g, '').trim();
+
+    const lineWithoutTags = line.replace(/<[^>]+>/g, '').replace(/\[(?:Traduction|Translation|Traducci[oó]n|Tradu[çc][aã]o|Übersetzung|\u7ffb\u8bd1)[\s\S]*?\]/gi, '');
+    const detectedLang = detectLanguage(lineWithoutTags);
+
+    const normalizedCourseLang = (courseLang || 'en').toLowerCase().split('-')[0];
+
+    if (detectedLang === normalizedCourseLang) {
+      let cleanedLine = line.replace(fullTranslationBlock, '');
+      cleanedLine = cleanedLine.replace(/\s*[.,;?]?\s*$/, matchStr => {
+        return matchStr.includes('.') ? '.' : '';
+      });
+      cleanedLine = cleanedLine.replace(/\s*\.\s*\./g, '.').trim();
+      return cleanedLine;
+    } else {
+      const quoteRegex = /"([^"]+)"|'([^']+)'|«([^»]+)»|“([^”]+)”/g;
+      const quoteMatch = quoteRegex.exec(line);
+      if (quoteMatch) {
+        const fullQuoteMatch = quoteMatch[0];
+        
+        let lineWithoutTranslationBlock = line.replace(fullTranslationBlock, '');
+        lineWithoutTranslationBlock = lineWithoutTranslationBlock.replace(/\s+([.,;?])\s*$/g, '$1').trim();
+
+        const replacement = `${fullQuoteMatch} ["${translationText}"]`;
+        return lineWithoutTranslationBlock.replace(fullQuoteMatch, replacement);
+      } else {
+        return line.replace(fullTranslationBlock, `["${translationText}"]`);
+      }
+    }
+  });
+
+  return processedLines.join('\n');
+}
+
+function cleanBiographyAlerts(mdx: string): string {
+  return mdx.replace(/<Alert\s+type="biography">([\s\S]*?)<\/Alert>/gi, (match, body) => {
+    const boldMatch = body.match(/^\s*\*\*([^*]+)\*\*/);
+    if (!boldMatch) return match;
+
+    const headerText = boldMatch[1].trim();
+    const subjectName = headerText.replace(/\([^)]+\)/g, '').trim();
+
+    let cleanedBody = body;
+
+    const realPersonRegex = /<RealPerson\b([^>]*?)>([\s\S]*?)<\/RealPerson>/gi;
+    cleanedBody = cleanedBody.replace(realPersonRegex, (tagMatch, attrs, innerText) => {
+      const cleanInner = innerText.trim();
+      if (cleanInner.toLowerCase() === subjectName.toLowerCase() || 
+          (subjectName.toLowerCase().includes(cleanInner.toLowerCase()) && cleanInner.length > 3)) {
+        return innerText;
+      }
+      return tagMatch;
+    });
+
+    const headerFull = boldMatch[0];
+    const remainingText = cleanedBody.substring(boldMatch.index! + headerFull.length);
+
+    const subjectRegex = new RegExp('^(\\s*[:\\-–—]?\\s*)' + escapeRegex(subjectName) + '\\b', 'i');
+    const subMatch = remainingText.match(subjectRegex);
+    if (subMatch) {
+      const replacedRemaining = remainingText.replace(subjectRegex, '');
+      cleanedBody = cleanedBody.substring(0, boldMatch.index! + headerFull.length) + replacedRemaining;
+    }
+
+    return `<Alert type="biography">${cleanedBody}</Alert>`;
+  });
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
+
+  // Clean citation translations based on original quote language and course language
+  processed = cleanCitationTranslations(processed, lang);
 
   // Fix AI-generated syntax errors in code attributes/blocks where `>=` or `<=` was mistyped with a slash (e.g. `/>=` or `/<=`)
   processed = processed.replace(/\/>=/g, '>=');
@@ -2524,6 +2644,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = indentNestedBlockquotes(processed);
   // Parse GFM-style [!NOTE]/[!WARNING] blockquotes into styled <Alert> components
   processed = parseMdxAlerts(processed);
+  
+  // Clean biography alerts to eliminate redundancies and strip overlapping hover overlays on the subject
+  processed = cleanBiographyAlerts(processed);
   
   // Group images, captions, and fallback links into a single <CustomFigure> component
   const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/).*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
