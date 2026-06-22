@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar, Palette, BookOpen } from 'lucide-react';
-import { useLanguage } from '@/context/LanguageContext';
+import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar, Palette } from 'lucide-react';
 
 export interface EntityLinkProps {
   name: string;
   lang: string;
   children: React.ReactNode;
-  type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork';
+  type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork' | 'website' | 'project';
   bio?: string;
   description?: string;
+  url?: string;
+  href?: string;
 }
 
 export const EntityLink = ({ 
@@ -21,7 +22,9 @@ export const EntityLink = ({
   children, 
   type = 'entity',
   bio,
-  description
+  description,
+  url: propUrl,
+  href: propHref
 }: EntityLinkProps) => {
   const [prevLang, setPrevLang] = useState(lang);
   const [activeLang, setActiveLang] = useState(() => {
@@ -38,7 +41,7 @@ export const EntityLink = ({
   }
 
   const [summary, setSummary] = useState<string | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
+  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
   const [exists, setExists] = useState<boolean | null>(name && activeLang ? null : false);
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -48,7 +51,8 @@ export const EntityLink = ({
   const fallbackUrl = exists === false
     ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanName)}`
     : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(cleanName.replace(/ /g, '_'))}`;
-  const resolvedUrl = url || fallbackUrl;
+  const resolvedWikiUrl = wikiUrl || fallbackUrl;
+  const resolvedExternalUrl = propUrl || propHref;
   const staticBio = bio || description;
   const resolvedSummary = summary || staticBio;
 
@@ -69,7 +73,7 @@ export const EntityLink = ({
           const data = await res.json();
           if (isMounted) {
             setSummary(data.extract || null);
-            setUrl(data.content_urls?.desktop?.page || null);
+            setWikiUrl(data.content_urls?.desktop?.page || null);
             setExists(true);
           }
         } else {
@@ -143,6 +147,12 @@ export const EntityLink = ({
     borderClass = "border-pink-400 text-pink-300 hover:text-pink-200";
     iconBoxClass = "bg-pink-600/20 text-pink-400";
     linkClass = "text-pink-400 hover:text-pink-300";
+  } else if (resolvedType === 'website' || resolvedType === 'project') {
+    Icon = Globe;
+    headerLabel = isFr ? 'Projet / Site' : 'Project / Website';
+    borderClass = "border-teal-400 text-teal-300 hover:text-teal-200";
+    iconBoxClass = "bg-teal-600/20 text-teal-400";
+    linkClass = "text-teal-400 hover:text-teal-300";
   }
 
   const t = {
@@ -197,17 +207,30 @@ export const EntityLink = ({
                 {t.loading}
               </p>
             )}
-            {resolvedUrl && (
-              <a 
-                href={resolvedUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
-              >
-                {t.readWiki} ({activeLang.toUpperCase()})
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-3 border-t border-slate-800/80">
+              {resolvedWikiUrl && (
+                <a 
+                  href={resolvedWikiUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
+                >
+                  {t.readWiki} ({activeLang.toUpperCase()})
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {resolvedExternalUrl && (
+                <a 
+                  href={resolvedExternalUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider text-teal-400 hover:text-teal-300"
+                >
+                  {isFr ? 'Site Officiel' : 'Official Website'}
+                  <Globe className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
             <Popover.Arrow className="fill-slate-700" />
           </motion.div>
         </Popover.Content>
@@ -249,3 +272,10 @@ export const EvenementHistorique = EventLink;
 export const Artwork = (props: Omit<EntityLinkProps, 'type'>) => (
   <EntityLink {...props} type="artwork" />
 );
+
+/** Website or Project external link — teal hover card */
+export const WebsiteLink = (props: EntityLinkProps) => (
+  <EntityLink {...props} type="website" />
+);
+
+export const ProjectLink = WebsiteLink;

@@ -137,18 +137,105 @@ const ADVANCED_STRINGS = {
   }
 };
 
+// Localized strings for SolvedProblem
+const SOLVED_PROBLEM_STRINGS = {
+  EN: {
+    challenge: "Academic Challenge",
+    show: "Show Analytical Verification",
+    hide: "Hide Analytical Verification",
+    fallback_solution: "The above derivation follows the first principles of Newtonian mechanics. Ensure all coordinate systems are inertial before applying the second-order differential operators."
+  },
+  FR: {
+    challenge: "Défi Académique",
+    show: "Afficher la Résolution Analytique",
+    hide: "Masquer la Résolution Analytique",
+    fallback_solution: "La dérivation ci-dessus découle des premiers principes de la mécanique newtonienne. Assurez-vous que tous les systèmes de coordonnées sont inertiels avant d'appliquer les opérateurs différentiels de second ordre."
+  },
+  ES: {
+    challenge: "Desafío Académico",
+    show: "Mostrar Verificación Analítica",
+    hide: "Ocultar Verificación Analítica",
+    fallback_solution: "La derivación anterior sigue los primeros principios de la mecánica newtoniana. Asegúrese de que todos los sistemas de coordenadas sean inerciales antes de aplicar los operadores diferenciales de segundo orden."
+  },
+  DE: {
+    challenge: "Akademische Herausforderung",
+    show: "Analytische Verifizierung anzeigen",
+    hide: "Analytische Verifizierung ausblenden",
+    fallback_solution: "Die obige Ableitung folgt den ersten Prinzipien der Newtonschen Mechanik. Stellen Sie sicher, dass alle Koordinatensysteme inertial sind, bevor Sie die Differentialoperatoren zweiter Ordnung anwenden."
+  },
+  ZH: {
+    challenge: "学术挑战",
+    show: "显示分析验证",
+    hide: "隐藏分析验证",
+    fallback_solution: "上述推导遵循牛顿力学的基本原理。在应用二阶微分算子之前，确保所有坐标系都是惯性的。"
+  }
+};
+
+const getNodeText = (node: React.ReactNode): string => {
+  if (node === null || node === undefined) return '';
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(getNodeText).join('');
+  if (React.isValidElement(node)) {
+    const props = node.props as any;
+    if (props && 'children' in props) {
+      return getNodeText(props.children);
+    }
+  }
+  return '';
+};
+
+const isSolutionStart = (text: string): boolean => {
+  const t = text.trim().toLowerCase();
+  return (
+    t.startsWith('solution') ||
+    t.startsWith('solución') ||
+    t.startsWith('lösung') ||
+    t.startsWith('解答') ||
+    t.startsWith('démonstration') ||
+    t.startsWith('demonstration') ||
+    t.startsWith('résolution') ||
+    t.startsWith('resolution') ||
+    t.startsWith('verification') ||
+    t.startsWith('vérification')
+  );
+};
+
 // Problème Résolu / Démonstration
 export const SolvedProblem = ({ title, children }: { title: string, children: React.ReactNode }) => {
   const [showSolution, setShowSolution] = useState(false);
+  const { language } = useLanguage();
+  const langKey = (language || 'EN') as keyof typeof SOLVED_PROBLEM_STRINGS;
+  const t = SOLVED_PROBLEM_STRINGS[langKey] || SOLVED_PROBLEM_STRINGS.EN;
+
+  const childrenArray = React.Children.toArray(children);
+  const problemElements: React.ReactNode[] = [];
+  const solutionElements: React.ReactNode[] = [];
+  let foundSolution = false;
+
+  for (const child of childrenArray) {
+    if (foundSolution) {
+      solutionElements.push(child);
+      continue;
+    }
+
+    const text = getNodeText(child);
+    if (isSolutionStart(text)) {
+      foundSolution = true;
+      solutionElements.push(child);
+    } else {
+      problemElements.push(child);
+    }
+  }
 
   return (
     <div className="my-10 rounded-[40px] overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-3xl shadow-2xl">
       <div className="p-10 border-b border-emerald-500/10">
         <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
-          <Lightbulb className="w-5 h-5" /> Academic Challenge: {title}
+          <Lightbulb className="w-5 h-5" /> {t.challenge}: {title}
         </h4>
         <div className="text-slate-300 text-lg leading-relaxed prose-p:mb-6 last:prose-p:mb-0">
-          {renderNodeWithMath(children)}
+          {renderNodeWithMath(problemElements)}
         </div>
       </div>
       <button 
@@ -156,7 +243,7 @@ export const SolvedProblem = ({ title, children }: { title: string, children: Re
         className="w-full py-6 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/10 transition-all border-t border-emerald-500/10 cursor-pointer"
       >
         <div className={`w-2 h-2 rounded-full bg-emerald-500 ${showSolution ? 'animate-none' : 'animate-pulse'}`} />
-        {showSolution ? "Hide Analytical Verification" : "Show Analytical Verification"}
+        {showSolution ? t.hide : t.show}
         {showSolution ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
       <AnimatePresence>
@@ -165,12 +252,18 @@ export const SolvedProblem = ({ title, children }: { title: string, children: Re
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-slate-950/80 border-t border-emerald-500/10 p-10 text-slate-400 text-sm italic leading-relaxed"
+            className="bg-slate-950/80 border-t border-emerald-500/10 p-10 text-slate-300 leading-relaxed"
           >
-             <div className="flex items-start gap-4">
+            {solutionElements.length > 0 ? (
+              <div className="flex flex-col gap-4 text-sm">
+                {renderNodeWithMath(solutionElements)}
+              </div>
+            ) : (
+              <div className="flex items-start gap-4 text-slate-400 text-sm italic">
                 <div className="mt-1 w-1 h-8 bg-emerald-500/30 rounded-full" />
-                <p>The above derivation follows the first principles of Newtonian mechanics. Ensure all coordinate systems are inertial before applying the second-order differential operators.</p>
-             </div>
+                <p>{t.fallback_solution}</p>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

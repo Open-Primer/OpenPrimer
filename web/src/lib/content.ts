@@ -1782,6 +1782,8 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     ŒuvreDArt: 'Artwork',
     OeuvreDart: 'Artwork',
     ŒuvreDart: 'Artwork',
+    SiteWeb: 'WebsiteLink',
+    ProjetLien: 'WebsiteLink',
 
     // Interactive Widgets
     ManipulateurFonction: 'FunctionManipulator',
@@ -1861,7 +1863,7 @@ function deduplicateHistoricalPersons(mdx: string): string {
 
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
-    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink'
+    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink', 'WebsiteLink', 'ProjectLink', 'SiteWeb'
   ];
   const blockTags = [
     'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres',
@@ -1996,6 +1998,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
   const customTags = [
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique',
+    'WebsiteLink', 'ProjectLink', 'SiteWeb',
     'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
@@ -2482,7 +2485,7 @@ function cleanBiographyAlerts(mdx: string): string {
     let cleanedBody = body;
 
     const realPersonRegex = /<RealPerson\b([^>]*?)>([\s\S]*?)<\/RealPerson>/gi;
-    cleanedBody = cleanedBody.replace(realPersonRegex, (tagMatch, attrs, innerText) => {
+    cleanedBody = cleanedBody.replace(realPersonRegex, (tagMatch: string, attrs: string, innerText: string) => {
       const cleanInner = innerText.trim();
       if (cleanInner.toLowerCase() === subjectName.toLowerCase() || 
           (subjectName.toLowerCase().includes(cleanInner.toLowerCase()) && cleanInner.length > 3)) {
@@ -3035,16 +3038,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     refContent = refContent.replace(/\s*<span\s+class="text-xs\s+text-slate-400\s+font-normal">\s*\|\s*<a\s+href="https:\/\/scholar\.google\.com\/scholar[^"]*"\s+target="_blank"\s+rel="noopener\s+noreferrer"\s+class="[^"]*">\s*Google\s+Scholar\s*<\/a>\s*<\/span>/gi, '');
     refContent = refContent.replace(/\*\*\[(\d+)\]\*\*/g, '[$1]');
     
-    // Structure references as clean separate blocks with proper IDs and back-links
-    const parsedItems: any[] = [];
-    const itemRegex = /(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
-    
-    let match;
-    while ((match = itemRegex.exec(refContent)) !== null) {
-      const num = match[2] || match[1];
-      const rest = match[3];
-      if (!num || !rest) continue;
-
+    // Consolidated processor for formatting single reference lines
+    const processSingleReferenceItem = (numStr: string, rest: string, langCode: string) => {
       const trimmedRest = rest.trim();
       
       let resolvedUrl = '';
@@ -3074,7 +3069,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       }
 
       // 4. Format book/article titles (convert asterisks/underscores to quotes/guillemets)
-      const currentLang = (lang || 'en').toLowerCase();
+      const currentLang = (langCode || 'en').toLowerCase();
       if (currentLang === 'fr') {
         processedRest = processedRest.replace(/\*([^*]+)\*/g, '« $1 »').replace(/_([^_]+)_/g, '« $1 »');
       } else {
@@ -3112,12 +3107,48 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
       const searchLabel = finalUrl.includes('books.google') ? 'Google Books' : 'Google Scholar';
 
-      parsedItems.push({
-        num: parseInt(num, 10),
+      return {
+        num: parseInt(numStr, 10),
         text: processedRest,
         scholarUrl: finalUrl,
         scholarText: searchLabel
-      });
+      };
+    };
+
+    // Structure references as clean separate blocks with proper IDs and back-links
+    const parsedItems: any[] = [];
+    const itemRegex = /(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
+    
+    let match;
+    while ((match = itemRegex.exec(refContent)) !== null) {
+      const num = match[2] || match[1];
+      const rest = match[3];
+      if (!num || !rest) continue;
+
+      const item = processSingleReferenceItem(num, rest, lang);
+      parsedItems.push(item);
+    }
+
+    if (parsedItems.length === 0) {
+      // Robust line-by-line fallback parser for plain-text reference lists (without [1], [2] brackets)
+      const lines = refContent.split(/\r?\n/);
+      let autoNum = 1;
+      for (const line of lines) {
+        let trimmedLine = line.trim();
+        // Skip headings and empty lines or MDX components/separators
+        if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('---') || trimmedLine.startsWith('<')) {
+          continue;
+        }
+        
+        // Strip out any auto-detected leading list markdown bullets, numbers or brackets like:
+        // "- ", "* ", "1. ", "1) ", "[1] "
+        trimmedLine = trimmedLine.replace(/^(?:[-*+•\s]|\d+[\s.)\-]+|\[\d+\]\s*)+/, '').trim();
+        if (!trimmedLine) continue;
+
+        const item = processSingleReferenceItem(String(autoNum), trimmedLine, lang);
+        parsedItems.push(item);
+        autoNum++;
+      }
     }
 
     citationBlocks.forEach(cb => {
@@ -3306,7 +3337,7 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary'];
+  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb'];
   const tagPattern = new RegExp(
     `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
     'gi'

@@ -29,9 +29,16 @@ const coursesToGenerate: CourseSpec[] = [
   {
     name: "Fundamentos de la Filosofía",
     subject: "Philosophy",
-    level: "L3",
+    level: "L1",
     targetLang: "es",
     description: "Un viaje sistemático y avanzado a través de las cuestiones centrales de la existencia, el conocimiento, la ética y la metafísica."
+  },
+  {
+    name: "Introduction à l'Économie Comportementale",
+    subject: "Économie",
+    level: "L1",
+    targetLang: "fr",
+    description: "Une exploration captivante de la psychologie des décisions économiques, remettant en question l'hypothèse de l'agent rationnel à travers les biais cognitifs, les heuristiques et la théorie des perspectives."
   }
 ];
 
