@@ -2379,6 +2379,19 @@ function normalizeComplexAttributeTags(mdx: string): string {
   });
 }
 
+export function cleanGlossaryDefinition(def: string): string {
+  if (!def) return '';
+  const colonIndex = def.indexOf(':');
+  if (colonIndex !== -1) {
+    const part1 = def.substring(0, colonIndex).trim();
+    const part2 = def.substring(colonIndex + 1).trim();
+    if (part2.startsWith(part1)) {
+      return part2;
+    }
+  }
+  return def;
+}
+
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false): string {
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   let processed = decodeHtmlEncodedTags(content);
@@ -2640,19 +2653,6 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
     return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
   });
-
-export function cleanGlossaryDefinition(def: string): string {
-  if (!def) return '';
-  const colonIndex = def.indexOf(':');
-  if (colonIndex !== -1) {
-    const part1 = def.substring(0, colonIndex).trim();
-    const part2 = def.substring(colonIndex + 1).trim();
-    if (part2.startsWith(part1)) {
-      return part2;
-    }
-  }
-  return def;
-}
 
   // 5. Render Glossary as static list at the bottom of the page
   const glossaryIndex = processed.search(/###\s*(Glossaire|Glossary)/i);
