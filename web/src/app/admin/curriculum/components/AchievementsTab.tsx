@@ -667,13 +667,35 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
 
       const formattedThreshold = editThreshold.includes(' ') ? editThreshold : `${editThreshold} streak`;
 
-      // Check if description or threshold changed to recompile evaluation rule
-      let rule = selectedAchievement.evaluationRule;
-      const crucialRuleFieldsChanged = 
-        editDesc !== (isEnglish ? selectedAchievement.description : (selectedAchievement.translations?.[activeLang]?.description || selectedAchievement.description)) ||
-        formattedThreshold !== selectedAchievement.threshold;
+      // Define critical vs non-critical edits
+      const isThresholdChanged = formattedThreshold !== selectedAchievement.threshold;
+      const isEnglishTitleChanged = isEnglish && editName !== selectedAchievement.name;
+      const isEnglishDescChanged = isEnglish && editDesc !== selectedAchievement.description;
+      const isCriticalChange = isThresholdChanged || isEnglishTitleChanged || isEnglishDescChanged;
 
-      if (crucialRuleFieldsChanged) {
+      // Update translation dictionary map
+      const updatedTranslations = { ...(selectedAchievement.translations || {}) };
+      if (isEnglish) {
+        updatedTranslations['EN'] = { name: editName, description: editDesc };
+        updatedTranslations['en'] = { name: editName, description: editDesc };
+      } else {
+        updatedTranslations[activeLang] = { name: editName, description: editDesc };
+        updatedTranslations[activeLang.toLowerCase()] = { name: editName, description: editDesc };
+      }
+
+      const finalIcon = await resolveBadgeIconToBase64(editIcon);
+
+      if (isCriticalChange) {
+        // 1. SOFT-ARCHIVE the old badge version to Level 1
+        // Previous earners keep the badge unlocked on their profiles, but no new students can earn it.
+        await dbService.saveAchievement({
+          ...selectedAchievement,
+          status: 'archived',
+          archivingLevel: 1
+        });
+
+        // 2. COMPILE the new rule based on the changed core fields
+        let rule = selectedAchievement.evaluationRule;
         try {
           const compileRes = await fetch('/api/badges/compile', {
             method: 'POST',
@@ -696,31 +718,36 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
         if (!rule) {
           rule = compileRuleLocally(isEnglish ? editDesc : selectedAchievement.description, formattedThreshold);
         }
-      }
 
-      // Update the translation dictionary
-      const updatedTranslations = { ...(selectedAchievement.translations || {}) };
-      if (isEnglish) {
-        updatedTranslations['EN'] = { name: editName, description: editDesc };
-        updatedTranslations['en'] = { name: editName, description: editDesc };
+        // 3. REGISTER a brand new version of the badge with an incremented ID
+        const newId = achievements.length > 0 ? Math.max(...achievements.map(a => a.id)) + 1 : 1;
+
+        await dbService.saveAchievement({
+          id: newId,
+          name: isEnglish ? editName : selectedAchievement.name,
+          description: isEnglish ? editDesc : selectedAchievement.description,
+          icon: finalIcon,
+          startDate: editStartDate || null,
+          endDate: editEndDate || null,
+          threshold: formattedThreshold,
+          evaluationRule: rule,
+          translations: updatedTranslations,
+          status: 'active',
+          archivingLevel: 0,
+          count: 0
+        });
       } else {
-        updatedTranslations[activeLang] = { name: editName, description: editDesc };
-        updatedTranslations[activeLang.toLowerCase()] = { name: editName, description: editDesc };
+        // Non-critical change (editing localized translations, updating icon image, or start/end dates in-place)
+        await dbService.saveAchievement({
+          ...selectedAchievement,
+          name: isEnglish ? editName : selectedAchievement.name,
+          description: isEnglish ? editDesc : selectedAchievement.description,
+          icon: finalIcon,
+          startDate: editStartDate || null,
+          endDate: editEndDate || null,
+          translations: updatedTranslations
+        });
       }
-
-      const finalIcon = await resolveBadgeIconToBase64(editIcon);
-
-      await dbService.saveAchievement({
-        ...selectedAchievement,
-        name: isEnglish ? editName : selectedAchievement.name,
-        description: isEnglish ? editDesc : selectedAchievement.description,
-        icon: finalIcon,
-        startDate: editStartDate || null,
-        endDate: editEndDate || null,
-        threshold: formattedThreshold,
-        evaluationRule: rule,
-        translations: updatedTranslations
-      });
 
       setSelectedAchievement(null);
       setEditStartDate('');
