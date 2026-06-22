@@ -94,6 +94,14 @@ And another citation:
 
 And a duplicate citation to test consolidation:
 <Citation author="David Hilbert" source="Radio Address" year="1930" original="Wir müssen wissen. Wir werden wissen.">Nous devons savoir. Nous saurons de nouveau.</Citation>`
+    },
+    {
+      name: "14. GoingFurtherItem with rich properties and types (books, movies, websites)",
+      input: `<GoingFurther title="Pour aller plus loin...">
+  <GoingFurtherItem title="The Structure of Scientific Revolutions" type="book" author="Thomas S. Kuhn" year="1962" publisher="University of Chicago Press" wikipedia="https://en.wikipedia.org/wiki/The_Structure_of_Scientific_Revolutions" description="A landmark work on scientific paradigm shifts." />
+  <GoingFurtherItem title="Copenhagen" type="movie" director="Howard Davies" year="2002" imdb="https://www.imdb.com/title/tt0340057/" description="A film adaptation of the 1941 Bohr-Heisenberg meeting." />
+  <GoingFurtherItem title="CERN Website" type="website" url="https://home.cern/" description="The official portal of the European Organization for Nuclear Research." />
+</GoingFurther>`
     }
   ];
 

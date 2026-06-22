@@ -1,17 +1,18 @@
 "use client";
 
 import React from 'react';
-import { Compass, ArrowUpRight, BookOpen, FileText, Globe, Play } from 'lucide-react';
+import { Compass, ArrowUpRight, BookOpen, FileText, Globe, Play, Film } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface ResourceItemProps {
   title: string;
-  type: 'book' | 'article' | 'video' | 'website' | 'research';
+  type: 'book' | 'article' | 'video' | 'website' | 'research' | 'movie' | 'film';
   url?: string;
   description: string;
+  refNum?: number;
 }
 
-export const GoingFurtherItem = ({ title, type, url, description }: ResourceItemProps) => {
+export const GoingFurtherItem = ({ title, type, url, description, refNum }: ResourceItemProps) => {
   const [isValid, setIsValid] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
@@ -44,6 +45,9 @@ export const GoingFurtherItem = ({ title, type, url, description }: ResourceItem
         return <FileText className="w-4 h-4 text-emerald-400" />;
       case 'video':
         return <Play className="w-4 h-4 text-rose-400 fill-rose-400/25" />;
+      case 'movie':
+      case 'film':
+        return <Film className="w-4 h-4 text-rose-400" />;
       case 'website':
         return <Globe className="w-4 h-4 text-blue-400" />;
       case 'research':
@@ -55,11 +59,11 @@ export const GoingFurtherItem = ({ title, type, url, description }: ResourceItem
 
   const getBadgeText = (lang: string) => {
     const texts: Record<string, Record<string, string>> = {
-      FR: { book: 'Livre', article: 'Article', video: 'Vidéo', website: 'Site Web', research: 'Recherche' },
-      EN: { book: 'Book', article: 'Article', video: 'Video', website: 'Website', research: 'Research' },
-      ES: { book: 'Libro', article: 'Artículo', video: 'Video', website: 'Sitio Web', research: 'Investigación' },
-      DE: { book: 'Buch', article: 'Artikel', video: 'Video', website: 'Webseite', research: 'Forschung' },
-      ZH: { book: '书籍', article: '文章', video: '视频', website: '网站', research: '学术研究' }
+      FR: { book: 'Livre', article: 'Article', video: 'Vidéo', website: 'Site Web', research: 'Recherche', movie: 'Film', film: 'Film' },
+      EN: { book: 'Book', article: 'Article', video: 'Video', website: 'Website', research: 'Research', movie: 'Movie', film: 'Film' },
+      ES: { book: 'Libro', article: 'Artículo', video: 'Video', website: 'Sitio Web', research: 'Investigación', movie: 'Película', film: 'Película' },
+      DE: { book: 'Buch', article: 'Artikel', video: 'Video', website: 'Webseite', research: 'Forschung', movie: 'Film', film: 'Film' },
+      ZH: { book: '书籍', article: '文章', video: '视频', website: '网站', research: '学术研究', movie: '电影', film: '电影' }
     };
     const l = lang.toUpperCase();
     return texts[l]?.[type] || texts.EN[type];
@@ -76,6 +80,7 @@ export const GoingFurtherItem = ({ title, type, url, description }: ResourceItem
 
   return (
     <CardWrapper 
+      id={refNum ? `cite-${refNum}` : undefined}
       {...(extraProps as any)}
       className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-800 transition-all duration-300 ${url ? 'cursor-pointer' : ''}`}
     >
@@ -91,6 +96,18 @@ export const GoingFurtherItem = ({ title, type, url, description }: ResourceItem
             <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-950 border border-slate-850 text-slate-400 select-none">
               {getBadgeText(language)}
             </span>
+            {refNum && (
+              <a 
+                href={`#ref-${refNum}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-900/50 text-indigo-400 hover:text-indigo-200 hover:bg-indigo-900 transition-all select-none cursor-pointer"
+                title={language.toUpperCase() === 'FR' ? `Voir la référence [${refNum}]` : `View reference [${refNum}]`}
+              >
+                [{refNum}]
+              </a>
+            )}
           </div>
           <p className="text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-350 transition-colors duration-200">
             {description}

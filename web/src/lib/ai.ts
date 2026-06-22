@@ -124,6 +124,8 @@ const syllabusSchema = {
   required: ["courseContext", "lessons"]
 };
 
+};
+
 const verificationSchema = {
   type: "object",
   properties: {
@@ -132,6 +134,482 @@ const verificationSchema = {
   },
   required: ["approved", "critique"]
 };
+
+// ─────────────────────────────────────────────────────────────────
+// WIDGETS-FIRST (WFTA) SCHEMAS & HELPERS
+// ─────────────────────────────────────────────────────────────────
+
+const lessonWidgetsSchema = {
+  type: "object",
+  properties: {
+    prerequisites: {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              slug: { type: "string" },
+              level: { type: "string" },
+              subject: { type: "string" }
+            },
+            required: ["title", "slug", "level", "subject"]
+          }
+        }
+      },
+      required: ["items"]
+    },
+    diagnosticQuiz: {
+      type: "object",
+      properties: {
+        question: { type: "string" },
+        options: { type: "array", items: { type: "string" } },
+        correctIndex: { type: "integer" },
+        targetSectionId: { type: "string" },
+        sectionTitle: { type: "string" }
+      },
+      required: ["question", "options", "correctIndex", "targetSectionId", "sectionTitle"]
+    },
+    learningObjectives: {
+      type: "object",
+      properties: {
+        knowledge: { type: "array", items: { type: "string" } },
+        skills: { type: "array", items: { type: "string" } },
+        attitudes: { type: "array", items: { type: "string" } }
+      },
+      required: ["knowledge", "skills", "attitudes"]
+    },
+    interactiveComponents: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          componentType: { type: "string" },
+          sectionAnchor: { type: "string" },
+          props: { type: "object" }
+        },
+        required: ["id", "componentType", "sectionAnchor", "props"]
+      }
+    },
+    whatsNext: {
+      type: "object",
+      properties: {
+        steps: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              description: { type: "string" },
+              slug: { type: "string" }
+            },
+            required: ["title", "description", "slug"]
+          }
+        }
+      },
+      required: ["steps"]
+    },
+    conclusionSummary: {
+      type: "object",
+      properties: {
+        items: { type: "array", items: { type: "string" } }
+      },
+      required: ["items"]
+    },
+    finalEvaluation: {
+      type: "object",
+      properties: {
+        type: { type: "string" },
+        props: { type: "object" }
+      },
+      required: ["type", "props"]
+    },
+    glossary: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          term: { type: "string" },
+          definition: { type: "string" }
+        },
+        required: ["term", "definition"]
+      }
+    },
+    references: {
+      type: "array",
+      items: { type: "string" }
+    }
+  },
+  required: [
+    "prerequisites",
+    "diagnosticQuiz",
+    "learningObjectives",
+    "interactiveComponents",
+    "whatsNext",
+    "conclusionSummary",
+    "finalEvaluation",
+    "glossary",
+    "references"
+  ]
+};
+
+export function validateAndFixWidgets(widgets: any): any {
+  if (!widgets || typeof widgets !== 'object') {
+    throw new Error("Widgets content is empty or malformed.");
+  }
+
+  // 1. Prerequisites validation
+  if (!widgets.prerequisites || !Array.isArray(widgets.prerequisites.items)) {
+    widgets.prerequisites = { items: [] };
+  }
+
+  // 2. Diagnostic quiz validation
+  if (!widgets.diagnosticQuiz || typeof widgets.diagnosticQuiz !== 'object') {
+    widgets.diagnosticQuiz = {
+      question: "Qu'est-ce que ce concept fondamental ?",
+      options: ["Option A (correct)", "Option B"],
+      correctIndex: 0,
+      targetSectionId: "introduction",
+      sectionTitle: "Introduction"
+    };
+  } else {
+    if (!Array.isArray(widgets.diagnosticQuiz.options) || widgets.diagnosticQuiz.options.length < 2) {
+      widgets.diagnosticQuiz.options = ["Option A (Correct)", "Option B (Incorrect)"];
+      widgets.diagnosticQuiz.correctIndex = 0;
+    }
+    if (typeof widgets.diagnosticQuiz.correctIndex !== 'number' || widgets.diagnosticQuiz.correctIndex < 0 || widgets.diagnosticQuiz.correctIndex >= widgets.diagnosticQuiz.options.length) {
+      widgets.diagnosticQuiz.correctIndex = 0;
+    }
+  }
+
+  // 3. Objectives KSA validation
+  if (!widgets.learningObjectives || typeof widgets.learningObjectives !== 'object') {
+    widgets.learningObjectives = {
+      knowledge: ["Comprendre les notions abordées."],
+      skills: ["Savoir appliquer les modèles."],
+      attitudes: ["Développer un esprit critique et analytique."]
+    };
+  } else {
+    if (!Array.isArray(widgets.learningObjectives.knowledge) || widgets.learningObjectives.knowledge.length === 0) {
+      widgets.learningObjectives.knowledge = ["Comprendre les notions abordées."];
+    }
+    if (!Array.isArray(widgets.learningObjectives.skills) || widgets.learningObjectives.skills.length === 0) {
+      widgets.learningObjectives.skills = ["Savoir appliquer les modèles."];
+    }
+    if (!Array.isArray(widgets.learningObjectives.attitudes) || widgets.learningObjectives.attitudes.length === 0) {
+      widgets.learningObjectives.attitudes = ["Développer un esprit critique."];
+    }
+  }
+
+  // 4. Formative interactiveComponents validation & sanitization
+  if (!Array.isArray(widgets.interactiveComponents)) {
+    widgets.interactiveComponents = [];
+  } else {
+    widgets.interactiveComponents = widgets.interactiveComponents.map((comp: any, idx: number) => {
+      if (!comp || typeof comp !== 'object') {
+        return {
+          id: `widget_${idx}`,
+          componentType: "Quiz",
+          sectionAnchor: "## Section 1",
+          props: { questions: [] }
+        };
+      }
+      if (!comp.id) comp.id = `widget_${idx}`;
+      if (!comp.componentType) comp.componentType = "Quiz";
+      if (!comp.sectionAnchor) comp.sectionAnchor = "## Section";
+      if (!comp.props || typeof comp.props !== 'object') comp.props = {};
+
+      if (comp.componentType === "Quiz") {
+        if (!Array.isArray(comp.props.questions) || comp.props.questions.length === 0) {
+          comp.props.questions = [
+            {
+              q: "Question d'auto-évaluation ?",
+              explanation: "Explication de la réponse correcte.",
+              options: [
+                { text: "Option Correcte", correct: true },
+                { text: "Option Incorrecte", correct: false }
+              ]
+            }
+          ];
+        } else {
+          comp.props.questions = comp.props.questions.map((q: any) => {
+            if (!q.q) q.q = "Question d'auto-évaluation ?";
+            if (!Array.isArray(q.options) || q.options.length < 2) {
+              q.options = [
+                { text: "Option Correcte", correct: true },
+                { text: "Option Incorrecte", correct: false }
+              ];
+            } else {
+              q.options = q.options.map((o: any) => {
+                if (!o || typeof o !== 'object') {
+                  return { text: "Option", correct: false };
+                }
+                if (!o.text) o.text = "Option";
+                o.correct = !!o.correct;
+                return o;
+              });
+              if (!q.options.some((o: any) => o.correct)) {
+                q.options[0].correct = true;
+              }
+            }
+            return q;
+          });
+        }
+      } else if (comp.componentType === "FillInBlanks") {
+        if (!comp.props.sentence) comp.props.sentence = "La Terre est une _____.";
+        if (!comp.props.answer) comp.props.answer = "planète";
+      } else if (comp.componentType === "SolvedExercise") {
+        if (!comp.props.title) comp.props.title = "Exercice résolu";
+        if (!comp.props.problem) comp.props.problem = "Formulez l'exercice ici.";
+        if (!comp.props.solution) comp.props.solution = "La solution détaillée.";
+      } else if (comp.componentType === "UnsolvedExercise") {
+        if (!comp.props.title) comp.props.title = "Exercice d'application";
+        if (!comp.props.problem) comp.props.problem = "Sujet de l'exercice à résoudre.";
+        if (!comp.props.correctAnswer) comp.props.correctAnswer = "Réponse attendue";
+      } else if (comp.componentType === "Mermaid") {
+        if (!comp.props.chart) comp.props.chart = "graph TD\n  A[Début] --> B[Fin]";
+      } else if (comp.componentType === "FunctionPlotter") {
+        if (!comp.props.fn) comp.props.fn = "x^2";
+      }
+      return comp;
+    });
+  }
+
+  // 5. Whats next validation
+  if (!widgets.whatsNext || !Array.isArray(widgets.whatsNext.steps) || widgets.whatsNext.steps.length === 0) {
+    widgets.whatsNext = {
+      steps: [
+        { title: "Sujet suivant", description: "Découvrez le chapitre suivant pour approfondir.", slug: "next-chapter" }
+      ]
+    };
+  }
+
+  // 6. Summary points validation (must be complete sentences ending with periods)
+  if (!widgets.conclusionSummary || !Array.isArray(widgets.conclusionSummary.items) || widgets.conclusionSummary.items.length === 0) {
+    widgets.conclusionSummary = {
+      items: [
+        "Ce chapitre a permis d'explorer les concepts fondamentaux de la discipline.",
+        "Les notions d'analyse et d'application ont été démontrées avec rigueur.",
+        "Les perspectives d'étude ouvrent la voie à de futurs développements majeurs."
+      ]
+    };
+  } else {
+    widgets.conclusionSummary.items = widgets.conclusionSummary.items.map((it: string) => {
+      let clean = (it || "").trim();
+      if (!clean) return "Concept clé assimilé de manière autonome.";
+      if (!clean.endsWith(".") && !clean.endsWith("!") && !clean.endsWith("?")) {
+        clean += ".";
+      }
+      return clean;
+    });
+  }
+
+  // 7. Final summative evaluation validation
+  if (!widgets.finalEvaluation || typeof widgets.finalEvaluation !== 'object') {
+    widgets.finalEvaluation = {
+      type: "Quiz",
+      props: {
+        durationLimit: 1800,
+        questions: [
+          {
+            q: "Question d'examen finale ?",
+            explanation: "Explication générale.",
+            options: [
+              { text: "Option Correcte", correct: true },
+              { text: "Option Incorrecte", correct: false }
+            ]
+          }
+        ]
+      }
+    };
+  } else {
+    if (widgets.finalEvaluation.type === "Quiz") {
+      const qProps = widgets.finalEvaluation.props || {};
+      if (!Array.isArray(qProps.questions) || qProps.questions.length === 0) {
+        widgets.finalEvaluation.props = {
+          durationLimit: 1800,
+          questions: [
+            {
+              q: "Question d'examen finale ?",
+              explanation: "Explication générale.",
+              options: [
+                { text: "Option Correcte", correct: true },
+                { text: "Option Incorrecte", correct: false }
+              ]
+            }
+          ]
+        };
+      }
+    }
+  }
+
+  // 8. Glossary & References validation
+  if (!Array.isArray(widgets.glossary) || widgets.glossary.length === 0) {
+    widgets.glossary = [
+      { term: "Souverain", definition: "Qui s'exerce de manière autonome et absolue." }
+    ];
+  }
+  if (!Array.isArray(widgets.references) || widgets.references.length === 0) {
+    widgets.references = [
+      "OpenPrimer Academic Research. 2026. *Autonomous Synthesizer Journal* 12 (2): 45-67."
+    ];
+  }
+
+  return widgets;
+}
+
+export function stitchLessonContent(narrativeMdx: string, widgets: any): string {
+  let content = narrativeMdx.trim();
+
+  const prerequisitesStr = `<Prerequisites items={${JSON.stringify(widgets.prerequisites.items)}} />`;
+  const diagnosticQuizStr = `<DiagnosticQuiz question="${widgets.diagnosticQuiz.question.replace(/"/g, '&quot;')}" options={${JSON.stringify(widgets.diagnosticQuiz.options)}} correctIndex={${widgets.diagnosticQuiz.correctIndex}} targetSectionId="${widgets.diagnosticQuiz.targetSectionId}" sectionTitle="${widgets.diagnosticQuiz.sectionTitle.replace(/"/g, '&quot;')}" />`;
+
+  const objectivesStr = `<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      ${widgets.learningObjectives.knowledge.map((k: string) => `<li>${k}</li>`).join('\n      ')}
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      ${widgets.learningObjectives.skills.map((s: string) => `<li>${s}</li>`).join('\n      ')}
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      ${widgets.learningObjectives.attitudes.map((a: string) => `<li>${a}</li>`).join('\n      ')}
+    </ul>
+  </Attitudes>
+</Objectives>`;
+
+  if (content.includes('[[WIDGET:prerequisites]]')) {
+    content = content.replace('[[WIDGET:prerequisites]]', prerequisitesStr);
+  } else {
+    content = `${prerequisitesStr}\n\n${content}`;
+  }
+
+  if (content.includes('[[WIDGET:diagnosticQuiz]]')) {
+    content = content.replace('[[WIDGET:diagnosticQuiz]]', diagnosticQuizStr);
+  } else {
+    content = content.replace(prerequisitesStr, `${prerequisitesStr}\n\n${diagnosticQuizStr}`);
+  }
+
+  if (content.includes('[[WIDGET:learningObjectives]]')) {
+    content = content.replace('[[WIDGET:learningObjectives]]', objectivesStr);
+  } else {
+    const introIdx = content.indexOf('## Introduction');
+    const presIdx = content.indexOf('## Présentation');
+    const targetIdx = introIdx !== -1 ? introIdx : (presIdx !== -1 ? presIdx : -1);
+
+    if (targetIdx !== -1) {
+      const nextHeadingIdx = content.indexOf('##', targetIdx + 15);
+      if (nextHeadingIdx !== -1) {
+        content = content.slice(0, nextHeadingIdx).trim() + `\n\n${objectivesStr}\n\n` + content.slice(nextHeadingIdx);
+      } else {
+        content = content + `\n\n${objectivesStr}`;
+      }
+    } else {
+      content = content.replace(diagnosticQuizStr, `${diagnosticQuizStr}\n\n${objectivesStr}`);
+    }
+  }
+
+  widgets.interactiveComponents.forEach((comp: any) => {
+    const anchor = `[[WIDGET:${comp.id}]]`;
+    let compStr = '';
+
+    if (comp.componentType === "Quiz") {
+      compStr = `<Quiz durationLimit={${comp.props.durationLimit || 300}}>\n  ${comp.props.questions.map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${q.options.map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+    } else if (comp.componentType === "FillInBlanks") {
+      compStr = `<FillInBlanks sentence="${comp.props.sentence.replace(/"/g, '&quot;')}" answer="${comp.props.answer.replace(/"/g, '&quot;')}" />`;
+    } else if (comp.componentType === "SolvedExercise") {
+      compStr = `<SolvedExercise title="${comp.props.title.replace(/"/g, '&quot;')}" solution="${comp.props.solution.replace(/"/g, '&quot;')}">\n  ${comp.props.problem}\n</SolvedExercise>`;
+    } else if (comp.componentType === "UnsolvedExercise") {
+      compStr = `<UnsolvedExercise title="${comp.props.title.replace(/"/g, '&quot;')}" correctAnswer="${comp.props.correctAnswer.replace(/"/g, '&quot;')}" explanation="${(comp.props.explanation || '').replace(/"/g, '&quot;')}">\n  ${comp.props.problem}\n</UnsolvedExercise>`;
+    } else if (comp.componentType === "Mermaid") {
+      compStr = `<Mermaid chart={\`${comp.props.chart}\`} />`;
+    } else if (comp.componentType === "FunctionPlotter") {
+      compStr = `<FunctionPlotter fn="${comp.props.fn}" domain={${JSON.stringify(comp.props.domain || [-10, 10])}} />`;
+    } else if (comp.componentType === "CodeSandbox") {
+      compStr = `<CodeSandbox initialCode={\`${comp.props.initialCode || ''}\`} language="${comp.props.language || 'javascript'}" />`;
+    } else if (comp.componentType === "DataChart") {
+      compStr = `<DataChart title="${(comp.props.title || '').replace(/"/g, '&quot;')}" data={${JSON.stringify(comp.props.data || [])}} xKey="${comp.props.xKey || 'label'}" yKey="${comp.props.yKey || 'value'}" />`;
+    } else {
+      compStr = `<${comp.componentType} id="${comp.id}" />`;
+    }
+
+    if (content.includes(anchor)) {
+      content = content.replace(anchor, compStr);
+    } else {
+      const sectionHeader = comp.sectionAnchor || '##';
+      const headingIdx = content.indexOf(sectionHeader);
+      if (headingIdx !== -1) {
+        const nextHeadingIdx = content.indexOf('##', headingIdx + sectionHeader.length);
+        if (nextHeadingIdx !== -1) {
+          content = content.slice(0, nextHeadingIdx).trim() + `\n\n${compStr}\n\n` + content.slice(nextHeadingIdx);
+        } else {
+          content = content + `\n\n${compStr}`;
+        }
+      } else {
+        if (content.includes('[[WIDGET:conclusionSummary]]')) {
+          content = content.replace('[[WIDGET:conclusionSummary]]', `${compStr}\n\n[[WIDGET:conclusionSummary]]`);
+        } else {
+          content = content + `\n\n${compStr}`;
+        }
+      }
+    }
+  });
+
+  const whatsNextStr = `<WhatsNext>\n  ${widgets.whatsNext.steps.map((s: any) => `<WhatsNextStep title="${s.title.replace(/"/g, '&quot;')}" description="${s.description.replace(/"/g, '&quot;')}" slug="${s.slug}" />`).join('\n  ')}\n</WhatsNext>`;
+  
+  if (content.includes('[[WIDGET:whatsNext]]')) {
+    content = content.replace('[[WIDGET:whatsNext]]', whatsNextStr);
+  } else {
+    content = content + `\n\n${whatsNextStr}`;
+  }
+
+  const summaryStr = `<Summary items={${JSON.stringify(widgets.conclusionSummary.items)}} />`;
+  
+  if (content.includes('[[WIDGET:conclusionSummary]]')) {
+    content = content.replace('[[WIDGET:conclusionSummary]]', summaryStr);
+  } else {
+    const conclusionIdx = content.indexOf('## Conclusion');
+    const conclusionIdxFr = content.indexOf('## Synthèse');
+    const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
+
+    if (targetConclusionIdx !== -1) {
+      content = content.slice(0, targetConclusionIdx + 13) + `\n\n${summaryStr}\n` + content.slice(targetConclusionIdx + 13);
+    } else {
+      content = content + `\n\n${summaryStr}`;
+    }
+  }
+
+  let finalEvalStr = '';
+  if (widgets.finalEvaluation.type === "Quiz") {
+    const fProps = widgets.finalEvaluation.props || {};
+    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+  } else {
+    finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
+  }
+
+  if (content.includes('[[WIDGET:finalEvaluation]]')) {
+    content = content.replace('[[WIDGET:finalEvaluation]]', finalEvalStr);
+  } else {
+    content = content + `\n\n${finalEvalStr}`;
+  }
+
+  const glossaryStr = `\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
+  content = content + glossaryStr;
+
+  const referencesStr = `\n\n### Références\n\n${widgets.references.map((r: string) => `* ${r}`).join('\n')}`;
+  content = content + referencesStr;
+
+  content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
+
+  return content;
+}
 
 const slugsArraySchema = {
   type: "array",
@@ -942,9 +1420,9 @@ Requirements:
    - **Systematic bottom Wikipedia redirects**: Every static entry in the bottom glossary list MUST contain a direct hyperlink to the corresponding Wikipedia page in the course language. Write them statically using a SINGLE-bracket Markdown link (NOT double-bracket) like: **Term** : Definition. [${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](https://${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores). CRITICAL: Use ONLY a single pair of square brackets \`[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)\` — NEVER double brackets \`[[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)]\` as this produces a stray closing parenthesis \`)\` on screen. The Wikipedia link MUST NOT be wrapped in bold asterisks. Correct format: **Term** : Definition. [${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url). Incorrect formats: **Term** : Definition. **[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)** OR **Term** : Definition. [[${targetLang.toLowerCase() === 'fr' ? 'Wikipédia' : 'Wikipedia'}](url)]. Do NOT wrap them in \`<Glossary>\` inside this bottom glossary list.
 10. Connected Entities: Historical Figures, Fictional Characters, Key Geographic Places, and Artworks (Personnalités, Personnages Fictifs, Lieux Clés, et Œuvres d'art) :
     - Wrap all connected, illustrative entities mentioned in the text to enrich the course with hover-based overlays and Wikipedia redirects. To ensure complete resilience and avoid empty cards/warning boxes when Wikipedia summary requests fail client-side (e.g. due to minor spelling or casing mismatches), you MUST systematically define a high-quality 2-3 line fallback description in the "bio" (for persons) or "description" (for non-persons) attribute:
-      * **Real & Historical Persons, Authors, and Scientists (Personnes réelles)**: For EVERY real person (historical figure, scientist, writer, director, living expert, etc.) mentioned in the main body text (outside of JSX component attribute list properties like options, explanation, knowledge, skills, attitudes arrays), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute:
+      * **Real & Historical Persons, Authors, and Scientists (Personnes réelles)**: For EVERY real person (historical figure, scientist, writer, director, living expert, etc.) mentioned in the lesson content (such as in the body text, blockquotes, quotes, citations, footnotes, info boxes, etc.), you MUST systematically append their birth and death dates in parentheses right after their name (e.g., "(1643 - 1727)" or "(né en 1941)" / "(born 1941)" for living figures). Wrap BOTH their name and their dates in the custom React component, and ALWAYS provide a high-quality 2-3 line biographical summary in the \`bio\` attribute:
         \`<RealPerson name="Exact_Wikipedia_Page_Title" lang="target_language_code" bio="A 2-3 line biography detailing their major achievements and relevance to the course.">DisplayName (Dates)</RealPerson>\`.
-        *IMPORTANT*: Do NOT require or place '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<RealPerson>' tags inside markdown image captions or figure titles.
+        *IMPORTANT ON PLACEMENT*: You are fully authorized and encouraged to place '<RealPerson>', '<Location>', '<Place>', '<EventLink>', '<Artwork>', and '<FictionalCharacter>' tags anywhere in the content (including inside blockquotes, citations, list items, footnotes, info boxes). The ONLY strict prohibition is that you must NOT require or place these tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and will crash the parser. Keep names as plain text when they appear inside these attributes. Also, do NOT wrap names or titles in '<Artwork>', '<Location>', or '<RealPerson>' tags inside markdown image captions or figure titles.
         *IDEMPOTENCY / NO DUPLICATION*: Do NOT wrap a person in a '<RealPerson>' tag if they are already wrapped in one, and do NOT place a '<RealPerson>' tag inside the bold title of a '**Mini-Biographie**' block. Duplicate or nested '<RealPerson>' tags for the same person are strictly prohibited.
         - Examples (French): \`<RealPerson name="Isaac_Newton" lang="fr" bio="Physicien et mathématicien anglais, théoricien de la gravitation universelle et des lois du mouvement.">Isaac Newton (1643 - 1727)</RealPerson>\`
         - Examples (English): \`<RealPerson name="Isaac_Newton" lang="en" bio="English physicist and mathematician who formulated the laws of motion and universal gravitation.">Isaac Newton (1643 - 1727)</RealPerson>\`
@@ -952,7 +1430,7 @@ Requirements:
         \`<Artwork name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the artwork, its creator, dates, and significance.">DisplayName</Artwork>\`.
         - Example (French): \`<Artwork name="L'Homme_de_Vitruve" lang="fr" description="Célèbre dessin annoté de Léonard de Vinci datant de 1490, représentant les proportions idéales du corps humain selon Vitruve.">l'Homme de Vitruve</Artwork>\`
         - Example (English): \`<Artwork name="Vitruvian_Man" lang="en" description="Famous pen and ink drawing by Leonardo da Vinci around 1490, illustrating human body proportions according to Vitruvius.">Vitruvian Man</Artwork>\`
-      * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\`). This mini-biography must be substantial and detailed: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) or university levels (Supérieur), highlighting their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson. At the end of the mini-biography text, you MUST systematically include a direct hyperlink to the person's Wikipedia page using standard markdown link syntax: \`[\${targetLang.toLowerCase() === 'fr' ? 'En savoir plus sur Wikipédia' : 'Learn more on Wikipedia'}](https://\${targetLang.toLowerCase()}.wikipedia.org/wiki/Wikipedia_Page_Title_In_Underscores).\`
+      * **Contextual Mini-Biographies (Minibios)**: To provide rich biographical context for key, central figures of the lesson (especially in history, philosophy, literature, and history of science), you MUST systematically include at least one detailed mini-biography panel directly inside the lesson text. Wrap this biography inside a styled information box (using standard markdown alert blocks like \`> [!INFO]\` or \`> [!NOTE]\` with a prominent title, e.g., \`> [!INFO] **Mini-Biographie : DisplayName (Dates)**\`). This mini-biography must be substantial and detailed: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) or university levels (Supérieur), highlighting their primary academic contributions, major life events, and how their work specifically relates to the concepts covered in this lesson. At the end of the mini-biography text, you MUST systematically and obligatorily include a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\` or \`[Learn more on Wikipedia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
       * **Fictional Characters (Personnages de fiction)**: For fictional or mythological characters (like "Sherlock Holmes", "Mickey Mouse"), wrap them in the custom component and ALWAYS include a \`description\` attribute: \`<FictionalCharacter name="Exact_Wikipedia_Page_Title" lang="target_language_code" description="A 2-3 line fallback description of the character, their creator, source work, and role.">CharacterName</FictionalCharacter>\`.
         - Example (French): \`<FictionalCharacter name="Mickey_Mouse" lang="fr" description="Personnage de dessin animé emblématique de la Walt Disney Company créé en 1928, une souris anthropomorphe mondialement connue.">Mickey Mouse</FictionalCharacter>\`
         - Example (English): \`<FictionalCharacter name="Sherlock_Holmes" lang="en" description="Personnage de fiction britannique créé par Sir Arthur Conan Doyle en 1887, détective privé doté d'une mémoire et d'un esprit de déduction exceptionnels.">Sherlock Holmes</FictionalCharacter>\`
@@ -1032,9 +1510,10 @@ Requirements:
        <GoingFurtherItem title="Recommended Video Explainer" type="video" url="https://youtube.com/..." description="Short summary of this excellent 2-minute video visual breakdown." />
      </GoingFurther>
       \`\`\``}
- 15. Short Audio and Video Duration Limits (Micro-learning):
-     - To optimize student focus and prevent attention loss, all recommended or embedded videos (using \`<Video id="..." title="..." provider="..." duration="..." />\` or \`<Video url="..." title="..." duration="..." />\`) and audio tracks (using \`<Audio url="..." title="..." duration="..." />\`) MUST be short (maximum 2 to 3 minutes long).
-     - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\` or \`duration="1:45"\`) and keep it within this short micro-learning boundary.
+ 15. Audio and Video Durations and Language Fallbacks:
+     - The strict duration limit for any audio or video content is between **1 minute and 1 hour (60 minutes)**. If a topic requires a deep 15-minute, 30-minute, or 45-minute video breakdown to be treated with proper academic depth, that is fully authorized and encouraged! Durations under 1 minute are prohibited.
+     - You MUST systematically populate the \`duration\` attribute (e.g. \`duration="2 min"\`, \`duration="15:45"\`, or \`duration="45 min"\`).
+     - **Language Fallback & Subtitles**: If high-quality, relevant videos or audios in the course's target language are scarce or unavailable, you MUST gracefully fall back to selecting highly relevant English resources (e.g., YouTube videos) and recommend them, specifically noting in the description that the resource supports auto-generated subtitles.
  16. Authentic Resource References:
      - All external resources, including video IDs, audio URLs, and bibliography references, will be automatically checked for reachability and validated against live APIs (e.g. Crossref, Google Books, YouTube). Do not invent fake or hallucinated URLs or media IDs.
  17. Mandatory and Discipline-Specific Visual, Interactive & Auditory Elements (Éléments visuels, interactifs et auditifs obligatoires par discipline) :
@@ -1090,7 +1569,7 @@ Requirements:
                 * Natural sciences: taxonomy or event names (e.g. \`title="Nightingale Luscinia megarhynchos song"\`, \`title="Thunderstorm rain"\`, \`title="Wolf howling"\`)
                 * History: speaker + event (e.g. \`title="Charles de Gaulle appel 18 juin 1940"\`, \`title="Martin Luther King I have a dream 1963"\`)
                 * Other: most specific English/French description (e.g. \`title="Normal heartbeat sinus rhythm stethoscope"\`)
-              - Keep duration under 2-3 minutes (e.g. \`duration="2 min"\`).
+              - The duration of the video or audio can be up to 1 hour (60 minutes) if the complexity of the subject warrants a comprehensive deep-dive tutorial.
         * Geometry/Mathematics/Physics Chapters (Draggable 2D Sandbox): For any chapter teaching coordinate systems, triangle trigonometry, vectors, or trigonometric circles, you MUST systematically insert at least one 2D Geometry sandbox widget:
              - \`<Geometry2D preset="triangle|circle|vector" title="Titre de la sandbox" />\`. Use "triangle" for triangle area/trigonometry, "circle" for the unit circle (sine/cosine/angle), and "vector" for vector addition and magnitude.
         * Statistical or Tabular Data (Automatic Markdown Table-to-Chart rendering): To present comparative data tables, simple lists of measurements, or results, write standard Markdown tables (e.g. | Label | Value |). The system will automatically wrap it in a custom interactive component that displays a toggle tab so students can switch between the table and a dynamic SVG Bar/Line chart.
@@ -1243,7 +1722,7 @@ Your Checkpoints:
    - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines (philosophy, literature, linguistics, ethics, law, political theory): A text-dominant lesson is pedagogically acceptable and must NOT be rejected solely on the absence of inline figures. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment (e.g. 1 portrait '<CustomFigure />' of a key thinker, 1 '<Mermaid />' concept map, or 1 '<CriticalThinking />' / '<PointOfView />' enrichment block) would still be beneficial for learner engagement and should be recommended.
    - "Audio/Video Integrity": When '<AudioPlayer />', '<Audio />', or '<Video />' components are present in the content, verify that:
      * Each has a non-empty 'src' or 'url' attribute (not a placeholder like "url_here" or "").
-     * Each specifies a 'duration' attribute (e.g. duration="2 min" or duration="1:45") and that this duration does NOT exceed 3 minutes, in line with the micro-learning constraint.
+     * Each specifies a 'duration' attribute (e.g. duration="2 min" or duration="15:45") and that this duration is strictly between 1 minute and 60 minutes. Any audio or video under 1 minute or exceeding 60 minutes must be rejected.
      * Each has a caption line directly below it (italicized, e.g. *Audio 1 : Title - Description.*) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
    - Regardless of discipline: Verify that audio players ('<AudioPlayer />' / '<Audio />') or video players ('<Video />') are incorporated where spoken context or audio demonstrations are pedagogically valuable (e.g. listening comprehension for language courses, spoken philosophical lectures, or historical audio documents).
    - "Existing Artwork AI-Generation Block Check": Verify that the content contains absolutely NO AI-generated images (e.g., Pollinations.ai prompts) of real/existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You MUST reject (set "approved": false) if the writer attempted to use an AI-generated image URL for an existing real historical artwork (such as Mona Lisa, David, Starry Night, etc.). Real historical artworks must only use Wikimedia Commons links or have no image at all.
@@ -1251,17 +1730,17 @@ Your Checkpoints:
    5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited. Valid interactive components include: formative quizzes ('<Quiz>'), fill-in-the-blanks ('<FillInBlanks />'), solved/unsolved exercises ('<SolvedExercise>' / '<UnsolvedExercise />'), or any sandbox/simulation widget ('<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />'). A section containing ONLY a '<Quiz>' is acceptable for introductory or textual sections, but deeper technical sections must use higher-order interactive components.
    5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
      * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' (for anatomical or cellular structures) or '<StructureViewer3D presetId="..." />' (for molecular/crystal structures). A lesson in these disciplines without either component MUST be rejected.
-     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', '<Geometry2D />', or '<BasicMathExplorer />'. A lesson in these disciplines without any of these MUST be rejected.
+     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component: '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<DataChart />', '<StructureViewer3D />', '<Geometry2D />', or '<BasicMathExplorer />'. A lesson in these disciplines without any of these MUST be rejected.
      * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />' for active code execution. A lesson without it MUST be rejected.
      * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
      * PHILOSOPHY / LITERATURE / LINGUISTICS / LAW / ETHICS: No mandatory simulator. However, the presence of at least one '<CriticalThinking />', '<PointOfView />', '<HistoricalAnecdote />', or '<HistoricalFact />' enrichment block is strongly recommended; flag its absence in the critique without causing a hard rejection.
 6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
 7. "Connected Entities (Real Persons, Fictional Characters, Locations, Events, Artworks) & Mini-Biographies":
-   - Verify that EVERY real person (historical figure, scientist, writer, director, or notable person) mentioned in the main body text is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute as a fallback. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
+   - Verify that EVERY real person (historical figure, scientist, writer, director, or notable person) mentioned in the lesson content (including in main body text, blockquotes, quotes, citations, footnotes, info boxes, etc.) is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute as a fallback. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<Objectives>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid in MDX and crashes the parser.
      - Verify that \`<Location>\`, \`<Place>\`, \`<EventLink>\`, \`<EvenementHistorique>\`, \`<Artwork>\`, and \`<FictionalCharacter>\` tags systematically contain a non-empty \`description\` attribute detailing their background and relevance as a secure fallback. Reject if missing or empty.
    - Verify that there are no duplicate or nested '<RealPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<RealPerson>' tags (they must remain plain text, and the hover/wiki cards should only be placed in the biography body text below the title). Reject content (set "approved": false) if duplicate/nested tags are found.
    - Verify that notable works of art/artworks mentioned in the text (like "L'Homme de Vitruve") are wrapped in '<Artwork name="..." lang="..." description="...">'.
-     - Verify that any Contextual Mini-Biography block (using \`> [!INFO]\` or \`> [!NOTE]\` titled \`Mini-Biographie\` or \`Mini-Biography\`) is substantial: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) and university levels (Supérieur). Verify that it systematically includes a direct Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\` or \`[Learn more on Wikipedia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
+     - Verify that any Contextual Mini-Biography block (using \`> [!INFO]\` or \`> [!NOTE]\` titled \`Mini-Biographie\` or \`Mini-Biography\`) is substantial: at least 4 to 6 lines for Primary/Collège levels, and at least 8 to 12 lines for high school (Lycée) and university levels (Supérieur). Verify that it systematically and obligatorily includes a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\` or \`[Learn more on Wikipedia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
 8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources (like Pollinations.ai images), and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
 9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
     - Every <Question> element MUST have its question text defined in the 'q' attribute (e.g. <Question q="Question text?">) and not as raw text children.

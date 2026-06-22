@@ -6,6 +6,136 @@ import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { cleanPathSegment } from '@/lib/translations';
 
+const LOCAL_DICTS: Record<string, Record<string, string>> = {
+  EN: {
+    back: 'Back',
+    included_courses: 'Included Courses',
+    study_modules: 'Study Modules',
+    syllabus_details: 'Syllabus details',
+    structure_loading: 'Course structure loading...',
+    syllabus_coming_soon: 'Syllabus details coming soon...',
+    courses_included_curriculum: 'Courses Included in the Curriculum',
+    enrolled: 'Enrolled',
+    recommended_next_steps: 'Recommended Next Steps',
+    available: 'Available',
+    curriculum_l2_format: 'L2 {subject} Curriculum'
+  },
+  FR: {
+    back: 'Retour',
+    included_courses: 'Cours inclus',
+    study_modules: "Sujets d'étude",
+    syllabus_details: 'Syllabus en cours',
+    structure_loading: 'Structure en cours de chargement...',
+    syllabus_coming_soon: 'Syllabus en cours de rédaction...',
+    courses_included_curriculum: 'Cours Inclus dans le Curriculum',
+    enrolled: 'Inscrit',
+    recommended_next_steps: 'Poursuites Possibles',
+    available: 'Disponible',
+    curriculum_l2_format: 'Curriculum L2 {subject}'
+  },
+  ES: {
+    back: 'Atrás',
+    included_courses: 'Cursos incluidos',
+    study_modules: 'Módulos de estudio',
+    syllabus_details: 'Detalles del plan de estudios',
+    structure_loading: 'Cargando estructura del curso...',
+    syllabus_coming_soon: 'Detalles del plan de estudios próximamente...',
+    courses_included_curriculum: 'Cursos incluidos en el plan de estudios',
+    enrolled: 'Inscrito',
+    recommended_next_steps: 'Próximos pasos recomendados',
+    available: 'Disponible',
+    curriculum_l2_format: 'Plan de estudios L2 {subject}'
+  },
+  DE: {
+    back: 'Zurück',
+    included_courses: 'Inbegriffene Kurse',
+    study_modules: 'Studienmodule',
+    syllabus_details: 'Lehrplan-Details',
+    structure_loading: 'Kursstruktur wird geladen...',
+    syllabus_coming_soon: 'Lehrplan-Details folgen in Kürze...',
+    courses_included_curriculum: 'Im Lehrplan enthaltene Kurse',
+    enrolled: 'Eingeschrieben',
+    recommended_next_steps: 'Empfohlene nächste Schritte',
+    available: 'Verfügbar',
+    curriculum_l2_format: 'L2 {subject} Lehrplan'
+  },
+  ZH: {
+    back: '返回',
+    included_courses: '包含课程',
+    study_modules: '学习模块',
+    syllabus_details: '教学大纲详情',
+    structure_loading: '课程结构加载中...',
+    syllabus_coming_soon: '教学大纲详情即将推出...',
+    courses_included_curriculum: '课程体系中包含的课程',
+    enrolled: '已报名',
+    recommended_next_steps: '推荐后续步骤',
+    available: '可用',
+    curriculum_l2_format: 'L2 {subject} 课程体系'
+  },
+  PT: {
+    back: 'Voltar',
+    included_courses: 'Cursos incluídos',
+    study_modules: 'Módulos de estudo',
+    syllabus_details: 'Detalhes do currículo',
+    structure_loading: 'Carregando estrutura do curso...',
+    syllabus_coming_soon: 'Detalhes do currículo em breve...',
+    courses_included_curriculum: 'Cursos incluídos no currículo',
+    enrolled: 'Inscrito',
+    recommended_next_steps: 'Próximos passos recomendados',
+    available: 'Disponível',
+    curriculum_l2_format: 'Currículo L2 {subject}'
+  },
+  AR: {
+    back: 'رجوع',
+    included_courses: 'الدورات المشمولة',
+    study_modules: 'وحدات الدراسة',
+    syllabus_details: 'تفاصيل المنهج',
+    structure_loading: 'جاري تحميل هيكل الدورة...',
+    syllabus_coming_soon: 'تفاصيل المنهج قريباً...',
+    courses_included_curriculum: 'الدورات المدرجة في المنهج الدراسي',
+    enrolled: 'مسجل',
+    recommended_next_steps: 'الخطوات التالية الموصى بها',
+    available: 'متاح',
+    curriculum_l2_format: 'منهج L2 {subject}'
+  },
+  HI: {
+    back: 'पीछे',
+    included_courses: 'शामिल पाठ्यक्रम',
+    study_modules: 'अध्ययन मॉड्यूल',
+    syllabus_details: 'पाठ्यक्रम विवरण',
+    structure_loading: 'पाठ्यक्रम संरचना लोड हो रही है...',
+    syllabus_coming_soon: 'पाठ्यक्रम विवरण जल्द ही आ रहा है...',
+    courses_included_curriculum: 'पाठ्यक्रम में शामिल कोर्सेज',
+    enrolled: 'नामांकित',
+    recommended_next_steps: 'अनुशंसित अगले कदम',
+    available: 'उपलब्ध',
+    curriculum_l2_format: 'L2 {subject} पाठ्यक्रम'
+  },
+  UR: {
+    back: 'واپس',
+    included_courses: 'شامل کورسز',
+    study_modules: 'مطالعاتی ماڈیولز',
+    syllabus_details: 'نصاب کی تفصیلات',
+    structure_loading: 'کورس کا ڈھانچہ لوڈ ہو رہا ہے...',
+    syllabus_coming_soon: 'نصاب کی تفصیلات جلد آرہی ہیں...',
+    courses_included_curriculum: 'نصاب میں شامل کورسز',
+    enrolled: 'شامل ہو گیا',
+    recommended_next_steps: 'تجویز کردہ اگلے اقدامات',
+    available: 'دستیاب',
+    curriculum_l2_format: 'L2 {subject} نصاب'
+  }
+};
+
+const getLocalString = (key: string, lang: string, subject?: string): string => {
+  const langKey = lang.toUpperCase();
+  const dict = LOCAL_DICTS[langKey] || LOCAL_DICTS.EN;
+  const str = dict[key] || LOCAL_DICTS.EN[key] || '';
+  if (subject && str.includes('{subject}')) {
+    return str.replace('{subject}', subject);
+  }
+  return str;
+};
+
 interface EnrollmentModalProps {
   course: any;
   onClose: () => void;
@@ -201,16 +331,15 @@ export const EnrollmentModal = ({
   } else if (activeCourse.recommendedNextSteps && Array.isArray(activeCourse.recommendedNextSteps)) {
     nextSteps = activeCourse.recommendedNextSteps;
   } else if (activeCourse.isCurriculum && activeCourse.level === 'L1') {
-    const isFR = lang.toUpperCase() === 'FR';
     const nextSubject = getLocalizedSubject(activeCourse.subject) || activeCourse.subject;
-    nextSteps = [isFR ? `Curriculum L2 ${nextSubject}` : `L2 ${nextSubject} Curriculum`];
+    nextSteps = [getLocalString('curriculum_l2_format', lang, nextSubject)];
   }
 
   const units = React.useMemo(() => {
     if (activeCourse.isCurriculum) {
       return [
         {
-          title: lang.toUpperCase() === 'FR' ? "Cours inclus" : "Included Courses",
+          title: getLocalString('included_courses', lang),
           modules: fetchedChildCourses.map((c: any) => dbService.getLocalizedCourseTitle(c, lang) || c.title)
         }
       ];
@@ -221,18 +350,18 @@ export const EnrollmentModal = ({
     if (dynamicLessons.length > 0) {
       return [
         {
-          title: lang.toUpperCase() === 'FR' ? "Sujets d'étude" : "Study Modules",
+          title: getLocalString('study_modules', lang),
           modules: dynamicLessons.map(l => l.title)
         }
       ];
     }
     return [
       {
-        title: lang.toUpperCase() === 'FR' ? "Syllabus en cours" : "Syllabus details",
+        title: getLocalString('syllabus_details', lang),
         modules: [
           isLoadingLessons
-            ? (lang.toUpperCase() === 'FR' ? "Structure en cours de chargement..." : "Course structure loading...")
-            : (lang.toUpperCase() === 'FR' ? "Syllabus en cours de rédaction..." : "Syllabus details coming soon...")
+            ? getLocalString('structure_loading', lang)
+            : getLocalString('syllabus_coming_soon', lang)
         ]
       }
     ];
@@ -273,7 +402,7 @@ export const EnrollmentModal = ({
             className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4 rotate-180 text-blue-400" />
-            {lang.toUpperCase() === 'FR' ? "Retour" : "Back"}
+            {getLocalString('back', lang)}
           </button>
         )}
 
@@ -315,7 +444,7 @@ export const EnrollmentModal = ({
         {activeCourse.isCurriculum && fetchedChildCourses.length > 0 && (
           <div className="mb-8">
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-3 text-left">
-              {lang.toUpperCase() === 'FR' ? "Cours Inclus dans le Curriculum" : "Courses Included in the Curriculum"}
+              {getLocalString('courses_included_curriculum', lang)}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
               {fetchedChildCourses.map((child: any) => {
@@ -345,7 +474,7 @@ export const EnrollmentModal = ({
                     {isChildEnrolled && (
                       <div className="mt-3 flex items-center justify-end">
                         <span className="px-2 py-0.5 rounded text-[8px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                          {lang.toUpperCase() === 'FR' ? "Inscrit" : "Enrolled"}
+                          {getLocalString('enrolled', lang)}
                         </span>
                       </div>
                     )}
@@ -403,7 +532,7 @@ export const EnrollmentModal = ({
           <div className="mb-8 p-5 bg-gradient-to-br from-indigo-500/5 to-slate-950/20 border border-indigo-500/10 rounded-2xl">
             <p className="text-[9px] font-black uppercase text-indigo-400 tracking-wider mb-3 text-left flex items-center gap-2">
               <Rocket className="w-3.5 h-3.5 animate-pulse" />
-              {lang.toUpperCase() === 'FR' ? "Poursuites Possibles" : "Recommended Next Steps"}
+              {getLocalString('recommended_next_steps', lang)}
             </p>
             <div className="flex flex-col gap-2 text-left">
               {nextSteps.map((nextItem: string, idx: number) => {
@@ -425,7 +554,7 @@ export const EnrollmentModal = ({
                     </span>
                     {matchedCourse ? (
                       <span className="px-2 py-0.5 rounded text-[8px] font-black bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
-                        {lang.toUpperCase() === 'FR' ? "Disponible" : "Available"}
+                        {getLocalString('available', lang)}
                       </span>
                     ) : null}
                   </div>

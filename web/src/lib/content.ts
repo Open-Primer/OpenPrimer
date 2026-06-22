@@ -2628,6 +2628,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     quote: string;
     refNum: number;
     tagName: string;
+    customRefText?: string;
+    customScholarUrl?: string;
+    customScholarText?: string;
   }[] = [];
 
   let maxRefNum = 0;
@@ -2681,6 +2684,148 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     let cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
     return `<${tagName} refNum={${refNum}} ${cleanAttrs}>${children || ''}</${tagName}>`;
+  });
+
+  // 5c. Parse GoingFurtherItem tags to auto-generate bibliographic references
+  const goingFurtherItemRegex = /<GoingFurtherItem\b([^>]*?)(?:\/>|>([\s\S]*?)<\/GoingFurtherItem>)/gi;
+  
+  processed = processed.replace(goingFurtherItemRegex, (match, attrs, children) => {
+    const titleMatch = attrs.match(/title=["']([^"']*)["']/i);
+    const typeMatch = attrs.match(/type=["']([^"']*)["']/i);
+    const urlMatch = attrs.match(/url=["']([^"']*)["']/i);
+    const descMatch = attrs.match(/description=["']([^"']*)["']/i) || attrs.match(/desc=["']([^"']*)["']/i);
+    const authorMatch = attrs.match(/author=["']([^"']*)["']/i) || attrs.match(/auteur=["']([^"']*)["']/i);
+    const yearMatch = attrs.match(/year=["']([^"']*)["']/i) || attrs.match(/annee=["']([^"']*)["']/i);
+    const publisherMatch = attrs.match(/publisher=["']([^"']*)["']/i) || attrs.match(/editeur=["']([^"']*)["']/i);
+    const wikipediaMatch = attrs.match(/wikipedia=["']([^"']*)["']/i) || attrs.match(/wiki=["']([^"']*)["']/i) || attrs.match(/wikipediaUrl=["']([^"']*)["']/i);
+    const imdbMatch = attrs.match(/imdb=["']([^"']*)["']/i) || attrs.match(/imdbUrl=["']([^"']*)["']/i);
+    const directorMatch = attrs.match(/director=["']([^"']*)["']/i) || attrs.match(/realisateur=["']([^"']*)["']/i);
+
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    const type = typeMatch ? typeMatch[1].trim().toLowerCase() : 'book';
+    const url = urlMatch ? urlMatch[1].trim() : '';
+    const description = descMatch ? descMatch[1].trim() : '';
+    const author = authorMatch ? authorMatch[1].trim() : '';
+    const year = yearMatch ? yearMatch[1].trim() : '';
+    const publisher = publisherMatch ? publisherMatch[1].trim() : '';
+    const wikipedia = wikipediaMatch ? wikipediaMatch[1].trim() : '';
+    const imdb = imdbMatch ? imdbMatch[1].trim() : '';
+    const director = directorMatch ? directorMatch[1].trim() : '';
+
+    const refNum = currentRefNum++;
+
+    const currentLang = (lang || 'en').toLowerCase();
+    const isFr = currentLang === 'fr';
+    const isEs = currentLang === 'es';
+    const isDe = currentLang === 'de';
+    const isZh = currentLang === 'zh';
+
+    let formattedTitle = title;
+    if (isFr) {
+      formattedTitle = `« *${title}* »`;
+    } else if (isDe) {
+      formattedTitle = `„*${title}*“`;
+    } else if (isZh) {
+      formattedTitle = `《*${title}*》`;
+    } else {
+      formattedTitle = `"*${title}*"`;
+    }
+
+    let refText = '';
+    let scholarUrl = url;
+    let scholarText = 'Google Scholar';
+
+    if (type === 'book' || type === 'livre') {
+      scholarText = 'Google Books';
+      if (author) refText += `**${author}**, `;
+      refText += formattedTitle;
+      
+      const pubYearParts: string[] = [];
+      if (publisher) {
+        pubYearParts.push(isFr ? `Éditions ${publisher}` : publisher);
+      }
+      if (year) {
+        pubYearParts.push(year);
+      }
+      if (pubYearParts.length > 0) {
+        refText += ` (${pubYearParts.join(', ')})`;
+      }
+      
+      if (description) {
+        refText += `. ${description}`;
+      }
+      
+      if (wikipedia) {
+        const wikiLabel = isFr ? 'Wikipédia' : 'Wikipedia';
+        refText += ` [Lien <a href="${wikipedia}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline font-bold">${wikiLabel}</a>]`;
+        if (!scholarUrl) scholarUrl = wikipedia;
+      }
+    } else if (type === 'movie' || type === 'film') {
+      scholarText = 'IMDb';
+      refText += formattedTitle;
+      
+      const details: string[] = [];
+      if (director) {
+        details.push(isFr ? `réalisé par ${director}` : `directed by ${director}`);
+      }
+      if (year) {
+        details.push(year);
+      }
+      if (details.length > 0) {
+        refText += ` (${details.join(', ')})`;
+      }
+      
+      if (description) {
+        refText += `. ${description}`;
+      }
+      
+      if (imdb) {
+        refText += ` [Lien <a href="${imdb}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline font-bold">IMDb</a>]`;
+        if (!scholarUrl) scholarUrl = imdb;
+      }
+    } else if (type === 'website' || type === 'site' || type === 'site web') {
+      scholarText = isFr ? 'Site Web' : 'Website';
+      if (author) refText += `**${author}**, `;
+      refText += formattedTitle;
+      if (year) refText += ` (${year})`;
+      if (description) refText += `. ${description}`;
+      if (url) {
+        const urlLabel = isFr ? 'site web' : 'website';
+        refText += ` [Consulter le <a href="${url}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline font-bold">${urlLabel}</a>]`;
+      }
+    } else {
+      if (author) refText += `**${author}**, `;
+      refText += formattedTitle;
+      if (year) refText += ` (${year})`;
+      if (description) refText += `. ${description}`;
+      if (url) {
+        const resLabel = isFr ? 'lien' : 'link';
+        refText += ` [Lien <a href="${url}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline font-bold">${resLabel}</a>]`;
+      }
+    }
+
+    if (refText && !refText.endsWith('.')) {
+      refText += '.';
+    }
+
+    // Clean up any accidental spaces before punctuation (e.g. "» ." -> "»." or "word , " -> "word,")
+    refText = refText.replace(/\s+([.,;?])/g, '$1').trim();
+
+    citationBlocks.push({
+      author: author || director || '',
+      source: title,
+      year,
+      original: '',
+      quote: description,
+      refNum,
+      tagName: 'GoingFurtherItem',
+      customRefText: refText,
+      customScholarUrl: scholarUrl,
+      customScholarText: scholarText
+    });
+
+    let cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
+    return `<GoingFurtherItem refNum={${refNum}} ${cleanAttrs}>${children || ''}</GoingFurtherItem>`;
   });
 
   // 6. Fix references run-on lists, ensure individual lines, and add backlinks
@@ -2799,21 +2944,25 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     citationBlocks.forEach(cb => {
       const queryText = cb.author && cb.source ? `${cb.author} ${cb.source}` : cb.author || cb.source;
-      const finalUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+      const finalUrl = cb.customScholarUrl || `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+      const searchLabel = cb.customScholarText || 'Google Scholar';
       
-      const currentLang = (lang || 'en').toLowerCase();
-      let refText = `${cb.author ? `**${cb.author}**, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
-      if (cb.original) {
-        if (currentLang === 'fr') {
-          refText += ` Version originale : « ${cb.original} »`;
-        } else if (currentLang === 'es') {
-          refText += ` Versión original: « ${cb.original} »`;
-        } else if (currentLang === 'de') {
-          refText += ` Originalversion: „${cb.original}“`;
-        } else if (currentLang === 'zh') {
-          refText += ` 原文：“${cb.original}”`;
-        } else {
-          refText += ` Original version: "${cb.original}"`;
+      let refText = cb.customRefText;
+      if (!refText) {
+        const currentLang = (lang || 'en').toLowerCase();
+        refText = `${cb.author ? `**${cb.author}**, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
+        if (cb.original) {
+          if (currentLang === 'fr') {
+            refText += ` Version originale : « ${cb.original} »`;
+          } else if (currentLang === 'es') {
+            refText += ` Versión original: « ${cb.original} »`;
+          } else if (currentLang === 'de') {
+            refText += ` Originalversion: „${cb.original}“`;
+          } else if (currentLang === 'zh') {
+            refText += ` 原文：“${cb.original}”`;
+          } else {
+            refText += ` Original version: "${cb.original}"`;
+          }
         }
       }
       
@@ -2822,7 +2971,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
           num: cb.refNum,
           text: refText,
           scholarUrl: finalUrl,
-          scholarText: 'Google Scholar'
+          scholarText: searchLabel
         });
       }
     });

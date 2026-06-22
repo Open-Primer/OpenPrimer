@@ -165,6 +165,605 @@ interface MathPreset {
   yMax: number;
 }
 
+const CATEGORY_LOCALIZATIONS: Record<string, Record<string, string>> = {
+  'All': {
+    EN: 'All',
+    FR: 'Tous',
+    ES: 'Todo',
+    DE: 'Alle',
+    ZH: '全部',
+    PT: 'Tudo',
+    AR: 'الكل',
+    HI: 'सभी',
+    UR: 'سب'
+  },
+  'Probability & Stats': {
+    EN: 'Probability & Stats',
+    FR: 'Probabilités & Stats',
+    ES: 'Probabilidad y Estadística',
+    DE: 'Wahrscheinlichkeit & Statistik',
+    ZH: '概率 & 统计',
+    PT: 'Probabilidade e Estatística',
+    AR: 'الاحتمالات والإحصاء',
+    HI: 'प्रायिकता और सांख्यिकी',
+    UR: 'امکانات اور شماریات'
+  },
+  'Waves & Signal': {
+    EN: 'Waves & Signal',
+    FR: 'Ondes & Signaux',
+    ES: 'Ondas y Señales',
+    DE: 'Wellen & Signale',
+    ZH: '波动 & 信号',
+    PT: 'Ondas e Sinais',
+    AR: 'الموجات والإشارات',
+    HI: 'तरंगें और संकेत',
+    UR: 'لہریں اور سگنل'
+  },
+  'Analysis & Growth': {
+    EN: 'Analysis & Growth',
+    FR: 'Analyse & Croissance',
+    ES: 'Análisis y Crecimiento',
+    DE: 'Analyse & Wachstum',
+    ZH: '分析 & 增长',
+    PT: 'Análise e Crescimento',
+    AR: 'التحليل والنمو',
+    HI: 'विश्लेषण और विकास',
+    UR: 'تجزیہ اور نمو'
+  }
+};
+
+const PRESET_LOCALIZATIONS: Record<string, Record<string, { name: string; description: string }>> = {
+  sigmoid: {
+    EN: {
+      name: "Sigmoid (Logistic)",
+      description: "A smooth, S-shaped activation function mapping values between 0 and 1. Commonly used in biology population models and neural networks."
+    },
+    FR: {
+      name: "Sigmoïde (Logistique)",
+      description: "Une fonction d'activation douce en forme de S qui associe les valeurs entre 0 et 1. Couramment utilisée dans les modèles de population en biologie et les réseaux de neurones."
+    },
+    ES: {
+      name: "Sigmoide (Logística)",
+      description: "Una función de activación suave en forma de S que asigna valores entre 0 y 1. Comúnmente utilizada en modelos de población biológica y redes neuronales."
+    },
+    DE: {
+      name: "Sigmoid (Logistisch)",
+      description: "Eine glatte, S-förmige Aktivierungsfunktion, die Werte zwischen 0 und 1 abbildet. Häufig in biologischen Populationsmodellen und neuronalen Netzen verwendet."
+    },
+    ZH: {
+      name: "S型函数 (逻辑斯蒂)",
+      description: "一种平滑的S形激活函数，将值映射在0到1之间。常用于生物学人口模型和神经网络。"
+    },
+    PT: {
+      name: "Sigmoide (Logística)",
+      description: "Uma função de ativação suave em forma de S que mapeia valores entre 0 e 1. Comumente usada em modelos de população biológica e redes neurais."
+    },
+    AR: {
+      name: "سيجمويد (لوجستية)",
+      description: "دالة تنشيط سلسة على شكل حرف S تربط القيم بين 0 و1. تُسخدم عادةً في نماذج التعداد البيولوجي والشبكات العصبية."
+    },
+    HI: {
+      name: "सिग्मोइड (लॉजिस्टिक)",
+      description: "एक चिकनी, S-आकार का सक्रियण फ़ंक्शन जो 0 और 1 के बीच मानों को मैप करता है। आमतौर पर जीव विज्ञान जनसंख्या मॉडल और तंत्रिका नेटवर्क में उपयोग किया जाता।"
+    },
+    UR: {
+      name: "سگموئیڈ (لوجسٹک)",
+      description: "ایک ہموار، S-شکل کا ایکٹیویشن فنکشن جو 0 اور 1 کے درمیان کی قدروں کو ظاہر کرتا ہے۔ عام طور پر بیالوجی آبادی کے ماڈلز اور نیورل نیٹ ورکس میں استعمال ہوتا ہے۔"
+    }
+  },
+  gaussian: {
+    EN: {
+      name: "Gaussian (Normal)",
+      description: "The classical bell curve of normal distribution describing random natural variations and statistical probabilities."
+    },
+    FR: {
+      name: "Gaussienne (Normale)",
+      description: "La courbe en cloche classique de la distribution normale décrivant les variations naturelles aléatoires et les probabilités statistiques."
+    },
+    ES: {
+      name: "Gaussiana (Normal)",
+      description: "La clásica curva de campana de la distribución normal que describe variaciones naturales aleatorias y probabilidades estadísticas."
+    },
+    DE: {
+      name: "Gauß-Verteilung (Normal)",
+      description: "Die klassische Glockenkurve der Normalverteilung, die zufällige natürliche Variationen und statistische Wahrscheinlichkeiten beschreibt."
+    },
+    ZH: {
+      name: "高斯函数 (正态分布)",
+      description: "正态分布的经典钟形曲线，描述随机自然变化和统计概率。"
+    },
+    PT: {
+      name: "Gaussiana (Normal)",
+      description: "A curva de sino clássica da distribuição normal que descreve variações naturais aleatórias e probabilidades estatísticas."
+    },
+    AR: {
+      name: "غاوصي (طبيعي)",
+      description: "منحنى الجرس الكلاسيكي للتوزيع الطبيعي الذي يصف المتغيرات الطبيعية العشوائية والاحتمالات الإحصائية."
+    },
+    HI: {
+      name: "गाऊसी (सामान्य)",
+      description: "सामान्य वितरण का शास्त्रीय बेल वक्र जो यादृच्छिक प्राकृतिक विविधताओं और सांख्यिकीय प्राथमिकताओं का वर्णन करता है।"
+    },
+    UR: {
+      name: "گاؤسی (نارمل)",
+      description: "نارمل ڈسٹری بیوشن کا کلاسک گھنٹی والا وکر جو بے ترتیب قدرتی تبدیلیوں اور شماریاتی امکانات کو بیان کرتا ہے۔"
+    }
+  },
+  lorentzian: {
+    EN: {
+      name: "Lorentzian Distribution",
+      description: "A probability distribution and line shape frequently describing resonance curves, spectral frequencies, and physical systems."
+    },
+    FR: {
+      name: "Distribution Lorentzienne",
+      description: "Une distribution de probabilité et une forme de raie décrivant fréquemment les courbes de résonance, les fréquences spectrales et les systèmes physiques."
+    },
+    ES: {
+      name: "Distribución Lorentziana",
+      description: "Una distribución de probabilidad y forma de línea que frecuentemente describe curvas de resonancia, frecuencias espectrales y sistemas físicos."
+    },
+    DE: {
+      name: "Lorentz-Verteilung",
+      description: "Eine Wahrscheinlichkeitsverteilung und Linienform, die häufig Resonanzkurven, Spektralfrequenzen und physikalische Systeme beschreibt."
+    },
+    ZH: {
+      name: "洛伦兹分布",
+      description: "一种概率分布和线形，常用于描述共振曲线、光谱频率和物理系统。"
+    },
+    PT: {
+      name: "Distribuição Lorentziana",
+      description: "Uma distribuição de probabilidade e forma de linha que frequentemente descreve curvas de ressonância, frequências espectrais e sistemas físicos."
+    },
+    AR: {
+      name: "توزيع لورنتز",
+      description: "توزيع احتمالي وشكل خطي يصف بشكل متكرر منحنيات الرنين، والترددات الطيفية، والأنظمة الفيزيائية."
+    },
+    HI: {
+      name: "लोरेंट्जियन वितरण",
+      description: "एक संभाव्यता वितरण और रेखा आकार जो अक्सर अनुनाद वक्र, वर्णक्रमीय आवृत्तियों और भौतिक प्रणालियों का वर्णन करता है।"
+    },
+    UR: {
+      name: "لورینٹزیئن ڈسٹری بیوشن",
+      description: "ایک امکانی تقسیم اور لکیر کی شکل جو اکثر گونج کے منحنی خطوط، سپیکٹرل فریکوئنسیوں اور فزیکل سسٹمز کو بیان کرتی ہے۔"
+    }
+  },
+  sinusoid: {
+    EN: {
+      name: "Sinc (Sinusoid)",
+      description: "The cardinal sine function, widely used in signal processing, diffraction light patterns, and Fourier analysis."
+    },
+    FR: {
+      name: "Sinus Cardinal (Sinc)",
+      description: "La fonction sinus cardinal, largement utilisée en traitement du signal, en figures de diffraction lumineuse et en analyse de Fourier."
+    },
+    ES: {
+      name: "Sinc (Sinusoide)",
+      description: "La función seno cardinal, ampliamente utilizada en procesamiento de señales, patrones de difracción de luz y análisis de Fourier."
+    },
+    DE: {
+      name: "Sinc-Funktion",
+      description: "Die Spaltfunktion (Kardinalsinaus), die in der Signalverarbeitung, bei Beugungsmustern von Licht und in der Fourier-Analyse weit verbreitet ist."
+    },
+    ZH: {
+      name: "Sinc函数 (辛格函数)",
+      description: "归一化正弦函数，广泛用于信号处理、光衍射图形和傅里叶分析。"
+    },
+    PT: {
+      name: "Sinc (Seno Cardinal)",
+      description: "A função seno cardinal, amplamente utilizada no processamento de sinais, padrões de difração de luz e análise de Fourier."
+    },
+    AR: {
+      name: "دالة الجيب الكاردينالية (Sinc)",
+      description: "دالة الجيب الكاردينالية، وتُستخدم على نطاق واسع في معالجة الإشارات، وأنماط حيود الضوء، وتحليل فورير."
+    },
+    HI: {
+      name: "सिंक (साइनसोइड)",
+      description: "कार्डिनल साइन फ़ंक्शन, व्यापक रूप से सिग्नल प्रोसेसिंग, विवर्तन प्रकाश पैटर्न और फूरियर विश्लेषण में उपयोग किया जाता।"
+    },
+    UR: {
+      name: "سنک (سائنوسائیڈ)",
+      description: "کارڈینل سائن فنکشن، سگنل پروسیسنگ، روشنی کے انحراف کے پیٹرن اور فوریر تجزیہ میں بڑے پیمانے پر استعمال ہوتا ہے۔"
+    }
+  },
+  sine: {
+    EN: {
+      name: "Sine Wave",
+      description: "The fundamental periodic oscillation modeling alternating current, sound propagation, and mechanical waves."
+    },
+    FR: {
+      name: "Onde Sinusoïdale",
+      description: "L'oscillation périodique fondamentale modélisant le courant alternatif, la propagation du son et les ondes mécaniques."
+    },
+    ES: {
+      name: "Onda Senoidal",
+      description: "La oscilación periódica fundamental que modela la corriente alterna, la propagación del sonido y las ondas mecánicas."
+    },
+    DE: {
+      name: "Sinuswelle",
+      description: "Die grundlegende periodische Schwingung zur Modellierung von Wechselstrom, Schallausbreitung und mechanischen Wellen."
+    },
+    ZH: {
+      name: "正弦波",
+      description: "模拟交流电、声音传播和机械波的基本周期性振荡。"
+    },
+    PT: {
+      name: "Onda Senoidal",
+      description: "A oscilação periódica fundamental que modela a corrente alternada, a propagação do som e as ondas mecânicas."
+    },
+    AR: {
+      name: "موجة جيبية",
+      description: "التذبذب الدوري الأساسي الذي يمثل التيار المتردد، وانتشار الصوت، والموجات الميكانيكية."
+    },
+    HI: {
+      name: "ज्या तरंग (साइन वेว)",
+      description: "मौलिक आवधिक दोलन जो प्रत्यावर्ती धारा, ध्वनि प्रसार और यांत्रिक तरंगों का मॉडल तैयार करता है।"
+    },
+    UR: {
+      name: "سائن ویو",
+      description: "بنیادی باری باری برقی رو (متبادل کرنٹ)، آواز کے پھیلاؤ اور مکینیکل لہروں کو ماڈل کرنے والی بنیادی دوری کی لہر۔"
+    }
+  },
+  exp: {
+    EN: {
+      name: "Exponential Growth",
+      description: "A curve representing unrestricted compounding growth, modeling epidemics, cell division, and nuclear reactions."
+    },
+    FR: {
+      name: "Croissance Exponentielle",
+      description: "Une courbe représentant une croissance composée illimitée, modélisant les épidémies, la division cellulaire et les réactions nucléaires."
+    },
+    ES: {
+      name: "Crecimiento Exponencial",
+      description: "Una curva que representa un crecimiento compuesto ilimitado, modelando epidemias, división celular y reacciones nucleares."
+    },
+    DE: {
+      name: "Exponentielles Wachstum",
+      description: "Eine Kurve, die unbegrenztes, sich selbst verstärktes Wachstum darstellt; sie modelliert Epidemien, Zellteilung und Kernreaktionen."
+    },
+    ZH: {
+      name: "指数增长",
+      description: "代表无限制复合增长的曲线，模拟流行病、细胞分裂和核反应。"
+    },
+    PT: {
+      name: "Crescimento Exponencial",
+      description: "Uma curva que representa um crescimento composto ilimitado, modelando epidemias, divisão celular e reações nucleares."
+    },
+    AR: {
+      name: "نمو أسي",
+      description: "منحنى يمثل النمو المركب غير المقيد، ويسهم في نمذجة الأوبئة، وانقسام الخلايا، والتفاعلات النووية."
+    },
+    HI: {
+      name: "घातांकीय वृद्धि",
+      description: "अप्रतिबंधित चक्रवृद्धि वृद्धि का प्रतिनिधित्व करने वाला एक वक्र, जो महामारी, कोशिका विभाजन और परमाणु प्रतिक्रियाओं का मॉडल तैयार करता है।"
+    },
+    UR: {
+      name: "ایکسپونینشل نمو",
+      description: "ایک وکر جو غیر محدود مرکب نمو की नुमाइंदगी करता है، وبائی امراض، سیل کی تقسیم اور جوہری رد عمل کی نمذجة کرتا ہے۔"
+    }
+  },
+  log: {
+    EN: {
+      name: "Logarithmic Curve",
+      description: "The inverse of the exponential function, representing slow and decelerating growth such as sound decibels or sensor responses."
+    },
+    FR: {
+      name: "Courbe Logarithmique",
+      description: "L'inverse de la fonction exponentielle, représentant une croissance lente et décélérante comme les décibels sonores ou les réponses des capteurs."
+    },
+    ES: {
+      name: "Curva Logarítmica",
+      description: "La inversa de la función exponencial, que representa un crecimiento lento y desacelerado, como los decibelios de sonido o las respuestas de los sensores."
+    },
+    DE: {
+      name: "Logarithmische Kurve",
+      description: "Das Gegenstück zur Exponentialfunktion, das langsames und sich verlangsamendes Wachstum darstellt, wie z.B. Schalldezibel oder Sensorreaktionen."
+    },
+    ZH: {
+      name: "对数曲线",
+      description: "指数函数的逆函数，表示缓慢且减速的增长，如声音分贝或传感器响应。"
+    },
+    PT: {
+      name: "Curva Logarítmica",
+      description: "O inverso da função exponencial, representando um crescimento lento e desacelerado, como decibéis de som ou respostas de sensores."
+    },
+    AR: {
+      name: "منحنى لوغاريتمي",
+      description: "معكوس الدالة الأسية، ويمثل نموًا بطيئًا ومتباطئًا مثل ديسيبل الصوت أو استجابات أجهزة الاستشعار."
+    },
+    HI: {
+      name: "लघुगणकीय वक्र",
+      description: "घातांकीय फ़ंक्शन का व्युत्क्रम, जो धीमी और घटती वृद्धि का प्रतिनिधित्व करता है जैसे कि ध्वनि डेसिबल या सेंसर प्रतिक्रियाएं।"
+    },
+    UR: {
+      name: "لوگارتھمک وکر",
+      description: "ایکسپونینشل فنکشن کا الٹ، جو سست اور کم ہوتی ہوئی نمو کی نمائندگی کرتا ہے جیسے آواز के डीडीसीबल्स या सेंसर के जवाबों को प्रदर्शित करता है।"
+    }
+  },
+  cubic: {
+    EN: {
+      name: "Cubic Polynomial",
+      description: "A third-degree polynomial displaying local minima and maxima, illustrating mathematical inflections and extrema."
+    },
+    FR: {
+      name: "Polynôme Cubique",
+      description: "Un polynôme du troisième degré présentant des minima et maxima locaux, illustrant les inflexions et extrema mathématiques."
+    },
+    ES: {
+      name: "Polinomio Cúbico",
+      description: "Un polinomio de tercer grado que muestra mínimos y máximos locales, ilustrando inflexiones y extremos matemáticos."
+    },
+    DE: {
+      name: "Kubisches Polynom",
+      description: "Ein Polynom dritten Grades mit lokalen Minima und Maxima, das mathematische Wendepunkte und Extrema veranschaulicht."
+    },
+    ZH: {
+      name: "三次多项式",
+      description: "显示局部极小值和极大值的三次多项式，说明数学拐点和极值。"
+    },
+    PT: {
+      name: "Polinômio Cúbico",
+      description: "Um polinômio de terceiro grau que exibe mínimos e máximos locais, ilustrando inflexões e extremos matemáticos."
+    },
+    AR: {
+      name: "كثير حدود من الدرجة الثالثة",
+      description: "كثير حدود من الدرجة الثالثة يعرض القيم الصغرى والعظمى المحلية، ويوضح نقاط الانعطاف والقصوى الرياضية."
+    },
+    HI: {
+      name: "त्रिघात बहुपद",
+      description: "एक तीसरे दर्जे का बहुपद जो स्थानीय न्यूनतम और अधिकतम दिखाता है, गणितीय उतार-चढ़ाव और चरम सीमाओं को दर्शाता है।"
+    },
+    UR: {
+      name: "مکعب کثیر رقمی (کیوبک پولی نومیل)",
+      description: "تیسرے درجے کا کثیر رقمی (پولی نومیل) جو مقامی کم از کم اور زیادہ سے زیادہ کی عکاسی کرتا ہے، ریاضیاتی موڑ اور انتہاؤں کی وضاحت کرتا ہے۔"
+    }
+  }
+};
+
+const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
+  dynamic_plotter_tag: {
+    EN: "📈 Dynamic Function Plotter",
+    FR: "📈 Grapheur Mathématique Dynamique",
+    ES: "📈 Graficador Matemático Dinámico",
+    DE: "📈 Dynamischer Funktionsplotter",
+    ZH: "📈 动态函数绘图仪",
+    PT: "📈 Plotador Matemático Dinâmico",
+    AR: "📈 رسم بياني رياضي ديناميكي",
+    HI: "📈 गतिशील कार्य प्लॉटर",
+    UR: "📈 متحرک فنکشن پلاٹر"
+  },
+  econometric_plotter_tag: {
+    EN: "📊 Interactive Econometric Plotter",
+    FR: "📊 Visualisateur Économétrique Interactif",
+    ES: "📊 Graficador Econométrico Interactivo",
+    DE: "📊 Interaktiver Ökonometrischer Plotter",
+    ZH: "📊 交互式计量经济绘图仪",
+    PT: "📊 Plotador Econométrico Interativo",
+    AR: "📊 مخطط اقتصادي قياسي تفاعلي",
+    HI: "📊 इंटरैक्टिव अर्थमितीय प्लॉटर",
+    UR: "📊 انٹرایکٹو اکانومیٹرک پلاٹر"
+  },
+  drag_slider_hint: {
+    EN: "Drag the slider or click directly on the graph",
+    FR: "Glissez le curseur ou cliquez directement sur le graphe",
+    ES: "Arrastra el deslizador o haz clic directamente en el gráfico",
+    DE: "Ziehen Sie den Schieberegler oder klicken Sie direkt auf das Diagramm",
+    ZH: "拖动滑块 or 直接点击图表",
+    PT: "Arraste o controle deslizante ou clique diretamente no gráfico",
+    AR: "اسحب شريط التمرير أو انقر مباشرة على الرسم البياني",
+    HI: "स्लाइडर खींचें या सीधे ग्राफ़ पर क्लिक करें",
+    UR: "سلائیڈر کو گھسیٹیں یا براہ راست گراف پر کلک کریں"
+  },
+  control_panel: {
+    EN: "Control Panel",
+    FR: "Tableau de Contrôle",
+    ES: "Panel de Control",
+    DE: "Bedienfeld",
+    ZH: "控制面板",
+    PT: "Painel de Controle",
+    AR: "لوحة التحكم",
+    HI: "नियंत्रण कक्ष",
+    UR: "کنٹرول پینل"
+  },
+  slope: {
+    EN: "Slope (a)",
+    FR: "Pente (a)",
+    ES: "Pendiente (a)",
+    DE: "Steigung (a)",
+    ZH: "斜率 (a)",
+    PT: "Inclinação (a)",
+    AR: "الميل (a)",
+    HI: "ढाल (a)",
+    UR: "ڈھلوان (a)"
+  },
+  intercept: {
+    EN: "Y-Intercept (b)",
+    FR: "Ordonnée à l'origine (b)",
+    ES: "Intersección Y (b)",
+    DE: "Y-Achsenabschnitt (b)",
+    ZH: "Y轴截距 (b)",
+    PT: "Interceptação Y (b)",
+    AR: "المقطع الصادي (b)",
+    HI: "Y-अवरोधन (b)",
+    UR: "Y-انٹرسیپٹ (b)"
+  },
+  initial_capital: {
+    EN: "Initial Capital (P)",
+    FR: "Capital Initial (P)",
+    ES: "Capital Inicial (P)",
+    DE: "Anfangskapital (P)",
+    ZH: "初始资本 (P)",
+    PT: "Capital Inicial (P)",
+    AR: "رأس المال الأولي (P)",
+    HI: "प्रारंभिक पूंजी (P)",
+    UR: "ابتدائی سرمایہ (P)"
+  },
+  interest_rate: {
+    EN: "Interest Rate (r)",
+    FR: "Taux d'intérêt (r)",
+    ES: "Tasa de Interés (r)",
+    DE: "Zinssatz (r)",
+    ZH: "利率 (r)",
+    PT: "Taxa de Juros (r)",
+    AR: "سعر الفائدة (r)",
+    HI: "ब्याज दर (r)",
+    UR: "شرح سود (r)"
+  },
+  demand_shift: {
+    EN: "Demand Shift",
+    FR: "Shift Demande",
+    ES: "Cambio de Demanda",
+    DE: "Verschiebung der Nachfrage",
+    ZH: "需求变化",
+    PT: "Mudança de Demanda",
+    AR: "تغير الطلب",
+    HI: "मांग में बदलाव",
+    UR: "ڈیمانڈ شفٹ"
+  },
+  supply_shift: {
+    EN: "Supply Shift",
+    FR: "Shift Offre",
+    ES: "Cambio de Oferta",
+    DE: "Verschiebung des Angebots",
+    ZH: "供应变化",
+    PT: "Mudança de Oferta",
+    AR: "تغير العرض",
+    HI: "आपूर्ति में बदलाव",
+    UR: "سپلائی شفٹ"
+  },
+  fixed_price: {
+    EN: "Fixed Price (P)",
+    FR: "Prix Fixé (P)",
+    ES: "Precio Fijo (P)",
+    DE: "Festpreis (P)",
+    ZH: "固定价格 (P)",
+    PT: "Preço Fixo (P)",
+    AR: "السعر الثابت (P)",
+    HI: "निश्चित मूल्य (P)",
+    UR: "مقررہ قیمت (P)"
+  },
+  stop_convergence: {
+    EN: "Stop Convergence",
+    FR: "Arrêter la Convergence",
+    ES: "Detener Convergencia",
+    DE: "Konvergenz stoppen",
+    ZH: "停止收敛",
+    PT: "Parar Convergência",
+    AR: "إيقاف التقارب",
+    HI: "अभिसरण रोकें",
+    UR: "کنورجنس کو روکیں"
+  },
+  start_convergence: {
+    EN: "Start Convergence",
+    FR: "Lancer la Convergence",
+    ES: "Iniciar Convergencia",
+    DE: "Konvergenz starten",
+    ZH: "开始收敛",
+    PT: "Iniciar Convergência",
+    AR: "بدء التقارب",
+    HI: "अभिसरण शुरू करें",
+    UR: "کنورجنس شروع کریں"
+  },
+  expression_input: {
+    EN: "Expression Input",
+    FR: "Saisie de l'expression",
+    ES: "Expresión",
+    DE: "Ausdruckseingabe",
+    ZH: "输入表达式",
+    PT: "Entrada de Expressão",
+    AR: "إدخال التعبير",
+    HI: "अभिव्यक्ति इनपुट",
+    UR: "ایکسپریشن ان پٹ"
+  },
+  valid_formula: {
+    EN: "valid formula",
+    FR: "formule valide",
+    ES: "fórmula válida",
+    DE: "gültige Formel",
+    ZH: "有效公式",
+    PT: "fórmula válida",
+    AR: "صيغة صالحة",
+    HI: "मान्य सूत्र",
+    UR: "درست فارمولہ"
+  },
+  incomplete_formula: {
+    EN: "incomplete formula",
+    FR: "formule incomplète",
+    ES: "fórmula incompleta",
+    DE: "unvollständige Formel",
+    ZH: "不完整公式",
+    PT: "fórmula incompleta",
+    AR: "صيغة غير مكتملة",
+    HI: "अपूर्ण सूत्र",
+    UR: "نامکمل فارمولہ"
+  },
+  viewport_boundaries: {
+    EN: "Viewport Boundaries",
+    FR: "Limites du plan",
+    ES: "Límites de la Vista",
+    DE: "Anzeige-Eingrenzung",
+    ZH: "视口边界",
+    PT: "Limites da Visualização",
+    AR: "حدود مساحة العرض",
+    HI: "दृश्यपोर्ट सीमाएं",
+    UR: "وپورٹ حدود"
+  },
+  functions_catalog_title: {
+    EN: "📁 Mathematical Functions Catalog",
+    FR: "📁 Annuaire des Fonctions Mathématiques",
+    ES: "📁 Catálogo de Funciones Matemáticas",
+    DE: "📁 Mathematischer Funktionskatalog",
+    ZH: "📁 数学函数目录",
+    PT: "📁 Catálogo de Funções Matemáticas",
+    AR: "📁 كتالوج الدوال الرياضية",
+    HI: "📁 गणितीय कार्यों की सूची",
+    UR: "📁 ریاضیاتی فنکشنز کیٹلاگ"
+  },
+  functions_catalog_desc: {
+    EN: "Browse and instantly plot reference mathematical functions",
+    FR: "Parcourez et tracez instantanément des fonctions de référence",
+    ES: "Navega y grafica instantáneamente funciones matemáticas de referencia",
+    DE: "Durchsuchen und zeichnen Sie sofort mathematische Referenzfunktionen",
+    ZH: "浏览并立即绘制参考数学函数",
+    PT: "Navegue e plote instantaneamente funções matemáticas de referência",
+    AR: "تصفح وارسم الدوال الرياضية المرجعية على الفور",
+    HI: "संदर्भ गणितीय कार्यों को ब्राउज़ करें और तुरंत प्लॉट करें",
+    UR: "حوالہ ریاضیاتی فنکشنز को براؤز کریں اور فوری طور پر پلاٹ کریں"
+  },
+  search_placeholder: {
+    EN: "Search functions...",
+    FR: "Rechercher une fonction...",
+    ES: "Buscar funciones...",
+    DE: "Funktionen suchen...",
+    ZH: "搜索函数...",
+    PT: "Buscar funções...",
+    AR: "بحث عن الدوال...",
+    HI: "कार्यों को खोजें...",
+    UR: "فنکشنز تلاش کریں..."
+  },
+  dynamic_plotter: {
+    EN: "Dynamic Mathematical Plotter",
+    FR: "Grapheur de Fonction",
+    ES: "Graficador Matemático Dinámico",
+    DE: "Dynamischer Funktionsplotter",
+    ZH: "动态数学绘图仪",
+    PT: "Plotador Matemático Dinâmico",
+    AR: "رسم بياني رياضي ديناميكي",
+    HI: "गतिशील गणितीय प्लॉटर",
+    UR: "متحرک ریاضیاتی پلاٹر"
+  },
+  graphical_simulator: {
+    EN: "2D Graphical Simulator",
+    FR: "Simulateur Graphique 2D",
+    ES: "Simulador Gráfico 2D",
+    DE: "2D Grafik-Simulator",
+    ZH: "2D 图形模拟器",
+    PT: "Simulador Gráfico 2D",
+    AR: "محاكي رسومي ثنائي الأبعاد",
+    HI: "2D ग्राफिकल सिम्युलेटर",
+    UR: "2D گرافیکل سمیلیٹر"
+  }
+};
+
 const MATH_PRESETS: MathPreset[] = [
   {
     id: 'sigmoid',
@@ -293,7 +892,15 @@ export const FunctionPlotter = ({
   yMax
 }: FunctionPlotterProps) => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+  const langKey = (language || 'EN').toUpperCase();
+  const isFR = langKey === 'FR';
+
+  const getUiString = (key: string): string => {
+    if (UI_TRANSLATIONS[key]) {
+      return UI_TRANSLATIONS[key][langKey] || UI_TRANSLATIONS[key].EN;
+    }
+    return "";
+  };
 
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
   const svgRef = useRef<SVGSVGElement>(null);
@@ -519,8 +1126,8 @@ export const FunctionPlotter = ({
   const supplyLineColor = isPaper ? "#047857" : isFocus ? "#a3a3a3" : "#10b981";
 
   const resolvedTitle = title || (isExpressionMode 
-    ? (isFR ? "Grapheur de Fonction" : "Dynamic Mathematical Plotter") 
-    : (isFR ? "Simulateur Graphique 2D" : "2D Graphical Simulator")
+    ? getUiString('dynamic_plotter') 
+    : getUiString('graphical_simulator')
   );
   const resolvedXLabel = xLabel || (isExpressionMode ? "x" : "X");
   const resolvedYLabel = yLabel || (isExpressionMode ? "y" : "Y");
@@ -534,8 +1141,8 @@ export const FunctionPlotter = ({
         <div>
           <span className={`text-[9px] font-black uppercase tracking-[0.2em] block mb-1 ${isPaper ? "text-blue-700" : isFocus ? "text-neutral-400" : "text-emerald-400"}`}>
             {isExpressionMode 
-              ? (isFR ? "📈 Grapheur Mathématique Dynamique" : "📈 Dynamic Function Plotter") 
-              : (isFR ? "📊 Visualisateur Économétrique Interactif" : "📊 Interactive Econometric Plotter")
+              ? getUiString('dynamic_plotter_tag') 
+              : getUiString('econometric_plotter_tag')
             }
           </span>
           <h4 className={`text-lg font-black uppercase tracking-tight ${textTitleColor}`}>{resolvedTitle}</h4>
@@ -543,7 +1150,7 @@ export const FunctionPlotter = ({
         {resolvedMode === 'supply-demand' && (
           <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${isPaper ? "bg-white border-[#dbd5be] text-slate-700" : isFocus ? "bg-neutral-900 border-[#262626] text-neutral-400" : "bg-slate-900/60 border-slate-880 text-slate-400"}`}>
             <MousePointer className="w-3 h-3 text-blue-500 animate-bounce" />
-            <span>{isFR ? "Glissez le curseur ou cliquez directement sur le graphe" : "Drag the slider or click directly on the graph"}</span>
+            <span>{getUiString('drag_slider_hint')}</span>
           </div>
         )}
       </div>
@@ -641,7 +1248,7 @@ export const FunctionPlotter = ({
           <div className="flex items-center justify-between text-xs font-black uppercase text-slate-400">
             <div className="flex items-center gap-1.5">
               <Sliders className={`w-4 h-4 ${isPaper ? "text-blue-600" : "text-emerald-500"}`} />
-              <span className={isPaper ? "text-slate-700" : "text-slate-400"}>{isFR ? "Tableau de Contrôle" : "Control Panel"}</span>
+              <span className={isPaper ? "text-slate-700" : "text-slate-400"}>{getUiString('control_panel')}</span>
             </div>
             {resolvedMode === 'supply-demand' && (
               <button onClick={resetSimulation} className={`p-1 rounded-md border text-[10px] flex items-center gap-1 ${isPaper ? "bg-white border-[#dbd5be] text-slate-700" : "bg-slate-900 border-slate-800 text-slate-300"}`}>
@@ -656,14 +1263,14 @@ export const FunctionPlotter = ({
               <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{isFR ? "Pente (a)" : "Slope (a)"}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('slope')}</span>
                     <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{slope.toFixed(2)}</span>
                   </div>
                   <input type="range" min="-2" max="3" step="0.05" value={slope} onChange={(e) => setSlope(parseFloat(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{isFR ? "Ordonnée à l'origine (b)" : "Y-Intercept (b)"}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('intercept')}</span>
                     <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{intercept}</span>
                   </div>
                   <input type="range" min="0" max="60" step="1" value={intercept} onChange={(e) => setIntercept(parseInt(e.target.value))} className="w-full" />
@@ -675,14 +1282,14 @@ export const FunctionPlotter = ({
               <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{isFR ? "Capital Initial (P)" : "Initial Capital (P)"}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('initial_capital')}</span>
                     <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{principal} €</span>
                   </div>
                   <input type="range" min="50" max="500" step="10" value={principal} onChange={(e) => setPrincipal(parseInt(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{isFR ? "Taux d'intérêt (r)" : "Interest Rate (r)"}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('interest_rate')}</span>
                     <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{rate} %</span>
                   </div>
                   <input type="range" min="1" max="20" step="0.5" value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} className="w-full" />
@@ -694,28 +1301,28 @@ export const FunctionPlotter = ({
               <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={`uppercase ${isPaper ? "text-blue-800" : "text-blue-400"}`}>{isFR ? "Shift Demande" : "Demand Shift"}</span>
+                    <span className={`uppercase ${isPaper ? "text-blue-800" : "text-blue-400"}`}>{getUiString('demand_shift')}</span>
                     <span className="font-mono">{demandShift}</span>
                   </div>
                   <input type="range" min="-25" max="25" step="1" value={demandShift} onChange={(e) => setDemandShift(parseInt(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={`uppercase ${isPaper ? "text-emerald-800" : "text-emerald-400"}`}>{isFR ? "Shift Offre" : "Supply Shift"}</span>
+                    <span className={`uppercase ${isPaper ? "text-emerald-800" : "text-emerald-400"}`}>{getUiString('supply_shift')}</span>
                     <span className="font-mono">{supplyShift}</span>
                   </div>
                   <input type="range" min="-20" max="25" step="1" value={supplyShift} onChange={(e) => setSupplyShift(parseInt(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={`uppercase ${isPaper ? "text-rose-700" : "text-rose-400"}`}>{isFR ? "Prix Fixé (P)" : "Fixed Price (P)"}</span>
+                    <span className={`uppercase ${isPaper ? "text-rose-700" : "text-rose-400"}`}>{getUiString('fixed_price')}</span>
                     <span className="font-mono">{marketPrice} €</span>
                   </div>
                   <input type="range" min="10" max="90" step="1" value={marketPrice} onChange={(e) => setMarketPrice(parseInt(e.target.value))} className="w-full" />
                 </div>
                 <button onClick={runConvergenceAnimation} className={`w-full py-2.5 rounded-xl border font-black text-xs uppercase flex items-center justify-center gap-2 ${isAnimating ? "bg-amber-600 text-white" : "bg-emerald-600 text-white"}`}>
                   {isAnimating ? <RefreshCw className="animate-spin" /> : <Play />}
-                  <span>{isAnimating ? (isFR ? "Arrêter la Convergence" : "Stop Convergence") : (isFR ? "Lancer la Convergence" : "Start Convergence")}</span>
+                  <span>{isAnimating ? getUiString('stop_convergence') : getUiString('start_convergence')}</span>
                 </button>
               </>
             )}
@@ -726,17 +1333,17 @@ export const FunctionPlotter = ({
                 {/* Safe real-time formula compiler/input */}
                 <div className="space-y-1.5">
                   <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between items-center">
-                    <span>{isFR ? "Saisie de l'expression" : "Expression Input"}</span>
+                    <span>{getUiString('expression_input')}</span>
                     <span className="flex items-center gap-1">
                       {isValidExpr ? (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[8px] text-emerald-400 font-bold lowercase tracking-normal">{isFR ? "formule valide" : "valid formula"}</span>
+                          <span className="text-[8px] text-emerald-400 font-bold lowercase tracking-normal">{getUiString('valid_formula')}</span>
                         </>
                       ) : (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                          <span className="text-[8px] text-rose-400 font-bold lowercase tracking-normal">{isFR ? "formule incomplète" : "incomplete formula"}</span>
+                          <span className="text-[8px] text-rose-400 font-bold lowercase tracking-normal">{getUiString('incomplete_formula')}</span>
                         </>
                       )}
                     </span>
@@ -761,7 +1368,7 @@ export const FunctionPlotter = ({
                 
                 {/* Viewport Bounds and limits */}
                 <div className="pt-3 border-t border-slate-800/40">
-                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block mb-2">{isFR ? "Limites du plan" : "Viewport Boundaries"}</span>
+                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block mb-2">{getUiString('viewport_boundaries')}</span>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-[8px] font-black uppercase text-slate-500">X Min</label>
@@ -814,10 +1421,10 @@ export const FunctionPlotter = ({
             <div>
               <h5 className={`text-xs font-black uppercase tracking-wider ${textTitleColor} flex items-center gap-1.5`}>
                 <BookOpen className="w-4 h-4 text-indigo-400" />
-                <span>{isFR ? "📁 Annuaire des Fonctions Mathématiques" : "📁 Mathematical Functions Catalog"}</span>
+                <span>{getUiString('functions_catalog_title')}</span>
               </h5>
               <p className="text-[10px] font-bold text-slate-400">
-                {isFR ? "Parcourez et tracez instantanément des fonctions de référence" : "Browse and instantly plot reference mathematical functions"}
+                {getUiString('functions_catalog_desc')}
               </p>
             </div>
             
@@ -828,7 +1435,7 @@ export const FunctionPlotter = ({
               </span>
               <input
                 type="text"
-                placeholder={isFR ? "Rechercher une fonction..." : "Search functions..."}
+                placeholder={getUiString('search_placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-850 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
@@ -848,7 +1455,7 @@ export const FunctionPlotter = ({
                     : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {cat === 'All' ? (isFR ? 'Tous' : 'All') : cat}
+                {CATEGORY_LOCALIZATIONS[cat]?.[langKey] || CATEGORY_LOCALIZATIONS[cat]?.EN || cat}
               </button>
             ))}
           </div>
@@ -857,12 +1464,25 @@ export const FunctionPlotter = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {MATH_PRESETS.filter((preset) => {
               const matchesCategory = selectedCategory === 'All' || preset.category === selectedCategory;
-              const matchesSearch = preset.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              
+              const presetLoc = PRESET_LOCALIZATIONS[preset.id]?.[langKey] || PRESET_LOCALIZATIONS[preset.id]?.EN;
+              const localizedName = presetLoc?.name || preset.name;
+              const localizedDescription = presetLoc?.description || preset.description;
+              const localizedCategory = CATEGORY_LOCALIZATIONS[preset.category]?.[langKey] || CATEGORY_LOCALIZATIONS[preset.category]?.EN || preset.category;
+
+              const matchesSearch = localizedName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                     preset.formula.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                    preset.description.toLowerCase().includes(searchQuery.toLowerCase());
+                                    localizedDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    localizedCategory.toLowerCase().includes(searchQuery.toLowerCase());
               return matchesCategory && matchesSearch;
             }).map((preset) => {
               const isSelected = plottedExpression === preset.formula;
+              
+              const presetLoc = PRESET_LOCALIZATIONS[preset.id]?.[langKey] || PRESET_LOCALIZATIONS[preset.id]?.EN;
+              const localizedName = presetLoc?.name || preset.name;
+              const localizedDescription = presetLoc?.description || preset.description;
+              const localizedCategory = CATEGORY_LOCALIZATIONS[preset.category]?.[langKey] || CATEGORY_LOCALIZATIONS[preset.category]?.EN || preset.category;
+
               return (
                 <div
                   key={preset.id}
@@ -883,10 +1503,10 @@ export const FunctionPlotter = ({
                 >
                   <div className="flex justify-between items-start gap-2">
                     <span className={`text-[10px] font-black tracking-tight ${isSelected ? 'text-indigo-400' : 'text-slate-200'}`}>
-                      {preset.name}
+                      {localizedName}
                     </span>
                     <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded-full border border-slate-850 shrink-0">
-                      {preset.category}
+                      {localizedCategory}
                     </span>
                   </div>
                   
@@ -895,7 +1515,7 @@ export const FunctionPlotter = ({
                   </div>
                   
                   <p className="text-[9px] leading-relaxed text-slate-400 group-hover:text-slate-350 line-clamp-3">
-                    {preset.description}
+                    {localizedDescription}
                   </p>
                   
                   <div className="flex justify-between text-[8px] font-bold text-slate-500 pt-2 border-t border-slate-900/60 font-mono">

@@ -15,42 +15,113 @@ const PROJECT_ID = process.env.VERTEX_PROJECT_ID || 'openprimer-free';
 const LOCATION   = process.env.VERTEX_LOCATION   || 'us-central1';
 
 // ─────────────────────────────────────────────────────────────────
-// RATE LIMITER — Token Bucket (module-level, shared across workers)
+// ADAPTIVE RATE LIMITER — Token Bucket with RPM + TPM Support
 // ─────────────────────────────────────────────────────────────────
-// Controls the maximum number of Vertex AI requests per minute.
-// Tune VERTEX_RATE_LIMIT_RPM via env var or system_parameters.
-// Default: 8 req/min — conservative baseline that avoids 429s
-// while running up to 2 concurrent course-generation workers.
-//
-// If you increase your Vertex AI quota in Google Cloud Console,
-// raise this value proportionally (e.g. 20 for 60 RPM quota).
-const VERTEX_RATE_LIMIT_RPM = Number(process.env.VERTEX_RATE_LIMIT_RPM) || 8;
-let _lastRequestTime = 0;
+// Monitors and regulates both Requests Per Minute (RPM) and
+// Tokens Per Minute (TPM) locally to prevent hitting GCP 429s.
+// Adapts dynamically (congestion control) if a 429 is encountered.
+
+interface RequestRecord {
+  timestamp: number;
+  tokens: number;
+}
+
+const requestHistory: RequestRecord[] = [];
+
+// Plafonds maximums configurables ou valeurs par défaut conservatrices
+const MAX_RPM_CEILING = Number(process.env.VERTEX_MAX_RPM || 60);
+const MAX_TPM_CEILING = Number(process.env.VERTEX_MAX_TPM || 1000000);
+
+let _rpmCapacity = MAX_RPM_CEILING;
+let _tpmCapacity = MAX_TPM_CEILING;
+
+function cleanOldHistory(now: number) {
+  const cutoff = now - 60000;
+  while (requestHistory.length > 0 && requestHistory[0].timestamp < cutoff) {
+    requestHistory.shift();
+  }
+}
+
+/**
+ * Heuristic estimation of the token size of a VertexRequest.
+ * Roughly 3.5 characters per token to remain conservative.
+ */
+function estimateRequestTokens(req: VertexRequest): number {
+  let textLength = 0;
+  req.contents.forEach(c => {
+    c.parts.forEach(p => {
+      if ('text' in p) {
+        textLength += p.text.length;
+      }
+    });
+  });
+  if (req.systemInstruction) {
+    textLength += req.systemInstruction.length;
+  }
+  return Math.max(1000, Math.ceil(textLength / 3.5));
+}
 
 /**
  * Acquire rate-limit spacing before making a Vertex AI call.
- * Ensures calls are spaced out to stay within the VERTEX_RATE_LIMIT_RPM.
+ * Blocks if we would exceed active RPM or estimated TPM ceilings.
  */
-async function acquireRateLimitToken(): Promise<void> {
-  const rpm = Number(process.env.VERTEX_RATE_LIMIT_RPM) || VERTEX_RATE_LIMIT_RPM;
-  const minIntervalMs = 60000 / rpm;
+async function acquireRateLimitToken(estimatedTokens: number): Promise<void> {
+  let isWaiting = true;
+  while (isWaiting) {
+    const now = Date.now();
+    cleanOldHistory(now);
 
-  const now = Date.now();
-  // If the last request was a long time ago, reset to prevent sudden catch-up delay
-  if (_lastRequestTime < now - minIntervalMs * 2) {
-    _lastRequestTime = now - minIntervalMs;
+    const currentRPM = requestHistory.length;
+    const currentTPM = requestHistory.reduce((sum, r) => sum + r.tokens, 0);
+
+    if (currentRPM + 1 > _rpmCapacity) {
+      const oldestRecord = requestHistory[0];
+      const waitMs = oldestRecord.timestamp + 60000 - now;
+      console.log(`[RATE LIMITER] RPM limit reached (${currentRPM}/${_rpmCapacity} req). Throttling for ${Math.ceil(waitMs / 1000)}s...`);
+      await new Promise(resolve => setTimeout(resolve, Math.max(1000, waitMs)));
+    } else if (currentTPM + estimatedTokens > _tpmCapacity) {
+      let cumulativeReleased = 0;
+      let waitMs = 1000;
+      for (const record of requestHistory) {
+        cumulativeReleased += record.tokens;
+        if (currentTPM - cumulativeReleased + estimatedTokens <= _tpmCapacity) {
+          waitMs = record.timestamp + 60000 - now;
+          break;
+        }
+      }
+      console.log(`[RATE LIMITER] TPM limit reached (Current: ${currentTPM} + Est: ${estimatedTokens} > Cap: ${_tpmCapacity}). Throttling for ${Math.ceil(waitMs / 1000)}s...`);
+      await new Promise(resolve => setTimeout(resolve, Math.max(1000, waitMs)));
+    } else {
+      isWaiting = false;
+    }
   }
 
-  const expectedTime = _lastRequestTime + minIntervalMs;
-  const waitMs = expectedTime - now;
+  // Record the start of this request
+  requestHistory.push({
+    timestamp: Date.now(),
+    tokens: estimatedTokens
+  });
+}
 
-  if (waitMs > 0) {
-    _lastRequestTime = expectedTime;
-    console.log(`[RATE LIMITER] Spacing request — throttling for ${Math.ceil(waitMs / 1000)}s (${rpm} RPM limit).`);
-    await new Promise(resolve => setTimeout(resolve, waitMs));
-  } else {
-    _lastRequestTime = now;
+/**
+ * Success handler: Updates estimate with actual token count and slowly
+ * increases capacity ceilings (AIMD - Additive Increase).
+ */
+function handleSuccessfulRequest(actualTokens: number) {
+  if (requestHistory.length > 0) {
+    requestHistory[requestHistory.length - 1].tokens = actualTokens;
   }
+  _rpmCapacity = Math.min(MAX_RPM_CEILING, _rpmCapacity + 1);
+  _tpmCapacity = Math.min(MAX_TPM_CEILING, _tpmCapacity + 10000);
+}
+
+/**
+ * 429 Rate Limit handler: Shrinks capacities by 20% (AIMD - Multiplicative Decrease).
+ */
+function handleRateLimitError() {
+  _rpmCapacity = Math.max(10, Math.floor(_rpmCapacity * 0.8));
+  _tpmCapacity = Math.max(100000, Math.floor(_tpmCapacity * 0.8));
+  console.warn(`[RATE LIMITER] ⚠️ 429 Resource Exhausted detected. Adapting local ceilings down to: RPM ${_rpmCapacity}, TPM ${_tpmCapacity}`);
 }
 
 interface ServiceAccountCredentials {
@@ -194,8 +265,9 @@ export interface VertexRequest {
  * Returns the raw fetch Response so callers can handle streaming or JSON.
  */
 export async function callVertexAI(req: VertexRequest): Promise<Response | null> {
-  // Acquire a rate-limit token before proceeding (blocks if bucket is empty)
-  await acquireRateLimitToken();
+  // Estimate tokens and acquire rate-limit slot
+  const estimatedTokens = estimateRequestTokens(req);
+  await acquireRateLimitToken(estimatedTokens);
 
   const token = await getAccessToken();
   if (!token) return null;
@@ -229,7 +301,6 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
     }
 
     const maxRetries = 5;
-    let delay = 4000;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[VERTEX] Attempting call with model "${model}" (attempt ${attempt}/${maxRetries})...`);
@@ -256,14 +327,20 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
               const usage = json.usageMetadata || {};
               const promptTokens = usage.promptTokenCount || 0;
               const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+              const actualTokens = promptTokens + candidatesTokens;
+              
+              // Report actual token usage back to the Token-Bucket
+              handleSuccessfulRequest(actualTokens);
+
               const firstPart = req.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
-              
               await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
             } catch (e) {
               console.warn('[VERTEX] Failed to parse usage metadata from response clone:', e);
               // Fallback: estimate tokens if parsing failed
               const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
+              handleSuccessfulRequest(est.inputTokens + est.outputTokens);
+
               const firstPart = req.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
               await recordMetrics(req.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
@@ -272,12 +349,19 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
           return response;
         } else if (response.status === 429) {
+          handleRateLimitError();
           const errText = await response.text();
           lastError = `[VERTEX] Model "${model}" failed (429 RESOURCE_EXHAUSTED): ${errText.slice(0, 300)}`;
-          console.warn(`${lastError}. Retrying in ${delay}ms...`);
+          
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2.0; // Exponential backoff (4s -> 8s -> 16s -> 32s -> 64s -> 128s)
+            // Apply Decorrelated Jitter: wait_time = random(0, min(cap, base * 2^attempt))
+            const cap = 120000; // Max 120s
+            const base = 4000;
+            const temp = Math.min(cap, base * Math.pow(2, attempt));
+            const jitterDelay = Math.floor(Math.random() * temp);
+
+            console.warn(`${lastError}. Retrying in ${Math.ceil(jitterDelay / 1000)}s with Jitter...`);
+            await new Promise(resolve => setTimeout(resolve, jitterDelay));
             continue;
           }
         } else {
@@ -290,9 +374,13 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
         lastError = `[VERTEX] Model "${model}" exception: ${e}`;
         console.warn(lastError);
         if (attempt < maxRetries) {
-          console.warn(`[VERTEX] Retrying in ${delay}ms after exception...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2.0;
+          const cap = 120000;
+          const base = 4000;
+          const temp = Math.min(cap, base * Math.pow(2, attempt));
+          const jitterDelay = Math.floor(Math.random() * temp);
+          
+          console.warn(`[VERTEX] Retrying in ${Math.ceil(jitterDelay / 1000)}s with Jitter after exception...`);
+          await new Promise(resolve => setTimeout(resolve, jitterDelay));
           continue;
         }
         break;

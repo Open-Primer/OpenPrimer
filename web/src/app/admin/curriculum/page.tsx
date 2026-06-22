@@ -15,6 +15,7 @@ import { ArchivingTab } from './components/ArchivingTab';
 import { QueueTab } from './components/QueueTab';
 import { AchievementsTab } from './components/AchievementsTab';
 import { PersonalitiesTab } from './components/PersonalitiesTab';
+import { WidgetsTab } from './components/WidgetsTab';
 
 import { 
   CURRICULUM_STRINGS, COCKPIT_DICTIONARY, LOCALIZED_POPUPS, EXTRA_TOOLTIP_STRINGS,
@@ -91,7 +92,7 @@ export default function AdminCurriculumPage() {
     return count;
   };
 
-  const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'achievements' | 'personalities'>('generation');
+  const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'widgets' | 'achievements' | 'personalities'>('generation');
   
 // Database States
   const [historyList, setHistoryList] = useState<any[]>([]);
@@ -2570,6 +2571,7 @@ export default function AdminCurriculumPage() {
                { id: 'revision', label: t.tab_revision, color: 'bg-yellow-600' },
                { id: 'archiving', label: t.tab_archiving, color: 'bg-pink-600' },
                { id: 'queue', label: t.tab_queue, color: 'bg-cyan-600' },
+               { id: 'widgets', label: t.tab_widgets, color: 'bg-teal-600' },
                { id: 'achievements', label: t.tab_achievements, color: 'bg-violet-600' },
                { id: 'personalities', label: t.tab_personalities, color: 'bg-fuchsia-600' }
              ].map(tab => (
@@ -2700,6 +2702,15 @@ export default function AdminCurriculumPage() {
                />
              )}
              
+             {view === 'widgets' && (
+               <WidgetsTab 
+                 lang={lang}
+                 t={t}
+                 tr={tr}
+                 showToast={showToast}
+               />
+             )}
+
              {view === 'achievements' && (
                <AchievementsTab 
                  lang={lang}
