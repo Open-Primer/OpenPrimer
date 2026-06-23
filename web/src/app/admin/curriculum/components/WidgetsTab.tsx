@@ -142,8 +142,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const [newWidgetLevelEN, setNewWidgetLevelEN] = useState('');
   const [newWidgetDisciplines, setNewWidgetDisciplines] = useState<string[]>([]);
 
-  const isFR = lang === 'FR';
-
   // Retrieve/Initialize Admin Name
   useEffect(() => {
     let savedId = localStorage.getItem('op_widget_admin_id');
@@ -159,7 +157,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     if (trimmed.length > 2) {
       setAdminId(trimmed);
       localStorage.setItem('op_widget_admin_id', trimmed);
-      showToast(isFR ? `Nom d'admin mis à jour : ${trimmed}` : `Admin nickname updated to: ${trimmed}`, 'success');
+      showToast(tr("Admin nickname updated to: ") + trimmed, 'success');
     }
     setIsEditingAdminName(false);
   };
@@ -280,9 +278,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       const success = await acquireLock(selectedWidget.id);
       if (!success) {
         showToast(
-          isFR 
-            ? "Verrouillage impossible. Un autre administrateur édite actuellement ce widget."
-            : "Lock denied. Another administrator is currently editing this widget.",
+          tr("Lock denied. Another administrator is currently editing this widget."),
           'error'
         );
         // Reset local modifications
@@ -328,7 +324,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       const data = await res.json();
       if (data.success) {
         showToast(
-          isFR ? "Paramètres pédagogiques mis à jour !" : "Pedagogical parameters successfully updated!",
+          tr("Pedagogical parameters successfully updated!"),
           'success'
         );
         setIsEditModalOpen(false);
@@ -362,7 +358,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     const success = await releaseLock(widgetIdToUnlock, true);
     if (success) {
       showToast(
-        isFR ? "Verrou forcé avec succès. Vous avez libéré le widget !" : "Lock successfully broken. Widget is now free!",
+        tr("Lock successfully broken. Widget is now free!"),
         'success'
       );
       await loadWidgets();
@@ -377,7 +373,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     if (!widgetIdClean || !newWidgetPrompt.trim() || isExecuting) return;
 
     if (widgets.some(w => w.id.toLowerCase() === widgetIdClean.toLowerCase())) {
-      showToast(isFR ? "Un widget avec ce nom existe déjà !" : "A widget with this name already exists!", 'error');
+      showToast(tr("A widget with this name already exists!"), 'error');
       return;
     }
 
@@ -419,9 +415,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       if (response.ok && data.success) {
         setCurrentStep(5); // 🎉 Done
         showToast(
-          isFR 
-            ? `Widget "${widgetIdClean}" créé et enregistré avec succès !`
-            : `Widget "${widgetIdClean}" successfully created and registered!`,
+          tr("Widget \"{id}\" successfully created and registered!").replace("{id}", widgetIdClean),
           'success'
         );
         
@@ -450,7 +444,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         setCurrentStep(0);
         setErrorDetails(data.details || data.error || "Compilation failed");
         showToast(
-          isFR ? `Création échouée. Les modifications ont été annulées.` : `Creation failed. Changes rolled back.`,
+          tr("Creation failed. Changes rolled back."),
           'error'
         );
       }
@@ -496,9 +490,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       if (response.ok && data.success) {
         setCurrentStep(5); // 🎉 Done
         showToast(
-          isFR 
-            ? `Widget "${selectedWidget.id}" mis à jour et validé avec succès !`
-            : `Widget "${selectedWidget.id}" successfully updated and compile-verified!`,
+          tr("Widget \"{id}\" successfully updated and compile-verified!").replace("{id}", selectedWidget.id),
           'success'
         );
         setPrompt('');
@@ -507,9 +499,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         setCurrentStep(0);
         setErrorDetails(data.details || data.error || "Unknown compilation error");
         showToast(
-          isFR
-            ? `Échec de validation. Les modifications ont été annulées.`
-            : `Compilation validation failed. Changes rolled back.`,
+          tr("Compilation validation failed. Changes rolled back."),
           'error'
         );
       }
@@ -574,12 +564,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
           </div>
           <div className="space-y-1 max-w-md">
             <h4 className="text-sm font-black text-slate-200">
-              {isFR ? "Nouveau Widget Enregistré" : "New Widget Hot-Registered"}
+              {tr("New Widget Hot-Registered")}
             </h4>
             <p className="text-[10px] text-slate-550 leading-relaxed">
-              {isFR 
-                ? `Le composant "${selectedWidget.id}" est enregistré dans MdxContent.tsx. Il sera compilé pour la prévisualisation au prochain redémarrage du serveur dev.`
-                : `The component "${selectedWidget.id}" has been registered in MdxContent.tsx and is ready for course lessons. It will be loaded inside this sandbox on your next development rebuild.`}
+              {tr("The component \"{id}\" has been registered in MdxContent.tsx and is ready for course lessons. It will be loaded inside this sandbox on your next development rebuild.").replace("{id}", selectedWidget.id)}
             </p>
           </div>
         </div>
@@ -621,7 +609,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
           </div>
           <div className="space-y-2 max-w-sm">
             <h4 className="text-sm font-black text-red-400 uppercase tracking-wider">
-              {isFR ? "Erreur de Rendu Sandbox" : "Sandbox Render Exception"}
+              {tr("Sandbox Render Exception")}
             </h4>
             <p className="text-[10px] text-slate-400 font-mono bg-slate-950/60 p-4 rounded-xl text-left border border-slate-850/50">
               {e.message}
@@ -826,9 +814,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           {tr("Component Locked Read-Only")}
                         </p>
                         <p className="text-[10px] text-slate-400 leading-relaxed">
-                          {isFR 
-                            ? `Cet atelier est actuellement verrouillé par "${activeLock.adminId}". Vos modifications de paramètres ou prompts d'IA seront rejetés.`
-                            : `This workshop is currently locked by "${activeLock.adminId}". Parameter saves or AI prompt commits will be rejected.`}
+                          {tr("This workshop is currently locked by \"{id}\". Parameter saves or AI prompt commits will be rejected.").replace("{id}", activeLock.adminId)}
                         </p>
                       </div>
                     </div>
@@ -932,9 +918,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               {workshopTab === 'code' && (
                 <div className="space-y-4">
                   <p className="text-[10px] text-slate-450 leading-relaxed font-medium">
-                    {isFR 
-                      ? "Inspection en lecture seule du fichier TSX. Pour le modifier, utilisez la console d'IA ci-dessous."
-                      : "Read-only inspection of the active TSX source code file. To edit or adjust logic, use the AI assistant console below."}
+                    {tr("Read-only inspection of the active TSX source code file. To edit or adjust logic, use the AI assistant console below.")}
                   </p>
                   <div className="bg-slate-950/80 rounded-2xl border border-slate-850 p-6 max-h-[350px] overflow-y-auto font-mono text-[9px] text-slate-400 leading-relaxed scrollbar-thin scrollbar-thumb-slate-800">
                     <pre className="whitespace-pre-wrap">{selectedWidget.code}</pre>
@@ -945,10 +929,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               {/* 3. PROPS & API SCHEMATIC */}
               {workshopTab === 'props' && (
                 <div className="space-y-4">
-                  <p className="text-[10px] text-slate-450 leading-relaxed font-medium">
-                    {isFR 
-                      ? "Signature technique d'intégration pédagogique détectée dans le code du composant."
-                      : "Pedagogical parameters signature and React properties registered for this interactive simulator."}
+                  <p className="text-[10px] text-slate-455 leading-relaxed font-medium">
+                    {tr("Pedagogical parameters signature and React properties registered for this interactive simulator.")}
                   </p>
                   <div className="bg-slate-950/40 rounded-2xl border border-slate-850 p-6 space-y-4 font-mono text-[10px]">
                     <div className="space-y-2">
@@ -1016,7 +998,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   disabled={isExecuting || (selectedWidget.lock !== null && selectedWidget.lock.adminId !== adminId && Date.now() < selectedWidget.lock.expiresAt)}
-                  placeholder={isFR ? `Décrivez vos modifications pour "${selectedWidget.id}"...` : `Instruct the AI to enhance, modify, or add features to "${selectedWidget.id}"...`}
+                  placeholder={tr("Instruct the AI to enhance, modify, or add features to \"{id}\"...").replace("{id}", selectedWidget.id)}
                   className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors resize-none pr-12 scrollbar-thin disabled:opacity-50"
                 />
                 
@@ -1090,9 +1072,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           {tr("TSX Compilation Log Rejected")}
                         </h4>
                         <p className="text-[9px] text-slate-400 font-medium">
-                          {isFR 
-                            ? "Les modifications ont été annulées et le backup d'origine a été restauré."
-                            : "Build-breaking changes were safely discarded and the active component has been restored."}
+                          {tr("Build-breaking changes were safely discarded and the active component has been restored.")}
                         </p>
                       </div>
                     </div>
@@ -1117,9 +1097,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 {tr("No Widget Selected")}
               </h4>
               <p className="text-xs text-slate-550 max-w-xs mx-auto leading-relaxed">
-                {isFR 
-                  ? "Sélectionnez un composant interactif dans le catalogue pour lancer la sandbox."
-                  : "Select an interactive widget component from the catalog list to activate the preview sandbox workshop."}
+                {tr("Select an interactive widget component from the catalog list to activate the preview sandbox workshop.")}
               </p>
             </div>
           </div>
@@ -1147,19 +1125,17 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 <div className="space-y-1">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Edit className="w-5 h-5 text-teal-400" />
-                    {isFR ? `Édition : ${selectedWidget?.id}` : `Edit parameters: ${selectedWidget?.id}`}
+                    {tr("Edit parameters: {id}").replace("{id}", selectedWidget?.id || '')}
                   </h3>
                   <p className="text-[10px] text-slate-400">
-                    {isFR 
-                      ? "Mettre à jour les métadonnées pédagogiques visibles par les enseignants lors de l'intégration dans un cours."
-                      : "Modify pedagogical metrics displayed to content authors within curriculum schedules."}
+                    {tr("Modify pedagogical metrics displayed to content authors within curriculum schedules.")}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Nom FR */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Nom (FR)" : "Name (French)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (French)")}</label>
                     <input
                       type="text"
                       value={editNameFR}
@@ -1169,7 +1145,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
                   {/* Nom EN */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Nom (EN)" : "Name (English)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (English)")}</label>
                     <input
                       type="text"
                       value={editNameEN}
@@ -1179,7 +1155,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
                   {/* Niveau FR */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Niveau Académique (FR)" : "Academic Level (French)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level (French)")}</label>
                     <input
                       type="text"
                       value={editLevelFR}
@@ -1190,7 +1166,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
                   {/* Niveau EN */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Niveau Académique (EN)" : "Academic Level (English)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level (English)")}</label>
                     <input
                       type="text"
                       value={editLevelEN}
@@ -1201,7 +1177,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
                   {/* Description FR */}
                   <div className="col-span-1 md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Description (FR)" : "Description (French)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (French)")}</label>
                     <textarea
                       rows={2}
                       value={editDescFR}
@@ -1211,7 +1187,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
                   {/* Description EN */}
                   <div className="col-span-1 md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Description (EN)" : "Description (English)"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (English)")}</label>
                     <textarea
                       rows={2}
                       value={editDescEN}
@@ -1222,7 +1198,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
                   {/* Disciplines Selection Grid */}
                   <div className="col-span-1 md:col-span-2 space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{isFR ? "Disciplines Cibles" : "Target Subject Fields"}</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Target Subject Fields")}</label>
                     <div className="flex flex-wrap gap-2">
                       {DISCIPLINES_LIST.map((disc) => {
                         const isChecked = editDisciplines.includes(disc);
@@ -1291,12 +1267,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 <div className="space-y-1">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Plus className="w-5 h-5 text-teal-400" />
-                    {isFR ? "Créer un Nouveau Widget Interactif" : "Create Brand New Interactive Widget"}
+                    {tr("Create Brand New Interactive Widget")}
                   </h3>
                   <p className="text-[10px] text-slate-400">
-                    {isFR 
-                      ? "L'assistant IA Gemini va écrire, compiler et enregistrer automatiquement le code source TSX."
-                      : "The AI agent will generate, run a static check verify, and deploy a self-contained simulator block."}
+                    {tr("The AI agent will generate, run a static check verify, and deploy a self-contained simulator block.")}
                   </p>
                 </div>
 
@@ -1305,7 +1279,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   {/* Widget Name ID */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5 col-span-1 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase text-slate-500">ID Unique du Composant (PascalCase)</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Unique Component ID (PascalCase)")}</label>
                       <input
                         type="text"
                         value={newWidgetId}
@@ -1313,11 +1287,11 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         placeholder="Ex: LightOpticsSandbox"
                         className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 font-mono"
                       />
-                      <p className="text-[8px] text-slate-500">Aucun espace, caractères spéciaux ou tirets. Doit commencer par une lettre majuscule.</p>
+                      <p className="text-[8px] text-slate-500">{tr("No spaces, special characters, or hyphens. Must start with an uppercase letter.")}</p>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Nom FR</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (French)")}</label>
                       <input
                         type="text"
                         value={newWidgetNameFR}
@@ -1328,7 +1302,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Nom EN</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (English)")}</label>
                       <input
                         type="text"
                         value={newWidgetNameEN}
@@ -1339,7 +1313,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Niveau (FR)</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Level (French)")}</label>
                       <input
                         type="text"
                         value={newWidgetLevelFR}
@@ -1350,7 +1324,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Niveau (EN)</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Level (English)")}</label>
                       <input
                         type="text"
                         value={newWidgetLevelEN}
@@ -1361,7 +1335,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="space-y-1.5 col-span-1 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Description FR</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (French)")}</label>
                       <input
                         type="text"
                         value={newWidgetDescFR}
@@ -1372,7 +1346,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="space-y-1.5 col-span-1 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Description EN</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (English)")}</label>
                       <input
                         type="text"
                         value={newWidgetDescEN}
@@ -1384,7 +1358,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
                     {/* Disciplines select */}
                     <div className="col-span-1 md:col-span-2 space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-500">Disciplines Cibles</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Target Subject Fields")}</label>
                       <div className="flex flex-wrap gap-1.5">
                         {DISCIPLINES_LIST.map((disc) => {
                           const isChecked = newWidgetDisciplines.includes(disc);
@@ -1405,7 +1379,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
                   {/* AI Prompt */}
                   <div className="space-y-1.5 pt-2">
-                    <label className="text-[10px] font-black uppercase text-slate-500">Instructions pour la génération par l'IA (Prompt)</label>
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Instructions for AI Generation (Prompt)")}</label>
                     <textarea
                       rows={4}
                       value={newWidgetPrompt}

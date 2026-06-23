@@ -19,6 +19,7 @@ import {
 
 // Registry pattern to avoid circular dependencies with db.ts
 let getMockCoursesFn: () => MockCourse[] = () => [];
+let isFirstEvaluation = true;
 
 export const registerCoursesProvider = (provider: () => MockCourse[]) => {
   getMockCoursesFn = provider;
@@ -694,7 +695,7 @@ export const progressService = {
   },
 
   // Dynamic achievement evaluation
-  evaluateAchievements: (achievements: Achievement[]): number[] => {
+  evaluateAchievements: (achievements: Achievement[], silent: boolean = false): number[] => {
     try {
       if (typeof window === 'undefined') return [];
       const earnedIds: number[] = [];
@@ -974,16 +975,22 @@ export const progressService = {
 
       const prevEarned = JSON.parse(window.localStorage.getItem('op_earned_achievements') || '[]');
       const newEarned = Array.from(new Set([...prevEarned, ...earnedIds]));
+      
+      const isFirst = isFirstEvaluation;
+      isFirstEvaluation = false;
+
       if (newEarned.length > prevEarned.length) {
         window.localStorage.setItem('op_earned_achievements', JSON.stringify(newEarned));
         const newlyUnlocked = newEarned.filter(id => !prevEarned.includes(id));
-        newlyUnlocked.forEach(id => {
-          const match = achievements.find(a => a.id === id);
-          if (match) {
-            const ev = new CustomEvent('op_achievement_unlocked', { detail: match });
-            window.dispatchEvent(ev);
-          }
-        });
+        if (!isFirst && !silent) {
+          newlyUnlocked.forEach(id => {
+            const match = achievements.find(a => a.id === id);
+            if (match) {
+              const ev = new CustomEvent('op_achievement_unlocked', { detail: match });
+              window.dispatchEvent(ev);
+            }
+          });
+        }
       }
 
       return newEarned;

@@ -111,6 +111,70 @@ const EMPTY_STATE_STRINGS = {
     clear: "清除搜索",
     privacy_note: "您的电子邮件地址将被安全保留最多90天，如果在此期间未生成课程，将被自动清除。",
   },
+  PT: {
+    title: "Nenhum curso encontrado",
+    subtitle_a: "Esta busca está sendo rastreada pelo nosso",
+    subtitle_b: "Motor de Geração IA.",
+    freq_label: "Busca frequente — curso ainda não gerado",
+    explain: "Quando estudantes suficientes buscam por este tema, nosso motor de currículo de IA soberano rascunha e publica automaticamente um novo curso. Você pode deixar seus dados abaixo para ser notificado no momento em que for lançado.",
+    email_placeholder: "Seu endereço de e-mail",
+    email_required: "Por favor, insira um endereço de e-mail válido.",
+    cta_notify: "Notifique-me quando este curso estiver disponível",
+    success_title: "Você está na lista!",
+    success_desc: "Enviaremos uma notificação a você assim que este curso for gerado e publicado automaticamente.",
+    alt_title: "Explorar cursos disponíveis",
+    alt_sub: "Ou tente um destes tópicos populares:",
+    clear: "Limpar busca",
+    privacy_note: "Seu endereço de e-mail é retido com segurança por até 90 dias e será excluído automaticamente se o curso não for gerado dentro deste período.",
+  },
+  AR: {
+    title: "لم يتم العثور على دورات",
+    subtitle_a: "هذا البحث يتم تتبعه بواسطة",
+    subtitle_b: "محرك التوليد المدعوم بالذكاء الاصطناعي الخاص بنا.",
+    freq_label: "يبحث عنه بكثرة — لم يتم توليده بعد",
+    explain: "عندما يبحث عدد كافٍ من الطلاب عن هذا الموضوع، يقوم محرك المناهج الدراسية السيادي المدعوم بالذكاء الاصطناعي لدينا بصياغة ونشر دورة جديدة تلقائيًا. يمكنك ترك بياناتك أدناه ليتم إخطارك في اللحظة التي يبدأ فيها البث المباشر.",
+    email_placeholder: "عنوان بريدك الإلكتروني",
+    email_required: "يرجى إدخال عنوان بريد إلكتروني صحيح.",
+    cta_notify: "أخبرني عندما تكون هذه الدورة متاحة",
+    success_title: "لقد تم إضافتك إلى القائمة!",
+    success_desc: "سنرسل إليك إشعارًا بمجرد إنشاء هذه الدورة ونشرها تلقائيًا.",
+    alt_title: "استكشف الدورات المتاحة",
+    alt_sub: "أو جرب أحد هذه المواضيع الشائعة:",
+    clear: "مسح البحث",
+    privacy_note: "يتم الاحتفاظ بعنوان بريدك الإلكتروني بشكل آمن لمدة تصل إلى 90 يومًا وسيتم حذفه تلقائيًا إذا لم يتم إنشاء الدورة التدريبية خلال هذه الفترة.",
+  },
+  HI: {
+    title: "कोई कोर्स नहीं मिला",
+    subtitle_a: "यह खोज हमारे द्वारा ट्रैक की जा रही है",
+    subtitle_b: "एआई जनरेशन इंजन।",
+    freq_label: "अक्सर खोजा गया — अभी तक उत्पन्न नहीं हुआ",
+    explain: "जब पर्याप्त छात्र इस विषय की खोज करते हैं, तो हमारा संसंप्रभु एआई पाठ्यक्रम इंजन स्वचालित रूप से एक नया पाठ्यक्रम तैयार और प्रकाशित करता है। लाइव होने के क्षण ही अधिसूचित होने के लिए आप नीचे अपना विवरण छोड़ सकते हैं।",
+    email_placeholder: "आपका ईमेल पता",
+    email_required: "कृपया एक मान्य ईमेल पता दर्ज करें।",
+    cta_notify: "इस कोर्स के लाइव होने पर मुझे सूचित करें",
+    success_title: "आप सूची में हैं!",
+    success_desc: "जैसे ही यह कोर्स स्वचालित रूप से उत्पन्न और प्रकाशित होगा, हम आपको एक अधिसूचना भेजेंगे।",
+    alt_title: "उपलब्ध पाठ्यक्रमों का पता लगाएं",
+    alt_sub: "या इनमें से किसी एक लोकप्रिय विषय को आज़माएं:",
+    clear: "खोज साफ़ करें",
+    privacy_note: "आपका ईमेल पता अधिकतम 90 दिनों के लिए सुरक्षित रूप से रखा जाता है और यदि इस अवधि के भीतर पाठ्यक्रम उत्पन्न नहीं होता है तो स्वचालित रूप से हटा दिया जाएगा।",
+  },
+  UR: {
+    title: "کوئی کورس نہیں ملا",
+    subtitle_a: "یہ تلاش ہماری طرف سے ٹریک کی جا رہی ہے",
+    subtitle_b: "اے آئی جنریشن انجن۔",
+    freq_label: "اکثر تلاش کیا گیا — ابھی تک تیار نہیں کیا گیا",
+    explain: "جب کافی طلباء اس موضوع کو تلاش کریں گے، تو ہمارا خود مختار اے آئی نصاب انجن خود بخود ایک نیا کورس تیار اور شائع کرے گا۔ آپ لائیو ہونے کے فوراً بعد اطلاع حاصل کرنے کے لیے نیچے اپنی تفصیلات درج کر سکتے ہیں۔",
+    email_placeholder: "آپ کا ای میل ایڈریس",
+    email_required: "براہ کرم ایک درست ای میل ایڈریس درج کریں۔",
+    cta_notify: "اس کورس کے لائیو ہونے پر مجھے مطلع کریں",
+    success_title: "آپ فہرست میں شامل ہیں!",
+    success_desc: "جیسے ہی یہ کورس خود بخود تیار اور شائع ہوگا، ہم آپ کو ایک اطلاع بھیجیں گے۔",
+    alt_title: "دستیاب کورسز تلاش کریں",
+    alt_sub: "یا ان میں سے کسی ایک مقبول موضوع کو آزمائیں:",
+    clear: "تلاش صاف کریں",
+    privacy_note: "آپ کا ای میل ایڈریس 90 دنوں تک محفوظ طریقے سے رکھا جاتا ہے اور اگر اس مدت کے دوران کورس تیار نہیں ہوتا ہے تو خود بخود صاف ہو جائے گا۔",
+  },
 };
 
 interface SmartEmptyStateProps {
@@ -735,9 +799,9 @@ export const CatalogPage = () => {
               {/* Catalog Filter Mode (All / Courses / Curricula) */}
               <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
                 {[
-                  { key: 'All',        label: { EN: 'All',      FR: 'Tout',         ES: 'Todo',    DE: 'Alle',       ZH: '全部',   IT: 'Tutti' } },
-                  { key: 'Course',     label: { EN: 'Courses',  FR: 'Cours',        ES: 'Cursos',  DE: 'Kurse',      ZH: '课程',   IT: 'Corsi' } },
-                  { key: 'Curriculum', label: { EN: 'Curricula',FR: 'Curriculums',  ES: 'Planes',  DE: 'Lehrpläne',  ZH: '课程体系', IT: 'Curriculum' } }
+                  { key: 'All',        label: { EN: 'All',      FR: 'Tout',         ES: 'Todo',    DE: 'Alle',       ZH: '全部',   IT: 'Tutti',      PT: 'Tudo',        AR: 'الكل',    HI: 'सभी',       UR: 'تمام' } },
+                  { key: 'Course',     label: { EN: 'Courses',  FR: 'Cours',        ES: 'Cursos',  DE: 'Kurse',      ZH: '课程',   IT: 'Corsi',      PT: 'Cursos',      AR: 'الدورات',  HI: 'पाठ्यक्रम',  UR: 'کورسز' } },
+                  { key: 'Curriculum', label: { EN: 'Curricula',FR: 'Curriculums',  ES: 'Planes',  DE: 'Lehrpläne',  ZH: '课程体系', IT: 'Curriculum', PT: 'Currículos',  AR: 'المناهج',  HI: 'पाठ्यचर्या', UR: 'نصاب' } }
                 ].map(opt => {
                   const active = filterType === opt.key;
                   const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
@@ -782,8 +846,8 @@ export const CatalogPage = () => {
               {/* Sort — Popularity / Graduates */}
               <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
                 {[
-                  { key: 'popularity',  label: { EN: 'Popularity', FR: 'Popularité',  ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热',  IT: 'Popolarità' } },
-                  { key: 'validations', label: { EN: 'Graduates',  FR: 'Diplômés',    ES: 'Graduados',   DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati' } }
+                  { key: 'popularity',  label: { EN: 'Popularity', FR: 'Popularité',  ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热',  IT: 'Popolarità', PT: 'Popularidade', AR: 'الشعبية', HI: 'लोकप्रियता', UR: 'مقبولیت' } },
+                  { key: 'validations', label: { EN: 'Graduates',  FR: 'Diplômés',    ES: 'Graduados',   DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati',    PT: 'Graduados',    AR: 'الخريجون', HI: 'स्नातक',      UR: 'فارغ التحصیل' } }
                 ].map(opt => {
                   const active = sortBy === opt.key;
                   const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;

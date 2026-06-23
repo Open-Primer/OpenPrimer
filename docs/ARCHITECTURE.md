@@ -61,18 +61,99 @@ graph TD
     class A,I user;
 ```
 
-### Precise Roles of AI Agents
-1.  **🎓 Agent 0 (Curriculum Planner / Architect):** Structures complete curriculum pathways (defining modules, subject, volume, credit weights, mandatory vs elective status, and master/course descriptions) by learning from real-world online curricula.
-2.  **📋 Agent 1 & 2 (Course & Pedagogical Planner):** Profiles the target discipline according to its cognitive matrix (Deductive, Empirical, Discursive, or Engineering) and adapts the chapter outline to the student's age group (CP-CM2 to L3). Outputs a structured JSON blueprint specifying cognitive artifacts and technical depth guidelines for each lesson.
-3.  **✍️ Agent 3 (Academic Writer):** Generates dense, comprehensive, professional MDX course content with LaTeX, component blocks (`<Prerequisites>`, `<DiagnosticQuiz>`, `<Epistemology>`, `<Quiz>`), respecting Socratic/Feynman heuristics and strict anti-placeholder constraints.
-4.  **🔍 Agent 4 (Verifier/Critic):** Quality gate agent checking the generated MDX content for zero-placeholder and academic density compliance. Employs a revision feedback loop (max 3 cycles) to correct and refine sections before persistence.
-5.  **💬 Interactive Socratic Tutor Agent:** Powers the student's conversation sidebar. Adjusts prompt personas (Socratic, Direct, Gamified) dynamically depending on the user's focus mode, guiding rather than giving answers.
-6.  **🌐 Translation Agent:** Multi-lingual translator localizing course MDX payloads into **FR**, **ES**, **DE**, **ZH**, **PT**, **AR**, **HI**, and **UR** without altering mathematical LaTeX markup or React code blocks. Arabic and Urdu outputs are automatically flagged as RTL (`dir="rtl"`) in the UI rendering layer.
-7.  **⚖️ Autonomy Engine:** Runs threshold-based logic over failed searches. If a missing discipline accumulates enough requests, the engine initiates automatic queue generation without human oversight.
+### Precise Roles of AI Agents & In-Engine Flow (0 to 4)
+OpenPrimer structures the course generation pipeline into a strictly ordered, decoupled chain of 5 dedicated autonomous agents:
+
+1.  **🎓 Agent 0 (Curriculum Architect / Planner):** 
+    *   **Scope & Input**: Triggered when initiating a new major pathway (with `isCurriculum: true`). Takes the curriculum title and level (e.g., `L1 Philosophy`) and target language.
+    *   **Operation**: Queries the model to generate a rich, cohesive curriculum map containing modules, titles, Descriptions, volume (hrs), subjects, and mandatory/optional status.
+    *   **Output**: Immediately saves the parent curriculum metadata and bulk-inserts individual lesson-generation tasks into the `task_queue` database table to be picked up by the background worker.
+
+2.  **📋 Agent 1 & 2 (Course & Pedagogical Planner):**
+    *   **Scope & Input**: Triggered per-course during CRON task processing. Takes the course name, academic level, and target language.
+    *   **Operation**: Evaluates the discipline against our cognitive matrix (Deductive, Empirical, Discursive, or Engineering) and student age groups (CP-CM2 to University L3). 
+    *   **Output**: Synthesizes a structured JSON blueprint specifying:
+        *   An ordered list of lessons.
+        *   All lesson widgets / pre-requisites (`prerequisites`, `diagnosticQuiz`, `learningObjectives`, `finalEvaluation`, `glossary`, `whatsNext`).
+        *   A list of highly curated **scholarly bibliographies/references** (verified against Crossref and Google Books).
+        *   Active learning interactive components matching the discipline (e.g., `<FunctionPlotter />` for math/physics, `<CodeSandbox />` for CS, `<Mermaid />` flowcharts for history, `<StructureViewer3D />` for biology/chemistry).
+
+3.  **✍️ Agent 3 (Academic Writer):**
+    *   **Scope & Input**: Takes the lesson title, level, target language, and the Agent 1 & 2 pre-generated widgets and references.
+    *   **Operation**: Drafts the complete, dense, high-academic-density narrative text. Operates strictly under Socratic & Feynman heuristics to simplify concepts into clear language.
+    *   **Formatting Rules**:
+        *   MUST integrate the pre-generated widget anchors exactly once using the bracketed string syntax: `[[WIDGET:prerequisites]]`, `[[WIDGET:diagnosticQuiz]]`, etc.
+        *   MUST cite the pre-generated bibliography references inline inside the narrative using standard markdown link syntax (e.g. `[1](#ref-1)`, `[2](#ref-2)`), placed right next to facts or claims.
+
+4.  **🔍 Agent 4 (Verifier/Critic Agent):**
+    *   **Scope & Input**: Operates as a strict quality gate, reviewing the compiled course draft before persistence.
+    *   **Operation**: Evaluates the draft against our multi-checkpoint verification checklist (Zero-Placeholder, Academic Density, Structural Completeness, Multimedia Density, Assessment Integrity, existing artwork checks).
+    *   **Critic Relaxation (Unused References)**: Crucially, Agent 4 **never** rejects a lesson draft (approved remains `true`) under the pretext that a pre-generated reference was not cited inline, as unused references are handled automatically post-critique.
+    *   **Feedback Loop**: If checks fail, Agent 4 returns a critique, looping back to Agent 3 (Academic Writer) to expand or correct (maximum of 3 attempts).
 
 ---
 
-### Curriculum Generation Pipeline (Agent 0 & Queue Scheduler)
+### Programmatic Post-Processing & Stitching Layer
+Once the Verifier/Critic Agent (Agent 4) approves the drafted narrative text, the system bypasses the LLM and runs a programmatic, deterministic **Stitching Layer** (`stitchLessonContent` in `web/src/lib/ai.ts`) to merge the narrative and pre-generated widgets:
+
+```mermaid
+graph TD
+    Narrative[Agent 3 Narrative Text] --> Stitch[Stitching Layer: stitchLessonContent]
+    Widgets[Agent 1 & 2 Widget JSON] --> Stitch
+    Stitch --> Scan[Scan inline citations via getCitedReferenceNumbers]
+    
+    Scan -->|Cited Items| Cited[Format under '### Références' with [X] standard numbers]
+    Scan -->|Unused Items| Uncited[Format under '#### Lectures complémentaires' as plain, unnumbered bullets]
+    
+    Cited --> Final[Complete MDX Page persisted to DB]
+    Uncited --> Final
+```
+
+1.  **Widget Injections**: The bracketed widget anchors (e.g. `[[WIDGET:prerequisites]]`) inside the narrative are replaced by fully rendered React elements populated with the structured JSON data.
+2.  **References Parsing & Footnoting**:
+    *   The stitcher scans the narrative using a regex-based helper `getCitedReferenceNumbers` to identify which references were actually cited inline (`[X](#ref-X)`).
+    *   **Cited References**: Placed under the primary `### Références` (or `### References`) heading. They maintain standard brackets (`[1]`, `[2]`), which our interactive compiler on the frontend transforms into beautiful, clickable bottom-of-the-page footnotes with automatic scroll-jump back-links.
+    *   **Unused References**: Programmatically and silently demoted. They are formatted as **plain, unnumbered bullet points** and grouped under `#### Lectures complémentaires` (or `#### Further Reading`), without brackets, link highlights, or jump links, representing supplemental reading.
+    *   **Zero-Citations Fallback**: If zero references were cited, all references are listed under the main `### Références` heading as plain, unnumbered bullets, ensuring no broken interactive link anchors can ever render.
+
+---
+
+### Media Discovery, Wikimedia Commons, & Zero-AI-Fallback Policy
+To maintain absolute academic, scientific, and factual accuracy, OpenPrimer enforces a strict visual asset discovery and rendering policy:
+
+1.  **Strict "No Fallback to AI" Policy**:
+    *   Using AI image generation (`generate_image` or external Pollinations API) is **STRICTLY PROHIBITED** for all factual, scientific, and historical assets (such as molecular structures, chemical reactions, physical models, maps, country flags, monuments, and historical portraits/paintings).
+    *   If a genuine, legal, copyright-free image is not available from our database or public sources, **do not display any image** and **do not attempt to generate an AI fallback**. Simply omit the image entirely.
+
+2.  **Wikimedia Commons & Wikipedia Search Strategy**:
+    *   The `media-resolver.ts` engine uses a multi-step, robust image resolver (`fetchWikipediaImage`):
+        *   **Step A (Wikimedia Commons Search)**: Queries the Wikimedia Commons search API (media namespace 6) with the asset name. If a direct high-quality `.jpg`, `.png`, or `.svg` is found, it is resolved immediately.
+        *   **Step B (Wikipedia Page Search)**: If direct search fails, it fallbacks to a fuzzy page query against the localized Wikipedia Search API.
+        *   **Step C (Wikipedia Original Image Fetch)**: Retrieves the primary original source image of the matched page.
+        *   **Step D (English Wiki Fallback)**: If localized searches fail, it runs the query against the English Wikipedia API as a final fallback.
+    *   Factual images are classified automatically via `isFactualMedia` to prevent utilizing generic decorative images for academic/scientific concepts.
+
+---
+
+### YouTube Video Scraping vs. Official API
+Rather than using the official *YouTube Data API v3*, OpenPrimer implements a custom, highly reliable, recursive scrape and parse engine (`searchYouTubeVideo` in `web/src/lib/media-resolver.ts` and `ai.ts`):
+
+#### Why do we avoid the official YouTube Data API?
+*   **Quota Limits**: The YouTube Data API v3 enforces a default daily limit of **10,000 units**. A single search query costs **100 units**, meaning a server is capped at just **100 video searches per day** across all users. For a collaborative academic engine generating full courses, this quota is exhausted in minutes.
+*   **API Key Friction**: The official API requires each local developer to register a Google Cloud Console project, configure OAuth/API credentials, and maintain API keys. This introduces significant setup friction.
+*   **Decoupled & Unlimited**: Scraping the public YouTube search results directly requires **zero API keys/registration** and has **zero quota limits**, enabling unlimited academic video enrichment out of the box.
+
+#### How does our search YouTube scraping work?
+1.  **Request & User-Agent**: Performs a fast HTTP GET request to `https://www.youtube.com/results?search_query=[Query]` mimicking a modern web browser.
+2.  **`ytInitialData` Extraction**: Extracts the client-side JavaScript initialization object `ytInitialData = {...}` embedded in the HTML response. If the simple regex fails, a brace-matching recursive parser extracts the exact JSON substring.
+3.  **Recursive Renderer Parser (`findRenderers`)**: Recursively traverses the parsed object to locate all `videoRenderer` nodes. It extracts the `videoId`, `title`, and approximates the `viewCount` text (handling international abbreviations like `k` for thousands, `m` for millions).
+4.  **Popularity Sorting & Validation**:
+    *   Takes the top 5 results, sorts them by `viewCount` descending (ensuring the most popular, high-quality, and active educational content is selected).
+    *   Calls a fast, lightweight validation probe (`validateYouTubeVideo` calling `oembed`) to ensure the selected video ID exists, is public, and is not a dead link or template placeholder.
+
+---
+
+### Detailed Curriculum Ingestion Workflow (Agent 0 & Queue Scheduler)
 
 The initiation of academic pathways is orchestrated in a decoupled, queue-centric model to prevent request timeouts and support large-scale program generation.
 

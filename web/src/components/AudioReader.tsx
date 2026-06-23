@@ -1715,7 +1715,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                 ? currentTutorSentenceIndex <= 0 
                 : currentSentenceIndex <= 0
             }
-            className="p-1 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors shrink-0"
             title="Previous Sentence"
             aria-label="Previous sentence"
           >
@@ -1724,7 +1724,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
           <button
             onClick={togglePlay}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center animate-fade-in cursor-pointer"
+            className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center shrink-0 cursor-pointer"
             title={isPlaying && !isPaused ? "Pause (Alt+S)" : "Play / Resume (Alt+S)"}
             aria-label={isPlaying && !isPaused ? "Pause speech" : "Play or resume speech"}
           >
@@ -1738,15 +1738,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
           <button
             onClick={stop}
             disabled={!isPlaying}
-            className={`p-1.5 rounded-full transition-all duration-300 flex items-center justify-center ${
+            className={`w-8 h-8 rounded-full transition-all duration-300 flex items-center justify-center shrink-0 ${
               isPlaying
-                ? 'bg-slate-800/80 text-rose-400 hover:text-rose-100 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-400/50 shadow-lg cursor-pointer'
+                ? 'bg-slate-800/80 text-slate-300 hover:text-slate-100 hover:bg-slate-700 border border-slate-700/80 shadow-lg cursor-pointer'
                 : 'bg-slate-950/40 text-slate-600 border border-transparent opacity-30 cursor-not-allowed'
             }`}
             title="Stop (Alt+Q)"
             aria-label="Stop speech"
           >
-            <Square className={`w-2.5 h-2.5 ${isPlaying ? 'fill-rose-400' : 'fill-slate-600'}`} />
+            <Square className={`w-2.5 h-2.5 ${isPlaying ? 'fill-slate-300' : 'fill-slate-600'}`} />
           </button>
 
           <button
@@ -1756,7 +1756,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
                 ? currentTutorSentenceIndex >= tutorSentences.length - 1 
                 : currentSentenceIndex >= sentences.length - 1
             }
-            className="p-1 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors shrink-0"
             title="Next Sentence"
             aria-label="Next sentence"
           >

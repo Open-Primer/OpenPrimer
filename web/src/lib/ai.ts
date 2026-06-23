@@ -459,6 +459,37 @@ export function validateAndFixWidgets(widgets: any): any {
   return widgets;
 }
 
+export function getCitedReferenceNumbers(narrativeText: string): Set<number> {
+  const cited = new Set<number>();
+  
+  // 1. Match [X](#ref-X)
+  const mdLinkRegex = /\[(\d+)\]\(#ref-\1\)/g;
+  let match;
+  while ((match = mdLinkRegex.exec(narrativeText)) !== null) {
+    cited.add(parseInt(match[1], 10));
+  }
+
+  // 2. Match href="#ref-X" or href='#ref-X'
+  const hrefRegex = /href=["']#ref-(\d+)["']/g;
+  while ((match = hrefRegex.exec(narrativeText)) !== null) {
+    cited.add(parseInt(match[1], 10));
+  }
+
+  // 3. Match refNum={X}
+  const refNumRegex = /refNum=\{\s*(\d+)\s*\}/g;
+  while ((match = refNumRegex.exec(narrativeText)) !== null) {
+    cited.add(parseInt(match[1], 10));
+  }
+
+  // 4. Match <sup>X</sup> or <sup>[X]</sup> or similar
+  const supRegex = /<sup>\s*\[?(\d+)\]?\s*<\/sup>/gi;
+  while ((match = supRegex.exec(narrativeText)) !== null) {
+    cited.add(parseInt(match[1], 10));
+  }
+
+  return cited;
+}
+
 export function stitchLessonContent(narrativeMdx: string, widgets: any): string {
   let content = narrativeMdx.trim();
 
@@ -560,7 +591,15 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     }
   });
 
-  const whatsNextStr = `<WhatsNext>\n  ${widgets.whatsNext.steps.map((s: any) => `<WhatsNextStep title="${s.title.replace(/"/g, '&quot;')}" description="${s.description.replace(/"/g, '&quot;')}" slug="${s.slug}" />`).join('\n  ')}\n</WhatsNext>`;
+  const parsedSteps = (widgets.whatsNext.steps || []).map((s: any) => ({
+    title: s.title || '',
+    description: s.description || '',
+    slug: s.slug || '',
+    subject: s.subject || '',
+    level: s.level || ''
+  }));
+  const stepsEncoded = Buffer.from(JSON.stringify(parsedSteps)).toString('base64');
+  const whatsNextStr = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
   
   if (content.includes('[[WIDGET:whatsNext]]')) {
     content = content.replace('[[WIDGET:whatsNext]]', whatsNextStr);
@@ -601,7 +640,40 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   const glossaryStr = `\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
   content = content + glossaryStr;
 
-  const referencesStr = `\n\n### Références\n\n${widgets.references.map((r: string) => `* ${r}`).join('\n')}`;
+  // Extract all cited reference numbers from the narrative text
+  const citedRefs = getCitedReferenceNumbers(content);
+
+  // Group references into cited and uncited
+  const citedList: string[] = [];
+  const uncitedList: string[] = [];
+
+  widgets.references.forEach((ref: string, idx: number) => {
+    const refNum = idx + 1;
+    const cleanRef = ref.replace(/^\[\d+\]\s*/, '');
+    if (citedRefs.has(refNum)) {
+      citedList.push(`* [${refNum}] ${cleanRef}`);
+    } else {
+      uncitedList.push(`* ${cleanRef}`);
+    }
+  });
+
+  // Build references section based on target language keywords in content
+  const isFr = content.toLowerCase().includes('présentation') || content.toLowerCase().includes('introduction') || content.toLowerCase().includes('références') || content.toLowerCase().includes('glossaire');
+  const refHeading = isFr ? '### Références' : '### References';
+  const readingHeading = isFr ? '#### Lectures complémentaires' : '#### Further Reading';
+
+  let referencesStr = '';
+  if (citedList.length > 0) {
+    referencesStr += `\n\n${refHeading}\n\n${citedList.join('\n')}`;
+  } else {
+    // Fallback if none are cited: render them all under primary heading as plain bullets
+    referencesStr += `\n\n${refHeading}\n\n${uncitedList.join('\n')}`;
+  }
+
+  if (citedList.length > 0 && uncitedList.length > 0) {
+    referencesStr += `\n\n${readingHeading}\n\n${uncitedList.join('\n')}`;
+  }
+
   content = content + referencesStr;
 
   content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
@@ -979,11 +1051,20 @@ Avant de générer le moindre chapitre, tu dois classifier la discipline cible s
 
 ---
 
-# ETAPE 2 : ADAPTATION AU PUBLIC (GRADATION COGNITIVE)
-Le plan doit refléter la capacité d'abstraction du public cible :
-* **Primaire (CP-CM2) :** Approche narrative, inductive et ultra-visuelle. Le plan doit utiliser des métaphores concrètes. Maximum 3 grands axes très cours.
-* **Collège/Lycée :** Transition vers la formalisation. Introduction des méthodes de la discipline (comment pense un historien ? comment calcule un physicien ?).
-* **Supérieur (L1-L3) :** Formalisme académique strict, épistémologique et critique. Le plan doit inclure l'étude des limites des modèles présentés.
+# ETAPE 2 : ADAPTATION AU PUBLIC (GRADATION COGNITIVE ET COHÉRENCE COGNITIVE NATURELLE)
+Le plan de cours doit refléter fidèlement la capacité d'abstraction et la structure d'apprentissage naturelle du public cible :
+
+1. **Primaire, Collège et Lycée (K-12 : de foundation_1 à preuni) :**
+   * **Rapprochement des parcours réels :** À l'école, l'enseignement ne se fait pas par cours cloisonnés hyper-spécifiques. Si le cours demandé porte sur un programme annuel général (ex: "Mathématiques de 3ème"), le syllabus doit proposer un découpage thématique réaliste et équilibré couvrant les grands piliers officiels (ex: Géométrie, Fonctions, Équations). 
+   * **Apprentissage en spirale (Spiralaire) :** Les mêmes concepts clés (ex: fractions, vecteurs, géométrie) sont revisités d'année en année avec un niveau d'abstraction croissant. Si le cours porte sur un concept ciblé (ex: "Géométrie au Collège"), structure les leçons de façon progressive en rappelant explicitement les notions acquises dans les classes précédentes et en connectant logiquement chaque chapitre à l'ossature générale de l'apprentissage annuel réel.
+   * **Règles de cadrage & taille :**
+     * *Primaire (foundation_1 & foundation_2) :* Approche narrative, métaphorique et inductive. Maximum 3 leçons très courtes au total (y compris l'Introduction et l'Évaluation Finale).
+     * *Collège/Lycée (secondary_1 & secondary_2) :* Transition graduelle vers la formalisation, rigueur croissante. Introduction des méthodes propres à la pensée disciplinaire. 4 à 6 leçons bien distinctes au total (y compris l'Introduction et l'Évaluation Finale).
+
+2. **Enseignement Supérieur / Université (L1 à M2 / de beginner à expert) :**
+   * *Licence 1 (L1 / Bachelor 1er) :* Les cours doivent être généraux, fondateurs et introductifs (ex: "Introduction à l'Algèbre Linéaire", "Fondements de la Thermodynamique"). Ils doivent poser les concepts clés, le vocabulaire universel et la rigueur méthodologique globale de la discipline.
+   * *Licence 2 & Licence 3 (L2-L3) :* Transition vers la modélisation formelle et l'étude des sous-branches précises avec un formalisme académique strict, des preuves formelles et une analyse critique des limites des modèles étudiés.
+   * *Master 1 & Master 2 (M1-M2 / advanced & expert) :* Les cours doivent basculer intégralement sur de **l'ultra-spécialisation de pointe**, axée sur des sujets de recherche avancés, pointus et extrêmement techniques (ex: "Méthodes numériques pour la dynamique des fluides turbulents", "Neurobiologie de la transmission synaptique"). Aucun cours généraliste ou d'introduction globale ne doit être généré à ce niveau.
 
 ---
 
@@ -1369,6 +1450,10 @@ LIST OF GENERATED WIDGETS AT YOUR DISPOSAL (INSERT EACH EXACTLY ONCE):
 - **What's Next steps block**: [[WIDGET:whatsNext]] (Insert at the very end of the Conclusion section).
 - **Final Exam block**: [[WIDGET:finalEvaluation]] (Insert after the Conclusion section, as the ultimate validation).
 
+- **Pre-generated bibliography/references (YOU MUST CITE THESE INLINE IN YOUR TEXT)**:
+${(parsedWidgets.references || []).map((r: string, idx: number) => `  - [${idx + 1}] ${r}`).join('\n')}
+*Mandate*: Integrate inline citations into your text to credit these specific resources. Format them exactly as standard inline links, for example: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc., placed right next to the corresponding fact, claim, or quote.
+
 INTERACTIVE COMPONENTS (INSERT EACH EXACTLY ONCE IN THE RESPECTIVE SECTION BODY):
 ${parsedWidgets.interactiveComponents.map((comp: any) => `
 - Component ID: "\${comp.id}"
@@ -1399,6 +1484,8 @@ ${widgetsDescription}
    - Systematically weave high-impact, contextually relevant quotes from notable thinkers and scientists formatted as:
      > "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. Page
      Every quote must be in the course language (or translated in brackets immediately following the quote) and must be followed by a dedicated paragraph explaining its conceptual implications.
+2b. **In-text Bibliography Citations**:
+   - Cite the pre-generated bibliography references listed in the widgets description inside your narrative text using standard markdown links: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc. at appropriate, highly relevant academic moments.
 3. **Controlled Digressions (Encadrés Épistémologiques)**:
    - If the level is university level (L1, L2, L3), systematically insert at least one historical controversy or limits-of-concept box:
      <Epistemology title="Title of Digression">Detailed epistemological discussion...</Epistemology>
@@ -1530,6 +1617,7 @@ Your Checkpoints:
    - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
    - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary.
      - Check formatting of bibliography references: verify that (a) they do NOT contain raw URLs, hyperlinks, or markdown link syntax in the citation text; (b) book/article titles inside the citation text must be wrapped in standard quotation marks (or French guillemets « ... » for French lessons) and NEVER in asterisks (*) or underscores (_); and (c) the citation format matches the discipline-appropriate style expected for the course (i.e., **${getCitationStyle(courseContext.discipline || correctedCourseName).name}**) — for example, APA 7 for psychology/social sciences, Vancouver for medicine, Chicago Notes-Bibliography for history/philosophy, IEEE for engineering/CS, CSE for biology, Bluebook/OSCOLA for law, etc. Reject if references are in plainly wrong format for the discipline.
+     - **CRITICAL**: You must NEVER reject or fail a lesson draft (approved must remain true) under the pretext that a pre-generated reference from the list was not cited or used inline in the text. Unused references are automatically and silently handled during programmatic post-processing/stitching. Simply evaluate the references that ARE present.
 4. "Multimedia, Illustrations, & Non-Text Media Density":
    This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${levelInput}", course: "${correctedCourseName}"):
    - Verify that the image density conforms to age-adaptation: for primary CP-CM2, reject if text dominates over visuals/simulators (the text/image ratio must be reversed: let visuals, games, and simulations dominate, and keep text explanations short and simple).
@@ -1655,6 +1743,10 @@ LIST OF PRE-GENERATED WIDGETS AT YOUR DISPOSAL (YOU MUST PRESERVE AND INSERT EAC
 - What's Next steps block: [[WIDGET:whatsNext]]
 - Final Exam block: [[WIDGET:finalEvaluation]]
 ${parsedWidgets.interactiveComponents.map((comp: any) => `- Component ID: "${comp.id}" -> Anchor: [[WIDGET:${comp.id}]] (Component Type: "${comp.componentType}", planned for "${comp.sectionAnchor}")`).join('\n')}
+
+LIST OF PRE-GENERATED REFERENCES FOR THIS LESSON (YOU MUST CITE EVERY RELEVANT ITEM INLINE):
+${(parsedWidgets.references || []).map((r: string, idx: number) => `- [${idx + 1}] ${r}`).join('\n')}
+*Mandate*: Preserve and integrate inline citations for these specific resources. Format them exactly as standard inline links, for example: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc., placed right next to the corresponding fact, claim, or quote.
 
 Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
 STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS:
@@ -3161,82 +3253,114 @@ INSTRUCTIONS:
   return repairedMdx;
 }
 
+// Recursive ytInitialData parser to extract search result videos
+async function searchYouTubeVideo(query: string): Promise<string | null> {
+  try {
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const res = await fetchWithTimeout(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
+      }
+    }, 5000);
+    if (!res.ok) return null;
+    const html = await res.text();
+    
+    // Extract ytInitialData
+    let ytInitialData = null;
+    const jsonMatch = html.match(/ytInitialData\s*=\s*({[\s\S]+?});/);
+    if (jsonMatch) {
+      try {
+        ytInitialData = JSON.parse(jsonMatch[1]);
+      } catch (e) {
+        // Fallback brace matching if parsing failed
+        const startIdx = html.indexOf('ytInitialData = {');
+        if (startIdx !== -1) {
+          const start = html.indexOf('{', startIdx);
+          let braceCount = 1;
+          let i = start + 1;
+          while (i < html.length && braceCount > 0) {
+            if (html[i] === '{') braceCount++;
+            else if (html[i] === '}') braceCount--;
+            i++;
+          }
+          if (braceCount === 0) {
+            try {
+              ytInitialData = JSON.parse(html.substring(start, i));
+            } catch {}
+          }
+        }
+      }
+    }
+
+    const videos: any[] = [];
+
+    if (ytInitialData) {
+      const findRenderers = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        if (obj.videoRenderer) {
+          const vr = obj.videoRenderer;
+          const videoId = vr.videoId;
+          let title = '';
+          if (vr.title?.runs?.[0]?.text) title = vr.title.runs[0].text;
+          else if (vr.title?.simpleText) title = vr.title.simpleText;
+
+          let viewStr = '';
+          if (vr.viewCountText?.simpleText) viewStr = vr.viewCountText.simpleText;
+          else if (vr.shortViewCountText?.simpleText) viewStr = vr.shortViewCountText.simpleText;
+
+          let durationStr = '';
+          if (vr.lengthText?.simpleText) durationStr = vr.lengthText.simpleText;
+
+          if (videoId && videoId.length === 11) {
+            let multiplier = 1;
+            const cleanStr = viewStr.toLowerCase().replace(/[^0-9kmy\s.,]/g, '').trim();
+            if (cleanStr.includes('k')) multiplier = 1000;
+            else if (cleanStr.includes('m')) multiplier = 1000000;
+            else if (cleanStr.includes('b') || cleanStr.includes('g')) multiplier = 1000000000;
+            else if (cleanStr.includes('mille')) multiplier = 1000;
+            else if (cleanStr.includes('million')) multiplier = 1000000;
+
+            const valMatch = cleanStr.match(/([0-9]+(?:[.,][0-9]+)?)/);
+            const viewCount = valMatch ? parseFloat(valMatch[1].replace(',', '.')) * multiplier : 0;
+
+            videos.push({ videoId, title, viewCount, duration: durationStr });
+          }
+          return;
+        }
+        for (const key of Object.keys(obj)) {
+          findRenderers(obj[key]);
+        }
+      };
+
+      findRenderers(ytInitialData);
+    }
+
+    if (videos.length > 0) {
+      const topCandidates = videos.slice(0, 5);
+      topCandidates.sort((a, b) => b.viewCount - a.viewCount);
+      console.log(`[YOUTUBE-SCRAPER] Sorted top candidates by viewCount:`, topCandidates.map(v => `${v.videoId} (${v.viewCount} views): "${v.title}"`));
+      return topCandidates[0].videoId;
+    }
+
+    const fallbackMatch = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
+    if (fallbackMatch && fallbackMatch[1]) {
+      return fallbackMatch[1];
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] YouTube search failed for query "${query}":`, err);
+    return null;
+  }
+}
+
 async function findAlternativeVideo(title: string, lang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
   console.log(`[ALTERNATIVE SEARCH] Searching alternative video for title: "${title}" (${lang})...`);
-  const queries = [
-    title,
-    `${title} educational video`,
-    `${title} lecture`
-  ];
-  
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const query = queries[attempt];
-    console.log(`[ALTERNATIVE SEARCH] Video Search Attempt ${attempt + 1}/3 with query: "${query}"`);
-    
-    const prompt = `You are a Research Agent (Agent C).
-Find a real, public, educational YouTube or Vimeo video about: "${query}".
-The video must be in language: "${lang}".
-It must be a real video ID that exists. Do not invent video IDs.
-If you know a real, highly popular video, output its ID (11 characters for YouTube) or URL.
-Output JSON only:
-{
-  "provider": "youtube",
-  "id": "11-character-id-here"
-}
-If you cannot find any real video, output: {}`;
-
-    try {
-      let rawJson = '';
-      if (isVertexConfigured()) {
-        const res = await callVertexAI({
-          task: 'course_generation',
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: "application/json",
-            responseSchema: videoSearchSchema
-          }
-        });
-        if (res && res.ok) {
-          const jsonRes = await res.json();
-          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        }
-      } else if (apiKey) {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: "application/json",
-              responseSchema: videoSearchSchema
-            }
-          })
-        });
-        if (res.ok) {
-          const jsonRes = await res.json();
-          rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        }
-      }
-
-      if (rawJson) {
-        const cleaned = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = safeJsonParse(cleaned, 'Video Search Alternative');
-        if (data.id || data.url) {
-          const providerStr = data.provider || 'youtube';
-          const videoTag = `<Video id="${data.id || ''}" url="${data.url || ''}" provider="${providerStr}" />`;
-          const isReachable = await isVideoReachable(videoTag);
-          if (isReachable) {
-            console.log(`[ALTERNATIVE SEARCH] Found valid alternative video: ID=${data.id}, URL=${data.url}`);
-            return { id: data.id, url: data.url, provider: providerStr };
-          }
-        }
-      }
-    } catch (err) {
-      console.warn(`[ALTERNATIVE SEARCH] Video search exception on attempt ${attempt + 1}:`, err);
-    }
+  const query = lang.toLowerCase() === 'fr' ? `${title} explication cours` : `${title} educational explanation`;
+  const videoId = await searchYouTubeVideo(query);
+  if (videoId) {
+    return { id: videoId, provider: 'youtube' };
   }
-  
   return null;
 }
 
@@ -3768,9 +3892,21 @@ export async function generateCurriculum(curriculumName: string, levelInput: str
   const level = normalizeLevel(levelInput);
 
   const promptCurriculum = `You are a Curriculum Planner Agent (Agent 0). Your goal is to structure a full academic curriculum for "${curriculumName}" at the level "${level}".
-You must model this curriculum on real-world academic programs (curriculums and syllabus guidelines from schools and universities) for this specific discipline and level.
+You must model this curriculum on real-world academic programs (curriculums and syllabus guidelines from schools and universities) for this specific discipline and level, ensuring they reflect natural and realistic educational paths:
+
+1. **Primary, Middle, and High School Levels (K-12: foundation_1, foundation_2, secondary_1, secondary_2, preuni):**
+   - **Integrated Grade-Level Curriculum:** At school levels, curricula are not divided into highly specialized, isolated courses. Instead, students follow a unified, comprehensive annual course (e.g., "Mathematics Grade 9", "Biology & Geology Grade 10") that covers multiple key branches.
+   - **Balanced Subject Coverage:** Your curriculum should structure courses that represent the general annual subjects or clear progressive units of that grade level, covering topics in a logical, balanced sequence (e.g., alternating between algebra, geometry, and functions for a high school math curriculum).
+   - **Spiral Progression:** Design the courses to respect spiral learning—revisiting core themes at increasing levels of depth, explicitly building upon what was learned in previous school years.
+   - **Simplicity & Scope:** Keep the number of courses/modules modest (typically 1 to 5 main units or modules representing the annual program).
+
+2. **Higher Education / University Levels (L1, L2, L3, M1, M2):**
+   - **First Year (L1 / Bachelor 1):** Curricula must consist of **broad, introductory, and foundational courses** (e.g., "Introduction to Classical Mechanics", "Foundations of Organic Chemistry", "General Sociology") to establish core concepts, terminology, and historical context across the entire discipline. Avoid any premature narrow specialization.
+   - **Gradual Specialization (L2, L3):** Curricula transition to focused sub-fields and formal methodology (e.g., "Thermodynamics", "Electromagnetism") with increased academic rigor, proofs, and critical model evaluation.
+   - **Master's and Expert Levels (M1, M2):** Curricula must shift entirely to **highly specialized, advanced research-grade, or professional courses** focusing on narrow, cutting-edge topics (e.g., "Relativistic Quantum Electrodynamics", "Synaptic Plasticity & Memory Consolidation", "Phenomenology of Perception"). Do not include broad, general, or general-introduction courses at the Master's level.
+
 Be flexible:
-- Adjust the number of courses (typically between 5 and 15 courses) and credit/hour volumes based on the actual complexity and standard requirements of the level and discipline.
+- Adjust the number of courses (typically between 1 and 5 for school levels, and between 5 and 15 courses for university levels) and credit/hour volumes based on the actual complexity and standard requirements of the level and discipline.
 - Categorize courses as either "mandatory" (obligatoire) or "optional" (optionnel). Note that some curricula may consist entirely of mandatory courses (0 optional courses) if that aligns with standard program progressions.
 
 You must return a valid JSON object with the following keys:

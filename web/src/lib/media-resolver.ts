@@ -31,6 +31,23 @@ async function safeResponseJson(res: Response, contextName: string = 'unknown'):
   }
 }
 
+function getSafeExtension(contentType: string, defaultExt: string = 'jpg'): string {
+  if (!contentType) return defaultExt;
+  const mainType = contentType.split(';')[0].trim();
+  const parts = mainType.split('/');
+  let ext = parts[parts.length - 1] || defaultExt;
+  ext = ext.replace(/[^a-zA-Z0-9]/g, '');
+  if (ext === 'jpeg') return 'jpeg';
+  if (ext === 'png') return 'png';
+  if (ext === 'gif') return 'gif';
+  if (ext === 'svgxml' || ext === 'svg') return 'svg';
+  if (ext === 'webp') return 'webp';
+  if (ext === 'mpeg' || ext === 'mp3') return 'mp3';
+  if (ext === 'wav') return 'wav';
+  if (ext === 'ogg') return 'ogg';
+  return ext || defaultExt;
+}
+
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
   const controller = new AbortController();
@@ -173,48 +190,103 @@ async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeTyp
   }
 }
 
-// Wikipedia Image Fetcher
-async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<string | null> {
-  try {
-    const cleanTitle = title.trim().replace(/\s+/g, '_');
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original&titles=${encodeURIComponent(cleanTitle)}&format=json&origin=*`;
-    const res = await fetchWithTimeout(url, {}, 4000);
-    if (!res.ok) return null;
-    
-    const json = await safeResponseJson(res, 'Wikipedia image fetch');
-    const pages = json.query?.pages;
-    if (!pages) return null;
-    
-    const pageId = Object.keys(pages)[0];
-    if (pageId === '-1') {
-      // If language specific search failed, fallback to English wiki
-      if (lang !== 'en') {
-        return fetchWikipediaImage(title, 'en');
-      }
-      return null;
-    }
-    
-    return pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source || null;
-  } catch (err) {
-    console.warn(`[MEDIA-RESOLVER] Failed to fetch Wikipedia image for ${title}:`, err);
-    return null;
-  }
-}
-
-// YouTube search scraper (no key needed)
+// Recursive ytInitialData parser to extract search result videos
 async function searchYouTubeVideo(query: string): Promise<string | null> {
   try {
     const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
     const res = await fetchWithTimeout(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
       }
     }, 5000);
     if (!res.ok) return null;
     const html = await res.text();
-    const match = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
-    if (match && match[1]) {
-      return match[1];
+    
+    // Extract ytInitialData
+    let ytInitialData: any = null;
+    const jsonMatch = html.match(/ytInitialData\s*=\s*({[\s\S]+?});/);
+    if (jsonMatch) {
+      try {
+        ytInitialData = JSON.parse(jsonMatch[1]);
+      } catch (e) {
+        // Fallback brace matching if parsing failed
+        const startIdx = html.indexOf('ytInitialData = {');
+        if (startIdx !== -1) {
+          const start = html.indexOf('{', startIdx);
+          let braceCount = 1;
+          let i = start + 1;
+          while (i < html.length && braceCount > 0) {
+            if (html[i] === '{') braceCount++;
+            else if (html[i] === '}') braceCount--;
+            i++;
+          }
+          if (braceCount === 0) {
+            try {
+              ytInitialData = JSON.parse(html.substring(start, i));
+            } catch {}
+          }
+        }
+      }
+    }
+
+    const videos: { videoId: string; title: string; viewCount: number; duration: string }[] = [];
+
+    if (ytInitialData) {
+      // Helper function to recursively find all videoRenderers
+      const findRenderers = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        if (obj.videoRenderer) {
+          const vr = obj.videoRenderer;
+          const videoId = vr.videoId;
+          let title = '';
+          if (vr.title?.runs?.[0]?.text) title = vr.title.runs[0].text;
+          else if (vr.title?.simpleText) title = vr.title.simpleText;
+
+          let viewStr = '';
+          if (vr.viewCountText?.simpleText) viewStr = vr.viewCountText.simpleText;
+          else if (vr.shortViewCountText?.simpleText) viewStr = vr.shortViewCountText.simpleText;
+
+          let durationStr = '';
+          if (vr.lengthText?.simpleText) durationStr = vr.lengthText.simpleText;
+
+          if (videoId && videoId.length === 11) {
+            // Parse approximate view count
+            let multiplier = 1;
+            const cleanStr = viewStr.toLowerCase().replace(/[^0-9kmy\s.,]/g, '').trim();
+            if (cleanStr.includes('k')) multiplier = 1000;
+            else if (cleanStr.includes('m')) multiplier = 1000000;
+            else if (cleanStr.includes('b') || cleanStr.includes('g')) multiplier = 1000000000;
+            else if (cleanStr.includes('mille')) multiplier = 1000;
+            else if (cleanStr.includes('million')) multiplier = 1000000;
+
+            const valMatch = cleanStr.match(/([0-9]+(?:[.,][0-9]+)?)/);
+            const viewCount = valMatch ? parseFloat(valMatch[1].replace(',', '.')) * multiplier : 0;
+
+            videos.push({ videoId, title, viewCount, duration: durationStr });
+          }
+          return;
+        }
+        for (const key of Object.keys(obj)) {
+          findRenderers(obj[key]);
+        }
+      };
+
+      findRenderers(ytInitialData);
+    }
+
+    if (videos.length > 0) {
+      // Sort by popularity viewCount descending as instructed
+      const topCandidates = videos.slice(0, 5);
+      topCandidates.sort((a, b) => b.viewCount - a.viewCount);
+      console.log(`[YOUTUBE-SCRAPER] Sorted top candidates by viewCount:`, topCandidates.map(v => `${v.videoId} (${v.viewCount} views): "${v.title}"`));
+      return topCandidates[0].videoId;
+    }
+
+    // Ultrafallback regex match if JSON parsing failed completely
+    const fallbackMatch = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
+    if (fallbackMatch && fallbackMatch[1]) {
+      return fallbackMatch[1];
     }
     return null;
   } catch (err) {
@@ -233,6 +305,109 @@ async function validateYouTubeVideo(videoId: string): Promise<boolean> {
     return true; // Assume exists for other statuses (e.g. 429, 403) to prevent false-negative repairs
   } catch (err) {
     return true; // Network/rate limit: assume OK
+  }
+}
+
+// Classifier to differentiate factual/scientific visual assets from general illustrative ones
+export function isFactualMedia(alt: string, caption: string): boolean {
+  const text = `${alt} ${caption}`.toLowerCase();
+  
+  // Terms representing general, contextual illustrations (as defined by user)
+  const generalContexts = [
+    'discutent', 'discuter', 'travail', 'bureau', 'office', 'street', 'rue', 'passant', 'gens dans la rue', 'people talking',
+    'étudiant', 'etudiant', 'salle de classe', 'classroom', 'bibliothèque', 'library', 'study', 'étudier', 'etudier'
+  ];
+  
+  const isDecorative = generalContexts.some(term => text.includes(term));
+  if (isDecorative) {
+    // Check if it also contains highly specific factual terms that override decorative status
+    const overrides = ['chapelle', 'molécule', 'molecule', 'structure', 'carte', 'bataille', 'battle', 'portrait', 'einstein', 'peinture', 'painting'];
+    const hasOverride = overrides.some(term => text.includes(term));
+    if (!hasOverride) {
+      return false; 
+    }
+  }
+  
+  const factualTerms = [
+    'molécule', 'molecule', 'structure', 'atome', 'chimique', 'reaction', 'réaction', 'formule',
+    'chapelle', 'monument', 'sculpture', 'tableau', 'peinture', 'painting', 'fresque', 'fresco',
+    'portrait', 'photographie historique', 'historical photo', 'carte', 'map', 'géographie', 'geography',
+    'bataille', 'guerre', 'battle', 'war', 'empire', 'dynastie', 'dynasty',
+    'physique', 'physics', 'mathématique', 'mathematics', 'géométrie', 'geometry', 'fonction', 'plot', 'courbe', 'curve',
+    'graphe', 'graph', 'diagramme', 'diagram', 'schéma', 'schema',
+    'neuro', 'neurone', 'synapse', 'cerveau', 'brain', 'cellule', 'cell', 'adn', 'dna', 'protéine', 'protein',
+    'einstein', 'bach', 'beethoven', 'mozart', 'gogh', 'picasso', 'da vinci', 'rembrandt', 'aristote', 'platon', 'aristotle', 'plato', 'descartes', 'kant', 'marx'
+  ];
+  
+  return factualTerms.some(term => text.includes(term)) || text.length < 3;
+}
+
+// Media-specific search prioritising Wikimedia Commons search first, and Wikipedia Search API second with English fallback
+async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<string | null> {
+  try {
+    const cleanTitle = title.trim();
+    
+    // Step A: Search Wikimedia Commons API (media repository) first
+    const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanTitle)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    try {
+      const commRes = await fetchWithTimeout(commonsUrl, {}, 4000);
+      if (commRes.ok) {
+        const commJson = await commRes.json();
+        const pages = commJson.query?.pages;
+        if (pages) {
+          for (const key of Object.keys(pages)) {
+            const imgInfo = pages[key]?.imageinfo?.[0];
+            const fileUrl = imgInfo?.url;
+            if (fileUrl && (
+              fileUrl.endsWith('.jpg') || 
+              fileUrl.endsWith('.jpeg') || 
+              fileUrl.endsWith('.png') || 
+              fileUrl.endsWith('.svg') || 
+              fileUrl.endsWith('.webp')
+            )) {
+              console.log(`[WIKIMEDIA-SEARCH] Found direct media URL for "${cleanTitle}": ${fileUrl}`);
+              return fileUrl;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[WIKIMEDIA-SEARCH] Direct Commons search failed for "${cleanTitle}":`, err);
+    }
+
+    // Step B: Fallback to Wikipedia Search API (fuzzy page query)
+    const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanTitle)}&format=json&origin=*`;
+    const searchRes = await fetchWithTimeout(searchUrl, {}, 4000);
+    if (!searchRes.ok) return null;
+    const searchJson = await safeResponseJson(searchRes, 'Wikipedia page search');
+    const searchResults = searchJson.query?.search;
+    
+    if (!searchResults || searchResults.length === 0) {
+      // Try English search as final fallback
+      if (lang !== 'en') {
+        return fetchWikipediaImage(title, 'en');
+      }
+      return null;
+    }
+    
+    const pageTitle = searchResults[0].title;
+    console.log(`[WIKIPEDIA-SEARCH] Found matching article page: "${pageTitle}" for query "${cleanTitle}"`);
+    
+    // Step C: Retrieve original image from page title
+    const pageImgUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original&titles=${encodeURIComponent(pageTitle)}&format=json&origin=*`;
+    const imgRes = await fetchWithTimeout(pageImgUrl, {}, 4000);
+    if (!imgRes.ok) return null;
+    const imgJson = await safeResponseJson(imgRes, 'Wikipedia pageimage fetch');
+    const pages = imgJson.query?.pages;
+    if (!pages) return null;
+    
+    const pageId = Object.keys(pages)[0];
+    if (pageId === '-1') return null;
+    
+    return pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source || null;
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] fetchWikipediaImage failed for "${title}":`, err);
+    return null;
   }
 }
 
@@ -564,7 +739,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       // Step D: Upload whichever buffer we have to Supabase Storage and replace URL
       if (audioBuffer) {
         const hash = crypto.createHash('md5').update(customText || title).digest('hex');
-        const ext = mimeType.split('/')[1] || 'mp3';
+        const ext = getSafeExtension(mimeType, 'mp3');
         const fileName = `audio_${hash}.${ext}`;
         
         console.log(`[MEDIA-RESOLVER] Uploading resolved audio to Supabase Storage: ${fileName}`);
@@ -640,9 +815,9 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           }
         }
 
-        if (buffer) {
+        if (buffer && !contentType.toLowerCase().includes('text/html')) {
           const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-          const ext = contentType.split('/')[1] || 'jpg';
+          const ext = getSafeExtension(contentType, 'jpg');
           const fileName = `img_${hash}.${ext}`;
           
           const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
@@ -721,9 +896,9 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           }
         }
 
-        if (buffer) {
+        if (buffer && !contentType.toLowerCase().includes('text/html')) {
           const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-          const ext = contentType.split('/')[1] || 'jpg';
+          const ext = getSafeExtension(contentType, 'jpg');
           const fileName = `img_${hash}.${ext}`;
           
           const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
@@ -938,7 +1113,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
       if (audioBuffer) {
         const hash = crypto.createHash('md5').update(customText || title).digest('hex');
-        const ext = mimeType.split('/')[1] || 'mp3';
+        const ext = getSafeExtension(mimeType, 'mp3');
         const fileName = `audio_${hash}.${ext}`;
         const publicUrl = await uploadToSupabaseStorage(fileName, audioBuffer, mimeType);
         
@@ -994,15 +1169,17 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
           if (imageRes.ok) {
             const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-            const buffer = Buffer.from(await imageRes.arrayBuffer());
-            const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-            const ext = contentType.split('/')[1] || 'jpg';
-            const fileName = `img_${hash}.${ext}`;
-            
-            const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
-            if (publicUrl) {
-              updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
-              console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
+            if (!contentType.toLowerCase().includes('text/html')) {
+              const buffer = Buffer.from(await imageRes.arrayBuffer());
+              const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+              const ext = getSafeExtension(contentType, 'jpg');
+              const fileName = `img_${hash}.${ext}`;
+              
+              const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+              if (publicUrl) {
+                updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
+                console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
+              }
             }
           }
         } catch (err) {
@@ -1058,21 +1235,23 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
           if (imageRes.ok) {
             const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-            const buffer = Buffer.from(await imageRes.arrayBuffer());
-            const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-            const ext = contentType.split('/')[1] || 'jpg';
-            const fileName = `img_${hash}.${ext}`;
-            
-            const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
-            if (publicUrl) {
-              let updatedAttrs = attrsStr;
-              if (attrsStr.includes('src=')) {
-                updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
-              } else {
-                updatedAttrs += ` src="${publicUrl}"`;
+            if (!contentType.toLowerCase().includes('text/html')) {
+              const buffer = Buffer.from(await imageRes.arrayBuffer());
+              const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+              const ext = getSafeExtension(contentType, 'jpg');
+              const fileName = `img_${hash}.${ext}`;
+              
+              const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+              if (publicUrl) {
+                let updatedAttrs = attrsStr;
+                if (attrsStr.includes('src=')) {
+                  updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
+                } else {
+                  updatedAttrs += ` src="${publicUrl}"`;
+                }
+                updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+                console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
               }
-              updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
-              console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
             }
           }
         } catch (err) {
