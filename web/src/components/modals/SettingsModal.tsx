@@ -613,6 +613,58 @@ const PWD_TRANSLATIONS = {
     complexity_error: "密码长度必须至少为 12 个字符，且必须包含大小写字母、数字及特殊字符。",
     match_error: "新密码不匹配。",
     all_fields: "请填写所有密码字段。"
+  },
+  PT: {
+    section_title: "Alterar Senha",
+    current_password: "Senha Atual",
+    new_password: "Nova Senha",
+    confirm_new_password: "Confirmar Nova Senha",
+    update_password: "Atualizar Senha",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "Senha atualizada com sucesso!",
+    mismatch_error: "A verificação da senha atual falhou.",
+    complexity_error: "A senha deve ter pelo menos 12 caracteres, incluindo uma letra maiúscula, uma letra minúscula, um número e um caractere especial.",
+    match_error: "As novas senhas não coincidem.",
+    all_fields: "Por favor, preencha todos os campos de senha."
+  },
+  AR: {
+    section_title: "تغيير كلمة المرور",
+    current_password: "كلمة المرور الحالية",
+    new_password: "كلمة المرور الجديدة",
+    confirm_new_password: "تأكيد كلمة المرور الجديدة",
+    update_password: "تحديث كلمة المرور",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "تم تحديث كلمة المرور بنجاح!",
+    mismatch_error: "فشل التحقق من كلمة المرور الحالية.",
+    complexity_error: "يجب أن تتكون كلمة المرور من 12 حرفًا على الأقل، بما في ذلك حرف كبير وحرف صغير ورقم ورمز خاص.",
+    match_error: "كلمات المرور الجديدة غير متطابقة.",
+    all_fields: "يرجى ملء جميع حقول كلمة المرور."
+  },
+  HI: {
+    section_title: "पासवर्ड बदलें",
+    current_password: "वर्तमान पासवर्ड",
+    new_password: "नया पासवर्ड",
+    confirm_new_password: "नए पासवर्ड की पुष्टि करें",
+    update_password: "पासवर्ड अपडेट करें",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "पासवर्ड सफलतापूर्वक अपडेट किया गया!",
+    mismatch_error: "वर्तमान पासवर्ड सत्यापन विफल रहा।",
+    complexity_error: "पासवर्ड कम से कम 12 वर्णों का होना चाहिए, जिसमें एक बड़ा अक्षर, एक छोटा अक्षर, एक संख्या और एक विशेष वर्ण शामिल हो।",
+    match_error: "नए पासवर्ड मेल नहीं खाते।",
+    all_fields: "कृपया पासवर्ड के सभी फ़ील्ड भरें।"
+  },
+  UR: {
+    section_title: "پاس ورڈ تبدیل کریں",
+    current_password: "موجودہ پاس ورڈ",
+    new_password: "نیا پاس ورڈ",
+    confirm_new_password: "نئے پاس ورڈ کی تصدیق کریں",
+    update_password: "پاس ورڈ اپ ڈیٹ کریں",
+    pwd_placeholder: "••••••••••••",
+    success_msg: "پاس ورڈ کامیابی کے ساتھ اپ ڈیٹ ہو گیا!",
+    mismatch_error: "موجودہ پاس ورڈ کی تصدیق ناکام ہو گئی۔",
+    complexity_error: "پاس ورڈ کم از کم 12 حروف طویل ہونا چاہیے، بشمول ایک بڑا حرف، ایک چھوٹا حرف، ایک ہندسہ، اور ایک خاص حرف۔",
+    match_error: "نئے پاس ورڈ مطابقت نہیں رکھتے۔",
+    all_fields: "براہ کرم پاس ورڈ کے تمام فیلڈز پُر کریں۔"
   }
 };
 
@@ -643,10 +695,44 @@ const DANGER_ZONE_TRANSLATIONS = {
   },
   ZH: {
     flush_title: "重置本地缓存",
-    flush_desc: "清除本地存储的课程数据、搜索历史和学生进度缓存，以解决潜在的数据同步问题。这将重新初始化所有存储并重新加载页面。",
+    flush_desc: "清除本地存储的课程 data、搜索历史和学生进度缓存，以解决潜在的数据同步问题。这将重新初始化所有存储并重新加载页面。",
     flush_btn: "重置缓存",
     flush_success: "缓存清除成功！"
+  },
+  PT: {
+    flush_title: "Redefinir Cache Local",
+    flush_desc: "Limpa os dados do curso do armazenamento local, histórico de busca e cache de progresso do estudante para resolver possíveis problemas de sincronização. Isso reinicializará todos os repositórios e recarregará a página.",
+    flush_btn: "Redefinir Cache",
+    flush_success: "Caches limpos com sucesso!"
+  },
+  AR: {
+    flush_title: "إعادة تعيين ذاكرة التخزين المؤقت المحلية",
+    flush_desc: "يمسح بيانات الدورة التدريبية وسجل البحث وذاكرة التخزين المؤقت لتقدم الطالب من التخزين المحلي لحل مشكلات مزامنة البيانات المحتملة. سيؤدي هذا إلى إعادة تهيئة كافة مخازن البيانات وإعادة تحميل الصفحة.",
+    flush_btn: "إعادة تعيين ذاكرة التخزين المؤقت",
+    flush_success: "تم مسح ذاكرة التخزين المؤقت بنجاح!"
+  },
+  HI: {
+    flush_title: "स्थानीय कैश रीसेट करें",
+    flush_desc: "संभावित डेटा सिंक्रनाइज़ेशन समस्याओं को हल करने के लिए स्थानीय स्टोरेज कोर्स डेटा, खोज इतिहास और छात्र प्रगति कैश को साफ़ करता है। यह सभी स्टोर को पुनरारंभ करेगा और पेज को पुनः लोड करेगा।",
+    flush_btn: "कैश रीसेट करें",
+    flush_success: "कैश सफलतापूर्वक साफ़ कर दिया गया!"
+  },
+  UR: {
+    flush_title: "مقامی کیشے ری سیٹ کریں",
+    flush_desc: "ڈیٹا کی ہم آہنگی (synchronization) کے ممکنہ مسائل کو حل کرنے کے لیے مقامی اسٹوریج کورس ڈیٹا، تلاش کی تاریخ، اور طالب علم کی ترقی کے کیشے کو صاف کرتا ہے۔ یہ تمام اسٹورز کو دوبارہ شروع کرے گا اور صفحہ کو دوبارہ لوڈ کرے گا۔",
+    flush_btn: "کیشے ری سیٹ کریں",
+    flush_success: "کیشے کامیابی کے ساتھ صاف کر دیا گیا!"
   }
+};
+
+const OPTIONAL_LABEL: Record<string, string> = {
+  EN: "optional", FR: "optionnel", ES: "opcional", DE: "optional", ZH: "可选",
+  PT: "opcional", AR: "اختياري", HI: "वैकल्पिक", UR: "اختیاری"
+};
+
+const NOT_PROVIDED_PLACEHOLDER: Record<string, string> = {
+  EN: "Not provided", FR: "Non renseigné", ES: "No proporcionado", DE: "Nicht angegeben", ZH: "未提供",
+  PT: "Não fornecido", AR: "غير محدد", HI: "प्रदान नहीं किया गया", UR: "فراہم نہیں کیا گیا"
 };
 
 interface SettingsModalProps {
@@ -1071,25 +1157,25 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">
-                          {t.first_name || "Prénom"} <span className="text-[8px] text-slate-500 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                          {t.first_name || "Prénom"} <span className="text-[8px] text-slate-500 lowercase">({OPTIONAL_LABEL[lang.toUpperCase()] || OPTIONAL_LABEL.EN})</span>
                         </label>
                         <input 
                           type="text" 
                           value={user.firstName}
                           onChange={(e) => setUser({...user, firstName: e.target.value})}
-                          placeholder={lang.toUpperCase() === 'FR' ? "Non renseigné" : "Not provided"}
+                          placeholder={NOT_PROVIDED_PLACEHOLDER[lang.toUpperCase()] || NOT_PROVIDED_PLACEHOLDER.EN}
                           className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-650" 
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">
-                          {t.last_name || "Nom"} <span className="text-[8px] text-slate-500 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                          {t.last_name || "Nom"} <span className="text-[8px] text-slate-500 lowercase">({OPTIONAL_LABEL[lang.toUpperCase()] || OPTIONAL_LABEL.EN})</span>
                         </label>
                         <input 
                           type="text" 
                           value={user.lastName}
                           onChange={(e) => setUser({...user, lastName: e.target.value})}
-                          placeholder={lang.toUpperCase() === 'FR' ? "Non renseigné" : "Not provided"}
+                          placeholder={NOT_PROVIDED_PLACEHOLDER[lang.toUpperCase()] || NOT_PROVIDED_PLACEHOLDER.EN}
                           className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-650" 
                         />
                       </div>
