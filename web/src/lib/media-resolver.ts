@@ -1164,6 +1164,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
         sourceUrl = await searchWikimediaCommonsImage(queryName);
       }
 
+      let success = false;
       if (sourceUrl) {
         try {
           const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
@@ -1179,12 +1180,19 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
               if (publicUrl) {
                 updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
+                success = true;
               }
             }
           }
         } catch (err) {
           console.warn(`[RESTITUTION-REPAIR] Failed to repair markdown image from ${sourceUrl}:`, err);
         }
+      }
+
+      if (!success) {
+        // If repair failed, remove the image tag completely as per "Strict No AI Fallbacks for Factual Assets" / "Omit broken images"
+        updatedContent = updatedContent.replace(fullMatch, '');
+        console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved markdown image: "${altText}"`);
       }
     }
   }
@@ -1230,6 +1238,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
         sourceUrl = await searchWikimediaCommonsImage(queryName);
       }
 
+      let success = false;
       if (sourceUrl) {
         try {
           const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
@@ -1251,12 +1260,19 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                 }
                 updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
+                success = true;
               }
             }
           }
         } catch (err) {
           console.warn(`[RESTITUTION-REPAIR] Failed to repair CustomFigure image from ${sourceUrl}:`, err);
         }
+      }
+
+      if (!success) {
+        // If repair failed, remove the CustomFigure tag completely as per "Strict No AI Fallbacks for Factual Assets" / "Omit broken images"
+        updatedContent = updatedContent.replace(fullTag, '');
+        console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved CustomFigure: "${altText || caption}"`);
       }
     }
   }

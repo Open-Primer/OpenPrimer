@@ -216,6 +216,14 @@ export const CourseClientWrapper = ({
 
   useEffect(() => {
     if (activeCourse && language) {
+      const segments = pathname.split('/').filter(Boolean);
+      const isLessonPage = segments.length >= 4 && 
+        !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]);
+      
+      if (isLessonPage) {
+        return;
+      }
+
       const supportedLangs = (activeCourse.languages || activeCourse.langs || []).map((l: string) => l.toUpperCase().trim());
       const currentLang = language.toUpperCase().trim();
       
@@ -228,7 +236,7 @@ export const CourseClientWrapper = ({
         }
       }
     }
-  }, [language, activeCourse]);
+  }, [language, activeCourse, pathname]);
 
   useEffect(() => {
     let active = true;

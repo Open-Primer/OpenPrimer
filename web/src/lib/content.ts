@@ -1805,13 +1805,110 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
 }
 
 function healWhatsNextNesting(mdx: string): string {
-  // Case A: <WhatsNext> followed by <EtApres itemsBase64="..." /> and </WhatsNext>
-  let processed = mdx.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)\/?>\s*<\/\1>/gi, (match, outerTag, outerAttrs, innerTag, innerAttrs) => {
+  // Pattern to find <WhatsNext ...> ... </WhatsNext> or <EtApres ...> ... </EtApres>
+  const whatsNextRegex = /<(WhatsNext|EtApres)\b([^>]*?)>([\s\S]*?)<\/\1>/gi;
+
+  let processed = mdx.replace(whatsNextRegex, (match: string, tagName: string, attrs: string, innerContent: string) => {
+    // 1. Extract any non-empty EssayEvaluation or Quiz components out of the block
+    const nestedComponents: string[] = [];
+    
+    // Pattern for EssayEvaluation
+    innerContent = innerContent.replace(/<EssayEvaluation\b([^>]*?)\/?>([\s\S]*?)(?:<\/EssayEvaluation>)?/gi, (subMatch: string, subAttrs: string, subBody: string) => {
+      // Check if it is a dummy/empty evaluation (no prompt, or empty prompt)
+      if (subAttrs.includes('prompt=""') || subAttrs.includes('prompt=&quot;&quot;') || subAttrs.includes('prompt={""}') || !subAttrs.includes('prompt=')) {
+        return ''; // remove empty/dummy evaluation
+      }
+      // Keep it and extract it
+      nestedComponents.push(`<EssayEvaluation${subAttrs}>${subBody}</EssayEvaluation>`);
+      return '';
+    });
+
+    // Pattern for Quiz
+    innerContent = innerContent.replace(/<Quiz\b([^>]*?)>([\s\S]*?)<\/Quiz>/gi, (subMatch: string, subAttrs: string, subBody: string) => {
+      if (subBody.trim() === '') {
+        return ''; // remove empty quiz
+      }
+      nestedComponents.push(`<Quiz${subAttrs}>${subBody}</Quiz>`);
+      return '';
+    });
+
+    // 2. Parse child steps in innerContent robustly.
+    // Replace html encoded quotes and smart quotes with normal double quotes
+    const cleanInner = innerContent
+      .replace(/&quot;/g, '"')
+      .replace(/&#34;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'");
+
+    const steps: any[] = [];
+    
+    // Split by potential step starts (including malformed tag starts like /Step or /WhatsNextStep)
+    const lines = cleanInner.split(/(?=<WhatsNextStep|<Step|<EtApres\.Card|<WhatsNext\.Card|\/WhatsNextStep|\/Step|\/EtApres\.Card)/gi);
+    
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      const titleMatch = line.match(/(?:title|titre)\s*=\s*(?:"([^"]*?)"|'([^']*?)')/i);
+      const descMatch = line.match(/(?:description|desc)\s*=\s*(?:"([^"]*?)"|'([^']*?)')/i);
+      const slugMatch = line.match(/(?:slug)\s*=\s*(?:"([^"]*?)"|'([^']*?)')/i);
+      const subjectMatch = line.match(/(?:subject|sujet)\s*=\s*(?:"([^"]*?)"|'([^']*?)')/i);
+      const levelMatch = line.match(/(?:level|niveau)\s*=\s*(?:"([^"]*?)"|'([^']*?)')/i);
+      
+      const title = titleMatch ? (titleMatch[1] || titleMatch[2] || '') : '';
+      const description = descMatch ? (descMatch[1] || descMatch[2] || '') : '';
+      const slug = slugMatch ? (slugMatch[1] || slugMatch[2] || '') : '';
+      const subject = subjectMatch ? (subjectMatch[1] || subjectMatch[2] || '') : '';
+      const level = levelMatch ? (levelMatch[1] || levelMatch[2] || '') : '';
+      
+      if (title.trim() || description.trim()) {
+        let cleanSlug = slug.split(/[&"'\s]/)[0];
+        if (!cleanSlug) {
+          cleanSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        }
+        steps.push({
+          title: title.trim(),
+          description: description.trim(),
+          slug: cleanSlug,
+          subject: subject.trim(),
+          level: level.trim()
+        });
+      }
+    }
+
+    // Fallback: if no steps were parsed from tags, check for bullet points
+    if (steps.length === 0) {
+      const bullets = cleanInner.match(/[*+-]\s*\*\*([^*]+)\*\*\s*:\s*([^\n]+)/gi);
+      if (bullets) {
+        for (const bullet of bullets) {
+          const m = bullet.match(/[*+-]\s*\*\*([^*]+)\*\*\s*:\s*([^\n]+)/i);
+          if (m) {
+            const title = m[1].trim();
+            const description = m[2].trim();
+            const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            steps.push({ title, description, slug, subject: '', level: '' });
+          }
+        }
+      }
+    }
+
+    const stepsEncoded = Buffer.from(JSON.stringify(steps)).toString('base64');
+    const cleanWhatsNext = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
+
+    if (nestedComponents.length > 0) {
+      return `${nestedComponents.join('\n\n')}\n\n${cleanWhatsNext}`;
+    }
+    return cleanWhatsNext;
+  });
+
+  // Case A: <WhatsNext> followed by <EtApres itemsBase64="..." /> and </WhatsNext> (legacy cleanup)
+  processed = processed.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)\/?>\s*<\/\1>/gi, (match: string, outerTag: string, outerAttrs: string, innerTag: string, innerAttrs: string) => {
     return `<WhatsNext${outerAttrs}${innerAttrs}/>`;
   });
 
-  // Case B: <WhatsNext> <EtApres ...> children </EtApres> </WhatsNext>
-  processed = processed.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)>([\s\S]*?)<\/\3>\s*<\/\1>/gi, (match, outerTag, outerAttrs, innerTag, innerAttrs, innerContent) => {
+  // Case B: <WhatsNext> <EtApres ...> children </EtApres> </WhatsNext> (legacy cleanup)
+  processed = processed.replace(/<(WhatsNext|EtApres)([^>]*?)>\s*<(EtApres|WhatsNext)([^>]*?)>([\s\S]*?)<\/\3>\s*<\/\1>/gi, (match: string, outerTag: string, outerAttrs: string, innerTag: string, innerAttrs: string, innerContent: string) => {
     return `<WhatsNext${outerAttrs}${innerAttrs}>${innerContent}</WhatsNext>`;
   });
 
@@ -1819,40 +1916,64 @@ function healWhatsNextNesting(mdx: string): string {
 }
 
 function deduplicateHistoricalPersons(mdx: string): string {
-  const seenNames = new Set<string>();
+  const seenKeys = new Set<string>();
 
-  // 1. First, strip HistoricalPerson tags from bold title blocks
+  // 1. First, strip HistoricalPerson / RealPerson tags from bold title blocks
   // e.g. **Mini-Biographie : <HistoricalPerson name="Phineas_Gage" ...>Phineas Gage (1823 - 1860)</HistoricalPerson>**
-  let processed = mdx.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>\*\*/gi, (match, displayName) => {
+  let processed = mdx.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*<(?:HistoricalPerson|RealPerson)\b[^>]*?>([\s\S]*?)<\/(?:HistoricalPerson|RealPerson)>\*\*/gi, (match: string, displayName: string) => {
     return `**Mini-Biographie : ${displayName}**`;
   });
 
   // Also catch simple cases where there are spaces or different cases
-  processed = processed.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*([^]*?)\*\*/gi, (match, content) => {
-    const stripped = content.replace(/<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>/gi, '$1');
+  processed = processed.replace(/\*\*(?:Mini-Biographie|Mini-Biography)\s*:\s*([^]*?)\*\*/gi, (match: string, content: string) => {
+    const stripped = content.replace(/<(?:HistoricalPerson|RealPerson)\b[^>]*?>([\s\S]*?)<\/(?:HistoricalPerson|RealPerson)>/gi, '$1');
     return `**Mini-Biographie : ${stripped}**`;
   });
 
-  // Strip HistoricalPerson tags inside markdown headings (e.g. ### <HistoricalPerson ...>Name</HistoricalPerson> -> ### Name)
-  processed = processed.replace(/^(#{1,6}\s+)([\s\S]*?)$/gm, (match, prefix, content) => {
-    const stripped = content.replace(/<HistoricalPerson\b[^>]*?>([\s\S]*?)<\/HistoricalPerson>/gi, '$1');
+  // Strip all overlay/entity tags inside markdown headings (e.g. ### <HistoricalPerson ...>Name</HistoricalPerson> -> ### Name)
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary)';
+  processed = processed.replace(/^(#{1,6}\s+)([\s\S]*?)$/gm, (match: string, prefix: string, content: string) => {
+    const stripped = content.replace(new RegExp(`<${entityTagsPattern}\\b[^>]*?>([\\s\\S]*?)<\\/${entityTagsPattern}>`, 'gi'), '$1');
     return `${prefix}${stripped}`;
   });
 
-  // 2. Now, handle duplicate HistoricalPerson tags in the MDX body
-  processed = processed.replace(/<HistoricalPerson\b([^>]*?)>([\s\S]*?)<\/HistoricalPerson>/gi, (match, attrs, innerText) => {
-    const nameMatch = attrs.match(/name=["']([^"']+)["']/i);
-    if (!nameMatch) {
-      return match;
-    }
-    const name = nameMatch[1].trim().toLowerCase();
+  // 2. Now, handle duplicate Wikipedia overlay/entity tags in the MDX body, keeping only the first occurrence as an interactive popup
+  const entityRegex = new RegExp(`<(${entityTagsPattern})\\b([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'gi');
+  processed = processed.replace(entityRegex, (match: string, tagName: string, attrs: string, innerText: string) => {
+    let key = '';
+    const tagLower = tagName.toLowerCase();
     
-    // If we've already seen this historical person in the document, replace the tag with its inner text
-    if (seenNames.has(name)) {
+    if (tagLower === 'glossary') {
+      const termMatch = attrs.match(/(?:term|word)=["']([^"']+)["']/i);
+      if (termMatch) {
+        key = termMatch[1].trim().toLowerCase();
+      }
+    } else {
+      const nameMatch = attrs.match(/name=["']([^"']+)["']/i);
+      if (nameMatch) {
+        key = nameMatch[1].trim().toLowerCase();
+      }
+    }
+
+    if (!key) {
+      key = innerText.trim().toLowerCase();
+    }
+
+    // Standardize key value by stripping accents to avoid mismatches
+    const normKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // Unify alias types in seen key tracking
+    let typeName = tagLower;
+    if (typeName === 'realperson') typeName = 'historicalperson';
+    if (typeName === 'historicaleventlink' || typeName === 'evenementhistorique' || typeName === 'événementhistorique') typeName = 'eventlink';
+
+    const seenKey = `${typeName}:${normKey}`;
+
+    if (seenKeys.has(seenKey)) {
       return innerText;
     }
-    
-    seenNames.add(name);
+
+    seenKeys.add(seenKey);
     return match;
   });
 

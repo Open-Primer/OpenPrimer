@@ -106,6 +106,25 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   // Custom interactive preset selected for previewing
   const [activePresetIndex, setActivePresetIndex] = useState(0);
 
+  const getWidgetName = (w: Widget) => {
+    const translated = tr(w.nameEN);
+    if (translated !== w.nameEN) return translated;
+    const prop = `name${lang.toUpperCase()}`;
+    return (w as any)[prop] || w.nameEN;
+  };
+  const getWidgetDesc = (w: Widget) => {
+    const translated = tr(w.descEN);
+    if (translated !== w.descEN) return translated;
+    const prop = `desc${lang.toUpperCase()}`;
+    return (w as any)[prop] || w.descEN;
+  };
+  const getWidgetLevel = (w: Widget) => {
+    const translated = tr(w.levelEN);
+    if (translated !== w.levelEN) return translated;
+    const prop = `level${lang.toUpperCase()}`;
+    return (w as any)[prop] || w.levelEN;
+  };
+
   // AI Generation workshop States
   const [prompt, setPrompt] = useState('');
   const [isExecuting, setIsGenerating] = useState(false);
@@ -528,8 +547,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const filteredWidgets = widgets.filter(w => {
     const term = searchQuery.toLowerCase();
     const idMatches = w.id.toLowerCase().includes(term);
-    const nameMatches = tr(w.nameEN).toLowerCase().includes(term);
-    const descMatches = tr(w.descEN).toLowerCase().includes(term);
+    const nameMatches = getWidgetName(w).toLowerCase().includes(term);
+    const descMatches = getWidgetDesc(w).toLowerCase().includes(term);
     const disciplineMatches = w.disciplines.some(d => d.toLowerCase().includes(term));
     return idMatches || nameMatches || descMatches || disciplineMatches;
   });
@@ -591,7 +610,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   onClick={() => setActivePresetIndex(idx)}
                   className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${activePresetIndex === idx ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/10' : 'bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white'}`}
                 >
-                  {p.label}
+                  {tr(p.label)}
                 </button>
               ))}
             </div>
@@ -763,7 +782,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
                     
                     <p className="text-[9px] text-slate-400 font-medium leading-relaxed line-clamp-2">
-                      {tr(widget.descEN)}
+                      {getWidgetDesc(widget)}
                     </p>
                   </div>
 
@@ -774,7 +793,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           key={disc}
                           className={`px-1.5 py-0.5 border text-[6px] font-black uppercase tracking-wider rounded-full ${getDisciplineColor(disc)}`}
                         >
-                          {disc}
+                          {tr(disc)}
                         </span>
                       ))}
                       {widget.disciplines.length > 2 && (
@@ -785,7 +804,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <span className="text-[7px] font-bold text-slate-500 uppercase font-mono shrink-0">
-                      🎓 {tr(widget.levelEN)}
+                      🎓 {getWidgetLevel(widget)}
                     </span>
                   </div>
                 </div>
@@ -851,10 +870,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-white">
-                  {tr(selectedWidget.nameEN)}
+                  {getWidgetName(selectedWidget)}
                 </h3>
                 <p className="text-xs text-slate-400 max-w-3xl leading-relaxed">
-                  {tr(selectedWidget.descEN)}
+                  {getWidgetDesc(selectedWidget)}
                 </p>
               </div>
 
@@ -986,7 +1005,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     disabled={isExecuting || (selectedWidget.lock !== null && selectedWidget.lock.adminId !== adminId && Date.now() < selectedWidget.lock.expiresAt)}
                     className="px-3 py-1.5 border border-slate-850 bg-slate-950/30 text-[9px] font-bold text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/20 rounded-xl transition-all cursor-pointer max-w-xs truncate disabled:opacity-40"
                   >
-                    💡 {p}
+                    💡 {tr(p)}
                   </button>
                 ))}
               </div>
@@ -1209,7 +1228,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             onClick={() => toggleDiscipline(disc, 'edit')}
                             className={`px-3 py-1.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-950 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                           >
-                            {disc}
+                            {tr(disc)}
                           </button>
                         );
                       })}
@@ -1369,7 +1388,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               onClick={() => toggleDiscipline(disc, 'new')}
                               className={`px-3 py-1 border rounded-lg text-[8px] font-black uppercase tracking-wider transition-colors cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-950 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                             >
-                              {disc}
+                              {tr(disc)}
                             </button>
                           );
                         })}
@@ -1426,7 +1445,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   {selectedWidget.id} Fullscreen Sandbox
                 </span>
                 <h3 className="text-md font-black text-white">
-                  {tr(selectedWidget.nameEN)}
+                  {getWidgetName(selectedWidget)}
                 </h3>
               </div>
               <button 

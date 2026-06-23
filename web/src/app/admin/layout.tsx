@@ -45,7 +45,7 @@ export const ADMIN_STRINGS = {
     logged_as: "Connecté en tant que",
     my_curriculum: "Mon Curriculum",
     catalog: "Parcourir le Catalogue",
-    settings: "Paramètres du Compte",
+    settings: "Paramètres",
     admin: "Console Admin",
     theme_default: "Défaut",
     theme_paper: "Papier",

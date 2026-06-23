@@ -676,6 +676,15 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
 
   content = content + referencesStr;
 
+  // Clean up any remaining unresolved [[WIDGET:...]] placeholders
+  content = content.replace(/\[\[WIDGET:[^\]]+\]\]/gi, '');
+
+  // Clean up empty self-closing InteractiveDiagram components without hotspotsBase64
+  content = content.replace(/<InteractiveDiagram(?![\s\S]*?hotspotsBase64)[^>]*?\/>/gi, '');
+
+  // Clean up generic/empty developer placeholders at the end of lessons
+  content = content.replace(/<FunctionPlotter\s+fn=["']x\^2["']\s*\/?>/gi, '');
+
   content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
 
   return content;
@@ -1132,7 +1141,7 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
   }
 
   // If lessonOffset is 0, clear any existing lessons for this course and language to avoid duplicates from previous failed runs.
-  if (lessonOffset === 0) {
+  if (lessonOffset === 0 && !process.env.REGENERATE_CHAPTER_1_ONLY) {
     const cleanSlug = cleanPathSegment(correctedCourseName);
     await appendTaskLog(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
     try {

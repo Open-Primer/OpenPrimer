@@ -354,6 +354,16 @@ select {
   border-color: #dbd5be !important;
 }
 
+/* Alert and Biography component theme overrides for readability */
+.theme-paper .alert-content,
+.theme-paper .alert-content * {
+  color: #1e293b !important; /* Slate-800 for high readability on warm paper */
+}
+.theme-focus .alert-content,
+.theme-focus .alert-content * {
+  color: #0f172a !important; /* Slate-900 for high-contrast focus reading */
+}
+
 /* --- High-Contrast Bulletproof Overrides for Tailwind v4 on Paper Mode --- */
 .theme-paper,
 .theme-paper main,

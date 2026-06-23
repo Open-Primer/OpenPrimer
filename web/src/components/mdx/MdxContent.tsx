@@ -188,7 +188,7 @@ const Alert = ({ type, children }: { type: string; children: React.ReactNode }) 
           {title}
         </span>
       </div>
-      <div className="text-[13px] leading-relaxed font-medium text-slate-200 alert-content">
+      <div className="text-[13px] leading-relaxed font-medium text-slate-800 dark:text-slate-200 alert-content">
         {children}
       </div>
     </div>
@@ -231,23 +231,67 @@ const isExistingArtwork = (src: string, label: string): boolean => {
 
 const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
   const [failed, setFailed] = React.useState(false);
+  const { language } = useLanguage();
+  
   React.useEffect(() => {
     setFailed(false);
   }, [src]);
 
-  if (failed) return null;
+  if (failed) {
+    const isFr = language?.toLowerCase() === 'fr';
+    const isEs = language?.toLowerCase() === 'es';
+    
+    let title = "Visual Asset Unavailable";
+    let message = `The illustrative asset "${alt || caption || 'Figure'}" could not be loaded. The lesson is running in degraded mode.`;
+    
+    if (isFr) {
+      title = "Ressource visuelle indisponible";
+      message = `L'illustration "${alt || caption || 'Figure'}" n'a pas pu être chargée. La leçon fonctionne en mode dégradé.`;
+    } else if (isEs) {
+      title = "Recurso visual no disponible";
+      message = `La ilustración "${alt || caption || 'Figura'}" no se pudo cargar. La lección se está ejecutando en modo degradado.`;
+    }
 
-  if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '')) {
     return (
-      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200">
+      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-300 [.theme-paper_&]:bg-amber-50/50 [.theme-paper_&]:border-amber-500/30 [.theme-paper_&]:text-slate-850">
         <div className="flex items-center gap-2 mb-2 select-none">
-          <AlertTriangle className="w-4 h-4 text-amber-500" />
+          <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" />
           <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
-            Intégrité Pédagogique
+            {title}
           </span>
         </div>
         <div className="text-[13px] leading-relaxed font-medium italic">
-          La génération par IA de l'œuvre d'art "{alt || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.
+          {message}
+        </div>
+      </div>
+    );
+  }
+
+  if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '')) {
+    const isFr = language?.toLowerCase() === 'fr';
+    const isEs = language?.toLowerCase() === 'es';
+    
+    let blockTitle = "Academic Integrity";
+    let blockMessage = `AI generation of the historical artwork "${alt || caption}" (painting, sculpture, historical monument or photograph) was blocked to preserve the educational and historical integrity of the lesson.`;
+    
+    if (isFr) {
+      blockTitle = "Intégrité Pédagogique";
+      blockMessage = `La génération par IA de l'œuvre d'art "${alt || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.`;
+    } else if (isEs) {
+      blockTitle = "Integridad Académica";
+      blockMessage = `La generación por IA de la obra de arte histórica "${alt || caption}" (pintura, escultura, monumento o fotografía histórica) ha sido bloqueada para preservar la integridad pedagógica de la lección.`;
+    }
+
+    return (
+      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200 [.theme-paper_&]:bg-amber-50/50 [.theme-paper_&]:border-amber-500/30 [.theme-paper_&]:text-slate-850">
+        <div className="flex items-center gap-2 mb-2 select-none">
+          <AlertTriangle className="w-4 h-4 text-amber-500" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+            {blockTitle}
+          </span>
+        </div>
+        <div className="text-[13px] leading-relaxed font-medium italic">
+          {blockMessage}
         </div>
       </div>
     );

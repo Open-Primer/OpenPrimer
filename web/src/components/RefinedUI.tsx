@@ -2162,11 +2162,11 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                        {userProfile ? userProfile.email : 'silvere@openprimer.app'}
                      </p>
                    </div>
-                     <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                     <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
                       <GraduationCap className="w-4 h-4" /> {t.my_curriculum}
                     </Link>
                     
-                    <Link href="/catalog" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
+                    <Link href="/catalog" className="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">
                       <Brain className="w-4 h-4" /> {t.catalog}
                     </Link>
                     
@@ -2175,7 +2175,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                         setIsSettingsOpen(true);
                         setActiveDropdown(null);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-left ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-left ${
                         userProfile?.role === 'admin'
                           ? 'border-b border-slate-800/50' 
                           : ''
@@ -2185,7 +2185,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     </button>
 
                     {userProfile?.role === 'admin' && (
-                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                         <ShieldAlert className="w-4 h-4" /> {t.admin}
                       </Link>
                     )}
