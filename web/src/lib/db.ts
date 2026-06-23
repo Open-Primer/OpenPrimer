@@ -603,7 +603,7 @@ export function generatePedagogicalSummary(
       if (isPt) return `🏛️ Como os grandes intelectuais da história, você demonstra uma dedicação notável com ${streakVal} dias consecutivos de estudo. Continue sua nobre busca pelo conhecimento em ${moduleName}.`;
       if (isAr) return `🏛️ مثل كبار العلماء عبر التاريخ، تظهر تفانيًا لافتًا مع ${streakVal} أيام متتالية من الدراسة. واصل مسعاك النبيل للمعرفة في ${moduleName}.`;
       if (isHi) return `🏛️ इतिहास के महान विद्वानों की तरह, आप लगातार ${streakVal} दिनों के अध्ययन के साथ उल्लेखनीय समर्पण दिखाते हैं। ${moduleName} में ज्ञान की अपनी नेक खोज जारी रखें।`;
-      if (isUr) return `🏛️ تاریخ کے عظیم اسکالرز کی طرح، آپ مسلسل ${streakVal} دن کے مطالعہ کے ساتھ شاندار لگن کا مظاہرہ کر رہے ہیں۔ ${moduleName} میں علم کے لیے اپنی عظیم جدوجہد جاری رکھیں۔`;
+      if (isUr) return `🏛️ تاریخ کے عظیم اسکالرز کی طرح، آپ مسلسل ${streakVal} دن के مطالعہ के साथ شاندار لگن का مظاہرہ कर रहे हैं। ${moduleName} में علم के लिए अपनी عظیم جدوجہد जारी रखें।`;
       return `🏛️ Like the great scholars of history, you show remarkable dedication with ${streakVal} consecutive days of study. Continue your noble quest for knowledge in ${moduleName}.`;
     }
     if (tutorId === 'feynman') {
@@ -614,7 +614,7 @@ export function generatePedagogicalSummary(
       if (isPt) return `💡 Incrível! Você alcançou uma série de ${streakVal} dias de estudo. Aprender um pouco todos os dias é a melhor forma de fixar os conceitos. Continue firme em ${moduleName}!`;
       if (isAr) return `💡 مدهش! لقد حققت سلسلة دراسة تبلغ ${streakVal} أيام. التعلم قليلاً كل يوم هو أفضل طريقة لترسيخ المفاهيم. استمر في التقدم مع ${moduleName}!`;
       if (isHi) return `💡 अद्भुत! आपने ${streakVal} दिनों का अध्ययन सिलसिला बनाया है। हर दिन थोड़ा-थोड़ा सीखना अवधारणाओं को याद रखने का सबसे अच्छा तरीका है। ${moduleName} के साथ आगे बढ़ते रहें!`;
-      if (isUr) return `💡 زبردست! آپ نے مسلسل ${streakVal} دن کے مطالعہ کا سلسلہ بنایا ہے۔ ہر روز تھوڑا سا سیکھنا تصورات کو پختہ کرنے کا بہترین طریقہ ہے۔ ${moduleName} کے ساتھ آگے بڑھتے رہیں!`;
+      if (isUr) return `💡 زبردست! آپ ने مسلسل ${streakVal} دن के مطالعہ का سلسلہ बनाया है। हर रोज़ थोड़ा सा सीखना تصورات को पختہ करने का बेहतरीन तरीका है। ${moduleName} के साथ आगे बढ़ते रहें!`;
       return `💡 Amazing! You have built a ${streakVal}-day study streak. Learning a little bit every day is the best way to make the concepts stick. Keep going with ${moduleName}!`;
     }
     if (tutorId === 'proof') {
@@ -625,7 +625,7 @@ export function generatePedagogicalSummary(
       if (isPt) return `📐 Constante de aprendizado validada: série de ${streakVal} dias consecutivos de estudo. Consistência demonstrada. Continuando a sequência ordenada em ${moduleName}.`;
       if (isAr) return `📐 تم التحقق من ثابت التعلم: سلسلة من ${streakVal} أيام دراسية متتالية. تم إثبات الاتساق. مواصلة المتتالية المرتبة في ${moduleName}.`;
       if (isHi) return `📐 सीखने का स्थिरांक सत्यापित: लगातार ${streakVal} दिनों के अध्ययन का सिलसिला। निरंतरता सिद्ध हुई। ${moduleName} में क्रमित अनुक्रम जारी रखना।`;
-      if (isUr) return `📐 سیکھنے کے مستقل کی تصدیق ہو گئی: مسلسل ${streakVal} دن کے مطالعہ کا سلسلہ۔ تسلسل ثابت ہوا۔ ${moduleName} میں منظم ترتیب جاری رکھنا۔`;
+      if (isUr) return `📐 سیکھنے के مستقل की تصدیق हो गई: مسلسل ${streakVal} دن के مطالعہ का سلسلہ। تسلسل ثابت ہوا۔ ${moduleName} में منظم ترتیب जारी रखना।`;
       return `📐 Learning constant validated: streak of ${streakVal} consecutive days of study. Consistency proven. Continuing the ordered sequence in ${moduleName}.`;
     }
     // Default / Socratic
@@ -709,41 +709,6 @@ export function generatePedagogicalSummary(
     return `💬 Welcome back. Ready to resume your study of ${moduleName}? You had completed ${progVal}% of the course.`;
   }
 
-  // Otherwise, return empty string so no popover is displayed
-  return '';
-}uleName}》了吗？你之前的进度是 ${progVal}%，让我们继续前进！⭐`;
-      return `🚀 Welcome back! Ready to continue with ${moduleName}? You were at ${progVal}% progress, let's keep going! ⭐`;
-    }
-    if (tutorId === 'historical') {
-      if (isFr) return `🏛️ Salutations. Poursuivons l'étude de "${moduleName}", dont vous avez déjà assimilé ${progVal}%. Le chemin de la connaissance vous attend.`;
-      if (isEs) return `🏛️ Saludos. Continuemos con el estudio de "${moduleName}", del cual ya has asimilado el ${progVal}%. El camino del saber te espera.`;
-      if (isDe) return `🏛️ Seien Sie gegrüßt. Setzen wir das Studium von "${moduleName}" fort, von dem Sie bereits ${progVal}% erlernt haben. Der Weg des Wissens erwartet Sie.`;
-      if (isZh) return `🏛️ 您好。让我们继续学习《${moduleName}》，您此前已掌握了 ${progVal}%。求知之路在前方延伸。`;
-      return `🏛️ Greetings. Let us resume the study of "${moduleName}", of which you have already assimilated ${progVal}%. The path of knowledge awaits you.`;
-    }
-    if (tutorId === 'feynman') {
-      if (isFr) return `💡 Ravi de vous revoir ! On continue à décortiquer ${moduleName} ? Vous en étiez à ${progVal}%, allons-y !`;
-      if (isEs) return `💡 ¡Qué bueno verte! ¿Seguimos desglosando ${moduleName}? Te quedaste en el ${progVal}%, ¡vamos allá!`;
-      if (isDe) return `💡 Schön, Sie wiederzusehen! Wollen wir ${moduleName} weiter zerlegen? Sie waren bei ${progVal}%, packen wir es an!`;
-      if (isZh) return `💡 很高兴再次见到您！我们继续拆解《${moduleName}》吧？您之前的进度是 ${progVal}%，让我们开始吧！`;
-      return `💡 Good to see you again! Ready to break down more of ${moduleName}? You were at ${progVal}% progress, let's go!`;
-    }
-    if (tutorId === 'proof') {
-      if (isFr) return `📐 État de la démonstration : progression à ${progVal}% pour "${moduleName}". Reprise de la séquence logique.`;
-      if (isEs) return `📐 Estado de la prueba: progreso al ${progVal}% para "${moduleName}". Reanudación de la secuencia lógica.`;
-      if (isDe) return `📐 Beweisstatus: Fortschritt bei ${progVal}% für "${moduleName}". Fortsetzung der logischen Sequenz.`;
-      if (isZh) return `📐 证明状态：正在进行《${moduleName}》（完成度 ${progVal}%）。恢复逻辑序列。`;
-      return `📐 Proof state: progression at ${progVal}% for "${moduleName}". Resuming the logical sequence.`;
-    }
-    // Default / Socratic
-    if (isFr) return `💬 Bon retour. Prêt à poursuivre votre réflexion sur ${moduleName} ? Vous aviez validé ${progVal}% du parcours.`;
-    if (isEs) return `💬 Bienvenido de nuevo. ¿Listo para continuar tu reflexión sobre ${moduleName}? Habías completado el ${progVal}% del camino.`;
-    if (isDe) return `💬 Willkommen zurück. Bereit, Ihre Überlegungen zu ${moduleName} fortzusetzen? Sie hatten bereits ${progVal}% des Weges geschafft.`;
-    if (isZh) return `💬 欢迎回来。准备好继续思考关于《${moduleName}》的内容了吗？您此前已完成了 ${progVal}% 的学习。`;
-    return `💬 Welcome back. Ready to resume your study of ${moduleName}? You had completed ${progVal}% of the course.`;
-  }
-
-  // Otherwise, return empty string so no popover is displayed
   return '';
 }
 
