@@ -152,6 +152,16 @@ export default function ResetPasswordPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Hidden username context for password managers */}
+              <input 
+                type="text" 
+                name="username" 
+                value={email} 
+                autoComplete="username" 
+                className="hidden" 
+                readOnly 
+              />
+
               {errorMsg && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-semibold flex items-center gap-2">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -169,6 +179,7 @@ export default function ResetPasswordPage() {
                   <input
                     id="new-password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     required
                     value={password}
                     onChange={(e) => { setPassword(e.target.value.slice(0, 60)); setErrorMsg(''); }}
@@ -176,7 +187,7 @@ export default function ResetPasswordPage() {
                     onBlur={() => setIsPasswordFocused(false)}
                     maxLength={60}
                     placeholder="••••••••••••"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800"
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder-slate-800"
                   />
                   <button
                     type="button"
@@ -199,12 +210,13 @@ export default function ResetPasswordPage() {
                   <input
                     id="confirm-new-password"
                     type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     required
                     value={confirmPassword}
                     onChange={(e) => { setConfirmPassword(e.target.value.slice(0, 60)); setErrorMsg(''); }}
                     maxLength={60}
                     placeholder="••••••••••••"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder:text-slate-800"
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-xs focus:border-blue-500/50 outline-none transition-all text-white placeholder-slate-800"
                   />
                   <button
                     type="button"

@@ -1213,9 +1213,10 @@ body:not(.theme-paper):not(.theme-focus) footer {
   color: #2563eb !important;
   background-color: #ede9d9 !important;
 }
-.theme-paper .profile-dropdown-menu .h-0\.5,
-.theme-paper .profile-dropdown-menu .border-b {
+.theme-paper .profile-dropdown-menu .h-0\.5 {
   background-color: #ede9d9 !important;
+}
+.theme-paper .profile-dropdown-menu .border-b {
   border-color: #ede9d9 !important;
 }
 .theme-paper .profile-dropdown-menu p.text-slate-600 { color: #64748b !important; }

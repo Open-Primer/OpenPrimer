@@ -1116,7 +1116,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
 
             {/* Tab selector bar */}
-            <div className="px-6 md:px-8 py-3 border-b border-slate-800/60 bg-slate-950/25 flex gap-2 items-center overflow-x-auto overflow-y-hidden scrollbar-none">
+            <div className="h-[60px] min-h-[60px] flex-shrink-0 px-6 md:px-8 py-3 border-b border-slate-800/60 bg-slate-950/25 flex gap-2 items-center overflow-x-auto overflow-y-hidden scrollbar-none">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -1205,6 +1205,16 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
                   {/* Change Password form */}
                   <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                    {/* Hidden username context for password managers to know which account's credentials are changing */}
+                    <input 
+                      type="text" 
+                      name="username" 
+                      value={user.email} 
+                      autoComplete="username" 
+                      className="hidden" 
+                      readOnly 
+                    />
+
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-3">
                       <Lock className="w-4 h-4 text-violet-400" /> {PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.section_title || PWD_TRANSLATIONS.EN.section_title}
                     </h3>
@@ -1232,6 +1242,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         <input 
                           id="current-password-input"
                           type={showCurrentPassword ? "text" : "password"} 
+                          autoComplete="current-password"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           placeholder={PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.pwd_placeholder || PWD_TRANSLATIONS.EN.pwd_placeholder}
@@ -1257,6 +1268,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           <input 
                             id="new-password-input"
                             type={showNewPassword ? "text" : "password"} 
+                            autoComplete="new-password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             onFocus={() => setIsNewPasswordFocused(true)}
@@ -1282,6 +1294,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           <input 
                             id="confirm-password-input"
                             type={showConfirmNewPassword ? "text" : "password"} 
+                            autoComplete="new-password"
                             value={confirmNewPassword}
                             onChange={(e) => setConfirmNewPassword(e.target.value)}
                             placeholder={PWD_TRANSLATIONS[lang.toUpperCase() as keyof typeof PWD_TRANSLATIONS]?.pwd_placeholder || PWD_TRANSLATIONS.EN.pwd_placeholder}

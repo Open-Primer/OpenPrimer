@@ -37,6 +37,26 @@ const SLIDER_STRINGS = {
     before: "之前",
     after: "之后",
     hint: "👈 拖动滑块以对比两种状态 👉"
+  },
+  PT: {
+    before: "Antes",
+    after: "Depois",
+    hint: "👈 Arraste o controle para comparar 👉"
+  },
+  AR: {
+    before: "قبل",
+    after: "بعد",
+    hint: "👈 اسحب الشريط للمقارنة 👉"
+  },
+  HI: {
+    before: "पहले",
+    after: "बाद",
+    hint: "👈 तुलना करने के लिए स्लाइडर खींचें 👉"
+  },
+  UR: {
+    before: "پہلے",
+    after: "بعد",
+    hint: "👈 موازنہ کرنے کے لیے سلائیڈر کھینچیں 👉"
   }
 };
 

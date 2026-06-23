@@ -257,6 +257,10 @@ export interface VertexRequest {
   }[];
   systemInstruction?: string;
   generationConfig?: Record<string, unknown>;
+  safetySettings?: {
+    category: string;
+    threshold: string;
+  }[];
   stream?: boolean;
 }
 
@@ -298,6 +302,9 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
     }
     if (req.generationConfig) {
       body.generationConfig = req.generationConfig;
+    }
+    if (req.safetySettings) {
+      body.safetySettings = req.safetySettings;
     }
 
     const maxRetries = 5;

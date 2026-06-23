@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Crown, X, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, TutorPersonality } from '@/lib/db';
@@ -27,32 +27,79 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
   const [showAddPersonality, setShowAddPersonality] = useState(false);
   const [newPers, setNewPers] = useState({ name: '', prompt: '', isDefault: false });
   const [deleteTutorTarget, setDeleteTutorTarget] = useState<TutorPersonality | null>(null);
+  const [localPersonalities, setLocalPersonalities] = useState<TutorPersonality[]>(personalities);
+
+  useEffect(() => {
+    setLocalPersonalities(personalities);
+  }, [personalities]);
 
   const handleSavePersonality = async () => {
     if (!newPers.name || !newPers.prompt) return;
     const id = newPers.name.toLowerCase().replace(/ /g, '_');
-    await dbService.saveTutorPersonality({
+    const newPersona: TutorPersonality = {
       id,
       name: newPers.name,
       prompt: newPers.prompt,
-      isDefault: newPers.isDefault
-    });
+      isDefault: newPers.isDefault,
+      archivingLevel: 0
+    };
+
+    const fallback = [...localPersonalities];
+    let updated = [...localPersonalities, newPersona];
+    if (newPers.isDefault) {
+      updated = updated.map(p => ({
+        ...p,
+        isDefault: p.id === id
+      }));
+    }
+    setLocalPersonalities(updated);
     setShowAddPersonality(false);
     setNewPers({ name: '', prompt: '', isDefault: false });
-    await loadData();
-    showToast(tr("Personality saved successfully."), 'success');
+
+    try {
+      const res = await dbService.saveTutorPersonality({
+        id,
+        name: newPers.name,
+        prompt: newPers.prompt,
+        isDefault: newPers.isDefault
+      });
+      if (res && 'error' in res && res.error) {
+        throw res.error;
+      }
+      await loadData();
+      showToast(tr("Personality saved successfully."), 'success');
+    } catch (err: any) {
+      setLocalPersonalities(fallback);
+      showToast(tr("Error saving personality: ") + (err?.message || err), 'error');
+    }
   };
 
   const handleSetDefaultPersona = async (pers: TutorPersonality) => {
-    await dbService.saveTutorPersonality({
-      ...pers,
-      isDefault: true
-    });
+    const fallback = [...localPersonalities];
+    const updated = localPersonalities.map(p => ({
+      ...p,
+      isDefault: p.id === pers.id
+    }));
+    setLocalPersonalities(updated);
+
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('op_active_tutor_personality', pers.id);
     }
-    await loadData();
-    showToast(tr("Default personality updated."), 'success');
+
+    try {
+      const res = await dbService.saveTutorPersonality({
+        ...pers,
+        isDefault: true
+      });
+      if (res && 'error' in res && res.error) {
+        throw res.error;
+      }
+      await loadData();
+      showToast(tr("Default personality updated."), 'success');
+    } catch (err: any) {
+      setLocalPersonalities(fallback);
+      showToast(tr("Error setting default personality: ") + (err?.message || err), 'error');
+    }
   };
 
   const handleDeletePersona = (p: TutorPersonality) => {
@@ -60,27 +107,39 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
   };
 
   const handleDeletePersonaConfirmed = async (id: string) => {
-    const res = await dbService.deleteTutorPersonality(id);
-    if (res.error) {
-      showToast(tr("Error deleting personality: ") + res.error.message, 'error');
-    } else {
-      if (typeof window !== 'undefined') {
-        const activeTutor = window.localStorage.getItem('op_active_tutor_personality');
-        if (activeTutor === id) {
-          const fallback = personalities.find(p => p.isDefault && p.id !== id) || personalities.find(p => p.id !== id);
-          if (fallback) {
-            window.localStorage.setItem('op_active_tutor_personality', fallback.id);
-          } else {
-            window.localStorage.setItem('op_active_tutor_personality', 'socratic');
-          }
-        }
+    const fallbackList = [...localPersonalities];
+    const updatedList = localPersonalities.filter(p => p.id !== id);
+    setLocalPersonalities(updatedList);
+
+    let previousActiveTutor: string | null = null;
+    let fallbackTutorId: string | null = null;
+
+    if (typeof window !== 'undefined') {
+      previousActiveTutor = window.localStorage.getItem('op_active_tutor_personality');
+      if (previousActiveTutor === id) {
+        const fallback = localPersonalities.find(p => p.isDefault && p.id !== id) || localPersonalities.find(p => p.id !== id);
+        fallbackTutorId = fallback ? fallback.id : 'socratic';
+        window.localStorage.setItem('op_active_tutor_personality', fallbackTutorId);
+      }
+    }
+
+    try {
+      const res = await dbService.deleteTutorPersonality(id);
+      if (res && 'error' in res && res.error) {
+        throw res.error;
       }
       await loadData();
       showToast(tr("Personality deleted."), 'success');
+    } catch (err: any) {
+      setLocalPersonalities(fallbackList);
+      if (typeof window !== 'undefined' && previousActiveTutor === id && previousActiveTutor !== null) {
+        window.localStorage.setItem('op_active_tutor_personality', previousActiveTutor);
+      }
+      showToast(tr("Error deleting personality: ") + (err?.message || err), 'error');
     }
   };
 
-  const sortedPersonalities = [...personalities].sort((a, b) => {
+  const sortedPersonalities = [...localPersonalities].sort((a, b) => {
     const lvlA = a.archivingLevel || 0;
     const lvlB = b.archivingLevel || 0;
     if (lvlA === 0 && lvlB > 0) return -1;
@@ -142,8 +201,25 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                       if (nextLvl === 3) {
                         handleDeletePersona(p);
                       } else {
-                        await dbService.saveTutorPersonality({ ...p, archivingLevel: nextLvl });
-                        await loadData();
+                        const fallback = [...localPersonalities];
+                        const updated = localPersonalities.map(item => {
+                          if (item.id === p.id) {
+                            return { ...item, archivingLevel: nextLvl };
+                          }
+                          return item;
+                        });
+                        setLocalPersonalities(updated);
+
+                        try {
+                          const res = await dbService.saveTutorPersonality({ ...p, archivingLevel: nextLvl });
+                          if (res && 'error' in res && res.error) {
+                            throw res.error;
+                          }
+                          await loadData();
+                        } catch (err: any) {
+                          setLocalPersonalities(fallback);
+                          showToast(tr("Error updating archiving level: ") + (err?.message || err), 'error');
+                        }
                       }
                     }}
                   />

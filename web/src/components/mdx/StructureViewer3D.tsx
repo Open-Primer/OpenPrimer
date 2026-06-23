@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, HelpCircle, Info, AlertCircle } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface Atom {
   x: number;
@@ -229,6 +231,49 @@ const PRESETS: Preset[] = [
     description: "2D planar grid of sp² hybridized carbon atoms arranged in an interlocking hexagonal lattice.",
     ...generateGraphene()
   }
+];
+
+// Dummy array to force extraction of all localized strings by the backend i18n parser
+const _dummy_translations = (t: any) => [
+  t("Water (H₂O)"),
+  t("Polar molecule showing a bent molecular geometry with an angle of 104.5°."),
+  t("Carbon Dioxide (CO₂)"),
+  t("Linear molecule featuring double covalent bonds between carbon and oxygen."),
+  t("Methane (CH₄)"),
+  t("Symmetrical tetrahedral configuration showcasing four carbon-hydrogen single bonds."),
+  t("Chloromethane (CH₃Cl)"),
+  t("Simple organic halogen compound with a tetrahedral carbon bonded to three hydrogens and one chlorine."),
+  t("Ethanol (C₂H₅OH)"),
+  t("Clear, colorless alcohol featuring a methyl group, a methylene group, and a polar hydroxyl functional group."),
+  t("Salt Lattice (NaCl)"),
+  t("FCC (Face-Centered Cubic) crystalline arrangement of alternating sodium and chlorine ions."),
+  t("Graphene Sheet"),
+  t("2D planar grid of sp² hybridized carbon atoms arranged in an interlocking hexagonal lattice."),
+  
+  // Element Names
+  t("Hydrogen"), t("Helium"), t("Lithium"), t("Beryllium"), t("Boron"), t("Carbon"),
+  t("Nitrogen"), t("Oxygen"), t("Fluorine"), t("Neon"), t("Sodium"), t("Magnesium"),
+  t("Aluminium"), t("Silicon"), t("Phosphorus"), t("Sulfur"), t("Chlorine"),
+  t("Potassium"), t("Calcium"), t("Iron"), t("Copper"), t("Zinc"), t("Bromine"), t("Iodine"),
+
+  // Element Categories
+  t("Reactive Nonmetal"), t("Noble Gas"), t("Alkali Metal"), t("Alkaline Earth Metal"),
+  t("Metalloid"), t("Halogen"), t("Post-Transition Metal"), t("Transition Metal"),
+
+  // HUD and Interface Strings
+  t("Interactive 3D Structure Viewer"),
+  t("Drag to rotate molecule. Scroll/slider to zoom. Click an atom to inspect properties."),
+  t("Loading molecule..."),
+  t("Loading error"),
+  t("Return to Water (H₂O)"),
+  t("Atom Inspector"),
+  t("Clear"),
+  t("Active Specimen"),
+  t("Atom Legend"),
+  t("Atomic Number"),
+  t("Atomic Mass"),
+  t("Configuration"),
+  t("Electronegativity")
 ];
 
 const ELEMENT_DETAILS: Record<string, {
@@ -500,6 +545,9 @@ export const StructureViewer3D = ({
   showMenu,
   gradeLevel = "high_school"
 }: StructureViewer3DProps) => {
+
+  const { language } = useLanguage();
+  const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -907,10 +955,10 @@ export const StructureViewer3D = ({
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>Interactive 3D Structure Viewer</span>
+            <span>{t["Interactive 3D Structure Viewer"]}</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            Drag to rotate molecule. Scroll/slider to zoom. Click an atom to inspect properties.
+            {t["Drag to rotate molecule. Scroll/slider to zoom. Click an atom to inspect properties."]}
           </p>
         </div>
 
@@ -930,7 +978,7 @@ export const StructureViewer3D = ({
                     : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {p.name.split(' ')[0]}
+                {(t[p.name] || p.name).split(' ')[0]}
               </button>
             ))}
           </div>
@@ -957,7 +1005,7 @@ export const StructureViewer3D = ({
           {isLoading && (
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
               <RotateCw className="w-8 h-8 text-amber-500 animate-spin" />
-              <p className="text-xs font-black text-slate-300 uppercase tracking-widest animate-pulse">Chargement de la molécule...</p>
+              <p className="text-xs font-black text-slate-300 uppercase tracking-widest animate-pulse">{t["Loading molecule..."]}</p>
             </div>
           )}
 
@@ -965,7 +1013,7 @@ export const StructureViewer3D = ({
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-4 z-10">
               <AlertCircle className="w-10 h-10 text-rose-500" />
               <div className="space-y-1 max-w-sm">
-                <h5 className="text-xs font-black text-rose-400 uppercase tracking-wider">Erreur de chargement</h5>
+                <h5 className="text-xs font-black text-rose-400 uppercase tracking-wider">{t["Loading error"]}</h5>
                 <p className="text-[11px] font-semibold text-slate-400 leading-relaxed">{errorMsg}</p>
               </div>
               <button
@@ -978,7 +1026,7 @@ export const StructureViewer3D = ({
                 }}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-xs font-black text-slate-300 uppercase rounded-xl transition-all cursor-pointer"
               >
-                Retour à l'eau (H₂O)
+                {t["Return to Water (H₂O)"]}
               </button>
             </div>
           )}
@@ -1037,13 +1085,13 @@ export const StructureViewer3D = ({
             <div className="space-y-3.5 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max block">
-                  Atom Inspector
+                  {t["Atom Inspector"]}
                 </span>
                 <button 
                   onClick={() => setSelectedAtomIndex(null)}
                   className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase cursor-pointer"
                 >
-                  Clear
+                  {t["Clear"]}
                 </button>
               </div>
 
@@ -1055,29 +1103,29 @@ export const StructureViewer3D = ({
                   {selectedAtom.label}
                 </div>
                 <div>
-                  <h5 className="text-xs font-black text-white">{selectedElement.nameFR}</h5>
-                  <p className="text-[10px] text-slate-400 font-bold">{selectedElement.categoryFR}</p>
+                  <h5 className="text-xs font-black text-white">{t[selectedElement.nameEN] || selectedElement.nameEN}</h5>
+                  <p className="text-[10px] text-slate-400 font-bold">{t[selectedElement.categoryEN] || selectedElement.categoryEN}</p>
                 </div>
               </div>
 
               <div className="space-y-1.5 border-t border-slate-850/80 pt-3">
                 <div className="flex justify-between items-center text-[10px] font-bold">
-                  <span className="text-slate-500 uppercase tracking-wide">Numéro Atomique</span>
+                  <span className="text-slate-500 uppercase tracking-wide">{t["Atomic Number"]}</span>
                   <span className="text-slate-300 font-black">{selectedElement.num}</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-bold">
-                  <span className="text-slate-500 uppercase tracking-wide">Masse Atomique</span>
+                  <span className="text-slate-500 uppercase tracking-wide">{t["Atomic Mass"]}</span>
                   <span className="text-slate-300 font-black">{selectedElement.weight} u</span>
                 </div>
                 
                 {gradeLevel !== "middle_school" && (
                   <>
                     <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-slate-500 uppercase tracking-wide">Configuration</span>
+                      <span className="text-slate-500 uppercase tracking-wide">{t["Configuration"]}</span>
                       <span className="text-slate-300 font-mono font-black">{selectedElement.config}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-slate-500 uppercase tracking-wide">Électronégativité</span>
+                      <span className="text-slate-500 uppercase tracking-wide">{t["Electronegativity"]}</span>
                       <span className="text-slate-300 font-black">{selectedElement.electronegativity}</span>
                     </div>
                   </>
@@ -1088,18 +1136,18 @@ export const StructureViewer3D = ({
             /* Default Compound description card */
             <div className="space-y-3">
               <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max">
-                Active Specimen
+                {t["Active Specimen"]}
               </span>
-              <h5 className="text-sm font-extrabold text-slate-100">{activePreset.name}</h5>
+              <h5 className="text-sm font-extrabold text-slate-100">{t[activePreset.name] || activePreset.name}</h5>
               <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                {activePreset.description}
+                {t[activePreset.description] || activePreset.description}
               </p>
             </div>
           )}
 
           <div className="pt-4 border-t border-slate-850/80 space-y-2">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
-              Atom Legend
+              {t["Atom Legend"]}
             </span>
             <div className="flex flex-col gap-1.5">
               {Array.from(new Map(activePreset.atoms.map(a => [a.label, a])).values()).map((atom, idx) => (

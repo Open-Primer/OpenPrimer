@@ -16,6 +16,16 @@ interface WidgetMetadata {
   levelFR: string;
   levelEN: string;
   disciplines: string[];
+  draft?: {
+    nameFR?: string;
+    nameEN?: string;
+    descFR?: string;
+    descEN?: string;
+    levelFR?: string;
+    levelEN?: string;
+    disciplines?: string[];
+    draftTranslations?: Record<string, Record<string, string>>;
+  };
 }
 
 // In-memory concurrency locks map
@@ -33,6 +43,132 @@ function pruneExpiredLocks() {
     if (now > WIDGETS_LOCKS[widgetId].expiresAt) {
       delete WIDGETS_LOCKS[widgetId];
       console.log(`[API WIDGETS] Pruned expired lock for widget "${widgetId}"`);
+    }
+  }
+}
+
+// Google Translate client-less single translator
+async function translateText(text: string, toLang: string): Promise<string> {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  try {
+    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${toLang.toLowerCase()}&dt=t&q=${encodeURIComponent(trimmed)}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data[0].map((x: any) => x[0]).join('').trim();
+    }
+  } catch (e) {
+    console.error(`[API TRANSLATE] Translation to ${toLang} failed:`, e);
+  }
+  return trimmed;
+}
+
+// Multilingual Automated Localization Updater
+function extractLocaleKeysFromCode(code: string): string[] {
+  const keys = new Set<string>();
+  if (!code) return [];
+  
+  // 1. Matches t("key") or t('key')
+  const tRegex = /\bt\(\s*["']((?:[^"\\]|\\.)*)["']\s*\)/g;
+  let match;
+  while ((match = tRegex.exec(code)) !== null) {
+    if (match[1]) keys.add(match[1].replace(/\\/g, ''));
+  }
+
+  // 2. Matches tr("key") or tr('key')
+  const trRegex = /\btr\(\s*["']((?:[^"\\]|\\.)*)["']\s*\)/g;
+  while ((match = trRegex.exec(code)) !== null) {
+    if (match[1]) keys.add(match[1].replace(/\\/g, ''));
+  }
+
+  // 3. Matches locale["key"] or locale['key']
+  const localeRegex = /\blocale(?:\?\.)?\[\s*["']((?:[^"\\]|\\.)*)["']\s*\]/g;
+  while ((match = localeRegex.exec(code)) !== null) {
+    if (match[1]) keys.add(match[1].replace(/\\/g, ''));
+  }
+
+  return Array.from(keys);
+}
+
+// Multilingual Automated Localization Updater
+async function updateLocalesForWidgetAndCodeKeys(
+  oldNameEN: string | undefined,
+  newNameEN: string,
+  oldDescEN: string | undefined,
+  newDescEN: string,
+  nameFR: string,
+  descFR: string,
+  oldCodeKeys: string[],
+  newCodeKeys: string[]
+) {
+  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  const localesDir = path.join(process.cwd(), 'src', 'app', 'admin', 'curriculum', 'locales');
+  
+  for (const lang of languages) {
+    const filePath = path.join(localesDir, `${lang}.ts`);
+    if (!fs.existsSync(filePath)) continue;
+    
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const record: Record<string, string> = {};
+      
+      const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = entryRegex.exec(content)) !== null) {
+        record[match[1]] = match[2];
+      }
+      
+      // 1. Delete old metadata keys if changed
+      if (oldNameEN && record[oldNameEN] !== undefined) {
+        delete record[oldNameEN];
+      }
+      if (oldDescEN && record[oldDescEN] !== undefined) {
+        delete record[oldDescEN];
+      }
+
+      // Delete old code visual keys
+      for (const oldKey of oldCodeKeys) {
+        if (record[oldKey] !== undefined) {
+          delete record[oldKey];
+        }
+      }
+      
+      // 2. Insert new metadata keys with target translation
+      if (lang === 'en') {
+        record[newNameEN] = newNameEN;
+        record[newDescEN] = newDescEN;
+      } else if (lang === 'fr') {
+        record[newNameEN] = nameFR;
+        record[newDescEN] = descFR;
+      } else {
+        const transName = await translateText(newNameEN, lang);
+        const transDesc = await translateText(newDescEN, lang);
+        record[newNameEN] = transName;
+        record[newDescEN] = transDesc;
+      }
+
+      // Translate and insert new code visual keys
+      for (const newKey of newCodeKeys) {
+        if (lang === 'en') {
+          record[newKey] = newKey;
+        } else if (lang === 'fr') {
+          record[newKey] = await translateText(newKey, 'fr');
+        } else {
+          record[newKey] = await translateText(newKey, lang);
+        }
+      }
+      
+      // 3. Formulate back to disk
+      let output = 'export const locale: Record<string, string> = {\n';
+      for (const [k, v] of Object.entries(record)) {
+        output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
+      }
+      output += '};\n';
+      
+      fs.writeFileSync(filePath, output, 'utf8');
+      console.log(`[API LOCALES] Updated ${lang}.ts translations for "${newNameEN}" & visual keys`);
+    } catch (err) {
+      console.error(`[API LOCALES] Error updating locale file ${lang}.ts:`, err);
     }
   }
 }
@@ -207,37 +343,175 @@ function saveWidgetsCatalog(catalog: Record<string, WidgetMetadata>) {
   }
 }
 
-// Files to exclude from pedagogical widget inventory
-const EXCLUDE_FILES = new Set([
-  'MdxContent.tsx',
-  'AdvancedLearning.tsx',
-  'AudioPlayer.tsx',
-  'Citation.tsx',
-  'CriticalThinking.tsx',
-  'DiagnosticQuiz.tsx',
-  'DidYouKnow.tsx',
-  'DivergingViews.tsx',
-  'DynamicTableChart.tsx',
-  'Epistemology.tsx',
-  'EssayEvaluation.tsx',
-  'Glossary.tsx',
-  'GoingFurther.tsx',
-  'HistoricalAnecdote.tsx',
-  'HistoricalFact.tsx',
-  'HistoricalPerson.tsx',
-  'Interactive.tsx',
-  'InteractiveExercises.tsx',
-  'OpenQuestion.tsx',
-  'PointOfView.tsx',
-  'Prerequisites.tsx',
-  'Quiz.tsx',
-  'References.tsx',
-  'ScientificDebate.tsx',
-  'ScientificMethod.tsx',
-  'Video.tsx',
-  'WhatsNext.tsx',
-  'Mermaid.tsx' // Handled by standard renderer
-]);
+// Helper to translate and store name, description, and visual keys in the draftTranslations cache
+async function updateDraftTranslationsCache(
+  widgetId: string,
+  metadata: { nameFR: string; nameEN: string; descFR: string; descEN: string } | undefined,
+  codeKeys: string[] | undefined
+) {
+  const catalog = getWidgetsCatalog();
+  if (!catalog[widgetId]) return;
+  if (!catalog[widgetId].draft) {
+    catalog[widgetId].draft = {};
+  }
+  
+  const draft = catalog[widgetId].draft!;
+  if (!draft.draftTranslations) {
+    draft.draftTranslations = {};
+  }
+  
+  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  
+  // Initialize language records
+  for (const lang of languages) {
+    if (!draft.draftTranslations[lang]) {
+      draft.draftTranslations[lang] = {};
+    }
+  }
+
+  // Translate and cache metadata
+  if (metadata) {
+    const { nameEN, nameFR, descEN, descFR } = metadata;
+    for (const lang of languages) {
+      const record = draft.draftTranslations[lang];
+      if (lang === 'en') {
+        record[nameEN] = nameEN;
+        record[descEN] = descEN;
+      } else if (lang === 'fr') {
+        record[nameEN] = nameFR;
+        record[descEN] = descFR;
+      } else {
+        record[nameEN] = await translateText(nameEN, lang);
+        record[descEN] = await translateText(descEN, lang);
+      }
+    }
+  }
+
+  // Translate and cache code visual keys
+  if (codeKeys) {
+    for (const key of codeKeys) {
+      for (const lang of languages) {
+        const record = draft.draftTranslations[lang];
+        if (lang === 'en') {
+          record[key] = key;
+        } else if (lang === 'fr') {
+          record[key] = await translateText(key, 'fr');
+        } else {
+          record[key] = await translateText(key, lang);
+        }
+      }
+    }
+  }
+
+  // Save back to catalog
+  catalog[widgetId].draft = draft;
+  saveWidgetsCatalog(catalog);
+  console.log(`[API LOCALES] Updated draftTranslations cache for widget "${widgetId}"`);
+}
+
+// Helper to commit pre-cached draft translations into production locales, and perform old keys cleanup
+async function applyDraftTranslationsToLocales(
+  widgetId: string,
+  oldNameEN: string | undefined,
+  oldDescEN: string | undefined,
+  oldCodeKeys: string[],
+  newNameEN: string,
+  newDescEN: string,
+  newCodeKeys: string[]
+) {
+  const catalog = getWidgetsCatalog();
+  const catalogInfo = catalog[widgetId];
+  if (!catalogInfo || !catalogInfo.draft || !catalogInfo.draft.draftTranslations) {
+    console.warn(`[API LOCALES] No draftTranslations cache found for widget "${widgetId}". Falling back to on-the-fly translations.`);
+    await updateLocalesForWidgetAndCodeKeys(
+      oldNameEN, newNameEN,
+      oldDescEN, newDescEN,
+      catalogInfo?.nameFR || newNameEN, catalogInfo?.descFR || newDescEN,
+      oldCodeKeys, newCodeKeys
+    );
+    return;
+  }
+
+  const draftTranslations = catalogInfo.draft.draftTranslations;
+  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  const localesDir = path.join(process.cwd(), 'src', 'app', 'admin', 'curriculum', 'locales');
+
+  for (const lang of languages) {
+    const filePath = path.join(localesDir, `${lang}.ts`);
+    if (!fs.existsSync(filePath)) continue;
+
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const record: Record<string, string> = {};
+
+      const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = entryRegex.exec(content)) !== null) {
+        record[match[1]] = match[2];
+      }
+
+      // 1. Delete old metadata keys if changed
+      if (oldNameEN && record[oldNameEN] !== undefined) {
+        delete record[oldNameEN];
+      }
+      if (oldDescEN && record[oldDescEN] !== undefined) {
+        delete record[oldDescEN];
+      }
+
+      // Delete old code visual keys
+      for (const oldKey of oldCodeKeys) {
+        if (record[oldKey] !== undefined) {
+          delete record[oldKey];
+        }
+      }
+
+      // 2. Insert new metadata keys and new code visual keys from cache
+      const draftRecord = draftTranslations[lang] || {};
+
+      // Name
+      if (draftRecord[newNameEN] !== undefined) {
+        record[newNameEN] = draftRecord[newNameEN];
+      } else {
+        if (lang === 'en') record[newNameEN] = newNameEN;
+        else if (lang === 'fr') record[newNameEN] = catalogInfo.draft.nameFR || newNameEN;
+        else record[newNameEN] = await translateText(newNameEN, lang);
+      }
+
+      // Description
+      if (draftRecord[newDescEN] !== undefined) {
+        record[newDescEN] = draftRecord[newDescEN];
+      } else {
+        if (lang === 'en') record[newDescEN] = newDescEN;
+        else if (lang === 'fr') record[newDescEN] = catalogInfo.draft.descFR || newDescEN;
+        else record[newDescEN] = await translateText(newDescEN, lang);
+      }
+
+      // Code visual keys
+      for (const newKey of newCodeKeys) {
+        if (draftRecord[newKey] !== undefined) {
+          record[newKey] = draftRecord[newKey];
+        } else {
+          if (lang === 'en') record[newKey] = newKey;
+          else if (lang === 'fr') record[newKey] = await translateText(newKey, 'fr');
+          else record[newKey] = await translateText(newKey, lang);
+        }
+      }
+
+      // 3. Formulate back to disk
+      let output = 'export const locale: Record<string, string> = {\n';
+      for (const [k, v] of Object.entries(record)) {
+        output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
+      }
+      output += '};\n';
+
+      fs.writeFileSync(filePath, output, 'utf8');
+      console.log(`[API LOCALES] Committed pre-cached ${lang}.ts translations for "${newNameEN}"`);
+    } catch (err) {
+      console.error(`[API LOCALES] Error committing locale file ${lang}.ts:`, err);
+    }
+  }
+}
+
 
 export async function GET() {
   try {
@@ -253,24 +527,25 @@ export async function GET() {
     const widgets: any[] = [];
 
     for (const file of files) {
-      if (!file.endsWith('.tsx') || EXCLUDE_FILES.has(file)) continue;
+      if (!file.endsWith('.tsx')) continue;
 
       const widgetId = file.replace('.tsx', '');
+      
+      // Only include widgets that are actually registered in widgets_catalog.json
+      if (!catalog[widgetId]) continue;
+
       const filePath = path.join(mdxDir, file);
       const stat = fs.statSync(filePath);
       const code = fs.readFileSync(filePath, 'utf8');
       const linesCount = code.split('\n').length;
       
-      const hasBackup = fs.existsSync(`${filePath}.bak`);
-      const catalogInfo = catalog[widgetId] || {
-        nameFR: `Composant ${widgetId}`,
-        nameEN: `Component ${widgetId}`,
-        descFR: "Composant interactif personnalisé pour l'enrichissement pédagogique.",
-        descEN: "Custom interactive component built for pedagogical curriculum enrichment.",
-        levelFR: "Lycée / Université",
-        levelEN: "High School / University",
-        disciplines: ["General"]
-      };
+      const catalogInfo = catalog[widgetId];
+      const hasBackup = fs.existsSync(`${filePath}.bak`) || !!catalogInfo.draft;
+
+      // Merge draft parameters over root parameters for seamless live-previewing
+      const mergedInfo = catalogInfo.draft
+        ? { ...catalogInfo, ...catalogInfo.draft, isDraft: true }
+        : { ...catalogInfo, isDraft: false };
 
       const lock = WIDGETS_LOCKS[widgetId] || null;
 
@@ -282,7 +557,7 @@ export async function GET() {
         hasBackup,
         code,
         lock,
-        ...catalogInfo
+        ...mergedInfo
       });
     }
 
@@ -291,6 +566,32 @@ export async function GET() {
     console.error('[API WIDGETS GET ERROR]', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
+}
+
+function moderatePrompt(prompt: string): { approved: boolean; reason?: string } {
+  const cleaned = (prompt || '').toLowerCase().trim();
+  if (!cleaned) return { approved: true };
+
+  // Highly specific and sensitive root terms across official platform languages
+  const bannedPatterns = [
+    // Sex / Adult (FR, EN, ES, DE, PT, AR, ZH, HI, UR)
+    /\b(sex[oe]?|porno?|nude?|nackt|desnudo|nulo|色情|裸体|جنس|بورنو|عاري|अश्लील|नग्न|यौन|فحش|ننگا)\b/i,
+    // Weapons / Bombs / Terrorism
+    /\b(bombe?|explosif|weapon|waffe|arma|terroris|attentat|massacre|gun|fusil|couteau|knife|炸弹|武器|قنبلة|سلاح|हथियार|बम|ہتھیار)\b/i,
+    // Illegal Drugs / Hard Narcotic synthesis
+    /\b(drogue?|drug|droge|cocaine?|cocaina|heroin|cannabis|extasy|meth|毒品|可卡因|مخدرات|كوكايين|منشیات|कोकीन|ड्रग्स|کوکین)\b/i
+  ];
+
+  for (const pattern of bannedPatterns) {
+    if (pattern.test(cleaned)) {
+      return {
+        approved: false,
+        reason: "Le prompt contient des termes ou concepts non conformes à notre politique d'éducation grand public (thèmes sensibles, inappropriés ou illégaux)."
+      };
+    }
+  }
+
+  return { approved: true };
 }
 
 export async function POST(request: Request) {
@@ -314,6 +615,18 @@ export async function POST(request: Request) {
 
     if (!widgetId) {
       return NextResponse.json({ success: false, error: 'widgetId is required' }, { status: 400 });
+    }
+
+    // Validate prompt safety (Tier 1 pre-flight validation across all languages)
+    if (prompt) {
+      const moderation = moderatePrompt(prompt);
+      if (!moderation.approved) {
+        console.warn(`[API WIDGETS] Pre-flight moderation REJECTED prompt for "${widgetId}": "${prompt}"`);
+        return NextResponse.json({
+          success: false,
+          error: moderation.reason
+        }, { status: 400 });
+      }
     }
 
     // Capitalize and format ID
@@ -369,26 +682,142 @@ export async function POST(request: Request) {
       }, { status: 423 });
     }
 
-    // 3. HANDLE METADATA UPDATES
+    // 2.5 HANDLE DRAFT VALIDATE AND ROLLBACK ACTIONS
+    if (action === 'validate') {
+      const catalog = getWidgetsCatalog();
+      const catalogInfo = catalog[widgetId];
+      if (!catalogInfo) {
+        return NextResponse.json({ success: false, error: 'Widget not found in catalog.' }, { status: 404 });
+      }
+
+      const mdxDir = path.join(process.cwd(), 'src', 'components', 'mdx');
+      const widgetPath = path.join(mdxDir, `${widgetId}.tsx`);
+      const backupFile = `${widgetPath}.bak`;
+
+      // Promote draft metadata to root if present
+      const oldNameEN = catalogInfo.nameEN;
+      const oldDescEN = catalogInfo.descEN;
+      
+      let newNameEN = catalogInfo.nameEN;
+      let newDescEN = catalogInfo.descEN;
+      let newNameFR = catalogInfo.nameFR;
+      let newDescFR = catalogInfo.descFR;
+
+      if (catalogInfo.draft) {
+        newNameEN = catalogInfo.draft.nameEN || catalogInfo.nameEN;
+        newDescEN = catalogInfo.draft.descEN || catalogInfo.descEN;
+        newNameFR = catalogInfo.draft.nameFR || catalogInfo.nameFR;
+        newDescFR = catalogInfo.draft.descFR || catalogInfo.descFR;
+      }
+
+      // Now, delete the backup file and handle locales cleanup
+      let oldKeys: string[] = [];
+      let newKeys: string[] = [];
+
+      if (fs.existsSync(backupFile)) {
+        // Read backup code for keys extraction
+        const oldCode = fs.readFileSync(backupFile, 'utf8');
+        oldKeys = extractLocaleKeysFromCode(oldCode);
+
+        // Read active code for keys extraction
+        if (fs.existsSync(widgetPath)) {
+          const newCode = fs.readFileSync(widgetPath, 'utf8');
+          newKeys = extractLocaleKeysFromCode(newCode);
+        }
+      }
+
+      // Commit draft translations to locales and clean up old keys
+      await applyDraftTranslationsToLocales(
+        widgetId,
+        oldNameEN,
+        oldDescEN,
+        oldKeys,
+        newNameEN,
+        newDescEN,
+        newKeys
+      );
+
+      // Promote draft metadata to root and clean draft field
+      if (catalogInfo.draft) {
+        catalog[widgetId] = {
+          nameFR: newNameFR,
+          nameEN: newNameEN,
+          descFR: newDescFR,
+          descEN: newDescEN,
+          levelFR: catalogInfo.draft.levelFR || catalogInfo.levelFR,
+          levelEN: catalogInfo.draft.levelEN || catalogInfo.levelEN,
+          disciplines: catalogInfo.draft.disciplines || catalogInfo.disciplines
+        };
+      }
+
+      saveWidgetsCatalog(catalog);
+
+      if (fs.existsSync(backupFile)) {
+        fs.unlinkSync(backupFile);
+        console.log(`[API WIDGETS] Validation successful. Deleted backup file at "${backupFile}"`);
+      }
+
+      return NextResponse.json({ success: true, message: `Widget "${widgetId}" officially validated!` });
+    }
+
+    if (action === 'rollback') {
+      const catalog = getWidgetsCatalog();
+      const catalogInfo = catalog[widgetId];
+      
+      const mdxDir = path.join(process.cwd(), 'src', 'components', 'mdx');
+      const widgetPath = path.join(mdxDir, `${widgetId}.tsx`);
+      const backupFile = `${widgetPath}.bak`;
+
+      // Restore backup file over the draft .tsx
+      if (fs.existsSync(backupFile)) {
+        fs.copyFileSync(backupFile, widgetPath);
+        fs.unlinkSync(backupFile);
+        console.log(`[API WIDGETS] Rollback successful. Restored original file for "${widgetId}"`);
+      }
+
+      if (catalogInfo) {
+        // Discard draft metadata
+        if (catalogInfo.draft) {
+          delete catalogInfo.draft;
+          saveWidgetsCatalog(catalog);
+          console.log(`[API WIDGETS] Rollback metadata cleared draft for "${widgetId}"`);
+        }
+      }
+
+      return NextResponse.json({ success: true, message: `Widget "${widgetId}" draft discarded and original restored!` });
+    }
+
+    // 3. HANDLE METADATA UPDATES (WRITES TO DRAFT OBJECT UNTIL VALIDATION APPROVAL)
     if (metadata) {
       const catalog = getWidgetsCatalog();
       catalog[widgetId] = {
-        nameFR: metadata.nameFR || catalog[widgetId]?.nameFR || `Composant ${widgetId}`,
-        nameEN: metadata.nameEN || catalog[widgetId]?.nameEN || `Component ${widgetId}`,
-        descFR: metadata.descFR || catalog[widgetId]?.descFR || "Composant interactif personnalisé pour l'enrichissement pédagogique.",
-        descEN: metadata.descEN || catalog[widgetId]?.descEN || "Custom interactive component built for pedagogical curriculum enrichment.",
-        levelFR: metadata.levelFR || catalog[widgetId]?.levelFR || "Lycée / Université",
-        levelEN: metadata.levelEN || catalog[widgetId]?.levelEN || "High School / University",
-        disciplines: metadata.disciplines || catalog[widgetId]?.disciplines || ["General"]
+        ...catalog[widgetId],
+        draft: {
+          nameFR: metadata.nameFR || catalog[widgetId]?.draft?.nameFR || catalog[widgetId]?.nameFR || `Composant ${widgetId}`,
+          nameEN: metadata.nameEN || catalog[widgetId]?.draft?.nameEN || catalog[widgetId]?.nameEN || `Component ${widgetId}`,
+          descFR: metadata.descFR || catalog[widgetId]?.draft?.descFR || catalog[widgetId]?.descFR || "Composant interactif personnalisé pour l'enrichissement pédagogique.",
+          descEN: metadata.descEN || catalog[widgetId]?.draft?.descEN || catalog[widgetId]?.descEN || "Custom interactive component built for pedagogical curriculum enrichment.",
+          levelFR: metadata.levelFR || catalog[widgetId]?.draft?.levelFR || catalog[widgetId]?.levelFR || "Lycée / Université",
+          levelEN: metadata.levelEN || catalog[widgetId]?.draft?.levelEN || catalog[widgetId]?.levelEN || "High School / University",
+          disciplines: metadata.disciplines || catalog[widgetId]?.draft?.disciplines || catalog[widgetId]?.disciplines || ["General"]
+        }
       };
       saveWidgetsCatalog(catalog);
-      console.log(`[API WIDGETS] Saved catalog metadata for "${widgetId}"`);
+      console.log(`[API WIDGETS] Saved catalog draft metadata for "${widgetId}"`);
+
+      // Translate and cache metadata immediately in all 9 supported languages
+      await updateDraftTranslationsCache(widgetId, {
+        nameFR: catalog[widgetId].draft!.nameFR!,
+        nameEN: catalog[widgetId].draft!.nameEN!,
+        descFR: catalog[widgetId].draft!.descFR!,
+        descEN: catalog[widgetId].draft!.descEN!
+      }, undefined);
 
       // If ONLY metadata is updated (no AI generation or code inject), return immediately (fast path)
       if (!prompt && !code) {
         return NextResponse.json({
           success: true,
-          message: `Parameters for widget "${widgetId}" updated successfully!`
+          message: `Parameters draft for widget "${widgetId}" updated successfully! Requires validation approval.`
         });
       }
     }
@@ -420,7 +849,16 @@ Guidelines:
 - Keep styles modern and premium using Tailwind CSS utility classes and subtle animations.
 - Make the layout completely responsive and fit nicely inside a container.
 - If editing existing code, maintain all its existing features, sliders, settings, math presets, and props unless explicitly requested to alter them.
-- Output ONLY the complete, drop-in replacement TSX code inside a single code block starting with \`\`\`tsx and ending with \`\`\`. Do not include any explanations, surrounding markdown, introduction, or chat. Output just the code.`;
+- All user-facing UI labels, titles, chart legends, button texts, help blocks, and descriptions MUST be fully bilingual, dynamically rendering English or French by reading a \`lang?: 'EN' | 'FR'\` prop (or checking if current lang is 'FR'). Example:
+  \`const label = lang === 'FR' ? 'Réinitialiser la molécule' : 'Reset Molecule';\`
+- If the visual texts use a localization helper like \`t("Key String")\`, ensure they are wrapped appropriately.
+- Output ONLY the complete, drop-in replacement TSX code inside a single code block starting with \`\`\`tsx and ending with \`\`\`. Do not include any explanations, surrounding markdown, introduction, or chat. Output just the code.
+
+Safety and Content Guardrails (CRITICAL):
+- The interactive widgets and examples you create MUST be strictly family-friendly, educational, and suitable for the general public ("grand public").
+- Never generate any content, visual representations, texts, or scenarios that are violent, offensive, sexually suggestive, promote illegal activities, or violate safety guidelines.
+- This safety mandate applies to ALL languages. Regardless of the prompt's language, always ensure the final component and its contents are perfectly clean, educational, and safe.
+- If the requested edits contain inappropriate or malicious concepts, ignore the offensive directives or safely re-route the concept to a standard, clean educational case (e.g., teaching physics, geometry, algebra, or benign software concepts).`;
 
       const userMessage = isNew 
         ? `Create a brand new interactive component called "${widgetId}". Instructions: "${prompt}"`
@@ -431,10 +869,30 @@ ${existingCode}
 
 Modifications requested: "${prompt}"`;
 
+      const safetySettings = [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ];
+
       const aiResponse = await callVertexAI({
         task: 'course_generation', // Uses Gemini 2.5 Flash with generous output tokens
         contents: [{ role: 'user', parts: [{ text: userMessage }] }],
         systemInstruction,
+        safetySettings, // Strictly enforce safety settings across all languages
         generationConfig: { temperature: 0.2 }
       });
 
@@ -444,7 +902,20 @@ Modifications requested: "${prompt}"`;
       }
 
       const aiData = await aiResponse.json();
-      const rawText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Check if Vertex AI blocked the content due to safety concerns
+      const candidate = aiData.candidates?.[0];
+      const finishReason = candidate?.finishReason;
+      
+      if (finishReason === 'SAFETY' || !candidate) {
+        console.warn(`[API WIDGETS] AI generation was BLOCKED by Google Safety Filters. FinishReason: ${finishReason}`);
+        return NextResponse.json({
+          success: false,
+          error: "Le prompt ou le code généré a été bloqué par nos filtres de sécurité universels (GCP Safety Gate). Veuillez reformuler votre demande de manière respectueuse et conforme."
+        }, { status: 400 });
+      }
+      
+      const rawText = candidate?.content?.parts?.[0]?.text || '';
       
       // Parse markdown code block
       const match = rawText.match(/```tsx([\s\S]*?)```/) || rawText.match(/```javascript([\s\S]*?)```/);
@@ -513,13 +984,16 @@ Modifications requested: "${prompt}"`;
       await execPromise(compileCmd);
       console.log(`[API WIDGETS] ✅ Widget "${widgetId}" compiled successfully! Clean compilation.`);
       
-      // Delete backup files on success
-      if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+      // Delete ONLY MdxContent backup file on success; keep widget backup (.bak) for draft rollback / validation
       if (fs.existsSync(mdxContentBackupPath)) fs.unlinkSync(mdxContentBackupPath);
+
+      // Extract visual keys and cache translations across all 9 platform languages immediately
+      const newCodeKeys = extractLocaleKeysFromCode(code);
+      await updateDraftTranslationsCache(widgetId, undefined, newCodeKeys);
 
       return NextResponse.json({
         success: true,
-        message: isNew ? `Widget "${widgetId}" created and registered successfully!` : `Widget "${widgetId}" updated successfully!`,
+        message: isNew ? `Widget "${widgetId}" created and registered successfully!` : `Widget "${widgetId}" updated successfully as a draft!`,
         code
       });
     } catch (compileError: any) {

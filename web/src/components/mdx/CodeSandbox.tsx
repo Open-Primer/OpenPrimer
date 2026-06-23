@@ -10,6 +10,27 @@ interface CodeSandboxProps {
   height?: string;
 }
 
+function injectSecureCSP(rawCode: string): string {
+  const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none';">`;
+  const trimmed = (rawCode || '').trim();
+
+  if (/<head[^>]*>/i.test(trimmed)) {
+    return trimmed.replace(/(<head[^>]*>)/i, `$1\n  ${cspMeta}`);
+  } else if (/<html[^>]*>/i.test(trimmed)) {
+    return trimmed.replace(/(<html[^>]*>)/i, `$1\n<head>\n  ${cspMeta}\n</head>`);
+  } else {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  ${cspMeta}
+</head>
+<body>
+${trimmed}
+</body>
+</html>`;
+  }
+}
+
 export function CodeSandbox({
   initialCode = `<!-- Modifiez ce code pour voir le résultat en temps réel ! -->
 <div class="card">
@@ -237,13 +258,18 @@ export function CodeSandbox({
               <ExternalLink className="w-3 h-3 text-slate-500" />
               Aperçu en direct
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-block text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                🔒 Bac à sable sécurisé (CSP active)
+              </span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
           </div>
           <div className="bg-slate-900 relative" style={{ height }}>
             <iframe
               key={previewKey}
               ref={iframeRef}
-              srcDoc={code}
+              srcDoc={injectSecureCSP(code)}
               title="Code Sandbox Preview"
               sandbox="allow-scripts"
               className="w-full h-full border-0 bg-white"

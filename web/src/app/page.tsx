@@ -1043,6 +1043,8 @@ export default function Home() {
                           <input 
                             type="email"
                             required
+                            id="signup-email"
+                            autoComplete="username"
                             value={email}
                             onChange={(e) => { setEmail(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
@@ -1061,6 +1063,8 @@ export default function Home() {
                           <input 
                             type={showPassword ? 'text' : 'password'}
                             required
+                            id="signup-password"
+                            autoComplete="new-password"
                             value={password}
                             onChange={(e) => { setPassword(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             onFocus={() => setIsPasswordFocused(true)}
@@ -1093,6 +1097,8 @@ export default function Home() {
                           <input 
                             type={showConfirmPassword ? 'text' : 'password'}
                             required
+                            id="signup-confirm-password"
+                            autoComplete="new-password"
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value.slice(0, 60)); if (errorMsg) setErrorMsg(''); }}
                             maxLength={60}
@@ -1193,6 +1199,8 @@ export default function Home() {
                           <input 
                             type="email"
                             required
+                            id="login-email"
+                            autoComplete="username"
                             value={email}
                             onChange={(e) => { setEmail(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="name@email.com"
@@ -1210,6 +1218,8 @@ export default function Home() {
                           <input 
                             type={showPassword ? 'text' : 'password'}
                             required
+                            id="login-password"
+                            autoComplete="current-password"
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); if (errorMsg) setErrorMsg(''); }}
                             placeholder="••••••••••••"
