@@ -557,4 +557,10 @@ export const locale: Record<string, string> = {
   "Computer Science": "Computer Science",
   "Economics": "Economics",
   "Social Sciences": "Social Sciences",
+  "Search by course or target language...": "Search by course or target language...",
+  "Click to edit your admin nickname": "Click to edit your admin nickname",
+  "Profile": "Profile",
+  "Re-scan MDX directory to load physical disk changes": "Re-scan MDX directory to load physical disk changes",
+  "catalog widgets": "catalog widgets",
+  "Custom interactive component built for pedagogical curriculum enrichment.": "Custom interactive component built for pedagogical curriculum enrichment.",
 };

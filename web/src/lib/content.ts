@@ -2790,6 +2790,42 @@ function applySystematicHealing(content: string, lang: string, lessonSlug?: stri
     const frChartReplacement = `<DataChart title="Biais Cognitifs les plus Influents dans les Décisions Financières" dataBase64="${frChartBase64}" xKey="label" yKey="value" />`;
     healed = healed.replace(frChartTarget, frChartReplacement);
 
+    // 3b. Programmatically replace bracketed pseudo-widgets or unregistered custom tags
+    const frCognitiveBiasesData = [
+      { "label": "Aversion à la Perte", "value": 30 },
+      { "label": "Biais d'Ancrage", "value": 25 },
+      { "label": "Excès de Confiance", "value": 20 },
+      { "label": "Biais de Confirmation", "value": 20 },
+      { "label": "Heuristique de Disponibilité", "value": 15 },
+      { "label": "Effet de Cadrage", "value": 10 }
+    ];
+    const frCognitiveBiasesBase64 = Buffer.from(JSON.stringify(frCognitiveBiasesData)).toString('base64');
+    const frCognitiveBiasesReplacement = `<DataChart title="Répartition et Impact des Principaux Biais Cognitifs" dataBase64="${frCognitiveBiasesBase64}" xKey="label" yKey="value" />`;
+    healed = healed.replace(/\[\[WIDGET:cognitive-biases-chart[\s\S]*?\]\]/gi, frCognitiveBiasesReplacement);
+    healed = healed.replace(/<CognitiveBiasesChart[\s\S]*?\/>/gi, frCognitiveBiasesReplacement);
+
+    const ptChartData = [
+      { "label": "-5", "value": -9.3 },
+      { "label": "-4", "value": -7.6 },
+      { "label": "-3", "value": -5.9 },
+      { "label": "-2", "value": -4.1 },
+      { "label": "-1", "value": -2.3 },
+      { "label": "0", "value": 0 },
+      { "label": "1", "value": 1.0 },
+      { "label": "2", "value": 1.8 },
+      { "label": "3", "value": 2.6 },
+      { "label": "4", "value": 3.4 },
+      { "label": "5", "value": 4.1 }
+    ];
+    const ptChartBase64 = Buffer.from(JSON.stringify(ptChartData)).toString('base64');
+    const frProspectTheoryReplacement = `<DataChart title="La Fonction de Valeur Asymétrique de la Théorie des Perspectives" type="line" dataBase64="${ptChartBase64}" xAxisLabel="Gains / Pertes" yAxisLabel="Valeur Subjective" />`;
+    healed = healed.replace(/\[\[WIDGET:prospect-theory-plot[\s\S]*?\]\]/gi, frProspectTheoryReplacement);
+    healed = healed.replace(/<ProspectTheoryPlot[\s\S]*?\/>/gi, frProspectTheoryReplacement);
+
+    // Omit AI-generated images to fully respect strict No-Fallback-to-AI Policy
+    healed = healed.replace(/<CustomFigure[^>]*src="https:\/\/image\.pollinations\.ai[^>]*\/?>/gi, '');
+
+
     // 4. Mermaid Chronology
     const frMermaidTarget = /<Mermaid\s+chart=\{\`graph TD\s*\n\s*A\[Début\]\s*-->\s*B\[Fin\]\`\}\s*\/?>/gi;
     const frMermaidReplacement = `<Mermaid chart={\`graph TD
@@ -2909,6 +2945,9 @@ Cependant, la Théorie des Perspectives révèle que l'être humain souffre d'av
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string): string {
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = applySystematicHealing(content, lang, lessonSlug);
+
+  // Clean up duplicate frontmatter boundaries if any
+  processed = processed.replace(/^---\s*\r?\n+---\s*\r?\n/g, '---\n');
 
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   processed = decodeHtmlEncodedTags(processed);

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2, VolumeX, Loader2, Music4 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { useMdxStatus } from './MdxStatusContext';
 
 interface AudioPlayerProps {
   url: string;
@@ -22,6 +23,13 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const { markDegraded } = useMdxStatus();
+
+  useEffect(() => {
+    if (status === 'unavailable') {
+      markDegraded('audio');
+    }
+  }, [status, markDegraded]);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

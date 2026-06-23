@@ -687,9 +687,9 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               <span 
                 onClick={() => setIsEditingAdminName(true)}
                 className="text-[10px] text-slate-400 font-bold hover:text-teal-400 cursor-pointer transition-colors"
-                title="Cliquer pour modifier votre nom d'admin"
+                title={tr("Click to edit your admin nickname")}
               >
-                Profile: <span className="underline decoration-dotted text-slate-200">{adminId}</span>
+                {tr("Profile")}: <span className="underline decoration-dotted text-slate-200">{adminId}</span>
               </span>
             )}
           </div>
@@ -698,7 +698,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             onClick={loadWidgets}
             disabled={loading || isExecuting}
             className="px-4 py-2.5 border border-slate-850 hover:border-teal-500/25 bg-slate-900/40 text-slate-400 hover:text-teal-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            title="Re-scan le dossier MDX pour charger les modifications physiques du disque"
+            title={tr("Re-scan MDX directory to load physical disk changes")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             {tr("Refresh")}
@@ -729,7 +729,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             />
           </div>
           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider shrink-0">
-            {filteredWidgets.length} catalog widgets
+            {filteredWidgets.length} {tr("catalog widgets")}
           </span>
         </div>
 

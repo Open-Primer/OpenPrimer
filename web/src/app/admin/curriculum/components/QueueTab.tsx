@@ -680,9 +680,9 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                     <td className="px-6 py-4 font-mono text-[9px] text-slate-500">
                       {task.completedAt ? new Date(task.completedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span className="text-slate-700">—</span>}
                     </td>
-                    <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{tr(task.type)}</td>
+                    <td className="px-6 py-4 font-black uppercase text-[9px] text-slate-500 tracking-wider">{tr(String(task.type || '').toUpperCase())}</td>
                     <td className="px-6 py-4">
-                      <span className={"px-2.5 py-1 text-[8px] font-black rounded-full uppercase border " + statusColor}>
+                      <span className={"px-2.5 py-1 text-[8px] font-black rounded-full uppercase border whitespace-nowrap " + statusColor}>
                         {tr(task.status)}
                       </span>
                     </td>
@@ -742,7 +742,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                             });
                             if (!matched) {
                               return (
-                                <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-rose-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
+                                <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-rose-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed whitespace-nowrap">
                                   {tr("Deleted course")}
                                 </span>
                               );
@@ -751,7 +751,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                             if (isOutdated) {
                               return (
                                 <span 
-                                  className="px-3 py-1.5 bg-slate-950 border border-slate-900/50 text-amber-500/80 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed flex items-center gap-1 shadow-lg shadow-amber-550/5"
+                                  className="px-3 py-1.5 bg-slate-950 border border-slate-900/50 text-amber-500/80 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed flex items-center gap-1 shadow-lg shadow-amber-550/5 whitespace-nowrap"
                                   title={tr("This action is outdated by a newer pipeline task.")}
                                 >
                                   ⚠️ {tr("Outdated (Done)")}
@@ -782,14 +782,14 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                               );
                             }
                             return (
-                              <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed">
+                              <span className="px-3 py-1.5 bg-slate-950 border border-slate-900 text-slate-600 rounded-xl text-[8px] font-black uppercase tracking-wider select-none cursor-not-allowed whitespace-nowrap">
                                 {tr("Locked (Done)")}
                               </span>
                             );
                           })()
                         ) : task.status === 'failed' ? (
                           <div className="flex items-center gap-2">
-                            <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none">
+                            <span className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 text-red-500 rounded-xl text-[8px] font-black uppercase tracking-wider select-none whitespace-nowrap">
                               {tr('Failed')}
                             </span>
                             <button 

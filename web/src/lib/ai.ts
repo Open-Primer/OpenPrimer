@@ -254,7 +254,7 @@ const lessonWidgetsSchema = {
   ]
 };
 
-export function validateAndFixWidgets(widgets: any): any {
+export function validateAndFixWidgets(widgets: any, discipline?: string): any {
   if (!widgets || typeof widgets !== 'object') {
     throw new Error("Widgets content is empty or malformed.");
   }
@@ -373,6 +373,68 @@ export function validateAndFixWidgets(widgets: any): any {
         if (!comp.props.fn) comp.props.fn = "x^2";
       }
       return comp;
+    });
+
+    // Programmatically filter out components that are incompatible with the course discipline
+    const disc = (discipline || "").toLowerCase().trim();
+    const isMath = disc.includes("math") || disc.includes("algè") || disc.includes("geomet");
+    const isPhysics = disc.includes("physic") || disc.includes("physiq") || disc.includes("astron");
+    const isChemistry = disc.includes("chemist") || disc.includes("chimi");
+    const isBiology = disc.includes("biolog") || disc.includes("life science") || disc.includes("anatom") || disc.includes("medec") || disc.includes("medici") || disc.includes("santé");
+    const isCS = disc.includes("computer") || disc.includes("informatique") || disc.includes("program") || disc.includes("software");
+    const isEconomics = disc.includes("econom") || disc.includes("finan") || disc.includes("busines") || disc.includes("comptab");
+    const isSocialPsych = disc.includes("psych") || disc.includes("sociol") || disc.includes("social");
+    const isHistoryGeogHumanities = disc.includes("histor") || disc.includes("geogr") || disc.includes("philosoph") || disc.includes("liter") || disc.includes("lettr") || disc.includes("art");
+
+    widgets.interactiveComponents = widgets.interactiveComponents.filter((comp: any) => {
+      if (!comp || !comp.componentType) return false;
+      
+      const alwaysAllowed = ["Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer"];
+      if (alwaysAllowed.includes(comp.componentType)) {
+        return true;
+      }
+      
+      if (comp.componentType === "Geometry2D" || comp.componentType === "BasicMathExplorer" || comp.componentType === "FunctionManipulator") {
+        return isMath;
+      }
+      
+      if (comp.componentType === "FunctionPlotter" || comp.componentType === "EquationManipulator") {
+        return isMath || isPhysics;
+      }
+      
+      if (comp.componentType === "DynamicSimulation") {
+        return isPhysics || isMath;
+      }
+      
+      if (comp.componentType === "StructureViewer3D" || comp.componentType === "QuantumOrbitalExplorer") {
+        return isPhysics || isChemistry;
+      }
+      
+      if (comp.componentType === "ChemicalStoichiometry") {
+        return isChemistry;
+      }
+      
+      if (comp.componentType === "CodeSandbox") {
+        return isCS;
+      }
+      
+      if (comp.componentType === "InteractiveDiagram") {
+        return isBiology || isSocialPsych || isHistoryGeogHumanities;
+      }
+      
+      if (comp.componentType === "ComparisonSlider") {
+        return isBiology || isHistoryGeogHumanities;
+      }
+      
+      if (comp.componentType === "GestaltInteractive") {
+        return isSocialPsych || isHistoryGeogHumanities;
+      }
+      
+      if (comp.componentType === "DataChart") {
+        return isEconomics || isPhysics || isSocialPsych || isMath || isHistoryGeogHumanities || isBiology || isChemistry || isCS;
+      }
+      
+      return false;
     });
   }
 

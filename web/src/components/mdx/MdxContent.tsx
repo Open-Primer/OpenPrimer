@@ -53,6 +53,88 @@ import { ScientificDebate } from './ScientificDebate';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { dbService } from '@/lib/db';
+import { MdxStatusProvider, useMdxStatus } from './MdxStatusContext';
+
+const DEGRADED_STRINGS = {
+  EN: {
+    bannerTitle: "Degraded Mode Active",
+    bannerDesc: "Some multimedia elements or interactive widgets could not be loaded or were restricted for pedagogical integrity. The lesson remains fully readable.",
+    assets: {
+      image: "illustrations / figures",
+      video: "videos",
+      audio: "audio tracks",
+      quiz: "interactive quizzes",
+      widget: "interactive tools",
+    }
+  },
+  FR: {
+    bannerTitle: "Mode Dégradé Actif",
+    bannerDesc: "Certains éléments multimédias ou widgets interactifs n'ont pas pu être chargés ou ont été restreints par intégrité pédagogique. La leçon reste entièrement lisible.",
+    assets: {
+      image: "illustrations / schémas",
+      video: "vidéos",
+      audio: "pistes audio",
+      quiz: "quiz interactifs",
+      widget: "outils interactifs",
+    }
+  },
+  ES: {
+    bannerTitle: "Modo Degradado Activo",
+    bannerDesc: "Algunos elementos multimedia o widgets interactivos no se pudieron cargar o fueron restringidos por integridad pedagógica. La lección sigue siendo completamente legible.",
+    assets: {
+      image: "ilustraciones / figuras",
+      video: "videos",
+      audio: "pistas de audio",
+      quiz: "cuestionarios interactivos",
+      widget: "herramientas interactivas",
+    }
+  }
+};
+
+function DegradedModeBanner() {
+  const { isDegraded, degradedReasons } = useMdxStatus();
+  const { language } = useLanguage();
+  
+  if (!isDegraded) return null;
+  
+  const langKey = (language?.toUpperCase() === 'FR' || language?.toUpperCase() === 'ES') ? language.toUpperCase() : 'EN';
+  const strings = DEGRADED_STRINGS[langKey as 'EN' | 'FR' | 'ES'] || DEGRADED_STRINGS.EN;
+  
+  const formattedReasons = Array.from(degradedReasons)
+    .map(r => strings.assets[r as keyof typeof strings.assets] || r)
+    .join(', ');
+    
+  return (
+    <div className="mb-6 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 backdrop-blur-md text-amber-800 dark:text-amber-200 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5 animate-pulse" />
+        <div className="flex-1 min-w-0">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 mb-1">
+            {strings.bannerTitle}
+          </h4>
+          <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
+            {strings.bannerDesc}
+          </p>
+          {formattedReasons && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-slate-400">
+                {langKey === 'FR' ? 'Éléments absents :' : langKey === 'ES' ? 'Elementos omitidos :' : 'Unavailable elements:'}
+              </span>
+              {Array.from(degradedReasons).map(reason => {
+                const label = strings.assets[reason as keyof typeof strings.assets] || reason;
+                return (
+                  <span key={reason} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 uppercase tracking-wide">
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const isChildrenEmpty = (children: React.ReactNode): boolean => {
   if (children === null || children === undefined) {
@@ -231,70 +313,22 @@ const isExistingArtwork = (src: string, label: string): boolean => {
 
 const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
   const [failed, setFailed] = React.useState(false);
-  const { language } = useLanguage();
+  const { markDegraded } = useMdxStatus();
   
+  const isBlocked = src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '');
+
   React.useEffect(() => {
     setFailed(false);
   }, [src]);
 
-  if (failed) {
-    const isFr = language?.toLowerCase() === 'fr';
-    const isEs = language?.toLowerCase() === 'es';
-    
-    let title = "Visual Asset Unavailable";
-    let message = `The illustrative asset "${alt || caption || 'Figure'}" could not be loaded. The lesson is running in degraded mode.`;
-    
-    if (isFr) {
-      title = "Ressource visuelle indisponible";
-      message = `L'illustration "${alt || caption || 'Figure'}" n'a pas pu être chargée. La leçon fonctionne en mode dégradé.`;
-    } else if (isEs) {
-      title = "Recurso visual no disponible";
-      message = `La ilustración "${alt || caption || 'Figura'}" no se pudo cargar. La lección se está ejecutando en modo degradado.`;
+  React.useEffect(() => {
+    if (isBlocked || failed) {
+      markDegraded('image');
     }
+  }, [isBlocked, failed, markDegraded]);
 
-    return (
-      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-300 [.theme-paper_&]:bg-amber-50/50 [.theme-paper_&]:border-amber-500/30 [.theme-paper_&]:text-slate-850">
-        <div className="flex items-center gap-2 mb-2 select-none">
-          <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
-            {title}
-          </span>
-        </div>
-        <div className="text-[13px] leading-relaxed font-medium italic">
-          {message}
-        </div>
-      </div>
-    );
-  }
-
-  if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '')) {
-    const isFr = language?.toLowerCase() === 'fr';
-    const isEs = language?.toLowerCase() === 'es';
-    
-    let blockTitle = "Academic Integrity";
-    let blockMessage = `AI generation of the historical artwork "${alt || caption}" (painting, sculpture, historical monument or photograph) was blocked to preserve the educational and historical integrity of the lesson.`;
-    
-    if (isFr) {
-      blockTitle = "Intégrité Pédagogique";
-      blockMessage = `La génération par IA de l'œuvre d'art "${alt || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.`;
-    } else if (isEs) {
-      blockTitle = "Integridad Académica";
-      blockMessage = `La generación por IA de la obra de arte histórica "${alt || caption}" (pintura, escultura, monumento o fotografía histórica) ha sido bloqueada para preservar la integridad pedagógica de la lección.`;
-    }
-
-    return (
-      <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200 [.theme-paper_&]:bg-amber-50/50 [.theme-paper_&]:border-amber-500/30 [.theme-paper_&]:text-slate-850">
-        <div className="flex items-center gap-2 mb-2 select-none">
-          <AlertTriangle className="w-4 h-4 text-amber-500" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
-            {blockTitle}
-          </span>
-        </div>
-        <div className="text-[13px] leading-relaxed font-medium italic">
-          {blockMessage}
-        </div>
-      </div>
-    );
+  if (isBlocked || failed) {
+    return null;
   }
 
   return (
@@ -1403,6 +1437,33 @@ const SmartEquationManipulator = (props: any) => {
   return <EquationManipulator {...props} />;
 };
 
+const MdxImage = (props: any) => {
+  const src = props.src || '';
+  const alt = props.alt || '';
+  const [failed, setFailed] = React.useState(false);
+  const { markDegraded } = useMdxStatus();
+  
+  const isBlocked = src && src.includes('pollinations.ai') && isExistingArtwork(src, alt);
+
+  React.useEffect(() => {
+    if (isBlocked || failed) {
+      markDegraded('image');
+    }
+  }, [isBlocked, failed, markDegraded]);
+
+  if (isBlocked || failed) {
+    return null;
+  }
+
+  return (
+    <img 
+      className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50 my-8" 
+      onError={() => setFailed(true)}
+      {...props} 
+    />
+  );
+};
+
 const components = {
   Alert,
   CustomFigure,
@@ -1530,26 +1591,7 @@ const components = {
     return <a {...props} />;
   },
 
-  img: (props: any) => {
-    const src = props.src || '';
-    const alt = props.alt || '';
-    if (src && src.includes('pollinations.ai') && isExistingArtwork(src, alt)) {
-      return (
-        <div className="my-8 p-5 rounded-2xl border-l-4 border-l-amber-500 bg-amber-500/5 border-amber-500/20 text-slate-200">
-          <div className="flex items-center gap-2 mb-2 select-none">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
-              Intégrité Pédagogique
-            </span>
-          </div>
-          <div className="text-[13px] leading-relaxed font-medium italic">
-            La génération par IA de l'œuvre d'art "{alt}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.
-          </div>
-        </div>
-      );
-    }
-    return <img className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50 my-8" {...props} />;
-  },
+  img: MdxImage,
 
   // Overriding standard table to render dynamic graphs on toggle
   table: DynamicTableChart,
@@ -2252,7 +2294,15 @@ interface MdxContentProps {
   lessonSlug?: string;
 }
 
-export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxContentProps) {
+export function MdxContent(props: MdxContentProps) {
+  return (
+    <MdxStatusProvider>
+      <MdxContentInner {...props} />
+    </MdxStatusProvider>
+  );
+}
+
+function MdxContentInner({ source, rawMdx, courseSlug, lessonSlug }: MdxContentProps) {
   const { language } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -2331,6 +2381,7 @@ export function MdxContent({ source, rawMdx, courseSlug, lessonSlug }: MdxConten
 
   return (
     <div ref={containerRef} className="mdx-content-container">
+      <DegradedModeBanner />
       <MdxErrorBoundary 
         fallback={rawMdx ? stripJsxAndRender(rawMdx) : undefined}
         courseSlug={courseSlug}

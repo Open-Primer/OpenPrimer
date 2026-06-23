@@ -563,4 +563,11 @@ export const locale: Record<string, string> = {
   "Economics": "经济学",
   "Social Sciences": "社会科学",
   "General": "通用",
+  "Search by course or target language...": "按课程或目标语言搜索...",
+  "Click to edit your admin nickname": "点击编辑您的管理员昵称",
+  "Profile": "个人资料",
+  "Re-scan MDX directory to load physical disk changes": "重新扫描 MDX 目录以加载物理磁盘更改",
+  "catalog widgets": "目录微件",
+  "Custom interactive component built for pedagogical curriculum enrichment.": "专为教学课程丰富而构建的自定义互动组件。",
+  "Pedagogical Widgets Workshop": "教学微件工作坊",
 };

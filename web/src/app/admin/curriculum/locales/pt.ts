@@ -568,4 +568,11 @@ export const locale: Record<string, string> = {
   "Economics": "Economia",
   "Social Sciences": "Ciências Sociais",
   "General": "Geral",
+  "Search by course or target language...": "Pesquisar por curso ou idioma de destino...",
+  "Click to edit your admin nickname": "Clique para editar seu apelido de administrador",
+  "Profile": "Perfil",
+  "Re-scan MDX directory to load physical disk changes": "Reescanear o diretório MDX para carregar as alterações físicas do disco",
+  "catalog widgets": "widgets de catálogo",
+  "Custom interactive component built for pedagogical curriculum enrichment.": "Componente interativo personalizado projetado para o enriquecimento pedagógico do currículo.",
+  "Pedagogical Widgets Workshop": "Oficina de Widgets Pedagógicos",
 };

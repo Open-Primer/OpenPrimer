@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, ExternalLink, Loader2, VideoOff, Search } from 'lucide-react';
+import { useMdxStatus } from './MdxStatusContext';
 
 type VideoStatus = 'checking' | 'ok' | 'unavailable';
 
@@ -36,6 +37,13 @@ interface VideoProps {
 export const Video = ({ id, title, provider: propProvider, url, duration }: VideoProps) => {
   const [status, setStatus] = useState<VideoStatus>('checking');
   const [lang, setLang] = useState('en');
+  const { markDegraded } = useMdxStatus();
+
+  useEffect(() => {
+    if (status === 'unavailable') {
+      markDegraded('video');
+    }
+  }, [status, markDegraded]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

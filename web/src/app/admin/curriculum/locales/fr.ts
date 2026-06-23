@@ -591,4 +591,10 @@ export const locale: Record<string, string> = {
   "Computer Science": "Informatique",
   "Economics": "Économie",
   "Social Sciences": "Sciences Sociales",
+  "Search by course or target language...": "Rechercher par cours ou langue cible...",
+  "Click to edit your admin nickname": "Cliquer pour modifier votre surnom d'admin",
+  "Profile": "Profil",
+  "Re-scan MDX directory to load physical disk changes": "Re-scanner le dossier MDX pour charger les modifications physiques du disque",
+  "catalog widgets": "widgets de catalogue",
+  "Custom interactive component built for pedagogical curriculum enrichment.": "Composant interactif personnalisé conçu pour l'enrichissement pédagogique du programme.",
 };

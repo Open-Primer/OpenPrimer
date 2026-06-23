@@ -568,4 +568,11 @@ export const locale: Record<string, string> = {
   "Economics": "معاشیات",
   "Social Sciences": "سماجی علوم",
   "General": "عام",
+  "Search by course or target language...": "کورس یا ہدف کی زبان کے مطابق تلاش کریں...",
+  "Click to edit your admin nickname": "اپنا ایڈمن عرفی نام تبدیل کرنے کے لیے کلک کریں",
+  "Profile": "پروفائل",
+  "Re-scan MDX directory to load physical disk changes": "فزیکل ڈسک کی تبدیلیوں کو لوڈ کرنے کے لیے MDX ڈائریکٹری کو دوبارہ اسکین کریں",
+  "catalog widgets": "کیٹلاگ وجیٹس",
+  "Custom interactive component built for pedagogical curriculum enrichment.": "تعلیمی نصاب کو بہتر بنانے کے لیے بنایا گیا حسب ضرورت انٹرایکٹو جزو۔",
+  "Pedagogical Widgets Workshop": "تعلیمی وجیٹس ورکشاپ",
 };

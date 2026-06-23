@@ -373,10 +373,10 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
           <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">{t.refused_trans_backlog}</h4>
           <input 
             type="text" 
-            placeholder={tr("Search by course or target language...")}
+            placeholder={"🔍 " + tr("Search by course or target language...")}
             value={translationRefusedSearch}
             onChange={(e) => setTranslationRefusedSearch(e.target.value)}
-            className="px-4 py-2 bg-slate-950/80 border border-slate-900 rounded-2xl text-xs focus:border-blue-500/50 outline-none text-white w-full md:w-56 transition-all"
+            className="px-4 py-2 bg-slate-950/80 border border-slate-900 rounded-2xl text-xs focus:border-emerald-500/50 outline-none text-white w-full md:w-56 transition-all"
           />
         </div>
         <div className="grid md:grid-cols-3 gap-6">

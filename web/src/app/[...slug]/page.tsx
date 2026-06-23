@@ -20,7 +20,7 @@ import { supabase } from '@/lib/supabase';
 
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
-  let autoSwitched = false;
+  let userId: string | undefined = undefined;
   let slug: string[] = [];
   let pageData: any = null;
   try {
@@ -28,6 +28,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     slug = (resolvedParams?.slug || []).map(part => cleanPathSegment(decodeURIComponent(part)));
     const cookieStore = await cookies();
     lang = (cookieStore.get('openprimer_lang')?.value || 'EN').toLowerCase();
+    userId = cookieStore.get('op_user_id')?.value;
 
     // Proactively switch language if the requested language has no lessons in the DB for this course
     if (slug.length >= 3) {
@@ -41,8 +42,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         return notFound();
       }
 
-      const cookieStore = await cookies();
-      const userId = cookieStore.get('op_user_id')?.value;
       const userRole = cookieStore.get('op_user_role')?.value;
       const isAdmin = userRole === 'admin';
 
@@ -109,12 +108,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           .eq('lang', lang.toLowerCase());
         
         if (count === 0) {
-          const altLang = await getFirstAvailableLanguage(slug);
-          if (altLang && altLang.toLowerCase() !== lang.toLowerCase()) {
-            console.log(`[CoursePage] Auto-switching course language from '${lang}' to '${altLang}' because no lessons exist for '${lang}' in DB`);
-            lang = altLang.toLowerCase();
-            autoSwitched = true;
-          }
+          const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
+          console.log(`[CoursePage] No lessons found for language '${lang}'. Redirecting to: ${redirectTarget}`);
+          redirect(redirectTarget);
         }
       } catch (err) {
         console.error("[CoursePage] Error checking available languages:", err);
@@ -172,12 +168,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     pageData = await getPageContent(slug, lang);
     if (!pageData) {
-      const altLang = await getFirstAvailableLanguage(slug);
-      if (altLang) {
-        lang = altLang.toLowerCase();
-        pageData = await getPageContent(slug, lang);
-        autoSwitched = true;
-      }
+      const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
+      console.log(`[CoursePage] No page content found for language '${lang}'. Redirecting to: ${redirectTarget}`);
+      redirect(redirectTarget);
     }
 
     if (!pageData) return notFound();
@@ -448,19 +441,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               lang={lang}
             />
           )}
-          {autoSwitched && (
-            <script dangerouslySetInnerHTML={{ __html: `
-              document.cookie = "openprimer_lang=${lang.toUpperCase()}; path=/; max-age=31536000; SameSite=Lax";
-              try {
-                localStorage.setItem("openprimer_lang", "${lang.toUpperCase()}");
-                const profile = JSON.parse(localStorage.getItem("op_user_profile") || "{}");
-                if (profile && Object.keys(profile).length > 0) {
-                  profile.preferredLang = "${lang.toLowerCase()}";
-                  localStorage.setItem("op_user_profile", JSON.stringify(profile));
-                }
-              } catch(e){}
-            ` }} />
-          )}
+          {/* Removed auto-switch script injection */}
         </div>
       </CourseClientWrapper>
     );

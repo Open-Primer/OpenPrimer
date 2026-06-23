@@ -613,7 +613,9 @@ export default function AdminUsers() {
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-[10px] text-slate-600 font-medium">{user.email}</p>
                         <span className="text-[8px] bg-slate-800/60 text-slate-400 border border-slate-700/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">{user.preferredLang || 'EN'}</span>
-                        <span className="text-[8px] bg-slate-800/60 text-slate-400 border border-slate-700/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">{user.readingMode || 'default'}</span>
+                        {user.readingMode && user.readingMode !== 'default' && (
+                          <span className="text-[8px] bg-slate-800/60 text-slate-400 border border-slate-700/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">{user.readingMode}</span>
+                        )}
                       </div>
                     </div>
                   </div>

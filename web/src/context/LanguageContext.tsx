@@ -143,6 +143,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       document.cookie = `openprimer_lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
     }
     if (typeof window !== 'undefined') {
+      const profileStr = localStorage.getItem('op_user_profile');
+      if (profileStr) {
+        try {
+          const profile = JSON.parse(profileStr);
+          profile.preferredLang = lang.toLowerCase();
+          localStorage.setItem('op_user_profile', JSON.stringify(profile));
+        } catch (e) {}
+      }
       window.dispatchEvent(new CustomEvent('op_language_changed', { detail: lang }));
     }
   };

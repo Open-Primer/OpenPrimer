@@ -309,7 +309,7 @@ async function validateYouTubeVideo(videoId: string): Promise<boolean> {
 }
 
 // Classifier to differentiate factual/scientific visual assets from general illustrative ones
-export function isFactualMedia(alt: string, caption: string): boolean {
+export function isFactualMedia(alt: string, caption: string = ''): boolean {
   const text = `${alt} ${caption}`.toLowerCase();
   
   // Terms representing general, contextual illustrations (as defined by user)
@@ -604,6 +604,7 @@ export function isExistingArtwork(src: string, label: string): boolean {
   return keywords.some(kw => decoded.includes(kw));
 }
 
+
 /**
  * Parses and replaces media links in MDX Content:
  * - Resolves Pollinations/placeholder images with official Wikipedia/Wikimedia Commons images when applicable.
@@ -778,10 +779,10 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         sourceUrl = wikiImage;
       }
 
-      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs
-      if (sourceUrl.includes('pollinations.ai') && isExistingArtwork(sourceUrl, altText)) {
-        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork: "${altText}"`);
-        updatedContent = updatedContent.replace(fullMatch, `\n\n> ⚠️ *La génération par IA de l'œuvre d'art "${altText}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.* \n\n`);
+      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
+      if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText) || isFactualMedia(altText))) {
+        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset: "${altText}"`);
+        updatedContent = updatedContent.replace(fullMatch, "");
         continue;
       }
 
@@ -859,10 +860,10 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         }
       }
 
-      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs
-      if (sourceUrl.includes('pollinations.ai') && isExistingArtwork(sourceUrl, altText || caption)) {
-        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork Figure: "${altText || caption}"`);
-        updatedContent = updatedContent.replace(fullTag, `\n\n> ⚠️ *La génération par IA de l'œuvre d'art "${altText || caption}" (peinture, sculpture, monument ou photographie historique) a été bloquée pour préserver l'intégrité pédagogique de l'apprentissage.* \n\n`);
+      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
+      if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText || caption) || isFactualMedia(altText || caption))) {
+        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption}"`);
+        updatedContent = updatedContent.replace(fullTag, "");
         continue;
       }
 
