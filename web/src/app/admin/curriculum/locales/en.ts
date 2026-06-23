@@ -312,7 +312,7 @@ export const locale: Record<string, string> = {
   "GENERATION": "Generation",
   "REVISION": "Revision",
   "TRANSLATION": "Translation",
-  "failed": "Failed",
+  "failed": "failed",
   "AWARD": "Award",
   "ZAP": "Zap",
   "STAR": "Star",
@@ -429,5 +429,10 @@ export const locale: Record<string, string> = {
   "Queue check complete: No pending tasks in queue.": "Queue check complete: No pending tasks in queue.",
   "Failed to run task worker:": "Failed to run task worker:",
   "Already running max parallel tasks:": "Already running max parallel tasks:",
-  "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?"
+  "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?": "Force running the queue will clear zombie tasks but will not launch new ones if the limit is exceeded. Proceed?",
+  "Force Reset": "Force Reset",
+  "processing": "processing",
+  "Save Changes": "Save Changes",
+  "Generate & Deploy": "Generate & Deploy",
+  "Exit Fullscreen": "Exit Fullscreen"
 };

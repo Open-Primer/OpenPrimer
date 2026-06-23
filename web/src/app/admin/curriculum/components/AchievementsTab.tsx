@@ -823,8 +823,16 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-xl font-black">{(ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name) || ach.name}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{(ach.translations?.[lang.toUpperCase()]?.description || ach.translations?.[lang.toLowerCase()]?.description) || ach.description}</p>
+                  <h3 className="text-xl font-black">
+                    {ach.translations?.[lang.toUpperCase()]?.name || 
+                     ach.translations?.[lang.toLowerCase()]?.name || 
+                     tr(ach.name)}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    {ach.translations?.[lang.toUpperCase()]?.description || 
+                     ach.translations?.[lang.toLowerCase()]?.description || 
+                     tr(ach.description)}
+                  </p>
                 </div>
               </div>
 

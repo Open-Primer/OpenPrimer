@@ -17,7 +17,7 @@ export async function verifySession(request: Request): Promise<AuthenticatedUser
   
   if (isOfflineMode) {
     console.log('[AUTH MOCK] Permitting offline/sandbox mock developer credentials.');
-    return { id: 'mock-offline-user-id', email: 'mock@openprimer.org' };
+    return { id: 'mock-offline-user-id', email: 'mock@openprimer.app' };
   }
 
   if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {

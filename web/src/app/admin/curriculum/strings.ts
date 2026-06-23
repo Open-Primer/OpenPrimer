@@ -1048,11 +1048,7 @@ export const ACADEMIC_LEVELS = [
   { value: 'L2',           EN: 'L2 — 2nd Year (University)', FR: 'L2 — 2ème Année Universitaire', ES: 'L2 — Segundo Año', DE: 'L2 — 2. Studienjahr', ZH: 'L2 — \u5927\u4e8c' },
   { value: 'L3',           EN: "L3 — Bachelor's Year", FR: 'L3 — 3ème Année (Licence)', ES: 'L3 — Grado (3er Año)', DE: 'L3 — Bachelor (3. Jahr)', ZH: 'L3 — \u5927\u4e09\uff08\u5b68\u58eb\uff09' },
   { value: 'M1',           EN: 'M1 — 1st Year (Master)', FR: 'M1 — 1ère Année de Master', ES: 'M1 — Máster (1er Año)', DE: 'M1 — Master (1. Jahr)', ZH: 'M1 — \u7814\u4e00' },
-  { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — \u7814\u4e8c' },
-  { value: 'beginner',     EN: 'Beginner', FR: 'Débutant', ES: 'Principiante', DE: 'Anfänger', ZH: '初学者' },
-  { value: 'intermediate', EN: 'Intermediate', FR: 'Intermédiaire', ES: 'Intermedio', DE: 'Mittelstufe', ZH: '中级' },
-  { value: 'advanced',     EN: 'Advanced', FR: 'Avancé', ES: 'Avanzado', DE: 'Fortgeschritten', ZH: '高级' },
-  { value: 'expert',       EN: 'Expert', FR: 'Expert', ES: 'Experto', DE: 'Experte', ZH: '专家' },
+  { value: 'M2',           EN: 'M2 — 2nd Year (Master)', FR: 'M2 — 2ème Année de Master', ES: 'M2 — Máster (2o Año)', DE: 'M2 — Master (2. Jahr)', ZH: 'M2 — \u7814\u4e8c' }
 ] as const;
 
 export const DISCIPLINES = [
@@ -1101,7 +1097,7 @@ export const DISCIPLINES = [
 ] as const;
 
 export const normalizeLevel = (level: string | undefined | null): string => {
-  if (!level) return 'beginner';
+  if (!level) return 'L1';
   const clean = level.trim().toLowerCase();
   const matched = ACADEMIC_LEVELS.find(lvl => lvl.value.toLowerCase() === clean);
   if (matched) return matched.value;

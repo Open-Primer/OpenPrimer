@@ -439,10 +439,10 @@ export default function Home() {
     const emailLower = email.trim().toLowerCase();
     const DEMO_EMAILS = [
       'vanguard.mysterious@gmail.com',
-      'student1@openprimer.org',
-      'student2@openprimer.org',
-      'student3@openprimer.org',
-      'silvere@openprimer.org'
+      'student1@openprimer.app',
+      'student2@openprimer.app',
+      'student3@openprimer.app',
+      'silvere@openprimer.app'
     ];
     if (DEMO_EMAILS.includes(emailLower)) {
       setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est déjà enregistrée.' : 'This email address is already registered.');

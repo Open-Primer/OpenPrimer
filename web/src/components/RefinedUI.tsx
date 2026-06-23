@@ -2159,7 +2159,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                          })()}
                      </p>
                      <p className="text-[10px] text-slate-500 truncate">
-                       {userProfile ? userProfile.email : 'silvere@openprimer.org'}
+                       {userProfile ? userProfile.email : 'silvere@openprimer.app'}
                      </p>
                    </div>
                      <Link href="/profile/curriculum" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all border-b border-slate-800/50">

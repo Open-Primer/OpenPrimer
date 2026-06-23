@@ -16,7 +16,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
       localStorage.setItem('op_allow_sandbox', 'true');
       localStorage.setItem('openprimer_lang', 'EN');
       localStorage.setItem('op_session', 'true');
-      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.app', role: 'admin' }));
     });
     await page.reload();
   });
@@ -53,7 +53,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
     await page.fill('#student-firstname-input', 'Test');
     await page.fill('#student-lastname-input', 'Student E2E');
 
-    await page.fill('#student-email-input', 'e2e.test.student@openprimer.org');
+    await page.fill('#student-email-input', 'e2e.test.student@openprimer.app');
     await page.fill('#student-password-input', 'SecureP@ssw0rd!');
 
     

@@ -667,14 +667,17 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(storageKey);
+      let hasDraft = false;
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           setAnswer(parsed.answer || '');
           setGrade(parsed.grade || null);
           setFeedback(parsed.feedback || null);
-          setIsReadOnly(true);
+          const draftMode = !!parsed.isDraft;
+          setIsReadOnly(draftMode ? false : true);
           setIsStarted(true);
+          hasDraft = draftMode;
         } catch (e) {
           // ignore
         }
@@ -686,8 +689,36 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
         setIsStarted(false);
         setTimeLeft(actualDurationLimit || durationLimit);
       }
+
+      if (actualDurationLimit) {
+        const startTimeKey = `op_summative_start_time_${storageKey}`;
+        const savedStartTime = localStorage.getItem(startTimeKey);
+        if (savedStartTime) {
+          const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartTime, 10)) / 1000);
+          const remaining = actualDurationLimit - elapsedSeconds;
+          if (remaining <= 0) {
+            setTimeLeft(0);
+            setIsReadOnly(true);
+          } else {
+            setTimeLeft(remaining);
+          }
+          setIsStarted(true);
+        } else if (hasDraft) {
+          localStorage.setItem(startTimeKey, Date.now().toString());
+        }
+      }
     }
   }, [storageKey, durationLimit, actualDurationLimit]);
+
+  // Autosave draft to local storage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && isStarted && !grade && !isReadOnly) {
+      localStorage.setItem(storageKey, JSON.stringify({
+        answer,
+        isDraft: true
+      }));
+    }
+  }, [answer, isStarted, grade, isReadOnly, storageKey]);
 
   React.useEffect(() => {
     if (!isStarted && actualDurationLimit) {
@@ -703,6 +734,21 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
     return () => clearInterval(interval);
   }, [isStarted, isReadOnly, timeLeft]);
 
+  // Warn user before reloading or navigating away
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isStarted && !grade && !isReadOnly && actualDurationLimit) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isStarted, grade, isReadOnly, actualDurationLimit]);
+
   const wordCount = React.useMemo(() => {
     return answer.trim().split(/\s+/).filter(Boolean).length;
   }, [answer]);
@@ -716,6 +762,9 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   const handleStart = () => {
     setIsStarted(true);
     setError(null);
+    if (typeof window !== 'undefined' && actualDurationLimit) {
+      localStorage.setItem(`op_summative_start_time_${storageKey}`, Date.now().toString());
+    }
   };
 
   const handleSubmit = async () => {
@@ -772,6 +821,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   const handleRetry = () => {
     if (confirm(language === 'FR' ? "Voulez-vous recommencer cette évaluation ? Votre note actuelle sera effacée." : "Are you sure you want to restart this evaluation? Your current grade will be erased.")) {
       localStorage.removeItem(storageKey);
+      localStorage.removeItem(`op_summative_start_time_${storageKey}`);
       setAnswer('');
       setGrade(null);
       setFeedback(null);

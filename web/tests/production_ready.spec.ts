@@ -70,7 +70,7 @@ test.describe('OpenPrimer Production Readiness', () => {
     await page.goto(BASE_URL);
     await page.evaluate(() => {
       localStorage.setItem('op_session', 'true');
-      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.app', role: 'admin' }));
     });
     await page.reload();
     await page.goto(`${BASE_URL}/admin`);

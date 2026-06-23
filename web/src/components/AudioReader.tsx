@@ -895,11 +895,15 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       synthRef.current = window.speechSynthesis;
       
       const PREFERRED_VOICES: Record<string, string[]> = {
-        'fr': ['Hortense', 'Thomas', 'Google français', 'Microsoft Hortense Desktop', 'Amélie', 'Julie'],
-        'en': ['Google US English', 'Microsoft Zira Desktop', 'Samantha', 'Karen', 'Alex', 'Daniel'],
-        'es': ['Google español', 'Microsoft Helena Desktop', 'Monica', 'Paulina'],
-        'de': ['Google Deutsch', 'Microsoft Hedda Desktop', 'Anna', 'Petra'],
-        'zh': ['Google 普通话（中国大陆）', 'Microsoft Huihui Desktop', 'Ting-Ting', 'Sinji'],
+        'fr': ['Hortense', 'Thomas', 'Microsoft Hortense Desktop', 'Amélie', 'Julie', 'Google français'],
+        'en': ['Microsoft Zira Desktop', 'Zira', 'Microsoft David Desktop', 'David', 'Samantha', 'Karen', 'Alex', 'Daniel', 'Google US English', 'Google UK English Male', 'Google UK English Female'],
+        'es': ['Microsoft Helena Desktop', 'Helena', 'Microsoft Sabina Desktop', 'Monica', 'Paulina', 'Google español', 'Google español de Estados Unidos'],
+        'de': ['Microsoft Hedda Desktop', 'Hedda', 'Microsoft Stefan Desktop', 'Anna', 'Petra', 'Google Deutsch'],
+        'zh': ['Microsoft Huihui Desktop', 'Huihui', 'Microsoft Kangkang Desktop', 'Microsoft Yaoyao Desktop', 'Ting-Ting', 'Sinji', 'Google 普通话（中国大陆）', 'Google 粤语（香港）'],
+        'pt': ['Microsoft Maria Desktop', 'Maria', 'Microsoft Daniel Desktop', 'Daniel', 'Helia', 'Raissa', 'Google português'],
+        'ar': ['Microsoft Naayf Desktop', 'Naayf', 'Hoda', 'Maged', 'Tarik', 'Google العربية'],
+        'hi': ['Microsoft Hemant Desktop', 'Hemant', 'Kalpana', 'Google हिन्दी'],
+        'ur': ['Microsoft Asif Desktop', 'Asif', 'Google اردو'],
       };
 
       const loadVoices = () => {
@@ -923,7 +927,17 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
             if (found) { matchedVoice = found; break; }
           }
 
-          // 3. Fallback: any voice whose BCP-47 lang starts with the target language
+          // 3. Fallback options prioritizing localService or non-Google offline voices
+          if (!matchedVoice) {
+            matchedVoice = availableVoices.find(v =>
+              v.lang.toLowerCase().startsWith(targetLang) && v.localService
+            );
+          }
+          if (!matchedVoice) {
+            matchedVoice = availableVoices.find(v =>
+              v.lang.toLowerCase().startsWith(targetLang) && !v.name.toLowerCase().includes('google')
+            );
+          }
           if (!matchedVoice) {
             matchedVoice = availableVoices.find(v =>
               v.lang.toLowerCase().startsWith(targetLang)
@@ -1157,7 +1171,28 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     utterance.onerror = (e) => {
       if (e.error !== 'interrupted') {
-        console.error('SpeechSynthesis error:', e);
+        console.error('SpeechSynthesis error in speakSentence:', e);
+        const failedVoice = activeVoice;
+        if (failedVoice && (failedVoice.name.toLowerCase().includes('google') || !failedVoice.localService)) {
+          const targetLang = (lang || 'EN').toLowerCase().split('-')[0];
+          const availableVoices = window.speechSynthesis.getVoices();
+          const localFallback = availableVoices.find(v => 
+            v.lang.toLowerCase().startsWith(targetLang) && 
+            v.localService && 
+            v.name !== failedVoice.name
+          );
+          if (localFallback) {
+            console.log(`TTS Hot-swap (Course): Switching from failed network voice '${failedVoice.name}' to offline voice '${localFallback.name}'`);
+            setSelectedVoice(localFallback);
+            selectedVoiceRef.current = localFallback;
+            setTimeout(() => {
+              if (isPlayingRef.current && !isPausedRef.current) {
+                speakSentence(index, localFallback);
+              }
+            }, 100);
+            return;
+          }
+        }
         setIsPlaying(false);
         setIsPaused(false);
       }
@@ -1204,7 +1239,28 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     utterance.onerror = (e) => {
       if (e.error !== 'interrupted') {
-        console.error('SpeechSynthesis error:', e);
+        console.error('SpeechSynthesis error in speakTutorSentence:', e);
+        const failedVoice = activeVoice;
+        if (failedVoice && (failedVoice.name.toLowerCase().includes('google') || !failedVoice.localService)) {
+          const targetLang = (lang || 'EN').toLowerCase().split('-')[0];
+          const availableVoices = window.speechSynthesis.getVoices();
+          const localFallback = availableVoices.find(v => 
+            v.lang.toLowerCase().startsWith(targetLang) && 
+            v.localService && 
+            v.name !== failedVoice.name
+          );
+          if (localFallback) {
+            console.log(`TTS Hot-swap (Tutor): Switching from failed network voice '${failedVoice.name}' to offline voice '${localFallback.name}'`);
+            setSelectedVoice(localFallback);
+            selectedVoiceRef.current = localFallback;
+            setTimeout(() => {
+              if (isPlayingRef.current && !isPausedRef.current) {
+                speakTutorSentence(index, list, localFallback);
+              }
+            }, 100);
+            return;
+          }
+        }
         setIsPlaying(false);
         setIsPaused(false);
         setIsReadingTutor(false);

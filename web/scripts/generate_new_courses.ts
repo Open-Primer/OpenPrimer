@@ -2,6 +2,7 @@ import './env-loader';
 import { dbService } from '../src/lib/db';
 import { generateCourseContent } from '../src/lib/ai';
 import { supabaseAdmin } from '../src/lib/supabase';
+import { cleanPathSegment } from '../src/lib/translations';
 
 interface CourseSpec {
   name: string;
@@ -12,20 +13,6 @@ interface CourseSpec {
 }
 
 const coursesToGenerate: CourseSpec[] = [
-  {
-    name: "Introduction à l'Histoire Ancienne",
-    subject: "History",
-    level: "L1",
-    targetLang: "fr",
-    description: "Une étude introductive approfondie de l'essor et de la chute des premières sociétés humaines, de la Mésopotamie et l'Égypte à la Grèce classique."
-  },
-  {
-    name: "Introduction to Human Anatomy",
-    subject: "Medicine",
-    level: "L2",
-    targetLang: "en",
-    description: "A comprehensive foundational course covering the structural organization of the human body, tissues, skeletal and muscular systems."
-  },
   {
     name: "Fundamentos de la Filosofía",
     subject: "Philosophy",
@@ -41,6 +28,7 @@ const coursesToGenerate: CourseSpec[] = [
     description: "Une exploration captivante de la psychologie des décisions économiques, remettant en question l'hypothèse de l'agent rationnel à travers les biais cognitifs, les heuristiques et la théorie des perspectives."
   }
 ];
+
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -76,7 +64,7 @@ async function run() {
 
   // 3. Pre-populate task queue
   for (const course of coursesToGenerate) {
-    const slug = course.name.toLowerCase().replace(/ /g, '_');
+    const slug = cleanPathSegment(course.name);
     const hasLessons = slugsWithLessons.has(slug);
     const lang = course.targetLang || 'fr';
     const existingTask = taskMap[course.name];
@@ -132,7 +120,7 @@ async function run() {
   // 4. Sequential Generation Loop
   for (let i = 0; i < coursesToGenerate.length; i++) {
     const course = coursesToGenerate[i];
-    const slug = course.name.toLowerCase().replace(/ /g, '_');
+    const slug = cleanPathSegment(course.name);
     const lang = course.targetLang || 'fr';
     const taskId = taskMap[course.name]?.id;
 

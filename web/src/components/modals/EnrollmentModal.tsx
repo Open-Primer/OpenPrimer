@@ -5,6 +5,7 @@ import { getLocalizedLabel, formatCourseLevel, UI_STRINGS } from '../RefinedUI';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { cleanPathSegment } from '@/lib/translations';
+import { useLanguage } from '@/context/LanguageContext';
 
 const LOCAL_DICTS: Record<string, Record<string, string>> = {
   EN: {
@@ -163,6 +164,7 @@ export const EnrollmentModal = ({
   bookmarks,
   onToggleBookmark
 }: EnrollmentModalProps) => {
+  const { setLanguage } = useLanguage();
   const [activeCourse, setActiveCourse] = React.useState<any>(course);
   const [history, setHistory] = React.useState<any[]>([]);
   const [dynamicLessons, setDynamicLessons] = React.useState<any[]>([]);
@@ -591,6 +593,13 @@ export const EnrollmentModal = ({
               <button
                 type="button"
                 onClick={() => {
+                  if (activeCourse.languages && activeCourse.languages.length > 0) {
+                    const currentLangLower = lang.toLowerCase();
+                    const supportsCurrentLang = activeCourse.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                    if (!supportsCurrentLang) {
+                      setLanguage(activeCourse.languages[0].toUpperCase());
+                    }
+                  }
                   window.location.href = `/${cleanPathSegment(activeCourse.level)}/${cleanPathSegment(activeCourse.subject)}/${activeCourse.slug}/introduction`;
                 }}
                 className="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"

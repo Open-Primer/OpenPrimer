@@ -1140,19 +1140,100 @@ export const IframeWidget = ({ src, title }: { src: string, title: string }) => 
   </div>
 );
 
+const PREFERRED_VOICES: Record<string, string[]> = {
+  'fr': ['Hortense', 'Thomas', 'Microsoft Hortense Desktop', 'Amélie', 'Julie', 'Google français'],
+  'en': ['Microsoft Zira Desktop', 'Zira', 'Microsoft David Desktop', 'David', 'Samantha', 'Karen', 'Alex', 'Daniel', 'Google US English', 'Google UK English Male', 'Google UK English Female'],
+  'es': ['Microsoft Helena Desktop', 'Helena', 'Microsoft Sabina Desktop', 'Monica', 'Paulina', 'Google español', 'Google español de Estados Unidos'],
+  'de': ['Microsoft Hedda Desktop', 'Hedda', 'Microsoft Stefan Desktop', 'Anna', 'Petra', 'Google Deutsch'],
+  'zh': ['Microsoft Huihui Desktop', 'Huihui', 'Microsoft Kangkang Desktop', 'Microsoft Yaoyao Desktop', 'Ting-Ting', 'Sinji', 'Google 普通话（中国大陆）', 'Google 粤语（香港）'],
+  'pt': ['Microsoft Maria Desktop', 'Maria', 'Microsoft Daniel Desktop', 'Daniel', 'Helia', 'Raissa', 'Google português'],
+  'ar': ['Microsoft Naayf Desktop', 'Naayf', 'Hoda', 'Maged', 'Tarik', 'Google العربية'],
+  'hi': ['Microsoft Hemant Desktop', 'Hemant', 'Kalpana', 'Google हिन्दी'],
+  'ur': ['Microsoft Asif Desktop', 'Asif', 'Google اردو'],
+};
+
 // Bouton Speech (TTS Natif)
 export const SpeechButton = ({ text }: { text: string }) => {
   const { language } = useLanguage();
   const t = INTERACTIVE_STRINGS[language as keyof typeof INTERACTIVE_STRINGS] || INTERACTIVE_STRINGS.EN;
 
-  const speak = () => {
+  const speak = (voiceOverride?: SpeechSynthesisVoice | null) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
+    const targetLang = (language || 'EN').toLowerCase();
+    const availableVoices = window.speechSynthesis.getVoices();
+
+    let matchedVoice = voiceOverride;
+    if (!matchedVoice) {
+      const preferred = PREFERRED_VOICES[targetLang] || [];
+
+      // 1. Try preferred voices
+      for (const name of preferred) {
+        const found = availableVoices.find(v =>
+          v.name.toLowerCase().includes(name.toLowerCase())
+        );
+        if (found) { matchedVoice = found; break; }
+      }
+
+      // 2. Try offline system voices
+      if (!matchedVoice) {
+        matchedVoice = availableVoices.find(v =>
+          v.lang.toLowerCase().startsWith(targetLang) && v.localService
+        );
+      }
+
+      // 3. Try non-Google offline voices
+      if (!matchedVoice) {
+        matchedVoice = availableVoices.find(v =>
+          v.lang.toLowerCase().startsWith(targetLang) && !v.name.toLowerCase().includes('google')
+        );
+      }
+
+      // 4. Try any voice matching the language
+      if (!matchedVoice) {
+        matchedVoice = availableVoices.find(v =>
+          v.lang.toLowerCase().startsWith(targetLang)
+        );
+      }
+    }
+
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
+
+    utterance.onerror = (e) => {
+      if (e.error !== 'interrupted') {
+        console.error('SpeechButton Synthesis error:', e);
+        const failedVoice = matchedVoice;
+        if (failedVoice && (failedVoice.name.toLowerCase().includes('google') || !failedVoice.localService)) {
+          const localFallback = availableVoices.find(v => 
+            v.lang.toLowerCase().startsWith(targetLang) && 
+            v.localService && 
+            v.name !== failedVoice.name
+          );
+          if (localFallback) {
+            console.log(`SpeechButton TTS Hot-swap: Switching from failed network voice '${failedVoice.name}' to offline voice '${localFallback.name}'`);
+            setTimeout(() => {
+              speak(localFallback);
+            }, 100);
+          }
+        }
+      }
+    };
+
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleSpeakClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    speak();
   };
 
   return (
     <button 
-      onClick={speak}
+      onClick={handleSpeakClick}
       className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer animate-none"
     >
       <Volume2 className="w-4 h-4" /> {t.listen}

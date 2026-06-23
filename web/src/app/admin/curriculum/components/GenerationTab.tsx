@@ -41,6 +41,65 @@ interface GenerationTabProps {
   isQueueLoaded?: boolean;
 }
 
+export const guessDisciplineFromTitle = (title: string): string => {
+  const t = title.toLowerCase();
+  
+  const rules = [
+    { value: 'mathematics', keywords: ['math', 'algebra', 'calculus', 'geometry', 'topology', 'analyse', 'géométrie', 'arithmétique', 'numbers', 'equation', 'équation', 'arithmetic', 'mathematic'] },
+    { value: 'statistics', keywords: ['statist', 'probability', 'probabilité', 'bayesian', 'bayes', 'stochastic', 'stochastique', 'distribution'] },
+    { value: 'physics', keywords: ['physic', 'quantum', 'relativity', 'relativité', 'mechanic', 'thermodynamic', 'optics', 'optique', 'electromagnet', 'électric', 'mécanique', 'astrophysic', 'gravit', 'thermodynamique'] },
+    { value: 'chemistry', keywords: ['chemist', 'chimie', 'organic', 'organique', 'molecule', 'molécule', 'reaction', 'réaction', 'atom', 'atome', 'chemical', 'chimique'] },
+    { value: 'biochemistry', keywords: ['biochem', 'biochim', 'enzym', 'protein', 'protéine', 'metabolism', 'métabolisme'] },
+    { value: 'genetics', keywords: ['genetic', 'génétic', 'dna', 'adn', 'rna', 'arn', 'genome', 'génome'] },
+    { value: 'biology', keywords: ['biolog', 'cellular', 'cellulaire', 'botany', 'zoology', 'evolution', 'évolution', 'ecology', 'écologie', 'organism', 'cellule'] },
+    { value: 'computer_science', keywords: ['computer', 'programming', 'code', 'informatique', 'algorithm', 'algorithme', 'software', 'hardware', 'network', 'web', 'database', 'crypto', 'programmation', 'reseau'] },
+    { value: 'data_science', keywords: ['data science', 'analytics', 'données', 'machine learning', 'deep learning', 'artificial intelligence', 'intelligence artificielle', 'python', 'neural network'] },
+    { value: 'law', keywords: ['law', 'droit', 'legal', 'légal', 'jurisprudence', 'constitution', 'contract', 'procédure', 'juridique'] },
+    { value: 'criminology', keywords: ['criminolog', 'crime', 'justice', 'forensic', 'délinquance', 'penal', 'pénal'] },
+    { value: 'political_science', keywords: ['politique', 'political', 'gouvernement', 'government', 'democracy', 'démocratie', 'state', 'état', 'geopolitic', 'géopolitique'] },
+    { value: 'economics', keywords: ['econom', 'économ', 'macroeconomic', 'microeconomic', 'finance', 'market', 'marché', 'trade', 'microéconomie', 'macroéconomie'] },
+    { value: 'sociology', keywords: ['sociolog', 'society', 'société', 'social', 'community', 'classe social'] },
+    { value: 'social_psychology', keywords: ['social psychology', 'psychologie sociale', 'interpersonal', 'group behavior'] },
+    { value: 'cognitive_science', keywords: ['cognitive science', 'sciences cognitives', 'perception', 'mind', 'esprit', 'cognit'] },
+    { value: 'psychology', keywords: ['psycholog', 'behavior', 'comportement', 'therapy', 'thérapie', 'clinical', 'clinique', 'mental', 'cognitive', 'cognitif'] },
+    { value: 'history', keywords: ['histor', 'ancient', 'antiqu', 'medieval', 'moyen âge', 'century', 'siècle', 'war', 'guerre', 'revolution', 'révolution', 'archaeolog', 'archéolog'] },
+    { value: 'theology', keywords: ['theolog', 'théolog', 'religion', 'god', 'dieu', 'biblical', 'bible', 'dogme'] },
+    { value: 'philosophy', keywords: ['philosoph', 'epistemology', 'épistémologie', 'ethics', 'éthique', 'logic', 'logique', 'existential', 'philo', 'kant', 'nietzsche', 'socrates', 'socrate'] },
+    { value: 'anthropology', keywords: ['anthropolog', 'culture', 'ethnograph', 'ritual', 'rite'] },
+    { value: 'performing_arts', keywords: ['performing arts', 'arts du spectacle', 'dance', 'danse', 'theater', 'théâtre', 'actor', 'acteur', 'drama', 'drame'] },
+    { value: 'fine_arts', keywords: ['fine arts', 'beaux-arts', 'art', 'design', 'paint', 'peinture', 'sculpt', 'architect', 'drawing', 'dessin', 'museum', 'musée'] },
+    { value: 'musicology', keywords: ['music', 'musique', 'harmony', 'harmonie', 'composer', 'compositeur', 'instrument', 'symphon'] },
+    { value: 'literature', keywords: ['literat', 'littérat', 'novel', 'roman', 'poetry', 'poésie', 'writer', 'écrivain', 'author', 'auteur', 'poème'] },
+    { value: 'linguistics', keywords: ['linguistic', 'linguistique', 'syntax', 'syntaxe', 'phonet', 'phonét', 'grammar', 'grammaire', 'language', 'langue', 'semantic', 'sémantique'] },
+    { value: 'geography', keywords: ['geograph', 'géograph', 'map', 'carte', 'cartography', 'climate', 'climat', 'region', 'région'] },
+    { value: 'geology', keywords: ['geolog', 'géolog', 'earth', 'terre', 'rock', 'roche', 'mineral', 'minéral', 'tectonic', 'tectonique', 'seismic', 'séisme'] },
+    { value: 'astronomy', keywords: ['astronom', 'astrophysic', 'space', 'espace', 'galaxy', 'galaxie', 'star', 'étoile', 'planet', 'planète', 'universe', 'univers', 'cosmolog'] },
+    { value: 'pharmacology', keywords: ['pharmacolog', 'drug', 'médicament', 'toxicology', 'toxicologie', 'pharmacie'] },
+    { value: 'neuroscience', keywords: ['neurosci', 'brain', 'cerveau', 'synapse', 'neuron', 'neurone', 'cortex'] },
+    { value: 'medicine', keywords: ['medicin', 'médecin', 'surgery', 'chirurgie', 'clinical', 'clinique', 'anatom', 'patholog', 'pediatric', 'santé', 'health'] },
+    { value: 'mechanical_eng', keywords: ['mechanical engineering', 'génie mécanique', 'fluid', 'fluide', 'robot', 'cad'] },
+    { value: 'electrical_eng', keywords: ['electrical engineering', 'génie électrique', 'circuit', 'signal', 'power system'] },
+    { value: 'chemical_eng', keywords: ['chemical engineering', 'génie chimique', 'reactor', 'réacteur', 'procédés'] },
+    { value: 'civil_eng', keywords: ['civil engineering', 'génie civil', 'structure', 'bridge', 'pont', 'concrete', 'béton', 'construction'] },
+    { value: 'aerospace_eng', keywords: ['aerospace', 'aérospatial', 'aircraft', 'avion', 'rocket', 'fusée', 'propulsion', 'satellite'] },
+    { value: 'materials_science', keywords: ['materials science', 'science des matériaux', 'alloy', 'alliage', 'polymer', 'polymère', 'ceramic', 'céramique'] },
+    { value: 'environmental_sci', keywords: ['environmental', 'environnement', 'ecology', 'écologie', 'sustainab', 'durable', 'climat'] },
+    { value: 'management', keywords: ['management', 'gestion', 'business', 'affaires', 'strategy', 'stratégie', 'marketing', 'leadership', 'entreprise'] },
+    { value: 'finance', keywords: ['finance', 'accounting', 'comptabilité', 'investment', 'investissement', 'portfolio', 'audit', 'banque', 'bank'] },
+    { value: 'education', keywords: ['education', 'éducation', 'pedagog', 'pédagog', 'teach', 'enseign', 'curriculum', 'didact', 'apprentissage'] }
+  ];
+
+  for (const rule of rules) {
+    for (const kw of rule.keywords) {
+      if (t.includes(kw)) {
+        return rule.value;
+      }
+    }
+  }
+
+  return 'physics';
+};
+
 export const GenerationTab: React.FC<GenerationTabProps> = ({
   lang,
   t,
@@ -68,7 +127,8 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
   const [manualTitle, setManualTitle] = useState('');
   const [manualType, setManualType] = useState<'curriculum' | 'course'>('course');
   const [manualLevel, setManualLevel] = useState('L1');
-  const [manualSubject, setManualSubject] = useState('Physics');
+  const [manualSubjectPref, setManualSubjectPref] = useState<'automatic' | 'explicit'>('automatic');
+  const [manualSubject, setManualSubject] = useState('physics');
   const [manualLang, setManualLang] = useState('EN');
   const [manualVolumePref, setManualVolumePref] = useState<'automatic' | 'explicit'>('automatic');
   const [manualVolumeHours, setManualVolumeHours] = useState<number>(30);
@@ -141,6 +201,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
       return;
     }
 
+    const chosenSubject = manualSubjectPref === 'automatic'
+      ? guessDisciplineFromTitle(title)
+      : (manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject);
+
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: title,
@@ -149,10 +213,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
       progress: 0,
       priority: 'High',
       timestamp: new Date().toISOString(),
-      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
+      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${chosenSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
       targetLang: manualLang,
       level: normalizeLevel(manualLevel),
-      subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject,
+      subject: chosenSubject,
       courseType: manualType,
       volume: manualVolumePref === 'explicit' ? `${manualVolumeHours} hours` : 'Automatic'
     };
@@ -380,9 +444,23 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
+              {tr("Discipline Preference")}
+            </label>
+            <select value={manualSubjectPref} onChange={(e) => setManualSubjectPref(e.target.value as 'automatic' | 'explicit')} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+              <option value="automatic">{tr("Automatic (On typing)")}</option>
+              <option value="explicit">{tr("Explicit / Manual")}</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block ml-2">
               {tr("Subject / Discipline")}
             </label>
-            <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white">
+            <select 
+              value={manualSubjectPref === 'automatic' ? guessDisciplineFromTitle(manualTitle) : manualSubject} 
+              onChange={(e) => setManualSubject(e.target.value)} 
+              disabled={manualSubjectPref === 'automatic'}
+              className="w-full bg-slate-950/60 border border-slate-800 rounded-2xl py-3 px-4 text-xs focus:border-blue-500/50 outline-none transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {[...DISCIPLINES]
                 .map((d) => ({
                   value: d.value,
@@ -639,7 +717,7 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Subject (label)")}</span>
-                      <span className="text-white font-bold">{manualSubject === 'NEW_CUSTOM' ? customDisciplineName : getDisciplineLabel(manualSubject, lang)}</span>
+                      <span className="text-white font-bold">{manualSubjectPref === 'automatic' ? getDisciplineLabel(guessDisciplineFromTitle(manualTitle), lang) : (manualSubject === 'NEW_CUSTOM' ? customDisciplineName : getDisciplineLabel(manualSubject, lang))}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{tr("Initial Language (label)")}</span>

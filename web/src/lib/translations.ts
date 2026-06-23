@@ -639,55 +639,7 @@ export const STATIC_ACADEMIC_LEVELS = [
     AR: 'M2 — السنة الثانية (ماستر)',
     HI: 'M2 — द्वितीय वर्ष (मास्टर)',
     UR: 'M2 — دوسرا سال (ماسٹر)'
-  },
-  { 
-    value: 'beginner',     
-    EN: 'Beginner', 
-    FR: 'Débutant', 
-    ES: 'Principiante', 
-    DE: 'Anfänger', 
-    ZH: '初学者',
-    PT: 'Iniciante',
-    AR: 'مبتدئ',
-    HI: 'शुरुआती',
-    UR: 'ابتدائی'
-  },
-  { 
-    value: 'intermediate', 
-    EN: 'Intermediate', 
-    FR: 'Intermédiaire', 
-    ES: 'Intermedio', 
-    DE: 'Mittelstufe', 
-    ZH: '中级',
-    PT: 'Intermediário',
-    AR: 'متوسط',
-    HI: 'मध्यम',
-    UR: 'متوسط'
-  },
-  { 
-    value: 'advanced',     
-    EN: 'Advanced', 
-    FR: 'Avancé', 
-    ES: 'Avanzado', 
-    DE: 'Fortgeschritten', 
-    ZH: '高级',
-    PT: 'Avançado',
-    AR: 'متقدم',
-    HI: 'उन्नत',
-    UR: 'ترقی یافتہ'
-  },
-  { 
-    value: 'expert',       
-    EN: 'Expert', 
-    FR: 'Expert', 
-    ES: 'Experto', 
-    DE: 'Experte', 
-    ZH: '专家',
-    PT: 'Especialista',
-    AR: 'خبير',
-    HI: 'विशेषज्ञ',
-    UR: 'ماهر'
-  },
+  }
 ] as const;
 
 export const formatCourseLevel = (level: string | number | undefined | null, lang: string): string => {
@@ -697,6 +649,10 @@ export const formatCourseLevel = (level: string | number | undefined | null, lan
 
   // Normalize common legacy and French school system abbreviations dynamically to canonical levels
   const normalKeyMap: Record<string, string> = {
+    'beginner': 'l1',
+    'intermediate': 'l2',
+    'advanced': 'l3',
+    'expert': 'm1',
     'cp': 'foundation_1',
     'ce1': 'foundation_1',
     'ce2': 'foundation_1',

@@ -74,7 +74,7 @@ export const users: UserProfile[] = [
   { 
     id: 'u4', 
     name: 'Charlie Brown', 
-    email: 'charlie@openprimer.org', 
+    email: 'charlie@openprimer.app', 
     role: 'student', 
     level: 3, 
     kp: 1800, 
@@ -186,7 +186,7 @@ export const users: UserProfile[] = [
   {
     id: 'u12',
     name: 'Student One',
-    email: 'student1@openprimer.org',
+    email: 'student1@openprimer.app',
     role: 'student',
     level: 1,
     kp: 150,
@@ -200,7 +200,7 @@ export const users: UserProfile[] = [
   {
     id: 'u13',
     name: 'Student Two',
-    email: 'student2@openprimer.org',
+    email: 'student2@openprimer.app',
     role: 'student',
     level: 2,
     kp: 450,
@@ -214,7 +214,7 @@ export const users: UserProfile[] = [
   {
     id: 'u14',
     name: 'Student Three',
-    email: 'student3@openprimer.org',
+    email: 'student3@openprimer.app',
     role: 'student',
     level: 3,
     kp: 950,
@@ -228,7 +228,7 @@ export const users: UserProfile[] = [
   {
     id: 'u15',
     name: 'Silvere Martin',
-    email: 'silvere@openprimer.org',
+    email: 'silvere@openprimer.app',
     role: 'admin',
     level: 1,
     kp: 0,
@@ -1076,7 +1076,7 @@ export const generatePreseededCourseCompletions = (): CourseCompletionEntry[] =>
 };
 
 export const translationEmailsList: TranslationEmailNotification[] = [
-  { id: 'em_1', courseTitle: 'Classical Mechanics', targetLang: 'es', email: 'physics_student@openprimer.org', timestamp: new Date(2026, 5, 16).toISOString() },
+  { id: 'em_1', courseTitle: 'Classical Mechanics', targetLang: 'es', email: 'physics_student@openprimer.app', timestamp: new Date(2026, 5, 16).toISOString() },
   { id: 'em_2', courseTitle: 'Cell Biology', targetLang: 'de', email: 'bio_scholar@openprimer.de', timestamp: new Date(2026, 2, 18).toISOString() }
 ];
 

@@ -524,7 +524,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [user, setUser] = useState({
     firstName: "",
     lastName: "",
-    email: "silvere@openprimer.org",
+    email: "silvere@openprimer.app",
     lang: lang.toUpperCase()
   });
 
@@ -614,7 +614,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         setUser({
           firstName: p.firstName || "",
           lastName: p.lastName || "",
-          email: p.email || "silvere@openprimer.org",
+          email: p.email || "silvere@openprimer.app",
           lang: (p.preferredLang || lang).toUpperCase()
         });
         setReduceMotion(!!p.reduceMotion);
@@ -662,7 +662,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               setUser({
                 firstName,
                 lastName,
-                email: p.email || "silvere@openprimer.org",
+                email: p.email || "silvere@openprimer.app",
                 lang: (p.preferredLang || lang).toUpperCase()
               });
 

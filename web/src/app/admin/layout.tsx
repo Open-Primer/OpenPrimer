@@ -201,7 +201,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [activeDropdown, setActiveDropdown] = React.useState<'lang' | 'user' | null>(null);
   const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
   const [readingMode, setReadingMode] = React.useState('dark');
-  const [dynamicEmail, setDynamicEmail] = React.useState('admin@openprimer.org');
+  const [dynamicEmail, setDynamicEmail] = React.useState('admin@openprimer.app');
   const [dynamicRole, setDynamicRole] = React.useState('Administrator');
   const [isDbConnected, setIsDbConnected] = React.useState<boolean | null>(null);
 

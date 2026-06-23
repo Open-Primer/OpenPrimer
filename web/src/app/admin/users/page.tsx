@@ -823,7 +823,7 @@ export default function AdminUsers() {
                     id="student-email-input"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="e.g. jean.dupont@openprimer.org"
+                    placeholder="e.g. jean.dupont@openprimer.app"
                     autoComplete="new-email"
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-medium"
                   />

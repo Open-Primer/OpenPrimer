@@ -263,6 +263,7 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
 
     // Retrieve previous answers if page was already finished
     const storage = getProgressionStorage();
+    let hasSavedAnswers = false;
     if (storage) {
       const key = `op_quiz_attempts_${pathname}`;
       const saved = storage.getItem(key);
@@ -270,11 +271,40 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
         try {
           const parsed = JSON.parse(saved);
           setAnswers(parsed);
+          hasSavedAnswers = true;
           setIsStarted(true);
         } catch {}
       }
     }
+
+    const startTimeKey = `op_quiz_start_time_${pathname}`;
+    const savedStartTime = localStorage.getItem(startTimeKey);
+    if (savedStartTime) {
+      setIsStarted(true);
+    } else if (hasSavedAnswers) {
+      localStorage.setItem(startTimeKey, Date.now().toString());
+    }
   }, [resetKey]);
+
+  // Restore start time and calculate correct remaining time on reload
+  useEffect(() => {
+    if (typeof window === 'undefined' || !actualDurationLimit || !isStarted) return;
+
+    const pathname = window.location.pathname;
+    const startTimeKey = `op_quiz_start_time_${pathname}`;
+    const savedStartTime = localStorage.getItem(startTimeKey);
+
+    if (savedStartTime) {
+      const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartTime, 10)) / 1000);
+      const remaining = actualDurationLimit - elapsedSeconds;
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        setIsTimeUp(true);
+      } else {
+        setTimeLeft(remaining);
+      }
+    }
+  }, [actualDurationLimit, isStarted]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -296,12 +326,29 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
     };
   }, [isStarted, actualDurationLimit, isFinished]);
 
+  // Warn user before reloading or navigating away
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isStarted && !isFinished && actualDurationLimit) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isStarted, isFinished, actualDurationLimit]);
+
   if (totalQuestions === 0) return null;
 
   const handleStart = () => {
     setIsStarted(true);
     if (actualDurationLimit) {
       setTimeLeft(actualDurationLimit);
+      const pathname = window.location.pathname;
+      localStorage.setItem(`op_quiz_start_time_${pathname}`, Date.now().toString());
     }
   };
 
@@ -336,10 +383,11 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
     
     // Clear storage for this quiz
     const storage = getProgressionStorage();
+    const pathname = window.location.pathname;
     if (storage) {
-      const pathname = window.location.pathname;
       storage.removeItem(`op_quiz_attempts_${pathname}`);
     }
+    localStorage.removeItem(`op_quiz_start_time_${pathname}`);
 
     setAnswers({});
     setIsStarted(false);

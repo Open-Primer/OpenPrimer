@@ -222,6 +222,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
         });
       }
     }
+    let hasDraft = false;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -231,6 +232,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
         setIsReadOnly(parsed.isOfflinePending ? true : parsed.grade ? true : false);
         setIsStarted(true);
         setIsOfflinePending(!!parsed.isOfflinePending);
+        hasDraft = !parsed.grade && !parsed.isOfflinePending;
         if (parsed.submissionType) {
           setSubmissionType(parsed.submissionType);
         }
@@ -244,6 +246,14 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           }
         }
       } catch {}
+    }
+
+    const startTimeKey = `op_essay_start_time_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
+    const savedStartTime = localStorage.getItem(startTimeKey);
+    if (savedStartTime) {
+      setIsStarted(true);
+    } else if (hasDraft) {
+      localStorage.setItem(startTimeKey, Date.now().toString());
     }
 
     return () => {
@@ -263,6 +273,27 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
       isDraft: true
     }));
   }, [answer, submissionType, fileAttachment, isStarted, grade, isOfflinePending]);
+
+  // Restore start time and calculate correct remaining time on reload
+  useEffect(() => {
+    if (typeof window === 'undefined' || !actualDurationLimit || !isStarted) return;
+
+    const pathname = window.location.pathname;
+    const startTimeKey = `op_essay_start_time_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
+    const savedStartTime = localStorage.getItem(startTimeKey);
+
+    if (savedStartTime) {
+      const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartTime, 10)) / 1000);
+      const remaining = actualDurationLimit - elapsedSeconds;
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        setIsTimeUp(true);
+        setIsReadOnly(true);
+      } else {
+        setTimeLeft(remaining);
+      }
+    }
+  }, [actualDurationLimit, isStarted, prompt]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -301,10 +332,28 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     };
   }, [isStarted, actualDurationLimit, isReadOnly, grade]);
 
+  // Warn user before reloading or navigating away
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isStarted && !grade && !isReadOnly && !isOfflinePending && actualDurationLimit) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isStarted, grade, isReadOnly, isOfflinePending, actualDurationLimit]);
+
   const handleStart = () => {
     setIsStarted(true);
     if (actualDurationLimit) {
       setTimeLeft(actualDurationLimit);
+      const pathname = window.location.pathname;
+      const startTimeKey = `op_essay_start_time_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
+      localStorage.setItem(startTimeKey, Date.now().toString());
     }
   };
 
@@ -553,6 +602,7 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
     const pathname = window.location.pathname;
     const key = `op_essay_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`;
     localStorage.removeItem(key);
+    localStorage.removeItem(`op_essay_start_time_${pathname}_${encodeURIComponent(prompt.slice(0, 30))}`);
 
     setIsReadOnly(false);
     setGrade(null);

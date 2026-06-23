@@ -1429,7 +1429,11 @@ ${widgetsDescription}
    - Tailor vocabulary, tone, mathematical rigor and paragraph density strictly to the presumption of "${levelInput}".
 9. **No Code Block Wrappers**:
    - Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).
-   - Write in "${targetLang.toUpperCase()}".`;
+10. **STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS**:
+    - You MUST NEVER write raw JSX/HTML tags for interactive components (such as \`<DataChart>\`, \`<Video>\`, \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<SolvedExercise>\`, \`<UnsolvedExercise>\`, \`<Mermaid>\` or \`<CodeSandbox>\`) inside your narrative text.
+    - Instead, you MUST EXCLUSIVELY use the pre-generated bracketed anchor tags (e.g. \`[[WIDGET:prerequisites]]\`, \`[[WIDGET:comp_02]]\`).
+    - The actual code for these interactive components has been pre-compiled and verified separately. Attempting to write raw custom components or placeholders in your narrative will fail the validation audit. Keep your markup limited to standard markdown (headings, paragraphs, blockquotes, bold/italic, lists) and the approved widget anchors.
+    - Write in "${targetLang.toUpperCase()}".`;
 
       let narrativeText = '';
       let narrativeSuccess = false;
@@ -1653,6 +1657,11 @@ LIST OF PRE-GENERATED WIDGETS AT YOUR DISPOSAL (YOU MUST PRESERVE AND INSERT EAC
 ${parsedWidgets.interactiveComponents.map((comp: any) => `- Component ID: "${comp.id}" -> Anchor: [[WIDGET:${comp.id}]] (Component Type: "${comp.componentType}", planned for "${comp.sectionAnchor}")`).join('\n')}
 
 Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
+STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS:
+- You MUST NEVER write raw JSX/HTML tags for interactive components (such as \`<DataChart>\`, \`<Video>\`, \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<SolvedExercise>\`, \`<UnsolvedExercise>\`, \`<Mermaid>\` or \`<CodeSandbox>\`) inside your narrative text.
+- Instead, you MUST EXCLUSIVELY use the pre-generated bracketed anchor tags (e.g. \`[[WIDGET:prerequisites]]\`, \`[[WIDGET:comp_02]]\`).
+- Any raw interactive custom elements will break validation. Keep your markup limited to standard markdown and approved widget anchors.
+
 Return ONLY the raw narrative text. Do not wrap the response in markdown code blocks (\`\`\`).`;
 
             let refinedNarrative = '';

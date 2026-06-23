@@ -1498,7 +1498,8 @@ export default function CurriculumPage() {
               hours: hours,
               isOptional,
               isEnrolled: !!activeMod,
-              langCode
+              langCode,
+              languages: matched.languages || []
             };
           });
 

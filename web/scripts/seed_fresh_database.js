@@ -10,9 +10,9 @@
  *  - Truncates all student dynamic tables (progress, favorites, search logs, contact feedback, and task queue)
  *  - Purges Supabase Auth system and registers 4 pristine accounts:
  *      1. Vanguard Administrator (vanguard.mysterious@gmail.com)
- *      2. Test Student 1 (student1@openprimer.org)
- *      3. Test Student 2 (student2@openprimer.org)
- *      4. Test Student 3 (student3@openprimer.org)
+ *      2. Test Student 1 (student1@openprimer.app)
+ *      3. Test Student 2 (student2@openprimer.app)
+ *      4. Test Student 3 (student3@openprimer.app)
  * 
  * Usage:
  *  node scripts/seed_fresh_database.js
@@ -83,7 +83,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_2",
     translations: {
-      fr: { name: "Apprenti Rapide", description: "Terminer un cours en moins de 3 jours" }
+      fr: { name: "Apprenti Rapide", description: "Terminer un cours en moins de 3 jours de l'inscription" },
+      FR: { name: "Apprenti Rapide", description: "Terminer un cours en moins de 3 jours de l'inscription" },
+      es: { name: "Aprendiz Rápido", description: "Completó un curso en menos de 3 días desde su inscripción" },
+      ES: { name: "Aprendiz Rápido", description: "Completó un curso en menos de 3 días desde su inscripción" }
     }
   },
   {
@@ -97,7 +100,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_25",
     translations: {
-      fr: { name: "Compagnon Socratique", description: "Poser 50 questions au Tuteur Socratique" }
+      fr: { name: "Compagnon Socratique", description: "Poser 50 questions au Tuteur Socratique" },
+      FR: { name: "Compagnon Socratique", description: "Poser 50 questions au Tuteur Socratique" },
+      es: { name: "Compañero Socrático", description: "Realizó 50 preguntas al Tutor Socrático" },
+      ES: { name: "Compañero Socrático", description: "Realizó 50 preguntas al Tutor Socrático" }
     }
   },
   {
@@ -111,7 +117,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_28",
     translations: {
-      fr: { name: "Sage Socratique", description: "Poser 100 questions au Tuteur Socratique" }
+      fr: { name: "Sage Socratique", description: "Poser 100 questions au Tuteur Socratique" },
+      FR: { name: "Sage Socratique", description: "Poser 100 questions au Tuteur Socratique" },
+      es: { name: "Sabio Socrático", description: "Realizó 100 preguntas al Tutor Socrático" },
+      ES: { name: "Sabio Socrático", description: "Realizó 100 preguntas al Tutor Socrático" }
     }
   },
   {
@@ -125,7 +134,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_4",
     translations: {
-      fr: { name: "Étudiant Persistant", description: "Maintenir une série d'apprentissage de 7 jours" }
+      fr: { name: "Étudiant Persistant", description: "Maintenir une série d'apprentissage de 7 jours" },
+      FR: { name: "Étudiant Persistant", description: "Maintenir une série d'apprentissage de 7 jours" },
+      es: { name: "Estudiante Persistente", description: "Mantuvo una racha de aprendizaje de 7 días" },
+      ES: { name: "Estudiante Persistente", description: "Mantuvo una racha de aprendizaje de 7 días" }
     }
   },
   {
@@ -139,7 +151,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_3",
     translations: {
-      fr: { name: "Score Parfait", description: "Obtenir 100% de bonnes réponses à une évaluation" }
+      fr: { name: "Score Parfait", description: "Obtenir 100% de bonnes réponses à une évaluation" },
+      FR: { name: "Score Parfait", description: "Obtenir 100% de bonnes réponses à une évaluation" },
+      es: { name: "Puntuación Perfecta", description: "Obtuvo un 100% en cualquier evaluación de curso" },
+      ES: { name: "Puntuación Perfecta", description: "Obtuvo un 100% en cualquier evaluación de curso" }
     }
   },
   {
@@ -153,7 +168,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_7",
     translations: {
-      fr: { name: "Savant Nocturne", description: "Terminer 5 sessions d'apprentissage de nuit (22h à 5h)" }
+      fr: { name: "Savant Nocturne", description: "Terminer 5 sessions d'apprentissage de nuit (22h à 5h)" },
+      FR: { name: "Savant Nocturne", description: "Terminer 5 sessions d'apprentissage de nuit (22h à 5h)" },
+      es: { name: "Erudito Nocturno", description: "Completó 5 sesiones nocturnas (22:00 a 05:00)" },
+      ES: { name: "Erudito Nocturno", description: "Completó 5 sesiones nocturnas (22:00 a 05:00)" }
     }
   },
   {
@@ -167,7 +185,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_6",
     translations: {
-      fr: { name: "Hibou du Matin", description: "Terminer 5 sessions d'apprentissage le matin (5h à 8h)" }
+      fr: { name: "Hibou du Matin", description: "Terminer 5 sessions d'apprentissage le matin (5h à 8h)" },
+      FR: { name: "Hibou du Matin", description: "Terminer 5 sessions d'apprentissage le matin (5h à 8h)" },
+      es: { name: "Búho Matutino", description: "Completó 5 sesiones matutinas (05:00 a 08:00)" },
+      ES: { name: "Búho Matutino", description: "Completó 5 sesiones matutinas (05:00 a 08:00)" }
     }
   },
   {
@@ -181,7 +202,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_49",
     translations: {
-      fr: { name: "Architecte du Programme", description: "Créer un syllabus personnalisé" }
+      fr: { name: "Architecte du Programme", description: "Créer un syllabus personnalisé" },
+      FR: { name: "Architecte du Programme", description: "Créer un syllabus personnalisé" },
+      es: { name: "Arquitecto de Currículum", description: "Creó 1 plan de estudios personalizado" },
+      ES: { name: "Arquitecto de Currículum", description: "Creó 1 plan de estudios personalizado" }
     }
   },
   {
@@ -195,7 +219,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_11",
     translations: {
-      fr: { name: "Contributeur de Retours", description: "Soumettre un retour d'expérience sur un cours" }
+      fr: { name: "Contributeur de Retours", description: "Soumettre un retour d'expérience sur un cours" },
+      FR: { name: "Contributeur de Retours", description: "Soumettre un retour d'expérience sur un cours" },
+      es: { name: "Colaborador de Comentarios", description: "Envió 1 comentario de retroalimentación sobre un curso" },
+      ES: { name: "Colaborador de Comentarios", description: "Envió 1 comentario de retroalimentación sobre un curso" }
     }
   },
   {
@@ -209,7 +236,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_8",
     translations: {
-      fr: { name: "Savant Souverain", description: "Terminer 5 cours avec succès" }
+      fr: { name: "Savant Souverain", description: "Terminer 5 cours avec succès" },
+      FR: { name: "Savant Souverain", description: "Terminer 5 cours avec succès" },
+      es: { name: "Erudito Soberano", description: "Completó 5 cursos con éxito" },
+      ES: { name: "Erudito Soberano", description: "Completó 5 cursos con éxito" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -227,7 +257,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_17",
     translations: {
-      fr: { name: "Explorateur d'Esprits", description: "Terminer 3 cours avec succès" }
+      fr: { name: "Explorateur d'Esprits", description: "Terminer 3 cours avec succès" },
+      FR: { name: "Explorateur d'Esprits", description: "Terminer 3 cours avec succès" },
+      es: { name: "Explorador de Mentes", description: "Completó 3 cursos con éxito" },
+      ES: { name: "Explorador de Mentes", description: "Completó 3 cursos con éxito" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -245,7 +278,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_22",
     translations: {
-      fr: { name: "Polyglotte Académique", description: "S'inscrire à au moins 2 cours" }
+      fr: { name: "Polyglotte Académique", description: "S'inscrire à au moins 2 cours" },
+      FR: { name: "Polyglotte Académique", description: "S'inscrire à au moins 2 cours" },
+      es: { name: "Académico Políglota", description: "Inscrito en al menos 2 cursos" },
+      ES: { name: "Académico Políglota", description: "Inscrito en al menos 2 cursos" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -263,7 +299,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_40",
     translations: {
-      fr: { name: "Alchimiste du Savoir", description: "Terminer au moins 10 leçons" }
+      fr: { name: "Alchimiste du Savoir", description: "Terminer au moins 10 leçons" },
+      FR: { name: "Alchimiste du Savoir", description: "Terminer au moins 10 leçons" },
+      es: { name: "Alquimista del Conocimiento", description: "Completó al menos 10 lecciones" },
+      ES: { name: "Alquimista del Conocimiento", description: "Completó al menos 10 lecciones" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -281,7 +320,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_45",
     translations: {
-      fr: { name: "Pionnier Scientifique", description: "Terminer votre tout premier cours" }
+      fr: { name: "Pionnier Scientifique", description: "Terminer votre tout premier cours" },
+      FR: { name: "Pionnier Scientifique", description: "Terminer votre tout premier cours" },
+      es: { name: "Pionero Científico", description: "Completó su primer curso con éxito" },
+      ES: { name: "Pionero Científico", description: "Completó su primer curso con éxito" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -299,7 +341,10 @@ const initialAchievements = [
     endDate: null,
     icon: "img_47",
     translations: {
-      fr: { name: "Maître Socratique", description: "Poser 200 questions au tuteur Socratique" }
+      fr: { name: "Maître Socratique", description: "Poser 200 questions au tuteur Socratique" },
+      FR: { name: "Maître Socratique", description: "Poser 200 questions au tuteur Socratique" },
+      es: { name: "Maestro Socrático", description: "Realizó 200 preguntas al Tutor Socrático" },
+      ES: { name: "Maestro Socrático", description: "Realizó 200 preguntas al Tutor Socrático" }
     },
     evaluation_rule: {
       logicalOperator: "and",
@@ -1048,19 +1093,19 @@ async function main() {
         role: 'admin'
       },
       {
-        email: 'student1@openprimer.org',
+        email: 'student1@openprimer.app',
         password: 'student1password',
         name: 'Student One',
         role: 'student'
       },
       {
-        email: 'student2@openprimer.org',
+        email: 'student2@openprimer.app',
         password: 'student2password',
         name: 'Student Two',
         role: 'student'
       },
       {
-        email: 'student3@openprimer.org',
+        email: 'student3@openprimer.app',
         password: 'student3password',
         name: 'Student Three',
         role: 'student'

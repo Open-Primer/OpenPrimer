@@ -858,6 +858,13 @@ export const CatalogPage = () => {
                     if (course.isCurriculum) {
                       setSelectedEnrollCourse(course);
                     } else {
+                      if (course.languages && course.languages.length > 0) {
+                        const currentLangLower = lang.toLowerCase();
+                        const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                        if (!supportsCurrentLang) {
+                          setActiveLang(course.languages[0].toUpperCase());
+                        }
+                      }
                       window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                     }
                   }}
@@ -1004,6 +1011,13 @@ export const CatalogPage = () => {
                           if (course.isCurriculum) {
                             setSelectedEnrollCourse(course);
                           } else {
+                            if (course.languages && course.languages.length > 0) {
+                              const currentLangLower = lang.toLowerCase();
+                              const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                              if (!supportsCurrentLang) {
+                                setActiveLang(course.languages[0].toUpperCase());
+                              }
+                            }
                             window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                           }
                         }}
@@ -1040,11 +1054,26 @@ export const CatalogPage = () => {
                               setSelectedEnrollCourse(null);
                               window.dispatchEvent(new Event('op_progress_updated'));
                               
+                              if (courseToOpen.languages && courseToOpen.languages.length > 0) {
+                                const currentLangLower = lang.toLowerCase();
+                                const supportsCurrentLang = courseToOpen.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                                if (!supportsCurrentLang) {
+                                  setActiveLang(courseToOpen.languages[0].toUpperCase());
+                                }
+                              }
+
                               setTimeout(() => {
                                 setEnrollmentSuccess(false);
                                 window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;
                               }, 2000);
                             } else {
+                              if (course.languages && course.languages.length > 0) {
+                                const currentLangLower = lang.toLowerCase();
+                                const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                                if (!supportsCurrentLang) {
+                                  setActiveLang(course.languages[0].toUpperCase());
+                                }
+                              }
                               window.location.href = `/signup?redirect=/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
                             }
                           }}
@@ -1131,6 +1160,13 @@ export const CatalogPage = () => {
             onEnroll={async (activeC) => {
               const targetCourse = activeC || selectedEnrollCourse;
               if (!isLoggedIn) {
+                if (targetCourse.languages && targetCourse.languages.length > 0) {
+                  const currentLangLower = lang.toLowerCase();
+                  const supportsCurrentLang = targetCourse.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                  if (!supportsCurrentLang) {
+                    setActiveLang(targetCourse.languages[0].toUpperCase());
+                  }
+                }
                 window.location.href = `/signup?redirect=/${cleanPathSegment(targetCourse.level)}/${cleanPathSegment(targetCourse.subject)}/${targetCourse.slug}/introduction`;
                 return;
               }
@@ -1150,6 +1186,14 @@ export const CatalogPage = () => {
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               
+              if (courseToOpen.languages && courseToOpen.languages.length > 0) {
+                const currentLangLower = lang.toLowerCase();
+                const supportsCurrentLang = courseToOpen.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+                if (!supportsCurrentLang) {
+                  setActiveLang(courseToOpen.languages[0].toUpperCase());
+                }
+              }
+
               setTimeout(() => {
                 setEnrollmentSuccess(false);
                 window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;

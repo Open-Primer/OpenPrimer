@@ -11,7 +11,7 @@ test.describe('OpenPrimer Anti-Corruption Archival Cascade Integration Suite', (
       localStorage.setItem('op_allow_sandbox', 'true');
       localStorage.setItem('openprimer_lang', 'EN');
       localStorage.setItem('op_session', 'true');
-      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.org', role: 'admin' }));
+      localStorage.setItem('op_user_profile', JSON.stringify({ email: 'admin@openprimer.app', role: 'admin' }));
     });
     await page.reload();
   });

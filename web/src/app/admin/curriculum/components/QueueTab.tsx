@@ -5,7 +5,7 @@ import { RefreshCw, ShieldAlert, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOCALIZED_POPUPS } from '../strings';
 import { dbService } from '@/lib/db';
-import { cleanPathSegment } from '@/lib/translations';
+import { cleanPathSegment, formatCourseLevel } from '@/lib/translations';
 
 const renderSortIndicator = (field: string, currentField: string, currentDir: 'asc' | 'desc') => {
   if (field !== currentField) return <span className="ml-1 text-slate-700 hover:text-slate-400 cursor-pointer">⇅</span>;
@@ -14,11 +14,7 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
 
 const formatCourseLevelGlobal = (level: string | undefined | null, lang: string) => {
   if (!level) return 'N/A';
-  const cleanL = level.toUpperCase().trim();
-  if (cleanL === 'L1' || cleanL === 'BEGINNER') return lang === 'FR' ? 'Débutant (L1)' : 'Beginner (L1)';
-  if (cleanL === 'L2' || cleanL === 'INTERMEDIATE') return lang === 'FR' ? 'Intermédiaire (L2)' : 'Intermediate (L2)';
-  if (cleanL === 'L3' || cleanL === 'ADVANCED') return lang === 'FR' ? 'Avancé (L3)' : 'Advanced (L3)';
-  return level;
+  return formatCourseLevel(level, lang);
 };
 
 interface QueueTabProps {

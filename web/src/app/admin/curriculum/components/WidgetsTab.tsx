@@ -538,8 +538,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const filteredWidgets = widgets.filter(w => {
     const term = searchQuery.toLowerCase();
     const idMatches = w.id.toLowerCase().includes(term);
-    const nameMatches = (isFR ? w.nameFR : w.nameEN).toLowerCase().includes(term);
-    const descMatches = (isFR ? w.descFR : w.descEN).toLowerCase().includes(term);
+    const nameMatches = tr(w.nameEN).toLowerCase().includes(term);
+    const descMatches = tr(w.descEN).toLowerCase().includes(term);
     const disciplineMatches = w.disciplines.some(d => d.toLowerCase().includes(term));
     return idMatches || nameMatches || descMatches || disciplineMatches;
   });
@@ -654,12 +654,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tight flex items-center gap-3">
             <Wrench className="w-7 h-7 text-teal-500" />
-            {isFR ? "Atelier des Widgets Pédagogiques" : "Pedagogical Widgets Workshop"}
+            {tr("Pedagogical Widgets Workshop")}
           </h2>
           <p className="text-xs text-slate-450 leading-relaxed font-medium">
-            {isFR 
-              ? "Surveillez, inspectez, prévisualiser et configurez les composants interactifs du curriculum."
-              : "Monitor, inspect, preview, and safely compile prompt-driven enhancements to interactive curriculum blocks."}
+            {tr("Monitor, inspect, preview, and safely compile prompt-driven enhancements to interactive curriculum blocks.")}
           </p>
         </div>
 
@@ -696,7 +694,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             title="Re-scan le dossier MDX pour charger les modifications physiques du disque"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            {isFR ? "Actualiser" : "Refresh"}
+            {tr("Refresh")}
           </button>
 
           <button
@@ -705,7 +703,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             className="px-4 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 hover:scale-[1.02] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
           >
             <Plus className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />
-            {isFR ? "Créer un Widget" : "Create Widget"}
+            {tr("Create Widget")}
           </button>
         </div>
       </div>
@@ -719,7 +717,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isFR ? "Rechercher un composant, une matière..." : "Filter components, subjects..."}
+              placeholder={tr("Filter components, subjects...")}
               className="w-full bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 rounded-2xl py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors"
             />
           </div>
@@ -734,14 +732,14 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             <div className="col-span-full flex flex-col items-center justify-center p-12 text-center space-y-3">
               <Loader2 className="w-8 h-8 text-teal-500 animate-spin" />
               <p className="text-[10px] text-slate-550 font-bold uppercase tracking-widest">
-                {isFR ? "Scan du dossier mdx..." : "Scanning MDX directory..."}
+                {tr("Scanning MDX directory...")}
               </p>
             </div>
           ) : filteredWidgets.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center p-12 text-center space-y-2">
               <Ban className="w-8 h-8 text-slate-650" />
               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
-                {isFR ? "Aucun widget trouvé" : "No matching widgets"}
+                {tr("No matching widgets")}
               </p>
             </div>
           ) : (
@@ -777,7 +775,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
                     
                     <p className="text-[9px] text-slate-400 font-medium leading-relaxed line-clamp-2">
-                      {isFR ? widget.descFR : widget.descEN}
+                      {tr(widget.descEN)}
                     </p>
                   </div>
 
@@ -799,7 +797,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <span className="text-[7px] font-bold text-slate-500 uppercase font-mono shrink-0">
-                      🎓 {isFR ? widget.levelFR : widget.levelEN}
+                      🎓 {tr(widget.levelEN)}
                     </span>
                   </div>
                 </div>
@@ -825,7 +823,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
                       <div className="space-y-0.5">
                         <p className="text-[11px] font-black text-red-400 uppercase tracking-wider">
-                          {isFR ? "Composant Verrouillé en Lecture Seule" : "Component Locked Read-Only"}
+                          {tr("Component Locked Read-Only")}
                         </p>
                         <p className="text-[10px] text-slate-400 leading-relaxed">
                           {isFR 
@@ -838,7 +836,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       onClick={() => handleForceUnlock(selectedWidget.id)}
                       className="px-3.5 py-1.5 bg-red-500 hover:bg-red-400 text-slate-950 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer"
                     >
-                      {isFR ? "Forcer le déverrouillage" : "Force Unlock"}
+                      {tr("Force Unlock")}
                     </button>
                   </div>
                 );
@@ -847,7 +845,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   <div className="p-3 bg-teal-500/10 border border-teal-500/20 rounded-2xl flex items-center gap-2">
                     <Lock className="w-4 h-4 text-teal-400 shrink-0" />
                     <span className="text-[9px] text-teal-400 font-bold uppercase tracking-wider">
-                      {isFR ? "Vous possédez le verrou exclusif sur ce composant" : "You hold the exclusive edit lock on this component"}
+                      {tr("You hold the exclusive edit lock on this component")}
                     </span>
                   </div>
                 );
@@ -867,10 +865,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-white">
-                  {isFR ? selectedWidget.nameFR : selectedWidget.nameEN}
+                  {tr(selectedWidget.nameEN)}
                 </h3>
                 <p className="text-xs text-slate-400 max-w-3xl leading-relaxed">
-                  {isFR ? selectedWidget.descFR : selectedWidget.descEN}
+                  {tr(selectedWidget.descEN)}
                 </p>
               </div>
 
@@ -881,7 +879,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 className="px-4 py-2.5 border border-slate-800 hover:border-slate-700 hover:bg-slate-800 bg-slate-950/40 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:scale-100"
               >
                 <Edit className="w-3.5 h-3.5 text-teal-400" />
-                {isFR ? "Éditer les Paramètres" : "Edit Parameters"}
+                {tr("Edit Parameters")}
               </button>
             </div>
 
@@ -889,9 +887,9 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             <div className="flex items-center justify-between border-b border-slate-900 pb-2">
               <div className="flex gap-4">
                 {[
-                  { id: 'preview', label: isFR ? "Aperçu Interactif" : "Interactive Live Sandbox", icon: Play },
-                  { id: 'code', label: isFR ? "Code Source TSX" : "TSX Source Code", icon: Code },
-                  { id: 'props', label: isFR ? "Documentation & API" : "Props & API Schema", icon: FileText }
+                  { id: 'preview', label: tr("Interactive Live Sandbox"), icon: Play },
+                  { id: 'code', label: tr("TSX Source Code"), icon: Code },
+                  { id: 'props', label: tr("Props & API Schema"), icon: FileText }
                 ].map(tab => {
                   const TabIcon = tab.icon;
                   const isTabSelected = workshopTab === tab.id;
@@ -915,7 +913,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   className="px-3 py-1.5 border border-slate-850 hover:border-teal-500/20 bg-slate-950/40 text-slate-400 hover:text-teal-400 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Maximize2 className="w-3 h-3" />
-                  {isFR ? "Plein Écran" : "Fullscreen Preview"}
+                  {tr("Fullscreen Preview")}
                 </button>
               )}
             </div>
@@ -990,7 +988,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               <div className="flex justify-between items-center">
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-teal-400" />
-                  {isFR ? "Assistant d'Amélioration par IA" : "AI Prompt Refinement Console"}
+                  {tr("AI Prompt Refinement Console")}
                 </h4>
                 <span className="px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[7px] font-black text-cyan-400 uppercase tracking-widest">
                   Gemini 2.5 Flash
@@ -1047,16 +1045,16 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     <div className="flex items-center gap-3">
                       <Loader2 className="w-5 h-5 text-teal-500 animate-spin shrink-0" />
                       <span className="text-xs font-black text-slate-200 uppercase tracking-wider">
-                        {isFR ? "Refonte Sécurisée en Cours..." : "Compiling Sovereign Refinements..."}
+                        {tr("Compiling Sovereign Refinements...")}
                       </span>
                     </div>
                     
                     <div className="grid grid-cols-4 gap-4 text-center">
                       {[
-                        { step: 1, label: isFR ? "AI Call" : "AI Synthesis", icon: Sparkles },
-                        { step: 2, label: isFR ? "Sauvegarde" : "Backup FS", icon: FileText },
-                        { step: 3, label: isFR ? "Écriture Code" : "TSX Inject", icon: Code },
-                        { step: 4, label: isFR ? "Compilateur TSC" : "TSC Compile", icon: Terminal }
+                        { step: 1, label: tr("AI Synthesis"), icon: Sparkles },
+                        { step: 2, label: tr("Backup FS"), icon: FileText },
+                        { step: 3, label: tr("TSX Inject"), icon: Code },
+                        { step: 4, label: tr("TSC Compile"), icon: Terminal }
                       ].map((s) => {
                         const isDone = currentStep > s.step;
                         const isActive = currentStep === s.step;
@@ -1089,7 +1087,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
                       <div className="space-y-0.5">
                         <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">
-                          {isFR ? "Erreur de Compilation détectée" : "TSX Compilation Log Rejected"}
+                          {tr("TSX Compilation Log Rejected")}
                         </h4>
                         <p className="text-[9px] text-slate-400 font-medium">
                           {isFR 
@@ -1116,7 +1114,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             </div>
             <div className="space-y-1">
               <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
-                {isFR ? "Aucun widget sélectionné" : "No Widget Selected"}
+                {tr("No Widget Selected")}
               </h4>
               <p className="text-xs text-slate-550 max-w-xs mx-auto leading-relaxed">
                 {isFR 
@@ -1249,7 +1247,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     onClick={() => setIsEditModalOpen(false)}
                     className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                   >
-                    {isFR ? "Annuler" : "Cancel"}
+                    {tr("Cancel")}
                   </button>
                   <button
                     type="button"
@@ -1262,7 +1260,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     ) : (
                       <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />
                     )}
-                    {isFR ? "Enregistrer" : "Save Changes"}
+                    {tr("Save Changes")}
                   </button>
                 </div>
 
@@ -1425,7 +1423,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     onClick={() => setIsCreateModalOpen(false)}
                     className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                   >
-                    {isFR ? "Annuler" : "Cancel"}
+                    {tr("Cancel")}
                   </button>
                   <button
                     type="button"
@@ -1434,7 +1432,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-40 disabled:scale-100"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
-                    {isFR ? "Générer et Créer" : "Generate & Deploy"}
+                    {tr("Generate & Deploy")}
                   </button>
                 </div>
 
@@ -1454,7 +1452,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   {selectedWidget.id} Fullscreen Sandbox
                 </span>
                 <h3 className="text-md font-black text-white">
-                  {isFR ? selectedWidget.nameFR : selectedWidget.nameEN}
+                  {tr(selectedWidget.nameEN)}
                 </h3>
               </div>
               <button 
@@ -1462,7 +1460,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer border border-slate-850"
               >
                 <Minimize2 className="w-4 h-4 text-teal-400" />
-                {isFR ? "Quitter le Plein Écran" : "Exit Fullscreen"}
+                {tr("Exit Fullscreen")}
               </button>
             </div>
 

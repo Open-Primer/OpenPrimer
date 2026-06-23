@@ -258,19 +258,6 @@ export default function AdminCurriculumPage() {
   // Academic Suggestions validations threshold
   const [validationsThreshold, setValidationsThreshold] = useState(5);
 
-  // Manual curriculum / course proposal form states
-  const [manualTitle, setManualTitle] = useState('');
-  const [manualType, setManualType] = useState<'curriculum' | 'course'>('course');
-  const [manualLevel, setManualLevel] = useState('L1');
-  const [manualSubject, setManualSubject] = useState('Physics');
-  const [manualLang, setManualLang] = useState('EN');
-  const [manualTutor, setManualTutor] = useState('socratic');
-  const [manualPriority, setManualPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
-  const [showManualConfirm, setShowManualConfirm] = useState(false);
-  const [disciplinesList, setDisciplinesList] = useState<string[]>(['Physics', 'Biology', 'Mathematics', 'Law', 'Humanities / Letters', 'Social Sciences', 'Computer Science', 'Medicine', 'Economics', 'Chemistry']);
-  const [customDisciplineName, setCustomDisciplineName] = useState('');
-  const [manualVolumePref, setManualVolumePref] = useState<'automatic' | 'explicit'>('automatic');
-  const [manualVolumeHours, setManualVolumeHours] = useState<number>(30);
 
   // ─── AI Generated Badge States ─────────────────────────────────────────────
   const [generatedBadges, setGeneratedBadges] = useState<string[]>([]);
@@ -822,8 +809,8 @@ export default function AdminCurriculumPage() {
                     });
 
                     const studentEmails = [
-                      'student.gen@openprimer.org',
-                      'researcher.transl@openprimer.org',
+                      'student.gen@openprimer.app',
+                      'researcher.transl@openprimer.app',
                       'learner.active@openprimer.edu'
                     ];
                     for (const email of studentEmails) {
@@ -1576,77 +1563,6 @@ export default function AdminCurriculumPage() {
     const updated = [...queue, newTask];
     setQueue(updated);
     dbService.savePipelineQueue(updated);
-    loadData();
-  };
-
-  const handleCreateManualTask = async () => {
-    if (!manualTitle.trim()) {
-      const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
-      showToast(pStrings.toast_title_empty, 'error');
-      return;
-    }
-
-    // --- Title Sanitization: translate to English, fix capitalization & typos ---
-    let title = manualTitle.trim();
-    try {
-      const res = await fetch('/api/correct-title', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, targetLang: 'en', translateToTargetLang: true })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.corrected && data.corrected.length >= 3) {
-          title = data.corrected;
-        }
-      }
-    } catch (e) {
-      console.warn('[Manual Task] Title correction API failed, using raw title.', e);
-    }
-    // -----------------------------------------------------------------------
-
-    const targetLvl = manualLevel || 'L1';
-    const isTooSimilarCourse = courses.some(c => {
-      const cLvl = c.level || 'L1';
-      return cLvl.toLowerCase() === targetLvl.toLowerCase() && areTitlesTooSimilar(c.title, title);
-    });
-    const isTooSimilarInQueue = queue.some(t => {
-      if (t.type !== 'generation') return false;
-      const tLvl = t.level || 'L1';
-      return tLvl.toLowerCase() === targetLvl.toLowerCase() && areTitlesTooSimilar(t.title, title);
-    });
-
-    if (isTooSimilarCourse || isTooSimilarInQueue) {
-      const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
-      showToast(pStrings.toast_similar_exists.replace('{title}', title), 'info');
-      return;
-    }
-
-    const newTask = {
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: title,
-      type: 'generation',
-      status: 'queued',
-      progress: 0,
-      priority: 'High',
-      timestamp: new Date().toISOString(),
-      details: `Manual Generation (${manualType.toUpperCase()}): Level ${manualLevel}, Subject "${manualSubject}", Language ${manualLang}, Tutor AI "Sovereign AI"`,
-      targetLang: manualLang,
-      level: normalizeLevel(manualLevel),
-      subject: manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject,
-      courseType: manualType,
-      volume: manualVolumePref === 'explicit' ? `${manualVolumeHours} hours` : 'Automatic'
-    };
-
-    const updated = [...queue, newTask];
-    setQueue(updated);
-    dbService.savePipelineQueue(updated);
-    
-    // Clear form
-    setManualTitle('');
-    setShowManualConfirm(false);
-    const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
-    showToast(pStrings.toast_manual_success, 'success');
     loadData();
   };
 

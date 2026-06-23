@@ -132,7 +132,7 @@ test.describe('LTI 1.3 Integration Suite', () => {
       iat: Math.floor(Date.now() / 1000) - 60,
       nonce: 'nonce-12345',
       name: 'LTI Playwright Test Student',
-      email: 'playwright.student@lti.openprimer.org',
+      email: 'playwright.student@lti.openprimer.app',
       'https://purl.imsglobal.org/spec/lti/claim/roles': [
         'http://purl.imsglobal.org/vocab/lis/v2/membership#Learner'
       ],
@@ -168,7 +168,7 @@ test.describe('LTI 1.3 Integration Suite', () => {
     const html = await response.text();
     expect(html).toContain('OPENPRIMER LTI');
     expect(html).toContain('localStorage.setItem(\'op_session\', \'true\')');
-    expect(html).toContain('playwright.student@lti.openprimer.org');
+    expect(html).toContain('playwright.student@lti.openprimer.app');
     expect(html).toContain('/L1/Physics/Classical_Mechanics/newtons_laws_of_motion');
 
     // Verify user profile is registered and linked in Supabase
@@ -189,7 +189,7 @@ test.describe('LTI 1.3 Integration Suite', () => {
       .maybeSingle();
 
     expect(profile).not.toBeNull();
-    expect(profile?.email).toBe('playwright.student@lti.openprimer.org');
+    expect(profile?.email).toBe('playwright.student@lti.openprimer.app');
     expect(profile?.role).toBe('student');
 
     // Verify student is automatically enrolled in Classical Mechanics course

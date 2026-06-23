@@ -56,7 +56,7 @@ export async function checkWikipediaPage(term: string, lang: string): Promise<st
   try {
     const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(cleanTerm)}`;
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.org)' }
+      headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' }
     });
     if (res.ok) {
       const data = await res.json();
@@ -480,27 +480,25 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
     const lessonSlug = slug[3] || 'introduction';
     try {
       const { supabase } = require('./supabase');
-      const { data: dbLesson } = await supabase
+      const { data: dbLessons } = await supabase
         .from('lessons')
         .select('lang')
         .eq('course_slug', courseSlug)
         .eq('lesson_slug', lessonSlug)
-        .limit(1)
-        .single();
-      if (dbLesson?.lang) {
-        console.log(`[getFirstAvailableLanguage] Found lang '${dbLesson.lang}' in DB for ${courseSlug}/${lessonSlug}`);
-        return dbLesson.lang;
+        .limit(1);
+      if (dbLessons && dbLessons.length > 0 && dbLessons[0].lang) {
+        console.log(`[getFirstAvailableLanguage] Found lang '${dbLessons[0].lang}' in DB for ${courseSlug}/${lessonSlug}`);
+        return dbLessons[0].lang;
       }
       // Also try any lesson for this course if lesson-specific slug not found
-      const { data: anyLesson } = await supabase
+      const { data: anyLessons } = await supabase
         .from('lessons')
         .select('lang')
         .eq('course_slug', courseSlug)
-        .limit(1)
-        .single();
-      if (anyLesson?.lang) {
-        console.log(`[getFirstAvailableLanguage] Found lang '${anyLesson.lang}' in DB for course ${courseSlug}`);
-        return anyLesson.lang;
+        .limit(1);
+      if (anyLessons && anyLessons.length > 0 && anyLessons[0].lang) {
+        console.log(`[getFirstAvailableLanguage] Found lang '${anyLessons[0].lang}' in DB for course ${courseSlug}`);
+        return anyLessons[0].lang;
       }
     } catch (err) {
       // DB lookup failed

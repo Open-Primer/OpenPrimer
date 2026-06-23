@@ -12,7 +12,7 @@ test.describe('OpenPrimer Secure Password Update Tests', () => {
       localStorage.setItem('op_session', 'true');
       localStorage.setItem('op_user_profile', JSON.stringify({
         id: 'user_test_123',
-        email: 'silvere@openprimer.org',
+        email: 'silvere@openprimer.app',
         firstName: 'Silvere',
         lastName: 'OpenPrimer'
       }));
@@ -25,7 +25,7 @@ test.describe('OpenPrimer Secure Password Update Tests', () => {
         {
           id: 'user_test_123',
           name: 'Silvere OpenPrimer',
-          email: 'silvere@openprimer.org',
+          email: 'silvere@openprimer.app',
           password: defaultHash,
           role: 'student',
           level: 1,
@@ -87,7 +87,7 @@ test.describe('OpenPrimer Secure Password Update Tests', () => {
     // Verify localStorage has the new password hash
     const isUpdated = await page.evaluate(() => {
       const users = JSON.parse(localStorage.getItem('openprimer_users') || '[]');
-      const user = users.find((u: any) => u.email === 'silvere@openprimer.org');
+      const user = users.find((u: any) => u.email === 'silvere@openprimer.app');
       const expectedHash = window.dbService.hashPassword('NewPassword123!');
       return user && user.password === expectedHash;
     });
