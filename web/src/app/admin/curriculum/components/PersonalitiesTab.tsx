@@ -39,7 +39,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
     });
     setShowAddPersonality(false);
     setNewPers({ name: '', prompt: '', isDefault: false });
-    loadData();
+    await loadData();
     showToast(tr("Personality saved successfully."), 'success');
   };
 
@@ -48,7 +48,10 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
       ...pers,
       isDefault: true
     });
-    loadData();
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('op_active_tutor_personality', pers.id);
+    }
+    await loadData();
     showToast(tr("Default personality updated."), 'success');
   };
 
@@ -72,7 +75,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
           }
         }
       }
-      loadData();
+      await loadData();
       showToast(tr("Personality deleted."), 'success');
     }
   };
@@ -140,7 +143,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                         handleDeletePersona(p);
                       } else {
                         await dbService.saveTutorPersonality({ ...p, archivingLevel: nextLvl });
-                        loadData();
+                        await loadData();
                       }
                     }}
                   />

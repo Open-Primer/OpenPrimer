@@ -348,6 +348,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { code: 'UR', flag: '🇵🇰', label: 'اردو' }
   ];
 
+  // Sort languages alphabetically (by label) and put the currently active language at the top of the list
+  const sortedLanguages = [...languages].sort((a, b) => {
+    const aIsSelected = a.code.toUpperCase() === lang.toUpperCase();
+    const bIsSelected = b.code.toUpperCase() === lang.toUpperCase();
+    
+    if (aIsSelected) return -1;
+    if (bIsSelected) return 1;
+    
+    return a.label.localeCompare(b.label, lang.toLowerCase());
+  });
+
   const handleLogout = async () => {
     try {
       const { supabase } = await import('@/lib/supabase');
@@ -429,7 +440,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <AnimatePresence>
                   {activeDropdown === 'lang' && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
-                      {languages.map(l => (
+                      {sortedLanguages.map(l => (
                         <button key={l.code} onClick={() => setLang(l.code as any)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                           <span>{l.flag} {l.label}</span>
                           {lang === l.code && <CheckCircle className="w-3 h-3 text-blue-500" />}

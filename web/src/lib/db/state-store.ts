@@ -596,6 +596,34 @@ if (isBrowser) {
     courseFeedbacks = getLocalStorageItem('openprimer_course_feedbacks', defaultCourseFeedbacks);
     
     tutorPersonalitiesList = getLocalStorageItem('openprimer_tutor_personalities', initialTutorPersonalities);
+    
+    // Self-healing merge routine for tutor personalities missing new language translations (e.g. HI)
+    let updatedPersonalities = false;
+    tutorPersonalitiesList = tutorPersonalitiesList.map(p => {
+      const seedP = initialTutorPersonalities.find(s => s.id === p.id);
+      if (seedP && seedP.translations) {
+        const mergedTranslations = { ...(p.translations || {}) };
+        let hasMissingTranslation = false;
+        for (const [langCode, translation] of Object.entries(seedP.translations)) {
+          if (!mergedTranslations[langCode]) {
+            mergedTranslations[langCode] = translation;
+            hasMissingTranslation = true;
+          }
+        }
+        if (hasMissingTranslation) {
+          updatedPersonalities = true;
+          return {
+            ...p,
+            translations: mergedTranslations
+          };
+        }
+      }
+      return p;
+    });
+    if (updatedPersonalities) {
+      setLocalStorageItem('openprimer_tutor_personalities', tutorPersonalitiesList);
+    }
+
     agentMetricsList = getLocalStorageItem('openprimer_agent_metrics', initialAgentMetrics);
     
     // Self-healing check for unrealistic cached mock agent metrics

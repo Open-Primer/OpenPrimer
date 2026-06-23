@@ -11,7 +11,8 @@ import {
   normalizeLevel, 
   getLevelLabel, 
   getDisciplineLabel,
-  areTitlesTooSimilar
+  areTitlesTooSimilar,
+  propagateCustomDiscipline
 } from '../strings';
 import { dbService } from '@/lib/db';
 
@@ -204,6 +205,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
     const chosenSubject = manualSubjectPref === 'automatic'
       ? guessDisciplineFromTitle(title)
       : (manualSubject === 'NEW_CUSTOM' ? customDisciplineName : manualSubject);
+
+    if (manualSubject === 'NEW_CUSTOM' && customDisciplineName.trim()) {
+      await propagateCustomDiscipline(customDisciplineName);
+    }
 
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

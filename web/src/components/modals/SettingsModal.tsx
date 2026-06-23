@@ -1116,7 +1116,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
 
             {/* Tab selector bar */}
-            <div className="px-6 md:px-8 py-2 border-b border-slate-800/60 bg-slate-950/25 flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-none">
+            <div className="px-6 md:px-8 py-3 border-b border-slate-800/60 bg-slate-950/25 flex gap-2 items-center overflow-x-auto overflow-y-hidden scrollbar-none">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;

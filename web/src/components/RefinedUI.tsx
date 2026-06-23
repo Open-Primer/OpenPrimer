@@ -1030,7 +1030,7 @@ export const AITutorOverlay = ({
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{t.tutor}</p>
                    <button
                      onClick={() => setShowTutorModal(true)}
-                     title={lang === 'FR' ? 'Changer de tuteur' : 'Change tutor'}
+                     title={t.change_tutor}
                      className="flex items-center gap-1.5 text-sm font-bold text-white hover:text-blue-300 transition-colors cursor-pointer group"
                    >
                      <span>{getPersonaName(persona)}</span>
@@ -1046,14 +1046,14 @@ export const AITutorOverlay = ({
                   onClick={() => setActiveTab('chat')}
                   className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'chat' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
                 >
-                  <span>{lang === 'FR' ? 'Tuteur' : 'Tutor'}</span>
+                  <span>{t.tutor_tab}</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('flashcards')}
                   className={`flex-1 py-3 text-center transition-all border-b-2 cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'flashcards' ? 'text-blue-400 border-blue-500 bg-blue-500/5' : 'border-transparent hover:text-slate-300'}`}
                 >
                   <Brain className="w-3.5 h-3.5" />
-                  <span>Flashcards ({flashcards.length})</span>
+                  <span>{t.flashcards_tab} ({flashcards.length})</span>
                 </button>
               </div>
             )}
@@ -1183,7 +1183,7 @@ export const AITutorOverlay = ({
                     `}</style>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between text-[9px] font-black uppercase text-slate-500 tracking-widest select-none">
-                        <span>{lang === 'FR' ? 'Répétition Espacée' : 'Spaced Repetition'}</span>
+                        <span>{t.spaced_repetition}</span>
                         <span>
                           {flashcards.length > 0 ? `${currentCardIndex + 1} / ${flashcards.length}` : '0 / 0'}
                         </span>
@@ -1191,9 +1191,7 @@ export const AITutorOverlay = ({
 
                       {flashcards.length === 0 ? (
                         <div className="py-12 text-center text-slate-500 text-xs italic">
-                          {lang === 'FR' 
-                            ? 'Aucun terme de glossaire disponible dans cette leçon pour générer des flashcards.' 
-                            : 'No glossary terms available in this lesson to generate flashcards.'}
+                          {t.no_flashcards}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 my-6 select-none">
@@ -1208,7 +1206,7 @@ export const AITutorOverlay = ({
                               }, 150);
                             }}
                             className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
-                            aria-label={lang === 'FR' ? 'Carte précédente' : 'Previous card'}
+                            aria-label={t.prev_card}
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
@@ -1223,7 +1221,7 @@ export const AITutorOverlay = ({
                               {/* Card Front */}
                               <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                 <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest mb-3">
-                                  {lang === 'FR' ? 'CONCEPT' : 'TERM'}
+                                  {t.card_concept}
                                 </span>
                                 <h3 className="text-base font-extrabold text-white leading-tight">
                                   {flashcards[currentCardIndex]?.term}
@@ -1238,14 +1236,14 @@ export const AITutorOverlay = ({
                                   </span>
                                 )}
                                 <p className="text-[9px] text-slate-500 mt-6 italic font-bold tracking-wider uppercase select-none">
-                                  {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
+                                  {t.click_to_flip}
                                 </p>
                               </div>
 
                               {/* Card Back */}
                               <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden transform rotateY-180 ${!isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                 <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest mb-3">
-                                  {lang === 'FR' ? 'DÉFINITION' : 'DEFINITION'}
+                                  {t.card_definition}
                                 </span>
                                 <div className="overflow-y-auto max-h-[140px] px-2 custom-scrollbar my-2 text-center w-full">
                                   <p className="text-xs text-slate-300 leading-relaxed font-semibold">
@@ -1253,7 +1251,7 @@ export const AITutorOverlay = ({
                                   </p>
                                 </div>
                                 <p className="text-[9px] text-slate-500 mt-4 italic font-bold tracking-wider uppercase select-none">
-                                  {lang === 'FR' ? 'Cliquez pour retourner' : 'Click to flip'}
+                                  {t.click_to_flip}
                                 </p>
                               </div>
                             </motion.div>
@@ -1270,7 +1268,7 @@ export const AITutorOverlay = ({
                               }, 150);
                             }}
                             className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
-                            aria-label={lang === 'FR' ? 'Carte suivante' : 'Next card'}
+                            aria-label={t.next_card}
                           >
                             <ChevronRight className="w-5 h-5" />
                           </button>
@@ -1283,26 +1281,26 @@ export const AITutorOverlay = ({
                         {isFlipped ? (
                           <div className="space-y-3">
                             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center select-none">
-                              {lang === 'FR' ? 'Évaluez votre maîtrise :' : 'Rate your mastery:'}
+                              {t.rate_mastery}
                             </p>
                             <div className="grid grid-cols-3 gap-2">
                               <button
                                 onClick={() => handleRateCard('hard')}
                                 className="py-2 bg-rose-950/20 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                               >
-                                🔴 {lang === 'FR' ? 'Difficile' : 'Hard'}
+                                🔴 {t.mastery_hard}
                               </button>
                               <button
                                 onClick={() => handleRateCard('medium')}
                                 className="py-2 bg-amber-950/20 border border-amber-500/30 hover:bg-amber-500/10 text-amber-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                               >
-                                🟡 {lang === 'FR' ? 'Moyen' : 'Medium'}
+                                🟡 {t.mastery_medium}
                               </button>
                               <button
                                 onClick={() => handleRateCard('easy')}
                                 className="py-2 bg-emerald-950/20 border border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                               >
-                                🟢 {lang === 'FR' ? 'Facile' : 'Easy'}
+                                🟢 {t.mastery_easy}
                               </button>
                             </div>
                           </div>
@@ -1317,7 +1315,7 @@ export const AITutorOverlay = ({
                           }}
                           className="w-full py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700/80 hover:text-white text-slate-300 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                         >
-                          ➡️ {lang === 'FR' ? 'Passer à la suivante' : 'Skip / Next Card'}
+                          ➡️ {t.skip_next_card}
                         </button>
 
                         {!isFlipped && !isCoachingDismissed && (
@@ -1328,18 +1326,16 @@ export const AITutorOverlay = ({
                                 localStorage.setItem('op_dismiss_flashcard_coaching', 'true');
                               }}
                               className="absolute top-3 right-3 w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white flex items-center justify-center border border-slate-700 transition-all cursor-pointer z-10"
-                              title={lang === 'FR' ? 'Masquer' : 'Dismiss'}
+                              title={t.coaching_dismiss}
                             >
                               <X className="w-3 h-3" />
                             </button>
                             <p className="text-[9px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5 mb-1.5 pr-8 select-none">
                               <Sparkles className="w-3 h-3 animate-pulse" />
-                              {lang === 'FR' ? 'Coaching Personnalisé IA & Sauvegarde Réelle' : 'AI Personalized Coaching & Real-time Sync'}
+                              {t.coaching_title}
                             </p>
                             <p className="text-[10px] text-slate-300 leading-relaxed font-medium pr-8">
-                              {lang === 'FR' 
-                                ? "Chaque évaluation entraînant directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
-                                : "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"}
+                              {t.coaching_desc}
                             </p>
                           </div>
                         )}
@@ -1849,6 +1845,17 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   
   const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
+  // Sort languages alphabetically (by label) and put the currently active language at the top of the list
+  const sortedLanguages = [...languages].sort((a, b) => {
+    const aIsSelected = a.code.toUpperCase() === lang.toUpperCase();
+    const bIsSelected = b.code.toUpperCase() === lang.toUpperCase();
+    
+    if (aIsSelected) return -1;
+    if (bIsSelected) return 1;
+    
+    return a.label.localeCompare(b.label, lang.toLowerCase());
+  });
+
   const handleAuthClick = (mode: 'login' | 'signup') => {
     if (typeof window !== 'undefined') {
       if (window.location.pathname === '/') {
@@ -2081,7 +2088,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           <AnimatePresence>
             {activeDropdown === 'lang' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
-                 {languages.map(l => (
+                 {sortedLanguages.map(l => (
                    <button key={l.code} onClick={() => handleLanguageSelect(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang.toUpperCase() === l.code.toUpperCase() ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                      <span>{l.flag} {l.label}</span>
                      {lang.toUpperCase() === l.code.toUpperCase() && <CheckCircle className="w-3 h-3" />}
@@ -2135,7 +2142,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             </button>
             <AnimatePresence>
               {activeDropdown === 'user' && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2 profile-dropdown-menu">
                    <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_in_as}</p>
                      <p className="text-xs font-bold text-white truncate">
@@ -2192,7 +2199,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                     
                     <div className="h-0.5 bg-slate-800/50 my-1" />
                     
-                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all">
                       <LogOut className="w-4 h-4" /> {t.signout}
                     </button>
                 </motion.div>

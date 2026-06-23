@@ -1119,8 +1119,6 @@ export const getLevelLabel = (value: string, lang: string): string => {
 };
 
 export const getDisciplineLabel = (value: string, lang: string): string => {
-  const disc = DISCIPLINES.find(d => d.value === value);
-  if (!disc) return value;
   const k = lang.toUpperCase();
   if (typeof window !== 'undefined') {
     try {
@@ -1128,13 +1126,22 @@ export const getDisciplineLabel = (value: string, lang: string): string => {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed[value]) return parsed[value];
+        const lowerVal = value.toLowerCase();
+        if (parsed[lowerVal]) return parsed[lowerVal];
+        for (const key of Object.keys(parsed)) {
+          if (key.toLowerCase() === lowerVal) return parsed[key];
+        }
       }
     } catch (e) {
       console.error(e);
     }
   }
-  const key = k as keyof typeof disc;
-  return (disc[key] as string) || disc.EN;
+  const disc = DISCIPLINES.find(d => d.value === value || d.value.toLowerCase() === value.toLowerCase() || d.EN.toLowerCase() === value.toLowerCase());
+  if (disc) {
+    const key = k as keyof typeof disc;
+    return (disc[key] as string) || disc.EN;
+  }
+  return value;
 };
 
 const batchTranslateTexts = async (texts: string[], targetLang: string): Promise<string[]> => {
@@ -1598,3 +1605,48 @@ if (typeof window !== 'undefined') {
     console.error("Error loading dynamic locales from localStorage into exported dictionaries:", err);
   }
 }
+
+export const propagateCustomDiscipline = async (name: string) => {
+  if (typeof window === 'undefined') return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  
+  let customList: string[] = [];
+  try {
+    customList = JSON.parse(localStorage.getItem('op_custom_disciplines') || '[]');
+  } catch (e) {}
+  
+  if (!customList.includes(trimmed)) {
+    customList.push(trimmed);
+    localStorage.setItem('op_custom_disciplines', JSON.stringify(customList));
+  }
+  
+  const langs = ['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'];
+  for (const lang of langs) {
+    try {
+      const storedKey = `op_lang_disciplines_${lang}`;
+      const existing = JSON.parse(localStorage.getItem(storedKey) || '{}');
+      
+      if (!existing[trimmed]) {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang.toLowerCase()}&dt=t&q=${encodeURIComponent(trimmed)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const translated = data[0].map((x: any) => x[0]).join('').trim();
+          existing[trimmed] = translated || trimmed;
+        } else {
+          existing[trimmed] = trimmed;
+        }
+        localStorage.setItem(storedKey, JSON.stringify(existing));
+      }
+    } catch (e) {
+      console.error(`Failed to propagate custom discipline translation for ${lang}:`, e);
+      try {
+        const storedKey = `op_lang_disciplines_${lang}`;
+        const existing = JSON.parse(localStorage.getItem(storedKey) || '{}');
+        existing[trimmed] = trimmed;
+        localStorage.setItem(storedKey, JSON.stringify(existing));
+      } catch (err) {}
+    }
+  }
+};
+

@@ -273,6 +273,8 @@ export const RAW_STATIC_UI_STRINGS = {
   "curriculum_lang_warning_title": "MULTILINGUAL CURRICULUM DETECTED",
   "curriculum_lang_warning_desc": "Some courses, trophies, or tutors in your curriculum are in another language. They are displayed and can be studied directly.",
   "unlocked": "Unlocked",
+  "locked": "Locked",
+  "github_repository": "GitHub Repository",
   "active_multi_course_curriculum": "ACTIVE MULTI-COURSE CURRICULUM",
   "global_curriculum_progression": "Global Curriculum Progression",
   "curriculum_integration_desc": "This roadmap integrates {count} academic courses. You complete the curriculum by mastering each milestone.",
@@ -391,9 +393,187 @@ export const RAW_STATIC_UI_STRINGS = {
   "eval_attempts_unlimited": "Unlimited retries",
   "eval_attempts_single": "Single attempt only — final evaluation",
   "audio_ai_generated": "Audio synthesized by artificial intelligence — illustrative only",
-  "summative_single_attempt_warning": "⚠️ Single Attempt Only: This is a final evaluation. You will not be able to retake this test after submission."
-}
-};;
+  "summative_single_attempt_warning": "⚠️ Single Attempt Only: This is a final evaluation. You will not be able to retake this test after submission.",
+  "change_tutor": "Change tutor",
+  "tutor_tab": "Tutor",
+  "flashcards_tab": "Flashcards",
+  "spaced_repetition": "Spaced Repetition",
+  "no_flashcards": "No glossary terms available in this lesson to generate flashcards.",
+  "prev_card": "Previous card",
+  "card_concept": "CONCEPT",
+  "click_to_flip": "Click to flip",
+  "card_definition": "DEFINITION",
+  "next_card": "Next card",
+  "rate_mastery": "Rate your mastery:",
+  "mastery_hard": "Hard",
+  "mastery_medium": "Medium",
+  "mastery_easy": "Easy",
+  "skip_next_card": "Skip / Next Card",
+  "coaching_dismiss": "Dismiss",
+  "coaching_title": "AI Personalized Coaching & Real-time Sync",
+  "coaching_desc": "Each rating trains your AI Tutor to personalize its coaching based on your strengths and weaknesses. Your progress syncs in real-time, allowing you to switch tabs or pause seamlessly!"
+  },
+  FR: {
+    "change_tutor": "Changer de tuteur",
+    "tutor_tab": "Tuteur",
+    "flashcards_tab": "Flashcards",
+    "spaced_repetition": "Répétition Espacée",
+    "no_flashcards": "Aucun terme de glossaire disponible dans cette leçon pour générer des flashcards.",
+    "prev_card": "Carte précédente",
+    "card_concept": "CONCEPT",
+    "click_to_flip": "Cliquez pour retourner",
+    "card_definition": "DÉFINITION",
+    "next_card": "Carte suivante",
+    "rate_mastery": "Évaluez votre maîtrise :",
+    "mastery_hard": "Difficile",
+    "mastery_medium": "Moyen",
+    "mastery_easy": "Facile",
+    "skip_next_card": "Passer à la suivante",
+    "coaching_dismiss": "Masquer",
+    "coaching_title": "Coaching Personnalisé IA & Sauvegarde Réelle",
+    "coaching_desc": "Chaque évaluation entraînant directement l'IA du Tuteur à personnaliser ses explications et questions d'après vos forces et faiblesses. Votre progression est sauvegardée en temps réel, vous pouvez basculer d'onglet ou faire une pause en toute sérénité !"
+  },
+  HI: {
+    "change_tutor": "ट्यूटर बदलें",
+    "tutor_tab": "ट्यूटर",
+    "flashcards_tab": "फ्लैशकार्ड",
+    "spaced_repetition": "अंतरालीय दोहराव",
+    "no_flashcards": "फ्लैशकार्ड बनाने के लिए इस पाठ में कोई शब्दावली उपलब्ध नहीं है।",
+    "prev_card": "पिछला कार्ड",
+    "card_concept": "संकल्पना",
+    "click_to_flip": "पलटने के लिए क्लिक करें",
+    "card_definition": "परिभाषा",
+    "next_card": "अगला कार्ड",
+    "rate_mastery": "अपनी महारत को रेट करें:",
+    "mastery_hard": "कठिन",
+    "mastery_medium": "मध्यम",
+    "mastery_easy": "आसान",
+    "skip_next_card": "छोड़ें / अगला कार्ड",
+    "coaching_dismiss": "छोड़ें",
+    "coaching_title": "एआई व्यक्तिगत कोचिंग और रीयल-टाइम सिंक",
+    "coaching_desc": "प्रत्येक रेटिंग आपके एआई ट्यूटर को आपकी ताकत और कमजोरियों के आधार पर कोचिंग को व्यक्तिगत बनाने के लिए प्रशिक्षित करती है। आपकी प्रगति रीयल-टाइम में सिंक होती है, जिससे आप आसानी से टैब बदल सकते हैं या रोक सकते हैं!"
+  },
+  ES: {
+    "change_tutor": "Cambiar tutor",
+    "tutor_tab": "Tutor",
+    "flashcards_tab": "Tarjetas",
+    "spaced_repetition": "Repetición Espaciada",
+    "no_flashcards": "No hay términos de glosario disponibles en esta lección para generar tarjetas de memoria.",
+    "prev_card": "Tarjeta anterior",
+    "card_concept": "CONCEPTO",
+    "click_to_flip": "Haga clic para voltear",
+    "card_definition": "DEFINICIÓN",
+    "next_card": "Siguiente tarjeta",
+    "rate_mastery": "Evalúe su dominio:",
+    "mastery_hard": "Difícil",
+    "mastery_medium": "Medio",
+    "mastery_easy": "Fácil",
+    "skip_next_card": "Omitir / Siguiente tarjeta",
+    "coaching_dismiss": "Descartar",
+    "coaching_title": "Coaching Personalizado por IA y Sincronización en Tiempo Real",
+    "coaching_desc": "¡Cada evaluación entrena a su Tutor de IA para personalizar su orientación según sus fortalezas y debilidades. Su progreso se sincroniza en tiempo real, lo que le permite cambiar de pestaña o pausar sin problemas!"
+  },
+  DE: {
+    "change_tutor": "Tutor wechseln",
+    "tutor_tab": "Tutor",
+    "flashcards_tab": "Karteikarten",
+    "spaced_repetition": "Spaced Repetition",
+    "no_flashcards": "In dieser Lektion sind keine Glossarbegriffe verfügbar, um Karteikarten zu generieren.",
+    "prev_card": "Vorherige Karte",
+    "card_concept": "KONZEPT",
+    "click_to_flip": "Klicken zum Umdrehen",
+    "card_definition": "DEFINITION",
+    "next_card": "Nächste Karte",
+    "rate_mastery": "Bewerten Sie Ihre Beherrschung:",
+    "mastery_hard": "Schwer",
+    "mastery_medium": "Mittel",
+    "mastery_easy": "Einfach",
+    "skip_next_card": "Überspringen / Nächste Karte",
+    "coaching_dismiss": "Ausblenden",
+    "coaching_title": "Personalisierte KI-Begleitung & Echtzeit-Synchronisation",
+    "coaching_desc": "Jede Bewertung trainiert Ihren KI-Tutor, die Unterstützung an Ihre Stärken und Schwächen anzupassen. Ihr Fortschritt wird in Echtzeit synchronisiert, sodass Sie nahtlos Tabs wechseln oder pausieren können!"
+  },
+  ZH: {
+    "change_tutor": "更换导师",
+    "tutor_tab": "AI导师",
+    "flashcards_tab": "记忆卡片",
+    "spaced_repetition": "间隔重复",
+    "no_flashcards": "本课没有可用于生成记忆卡片的词汇表词条。",
+    "prev_card": "上一张卡片",
+    "card_concept": "概念",
+    "click_to_flip": "点击翻转",
+    "card_definition": "定义",
+    "next_card": "下一张卡片",
+    "rate_mastery": "评估掌握程度：",
+    "mastery_hard": "困难",
+    "mastery_medium": "中等",
+    "mastery_easy": "简单",
+    "skip_next_card": "跳过 / 下一张",
+    "coaching_dismiss": "隐藏",
+    "coaching_title": "AI个性化辅导与实时同步",
+    "coaching_desc": "每次评估都会训练您的AI导师，根据您的优缺点定制个性化辅导。您的学习进度实时同步，您可以随时切换标签或暂停，无缝连接！"
+  },
+  PT: {
+    "change_tutor": "Alterar tutor",
+    "tutor_tab": "Tutor",
+    "flashcards_tab": "Flashcards",
+    "spaced_repetition": "Repetição Espaçada",
+    "no_flashcards": "Nenhum termo de glossário disponível nesta lição para gerar flashcards.",
+    "prev_card": "Carta anterior",
+    "card_concept": "CONCEITO",
+    "click_to_flip": "Clique para virar",
+    "card_definition": "DEFINIÇÃO",
+    "next_card": "Próxima carta",
+    "rate_mastery": "Avalie o seu domínio:",
+    "mastery_hard": "Difícil",
+    "mastery_medium": "Médio",
+    "mastery_easy": "Fácil",
+    "skip_next_card": "Pular / Próxima carta",
+    "coaching_dismiss": "Ocultar",
+    "coaching_title": "Coaching Personalizado por IA & Sincronização em Tempo Real",
+    "coaching_desc": "Cada avaliação treina o seu Tutor de IA para personalizar as explicações com base nos seus pontos fortes e fracos. O seu progresso sincroniza em tempo real, permitindo-lhe alternar entre abas ou fazer pausas sem preocupações!"
+  },
+  AR: {
+    "change_tutor": "تغيير المعلم",
+    "tutor_tab": "المعلم الآلي",
+    "flashcards_tab": "البطاقات التعليمية",
+    "spaced_repetition": "التكرار المتباعد",
+    "no_flashcards": "لا توجد مصطلحات مسرد متاحة في هذا الدرس لإنشاء بطاقات تعليمية.",
+    "prev_card": "البطاقة السابقة",
+    "card_concept": "المفهوم",
+    "click_to_flip": "انقر للقلب",
+    "card_definition": "التعريف",
+    "next_card": "البطاقة التالية",
+    "rate_mastery": "قيم مدى إتقانك:",
+    "mastery_hard": "صعب",
+    "mastery_medium": "متوسط",
+    "mastery_easy": "سهل",
+    "skip_next_card": "تخطي / البطاقة التالية",
+    "coaching_dismiss": "تجاهل",
+    "coaching_title": "التدريب الشخصي بالذكاء الاصطناعي والمزامنة الفورية",
+    "coaching_desc": "كل تقييم يدرب معلمك الآلي على تخصيص إرشاداته بناءً على نقاط قوتك وضعفك. تتم مزامنة تقدمك في الوقت الفعلي، مما يتيح لك تبديل علامات التبويب أو التوقف مؤقتًا بسلاسة!"
+  },
+  UR: {
+    "change_tutor": "ٹیوٹر تبدیل کریں",
+    "tutor_tab": "ٹیوٹر",
+    "flashcards_tab": "فلیش کارڈز",
+    "spaced_repetition": "وقتیہ دہراؤ",
+    "no_flashcards": "اس سبق میں فلیش کارڈز بنانے کے لیے فرہنگ کی کوئی اصطلاحات دستیاب نہیں ہیں۔",
+    "prev_card": "پچھلا کارڈ",
+    "card_concept": "تصور",
+    "click_to_flip": "پلٹنے کے لیے کلک کریں",
+    "card_definition": "تعریف",
+    "next_card": "اگلا کارڈ",
+    "rate_mastery": "اپنی مہارت کی درجہ بندی کریں:",
+    "mastery_hard": "کٹھن",
+    "mastery_medium": "درمیانہ",
+    "mastery_easy": "آسان",
+    "skip_next_card": "چھوڑیں / اگلا کارڈ",
+    "coaching_dismiss": "چھوڑیں",
+    "coaching_title": "اے آئی ذاتی نوعیت کی کوچنگ اور رئیل ٹائم مطابقت پذیری",
+    "coaching_desc": "ہر درجہ بندی آپ کے اے آئی ٹیوٹر کو آپ کی طاقتوں اور کمزوریوں کی بنیاد پر کوچنگ کو ذاتی بنانے کی تربیت دیتی ہے۔ آپ کی پیشرفت ریئل ٹائم میں مطابقت پذیر ہوتی ہے، جس سے آپ آسانی سے ٹیبز تبدیل کر سکتے ہیں یا سیکھنا روک سکتے ہیں!"
+  }
+};
 
 // --- CENTRALIZED DISCIPLINE INTERNATIONALIZATION ---
 
@@ -479,13 +659,17 @@ export const STATIC_UI_STRINGS: Record<string, typeof RAW_STATIC_UI_STRINGS.EN> 
       if (DYNAMIC_UI_STRINGS[upper]) {
         return {
           ...target.EN,
+          ...(target[upper as keyof typeof target] || {}),
           ...DYNAMIC_UI_STRINGS[upper]
         };
       }
       
       // Otherwise fallback to raw static dictionaries (EN)
       if (upper in target) {
-        return target[upper as keyof typeof target];
+        return {
+          ...target.EN,
+          ...target[upper as keyof typeof target]
+        };
       }
       
       // Ultimate fallback to EN

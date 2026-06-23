@@ -1412,11 +1412,12 @@ Target Language: ${targetLang.toUpperCase()}
 ### DISCIPLINARY & PEDAGOGICAL REQUIREMENTS FOR INTERACTIVE COMPONENTS:
 Ensure you include highly relevant components in "interactiveComponents" that match the discipline and level:
 1. **Life Sciences / Anatomy / Biology / Medicine**: You MUST systematically include at least one \<InteractiveDiagram\> of type "cell", "neuron" or "custom" with 3-6 distinct detailed hotspots.
-2. **Mathematics / Physics / Economics / Finance**: You MUST systematically include at least one dynamic graph, equation sandbox or basic math explorer component: "FunctionPlotter", "FunctionManipulator", "EquationManipulator", "Geometry2D", or "BasicMathExplorer". You MUST also include at least one Solved Worked Example ("SolvedExercise") and one Unsolved Numeric Challenge ("UnsolvedExercise" with tolerance).
-3. **Computer Science / Software Engineering**: You MUST systematically include at least one \<CodeSandbox\> for real-time coding with initial code.
-4. **History / Geography / Social Sciences / Processes**: You MUST systematically include at least one process/timeline flowchart using Mermaid ("Mermaid" component with "chart" syntax).
-5. **Statistical / Analytical Data (All disciplines)**: You MUST systematically include at least one gradient chart ("DataChart" component of type "bar" or "donut" with data array).
-6. **Auditory & Video Enrichment**: You MUST systematically include at least one short audio or video resource ("Video" with empty ID to search on YouTube, or "Audio" with precise searchable title).
+2. **Mathematics / Physics**: You MUST systematically include at least one dynamic graph, equation sandbox, simulation, or basic math explorer component: "FunctionPlotter", "FunctionManipulator", "EquationManipulator", "Geometry2D", "DynamicSimulation", or "BasicMathExplorer". You MUST also include at least one Solved Worked Example ("SolvedExercise") and one Unsolved Numeric Challenge ("UnsolvedExercise" with tolerance).
+3. **Economics / Finance / Business**: You MUST systematically include at least one interactive statistical or analytical data chart or table ("DataChart" component of type "bar", "line", or "donut" with data array) for supply/demand, financial metrics, or indicators. You MUST strictly prohibit math/geometry/stoichiometry components (like "Geometry2D", "ChemicalStoichiometry", "BasicMathExplorer", or "FunctionManipulator"). Use "DataChart" instead for numerical displays.
+4. **Computer Science / Software Engineering**: You MUST systematically include at least one \<CodeSandbox\> for real-time coding with initial code.
+5. **History / Geography / Social Sciences / Processes**: You MUST systematically include at least one process/timeline flowchart using Mermaid ("Mermaid" component with "chart" syntax).
+6. **Statistical / Analytical Data (All disciplines)**: You MUST systematically include at least one gradient chart ("DataChart" component of type "bar" or "donut" with data array).
+7. **Auditory & Video Enrichment**: You MUST systematically include at least one short audio or video resource ("Video" with empty ID to search on YouTube, or "Audio" with precise searchable title).
 
 ### OTHER REQUIRED SECTIONS:
 - **prerequisites**: 1 to 2 logical prerequisite courses.
@@ -1498,10 +1499,10 @@ Return a valid JSON object matching the requested schema. Ensure all fields are 
       try {
         const cleanedJson = widgetsJsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
         parsedWidgets = safeJsonParse(cleanedJson, 'generateCourseContent (WFTA Stage 1 Widgets)');
-        parsedWidgets = validateAndFixWidgets(parsedWidgets);
+        parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
       } catch (err: any) {
         await appendTaskLog(`[AI GENERATOR ERROR] Failed to parse/validate widgets: ${err.message || err}. Falling back to default mock widgets.`);
-        parsedWidgets = validateAndFixWidgets({});
+        parsedWidgets = validateAndFixWidgets({}, courseContext.discipline || correctedCourseName);
       }
 
       await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 2] Generating academic narrative text for lesson "${item.title}"...`);

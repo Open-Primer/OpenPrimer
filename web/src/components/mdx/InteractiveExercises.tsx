@@ -90,8 +90,11 @@ export const renderNodeWithMath = (node: React.ReactNode, inParagraph = false): 
   if (React.isValidElement(node)) {
     const element = node as React.ReactElement<any>;
     const isP = element.type === 'p';
+    const isInlineOrContainer = typeof element.type === 'string' && (
+      ['p', 'li', 'strong', 'em', 'span', 'b', 'i', 'u', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'sub', 'sup', 'code', 'td', 'th'].includes(element.type.toLowerCase())
+    );
     if (element.props && element.props.children) {
-      const processedChildren = renderNodeWithMath(element.props.children, isP || inParagraph);
+      const processedChildren = renderNodeWithMath(element.props.children, isP || inParagraph || isInlineOrContainer);
       return React.cloneElement(element, { ...element.props }, processedChildren);
     }
     return node;

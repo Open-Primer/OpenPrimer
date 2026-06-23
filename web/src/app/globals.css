@@ -1171,3 +1171,55 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .custom-alert .alert-content li {
   margin-bottom: 0.25rem;
 }
+
+/* Ensure buttons inside user profile dropdown have identical typography and styling as links across all themes */
+.profile-dropdown-menu button {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important; /* text-slate-400 */
+  background-color: transparent !important;
+  border: none !important;
+  text-transform: uppercase !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.profile-dropdown-menu button:hover {
+  color: #ffffff !important;
+  background-color: #1e293b !important; /* bg-slate-800 */
+}
+
+/* User profile dropdown override classes for the Paper Theme */
+.theme-paper .profile-dropdown-menu {
+  background-color: #f6f3e8 !important;
+  border: 1px solid #ede9d9 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+.theme-paper .profile-dropdown-menu a,
+.theme-paper .profile-dropdown-menu button,
+.theme-paper nav .profile-dropdown-menu button,
+.theme-paper nav .profile-dropdown-menu a {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  background-color: transparent !important;
+  border: none !important;
+  text-transform: uppercase !important;
+  box-shadow: none !important;
+}
+.theme-paper .profile-dropdown-menu a:hover,
+.theme-paper .profile-dropdown-menu button:hover,
+.theme-paper nav .profile-dropdown-menu button:hover,
+.theme-paper nav .profile-dropdown-menu a:hover {
+  color: #2563eb !important;
+  background-color: #ede9d9 !important;
+}
+.theme-paper .profile-dropdown-menu .h-0\.5,
+.theme-paper .profile-dropdown-menu .border-b {
+  background-color: #ede9d9 !important;
+  border-color: #ede9d9 !important;
+}
+.theme-paper .profile-dropdown-menu p.text-slate-600 { color: #64748b !important; }
+.theme-paper .profile-dropdown-menu p.text-white { color: #0f172a !important; }
+.theme-paper .profile-dropdown-menu p.text-slate-500 { color: #64748b !important; }
+
+

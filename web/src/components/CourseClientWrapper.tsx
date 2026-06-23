@@ -359,15 +359,18 @@ export const CourseClientWrapper = ({
         if (targetEl && container) {
           e.preventDefault();
           // Compute the element's offset relative to the scroll container
-          // Walk up the offsetParent chain until we reach the container or body
-          let offsetTop = 0;
-          let node: HTMLElement | null = targetEl;
-          while (node && node !== container) {
-            offsetTop += node.offsetTop;
-            node = node.offsetParent as HTMLElement | null;
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = targetEl.getBoundingClientRect();
+          const relativeTop = targetRect.top - containerRect.top;
+          let scrollTarget = container.scrollTop + relativeTop;
+
+          // Center inline citations if returning back up from a reference
+          if (id.startsWith('cite-')) {
+            scrollTarget = scrollTarget - (containerRect.height / 2) + (targetRect.height / 2);
+          } else {
+            scrollTarget = scrollTarget - 96; // 64px nav height + 32px breathing room
           }
-          // Subtract top-nav height (64px) + small breathing room (32px)
-          const scrollTarget = Math.max(0, offsetTop - 96);
+          scrollTarget = Math.max(0, scrollTarget);
           container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
           // Update URL hash without reload
           window.history.pushState(null, '', href);

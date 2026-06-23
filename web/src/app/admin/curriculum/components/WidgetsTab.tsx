@@ -7,6 +7,7 @@ import {
   Lock, Unlock, ShieldAlert, Maximize2, Minimize2, Edit, Plus, Globe, Tag, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DISCIPLINES, getDisciplineLabel } from '../strings';
 
 // Statically import the 14 rich pedagogical widgets for safe live-rendering
 import { StructureViewer3D } from '../../../../components/mdx/StructureViewer3D';
@@ -87,10 +88,6 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   ]
 };
 
-const DISCIPLINES_LIST = [
-  "Chemistry", "Physics", "Mathematics", "Biology", "Computer Science", "Economics", "Social Sciences", "General"
-];
-
 export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   lang,
   t,
@@ -105,6 +102,18 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   
   // Custom interactive preset selected for previewing
   const [activePresetIndex, setActivePresetIndex] = useState(0);
+
+  const DISCIPLINES_LIST = React.useMemo(() => {
+    const staticEn = DISCIPLINES.map(d => d.EN);
+    let customList: string[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        customList = JSON.parse(localStorage.getItem('op_custom_disciplines') || '[]');
+      } catch (e) {}
+    }
+    const combined = Array.from(new Set([...staticEn, ...customList]));
+    return combined;
+  }, []);
 
   const getWidgetName = (w: Widget) => {
     const translated = tr(w.nameEN);
@@ -322,7 +331,50 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const handleSaveParameters = async () => {
     if (!selectedWidget || !adminId) return;
     setIsSavingMetadata(true);
+    
+    const translateText = async (text: string, fromLang: string, toLang: string): Promise<string> => {
+      const trimmed = text.trim();
+      if (!trimmed) return '';
+      try {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang.toLowerCase()}&tl=${toLang.toLowerCase()}&dt=t&q=${encodeURIComponent(trimmed)}`);
+        if (res.ok) {
+          const data = await res.json();
+          return data[0].map((x: any) => x[0]).join('').trim();
+        }
+      } catch (e) {
+        console.error("Translation failed:", e);
+      }
+      return trimmed;
+    };
+
     try {
+      let finalNameFR = editNameFR;
+      let finalNameEN = editNameEN;
+      let finalDescFR = editDescFR;
+      let finalDescEN = editDescEN;
+      let finalLevelFR = editLevelFR;
+      let finalLevelEN = editLevelEN;
+
+      if (lang === 'FR') {
+        const [tName, tDesc, tLevel] = await Promise.all([
+          translateText(editNameFR, 'FR', 'EN'),
+          translateText(editDescFR, 'FR', 'EN'),
+          translateText(editLevelFR, 'FR', 'EN')
+        ]);
+        finalNameEN = tName;
+        finalDescEN = tDesc;
+        finalLevelEN = tLevel;
+      } else {
+        const [tName, tDesc, tLevel] = await Promise.all([
+          translateText(editNameEN, lang, 'FR'),
+          translateText(editDescEN, lang, 'FR'),
+          translateText(editLevelEN, lang, 'FR')
+        ]);
+        finalNameFR = tName;
+        finalDescFR = tDesc;
+        finalLevelFR = tLevel;
+      }
+
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -330,12 +382,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
           widgetId: selectedWidget.id,
           adminId,
           metadata: {
-            nameFR: editNameFR,
-            nameEN: editNameEN,
-            descFR: editDescFR,
-            descEN: editDescEN,
-            levelFR: editLevelFR,
-            levelEN: editLevelEN,
+            nameFR: finalNameFR,
+            nameEN: finalNameEN,
+            descFR: finalDescFR,
+            descEN: finalDescEN,
+            levelFR: finalLevelFR,
+            levelEN: finalLevelEN,
             disciplines: editDisciplines
           }
         })
@@ -793,7 +845,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           key={disc}
                           className={`px-1.5 py-0.5 border text-[6px] font-black uppercase tracking-wider rounded-full ${getDisciplineColor(disc)}`}
                         >
-                          {tr(disc)}
+                          {getDisciplineLabel(disc, lang)}
                         </span>
                       ))}
                       {widget.disciplines.length > 2 && (
@@ -1126,12 +1178,16 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       {/* EDIT PARAMETERS METADATA MODAL */}
       <AnimatePresence>
         {isEditModalOpen && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setIsEditModalOpen(false)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-pointer"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-slate-900 border border-slate-850 rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden"
+              className="bg-slate-900 border border-slate-850 rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden cursor-default"
             >
               <button 
                 onClick={() => setIsEditModalOpen(false)}
@@ -1144,7 +1200,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 <div className="space-y-1">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Edit className="w-5 h-5 text-teal-400" />
-                    {tr("Edit parameters: {id}").replace("{id}", selectedWidget?.id || '')}
+                    {tr("Edit parameters: {id}").replace(/[:：]\s*\{id\}/, "").trim()}
                   </h3>
                   <p className="text-[10px] text-slate-400">
                     {tr("Modify pedagogical metrics displayed to content authors within curriculum schedules.")}
@@ -1152,68 +1208,87 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Nom FR */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (French)")}</label>
-                    <input
-                      type="text"
-                      value={editNameFR}
-                      onChange={(e) => setEditNameFR(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                    />
-                  </div>
-                  {/* Nom EN */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (English)")}</label>
-                    <input
-                      type="text"
-                      value={editNameEN}
-                      onChange={(e) => setEditNameEN(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                    />
-                  </div>
-                  {/* Niveau FR */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level (French)")}</label>
-                    <input
-                      type="text"
-                      value={editLevelFR}
-                      onChange={(e) => setEditLevelFR(e.target.value)}
-                      placeholder="Collège / Lycée"
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                    />
-                  </div>
-                  {/* Niveau EN */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level (English)")}</label>
-                    <input
-                      type="text"
-                      value={editLevelEN}
-                      onChange={(e) => setEditLevelEN(e.target.value)}
-                      placeholder="Middle School / High School"
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                    />
-                  </div>
-                  {/* Description FR */}
-                  <div className="col-span-1 md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (French)")}</label>
-                    <textarea
-                      rows={2}
-                      value={editDescFR}
-                      onChange={(e) => setEditDescFR(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none"
-                    />
-                  </div>
-                  {/* Description EN */}
-                  <div className="col-span-1 md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (English)")}</label>
-                    <textarea
-                      rows={2}
-                      value={editDescEN}
-                      onChange={(e) => setEditDescEN(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none"
-                    />
-                  </div>
+                  {lang === 'FR' ? (
+                    <>
+                      {/* Name FR */}
+                      <div className="space-y-1.5 col-span-1 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Name (French)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editNameFR}
+                          onChange={(e) => setEditNameFR(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                      </div>
+                      {/* Academic Level FR */}
+                      <div className="space-y-1.5 col-span-1 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Academic Level (French)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editLevelFR}
+                          onChange={(e) => setEditLevelFR(e.target.value)}
+                          placeholder="Collège / Lycée"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                      </div>
+                      {/* Description FR */}
+                      <div className="col-span-1 md:col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Description (French)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={editDescFR}
+                          onChange={(e) => setEditDescFR(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Name EN */}
+                      <div className="space-y-1.5 col-span-1 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Name (English)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editNameEN}
+                          onChange={(e) => setEditNameEN(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                      </div>
+                      {/* Academic Level EN */}
+                      <div className="space-y-1.5 col-span-1 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Academic Level (English)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editLevelEN}
+                          onChange={(e) => setEditLevelEN(e.target.value)}
+                          placeholder="Middle School / High School"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                        />
+                      </div>
+                      {/* Description EN */}
+                      <div className="col-span-1 md:col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">
+                          {tr("Description (English)").replace(/\s*\([^)]+\)/g, "")}
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={editDescEN}
+                          onChange={(e) => setEditDescEN(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* Disciplines Selection Grid */}
                   <div className="col-span-1 md:col-span-2 space-y-2">
@@ -1228,7 +1303,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             onClick={() => toggleDiscipline(disc, 'edit')}
                             className={`px-3 py-1.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-950 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                           >
-                            {tr(disc)}
+                            {getDisciplineLabel(disc, lang)}
                           </button>
                         );
                       })}
@@ -1268,12 +1343,16 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       {/* CREATE NEW WIDGET MODAL DIALOG */}
       <AnimatePresence>
         {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setIsCreateModalOpen(false)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-pointer"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-slate-900 border border-slate-850 rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden"
+              className="bg-slate-900 border border-slate-850 rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden cursor-default"
             >
               <button 
                 onClick={() => setIsCreateModalOpen(false)}
@@ -1388,7 +1467,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               onClick={() => toggleDiscipline(disc, 'new')}
                               className={`px-3 py-1 border rounded-lg text-[8px] font-black uppercase tracking-wider transition-colors cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-950 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                             >
-                              {tr(disc)}
+                              {getDisciplineLabel(disc, lang)}
                             </button>
                           );
                         })}

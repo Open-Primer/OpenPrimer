@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { Minus, Plus, RefreshCw, CheckCircle2, AlertCircle, Award, Heart, Star, Sparkles, LayoutGrid, Layers, Circle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Minus, Plus, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 type ExplorerTab = 'add-sub' | 'mul-div' | 'fractions' | 'parentheses';
@@ -14,6 +14,490 @@ interface BasicMathExplorerProps {
   gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
 
+interface TranslationSet {
+  incompatibleTitle: string;
+  incompatibleText: string;
+  incompatibleSuggestion: string;
+  explorerTitle: string;
+  explorerSubtitle: string;
+  tabAddSub: string;
+  tabMulDiv: string;
+  tabFractions: string;
+  tabParentheses: string;
+  mode: string;
+  addition: string;
+  subtraction: string;
+  firstNumber: string;
+  secondNumber: string;
+  objectsToAdd: string;
+  tactileObjects: string;
+  graduatedAxis: string;
+  verify: string;
+  greatJob: (numA: number, op: string, numB: number, correctVal: number) => string;
+  notQuite: string;
+  multiplication: string;
+  division: string;
+  rowsGroups: string;
+  columnsSize: string;
+  totalToDistribute: string;
+  divisorGroups: string;
+  multiplicationGrid: (rows: number, cols: number) => string;
+  fairDistribution: (total: number, groups: number) => string;
+  groupLabel: (num: number) => string;
+  remainderText: (rem: number) => string;
+  awesomeFeedback: (expr: string, val: number) => string;
+  tryAgainGrid: string;
+  numerator: string;
+  denominator: string;
+  circularPie: string;
+  writtenFraction: string;
+  fractionExpl: (num: number, den: number) => string;
+  decimalValue: (val: string) => string;
+  fundamentalRule: string;
+  parenthesesExpl: string;
+  riddleOfDay: string;
+  step1Expl: string;
+  solveStep1: string;
+  yourAnswer: string;
+  parenthesesSuccess: string;
+  parenthesesIncorrect: string;
+}
+
+const TRANSLATIONS: Record<string, TranslationSet> = {
+  EN: {
+    incompatibleTitle: "Incompatible Grade Level",
+    incompatibleText: "This basic math exploration module is designed for middle and high school students. The concepts covered (fractions, basic arithmetic) are not suited for university level.",
+    incompatibleSuggestion: "💡 Suggestion for Level 3 Agent: Please use <FunctionPlotter />, <FunctionManipulator />, or <EquationManipulator /> for university level.",
+    explorerTitle: "Basic Math Explorer",
+    explorerSubtitle: "Discover fundamental math operations visually and interactively",
+    tabAddSub: "➕ / ➖ Add & Subtract",
+    tabMulDiv: "✖️ / ➗ Multiply & Divide",
+    tabFractions: "🍕 Fractions Pie",
+    tabParentheses: "✨ Parentheses & Order",
+    mode: "Mode",
+    addition: "Addition (+)",
+    subtraction: "Subtraction (-)",
+    firstNumber: "First Number",
+    secondNumber: "Second Number",
+    objectsToAdd: "Objects to add",
+    tactileObjects: "Tactile Objects (click to cross out)",
+    graduatedAxis: "Graduated Axis (Graphical Representation)",
+    verify: "Verify",
+    greatJob: (numA, op, numB, correctVal) => `Great job! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "Not quite. Try counting the objects again!",
+    multiplication: "Multiplication (×)",
+    division: "Division (÷)",
+    rowsGroups: "Rows (Groups)",
+    columnsSize: "Columns (Size)",
+    totalToDistribute: "Total to distribute",
+    divisorGroups: "Divisor (Groups)",
+    multiplicationGrid: (rows, cols) => `Multiplication Grid: ${rows} rows × ${cols} columns`,
+    fairDistribution: (total, groups) => `Fair distribution of ${total} objects into ${groups} groups`,
+    groupLabel: (num) => `Group ${num}`,
+    remainderText: (rem) => `⚠️ Remainder: ${rem} object(s) that cannot be distributed equally.`,
+    awesomeFeedback: (expr, val) => `Awesome! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "Try again, use the visual grid to help you!",
+    numerator: "Numerator (Colored parts)",
+    denominator: "Denominator (Total parts)",
+    circularPie: "Circular Pie Representation",
+    writtenFraction: "Written Fraction",
+    fractionExpl: (num, den) => `This fraction represents precisely ${num} parts out of ${den} total parts.`,
+    decimalValue: (val) => `Decimal value: ${val}`,
+    fundamentalRule: "Fundamental Order of Operations Rule",
+    parenthesesExpl: "When an equation contains parentheses, you MUST always calculate the block inside the parentheses () first before doing other operations!",
+    riddleOfDay: "Riddle of the Day",
+    step1Expl: "Yes! (3 + 2) is calculated first to give 5. Then, 5 × 4 = 20.",
+    solveStep1: "Solve Step 1",
+    yourAnswer: "Your Answer",
+    parenthesesSuccess: "Congratulations! (3 + 2) × 4 = 5 × 4 = 20. You respected the order of operations! 🌟",
+    parenthesesIncorrect: "Incorrect. Hint: Calculate what is inside the parentheses first!"
+  },
+  FR: {
+    incompatibleTitle: "Niveau non adapté",
+    incompatibleText: "Ce module d'exploration mathématique élémentaire est conçu pour les élèves du collège et lycée. Les concepts abordés (fractions, arithmétique de base) ne sont pas adaptés au niveau universitaire.",
+    incompatibleSuggestion: "💡 Conseil pour l'Agent de Niveau 3 : Utilisez plutôt <FunctionPlotter />, <FunctionManipulator /> ou <EquationManipulator /> pour le niveau universitaire.",
+    explorerTitle: "Explorateur de Mathématiques de Base",
+    explorerSubtitle: "Découvrez de manière visuelle et interactive les fondamentaux des maths",
+    tabAddSub: "➕ / ➖ Addition & Soustraction",
+    tabMulDiv: "✖️ / ➗ Multiplier & Diviser",
+    tabFractions: "🍕 Fractions Visuelles",
+    tabParentheses: "✨ Priorités / Parenthèses",
+    mode: "Mode",
+    addition: "Addition (+)",
+    subtraction: "Soustraction (-)",
+    firstNumber: "Premier Nombre",
+    secondNumber: "Deuxième Nombre",
+    objectsToAdd: "Objets à additionner",
+    tactileObjects: "Objets tactiles (cliquez pour rayer)",
+    graduatedAxis: "Axe Gradué (Représentation Graphique)",
+    verify: "Vérifier",
+    greatJob: (numA, op, numB, correctVal) => `Bravo ! ${numA} ${op} ${numB} = ${correctVal} ! 🎉`,
+    notQuite: "Ce n'est pas tout à fait ça. Compte à nouveau les objets !",
+    multiplication: "Multiplication (×)",
+    division: "Division (÷)",
+    rowsGroups: "Lignes (Groupes)",
+    columnsSize: "Colonnes (Taille)",
+    totalToDistribute: "Total à distribuer",
+    divisorGroups: "Diviseur (Groupes)",
+    multiplicationGrid: (rows, cols) => `Matrice de multiplication : ${rows} lignes × ${cols} colonnes`,
+    fairDistribution: (total, groups) => `Distribution équitable de ${total} objets dans ${groups} groupes`,
+    groupLabel: (num) => `Groupe ${num}`,
+    remainderText: (rem) => `⚠️ Reste : ${rem} objet(s) qui ne peuve(nt) pas être distribué(s) équitablement.`,
+    awesomeFeedback: (expr, val) => `Génial ! ${expr} = ${val} ! 🏆`,
+    tryAgainGrid: "Essaie encore, aide-toi de la grille visuelle !",
+    numerator: "Numérateur (Parts colorées)",
+    denominator: "Dénominateur (Total des parts)",
+    circularPie: "Représentation Circulaire (Tarte)",
+    writtenFraction: "Fraction Écrite",
+    fractionExpl: (num, den) => `Cette fraction représente précisément ${num} part(s) sur un total de ${den}.`,
+    decimalValue: (val) => `Écrit en décimal : ${val}`,
+    fundamentalRule: "Règle Fondamentale de l'Ordre des Opérations",
+    parenthesesExpl: "Quand une équation contient des parenthèses, on DOIT toujours calculer en priorité absolue le bloc entre parenthèses () avant de faire les autres calculs !",
+    riddleOfDay: "Défi du jour",
+    step1Expl: "Oui ! (3 + 2) est calculé en premier et donne 5. Ensuite, 5 × 4 = 20.",
+    solveStep1: "Résoudre étape 1",
+    yourAnswer: "Votre Réponse",
+    parenthesesSuccess: "Félicitations ! (3 + 2) × 4 = 5 × 4 = 20. Vous respectez l'ordre de priorité ! 🌟",
+    parenthesesIncorrect: "Faux. Indice : Calculez d'abord ce qu'il y a entre parenthèses !"
+  },
+  ES: {
+    incompatibleTitle: "Nivel de grado incompatible",
+    incompatibleText: "Este módulo de exploración matemática básica está diseñado para estudiantes de secundaria y bachillerato. Los conceptos abordados (fracciones, aritmética básica) no son adecuados para el nivel universitario.",
+    incompatibleSuggestion: "💡 Sugerencia para el Agente de Nivel 3: Utilice <FunctionPlotter />, <FunctionManipulator /> o <EquationManipulator /> para el nivel universitario.",
+    explorerTitle: "Explorador de Matemáticas Básicas",
+    explorerSubtitle: "Descubra las operaciones matemáticas fundamentales de forma visual e interactiva",
+    tabAddSub: "➕ / ➖ Suma y Resta",
+    tabMulDiv: "✖️ / ➗ Multiplicación y División",
+    tabFractions: "🍕 Fracciones Visuales",
+    tabParentheses: "✨ Paréntesis y Orden",
+    mode: "Modo",
+    addition: "Suma (+)",
+    subtraction: "Resta (-)",
+    firstNumber: "Primer número",
+    secondNumber: "Segundo número",
+    objectsToAdd: "Objetos para sumar",
+    tactileObjects: "Objetos táctiles (haga clic para tachar)",
+    graduatedAxis: "Eje graduado (Representación gráfica)",
+    verify: "Verificar",
+    greatJob: (numA, op, numB, correctVal) => `¡Buen trabajo! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "No del todo. ¡Intente contar los objetos de nuevo!",
+    multiplication: "Multiplicación (×)",
+    division: "División (÷)",
+    rowsGroups: "Filas (Grupos)",
+    columnsSize: "Columnas (Tamaño)",
+    totalToDistribute: "Total a distribuir",
+    divisorGroups: "Divisor (Grupos)",
+    multiplicationGrid: (rows, cols) => `Matriz de multiplicación: ${rows} filas × ${cols} columnas`,
+    fairDistribution: (total, groups) => `Distribución equitativa de ${total} objetos en ${groups} grupos`,
+    groupLabel: (num) => `Grupo ${num}`,
+    remainderText: (rem) => `⚠️ Residuo: ${rem} objeto(s) que no se pueden distribuir equitativamente.`,
+    awesomeFeedback: (expr, val) => `¡Increíble! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "¡Inténtelo de nuevo, use la cuadrícula visual para ayudarse!",
+    numerator: "Numerador (Partes coloreadas)",
+    denominator: "Denominador (Partes totales)",
+    circularPie: "Representación circular de pastel",
+    writtenFraction: "Fracción escrita",
+    fractionExpl: (num, den) => `Esta fracción representa exactamente ${num} partes de un total de ${den} partes.`,
+    decimalValue: (val) => `Valor decimal: ${val}`,
+    fundamentalRule: "Regla fundamental del orden de las operaciones",
+    parenthesesExpl: "¡Cuando una ecuación contiene paréntesis, siempre DEBE calcular primero el bloque dentro de los paréntesis () antes de realizar otras operaciones!",
+    riddleOfDay: "Acertijo del día",
+    step1Expl: "¡Sí! (3 + 2) se calcula primero para dar 5. Luego, 5 × 4 = 20.",
+    solveStep1: "Resolver paso 1",
+    yourAnswer: "Su respuesta",
+    parenthesesSuccess: "¡Felicitaciones! (3 + 2) × 4 = 5 × 4 = 20. ¡Respetó el orden de las operaciones! 🌟",
+    parenthesesIncorrect: "Incorrecto. Consejo: ¡Calcule primero lo que está dentro de los paréntesis!"
+  },
+  DE: {
+    incompatibleTitle: "Inkompatible Klassenstufe",
+    incompatibleText: "Dieses grundlegende Mathe-Erkundungsmodul ist für Schüler der Mittel- und Oberstufe konzipiert. Die behandelten Konzepte (Brüche, einfache Arithmetik) sind nicht für das Universitätsniveau geeignet.",
+    incompatibleSuggestion: "💡 Vorschlag für Level-3-Agenten: Bitte verwenden Sie <FunctionPlotter />, <FunctionManipulator /> oder <EquationManipulator /> für Universitätsniveau.",
+    explorerTitle: "Grundlegender Mathe-Erkundung",
+    explorerSubtitle: "Entdecken Sie grundlegende mathematische Operationen auf visuelle und interaktive Weise",
+    tabAddSub: "➕ / ➖ Addieren & Subtrahieren",
+    tabMulDiv: "✖️ / ➗ Multiplizieren & Dividieren",
+    tabFractions: "🍕 Visuelle Brüche",
+    tabParentheses: "✨ Klammern & Reihenfolge",
+    mode: "Modus",
+    addition: "Addition (+)",
+    subtraction: "Subtraktion (-)",
+    firstNumber: "Erste Zahl",
+    secondNumber: "Zweite Zahl",
+    objectsToAdd: "Objekte zum Hinzufügen",
+    tactileObjects: "Taktile Objekte (zum Durchstreichen anklicken)",
+    graduatedAxis: "Zahlenstrahl (Grafische Darstellung)",
+    verify: "Überprüfen",
+    greatJob: (numA, op, numB, correctVal) => `Gut gemacht! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "Nicht ganz. Versuche, die Objekte noch einmal zu zählen!",
+    multiplication: "Multiplikation (×)",
+    division: "Division (÷)",
+    rowsGroups: "Zeilen (Gruppen)",
+    columnsSize: "Spalten (Größe)",
+    totalToDistribute: "Gesamtmenge zum Verteilen",
+    divisorGroups: "Divisor (Gruppen)",
+    multiplicationGrid: (rows, cols) => `Multiplikationsgitter: ${rows} Zeilen × ${cols} Spalten`,
+    fairDistribution: (total, groups) => `Gerechte Aufteilung von ${total} Objekten auf ${groups} Gruppen`,
+    groupLabel: (num) => `Gruppe ${num}`,
+    remainderText: (rem) => `⚠️ Rest: ${rem} Objekt(e), das/die nicht gleichmäßig verteilt werden kann/können.`,
+    awesomeFeedback: (expr, val) => `Großartig! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "Versuche es noch einmal, nutze das visuelle Gitter als Hilfe!",
+    numerator: "Zähler (Farbige Teile)",
+    denominator: "Nenner (Gesamtteile)",
+    circularPie: "Kreisdiagramm-Darstellung",
+    writtenFraction: "Geschriebener Bruch",
+    fractionExpl: (num, den) => `Dieser Bruch stellt genau ${num} von insgesamt ${den} Teilen dar.`,
+    decimalValue: (val) => `Dezimalwert: ${val}`,
+    fundamentalRule: "Grundregel der Rangfolge der Operationen",
+    parenthesesExpl: "Wenn eine Gleichung Klammern enthält, MÜSSEN Sie immer zuerst den Block innerhalb der Klammern () berechnen, bevor Sie andere Operationen durchführen!",
+    riddleOfDay: "Rätsel des Tages",
+    step1Expl: "Ja! (3 + 2) wird zuerst berechnet und ergibt 5. Dann ist 5 × 4 = 20.",
+    solveStep1: "Schritt 1 lösen",
+    yourAnswer: "Ihre Antwort",
+    parenthesesSuccess: "Herzlichen Glückwunsch! (3 + 2) × 4 = 5 × 4 = 20. Sie haben die Klammerregel beachtet! 🌟",
+    parenthesesIncorrect: "Falsch. Hinweis: Berechnen Sie zuerst, was in den Klammern steht!"
+  },
+  PT: {
+    incompatibleTitle: "Nível escolar incompatível",
+    incompatibleText: "Este módulo de exploração matemática básica foi projetado para alunos do ensino fundamental e médio. Os conceitos abordados (frações, aritmética básica) não são adequados para o nível universitário.",
+    incompatibleSuggestion: "💡 Sugestão para o Agente de Nível 3: Use <FunctionPlotter />, <FunctionManipulator /> ou <EquationManipulator /> para o nível universitário.",
+    explorerTitle: "Explorador de Matemática Básica",
+    explorerSubtitle: "Descubra as operações matemáticas fundamentais de forma visual e interativa",
+    tabAddSub: "➕ / ➖ Somar e Subtrair",
+    tabMulDiv: "✖️ / ➗ Multiplicar e Dividir",
+    tabFractions: "🍕 Frações Visuais",
+    tabParentheses: "✨ Parênteses e Ordem",
+    mode: "Modo",
+    addition: "Adição (+)",
+    subtraction: "Subtração (-)",
+    firstNumber: "Primeiro Número",
+    secondNumber: "Segundo Número",
+    objectsToAdd: "Objetos para adicionar",
+    tactileObjects: "Objetos táteis (clique para riscar)",
+    graduatedAxis: "Eixo Graduado (Representação Gráfica)",
+    verify: "Verificar",
+    greatJob: (numA, op, numB, correctVal) => `Bom trabalho! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "Não exatamente. Tente contar os objetos novamente!",
+    multiplication: "Multiplicação (×)",
+    division: "Divisão (÷)",
+    rowsGroups: "Linhas (Grupos)",
+    columnsSize: "Colunas (Tamanho)",
+    totalToDistribute: "Total a distribuir",
+    divisorGroups: "Divisor (Grupos)",
+    multiplicationGrid: (rows, cols) => `Grade de multiplicação: ${rows} linhas × ${cols} colunas`,
+    fairDistribution: (total, groups) => `Distribuição justa de ${total} objetos em ${groups} grupos`,
+    groupLabel: (num) => `Grupo ${num}`,
+    remainderText: (rem) => `⚠️ Resto: ${rem} objeto(s) que não pode(m) ser distribuído(s) igualmente.`,
+    awesomeFeedback: (expr, val) => `Incrível! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "Tente novamente, use a grade visual para ajudar!",
+    numerator: "Numerador (Partes coloridas)",
+    denominator: "Denominador (Total de partes)",
+    circularPie: "Representação em Pizza",
+    writtenFraction: "Fração Escrita",
+    fractionExpl: (num, den) => `Esta fração representa exatamente ${num} partes de um total de ${den} partes.`,
+    decimalValue: (val) => `Valor decimal: ${val}`,
+    fundamentalRule: "Regra Fundamental da Ordem das Operações",
+    parenthesesExpl: "Quando uma equação contém parênteses, você DEVE sempre calcular o bloco dentro dos parênteses () primeiro antes de fazer outras operações!",
+    riddleOfDay: "Desafio do Dia",
+    step1Expl: "Sim! (3 + 2) é calculado primeiro para dar 5. Depois, 5 × 4 = 20.",
+    solveStep1: "Resolver Passo 1",
+    yourAnswer: "Sua Resposta",
+    parenthesesSuccess: "Parabéns! (3 + 2) × 4 = 5 × 4 = 20. Você respeitou a ordem das operações! 🌟",
+    parenthesesIncorrect: "Incorreto. Dica: Calcule primeiro o que está dentro dos parênteses!"
+  },
+  ZH: {
+    incompatibleTitle: "年级水平不兼容",
+    incompatibleText: "此基础数学探索模块专为初中和高中学生设计。所涉及的概念（分数、基础算术）不适合大学水平。",
+    incompatibleSuggestion: "💡 针对3级代理的建议：大学水平请使用 <FunctionPlotter />、<FunctionManipulator /> 或 <EquationManipulator />。",
+    explorerTitle: "基础数学探索器",
+    explorerSubtitle: "通过直观和互动的方式发现基本的数学运算",
+    tabAddSub: "➕ / ➖ 加法与减法",
+    tabMulDiv: "✖️ / ➗ 乘法与除法",
+    tabFractions: "🍕 直观分数",
+    tabParentheses: "✨ 括号与优先级",
+    mode: "模式",
+    addition: "加法 (+)",
+    subtraction: "减法 (-)",
+    firstNumber: "第一个数",
+    secondNumber: "第二个数",
+    objectsToAdd: "要相加的物体",
+    tactileObjects: "可点按物体（点击划掉）",
+    graduatedAxis: "数轴（图形表示）",
+    verify: "验证",
+    greatJob: (numA, op, numB, correctVal) => `太棒了！${numA} ${op} ${numB} = ${correctVal}！🎉`,
+    notQuite: "不完全正确。请试着重新数一下物体！",
+    multiplication: "乘法 (×)",
+    division: "除法 (÷)",
+    rowsGroups: "行（组）",
+    columnsSize: "列（大小）",
+    totalToDistribute: "要分配的总数",
+    divisorGroups: "除数（组）",
+    multiplicationGrid: (rows, cols) => `乘法网格：${rows} 行 × ${cols} 列`,
+    fairDistribution: (total, groups) => `将 ${total} 个物体平均分配到 ${groups} 个组中`,
+    groupLabel: (num) => `第 ${num} 组`,
+    remainderText: (rem) => `⚠️ 余数：剩余 ${rem} 个物体无法平均分配。`,
+    awesomeFeedback: (expr, val) => `太棒了！${expr} = ${val}！🏆`,
+    tryAgainGrid: "再试一次，用直观的网格来帮助你！",
+    numerator: "分子（有色部分）",
+    denominator: "分母（总部分）",
+    circularPie: "饼图表示",
+    writtenFraction: "分数书写",
+    fractionExpl: (num, den) => `这个分数精确表示总共 ${den} 等分中的 ${num} 部分。`,
+    decimalValue: (val) => `小数值：${val}`,
+    fundamentalRule: "运算法则基本规则",
+    parenthesesExpl: "当等式中含有括号时，您必须首先计算括号 () 内的部分，然后再进行其他计算！",
+    riddleOfDay: "今日谜题",
+    step1Expl: "是的！先计算 (3 + 2) 得到 5。然后，5 × 4 = 20。",
+    solveStep1: "求解第1步",
+    yourAnswer: "您的答案",
+    parenthesesSuccess: "恭喜你！(3 + 2) × 4 = 5 × 4 = 20。你遵守了运算顺序！🌟",
+    parenthesesIncorrect: "错误。提示：请先计算括号内的内容！"
+  },
+  AR: {
+    incompatibleTitle: "مستوى صف غير متوافق",
+    incompatibleText: "تم تصميم وحدة استكشاف الرياضيات الأساسية هذه لطلاب المدارس الإعدادية والثانوية. المفاهيم التي تغطيها (الكسور، الحساب الأساسي) غير مناسبة للمستوى الجامعي.",
+    incompatibleSuggestion: "💡 اقتراح لوكيل المستوى 3: يرجى استخدام <FunctionPlotter /> أو <FunctionManipulator /> أو <EquationManipulator /> للمستوى الجامعي.",
+    explorerTitle: "مستكشف الرياضيات الأساسية",
+    explorerSubtitle: "اكتشف العمليات الحسابية الأساسية بشكل مرئي وتفاعلي",
+    tabAddSub: "➕ / ➖ الجمع والطرح",
+    tabMulDiv: "✖️ / ➗ الضرب والقسمة",
+    tabFractions: "🍕 تمثيل الكسور",
+    tabParentheses: "✨ الأقواس والترتيب",
+    mode: "الوضع",
+    addition: "الجمع (+)",
+    subtraction: "الطرح (-)",
+    firstNumber: "الرقم الأول",
+    secondNumber: "الرقم الثاني",
+    objectsToAdd: "العناصر المراد جمعها",
+    tactileObjects: "العناصر التفاعلية (انقر للتشطيب)",
+    graduatedAxis: "المحور المدرج (التمثيل البياني)",
+    verify: "تحقق",
+    greatJob: (numA, op, numB, correctVal) => `عمل رائع! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "ليس تماماً. حاول عد العناصر مرة أخرى!",
+    multiplication: "الضرب (×)",
+    division: "القسمة (÷)",
+    rowsGroups: "الصفوف (المجموعات)",
+    columnsSize: "الأعمدة (الحجم)",
+    totalToDistribute: "الإجمالي للتوزيع",
+    divisorGroups: "المقسوم عليه (المجموعات)",
+    multiplicationGrid: (rows, cols) => `شبكة الضرب: ${rows} صفوف × ${cols} أعمدة`,
+    fairDistribution: (total, groups) => `توزيع عادل لـ ${total} عناصر على ${groups} مجموعات`,
+    groupLabel: (num) => `المجموعة ${num}`,
+    remainderText: (rem) => `⚠️ الباقي: ${rem} عنصر (عناصر) لا يمكن توزيعها بالتساوي.`,
+    awesomeFeedback: (expr, val) => `رائع! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "حاول مجدداً، استخدم الشبكة المرئية لمساعدتك!",
+    numerator: "البسط (الأجزاء الملونة)",
+    denominator: "المقام (إجمالي الأجزاء)",
+    circularPie: "تمثيل الدائرة المجزأة",
+    writtenFraction: "الكسر المكتوب",
+    fractionExpl: (num, den) => `يمثل هذا الكسر بالضبط ${num} أجزاء من إجمالي ${den} أجزاء.`,
+    decimalValue: (val) => `القيمة العشرية: ${val}`,
+    fundamentalRule: "القاعدة الأساسية لترتيب العمليات",
+    parenthesesExpl: "عندما تحتوي المعادلة على أقواس، يجب عليك دائماً حساب ما بداخل الأقواس () أولاً قبل القيام بالعمليات الأخرى!",
+    riddleOfDay: "لغز اليوم",
+    step1Expl: "نعم! يتم حساب (3 + 2) أولاً ليعطي 5. ثم، 5 × 4 = 20.",
+    solveStep1: "حل الخطوة الأولى",
+    yourAnswer: "إجابتك",
+    parenthesesSuccess: "تهانينا! (3 + 2) × 4 = 5 × 4 = 20. لقد احترمت ترتيب العمليات! 🌟",
+    parenthesesIncorrect: "غير صحيح. تلميح: احسب ما بداخل الأقواس أولاً!"
+  },
+  HI: {
+    incompatibleTitle: "असंगत ग्रेड स्तर",
+    incompatibleText: "यह बुनियादी गणित अन्वेषण मॉड्यूल माध्यमिक और उच्च विद्यालय के छात्रों के लिए डिज़ाइन किया गया है। कवर की गई अवधारणाएं (भिन्न, बुनियादी अंकगणित) विश्वविद्यालय स्तर के अनुकूल नहीं हैं।",
+    incompatibleSuggestion: "💡 स्तर 3 एजेंट के लिए सुझाव: कृपया विश्वविद्यालय स्तर के लिए <FunctionPlotter />, <FunctionManipulator />, या <EquationManipulator /> का उपयोग करें।",
+    explorerTitle: "बुनियादी गणित अन्वेषक",
+    explorerSubtitle: "बुनियादी गणितीय क्रियाओं को दृश्य और संवादात्मक रूप से खोजें",
+    tabAddSub: "➕ / ➖ जोड़ें और घटाएं",
+    tabMulDiv: "✖️ / ➗ गुणा और भाग",
+    tabFractions: "🍕 भिन्न पाई",
+    tabParentheses: "✨ कोष्ठक और क्रम",
+    mode: "मोड",
+    addition: "जोड़ (+)",
+    subtraction: "घटाव (-)",
+    firstNumber: "पहली संख्या",
+    secondNumber: "दूसरी संख्या",
+    objectsToAdd: "जोड़ने के लिए वस्तुएं",
+    tactileObjects: "स्पर्शनीय वस्तुएं (काटने के लिए क्लिक करें)",
+    graduatedAxis: "संख्या रेखा (ग्राफिक प्रतिनिधित्व)",
+    verify: "सत्यापित करें",
+    greatJob: (numA, op, numB, correctVal) => `बहुत बढ़िया! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "पूरी तरह से सही नहीं है। वस्तुओं को फिर से गिनने का प्रयास करें!",
+    multiplication: "गुणा (×)",
+    division: "भाग (÷)",
+    rowsGroups: "पंक्तियाँ (समूह)",
+    columnsSize: "कॉलम (आकार)",
+    totalToDistribute: "वितरित करने के लिए कुल",
+    divisorGroups: "भाजक (समूह)",
+    multiplicationGrid: (rows, cols) => `गुणा ग्रिड: ${rows} पंक्तियाँ × ${cols} कॉलम`,
+    fairDistribution: (total, groups) => `${total} वस्तुओं का ${groups} समूहों में समान वितरण`,
+    groupLabel: (num) => `समूह ${num}`,
+    remainderText: (rem) => `⚠️ शेषफल: ${rem} वस्तु(एं) जिन्हें समान रूप से वितरित नहीं किया जा सकता।`,
+    awesomeFeedback: (expr, val) => `अद्भुत! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "फिर से प्रयास करें, सहायता के लिए दृश्य ग्रिड का उपयोग करें!",
+    numerator: "अंश (रंगीन भाग)",
+    denominator: "हर (कुल भाग)",
+    circularPie: "वृत्ताकार पाई प्रतिनिधित्व",
+    writtenFraction: "लिखित भिन्न",
+    fractionExpl: (num, den) => `यह भिन्न कुल ${den} भागों में से ठीक ${num} भागों को दर्शाती है।`,
+    decimalValue: (val) => `दशमलव मान: ${val}`,
+    fundamentalRule: "संचालन के क्रम का मौलिक नियम",
+    parenthesesExpl: "जब किसी समीकरण में कोष्ठक होते हैं, तो आपको हमेशा अन्य क्रियाओं को करने से पहले कोष्ठक () के अंदर के हिस्से की गणना पहले करनी होगी!",
+    riddleOfDay: "आज की पहेली",
+    step1Expl: "हाँ! (3 + 2) की गणना पहले की जाती है जिससे 5 मिलता है। फिर, 5 × 4 = 20.",
+    solveStep1: "चरण 1 हल करें",
+    yourAnswer: "आपका उत्तर",
+    parenthesesSuccess: "बधाई हो! (3 + 2) × 4 = 5 × 4 = 20. आपने संचालन के क्रम का पालन किया! 🌟",
+    parenthesesIncorrect: "गलत। संकेत: पहले कोष्ठक के अंदर की गणना करें!"
+  },
+  UR: {
+    incompatibleTitle: "غیر مطابقت پذیر گریڈ لیول",
+    incompatibleText: "بنیادی ریاضی کی دریافت کا یہ ماڈیول مڈل اور ہائی اسکول کے طلباء کے لیے ڈیزائن کیا گیا ہے۔ احاطہ شدہ تصورات (کسر، بنیادی حساب) یونیورسٹی کی سطح کے لیے موزوں نہیں ہیں۔",
+    incompatibleSuggestion: "💡 لیول 3 ایجنٹ کے لیے مشورہ: براہ کرم یونیورسٹی کی سطح کے لیے <FunctionPlotter />، <FunctionManipulator /> یا <EquationManipulator /> استعمال کریں۔",
+    explorerTitle: "بنیادی ریاضی کا ایکسپلورر",
+    explorerSubtitle: "بنیادی ریاضی کے عمل کو بصری اور انٹرایکٹو طریقے سے دریافت کریں",
+    tabAddSub: "➕ / ➖ جمع اور تفریق",
+    tabMulDiv: "✖️ / ➗ ضرب اور تقسیم",
+    tabFractions: "🍕 فریکشنز پائی",
+    tabParentheses: "✨ قوسین اور ترتیب",
+    mode: "موڈ",
+    addition: "جمع (+)",
+    subtraction: "تفریق (-)",
+    firstNumber: "پہلا نمبر",
+    secondNumber: "دوسرا نمبر",
+    objectsToAdd: "جمع کرنے کے لیے اشیاء",
+    tactileObjects: "ٹچ ایبل اشیاء (کاٹنے کے لیے کلک کریں)",
+    graduatedAxis: "نمبر لائن (بصری نمائندگی)",
+    verify: "تصدیق کریں",
+    greatJob: (numA, op, numB, correctVal) => `بہت عمدہ! ${numA} ${op} ${numB} = ${correctVal}! 🎉`,
+    notQuite: "مکمل طور پر درست نہیں۔ اشیاء کو دوبارہ گننے کی کوشش کریں!",
+    multiplication: "ضرب (×)",
+    division: "تقسيم (÷)",
+    rowsGroups: "قطاریں (گروپ)",
+    columnsSize: "کالم (سائز)",
+    totalToDistribute: "تقسیم کرنے کے لیے کل",
+    divisorGroups: "تقسیم کار (گروپ)",
+    multiplicationGrid: (rows, cols) => `ضرب کا گرڈ: ${rows} قطاریں × ${cols} کالم`,
+    fairDistribution: (total, groups) => `${total} اشیاء کی ${groups} گروپس میں مساوی تقسیم`,
+    groupLabel: (num) => `گروپ ${num}`,
+    remainderText: (rem) => `⚠️ باقی: ${rem} اشیاء جو مساوی طور پر تقسیم نہیں کی جا سکتیں۔`,
+    awesomeFeedback: (expr, val) => `شاندار! ${expr} = ${val}! 🏆`,
+    tryAgainGrid: "دوبارہ کوشش کریں، مدد کے لیے بصری گرڈ استعمال کریں!",
+    numerator: "شمار کنندہ (رنگین حصے)",
+    denominator: "مخرج (کل حصے)",
+    circularPie: "گول پائی کی شکل میں نمائندگی",
+    writtenFraction: "لکھی ہوئی کسر",
+    fractionExpl: (num, den) => `یہ کسر کل ${den} حصوں میں سے ٹھیک ${num} حصوں کو ظاہر کرتی ہے۔`,
+    decimalValue: (val) => `عشاریہ قیمت: ${val}`,
+    fundamentalRule: "حساب کے ترتیب کا بنیادی اصول",
+    parenthesesExpl: "جب کسی مساوات میں قوسین ہوں، تو آپ کو ہمیشہ دوسرے حسابات کرنے سے پہلے قوسین () کے اندر موجود حصے کو پہلے حل کرنا ہوگا!",
+    riddleOfDay: "آج کا معمہ",
+    step1Expl: "جی ہاں! پہلے (3 + 2) کو حل کرنے سے 5 حاصل ہوتا ہے۔ پھر، 5 × 4 = 20۔",
+    solveStep1: "مرحلہ 1 حل کریں",
+    yourAnswer: "آپ کا جواب",
+    parenthesesSuccess: "مبارک ہو! (3 + 2) × 4 = 5 × 4 = 20۔ آپ نے حساب کے ترتیب کا درست خیال رکھا! 🌟",
+    parenthesesIncorrect: "غلط۔ اشارہ: پہلے قوسین کے اندر کا حصہ حل کریں!"
+  }
+};
+
 export const BasicMathExplorer = ({
   initialTab,
   initialMode,
@@ -22,7 +506,8 @@ export const BasicMathExplorer = ({
   gradeLevel
 }: BasicMathExplorerProps = {}) => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+  const langKey = language?.toUpperCase() || 'EN';
+  const t = TRANSLATIONS[langKey] || TRANSLATIONS.EN;
 
   const [activeTab, setActiveTab] = useState<ExplorerTab>(initialTab || 'add-sub');
 
@@ -116,14 +601,12 @@ export const BasicMathExplorer = ({
     if (guessVal === correctVal) {
       setTab1Feedback({
         isCorrect: true,
-        text: isFR 
-          ? `Bravo ! ${numA} ${addSubMode === 'add' ? '+' : '-'} ${numB} = ${correctVal} ! 🎉`
-          : `Great job! ${numA} ${addSubMode === 'add' ? '+' : '-'} ${numB} = ${correctVal}! 🎉`
+        text: t.greatJob(numA, addSubMode === 'add' ? '+' : '-', numB, correctVal)
       });
     } else {
       setTab1Feedback({
         isCorrect: false,
-        text: isFR ? "Ce n'est pas tout à fait ça. Compte à nouveau les objets !" : "Not quite. Try counting the objects again!"
+        text: t.notQuite
       });
     }
   };
@@ -134,14 +617,12 @@ export const BasicMathExplorer = ({
     if (guessVal === correctVal) {
       setTab2Feedback({
         isCorrect: true,
-        text: isFR
-          ? `Génial ! ${mulDivMode === 'mul' ? `${factorA} × ${factorB}` : `${divTotal} ÷ ${divDivisor}`} = ${correctVal} ! 🏆`
-          : `Awesome! ${mulDivMode === 'mul' ? `${factorA} × ${factorB}` : `${divTotal} ÷ ${divDivisor}`} = ${correctVal}! 🏆`
+        text: t.awesomeFeedback(mulDivMode === 'mul' ? `${factorA} × ${factorB}` : `${divTotal} ÷ ${divDivisor}`, correctVal)
       });
     } else {
       setTab2Feedback({
         isCorrect: false,
-        text: isFR ? "Essaie encore, aide-toi de la grille visuelle !" : "Try again, use the visual grid to help you!"
+        text: t.tryAgainGrid
       });
     }
   };
@@ -151,13 +632,13 @@ export const BasicMathExplorer = ({
     if (guessVal === 20) {
       setTab4Feedback({
         isCorrect: true,
-        text: isFR ? "Félicitations ! (3 + 2) × 4 = 5 × 4 = 20. Vous respectez l'ordre de priorité ! 🌟" : "Congratulations! (3 + 2) × 4 = 5 × 4 = 20. You respected the order of operations! 🌟"
+        text: t.parenthesesSuccess
       });
       setParenthesisStep(2);
     } else {
       setTab4Feedback({
         isCorrect: false,
-        text: isFR ? "Faux. Indice : Calculez d'abord ce qu'il y a entre parenthèses !" : "Incorrect. Hint: Calculate what is inside the parentheses first!"
+        text: t.parenthesesIncorrect
       });
     }
   };
@@ -167,17 +648,13 @@ export const BasicMathExplorer = ({
       <div className="my-10 p-8 rounded-[40px] border border-slate-800 bg-slate-900/50 backdrop-blur-3xl text-center max-w-xl mx-auto shadow-2xl">
         <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
         <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wider animate-pulse">
-          {isFR ? "Niveau non adapté" : "Incompatible Grade Level"}
+          {t.incompatibleTitle}
         </h3>
         <p className="text-slate-300 text-sm mb-4 leading-relaxed">
-          {isFR 
-            ? "Ce module d'exploration mathématique élémentaire est conçu pour les élèves du collège et lycée. Les concepts abordés (fractions, arithmétique de base) ne sont pas adaptés au niveau universitaire."
-            : "This basic math exploration module is designed for middle and high school students. The concepts covered (fractions, basic arithmetic) are not suited for university level."}
+          {t.incompatibleText}
         </p>
         <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-2xl p-3">
-          {isFR
-            ? "💡 Conseil pour l'Agent de Niveau 3 : Utilisez plutôt <FunctionPlotter />, <FunctionManipulator /> ou <EquationManipulator /> pour le niveau universitaire."
-            : "💡 Suggestion for Level 3 Agent: Please use <FunctionPlotter />, <FunctionManipulator />, or <EquationManipulator /> for university level."}
+          {t.incompatibleSuggestion}
         </p>
       </div>
     );
@@ -193,10 +670,10 @@ export const BasicMathExplorer = ({
           </div>
           <div>
             <h4 className="text-white text-xs font-black uppercase tracking-wider">
-              {isFR ? 'Explorateur de Mathématiques de Base' : 'Basic Math Explorer'}
+              {t.explorerTitle}
             </h4>
             <p className="text-[10px] text-slate-400 font-bold">
-              {isFR ? 'Découvrez de manière visuelle et interactive les fondamentaux des maths' : 'Discover fundamental math operations visually and interactively'}
+              {t.explorerSubtitle}
             </p>
           </div>
         </div>
@@ -213,10 +690,10 @@ export const BasicMathExplorer = ({
                   : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
               }`}
             >
-              {tab === 'add-sub' ? (isFR ? '➕ / ➖ Addition & Soustraction' : '➕ / ➖ Add & Subtract') :
-               tab === 'mul-div' ? (isFR ? '✖️ / ➗ Multiplier & Diviser' : '✖️ / ➗ Multiply & Divide') :
-               tab === 'fractions' ? (isFR ? '🍕 Fractions Visuelles' : '🍕 Fractions Pie') :
-               (isFR ? '✨ Priorités / Parenthèses' : '✨ Parentheses & Order')}
+              {tab === 'add-sub' ? t.tabAddSub :
+               tab === 'mul-div' ? t.tabMulDiv :
+               tab === 'fractions' ? t.tabFractions :
+               t.tabParentheses}
             </button>
           ))}
         </div>
@@ -230,7 +707,7 @@ export const BasicMathExplorer = ({
             {/* Top Config */}
             <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               <div className="space-y-1">
-                <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">Mode</span>
+                <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t.mode}</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => { setAddSubMode('add'); setTab1Feedback(null); }}
@@ -238,7 +715,7 @@ export const BasicMathExplorer = ({
                       addSubMode === 'add' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
                     }`}
                   >
-                    {isFR ? 'Addition (+)' : 'Addition (+)'}
+                    {t.addition}
                   </button>
                   <button
                     onClick={() => { setAddSubMode('sub'); setTab1Feedback(null); }}
@@ -246,7 +723,7 @@ export const BasicMathExplorer = ({
                       addSubMode === 'sub' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
                     }`}
                   >
-                    {isFR ? 'Soustraction (-)' : 'Subtraction (-)'}
+                    {t.subtraction}
                   </button>
                 </div>
               </div>
@@ -254,7 +731,7 @@ export const BasicMathExplorer = ({
               {/* Number A Slider */}
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                  <span>{isFR ? 'Premier Nombre' : 'First Number'}</span>
+                  <span>{t.firstNumber}</span>
                   <span className="font-mono text-[11px] text-white font-black">{numA}</span>
                 </label>
                 <input 
@@ -267,7 +744,7 @@ export const BasicMathExplorer = ({
               {/* Number B Slider */}
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                  <span>{isFR ? 'Deuxième Nombre' : 'Second Number'}</span>
+                  <span>{t.secondNumber}</span>
                   <span className="font-mono text-[11px] text-white font-black">{numB}</span>
                 </label>
                 <input 
@@ -281,7 +758,7 @@ export const BasicMathExplorer = ({
             {/* Tactile display block */}
             <div className="space-y-4">
               <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {addSubMode === 'add' ? (isFR ? 'Objets à additionner' : 'Objects to add') : (isFR ? 'Objets tactiles (cliquez pour rayer)' : 'Tactile Objects (click to cross out)')}
+                {addSubMode === 'add' ? t.objectsToAdd : t.tactileObjects}
               </h5>
 
               <div className="p-6 rounded-3xl bg-slate-950/40 border border-slate-900 flex flex-wrap gap-3 items-center justify-center min-h-[100px]">
@@ -307,7 +784,7 @@ export const BasicMathExplorer = ({
             {/* Step-Jump Curved Number Line */}
             <div className="space-y-4 pt-4 border-t border-slate-850">
               <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {isFR ? 'Axe Gradué (Représentation Graphique)' : 'Graduated Axis (Graphical Representation)'}
+                {t.graduatedAxis}
               </h5>
 
               <div className="p-6 rounded-3xl bg-slate-950/60 border border-slate-900 shadow-inner overflow-x-auto">
@@ -318,7 +795,7 @@ export const BasicMathExplorer = ({
                   {/* Jump Bezier Curve overlay */}
                   <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ overflow: 'visible' }}>
                     {(() => {
-                      const startPos = addSubMode === 'add' ? numA : numA;
+                      const startPos = numA;
                       const endPos = addSubMode === 'add' ? numA + numB : numA - numB;
                       const startPct = 4 + (startPos / 30) * 92;
                       const endPct = 4 + (endPos / 30) * 92;
@@ -378,7 +855,7 @@ export const BasicMathExplorer = ({
                   onClick={verifyTab1}
                   className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/15 cursor-pointer"
                 >
-                  {isFR ? 'Vérifier' : 'Verify'}
+                  {t.verify}
                 </button>
               </div>
 
@@ -399,7 +876,7 @@ export const BasicMathExplorer = ({
             {/* Top Config */}
             <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               <div className="space-y-1">
-                <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">Mode</span>
+                <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t.mode}</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => { setMulDivMode('mul'); setTab2Feedback(null); }}
@@ -407,7 +884,7 @@ export const BasicMathExplorer = ({
                       mulDivMode === 'mul' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
                     }`}
                   >
-                    {isFR ? 'Multiplication (×)' : 'Multiplication (×)'}
+                    {t.multiplication}
                   </button>
                   <button
                     onClick={() => { setMulDivMode('div'); setTab2Feedback(null); }}
@@ -415,7 +892,7 @@ export const BasicMathExplorer = ({
                       mulDivMode === 'div' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
                     }`}
                   >
-                    {isFR ? 'Division (÷)' : 'Division (÷)'}
+                    {t.division}
                   </button>
                 </div>
               </div>
@@ -424,7 +901,7 @@ export const BasicMathExplorer = ({
                 <>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                      <span>{isFR ? 'Lignes (Groupes)' : 'Rows (Groups)'}</span>
+                      <span>{t.rowsGroups}</span>
                       <span className="font-mono text-[11px] text-white font-black">{factorA}</span>
                     </label>
                     <input 
@@ -435,7 +912,7 @@ export const BasicMathExplorer = ({
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                      <span>{isFR ? 'Colonnes (Taille)' : 'Columns (Size)'}</span>
+                      <span>{t.columnsSize}</span>
                       <span className="font-mono text-[11px] text-white font-black">{factorB}</span>
                     </label>
                     <input 
@@ -449,7 +926,7 @@ export const BasicMathExplorer = ({
                 <>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                      <span>{isFR ? 'Total à distribuer' : 'Total to distribute'}</span>
+                      <span>{t.totalToDistribute}</span>
                       <span className="font-mono text-[11px] text-white font-black">{divTotal}</span>
                     </label>
                     <input 
@@ -460,7 +937,7 @@ export const BasicMathExplorer = ({
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                      <span>{isFR ? 'Diviseur (Groupes)' : 'Divisor (Groups)'}</span>
+                      <span>{t.divisorGroups}</span>
                       <span className="font-mono text-[11px] text-white font-black">{divDivisor}</span>
                     </label>
                     <input 
@@ -477,8 +954,8 @@ export const BasicMathExplorer = ({
             <div className="space-y-4">
               <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                 {mulDivMode === 'mul' 
-                  ? (isFR ? `Matrice de multiplication : ${factorA} lignes × ${factorB} colonnes` : `Multiplication Grid: ${factorA} rows × ${factorB} columns`)
-                  : (isFR ? `Distribution équitable de ${divTotal} objets dans ${divDivisor} groupes` : `Fair distribution of ${divTotal} objects into ${divDivisor} groups`)}
+                  ? t.multiplicationGrid(factorA, factorB)
+                  : t.fairDistribution(divTotal, divDivisor)}
               </h5>
 
               <div className="p-8 rounded-3xl bg-slate-950/40 border border-slate-900 flex items-center justify-center min-h-[180px]">
@@ -506,7 +983,7 @@ export const BasicMathExplorer = ({
 
                       return (
                         <div key={groupIdx} className="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 min-w-[100px] flex flex-col items-center gap-2">
-                          <span className="text-[9px] font-black uppercase text-indigo-400">Groupe {groupIdx + 1}</span>
+                          <span className="text-[9px] font-black uppercase text-indigo-400">{t.groupLabel(groupIdx + 1)}</span>
                           <div className="flex flex-wrap gap-1 max-w-[80px] justify-center">
                             {Array.from({ length: count }).map((_, i) => (
                               <div key={i} className="w-4 h-4 rounded-full bg-indigo-400" />
@@ -522,7 +999,7 @@ export const BasicMathExplorer = ({
 
               {mulDivMode === 'div' && divTotal % divDivisor !== 0 && (
                 <p className="text-[10px] text-amber-500 font-bold text-center">
-                  ⚠️ {isFR ? `Reste : ${divTotal % divDivisor} objet(s) qui ne peuve(nt) pas être distribué(s) équitablement.` : `Remainder: ${divTotal % divDivisor} object(s) that cannot be distributed equally.`}
+                  {t.remainderText(divTotal % divDivisor)}
                 </p>
               )}
             </div>
@@ -547,7 +1024,7 @@ export const BasicMathExplorer = ({
                   onClick={verifyTab2}
                   className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/15 cursor-pointer"
                 >
-                  {isFR ? 'Vérifier' : 'Verify'}
+                  {t.verify}
                 </button>
               </div>
 
@@ -571,7 +1048,7 @@ export const BasicMathExplorer = ({
               {/* Numerator */}
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                  <span>{isFR ? 'Numérateur (Parts colorées)' : 'Numerator (Colored parts)'}</span>
+                  <span>{t.numerator}</span>
                   <span className="font-mono text-[11px] text-white font-black">{fracNum}</span>
                 </label>
                 <input 
@@ -584,7 +1061,7 @@ export const BasicMathExplorer = ({
               {/* Denominator */}
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                  <span>{isFR ? 'Dénominateur (Total des parts)' : 'Denominator (Total parts)'}</span>
+                  <span>{t.denominator}</span>
                   <span className="font-mono text-[11px] text-white font-black">{fracDen}</span>
                 </label>
                 <input 
@@ -604,7 +1081,7 @@ export const BasicMathExplorer = ({
               
               {/* Interactive circular Pie (SVG) */}
               <div className="p-6 rounded-3xl bg-slate-950/40 border border-slate-900 flex flex-col items-center justify-center min-h-[220px]">
-                <h6 className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">{isFR ? 'Représentation Circulaire (Tarte)' : 'Circular Pie Representation'}</h6>
+                <h6 className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">{t.circularPie}</h6>
                 
                 <svg width="150" height="150" viewBox="0 0 100 100" className="transform -rotate-90 select-none">
                   {/* Outer circle border */}
@@ -646,7 +1123,7 @@ export const BasicMathExplorer = ({
               {/* Fraction numerical representation & Info */}
               <div className="p-6 rounded-3xl border border-slate-850 bg-slate-900/30 flex flex-col justify-between min-h-[220px]">
                 <div className="space-y-4">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{isFR ? 'Fraction Écrite' : 'Written Fraction'}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t.writtenFraction}</span>
                   
                   {/* Fraction Math display */}
                   <div className="flex justify-center py-4 select-none">
@@ -660,12 +1137,10 @@ export const BasicMathExplorer = ({
 
                 <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-850 text-[11px] leading-relaxed text-slate-400">
                   <p>
-                    {isFR 
-                      ? `Cette fraction représente précisément ${fracNum} part(s) sur un total de ${fracDen}.`
-                      : `This fraction represents precisely ${fracNum} parts out of ${fracDen} total parts.`}
+                    {t.fractionExpl(fracNum, fracDen)}
                   </p>
                   <p className="mt-1 font-bold text-slate-300">
-                    {isFR ? `Écrit en décimal : ${(fracNum / fracDen).toFixed(2)}` : `Decimal value: ${(fracNum / fracDen).toFixed(2)}`}
+                    {t.decimalValue((fracNum / fracDen).toFixed(2))}
                   </p>
                 </div>
               </div>
@@ -680,12 +1155,10 @@ export const BasicMathExplorer = ({
             <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 space-y-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                {isFR ? 'Règle Fondamentale de l\'Ordre des Opérations' : 'Fundamental Order of Operations Rule'}
+                {t.fundamentalRule}
               </span>
               <p className="text-slate-200 font-extrabold text-sm leading-relaxed">
-                {isFR 
-                  ? "Quand une équation contient des parenthèses, on DOIT toujours calculer en priorité absolue le bloc entre parenthèses () avant de faire les autres calculs !"
-                  : "When an equation contains parentheses, you MUST always calculate the block inside the parentheses () first before doing other operations!"}
+                {t.parenthesesExpl}
               </p>
             </div>
 
@@ -693,7 +1166,7 @@ export const BasicMathExplorer = ({
               
               {/* Target calculation problem visual representation */}
               <div className="p-6 md:p-8 rounded-3xl bg-slate-950/60 border border-slate-900 shadow-inner flex flex-col justify-between min-h-[220px]">
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{isFR ? 'Défi du jour' : 'Riddle of the Day'}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t.riddleOfDay}</span>
                 
                 <div className="py-6 text-center select-none">
                   <div className="font-mono text-3xl font-black text-slate-100 flex justify-center items-center gap-2">
@@ -724,14 +1197,12 @@ export const BasicMathExplorer = ({
                       setTab4Guess('20');
                       setTab4Feedback({
                         isCorrect: true,
-                        text: isFR 
-                          ? "Oui ! (3 + 2) est calculé en premier et donne 5. Ensuite, 5 × 4 = 20."
-                          : "Yes! (3 + 2) is calculated first to give 5. Then, 5 × 4 = 20."
+                        text: t.step1Expl
                       });
                     }}
                     className="px-4 py-2 rounded-xl text-[9px] font-black uppercase border tracking-widest bg-slate-950 border-slate-800 text-indigo-400 hover:bg-slate-900 cursor-pointer"
                   >
-                    {isFR ? 'Résoudre étape 1' : 'Solve Step 1'}
+                    {t.solveStep1}
                   </button>
                   <button
                     onClick={() => {
@@ -749,7 +1220,7 @@ export const BasicMathExplorer = ({
               {/* Form input and text explaining step */}
               <div className="p-6 rounded-3xl border border-slate-850 bg-slate-900/30 flex flex-col justify-between min-h-[220px]">
                 <div className="space-y-4">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{isFR ? 'Votre Réponse' : 'Your Answer'}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t.yourAnswer}</span>
                   
                   <div className="flex items-center gap-3">
                     <input
@@ -764,7 +1235,7 @@ export const BasicMathExplorer = ({
                       onClick={verifyTab4}
                       className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/15 cursor-pointer"
                     >
-                      {isFR ? 'Vérifier' : 'Verify'}
+                      {t.verify}
                     </button>
                   </div>
                 </div>

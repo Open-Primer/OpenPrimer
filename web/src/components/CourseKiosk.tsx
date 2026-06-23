@@ -99,6 +99,54 @@ const KIOSK_TEXTS: Record<string, Record<string, string>> = {
     courses_count: "门课程",
     course_count: "门课程",
     explore: "探索",
+  },
+  PT: {
+    popular_title: "Quiosque de Cursos Curados",
+    popular_subtitle: "Deslize ou gire pelos nossos cursos recomendados de elite",
+    disciplines_title: "Explorar Disciplinas",
+    disciplines_subtitle: "Selecione um assunto para descobrir caminhos acadêmicos correspondentes",
+    view_details: "Ver Detalhes",
+    credits: "Créditos",
+    hours: "horas",
+    courses_count: "cursos",
+    course_count: "curso",
+    explore: "Explorar",
+  },
+  AR: {
+    popular_title: "كشك الدورات المختارة",
+    popular_subtitle: "اسحب أو تنقل عبر دوراتنا النخبوية الموصى بها",
+    disciplines_title: "استكشاف التخصصات",
+    disciplines_subtitle: "اختر موضوعًا لاكتشاف المسارات الأكاديمية المقابلة",
+    view_details: "عرض التفاصيل",
+    credits: "وحدات",
+    hours: "ساعات",
+    courses_count: "دورات",
+    course_count: "دورة",
+    explore: "استكشف",
+  },
+  HI: {
+    popular_title: "क्यूरेटेड कोर्स कियोस्क",
+    popular_subtitle: "हमारे विशिष्ट अनुशंसित पाठ्यक्रमों के माध्यम से स्वाइप करें या घूमें",
+    disciplines_title: "हमारे कुलीन विषयों का अन्वेषण करें",
+    disciplines_subtitle: "अपनी खोज को पुनः आरंभ करने के लिए एक विषय चुनें",
+    view_details: "विवरण देखें",
+    credits: "क्रेडिट",
+    hours: "घंटे",
+    courses_count: "पाठ्यक्रम",
+    course_count: "पाठ्यक्रम",
+    explore: "अन्वेषण करें",
+  },
+  UR: {
+    popular_title: "کیوریٹڈ کورس کیوسک",
+    popular_subtitle: "ہمارے ایلیٹ تجویز کردہ کورسز کو سوائپ کریں یا گھمائیں",
+    disciplines_title: "موضوعات تلاش کریں",
+    disciplines_subtitle: "مطابقت پذیر تعلیمی راستے دریافت کرنے کے لیے کوئی موضوع منتخب کریں",
+    view_details: "تفصیلات دیکھیں",
+    credits: "کریڈٹ",
+    hours: "گھنٹے",
+    courses_count: "کورسز",
+    course_count: "کورس",
+    explore: "تلاش کریں",
   }
 };
 
@@ -127,6 +175,26 @@ const KIOSK_ARIA_TEXTS: Record<string, Record<string, string>> = {
     prev_page: "上一页",
     next_page: "下一页",
     go_to_page: "跳转到第 {num} 页"
+  },
+  PT: {
+    prev_page: "Página anterior",
+    next_page: "Próxima página",
+    go_to_page: "Ir para a página {num}"
+  },
+  AR: {
+    prev_page: "الصفحة السابقة",
+    next_page: "الصفحة التالية",
+    go_to_page: "الذهاب إلى الصفحة {num}"
+  },
+  HI: {
+    prev_page: "पिछला पृष्ठ",
+    next_page: "अगला पृष्ठ",
+    go_to_page: "पृष्ठ {num} पर जाएँ"
+  },
+  UR: {
+    prev_page: "پچھلا صفحہ",
+    next_page: "اگلا صفحہ",
+    go_to_page: "صفحہ {num} پر جائیں"
   }
 };
 

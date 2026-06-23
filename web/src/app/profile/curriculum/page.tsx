@@ -12,6 +12,42 @@ import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
 import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
 import { cleanPathSegment } from '@/lib/translations';
 
+import { locale as arLocale } from '../../admin/curriculum/locales/ar';
+import { locale as deLocale } from '../../admin/curriculum/locales/de';
+import { locale as enLocale } from '../../admin/curriculum/locales/en';
+import { locale as esLocale } from '../../admin/curriculum/locales/es';
+import { locale as frLocale } from '../../admin/curriculum/locales/fr';
+import { locale as hiLocale } from '../../admin/curriculum/locales/hi';
+import { locale as ptLocale } from '../../admin/curriculum/locales/pt';
+import { locale as urLocale } from '../../admin/curriculum/locales/ur';
+import { locale as zhLocale } from '../../admin/curriculum/locales/zh';
+
+const LOCALES: Record<string, Record<string, string>> = {
+  AR: arLocale,
+  DE: deLocale,
+  EN: enLocale,
+  ES: esLocale,
+  FR: frLocale,
+  HI: hiLocale,
+  PT: ptLocale,
+  UR: urLocale,
+  ZH: zhLocale,
+};
+
+function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {
+  const upperLang = (lang || 'EN').toUpperCase();
+  const dynamicVal = ach.translations?.[upperLang]?.[field] || ach.translations?.[lang.toLowerCase()]?.[field];
+  if (dynamicVal) return dynamicVal;
+  
+  const defaultVal = ach[field] || '';
+  const localeDict = LOCALES[upperLang] || LOCALES.EN;
+  if (localeDict && defaultVal) {
+    const staticVal = localeDict[defaultVal];
+    if (staticVal) return staticVal;
+  }
+  return defaultVal;
+}
+
 export default function CurriculumPage() {
   const router = useRouter();
   const { language: lang, setLanguage: setLang } = useLanguage();
@@ -1114,7 +1150,7 @@ export default function CurriculumPage() {
                                      <div
                                        key={ach.id}
                                        className={`w-6 h-6 rounded-lg bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shrink-0 shadow-sm border border-white/10`}
-                                       title={ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name || ach.name}
+                                       title={getAchievementTranslation(ach, 'name', lang)}
                                      >
                                        <IconComp className="w-3.5 h-3.5" />
                                      </div>
@@ -1410,7 +1446,7 @@ export default function CurriculumPage() {
                    const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
                    const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
                    const name = ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name || ach.name;
-                   const description = ach.translations?.[lang.toUpperCase()]?.description || ach.translations?.[lang.toLowerCase()]?.description || ach.description;
+                   const description = getAchievementTranslation(ach, 'description', lang);
 
                    return (
                      <div 
@@ -1441,7 +1477,7 @@ export default function CurriculumPage() {
                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' 
                            : 'bg-slate-800/20 border-slate-800/40 text-slate-600'
                        }`}>
-                         {isEarned ? t.unlocked : (lang.toUpperCase() === 'FR' ? 'Verrouillé' : 'Locked')}
+                         {isEarned ? t.unlocked : (t.locked || "Locked")}
                        </span>
                      </div>
                    );

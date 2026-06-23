@@ -1315,12 +1315,32 @@ export const PhilosophyPage = () => {
     IT: [
       { step: '01', title: 'Decomposizione Atomica', desc: "Dividiamo ogni corso in moduli incentrati su un singolo concetto chiave. Non puoi andare avanti finché non sai spiegare il modulo corrente in termini semplici." },
       { step: '02', title: 'Ciclo di Feedback Socratico', desc: "Invece di fornire risposte, il nostro Tutor IA pone domande che ti guidano alla risposta, prevenendo la lettura passiva." },
-      { step: '03', title: 'Sintesi Trans-Linguistica', desc: "Cambiando lingua, gli studenti attivano percorsi cognitivi diversi, rafforzando l'astrazione del concetto dal semplice vocabolario." }
+      { step: '03', title: 'Sintesi Trans-Linguistica', desc: "Cambiando lingua, gli studenti attivano percorsi cognitivi diversi, rafforçando l'astrazione del concetto dal semplice vocabolario." }
     ],
     ZH: [
       { step: '01', title: '原子化分解', desc: "我们将每门课程拆分为专注于单一核心概念的模块。只有在你能用简单的语言解释当前模块时，才能继续前进。" },
       { step: '02', title: '苏格拉底式反馈闭环', desc: "我们的AI导师不会直接提供答案，而是通过提问引导你找到答案，防止被动阅读。" },
       { step: '03', title: '跨语言合成认知', desc: "通过切换语言，学生可以激活不同的认知途径，增强概念从单纯词汇中的学术抽象理解。" }
+    ],
+    PT: [
+      { step: '01', title: 'Decomposição Atômica', desc: "Dividimos cada curso em módulos focados em um único conceito central. Você não pode avançar até conseguir explicar o módulo atual em termos simples." },
+      { step: '02', title: 'Ciclo de Feedback Socrático', desc: "Em vez de fornecer respostas, o nosso Tutor de IA faz as perguntas que o guiam até a resposta. Esta é a 'Camada Socrática' que evita a leitura passiva." },
+      { step: '03', title: 'Síntese Translinguística', desc: "Ao alternar entre idiomas, os alunos ativam diferentes caminhos cognitivos, reforçando a abstração do conceito além do mero vocabolário." }
+    ],
+    AR: [
+      { step: '01', title: 'التفكيك الذري', desc: "نحن نقوم بتفكيك كل دورة إلى وحدات تركز على مفهوم أساسي واحد. لا يمكنك المضي قدمًا حتى تتمكن من شرح الوحدة الحالية بعبارات بسيطة." },
+      { step: '02', title: 'حلقة التغذية الراجعة السقراطية', desc: "بدلاً من تقديم الإجابات، يطرح معلمنا الآلي الأسئلة التي تقودك إلى الإجابة. هذا هو 'التراكب السقراطي' الذي يمنع القراءة السلبية." },
+      { step: '03', title: 'التركيب عابر اللغات', desc: "من خلال التبديل بين اللغات، ينشط الطلاب مسارات معرفية مختلفة، مما يعزز تجريد المفهوم من مجرد مفردات." }
+    ],
+    HI: [
+      { step: '01', title: 'परमाणु अपघटन', desc: "हम प्रत्येक पाठ्यक्रम को ऐसे मॉड्यूल में विभाजित करते हैं जो एकल मुख्य अवधारणा पर ध्यान केंद्रित करते हैं। जब तक आप वर्तमान मॉड्यूल को सरल शब्दों में नहीं समझा सकते, तब तक आप आगे नहीं बढ़ सकते।" },
+      { step: '02', title: 'सुकराती प्रतिक्रिया लूप', desc: "उत्तर प्रदान करने के बजाय, हमारा एआई ट्यूटर उन प्रश्नों को पूछता है जो आपको उत्तर की ओर ले जाते हैं। यह 'सुकराती ओवरले' है जो निष्क्रिय पढ़ने को रोकता है।" },
+      { step: '03', title: 'क्रॉस-भाषाई संश्लेषण', desc: "भाषाओं को बदलकर, छात्र विभिन्न संज्ञानात्मक मार्गों को सक्रिय करते हैं, जिससे केवल शब्दावली से परे अवधारणा के अमूर्तीकरण को बल मिलता है।" }
+    ],
+    UR: [
+      { step: '01', title: 'جوہری تحلیل', desc: "ہم ہر کورس کو ایسے ماڈیولز میں تقسیم کرتے ہیں جو ایک واحد بنیادی تصور پر مرکوز ہوتے ہیں۔ آپ اس وقت تک آگے نہیں بڑھ سکتے جب تک کہ آپ موجودہ ماڈیول کو آسان الفاظ میں بیان نہ کر سکیں۔" },
+      { step: '02', title: 'سقراطی فیڈ بیک لوپ', desc: "جوابات فراہم کرنے کے بجائے، ہمارا AI ٹیوٹر وہ سوالات پوچھتا ہے جو آپ کو جواب کی طرف لے جاتے ہیں۔ یہ 'سقراطی اوورلے' ہے جو غیر فعال پڑھنے کو روکتا ہے۔" },
+      { step: '03', title: 'بین اللسانی ترکیب', desc: "زبانیں تبدیل کرنے سے، طلباء مختلف علمی راستوں کو فعال کرتے ہیں، جس سے محض الفاظ سے بالاتر تصور کے تجرید کو تقویت ملتی ہے۔" }
     ]
   };
 
@@ -1398,10 +1418,10 @@ export const PhilosophyPage = () => {
               target="_blank" 
               className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all shadow-2xl"
             >
-              GitHub Repository <ChevronRight className="w-4 h-4" />
+              {t.github_repository || "GitHub Repository"} <ChevronRight className="w-4 h-4" />
             </a>
             <Link href="/contact" className="text-blue-500 font-black uppercase tracking-widest text-[10px] hover:text-blue-400 transition-colors">
-              Contact Support
+              {t.contact || "Contact Support"}
             </Link>
           </div>
         </div>
@@ -1476,7 +1496,7 @@ export const ContactPage = () => {
     },
     IT: {
       title: "Contattaci",
-      desc: "Contatta il nostro team operativo globale per partnership o feedback sul Feynman Engine.",
+      desc: "Contatta il nosso team operativo globale per partnership o feedback sul Feynman Engine.",
       support: "Operazioni di Supporto Globale",
       success_title: "Messaggio Ricevuto",
       success_desc: "Ti risponderemo al più presto.",
@@ -1501,6 +1521,62 @@ export const ContactPage = () => {
       btn_send: "发送咨询",
       alert_err: "发生错误。请重试。",
       alert_fail: "发送消息失败。请稍后重试。"
+    },
+    PT: {
+      title: "Entre em Contato",
+      desc: "Entre em contato com nossa equipe operacional global para parcerias ou feedback sobre o Feynman Engine.",
+      support: "Suporte Operacional Global",
+      success_title: "Mensagem Recebida",
+      success_desc: "Entraremos em contato em breve.",
+      name_placeholder: "Nome Completo",
+      email_placeholder: "Endereço de E-mail",
+      message_placeholder: "Sua Mensagem",
+      btn_sending: "Enviando...",
+      btn_send: "Enviar Consulta",
+      alert_err: "Ocorreu um erro. Por favor, tente novamente.",
+      alert_fail: "Falha ao enviar a mensagem. Por favor, tente mais tarde."
+    },
+    AR: {
+      title: "تواصل معنا",
+      desc: "تواصل مع فريق عملياتنا العالمي للشراكات أو التعليقات حول محرك فاينمان.",
+      support: "دعم العمليات العالمية",
+      success_title: "تم استلام الرسالة",
+      success_desc: "سنرد عليك في أقرب وقت.",
+      name_placeholder: "الاسم الكامل",
+      email_placeholder: "عنوان البريد الإلكتروني",
+      message_placeholder: "رسالتك",
+      btn_sending: "جاري الإرسال...",
+      btn_send: "إرسال الاستفسار",
+      alert_err: "حدث خطأ. يرجى المحاولة مرة أخرى.",
+      alert_fail: "فشل إرسال الرسالة. يرجى المحاولة لاحقاً."
+    },
+    HI: {
+      title: "संपर्क करें",
+      desc: "साझेदारी या फेनमैन इंजन पर प्रतिक्रिया के लिए हमारी वैश्विक संचालन टीम से संपर्क करें।",
+      support: "वैश्विक सहायता संचालन",
+      success_title: "संदेश प्राप्त हुआ",
+      success_desc: "हम जल्द ही आपसे संपर्क करेंगे।",
+      name_placeholder: "पूरा नाम",
+      email_placeholder: "ईमेल पता",
+      message_placeholder: "आपका संदेश",
+      btn_sending: "भेजा जा रहा है...",
+      btn_send: "पूछताछ भेजें",
+      alert_err: "एक त्रुटि हुई। कृपया पुनः प्रयास करें।",
+      alert_fail: "संदेश भेजने में विफल। कृपया बाद में पुनः प्रयास करें।"
+    },
+    UR: {
+      title: "رابطہ کریں",
+      desc: "شراکت داری یا فین مین انجن پر رائے کے لیے ہماری عالمی آپریشنز ٹیم سے رابطہ کریں۔",
+      support: "عالمی سپورٹ آپریشنز",
+      success_title: "پیغام موصول ہوا",
+      success_desc: "ہم جلد ہی آپ سے رابطہ کریں گے۔",
+      name_placeholder: "پورا نام",
+      email_placeholder: "ای میل ایڈریس",
+      message_placeholder: "آپ کا پیغام",
+      btn_sending: "بھیجا جا رہا ہے...",
+      btn_send: "انکوائری بھیجیں",
+      alert_err: "ایک خرابی پیش آئی। براہ کرم دوبارہ کوشش کریں۔",
+      alert_fail: "پیغام بھیجنے میں ناکامی۔ براہ کرم بعد میں دوبارہ کوشش کریں۔"
     }
   };
 
@@ -1640,7 +1716,7 @@ export const TermsPage = () => {
       sec1_d: "OpenPrimer è una risorsa accademica. Gli utenti sono tenuti a interagire con il Tutor IA in modo rispettoso e a utilizzare la piattaforma per scopi di apprendimento autentico.",
       sec2_t: "2. Proprietà Intellettuale",
       sec2_d: "Tutto il software principale è concesso in licenza MIT. Il contenuto accademico è concesso in licenza CC BY-NC-SA 4.0, consentendo la condivisione non commerciale con corretta attribuzione.",
-      sec3_t: "3. Limitazione di Responsabilità",
+      sec3_t: "3. Limitazione di Responsabilidade",
       sec3_d: "La piattaforma viene fornita 'così com'è'. Sebbene ci impegniamo per il massimo rigore accademico, gli utenti dovrebbero sempre verificare le informazioni critiche con fonti universitarie ufficiali."
     },
     ZH: {
@@ -1652,6 +1728,46 @@ export const TermsPage = () => {
       sec2_d: "所有核心软件均采用 MIT 许可。学术内容采用 CC BY-NC-SA 4.0 许可，允许在提供适当署名的前提下进行非商业性分享。",
       sec3_t: "3. 免责声明",
       sec3_d: "该平台按“原样”提供。虽然我们力求绝对的学术严谨性，但用户应始终将关键信息 with 官方大学来源进行交叉比对。"
+    },
+    PT: {
+      title: "Termos de Serviço",
+      date: "Data de Vigência: 11 de maio de 2026",
+      sec1_t: "1. Uso Aceitável",
+      sec1_d: "O OpenPrimer é um recurso acadêmico. Espera-se que os usuários interajam com o Tutor de IA de forma respeitosa e utilizem a plataforma para fins de aprendizagem genuína.",
+      sec2_t: "2. Propriedade Intelectual",
+      sec2_d: "Todo o software principal é licenciado sob a licença MIT. O conteúdo acadêmico é licenciado sob CC BY-NC-SA 4.0, permitindo o compartilhamento não comercial com a atribuição adequada.",
+      sec3_t: "3. Limitação de Responsabilidade",
+      sec3_d: "A plataforma é fornecida 'como está'. Embora nos esforcemos pelo rigor acadêmico absoluto, os usuários devem sempre cruzar informações críticas com fontes universitárias oficiais."
+    },
+    AR: {
+      title: "شروط الخدمة",
+      date: "تاريخ السريان: ١١ مايو ٢٠٢٦",
+      sec1_t: "١. الاستخدام المقبول",
+      sec1_d: "إن OpenPrimer هو مورد أكاديمي. يُتوقع من المستخدمين التفاعل مع معلم الذكاء الاصطناعي باحترام واستخدام المنصة لأغراض التعلم الحقيقية.",
+      sec2_t: "٢. الملكية الفكرية",
+      sec2_d: "جميع البرمجيات الأساسية مرخصة بموجب رخصة MIT. المحتوى الأكاديمي مرخص بموجب رخصة المشاع الإبداعي CC BY-NC-SA 4.0، مما يسمح بالمشاركة غير التجارية مع الإشارة المناسبة للمصدر.",
+      sec3_t: "٣. تحديد المسؤولية",
+      sec3_d: "يتم تقديم المنصة 'كما هي'. بينما نسعى جاهدين لتحقيق الدقة الأكاديمية المطلقة، يجب على المستخدمين دائمًا مقارنة المعلومات الهامة بالمرجعيات الجامعية الرسمية."
+    },
+    HI: {
+      title: "सेवा की शर्तें",
+      date: "प्रभावी तिथि: 11 मई, 2026",
+      sec1_t: "1. स्वीकार्य उपयोग",
+      sec1_d: "OpenPrimer एक शैक्षणिक संसाधन है। उपयोगकर्ताओं से अपेक्षा की जाती है कि वे एआई ट्यूटर के साथ सम्मानपूर्वक बातचीत करें और वास्तविक सीखने के उद्देश्यों के लिए मंच का उपयोग करें।",
+      sec2_t: "2. बौद्धिक संपदा",
+      sec2_d: "सभी मुख्य सॉफ़्टवेयर MIT के तहत लाइसेंस प्राप्त हैं। शैक्षणिक सामग्री CC BY-NC-SA 4.0 के तहत लाइसेंस प्राप्त है, जो उचित श्रेय के साथ गैर-व्यावसायिक साझाकरण की अनुमति देती है।",
+      sec3_t: "3. देयता की सीमा",
+      sec3_d: "यह मंच 'जैसा है' वैसा ही प्रदान किया जाता है। हालांकि हम पूर्ण शैक्षणिक कठोरता के लिए प्रयास करते हैं, उपयोगकर्ताओं को हमेशा आधिकारिक विश्वविद्यालय स्रोतों के साथ महत्वपूर्ण जानकारी को सत्यापित करना चाहिए।"
+    },
+    UR: {
+      title: "سروس کی شرائط",
+      date: "مؤثر تاریخ: 11 مئی، 2026",
+      sec1_t: "1. قابل قبول استعمال",
+      sec1_d: "OpenPrimer ایک تعلیمی ذریعہ ہے۔ صارفین سے توقع کی جاتی ہے کہ وہ AI ٹیوٹر کے ساتھ احترام سے پیش آئیں اور پلیٹ فارم کو حقیقی سیکھنے کے مقاصد کے لیے استعمال کریں۔",
+      sec2_t: "2. دانشورانہ ملکیت",
+      sec2_d: "تمام بنیادی سافٹ ویئر MIT کے تحت لائسنس یافتہ ہیں۔ تعلیمی مواد CC BY-NC-SA 4.0 کے تحت لائسنس یافتہ ہے، جس سے مناسب انتساب کے ساتھ غیر تجارتی اشتراک کی اجازت ملتی ہے۔",
+      sec3_t: "3. ذمہ داری کی حد",
+      sec3_d: "یہ پلیٹ فارم 'جیسا ہے' ویسا ہی فراہم کیا جاتا ہے۔ اگرچہ ہم مقررہ تعلیمی درستی کے لیے کوشاں ہیں، صارفین کو ہمیشہ اہم معلومات کی تصدیق سرکاری یونیورسٹی کے ذرائع سے کرنی چاہیے۔"
     }
   };
 
@@ -1693,7 +1809,7 @@ export const PrivacyPage = () => {
     ES: {
       title: "Política de Privacidad",
       tagline: '"Tus datos, tu progreso, tu soberanía."',
-      desc: "No vendemos tus datos. Tu progreso de aprendizaje se utiliza exclusivamente para calibrar el Tutor de IA para tus necesidades específicas. Cumplimos con el RGPD y los estándares globales de privacidad para la protección de datos académicos."
+      desc: "No vendemos tus datos. Tu progreso de aprendizaje se utiliza exclusivamente para calibrar el Tutor de IA para tus necesidades específicas. Cumplimos con el RGPD y los estándares globales de privacidad para la proteção de dados acadêmicos."
     },
     DE: {
       title: "Datenschutz-Bestimmungen",
@@ -1709,6 +1825,26 @@ export const PrivacyPage = () => {
       title: "隐私政策",
       tagline: "“您的数据，您的进步，您的自主权。”",
       desc: "我们不出售您的数据。您的学习进度仅用于针对您的特定需求调整 AI 导师。我们遵守 GDPR 和全球学术数据保护隐私标准。"
+    },
+    PT: {
+      title: "Política de Privacidade",
+      tagline: '"Seus dados, seu progresso, sua soberania."',
+      desc: "Não vendemos os seus dados. O seu progresso de aprendizagem é utilizado exclusivamente para calibrar o Tutor de IA para as suas necessidades específicas. Cumprimos com o RGPD e as normas globais de privacidade para a proteção de dados acadêmicos."
+    },
+    AR: {
+      title: "سياسة الخصوصية",
+      tagline: '"بياناتك، تقدمك، سيادتك."',
+      desc: "نحن لا نبيع بياناتك. يتم استخدام تقدمك التعليمي حصريًا لمعايرة معلم الذكاء الاصطناعي وفقًا لاحتياجاتك الخاصة. نحن نلتزم باللائحة العامة لحماية البيانات (GDPR) والمعايير العالمية للخصوصية لحماية البيانات الأكاديمية."
+    },
+    HI: {
+      title: "गोपनीयता नीति",
+      tagline: '"आपका डेटा, आपकी प्रगति, आपकी संप्रभुता।"',
+      desc: "हम आपका डेटा नहीं बेचते हैं। आपकी सीखने की प्रगति का उपयोग विशेष रूप से आपकी विशिष्ट आवश्यकताओं के लिए एआई ट्यूटर को कैलिब्रेट करने के लिए किया जाता है। हम शैक्षणिक डेटा सुरक्षा के लिए जीडीपीआर और वैश्विक गोपनीयता मानकों का पालन करते हैं।"
+    },
+    UR: {
+      title: "رازداری की पॉलिसी",
+      tagline: '"آپ کا ڈیٹا، آپ کی ترقی، آپ کی خودمختاری۔"',
+      desc: "ہم آپ کا ڈیٹا فروخت نہیں کرتے ہیں۔ آپ کی سیکھنے کی پیشرفت کو خاص طور پر آپ کی مخصوص ضروریات کے مطابق AI ٹیوٹر کی رہنمائی کے لیے استعمال کیا جاتا ہے۔ ہم تعلیمی ڈیٹا کے تحفظ کے لیے GDPR اور عالمی رازداری کے معیارات کی تعمیل کرتے ہیں۔"
     }
   };
 

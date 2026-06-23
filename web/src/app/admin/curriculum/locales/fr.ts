@@ -597,4 +597,8 @@ export const locale: Record<string, string> = {
   "Re-scan MDX directory to load physical disk changes": "Re-scanner le dossier MDX pour charger les modifications physiques du disque",
   "catalog widgets": "widgets de catalogue",
   "Custom interactive component built for pedagogical curriculum enrichment.": "Composant interactif personnalisé conçu pour l'enrichissement pédagogique du programme.",
+  "Edit Parameters": "Modifier les paramètres",
+  "Personality saved successfully.": "Personnalité enregistrée avec succès.",
+  "Default personality updated.": "Personnalité par défaut mise à jour.",
 };
+
