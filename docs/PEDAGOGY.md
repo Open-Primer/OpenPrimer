@@ -10,10 +10,10 @@ This document details the pedagogical framework of OpenPrimer, including the Soc
 OpenPrimer rejects simple slide-reading formats. The platform leverages two primary educational principles to achieve high student retention:
 
 ### A. The Feynman Technique (Analogical Learning)
-Our **Synthesis Agent** drafts all course contents based on Richard Feynman's simplification technique:
+Our **Agent 3A (Narrative Scribe)** drafts all course contents based on Richard Feynman's simplification technique:
 1.  **Deconstruction:** Demystifying highly abstract technical concepts (e.g. *Quantum Superposition*) using standard real-world analogies.
 2.  **Linguistic Clarity:** Removing complex terminology in introductory chapters, introducing concepts sequentially.
-3.  **Active Simulation:** Injecting React components directly into reading panes so students can manipulate vectors or examine code outputs dynamically as they read.
+3.  **Active Simulation:** Integrating React components designed by **Agent 3B (Widgets Architect)** directly into reading panes so students can manipulate vectors or examine code outputs dynamically as they read.
 
 ### B. The Socratic Method (Guided Dialogue)
 The **AI Tutor Agent** operates as an interactive Socratic Guide. Unlike standard LLM assistants that immediately output direct solutions, our tutor:
@@ -21,7 +21,7 @@ The **AI Tutor Agent** operates as an interactive Socratic Guide. Unlike standar
 2.  **Asks guiding questions:** Encourages critical thinking by prompting: *"What would happen to the balance if we doubled the gravity?"* or *"Let's look at line 4 of the code snippet together. What is the value of variable `x` at that step?"*
 3.  **Adapts instructions dynamically:** If the student fails an assessment MCQ, the tutor analyzes the selected wrong choice and suggests tailored analogies to fill the specific knowledge gap.
 
-### C. Dynamic Syllabus Design (Agent 1 & 2)
+### C. Dynamic Syllabus Design (Agent 1 & 2 / Syllabus Scribe)
 Course structures are dynamically aligned with the discipline's epistemological DNA (ADN Cognitif) and the student's level:
 1. **Sciences Déductives / Formelles**: Focused on logical causations (Lemme ➔ Théorème ➔ Démonstration ➔ Corollaire).
 2. **Sciences Empiriques / Expérimentales**: Focused on observation and visual aids (Hypothèse ➔ Protocole ➔ Observation ➔ Modélisation).
@@ -33,8 +33,8 @@ Gradation limits adjust constraints per age group:
 * **Collège/Lycée**: Transitional formalization of core methodology.
 * **Supérieur (L1-L3)**: Strict academic formalism, research-grade proofs, limits of models.
 
-### D. Verification Loop & Quality Gate (Agent 4)
-All dynamically written outputs from Agent 3 are checked for "Zero-Placeholder" compliance. Skeletal text is rejected, and constructive critiques are looped back (up to 3 times) to guarantee maximum text density and pedagogical integrity.
+### D. Dual-Decoupled Verification Loop & Quality Gate (Agent 4A & 4B)
+All dynamically written outputs from Agent 3A (Narrative text) and Agent 3B (Widgets JSON) are checked independently for "Zero-Placeholder" compliance and pedagogical alignment. Skeletal text or misaligned JSON is rejected, and constructive critiques are looped back to the respective generator (up to 3 times) to guarantee maximum text density, pedagogical integrity, and perfect grammatical cohesion.
 
 ---
 

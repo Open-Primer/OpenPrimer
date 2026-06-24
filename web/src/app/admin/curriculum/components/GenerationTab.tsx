@@ -30,7 +30,7 @@ interface GenerationTabProps {
   
   proposals: any[];
   refusedCourses: any[];
-  handleApproveGen: (title: string, count: number, level?: string, subject?: string) => void;
+  handleApproveGen: (title: string, count: number, level?: string, subject?: string, isCurriculum?: boolean) => void;
   handleRefuseGen: (query: string) => void;
   deleteRefused: (id: string) => void;
 
@@ -604,7 +604,7 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
               <div className="flex gap-2 shrink-0 z-10">
                 <button 
                   title={tr("Approve & Promote")} 
-                  onClick={() => handleApproveGen(item.query, item.count, item.level, item.subject)}
+                  onClick={() => handleApproveGen(item.query, item.count, item.level, item.subject, item.isCurriculum)}
                   className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-md shadow-blue-600/10"
                 >
                   <Check className="w-4 h-4" />

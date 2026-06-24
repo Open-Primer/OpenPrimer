@@ -62,44 +62,55 @@ graph TD
 ```
 
 ### Precise Roles of AI Agents & In-Engine Flow (0 to 4)
-OpenPrimer structures the course generation pipeline into a strictly ordered, decoupled chain of 5 dedicated autonomous agents:
+OpenPrimer structures the course generation pipeline into a strictly ordered, decoupled chain of dedicated autonomous agents:
 
 1.  **🎓 Agent 0 (Curriculum Architect / Planner):** 
     *   **Scope & Input**: Triggered when initiating a new major pathway (with `isCurriculum: true`). Takes the curriculum title and level (e.g., `L1 Philosophy`) and target language.
-    *   **Operation**: Queries the model to generate a rich, cohesive curriculum map containing modules, titles, Descriptions, volume (hrs), subjects, and mandatory/optional status.
+    *   **Operation**: Queries the model to generate a rich, cohesive curriculum map containing modules, titles, descriptions, volume (hrs), subjects, and mandatory/optional status.
     *   **Output**: Immediately saves the parent curriculum metadata and bulk-inserts individual lesson-generation tasks into the `task_queue` database table to be picked up by the background worker.
 
-2.  **📋 Agent 1 & 2 (Course & Pedagogical Planner):**
+2.  **📋 Agent 1 & 2 (Syllabus Scribe):**
     *   **Scope & Input**: Triggered per-course during CRON task processing. Takes the course name, academic level, and target language.
     *   **Operation**: Evaluates the discipline against our cognitive matrix (Deductive, Empirical, Discursive, or Engineering) and student age groups (CP-CM2 to University L3). 
-    *   **Output**: Synthesizes a structured JSON blueprint specifying:
-        *   An ordered list of lessons.
-        *   All lesson widgets / pre-requisites (`prerequisites`, `diagnosticQuiz`, `learningObjectives`, `finalEvaluation`, `glossary`, `whatsNext`).
-        *   A list of highly curated **scholarly bibliographies/references** (verified against Crossref and Google Books).
-        *   Active learning interactive components matching the discipline (e.g., `<FunctionPlotter />` for math/physics, `<CodeSandbox />` for CS, `<Mermaid />` flowcharts for history, `<StructureViewer3D />` for biology/chemistry).
+    *   **Output**: Synthesizes a structured JSON syllabus specifying:
+        *   An ordered list of lessons with titles, slugs, and pedagogical strategies.
+        *   The course's global discipline classification and epistemological matrix.
 
-3.  **✍️ Agent 3 (Academic Writer):**
-    *   **Scope & Input**: Takes the lesson title, level, target language, and the Agent 1 & 2 pre-generated widgets and references.
+3.  **✍️ Agent 3A (Narrative Scribe - Stage 1):**
+    *   **Scope & Input**: Takes the lesson title, level, target language, and course context.
     *   **Operation**: Drafts the complete, dense, high-academic-density narrative text. Operates strictly under Socratic & Feynman heuristics to simplify concepts into clear language.
     *   **Formatting Rules**:
-        *   MUST integrate the pre-generated widget anchors exactly once using the bracketed string syntax: `[[WIDGET:prerequisites]]`, `[[WIDGET:diagnosticQuiz]]`, etc.
-        *   MUST cite the pre-generated bibliography references inline inside the narrative using standard markdown link syntax (e.g. `[1](#ref-1)`, `[2](#ref-2)`), placed right next to facts or claims.
+        *   Weaves standard widget anchors (`[[WIDGET:prerequisites]]`, `[[WIDGET:diagnosticQuiz]]`, `[[WIDGET:learningObjectives]]`, `[[WIDGET:conclusionSummary]]`, `[[WIDGET:whatsNext]]`, `[[WIDGET:finalEvaluation]]`) at perfect pedagogical moments.
+        *   Weaves discipline-specific custom interactive widget anchors (e.g. `[[WIDGET:my_custom_plot]]`) from the *discipline-pruned catalog*.
+        *   Cites bibliography references inline using standard markdown links (e.g. `[1](#ref-1)`).
 
-4.  **🔍 Agent 4 (Verifier/Critic Agent):**
-    *   **Scope & Input**: Operates as a strict quality gate, reviewing the compiled course draft before persistence.
-    *   **Operation**: Evaluates the draft against our multi-checkpoint verification checklist (Zero-Placeholder, Academic Density, Structural Completeness, Multimedia Density, Assessment Integrity, existing artwork checks).
-    *   **Critic Relaxation (Unused References)**: Crucially, Agent 4 **never** rejects a lesson draft (approved remains `true`) under the pretext that a pre-generated reference was not cited inline, as unused references are handled automatically post-critique.
-    *   **Feedback Loop**: If checks fail, Agent 4 returns a critique, looping back to Agent 3 (Academic Writer) to expand or correct (maximum of 3 attempts).
+4.  **🔍 Agent 4A (Narrative Critic - Stage 4A):**
+    *   **Scope & Input**: Evaluates the narrative draft before the widgets are created.
+    *   **Operation**: Audits long-form text structure, academic tone, target word count (3000-5000 words), mini-bios, Hover-Cards, citation placements, and visual assets density.
+    *   **Feedback Loop**: If checks fail, Agent 4A returns a critique, looping back to Agent 3A to correct (maximum of 3 attempts).
+
+5.  **⚙️ Agent 3B (Widgets Architect - Stage 2):**
+    *   **Scope & Input**: Takes the approved narrative draft, scans and extracts all `[[WIDGET:id]]` anchors, and maps bibliography citations.
+    *   **Operation**: Generates a validated JSON object conforming strictly to `lessonWidgetsSchema` to define every single anchor.
+    *   **Curation & Budget**:
+        *   Acts as a Matchmaker to select suitable pre-designed, curated widgets (e.g. `<FunctionPlotter />` for math/physics, `<CodeSandbox />` for CS) from the pruned catalog.
+        *   Enforces a strict budget of at most 2 database-curated widgets per course and at most 1 per lesson (with empty `props` `{}`).
+        *   Generates accurate quizzes, objectives, glossaries, and bibliographical references matching the written text.
+
+6.  **🔬 Agent 4B (Widgets Critic - Stage 4B):**
+    *   **Scope & Input**: Reviews the generated widgets JSON.
+    *   **Operation**: Audits the pedagogical correctness of quizzes, option formatting, citation schema compliance, and structured JSON parameters.
+    *   **Feedback Loop**: If checks fail, Agent 4B returns a critique, looping back to Agent 3B to correct (maximum of 3 attempts).
 
 ---
 
-### Programmatic Post-Processing & Stitching Layer
-Once the Verifier/Critic Agent (Agent 4) approves the drafted narrative text, the system bypasses the LLM and runs a programmatic, deterministic **Stitching Layer** (`stitchLessonContent` in `web/src/lib/ai.ts`) to merge the narrative and pre-generated widgets:
+### Programmatic Post-Processing & Stitching Layer (Stage 3)
+Once both the narrative text (Stage 1) and widgets JSON (Stage 2) are verified and approved, the system runs a programmatic, deterministic **Stitching Layer** (`stitchLessonContent` in `web/src/lib/ai.ts`) to merge the narrative and pre-generated widgets, requiring **zero AI critique loops**:
 
 ```mermaid
 graph TD
-    Narrative[Agent 3 Narrative Text] --> Stitch[Stitching Layer: stitchLessonContent]
-    Widgets[Agent 1 & 2 Widget JSON] --> Stitch
+    Narrative[Agent 3A Approved Narrative Text] --> Stitch[Stitching Layer: stitchLessonContent]
+    Widgets[Agent 3B Approved Widgets JSON] --> Stitch
     Stitch --> Scan[Scan inline citations via getCitedReferenceNumbers]
     
     Scan -->|Cited Items| Cited[Format under '### Références' with [X] standard numbers]

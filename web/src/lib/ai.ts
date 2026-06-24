@@ -5,6 +5,8 @@ import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } f
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
 import { TASK_MODELS } from './ai-config';
+import fs from 'fs';
+import path from 'path';
 
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -389,7 +391,13 @@ export function validateAndFixWidgets(widgets: any, discipline?: string): any {
     widgets.interactiveComponents = widgets.interactiveComponents.filter((comp: any) => {
       if (!comp || !comp.componentType) return false;
       
-      const alwaysAllowed = ["Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer"];
+      const alwaysAllowed = [
+        "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer",
+        "StructureViewer3D", "QuantumOrbitalExplorer", "DynamicSimulation",
+        "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
+        "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
+        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive"
+      ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
       }
@@ -1054,6 +1062,46 @@ function getCitationStyle(discipline: string): CitationStyleSpec {
   };
 }
 
+export function getFilteredWidgetsCatalog(discipline: string): Record<string, any> {
+  const dbCatalog = getDatabaseWidgets();
+  if (!discipline) return dbCatalog;
+  
+  const filtered: Record<string, any> = {};
+  const normDiscipline = discipline.toLowerCase().trim();
+  
+  for (const [id, meta] of Object.entries(dbCatalog)) {
+    const disciplines: string[] = meta.disciplines || [];
+    const hasAll = disciplines.some(d => d.toLowerCase() === 'all disciplines');
+    if (hasAll) {
+      filtered[id] = meta;
+      continue;
+    }
+    
+    const isMatch = disciplines.some(d => {
+      const normD = d.toLowerCase().trim();
+      return normDiscipline.includes(normD) || normD.includes(normDiscipline);
+    });
+    
+    if (isMatch) {
+      filtered[id] = meta;
+    }
+  }
+  
+  return filtered;
+}
+
+export function getDatabaseWidgets(): Record<string, any> {
+  try {
+    const catalogPath = path.join(process.cwd(), 'src', 'components', 'mdx', 'widgets_catalog.json');
+    if (fs.existsSync(catalogPath)) {
+      return JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+    }
+  } catch (err) {
+    console.error('[AI] Error reading widgets_catalog.json:', err);
+  }
+  return {};
+}
+
 export async function generateCourseContent(courseName: string, levelInput: string, targetLang: string = 'en', taskId?: string, lessonOffset: number = 0) {
   const appendTaskLog = async (msg: string) => {
     const timestampedMsg = `[${new Date().toISOString()}] ${msg}`;
@@ -1093,89 +1141,7 @@ export async function generateCourseContent(courseName: string, levelInput: stri
   };
   const level = normalizeLevel(levelInput);
 
-  // 1. Generate syllabus (lesson titles and slugs)
-  const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
-Ta mission est de concevoir la structure, le chapitrage et la stratégie cognitive du cours intitulé "${correctedCourseName}" pour le niveau "${level}". Tu ne rédiges pas le cours, tu en crées l'ossature computationnelle et didactique la plus pure et la plus adaptée.
-
-Un cours d'anatomie ne s'articule pas comme un cours de topologie algébrique ou de philosophie politique. Tu dois impérativement adapter le squelette du cours à l'ADN épistémologique de la discipline et à l'âge du public visé (de la Primaire à la Licence 3).
-
----
-
-# ETAPE 1 : PROFILAGE DE LA DISCIPLINE (ADN COGNITIF)
-Avant de générer le moindre chapitre, tu dois classifier la discipline cible selon son mode d'administration de la preuve et de la transmission. Tu choisiras et appliqueras la matrice dominante parmi les suivantes :
-
-1. **Sciences Déductives / Formelles (Mathématiques, Logique, Physique Théorique) :**
-   * Focus : Rigueur absolue, chaîne causale sans faille.
-   * Composants obligatoires : Lemme ➔ Théorème ➔ Démonstration ➔ Corollaire. Chaque brique doit découler logiquement de la précédente.
-
-2. **Sciences Empiriques / Expérimentales (Biologie, Physique Expérimentale, Chimie) :**
-   * Focus : Observation du réel, double codage visuel.
-   * Composants obligatoires : Hypothèse ➔ Protocole Expérimental ➔ Observation/Données ➔ Interprétation/Modélisation. Présence massive de schémas, d'atlas ou d'illustrations anatomiques/structurelles.
-
-3. **Sciences Humaines et Discursives (Philosophie, Histoire, Littérature) :**
-   * Focus : Rhétorique, problématisation, dialectique.
-   * Composants obligatoires : Thèse ➔ Antithèse ➔ Synthèse (ou approche généalogique/conceptuelle). Analyse textuelle fine, contextualisation socio-historique, controverses doctrinales.
-
-4. **Sciences Appliquées / Ingénierie (Informatique, Architecture des Systèmes, Électronique) :**
-   * Focus : Résolution de problèmes, design pattern, constructivisme.
-   * Composants obligatoires : Expression du besoin ➔ Contraintes techniques ➔ Spécification de l'Architecture ➔ Implémentation/Code ➔ Tests de validation.
-
----
-
-# ETAPE 2 : ADAPTATION AU PUBLIC (GRADATION COGNITIVE ET COHÉRENCE COGNITIVE NATURELLE)
-Le plan de cours doit refléter fidèlement la capacité d'abstraction et la structure d'apprentissage naturelle du public cible :
-
-1. **Primaire, Collège et Lycée (K-12 : de foundation_1 à preuni) :**
-   * **Rapprochement des parcours réels :** À l'école, l'enseignement ne se fait pas par cours cloisonnés hyper-spécifiques. Si le cours demandé porte sur un programme annuel général (ex: "Mathématiques de 3ème"), le syllabus doit proposer un découpage thématique réaliste et équilibré couvrant les grands piliers officiels (ex: Géométrie, Fonctions, Équations). 
-   * **Apprentissage en spirale (Spiralaire) :** Les mêmes concepts clés (ex: fractions, vecteurs, géométrie) sont revisités d'année en année avec un niveau d'abstraction croissant. Si le cours porte sur un concept ciblé (ex: "Géométrie au Collège"), structure les leçons de façon progressive en rappelant explicitement les notions acquises dans les classes précédentes et en connectant logiquement chaque chapitre à l'ossature générale de l'apprentissage annuel réel.
-   * **Règles de cadrage & taille :**
-     * *Primaire (foundation_1 & foundation_2) :* Approche narrative, métaphorique et inductive. Maximum 3 leçons très courtes au total (y compris l'Introduction et l'Évaluation Finale).
-     * *Collège/Lycée (secondary_1 & secondary_2) :* Transition graduelle vers la formalisation, rigueur croissante. Introduction des méthodes propres à la pensée disciplinaire. 4 à 6 leçons bien distinctes au total (y compris l'Introduction et l'Évaluation Finale).
-
-2. **Enseignement Supérieur / Université (L1 à M2 / de beginner à expert) :**
-   * *Licence 1 (L1 / Bachelor 1er) :* Les cours doivent être généraux, fondateurs et introductifs (ex: "Introduction à l'Algèbre Linéaire", "Fondements de la Thermodynamique"). Ils doivent poser les concepts clés, le vocabulaire universel et la rigueur méthodologique globale de la discipline.
-   * *Licence 2 & Licence 3 (L2-L3) :* Transition vers la modélisation formelle et l'étude des sous-branches précises avec un formalisme académique strict, des preuves formelles et une analyse critique des limites des modèles étudiés.
-   * *Master 1 & Master 2 (M1-M2 / advanced & expert) :* Les cours doivent basculer intégralement sur de **l'ultra-spécialisation de pointe**, axée sur des sujets de recherche avancés, pointus et extrêmement techniques (ex: "Méthodes numériques pour la dynamique des fluides turbulents", "Neurobiologie de la transmission synaptique"). Aucun cours généraliste ou d'introduction globale ne doit être généré à ce niveau.
-
----
-
-# ETAPE 3 : FORMAT DE SORTIE ATTENDU
-Tu dois sortir uniquement un objet JSON structurant le cours. Le chapitrage doit être exhaustif, détaillé et ne comporter AUCUN élément vague. Chaque sous-section doit spécifier sa "stratégie éditoriale".
-Le JSON généré doit être entièrement rédigé dans la langue cible suivante : "${targetLang}" (les titres, stratégies, et descriptions doivent être dans cette langue).
-Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'objet JSON brut.
-
-
-{
-  "courseContext": {
-    "discipline": "[Nom de la discipline]",
-    "description": "[Description détaillée et attractive du cours en 2-3 phrases, présentant les objectifs pédagogiques généraux et les compétences clés visées]",
-    "epistemologicalMatrix": "[Déductive / Empirique / Discursive / Ingénierie]",
-    "targetLevel": "${level}",
-    "pedagogicalStrategy": "[Explication de la stratégie adoptée pour ce public et cette discipline]"
-  },
-  "lessons": [
-    {
-      "title": "[Titre explicite et percutant de la leçon / du chapitre]",
-      "slug": "[Slug URL-friendly en ASCII]",
-      "cognitiveArtifact": "[Spécifier : Démonstration de lemme / Schéma d'anatomie légendé / Analyse de texte / Bloc de code Sandbox]",
-      "technicalDepth": "[Niveau de détail attendu pour guider l'agent rédacteur Agent 3]"
-    }
-  ]
-}
-
----
-
-# CONTRÔLE QUALITÉ ET INTERDICTIONS STRICTES
-* **Interdiction absolue du plan générique :** Un plan de cours de Mathématiques L3 qui ressemble à un plan d'Histoire (ex: I. Introduction, II. Évolution, III. Conclusion) sera rejeté.
-* **Exhaustivité du chapitrage :** Tu dois spécifier 4 à 6 leçons bien distinctes (maximum 3 pour le niveau Primaire). L'agent rédacteur (Agent 3) ne doit avoir aucune extrapolation à faire sur le plan.
-* **Introduction obligatoire :** La toute première leçon du cours (le premier élément de la liste 'lessons') doit obligatoirement être une leçon d'Introduction (titre: "Introduction" ou "Introduction à [Sujet]" ou équivalent dans la langue "${targetLang}", slug: "introduction" ou "introduction-a-[sujet]"). Cette première leçon doit être rédigée avec la même qualité et rigueur académique que les autres leçons, sans aucun placeholder ou fallback.
-* **Évaluation Finale globale obligatoire :** La toute dernière leçon du cours (le dernier élément de la liste 'lessons') doit obligatoirement être consacrée à l'Évaluation Finale (titre: "Évaluation Finale" ou "Final Evaluation" selon la langue "${targetLang}", slug: "evaluation-finale" ou "final-evaluation"). Ce chapitre ne doit pas introduire de nouveaux concepts, mais servir d'examen final sommatif pour évaluer l'assimilation globale de l'ensemble du cours.`;
-
-  try {
-    let parsedSyllabus: any = null;
-    let lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = [];
-    let courseContext: any = {};
-
+  let extra: any = {};
   if (taskId) {
     try {
       const { data: taskData, error: taskError } = await supabaseAdmin
@@ -1184,16 +1150,126 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
         .eq('id', taskId)
         .single();
       if (!taskError && taskData?.description) {
-        const extra = JSON.parse(taskData.description || '{}');
-        if (extra.syllabus) {
-          await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
-          parsedSyllabus = extra.syllabus;
-        }
+        extra = JSON.parse(taskData.description || '{}');
       }
     } catch (err) {
-      console.warn(`[AI GENERATOR WARNING] Failed to retrieve cached syllabus for task ${taskId}:`, err);
+      console.warn(`[AI GENERATOR WARNING] Failed to retrieve task description in pre-prompt load:`, err);
     }
   }
+
+  const discipline = extra.subject || 'General';
+  const volume = extra.volume || '15h';
+
+  // 1. Generate syllabus (lesson titles and slugs)
+  const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
+Your mission is to design the structure, lesson titles, and cognitive strategy of the course titled "${correctedCourseName}" for the level "${level}". You do not write the course content; you construct its pure, highly-adapted computational and educational backbone.
+
+An anatomy course is not structured like an algebraic topology or political philosophy course. You MUST adapt the skeleton of the course to the epistemological DNA of the discipline, the target audience's age (from Primary School to Bachelor/University Year 3), and the course's hourly volume.
+
+---
+
+# STEP 1: PARAMETERS AND COGNITIVE DNA
+The following parameters are fixed *a priori* and must guide your architecture:
+- **Course Title:** "${correctedCourseName}"
+- **Target Level:** "${level}"
+- **Discipline:** "${discipline}"
+- **Hourly Volume:** "${volume}"
+- **Target Language:** "${targetLang}"
+
+Before generating any chapters, classify the target discipline according to its style of validation, evidence, and knowledge transmission. Select and apply the dominant matrix from the following options:
+
+1. **Deductive / Formal Sciences (Mathematics, Logic, Theoretical Physics):**
+   * Focus: Absolute rigor, seamless causal chain.
+   * Obligatory components: Lemma ➔ Theorem ➔ Proof ➔ Corollary. Every block must flow logically from the previous one.
+
+2. **Empirical / Experimental Sciences (Biology, Experimental Physics, Chemistry):**
+   * Focus: Real-world observation, visual dual-coding.
+   * Obligatory components: Hypothesis ➔ Experimental Protocol ➔ Observation/Data ➔ Interpretation/Modeling. Pervasive use of labeled diagrams, structural schemas, or anatomical atlases.
+
+3. **Humanities and Discursive Sciences (Philosophy, History, Literature):**
+   * Focus: Rhetoric, problematization, dialectic.
+   * Obligatory components: Thesis ➔ Antithesis ➔ Synthesis (or genealogical/conceptual approach). Fine text analysis, socio-historical contextualization, doctrinal controversies.
+
+4. **Applied Sciences / Engineering (Computer Science, Systems Architecture, Electronics):**
+   * Focus: Problem-solving, design patterns, constructivism.
+   * Obligatory components: Requirements gathering ➔ Technical constraints ➔ Architecture specifications ➔ Implementation/Code ➔ Validation tests.
+
+---
+
+# STEP 2: AUDIENCE AND VOLUME ADAPTATION (COGNITIVE GRADATION AND STRUCTURE)
+The quantity, granularity, and depth of the chapters must be strictly proportional to the target level and the hourly volume of "${volume}":
+
+1. **Primary, Middle, and High School (K-12: from foundation_1 to preuni):**
+   * **Real-world Curricular Realism:** In schools, learning does not happen through isolated, hyper-specific courses. If the requested course represents a general annual program, the syllabus must propose a realistic and balanced thematic division covering the main official pillars.
+   * **Spiral Learning Progression:** Core concepts are revisited year after year with increasing levels of abstraction. Structure the lessons progressively, explicitly building upon knowledge acquired in previous school years.
+   * **Scope & Length Rules:**
+     * *Primary School (foundation_1 & foundation_2):* Proportional to low hourly volume (e.g. 1h-3h). Narrative, metaphorical, and inductive approach. Maximum of 3 short items in total (including the Implicit Introduction and Terminal Evaluation).
+     * *Middle & High School (secondary_1 & secondary_2):* Proportional to medium hourly volume (e.g. 5h-10h). Gradual transition to formalization, increasing rigor. 4 to 6 distinct items in total.
+
+2. **Higher Education / University (L1 to M2 / from beginner to expert):**
+   * Proportional to high hourly volume (e.g. 15h-30h or more).
+   * *First Year (L1 / Bachelor 1st):* Courses must be broad, foundational, and introductory to establish key concepts, universal terminology, and global methodology. 6 to 8 lessons in total.
+   * *Second & Third Year (L2-L3):* Transition to formal modeling, proofs, and precise sub-branches with strict academic formalism and critical evaluation of model limits. 6 to 10 lessons in total.
+   * *Master's & Expert Levels (M1-M2 / advanced & expert):* Focus entirely on highly specialized, cutting-edge research topics. Do not include general or introductory courses. 6 to 10 lessons in total.
+
+---
+
+# STEP 3: SPECIFIC PEDAGOGICAL STRUCTURE (IMPLICIT INTRODUCTION, DETACHED EVALUATION)
+You must follow these strict structural guidelines:
+
+1. **First Lesson (Implicit Introduction - Context & History):**
+   * The very first item in the 'lessons' array represents the start of the course. It must **NOT** be forced to use the word "Introduction" or "Introduction to [Subject]" in its title. Be creative and academic!
+   * This lesson is naturally introductory. It must present stronger historical, conceptual, or contextual elements explaining *why* there is a subject to treat, its origin, and why it is critical. It must contain real, high-quality academic content, not just generic welcoming text.
+
+2. **Last Lesson (Content with General Conclusion):**
+   * The penultimate item in the 'lessons' array (the last core teaching lesson) must be a core content lesson, but its technical depth/description must specify that it also integrates a complete **general conclusion** for the entire course, synthesizing all main lessons and concepts.
+
+3. **Terminal Evaluation (Detached Evaluation Chapter):**
+   * The ultimate item in the 'lessons' array must be the Terminal Evaluation (title: "Évaluation Terminale" or "Final Evaluation" or equivalent in the target language "${targetLang}", slug: "evaluation-finale" or "final-evaluation").
+   * This chapter is **not** a standard lesson. It must contain **only** the assessment/questions/summative validation itself (with no new lesson content, no narrative text, and no core textbook content).
+
+---
+
+# STEP 4: EXPECTED OUTPUT FORMAT
+You must output ONLY a valid JSON object structuring the course. The chapter list must be exhaustive and detailed with NO vague placeholders. Each lesson must specify its "cognitiveArtifact" and "technicalDepth".
+**CRITICAL LANGUAGE REQUIREMENT**: Instructions are given in English, but you must imperatively generate the actual JSON output values (titles, descriptions, strategies, etc.) in the requested target language: "${targetLang}". Ensure the values of all fields are translated and formatted in "${targetLang}".
+Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON object.
+
+
+{
+  "courseContext": {
+    "discipline": "[Input discipline: '${discipline}', translated to ${targetLang.toUpperCase()}]",
+    "description": "[Detailed, engaging 2-3 sentence course description, detailing general objectives and target skills, in ${targetLang.toUpperCase()}]",
+    "epistemologicalMatrix": "[Deductive / Empirical / Discursive / Engineering, translated to ${targetLang.toUpperCase()}]",
+    "targetLevel": "${level}",
+    "pedagogicalStrategy": "[Explanation of the strategy adopted for this specific audience, discipline, and hourly volume of ${volume}, in ${targetLang.toUpperCase()}]"
+  },
+  "lessons": [
+    {
+      "title": "[Explicit, engaging title of the lesson/chapter, in ${targetLang.toUpperCase()}]",
+      "slug": "[URL-friendly ASCII slug]",
+      "cognitiveArtifact": "[Specify: Lemma Proof / Labeled Anatomical Schema / Text Analysis / Sandbox Code Block, translated to ${targetLang.toUpperCase()}]",
+      "technicalDepth": "[Expected level of detail to guide the writing agent Agent 3, in ${targetLang.toUpperCase()}]"
+    }
+  ]
+}
+
+---
+
+# QUALITY CONTROL & STRICT PROHIBITIONS
+* **No Generic Outlines or Fillers:** A syllabus outline that uses generic academic blocks (e.g., I. Introduction, II. History, III. Conclusion) is strictly prohibited. The syllabus must be **complete, specific, and highly authentic**, matching a real-world curriculum you would find in actual academic or professional training, without being overly eccentric.
+* **Exhaustiveness of Chapters:** You must specify the exact number of distinct lessons appropriate for the level and volume (maximum of 3 for Primary level, 4 to 6 for Middle/High school, 6 to 10 for University). The writing agent (Agent 3) must have clear, actionable guidelines with zero need for outline extrapolation.
+* **Detached Evaluation Content:** Under no circumstances should the Terminal Evaluation contain instructional content. It must focus purely on testing.`;
+
+  try {
+    let parsedSyllabus: any = null;
+    let lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = [];
+    let courseContext: any = {};
+
+    if (taskId && extra && extra.syllabus) {
+      await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
+      parsedSyllabus = extra.syllabus;
+    }
 
   // If we have a lessonOffset > 0, but no cached syllabus, we have a mismatch hazard!
   // In this case, we reset lessonOffset to 0 and start from scratch to guarantee course consistency.
@@ -1364,6 +1440,8 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
 
     const MAX_PARALLEL_LESSONS = Number(process.env.MAX_PARALLEL_LESSONS || 1);
 
+    const usedDatabaseWidgetIds = new Set<string>();
+
     // 2. For each lesson, generate rich MDX content with concurrency limit
     await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item, index) => {
       if (index < lessonOffset) {
@@ -1375,527 +1453,594 @@ Ne renvoie PAS de balises de bloc de code markdown (\`\`\`). Rends uniquement l'
       try {
         const { data: existingLesson } = await dbService.getLesson(
           cleanPathSegment(correctedCourseName),
-          item.slug,
+          cleanPathSegment(item.slug),
           targetLang.toLowerCase()
         );
         if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
-          await appendTaskLog(`[INCREMENTAL] Skipping generation for already existing lesson: "${item.title}" (${item.slug})`);
+          await appendTaskLog(`[AI GENERATOR - INCREMENTAL] Skipping lesson "${item.title}" because it is already generated.`);
           await updateTaskProgress(item.title);
           return;
         }
       } catch (err) {
-        console.warn(`[INCREMENTAL] Check failed for "${item.title}", proceeding with generation.`, err);
+        console.warn(`[AI GENERATOR] Incremental check failed for "${item.title}", proceeding to generate:`, err);
       }
 
-      // Stagger starts to smooth API requests
-      if (index > 0 && INTER_LESSON_DELAY_MS > 0) {
-        const delay = index * INTER_LESSON_DELAY_MS;
-        console.log(`[THROTTLE] Delaying start of lesson "${item.title}" (${index + 1}/${lessonsList.length}) by ${delay / 1000}s...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      // Helper to call Vertex AI or fallback Gemini 2.5 Flash
+      const callAIEngine = async (
+        promptText: string,
+        schema?: any,
+        temperature: number = 0.2
+      ): Promise<string> => {
+        let resultText = '';
+        let success = false;
+        let lastError = 'N/A';
 
-      const isPrimary = levelInput.toLowerCase().includes('primary') || levelInput.toLowerCase().includes('primaire');
-      const isLastLesson = index === lessonsList.length - 1 && lessonsList.length > 1;
-
-      await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 1] Generating Widgets JSON for lesson "${item.title}"...`);
-      
-      // Construct a very precise prompt for Stage 1 Widgets generation
-      const widgetsPrompt = `You are a world-class educational curriculum architect (Agent 3 - Widgets Designer).
-Your task is to generate ALL interactive widgets, objectives, prerequisites, final evaluations, glossary, and reference resources for the academic lesson "${item.title}" in the course "${correctedCourseName}" (Level: ${levelInput}).
-
-Course Discipline: ${courseContext.discipline || 'General'}
-Course Epistemological Matrix: ${courseContext.epistemologicalMatrix || 'N/A'}
-Lesson Cognitive Artifact: ${item.cognitiveArtifact || 'N/A'}
-Lesson Technical Depth / Expected Guidelines: ${item.technicalDepth || 'N/A'}
-Target Language: ${targetLang.toUpperCase()}
-
-### DISCIPLINARY & PEDAGOGICAL REQUIREMENTS FOR INTERACTIVE COMPONENTS:
-Ensure you include highly relevant components in "interactiveComponents" that match the discipline and level:
-1. **Life Sciences / Anatomy / Biology / Medicine**: You MUST systematically include at least one \<InteractiveDiagram\> of type "cell", "neuron" or "custom" with 3-6 distinct detailed hotspots.
-2. **Mathematics / Physics**: You MUST systematically include at least one dynamic graph, equation sandbox, simulation, or basic math explorer component: "FunctionPlotter", "FunctionManipulator", "EquationManipulator", "Geometry2D", "DynamicSimulation", or "BasicMathExplorer". You MUST also include at least one Solved Worked Example ("SolvedExercise") and one Unsolved Numeric Challenge ("UnsolvedExercise" with tolerance).
-3. **Economics / Finance / Business**: You MUST systematically include at least one interactive statistical or analytical data chart or table ("DataChart" component of type "bar", "line", or "donut" with data array) for supply/demand, financial metrics, or indicators. You MUST strictly prohibit math/geometry/stoichiometry components (like "Geometry2D", "ChemicalStoichiometry", "BasicMathExplorer", or "FunctionManipulator"). Use "DataChart" instead for numerical displays.
-4. **Computer Science / Software Engineering**: You MUST systematically include at least one \<CodeSandbox\> for real-time coding with initial code.
-5. **History / Geography / Social Sciences / Processes**: You MUST systematically include at least one process/timeline flowchart using Mermaid ("Mermaid" component with "chart" syntax).
-6. **Statistical / Analytical Data (All disciplines)**: You MUST systematically include at least one gradient chart ("DataChart" component of type "bar" or "donut" with data array).
-7. **Auditory & Video Enrichment**: You MUST systematically include at least one short audio or video resource ("Video" with empty ID to search on YouTube, or "Audio" with precise searchable title).
-
-### OTHER REQUIRED SECTIONS:
-- **prerequisites**: 1 to 2 logical prerequisite courses.
-- **diagnosticQuiz**: A single multiple-choice question before the introduction allowing learners to skip sections.
-- **learningObjectives**: KSA model objectives (Knowledge, Skills, Attitudes). If university level, use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer).
-- **conclusionSummary**: Exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each must end with a period).
-- **finalEvaluation**: A substantial, timed summative evaluation adapted to the discipline (MCQ Quiz with 5-10 questions in Flat-Prop format, or EssayEvaluation with a deep prompt).
-- **glossary**: At least 3 key academic terms with clear definitions.
-- **references**: At least 3-5 complete, real, authoritative academic references (exclude for primary school level). Ensure book/article titles are in standard quotes, not asterisks, and conform to **${getCitationStyle(courseContext.discipline || correctedCourseName).name}** style.
-
-Return a valid JSON object matching the requested schema. Ensure all fields are in "${targetLang.toUpperCase()}".`;
-
-      let widgetsJsonStr = '';
-      let widgetsSuccess = false;
-      let widgetsError = 'N/A';
-
-      if (isVertexConfigured()) {
-        try {
-          const widgetsRes = await callVertexAI({
-            task: 'course_generation',
-            contents: [{ role: 'user', parts: [{ text: widgetsPrompt }] }],
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: "application/json",
-              responseSchema: lessonWidgetsSchema
-            }
-          });
-          if (widgetsRes && widgetsRes.ok) {
-            const resJson = await widgetsRes.json();
-            widgetsJsonStr = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            widgetsSuccess = true;
-          } else {
-            widgetsError = widgetsRes ? `HTTP ${widgetsRes.status} ${widgetsRes.statusText}` : 'Null Response';
-          }
-        } catch (err: any) {
-          widgetsError = err.message || String(err);
-          console.warn("[AI GENERATOR - WFTA] Vertex Stage 1 widgets call exception:", err);
+        const generationConfig: any = { temperature };
+        if (schema) {
+          generationConfig.responseMimeType = "application/json";
+          generationConfig.responseSchema = schema;
         }
-      }
 
-      if (!widgetsSuccess && apiKey) {
-        const startTime = Date.now();
-        try {
-          const widgetsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: widgetsPrompt }] }],
-              generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: lessonWidgetsSchema,
-                temperature: 0.2
-              }
-            })
-          });
-          if (widgetsRes.ok) {
-            const resJson = await widgetsRes.json();
-            widgetsJsonStr = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            widgetsSuccess = true;
-
-            const durationMs = Date.now() - startTime;
-            const usage = resJson.usageMetadata || {};
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, widgetsPrompt);
-          } else {
-            widgetsError = `HTTP ${widgetsRes.status} ${widgetsRes.statusText}`;
-          }
-        } catch (err: any) {
-          widgetsError = err.message || String(err);
-          console.error(`[AI GENERATOR - WFTA] AI Studio Stage 1 widgets fallback exception:`, err);
-        }
-      }
-
-      if (!widgetsJsonStr) {
-        throw new Error(`[AI GENERATOR CRITICAL ERROR] Failed to generate Widgets JSON for lesson "${item.title}". Error: ${widgetsError}`);
-      }
-
-      // Parse and clean the generated widgets locally
-      let parsedWidgets: any = {};
-      try {
-        const cleanedJson = widgetsJsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-        parsedWidgets = safeJsonParse(cleanedJson, 'generateCourseContent (WFTA Stage 1 Widgets)');
-        parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
-      } catch (err: any) {
-        await appendTaskLog(`[AI GENERATOR ERROR] Failed to parse/validate widgets: ${err.message || err}. Falling back to default mock widgets.`);
-        parsedWidgets = validateAndFixWidgets({}, courseContext.discipline || correctedCourseName);
-      }
-
-      await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 2] Generating academic narrative text for lesson "${item.title}"...`);
-
-      // Describe the generated widgets to the narrative writer so they can weave them perfectly
-      const widgetsDescription = `
-We have pre-generated and verified the following highly interactive educational widgets for this lesson.
-You MUST write your academic course text directly around these widgets.
-To insert a widget at the best educational moment, write its exact bracketed anchor tag like this: [[WIDGET:id]].
-Directly before and after each widget, provide a paragraph of high-quality narrative context, explaining what the widget demonstrates, how it relates to the theory, or prompting the student on what to observe or solve.
-
-LIST OF GENERATED WIDGETS AT YOUR DISPOSAL (INSERT EACH EXACTLY ONCE):
-- **Prerequisites block**: [[WIDGET:prerequisites]] (Insert at the very beginning, before the introduction).
-- **Diagnostic Quiz skip-block**: [[WIDGET:diagnosticQuiz]] (Insert immediately after the Prerequisites block, before the introduction).
-- **Learning Objectives block**: [[WIDGET:learningObjectives]] (Insert immediately after the Introduction section).
-- **Conclusion Summary block**: [[WIDGET:conclusionSummary]] (Insert at the beginning of the "## Conclusion" section).
-- **What's Next steps block**: [[WIDGET:whatsNext]] (Insert at the very end of the Conclusion section).
-- **Final Exam block**: [[WIDGET:finalEvaluation]] (Insert after the Conclusion section, as the ultimate validation).
-
-- **Pre-generated bibliography/references (YOU MUST CITE THESE INLINE IN YOUR TEXT)**:
-${(parsedWidgets.references || []).map((r: string, idx: number) => `  - [${idx + 1}] ${r}`).join('\n')}
-*Mandate*: Integrate inline citations into your text to credit these specific resources. Format them exactly as standard inline links, for example: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc., placed right next to the corresponding fact, claim, or quote.
-
-INTERACTIVE COMPONENTS (INSERT EACH EXACTLY ONCE IN THE RESPECTIVE SECTION BODY):
-${parsedWidgets.interactiveComponents.map((comp: any) => `
-- Component ID: "\${comp.id}"
-  Anchor tag to insert: [[WIDGET:\${comp.id}]]
-  Component Type: "\${comp.componentType}"
-  Planned Section: "\${comp.sectionAnchor}"
-  Props/Data summary: \${JSON.stringify(comp.props).slice(0, 300)}...
-`).join('\n')}
-`;
-
-      const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3 - Academic Writer).
-Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the lesson "${item.title}" in the course "${correctedCourseName}" (Level: ${levelInput}).
-
-Course Context and Disciplinary Strategy:
-${courseContext.pedagogicalStrategy ? `- Pedagogical Strategy: ${courseContext.pedagogicalStrategy}` : ''}
-${courseContext.epistemologicalMatrix ? `- Epistemological Matrix: ${courseContext.epistemologicalMatrix}` : ''}
-${item.cognitiveArtifact ? `- Expected Cognitive Artifact for this lesson: ${item.cognitiveArtifact}` : ''}
-${item.technicalDepth ? `- Expected Guidelines and Technical Depth: ${item.technicalDepth}` : ''}
-
-### WIDGET PLACEMENT MANDATE (THE WFTA SYSTEM):
-${widgetsDescription}
-
-### RIGOROUS WRITING & PEDAGOGICAL STYLING CONSTRAINTS:
-1. **Academic Density & Zero-Placeholders**:
-   - Write fully developed, long paragraphs. Skeletons, placeholders, comments like "write your section here", vague lists, and bullet points without substance are strictly prohibited and will cause immediate failure.
-   - You must write the actual text of all sections (Introduction, the main concepts body, and Conclusion). Do NOT write headings like '## Glossaire' or '## Références', as these are appended programmatically from the pre-generated widgets!
-   - **Target Lesson Length**: For university levels (Licence L1-L3), you MUST write an extremely detailed and thorough academic text. Aim for **3000 to 5000 words of rich narrative text** (excluding widgets and final questions) spread across at least 4 to 5 conceptual sections (each starting with a '## ' heading). Provide extensive theoretical discussions, historical background, detailed real-world examples, and formal proofs where appropriate.
-
-2. **Author Quotes with Citations**:
-   - Systematically weave high-impact, contextually relevant quotes from notable thinkers and scientists formatted as:
-     > "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. Page
-     Every quote must be in the course language (or translated in brackets immediately following the quote) and must be followed by a dedicated paragraph explaining its conceptual implications.
-
-2b. **In-text Bibliography Citations**:
-   - Cite the pre-generated bibliography references listed in the widgets description inside your narrative text using standard markdown links: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc. at appropriate, highly relevant academic moments.
-
-3. **Controlled Digressions (Encadrés Épistémologiques)**:
-   - If the level is university level (L1, L2, L3), systematically insert at least one historical controversy or limits-of-concept box:
-     <Epistemology title="Title of Digression">Detailed epistemological discussion...</Epistemology>
-
-4. **Contextual Mini-Biographies (Minibios)**:
-   - Include at least one detailed biographical box inside the main text using:
-     > [!INFO] **Mini-Biographie : Name (Dates)**
-     Write 8-12 lines of biography (4-6 for primary level) and systematically include a direct, working Wikipedia markdown link at the end: \`[En savoir plus sur Wikipédia](...)\`.
-
-5. **Connected Entities Hover-Cards**:
-   - Wrap every historical figure, author, artwork, geographic location, fictional character, or historical event mentioned inline in their respective custom overlay component with a 2-3 line biographical/description attribute as fallback:
-     - <RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>
-     - <Artwork name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Title</Artwork>
-     - <Location name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</Location>
-     - <EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>
-     - <FictionalCharacter name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</FictionalCharacter>
-     *Constraint*: Do NOT require or place these tags inside JSX attribute properties (like inside component props or diagnostic quiz questions), as nesting JSX is syntactically invalid there. Keep names as plain text when inside properties. Do not wrap names inside markdown image captions.
-
-6. **Visual Assets Density, Sourcing & Captions**:
-   - To offer a visually stunning, premium experience, each lesson for Licence (L1-L3) must contain a rich density of images:
-     - **Sourced/Factual Images (Systematically include 5 to 6)**: For real historical paintings, portraits of notable scientists/philosophers, geographical maps, anatomical diagrams, or historical monuments, use standard Pollinations URLs BUT set the alt text to the **EXACT, precise, search-friendly English Wikipedia title** of the subject (e.g. \`![Adam_Smith](https://image.pollinations.ai/...)\` or \`![La_Escuela_de_Atenas](https://image.pollinations.ai/...)\`). The media resolver will automatically intercept these URLs, search Wikipedia/Wikimedia for the exact title, download the real public-domain/Creative Commons image, and upload it to Supabase. If you write an obscure or bloated alt text, the search will fail and the image will be deleted.
-     - **Decorative AI Illustrations (Systematically include 1 to 2)**: For general atmospheres or abstract educational metaphors, use Pollinations URLs with general descriptive alt text that **does NOT contain factual words** (avoid: "portrait", "molecule", "painting", "fresco", "graph", "curve", "diagram", "monument"). This ensures they bypass the factual filter and remain as beautiful AI illustrations.
-     - **Strict Prohibition on Graphical Curves/Data Plots as Images**: Do NOT use images to represent mathematical curves, functions, or statistical plots. Instead, always use the pre-generated interactive components (like \`[[WIDGET:id]]\` for \`<DataChart />\` or \`<FunctionPlotter />\`).
-     - Caption every single image, audio or video player immediately below using:
-       *Figure X : [Title] - [Description]. Source : ...* (use "Wikimedia Commons" or specify AI-generated origin).
-       For external resources, link them with a footnote tag: <sup><a id="ref-src-X" href="#ref-X">X</a></sup>. No link for flowcharts or AI images.
-
-7. **Discipline Adaptation**:
-   - biology/anatomy: focus on visual illustrations and anatomical mapping.
-   - math/physics: use advanced LaTeX formulas ($ and $$), systematic definitions, and proof.
-   - humanities/philosophy: focus on comparative dialectics, historical controversy, and rhetoric.
-
-8. **Level Adaptation**:
-   - Tailor vocabulary, tone, mathematical rigor and paragraph density strictly to the presumption of "${levelInput}".
-
-9. **No Code Block Wrappers**:
-   - Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).
-
-10. **STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS**:
-    - You MUST NEVER write raw JSX/HTML tags for interactive components (such as \`<DataChart>\`, \`<Video>\`, \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<SolvedExercise>\`, \`<UnsolvedExercise>\`, \`<Mermaid>\` or \`<CodeSandbox>\`) inside your narrative text.
-    - Instead, you MUST EXCLUSIVELY use the pre-generated bracketed anchor tags (e.g. \`[[WIDGET:prerequisites]]\`, \`[[WIDGET:comp_02]]\`).
-    - The actual code for these interactive components has been pre-compiled and verified separately. Attempting to write raw custom components or placeholders in your narrative will fail the validation audit. Keep your markup limited to standard markdown (headings, paragraphs, blockquotes, bold/italic, lists) and the approved widget anchors.
-    - Write in "${targetLang.toUpperCase()}".`;
-
-      let narrativeText = '';
-      let narrativeSuccess = false;
-      let narrativeError = 'N/A';
-
-      if (isVertexConfigured()) {
-        try {
-          const narrativeRes = await callVertexAI({
-            task: 'course_generation',
-            contents: [{ role: 'user', parts: [{ text: narrativePrompt }] }],
-            generationConfig: {
-              temperature: 0.3
-            }
-          });
-          if (narrativeRes && narrativeRes.ok) {
-            const resJson = await narrativeRes.json();
-            narrativeText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            narrativeSuccess = true;
-          } else {
-            narrativeError = narrativeRes ? `HTTP ${narrativeRes.status} ${narrativeRes.statusText}` : 'Null Response';
-          }
-        } catch (err: any) {
-          narrativeError = err.message || String(err);
-          console.warn("[AI GENERATOR - WFTA] Vertex Stage 2 narrative call exception:", err);
-        }
-      }
-
-      if (!narrativeSuccess && apiKey) {
-        const startTime = Date.now();
-        try {
-          const narrativeRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: narrativePrompt }] }],
-              generationConfig: {
-                temperature: 0.3
-              }
-            })
-          });
-          if (narrativeRes.ok) {
-            const resJson = await narrativeRes.json();
-            narrativeText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            narrativeSuccess = true;
-
-            const durationMs = Date.now() - startTime;
-            const usage = resJson.usageMetadata || {};
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, narrativePrompt);
-          } else {
-            narrativeError = `HTTP ${narrativeRes.status} ${narrativeRes.statusText}`;
-          }
-        } catch (err: any) {
-          narrativeError = err.message || String(err);
-          console.error(`[AI GENERATOR - WFTA] AI Studio Stage 2 narrative fallback exception:`, err);
-        }
-      }
-
-      if (!narrativeText) {
-        throw new Error(`[AI GENERATOR CRITICAL ERROR] Failed to generate Narrative text for lesson "${item.title}". Error: ${narrativeError}`);
-      }
-
-      // STAGE 3: Stitching the narrative and widgets programmatically
-      let currentMdx = stitchLessonContent(narrativeText, parsedWidgets);
-
-      let approved = false;
-      let iteration = 0;
-      const maxIterations = 3;
-
-      while (!approved && iteration < maxIterations) {
-        iteration++;
-        await appendTaskLog(`[AI GENERATOR - WFTA] [STAGE 4] Verifying stitched content (Attempt ${iteration}/${maxIterations})...`);
-
-        const verifierPrompt = `You are the Verifier/Critic Agent (Agent 4). Your job is to strictly review the generated academic course content (MDX) to ensure it complies with the "Zero-Placeholder", "Academic Density", and "Styling/Structure" policies.
-
-MDX CONTENT TO VERIFY:
----
-${currentMdx}
----
-
-Your Checkpoints:
-1. "Zero-Placeholder & Prohibited Empty Tags & Content Collisions":
-   - **STRICT ZERO-PLACEHOLDER CONSTRAINT**: Systematically reject (approved: false) if the lesson contains any placeholders, comments telling the user to write their own text, unwritten sections, or skeletons like "Insérer ici...", "[Placeholder]", "[À compléter]", "Lorem Ipsum", or generic non-developed paragraphs. The text must be fully written, complete, and production-ready.
-   - Detect if there are any empty custom component tags (e.g. <Evaluation></Evaluation>, <Objectives></Objectives>, <CriticalThinking />, etc.). If ANY tag is present but empty, lacks significant children/content, or is self-closing without proper props/data, you MUST reject the content (set "approved": false).
-   - Content collision: Ensure that <HistoricalAnecdote>, <HistoricalFact>, and <DidYouKnow> do NOT cover the exact same subject or discover. Ensure that <HistoricalAnecdote> is TRULY anecdotal, quirky, funny, or human (not just a dry historical milestone). Factual milestones like the founding of a laboratory or publication of a textbook MUST be placed in a <HistoricalFact> (Événement Historique) block instead.
-2. "Academic Density": Verify that the content is exhaustive, detailed, and academically rigorous for the specified level ("${levelInput}"). Look for lazy summaries or text-avoidance patterns.
-3. "Structural Completeness & Mandated Sections":
-   - Ensure the presence of prerequisites at the very beginning (using '<Prerequisites items={[...]} />').
-   - Ensure the presence of diagnostic quizzes (using '<DiagnosticQuiz ... />') before the introduction.
-   - Ensure the presence of a proper introduction section (using '## Introduction' or a translated equivalent heading).
-   - Ensure the presence of learning objectives (using '<Objectives>' containing '<Knowledge>', '<Skills>', and '<Attitudes>' sub-components).
-   - Ensure the presence of a forward-looking/what's next section (using '<WhatsNext>' component) before the final evaluation.
-   - Ensure the presence of a concluding section (using the heading '## Conclusion' or localized equivalent) containing the '<Summary items={[...]} />' component.
-   - Ensure the presence of a final validating/timed end-of-lesson evaluation (using '<Quiz durationLimit={...}>' or '<EssayEvaluation ... />').
-   - Ensure the presence of a glossary section (using a heading like '### Glossary' or '### Glossaire').
-   - Ensure the presence of a bibliography/references section (using a heading like '### References' or '### Références'). Note: This references section is mandatory for all levels except if the level is primary.
-     - Check formatting of bibliography references: verify that (a) they do NOT contain raw URLs, hyperlinks, or markdown link syntax in the citation text; (b) book/article titles inside the citation text must be wrapped in standard quotation marks (or French guillemets « ... » for French lessons) and NEVER in asterisks (*) or underscores (_); and (c) the citation format matches the discipline-appropriate style expected for the course (i.e., **${getCitationStyle(courseContext.discipline || correctedCourseName).name}**) — for example, APA 7 for psychology/social sciences, Vancouver for medicine, Chicago Notes-Bibliography for history/philosophy, IEEE for engineering/CS, CSE for biology, Bluebook/OSCOLA for law, etc. Reject if references are in plainly wrong format for the discipline.
-     - **CRITICAL**: You must NEVER reject or fail a lesson draft (approved must remain true) under the pretext that a pre-generated reference from the list was not cited or used inline in the text. Unused references are automatically and silently handled during programmatic post-processing/stitching. Simply evaluate the references that ARE present.
-4. "Multimedia, Illustrations, & Non-Text Media Density":
-   This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${levelInput}", course: "${correctedCourseName}"):
-   - Verify that the image density conforms to age-adaptation: for primary CP-CM2, reject if text dominates over visuals/simulators (the text/image ratio must be reversed: let visuals, games, and simulations dominate, and keep text explanations short and simple).
-   - **STRICT MEDIA BASELINE FOR LICENCE (L1-L3)**: You MUST systematically reject (approved: false) if a Licence-level lesson contains fewer than 5 to 6 distinct factual/sourced images/figures (e.g. \`<CustomFigure />\` or markdown images) or fewer than 1 to 2 decorative/conceptual AI-generated illustrations. This density is a strict requirement to provide a visually premium educational experience.
-   - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines: A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'.
-   - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components. Reject if NONE of these are present.
-   - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines: A text-dominant lesson is pedagogically acceptable. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment would still be beneficial.
-   - "Audio/Video Integrity": When '<Audio />' or '<Video />' components are present, verify that:
-     * Each has a non-empty 'src' or 'url' attribute (not a placeholder like "url_here" or "").
-     * Each specifies a 'duration' attribute and that this duration is strictly between 1 minute and 60 minutes. Any audio or video under 1 minute or exceeding 60 minutes must be rejected.
-     * Each has a caption line directly below it (italicized) and, for actual external resources, an accessible fallback redirect link. Reject any '<Audio />' or '<Video />' tag with a missing or empty 'duration' attribute.
-   - "Existing Artwork AI-Generation Block Check": Verify that the content contains absolutely NO AI-generated images (e.g., Pollinations.ai prompts) of real/existing paintings, drawings, frescoes, sculptures, historical photographs, monuments, or real artworks. You MUST reject (set "approved": false) if the writer attempted to use an AI-generated image URL for an existing real historical artwork (such as Mona Lisa, David, Starry Night, etc.). Real historical artworks must only use Wikimedia Commons links or have no image at all.
-5. "Section Interactivity and Sandboxes":
-   5a. "Per-Section Interactivity Rule": Every major conceptual section (demarcated by a '##' heading) MUST contain at least one interactive/active learning component. Passive reading blocks are prohibited.
-   5b. "Discipline-Specific Simulator Mandate": Beyond the per-section rule, apply these discipline-level simulator requirements:
-     * LIFE SCIENCES / ANATOMY / BIOLOGY / MEDICINE / CHEMISTRY / MATERIAL SCIENCES: The lesson MUST contain at least one '<InteractiveDiagram />' or '<StructureViewer3D presetId="..." />'. A lesson in these disciplines without either component MUST be rejected.
-     * MATHEMATICS / PHYSICS / ECONOMICS / FINANCE: The lesson MUST contain at least one dynamic graph, equation, or basic math explorer component. A lesson in these disciplines without any of these MUST be rejected.
-     * COMPUTER SCIENCE / ENGINEERING / PROGRAMMING: The lesson MUST contain at least one '<CodeSandbox />'. A lesson without it MUST be rejected.
-     * HISTORY / GEOGRAPHY / POLITICAL SCIENCE / SOCIAL SCIENCES: The lesson MUST contain at least one process/timeline flowchart ('<Mermaid />'). A lesson without it MUST be rejected.
-6. "No Fragmented Sentences in Key Points": Check '<Summary items={[...]} />' and ensure none of the items are fragmented or artificially split clauses of a single sentence. Each item MUST be a complete, grammatically whole sentence.
-7. "Connected Entities (Real Persons, Fictional Characters, Locations, Events, Artworks) & Mini-Biographies":
-   - Verify that EVERY real person mentioned in the lesson content is wrapped in '<RealPerson name="..." lang="..." bio="...">'. Verify that it has a non-empty \`bio\` attribute. IMPORTANT: Do NOT require or check for '<RealPerson>' tags inside JSX component attribute properties (like inside 'options', 'explanation', 'knowledge', 'skills', or 'attitudes' arrays/objects of \`<Quiz>\` etc.), as nesting JSX elements inside JavaScript strings or array attributes is syntactically invalid.
-   - Verify that there are no duplicate or nested '<RealPerson>' tags for the same person in close proximity. Ensure that the bold titles of '**Mini-Biographie**' or '**Mini-Biography**' blocks do NOT contain '<RealPerson>' tags. Reject content (set "approved": false) if duplicate/nested tags are found.
-   - Verify that any Contextual Mini-Biography block is substantial (at least 8-12 lines for secondary/university, 4-6 lines for primary) and systematically and obligatorily includes a direct, working Wikipedia markdown link at the end (e.g. \`[En savoir plus sur Wikipédia](...)\`). Reject the content if it's too short or lacks the Wikipedia link.
-8. "No Source Redirects for Flowcharts, Simulators, or AI Resources": Check system-generated flowcharts (mermaid diagrams), interactive simulators, or AI-generated resources, and ensure they do NOT contain any "[Source]" / "[Link]" / "[Reference]" / "[Accéder]" text links below them, as they are constructed dynamically or have no external origin URL.
-9. "Interactive Elements and Assessment Integrity": Systematically audit all <Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, and <UnsolvedExercise> tags. Verify that:
-    - Every <Question> element MUST have its question text defined in the 'q' attribute and not as raw text children.
-    - Systematically reject (approved: false) any content containing deprecated pedagogical tags like <Explanation>, <Solution>, <Instruction>, or <KeyConcept>.
-    - Every <Option /> tag MUST follow the Flat-Prop pattern: it must pass the option text via the 'text' attribute and its correctness state via the 'correct' boolean attribute, and it MUST be a self-closing tag. Systematically reject any question containing nested/wrapped text inside <Option> or missing the 'text' attribute, or where no option has correct={true}.
-    - Every <DiagnosticQuiz> has options, and a valid "correctIndex" attribute.
-10. "Foreign Language Quotes & Translations":
-    - Verify that any quote in a language other than the lesson's target language is systematically translated into the target language of the lesson, and that this translation is displayed in brackets immediately following the quote. Reject if a foreign quote is not followed by its bracketed translation. Every quote must be followed by a dedicated paragraph explaining its conceptual implications and context.
-11. "Wikimedia Commons Preference for Complex Diagrams":
-    - For complex biological, chemical, physical, geographical, or anatomical diagrams, verify that high-quality public domain images from Wikimedia Commons are preferred over low-quality Pollinations.ai images. Verify that the Wikimedia Commons image URL is correctly used in the markdown image syntax and linked/credited in the references section.
-12. "DataChart Data Integrity":
-    - Every \`<DataChart />\` tag MUST have a \`data={[...]}\` attribute with at least 2 valid data point objects (each with a label string and value number). A \`<DataChart />\` without a data attribute, with an empty data array, or with a string instead of a JSX array MUST be rejected.
-13. "SolvedExercise Completeness":
-    - Every \`<SolvedExercise>\` block MUST have: (a) a non-empty \`title\` attribute, (b) non-empty problem statement children (clearly formulating a concrete problem with enough context), AND (c) a non-empty \`solution="..."\` attribute or \`<Solution>...</Solution>\` child with step-by-step resolution. An empty \`<SolvedExercise>\` MUST be rejected.
-
-You must return a valid JSON object with the following keys:
-- "approved": boolean (true if it perfectly complies with the policies; false if there are violations).
-- "critique": string (detailed description of the violations and clear instructions on how the generating agent must expand or correct the text. Leave empty if approved).
-
-Return ONLY a valid JSON object. Do not include markdown code block backticks around the JSON.`;
-
-        let verifierRaw = '';
-        let verifierSuccess = false;
-        try {
-          if (isVertexConfigured()) {
-            const vRes = await callVertexAI({
+        if (isVertexConfigured()) {
+          try {
+            const res = await callVertexAI({
               task: 'course_generation',
-              contents: [{ role: 'user', parts: [{ text: verifierPrompt }] }],
-              generationConfig: {
-                temperature: 0.1,
-                responseMimeType: "application/json",
-                responseSchema: verificationSchema
-              }
+              contents: [{ role: 'user', parts: [{ text: promptText }] }],
+              generationConfig
             });
-            if (vRes && vRes.ok) {
-              const vJson = await vRes.json();
-              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-              verifierSuccess = true;
+            if (res && res.ok) {
+              const resJson = await res.json();
+              resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              success = true;
+            } else {
+              lastError = res ? `HTTP ${res.status} ${res.statusText}` : 'Null Response';
             }
+          } catch (err: any) {
+            lastError = err.message || String(err);
+            console.warn("[AI GENERATOR] Vertex AI call exception:", err);
           }
-          
-          if (!verifierSuccess && apiKey) {
-            const startTime = Date.now();
-            const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        }
+
+        if (!success && apiKey) {
+          const startTime = Date.now();
+          try {
+            const bodyPayload: any = {
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig
+            };
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: verifierPrompt }] }],
-                generationConfig: {
-                  responseMimeType: "application/json",
-                  responseSchema: verificationSchema,
-                  temperature: 0.1
-                }
-              })
+              body: JSON.stringify(bodyPayload)
             });
-            if (vRes.ok) {
-              const vJson = await vRes.json();
-              verifierRaw = vJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-              verifierSuccess = true;
+            if (res.ok) {
+              const resJson = await res.json();
+              resultText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              success = true;
 
               const durationMs = Date.now() - startTime;
-              const usage = vJson.usageMetadata || {};
-              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, verifierPrompt);
+              const usage = resJson.usageMetadata || {};
+              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, promptText);
+            } else {
+              lastError = `HTTP ${res.status} ${res.statusText}`;
             }
+          } catch (err: any) {
+            lastError = err.message || String(err);
+            console.error(`[AI GENERATOR] AI Studio fallback exception:`, err);
+          }
+        }
+
+        if (!success) {
+          throw new Error(`AI Call failed. Last error: ${lastError}`);
+        }
+
+        return resultText;
+      };
+
+      // 1. Discipline-Aware Catalog Pruning
+      const prunedCatalog = getFilteredWidgetsCatalog(courseContext.discipline || 'General');
+      const remainingBudget = Math.max(0, 2 - usedDatabaseWidgetIds.size);
+      const alreadyUsedList = usedDatabaseWidgetIds.size > 0 
+        ? Array.from(usedDatabaseWidgetIds).map(id => `"${id}"`).join(', ')
+        : 'None';
+
+      const formattedCatalogList = Object.entries(prunedCatalog).map(([id, meta]: [string, any]) => {
+        return `- ID: "${id}"
+  Name: "${meta.nameEN || id}" (${meta.nameFR || id})
+  Description: "${meta.descEN || meta.descFR || ''}"
+  Disciplines: [${(meta.disciplines || []).join(', ')}]
+  Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
+      }).join('\n\n');
+
+      // ───────────────────────────────────────────────────────────────
+      // [STAGE 1] NARRATIVE SCRIBE (AGENT 3A)
+      // ───────────────────────────────────────────────────────────────
+      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1] Drafting academic narrative text for lesson "${item.title}"...`);
+
+      const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
+
+---
+
+### METADATA
+- **Course Name**: "${correctedCourseName}"
+- **Academic Level**: "${levelInput}"
+- **Lesson Title**: "${item.title}"
+- **Lesson Slug**: "${item.slug}"
+- **Target Language**: "${targetLang.toUpperCase()}"
+- **Course Discipline**: "${courseContext.discipline || 'General'}"
+- **Epistemological Matrix**: "${courseContext.epistemologicalMatrix || 'N/A'}"
+- **Expected Cognitive Artifact**: "${item.cognitiveArtifact || 'N/A'}"
+- **Expected Guidelines / Technical Depth**: "${item.technicalDepth || 'N/A'}"
+
+---
+
+### 1. DISCIPLINARY WRITING MATRIX
+You must adapt your writing style, formatting, and density strictly to the epistemological DNA of the discipline:
+
+1. **Deductive / Formal Sciences (Mathematics, Logic, Theoretical Physics):**
+   - Style: Formal, absolute logical rigor, and deductive reasoning.
+   - Requirements: Systematically include Lemma ➔ Theorem ➔ Proof ➔ Corollary blocks. Use LaTeX equations inline (\`$...$\`) and block (\`$$...$$\`) extensively. Ensure every formula is defined and placed in logical sequence.
+2. **Empirical / Experimental Sciences (Biology, Experimental Physics, Chemistry, Medicine):**
+   - Style: Observational, analytical, and highly structured.
+   - Requirements: Follow the Hypothesis ➔ Experimental Protocol ➔ Observation ➔ Interpretation/Modeling workflow. Use labeled anatomical or structural diagrams and process flows.
+3. **Humanities and Discursive Sciences (Philosophy, History, Literature, Sociology):**
+   - Style: Discursive, argumentative, rhetorical, and dialectical.
+   - Requirements: Follow a Thesis ➔ Antithesis ➔ Synthesis framework. Focus on deep textual analysis, socio-historical contextualization, and competing intellectual doctrines/controversies.
+4. **Applied Sciences / Engineering (Computer Science, Electronics, Systems Design):**
+   - Style: Problem-solving, architectural, and constructivist.
+   - Requirements: Follow the Requirements ➔ Technical Constraints ➔ Architectural Design ➔ Implementation ➔ Validation workflow. Use code structures and technical schemas.
+
+---
+
+### 2. LEVEL & LANGUAGE ADAPTATION (BLOOM'S TAXONOMY)
+- **Vocabulary & Tone**: Tailor all terminology, sentence complexity, and conceptual depth to the target academic level ("${levelInput}").
+- **Language**: Write the entire content in "${targetLang.toUpperCase()}".
+- **Bloom's Taxonomy Rule**:
+  - If the target level is University/Higher Education (L1-M2, beginner-expert):
+    - If Target Language is **FR** (French): Systematically use Revised Bloom's Taxonomy verbs: **Analyser** (Analyze), **Évaluer** (Evaluate), and **Créer** (Create) when introducing goals and activities.
+    - If Target Language is **EN** (English) or any other language: Systematically use their exact localized equivalents: **Analyze**, **Evaluate**, and **Create**.
+
+---
+
+### 3. WIDGET PLACEMENT SYSTEM (WFTA SYSTEM)
+You do NOT write interactive components, quizzes, or glossary definitions in raw HTML or JS. Doing so is strictly prohibited and will cause compile-time failures.
+Instead, you must decide where these elements belong and insert standard or custom bracketed anchor tags \`[[WIDGET:id]]\` directly into your narrative. The **Widgets Architect (Agent 3B)** will parse these anchors and generate matching interactive components programmatically.
+
+#### A. Standard/Structural Widget Anchors (Insert Each Exactly Once):
+- \`[[WIDGET:prerequisites]]\`: Place at the very beginning of the document, before the introduction.
+- \`[[WIDGET:diagnosticQuiz]]\`: Place immediately after the prerequisites block, before the introduction. This provides a diagnostic skip-pass for students.
+- \`[[WIDGET:learningObjectives]]\`: Place immediately after the \`## Introduction\` section.
+- \`[[WIDGET:conclusionSummary]]\`: Place at the very beginning of the \`## Conclusion\` section.
+- \`[[WIDGET:whatsNext]]\`: Place at the very end of the \`## Conclusion\` section.
+- \`[[WIDGET:finalEvaluation]]\`: Place at the very end of the document, after the conclusion, as the ultimate summative validation.
+
+#### B. Discipline-Aware Custom Interactive Anchors:
+You must insert at least 1 to 2 custom interactive widget anchors inside the conceptual body sections (e.g., \`[[WIDGET:my_custom_chart]]\`).
+For each anchor you insert, you must provide a dedicated, highly engaging narrative paragraph directly before or after it, explaining what the component represents, guiding students on what variables to manipulate, or prompting them on what to solve.
+
+**Approved Pruned Widgets for this Discipline**:
+${formattedCatalogList}
+
+*Constraint on Curation Budget*:
+- You may insert **at most 1** database-curated widget from the approved list above (e.g. \`[[WIDGET:FunctionPlotter:my_plot]]\` or \`[[WIDGET:CodeSandbox:my_sandbox]]\`). Rely on simple discursives like Quizzes, FillInBlanks, or Solved/Unsolved Exercises for other sections (e.g., \`[[WIDGET:Quiz:section_quiz]]\` or \`[[WIDGET:SolvedExercise:math_work]]\`).
+
+---
+
+### 4. RIGOROUS WRITING & PEDAGOGICAL STYLING RULES
+1. **Academic Density & Word Count**:
+   - For higher education levels (L1-L3), write an extremely thorough, exhaustive narrative. Skeletons, empty summaries, or "write section here" comments are strictly forbidden.
+   - Target word count: **3,000 to 5,000 words** of deeply developed text across at least 4 to 5 conceptual sections (each starting with a '## ' heading).
+2. **Author Quotes with Citations**:
+   - Weave at least one high-impact, authentic quotation from a notable expert/scientist, formatted exactly as:
+     > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
+   - Every foreign-language quote must be followed by its bracketed translation in the course's target language, plus a paragraph detailing its conceptual implications.
+3. **In-text Bibliography Citations**:
+   - You must cite academic resources inside your text using standard Markdown links referencing standard citation numbers, e.g., \`[1](#ref-1)\`, \`[2](#ref-2)\`. (Agent 3B will generate the corresponding bibliography entries in Stage 2).
+4. **Controlled Digressions (Encadrés Épistémologiques)**:
+   - Include at least one historical controversy or limit-of-concept discussion box:
+     <Epistemology title="Title of Controversy">Deep academic controversy or critical discussion...</Epistemology>
+5. **Contextual Mini-Biographies**:
+   - Include at least one detailed biographical sidebar:
+     > [!INFO] **Mini-Biography: Name (Dates)**
+     > Write 8-12 lines of biography detailing their main academic contribution. Systematically include a direct working Wikipedia link at the end: \`[Read more on Wikipedia](...)\`.
+6. **Entity Hover-Cards**:
+   - Wrap named historical figures, landmark artworks, locations, events, or fictional characters mentioned inline in Hover-Card components with a short description:
+     - \`<RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>\`
+     - \`<Artwork name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Title</Artwork>\`
+     - \`<Location name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</Location>\`
+     - \`<EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>\`
+     *Constraint*: Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
+7. **Factual Images & Captions**:
+   - Include 5 to 6 factual/sourced images and 1 to 2 decorative AI illustrations for Licence level.
+   - Factual images (historical figures, maps, diagrams) MUST use standard Markdown image tags where the Alt Text is the **EXACT, search-friendly English Wikipedia title** of the subject, and the source URL points to the Pollinations API:
+     \`![Adam_Smith](https://image.pollinations.ai/..._prompt_description...)\`
+   - Decorative/Conceptual images MUST use general, non-factual alt text to bypass factual checks.
+   - Every image must have an italicized figure caption directly below:
+     *Figure X: [Title] - [Description]. Source: [Wikimedia Commons / AI-generated]*
+   - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
+
+---
+
+### 5. OUTPUT FORMAT
+- Return ONLY the raw MDX content.
+- Do NOT wrap your output in markdown code blocks (\`\`\`).
+- Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
+`;
+
+      let narrativeText = await callAIEngine(narrativePrompt, null, 0.3);
+
+      // Pre-verifier 1: MDX Text Preprocessor & Cleaner
+      let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+
+      // ───────────────────────────────────────────────────────────────
+      // [STAGE 4A] NARRATIVE CRITIC (AGENT 4A)
+      // ───────────────────────────────────────────────────────────────
+      let narrativeApproved = false;
+      let narrativeIteration = 0;
+      const maxNarrativeIterations = 3;
+
+      while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
+        narrativeIteration++;
+        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Reviewing narrative text (Attempt ${narrativeIteration}/${maxNarrativeIterations})...`);
+
+        const narrativeCriticPrompt = `You are the Narrative Critic Agent (Agent 4A). Your job is to strictly review the generated academic lesson narrative text to ensure it complies with our "Zero-Placeholder", "Academic Density", and "Pedagogical Formatting" policies before widgets are designed.
+
+---
+
+### METADATA
+- **Course Name**: "${correctedCourseName}"
+- **Academic Level**: "${levelInput}"
+- **Lesson Title**: "${item.title}"
+- **Target Language**: "${targetLang.toUpperCase()}"
+
+---
+
+### INPUT NARRATIVE TEXT TO AUDIT
+---
+${cleanedNarrative}
+---
+
+---
+
+### CORE CHECKPOINTS
+You must audit the narrative text against the following 7 critical checkpoints:
+
+1. **Zero-Placeholder Constraint**:
+   - **STRICT REJECTION**: You MUST reject (\`approved: false\`) if the text contains any comments, skeletons, or placeholder phrases like "write section here," "[À compléter]," "Lorem Ipsum," or undeveloped paragraphs. The narrative must be 100% complete and publication-ready.
+2. **Academic Density & Length**:
+   - For higher education levels (L1-M2), verify that the lesson is detailed, rigorous, and exhaustive. It must cover at least 4 to 5 core conceptual sections under distinct \`## \` headings.
+   - Target word count: **3,000 to 5,000 words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
+3. **Widget Placement & Anchors**:
+   - Verify that the standard structural widget anchors are placed exactly once and at correct positions:
+     - \`[[WIDGET:prerequisites]]\` (at the very beginning)
+     - \`[[WIDGET:diagnosticQuiz]]\` (before introduction)
+     - \`[[WIDGET:learningObjectives]]\` (after introduction)
+     - \`[[WIDGET:conclusionSummary]]\` (at the beginning of ## Conclusion)
+     - \`[[WIDGET:whatsNext]]\` (at the very end of conclusion)
+     - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
+   - Verify that there are **at least 1 to 2** custom interactive anchors (e.g. \`[[WIDGET:my_plot]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
+   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, or \`<Mermaid>\`). They must exclusively use bracketed anchors.
+4. **Author Quotes & In-text Citations**:
+   - Verify that the text integrates high-impact quotes formatted exactly as:
+     > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
+   - Every foreign-language quote must be immediately followed by its bracketed translation. Every quote must have an explanatory paragraph.
+   - Verify that references are cited inline using standard brackets, e.g. \`[1](#ref-1)\`.
+5. **Controlled Digressions & Mini-Biographies**:
+   - For higher education, verify that at least one \`<Epistemology>\` controversy/limit box is present with deep theoretical content.
+   - Verify that at least one contextual Mini-Biography is present, is substantial (8-12 lines), and contains a working, direct Wikipedia Markdown link at the very end.
+6. **Connected Entity Hover-Cards**:
+   - Verify that historical figures, artworks, locations, and events mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<Artwork>\`, \`<Location>\`, \`<EventLink>\`.
+   - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
+   - Check for and reject any nested or duplicated Hover-Cards.
+7. **Visual Assets Density, Sourcing & Captions**:
+   - For higher education, verify that the lesson contains at least **5 to 6 distinct factual images/figures** and **1 to 2 decorative AI illustrations**.
+   - Factual images must use English Wikipedia page titles as their Alt Text, e.g. \`![Adam_Smith](https://image.pollinations.ai/..._prompt...)\`. Obscure or bloated alt texts are unacceptable.
+   - Every image must have an italicized figure caption directly below:
+     *Figure X: [Title] - [Description]. Source: ...*
+
+---
+
+### OUTPUT FORMAT
+You must return ONLY a valid JSON object matching the \`verificationSchema\` with the following keys:
+- **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints; false if there are any violations).
+- **\`critique\`**: string (detailed, actionable explanation of the violations and clear instructions on how the writer must expand or correct the text. Leave empty if approved).
+
+Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
+`;
+
+        const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, verificationSchema, 0.1);
+        const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        const audit = safeJsonParse(critiqueClean, 'Narrative Critic Audit');
+
+        if (audit && audit.approved === true) {
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text APPROVED on attempt ${narrativeIteration}!`);
+          narrativeApproved = true;
+        } else {
+          const critiqueText = audit?.critique || 'Invalid response from critic.';
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text REJECTED. Critique: ${critiqueText}`);
+
+          if (narrativeIteration >= maxNarrativeIterations) {
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Max narrative critique loops reached. Moving forward.`);
+            break;
           }
 
-          const cleanedVJson = verifierRaw.replace(/```json/g, '').replace(/```/g, '').trim();
-          const verificationResult = safeJsonParse(cleanedVJson, 'generateCourseContent (Agent 4 Verification)');
-
-          if (verificationResult && verificationResult.approved === true) {
-            await appendTaskLog(`[AI GENERATOR - AGENT 4] Content approved for "${item.title}" on attempt ${iteration}!`);
-            approved = true;
-          } else {
-            const critique = verificationResult?.critique || 'Invalid or empty verification response from AI critic.';
-            await appendTaskLog(`[AI GENERATOR - AGENT 4] Content REJECTED for "${item.title}" on attempt ${iteration}. Critique: ${critique}`);
-            
-            if (iteration >= maxIterations) {
-              await appendTaskLog(`[AI GENERATOR - AGENT 4] Max verification attempts reached. Moving forward with current MDX.`);
-              break;
-            }
-
-            const refinerPrompt = `You are a world-class academic professor (Agent 3 - Academic Writer).
-The verifier/critic (Agent 4) has rejected your previously generated academic narrative text.
+          const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+The narrative critic (Agent 4A) has rejected your previously generated academic narrative text.
 You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
 
-CRITIQUE FROM AGENT 4:
-"${critique}"
+CRITIQUE FROM AGENT 4A:
+"${critiqueText}"
 
 PREVIOUS ACADEMIC NARRATIVE TEXT:
 ---
-${narrativeText}
+${cleanedNarrative}
 ---
 
-LIST OF PRE-GENERATED WIDGETS AT YOUR DISPOSAL (YOU MUST PRESERVE AND INSERT EACH WIDGET ANCHOR [[WIDGET:id]] EXACTLY ONCE):
-- Prerequisites block: [[WIDGET:prerequisites]]
-- Diagnostic Quiz skip-block: [[WIDGET:diagnosticQuiz]]
-- Learning Objectives block: [[WIDGET:learningObjectives]]
-- Conclusion Summary block: [[WIDGET:conclusionSummary]]
-- What's Next steps block: [[WIDGET:whatsNext]]
-- Final Exam block: [[WIDGET:finalEvaluation]]
-${parsedWidgets.interactiveComponents.map((comp: any) => `- Component ID: "${comp.id}" -> Anchor: [[WIDGET:${comp.id}]] (Component Type: "${comp.componentType}", planned for "${comp.sectionAnchor}")`).join('\n')}
-
-LIST OF PRE-GENERATED REFERENCES FOR THIS LESSON (YOU MUST CITE EVERY RELEVANT ITEM INLINE):
-${(parsedWidgets.references || []).map((r: string, idx: number) => `- [${idx + 1}] ${r}`).join('\n')}
-*Mandate*: Preserve and integrate inline citations for these specific resources. Format them exactly as standard inline links, for example: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc., placed right next to the corresponding fact, claim, or quote.
-
 Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
-STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS:
-- You MUST NEVER write raw JSX/HTML tags for interactive components (such as \`<DataChart>\`, \`<Video>\`, \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<SolvedExercise>\`, \`<UnsolvedExercise>\`, \`<Mermaid>\` or \`<CodeSandbox>\`) inside your narrative text.
-- Instead, you MUST EXCLUSIVELY use the pre-generated bracketed anchor tags (e.g. \`[[WIDGET:prerequisites]]\`, \`[[WIDGET:comp_02]]\`).
-- Any raw interactive custom elements will break validation. Keep your markup limited to standard markdown and approved widget anchors.
+Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
 
-Return ONLY the raw narrative text. Do not wrap the response in markdown code blocks (\`\`\`).`;
-
-            let refinedNarrative = '';
-            let refineSuccess = false;
-            
-            if (isVertexConfigured()) {
-              try {
-                const refRes = await callVertexAI({
-                  task: 'course_generation',
-                  contents: [{ role: 'user', parts: [{ text: refinerPrompt }] }],
-                  generationConfig: { temperature: 0.3 }
-                });
-                if (refRes && refRes.ok) {
-                  const refJson = await refRes.json();
-                  refinedNarrative = refJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  refineSuccess = true;
-                }
-              } catch (err: any) {
-                console.warn("[AI GENERATOR - AGENT 4] Vertex refinement call exception:", err);
-              }
-            }
-            
-            if (!refineSuccess && apiKey) {
-              const startTime = Date.now();
-              try {
-                const refRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: refinerPrompt }] }]
-                  })
-                });
-                if (refRes.ok) {
-                  const refJson = await refRes.json();
-                  refinedNarrative = refJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  refineSuccess = true;
-                  
-                  const durationMs = Date.now() - startTime;
-                  const usage = refJson.usageMetadata || {};
-                  await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, refinerPrompt);
-                }
-              } catch (err: any) {
-                console.error(`[AI GENERATOR - REFINE] AI Studio refinement fetch exception:`, err);
-              }
-            }
-
-            if (refinedNarrative) {
-              narrativeText = refinedNarrative;
-              currentMdx = stitchLessonContent(narrativeText, parsedWidgets);
-            } else {
-              console.warn("[AI GENERATOR - AGENT 4] Refinement failed to return content, keeping previous MDX.");
-            }
-          }
-        } catch (vErr: any) {
-          console.error("[AI GENERATOR - AGENT 4] Error during verification cycle:", vErr);
-          throw new Error(`[VERIFICATION CRITICAL ERROR] Verification failed for lesson "${item.title}": ${vErr.message || vErr}`);
+          const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
+          cleanedNarrative = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
         }
       }
+
+      const approvedNarrativeText = cleanedNarrative;
+
+      // ───────────────────────────────────────────────────────────────
+      // [STAGE 2] WIDGETS ARCHITECT (AGENT 3B)
+      // ───────────────────────────────────────────────────────────────
+      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
+
+      const widgetsPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to parse the approved academic narrative draft of the lesson, extract all custom and standard bracketed widget anchors (\`[[WIDGET:id]]\`), and generate a valid JSON object conforming strictly to the requested \`lessonWidgetsSchema\` to fully define each anchor.
+
+---
+
+### METADATA
+- **Course Name**: "${correctedCourseName}"
+- **Academic Level**: "${levelInput}"
+- **Lesson Title**: "${item.title}"
+- **Target Language**: "${targetLang.toUpperCase()}"
+- **Course Discipline**: "${courseContext.discipline || 'General'}"
+- **Citation Style**: "${getCitationStyle(courseContext.discipline || correctedCourseName).name}"
+
+---
+
+### INPUT APPROVED NARRATIVE DRAFT
+Review the approved narrative text to identify all placed \`[[WIDGET:id]]\` anchors and the bibliography citation links (e.g. \`[1](#ref-1)\`):
+---
+${approvedNarrativeText}
+---
+
+---
+
+### 1. CURATION-FIRST INTERACTIVE COMPONENTS MANDATE
+For every custom interactive widget anchor you find in the approved narrative draft (other than standard structural ones), you must define a corresponding item inside the \`interactiveComponents\` JSON array:
+
+#### A. Approved Pruned Widgets for this Discipline:
+${formattedCatalogList}
+
+#### B. Selection Heuristics & Budget Enforcer:
+1. **Simple Discursive Components (Can be generated from scratch)**:
+   - \`Quiz\`: Multiple-choice question sets with questions, options, correct indices, and detailed explanations.
+   - \`FillInBlanks\`: Sentence structures with blank gaps.
+   - \`SolvedExercise\`: Step-by-step worked analytical or mathematical solution.
+   - \`UnsolvedExercise\`: Conceptual or mathematical question with an explanation and correct answer string.
+2. **Complex Structural Tools (Matchmaker Database-Curated Widgets)**:
+   - If the narrative draft places a database widget (e.g. \`[[WIDGET:FunctionPlotter:my_plot]]\`), you must select it from the approved catalog list above.
+   - **Crucial Curation-First Rule**: For all database-curated widgets, set "props" to \`{}\` (empty object), as their pre-configured behaviors and schemas are handled programmatically by the system.
+   - **Strict Budget Constraints**:
+     - Remaining database widget budget for this lesson: ${remainingBudget}.
+     - If the remaining budget is 0, do NOT select any database-curated widgets. Use simple discursives instead.
+     - Never repeat a database widget ID that has already been used in this course: Already used list: ${alreadyUsedList}.
+
+---
+
+### 2. CORE SCHEMA FIELDS TO GENERATE (CONFORMING TO lessonWidgetsSchema)
+Your generated JSON must contain the following top-level keys:
+
+1. **\`prerequisites\`**:
+   - Provide 1 to 2 logical prerequisite lessons. Each must have \`title\`, \`slug\`, \`level\`, and \`subject\` (in target language "${targetLang.toUpperCase()}").
+2. **\`diagnosticQuiz\`**:
+   - A single premium multiple-choice question designed to allow advanced students to bypass this lesson. Include \`question\`, \`options\` array, \`correctIndex\`, \`targetSectionId\` (anchor of the bypass section), and \`sectionTitle\`.
+3. **\`learningObjectives\`**:
+   - Provide learning objectives broken down into \`knowledge\` (concepts), \`skills\` (capabilities), and \`attitudes\` (metacognition) arrays.
+   - **Bloom's Taxonomy Rule**: For University levels, use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer depending on target language "${targetLang.toUpperCase()}").
+4. **\`conclusionSummary\`**:
+   - Provide exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each item in the \`items\` array must end with a period).
+5. **\`whatsNext\`**:
+   - Provide 2 to 3 engaging next steps or follow-up courses, each with \`title\`, \`description\`, and \`slug\`.
+6. **\`finalEvaluation\`**:
+   - A comprehensive final test. This must be a structured JSON object representing either a high-fidelity MCQ Quiz (with 5-10 questions following the Flat-Prop format) or an \`EssayEvaluation\` with a detailed prompt.
+7. **\`glossary\`**:
+   - An array of at least 3 key academic terms with clear definitions.
+8. **\`references\`**:
+   - An array of 3 to 5 complete, real, authoritative scholarly references (exclude for primary school).
+   - Ensure book/article titles are in standard quotes (or French guillemets « ... »), not asterisks.
+   - The references MUST match the designated style: **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}**.
+   - Make sure any inline citations used in the narrative draft (e.g. \`[1](#ref-1)\`) map perfectly to their respective index in this array (e.g., \`references[0]\` is index 1).
+9. **\`interactiveComponents\`**:
+   - An array of all custom interactive components. Every custom \`[[WIDGET:id]]\` anchor in the narrative draft MUST have a corresponding object here where \`id\` matches the anchor suffix exactly, \`componentType\` matches the selected widget ID, \`sectionAnchor\` is the heading title of the parent section, and \`props\` specifies its data properties.
+
+---
+
+### 3. OUTPUT FORMAT
+- Return ONLY a valid JSON object matching the \`lessonWidgetsSchema\` schema.
+- Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
+- Ensure all string values are fully written in "${targetLang.toUpperCase()}".
+`;
+
+      let parsedWidgets: any = {};
+      let widgetsApproved = false;
+      let widgetsIteration = 0;
+      const maxWidgetsIterations = 3;
+
+      while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
+        widgetsIteration++;
+        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Designing and validating widgets JSON (Attempt ${widgetsIteration}/${maxWidgetsIterations})...`);
+
+        const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.2);
+        const cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        parsedWidgets = safeJsonParse(cleanWidgetsJson, 'WFTA Stage 2 Widgets Parsing');
+        parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+
+        // --- Programmatic Pre-verifier 2: Curation-First budget & normalization ---
+        const dbCatalogKeys = Object.keys(prunedCatalog);
+        if (parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
+          let databaseWidgetsInThisLesson = 0;
+          parsedWidgets.interactiveComponents = parsedWidgets.interactiveComponents.filter((comp: any) => {
+            if (!comp || !comp.componentType) return false;
+
+            const matchedKey = dbCatalogKeys.find(
+              key => key.toLowerCase() === comp.componentType.toLowerCase() || key.toLowerCase() === comp.id?.toLowerCase()
+            );
+
+            if (matchedKey) {
+              const isDuplicate = usedDatabaseWidgetIds.has(matchedKey);
+              const isOverBudget = (usedDatabaseWidgetIds.size + databaseWidgetsInThisLesson) >= 2;
+
+              if (isDuplicate || isOverBudget) {
+                console.log(`[WIDGET CURATION] Filtered out database widget "${matchedKey}" (Duplicate: ${isDuplicate}, OverBudget: ${isOverBudget})`);
+                return false;
+              }
+
+              comp.componentType = matchedKey;
+              comp.id = matchedKey;
+              comp.props = {};
+              databaseWidgetsInThisLesson++;
+              usedDatabaseWidgetIds.add(matchedKey);
+              appendTaskLog(`[WIDGET CURATION] Selected and approved database-curated widget: "${matchedKey}"`);
+              return true;
+            }
+
+            return true;
+          });
+        }
+
+        // Stage 4B Critic check
+        const widgetsCriticPrompt = `# 🔬 Agent 4B: Widgets Critic Prompt (Stage 4B)
+
+You are the Widgets Critic Agent (Agent 4B). Your job is to strictly review the generated academic lesson widgets JSON to ensure it complies perfectly with our "Pedagogical Rigor", "Curation-First Matchmaker", and "Data Integrity" constraints before the content is programmatically stitched.
+
+---
+
+### METADATA
+- **Course Name**: "${correctedCourseName}"
+- **Academic Level**: "${levelInput}"
+- **Lesson Title**: "${item.title}"
+- **Target Language**: "${targetLang.toUpperCase()}"
+- **Course Discipline**: "${courseContext.discipline || 'General'}"
+- **Citation Style**: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
+
+---
+
+### INPUT WIDGETS JSON TO AUDIT
+Review the generated widgets JSON structure:
+---
+${JSON.stringify(parsedWidgets, null, 2)}
+---
+
+### INPUT APPROVED NARRATIVE DRAFT (FOR REFERENCE)
+Verify that all anchors and citations match the approved text perfectly:
+---
+${approvedNarrativeText}
+---
+
+---
+
+### CORE CHECKPOINTS
+You must audit the widgets JSON against the following 6 critical checkpoints:
+
+1. **Perfect Semantic & Anchor Alignment**:
+   - **STRICT REJECTION**: You MUST verify that every single interactive anchor (e.g. \`[[WIDGET:id]]\`) placed in the approved narrative draft has a corresponding entry in the \`interactiveComponents\` array with the exact same \`id\` (after removing the suffix/prefix, matching precisely).
+   - Ensure \`sectionAnchor\` matches the actual section title (\`## Heading\`) in the narrative draft.
+   - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON.
+
+2. **Curation-First Matchmaker & Budget Compliance**:
+   - Verify that any database-curated widgets (like \`FunctionPlotter\`, \`CodeSandbox\`, \`DataChart\`, etc.) have their \`props\` set to exactly \`{}\` (empty object).
+   - Verify that the number of database-curated widgets in this lesson does not exceed the remaining budget: **${remainingBudget}**.
+   - Verify that no database-curated widget used in this lesson has already been used earlier in the course: **${alreadyUsedList}**.
+
+3. **Bloom's Taxonomy Verbs (Objectives & Diagnostics)**:
+   - For University levels, check that the \`learningObjectives\` under \`knowledge\`, \`skills\`, and \`attitudes\` utilize the Revised Bloom's Taxonomy verbs:
+     - **FR (French)**: Analyser, Évaluer, Créer.
+     - **EN (English)** or other languages: Analyze, Evaluate, Create.
+   - Reject if simplistic or passive verbs (like "comprendre", "connaître", "understand", "know") are used for higher education levels.
+
+4. **MCQ and Diagnostic Correctness & Flat-Prop Format**:
+   - Audit the \`diagnosticQuiz\` and \`finalEvaluation\` (if MCQ). Check that the question is academically robust, options are diverse, and the \`correctIndex\` is mathematically/scientifically accurate (0-indexed).
+   - Verify that MCQ questions do NOT use nested markdown structures or custom Hover-Card tags inside options or question strings.
+   - For \`finalEvaluation\` MCQ quiz, verify that the props conform to the **Flat-Prop Quiz Format**:
+     - Array of questions with \`question\`, \`options\`, \`correctIndex\`, and \`explanation\`.
+
+5. **Glossary Rigor**:
+   - Verify that the \`glossary\` contains at least 3 high-quality key academic terms defined in "${targetLang.toUpperCase()}".
+   - Definitions must be clear, concise, and academically accurate.
+
+6. **Academic Bibliography & Citation Style**:
+   - Verify that the \`references\` array contains 3 to 5 real, authoritative academic works (books, journal articles, landmark papers) formatted strictly in **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}**.
+   - Asterisks for italics (like \`*Book Title*\`) are forbidden inside JSON strings—titles must use quotes or French guillemets.
+   - Ensure that the inline citations inside the approved narrative (e.g. \`[1](#ref-1)\`) map 1-to-1 to their correct index in this array (i.e. \`references[0]\` is citation \`[1]\`, \`references[1]\` is citation \`[2]\`).
+
+---
+
+### OUTPUT FORMAT
+You must return ONLY a valid JSON object matching the \`verificationSchema\` with the following keys:
+- **\`approved\`**: boolean (true if the widgets JSON complies perfectly with all checkpoints; false if there are any violations).
+- **\`critique\`**: string (detailed, actionable explanation of the violations and clear instructions on how the widgets architect must modify or regenerate the JSON. Leave empty if approved).
+
+Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
+`;
+
+        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, verificationSchema, 0.1);
+        const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
+
+        if (widgetsAudit && widgetsAudit.approved === true) {
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED on attempt ${widgetsIteration}!`);
+          widgetsApproved = true;
+        } else {
+          const critiqueText = widgetsAudit?.critique || 'Invalid response from widgets critic.';
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON REJECTED. Critique: ${critiqueText}`);
+
+          if (widgetsIteration >= maxWidgetsIterations) {
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Max widgets critique loops reached. Moving forward with current widgets.`);
+            break;
+          }
+
+          const widgetsRefinerPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+The widgets critic (Agent 4B) has rejected your previously generated widgets JSON.
+You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
+
+CRITIQUE FROM AGENT 4B:
+"${critiqueText}"
+
+PREVIOUS WIDGETS JSON:
+---
+${JSON.stringify(parsedWidgets, null, 2)}
+---
+
+INPUT APPROVED NARRATIVE DRAFT:
+---
+${approvedNarrativeText}
+---
+
+Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.`;
+
+          const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.2);
+          const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
+          parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+        }
+      }
+
+      // ───────────────────────────────────────────────────────────────
+      // [STAGE 3] DETERMINISTIC STITCHING ENGINE
+      // ───────────────────────────────────────────────────────────────
+      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 3] Stitching narrative and widgets programmatically...`);
+      const isLastLesson = index === lessonsList.length - 1;
+      let currentMdx = stitchLessonContent(approvedNarrativeText, parsedWidgets);
 
       // De-hallucinate bibliography links against Crossref / Google Books
       let validatedMdx = await validateAndFixBibliography(currentMdx, targetLang.toLowerCase());
@@ -2831,7 +2976,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
 
     console.log(`[REVISION AGENT] Revising lesson: "${lesson.title}" (${slug})...`);
 
-    const promptRevise = `You are a Pedagogical Revision Agent (Agent de Révision).
+    const promptRevise = `You are a Pedagogical Revision Agent (Revision Agent).
 Your mission is to revise and correct a specific course lesson (written in MDX) based on the feedback/reports below.
 
 COURSE: ${courseSlug}
@@ -3991,7 +4136,9 @@ You must model this curriculum on real-world academic programs (curriculums and 
 
 Be flexible:
 - Adjust the number of courses (typically between 1 and 5 for school levels, and between 5 and 15 courses for university levels) and credit/hour volumes based on the actual complexity and standard requirements of the level and discipline.
-- Categorize courses as either "mandatory" (obligatoire) or "optional" (optionnel). Note that some curricula may consist entirely of mandatory courses (0 optional courses) if that aligns with standard program progressions.
+- Categorize courses as either "mandatory" or "optional" (use exactly these literal strings "mandatory" or "optional"). Note that some curricula may consist entirely of mandatory courses (0 optional courses) if that aligns with standard program progressions.
+
+**CRITICAL LANGUAGE REQUIREMENT**: Although these instructions and guidelines are given in English, you must imperatively write all the text content of your JSON response (the curriculum 'description', the course 'title', 'subject', 'volume', and course 'description') in the requested target language: "${targetLang.toUpperCase()}". All generated descriptive text and labels must be fully written in "${targetLang.toUpperCase()}".
 
 You must return a valid JSON object with the following keys:
 1. "description": A comprehensive, high-quality, professional academic description of the entire curriculum (master-level description). Do not use generic placeholders.

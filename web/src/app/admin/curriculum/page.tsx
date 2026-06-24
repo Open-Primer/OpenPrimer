@@ -666,7 +666,7 @@ export default function AdminCurriculumPage() {
             const taskLang = (runningTask.targetLang || lang || 'EN').toUpperCase();
             let correctedTitle = runningTask.title;
             try {
-              if (runningTask.type === 'generation') {
+              if (runningTask.type === 'generation' || runningTask.type === 'curriculum') {
                 const isCurriculum = runningTask.details?.includes('(CURRICULUM)') || runningTask.type === 'curriculum';
                 const res = await fetch('/api/content/generate', {
                   method: 'POST',
@@ -1567,14 +1567,14 @@ export default function AdminCurriculumPage() {
   };
 
 
-  const handleApproveGen = (title: string, count: number, level?: string, subject?: string) => {
+  const handleApproveGen = (title: string, count: number, level?: string, subject?: string, isCurriculum?: boolean) => {
     const targetLvl = level || 'L1';
     const isTooSimilarCourse = courses.some(c => {
       const cLvl = c.level || 'L1';
       return cLvl.toLowerCase() === targetLvl.toLowerCase() && areTitlesTooSimilar(c.title, title);
     });
     const isTooSimilarInQueue = queue.some(t => {
-      if (t.type !== 'generation') return false;
+      if (t.type !== 'generation' && t.type !== 'curriculum') return false;
       const tLvl = t.level || 'L1';
       return tLvl.toLowerCase() === targetLvl.toLowerCase() && areTitlesTooSimilar(t.title, title);
     });
@@ -1588,14 +1588,15 @@ export default function AdminCurriculumPage() {
     const newTask = {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
-      type: 'generation',
+      type: isCurriculum ? 'curriculum' : 'generation',
       status: 'queued',
       progress: 0,
       priority: count >= 15 ? 'High' : 'Medium',
       timestamp: new Date().toISOString(),
       targetLang: lang,
       level: normalizeLevel(level || 'L1'),
-      subject: subject || 'General'
+      subject: subject || 'General',
+      details: isCurriculum ? 'Curriculum Generation (CURRICULUM)' : undefined
     };
     const updated = [...queue, newTask];
     setQueue(updated);
@@ -1708,7 +1709,7 @@ export default function AdminCurriculumPage() {
       const otherInfo = getTaskTargetInfo(other);
       if (cleanStr(tInfo.courseTitle) !== cleanStr(otherInfo.courseTitle)) return false;
       
-      if (other.type === 'generation') return true;
+      if (other.type === 'generation' || other.type === 'curriculum') return true;
       if (!tInfo.isRevision) return true;
       
       if (tInfo.isRevision && otherInfo.isRevision) {
