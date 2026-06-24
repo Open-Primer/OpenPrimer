@@ -601,5 +601,8 @@ export const locale: Record<string, string> = {
   "Edit Parameters": "पैरामीटर संपादित करें",
   "Personality saved successfully.": "व्यक्तित्व सफलतापूर्वक सहेजा गया।",
   "Default personality updated.": "डिफ़ॉल्ट व्यक्तित्व अपडेट किया गया।",
+  "Refresh Random Parameters": "यादृच्छिक पैरामीटर रीफ़्रेश करें",
+  "Dynamic Sandbox Controls": "डायनेमिक सैंडबॉक्स नियंत्रण",
 };
+
 

@@ -4,6 +4,8 @@ import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { callVertexAI } from '@/lib/vertex-client';
+import { supabaseAdmin } from '@/lib/supabase';
+
 
 const execPromise = promisify(exec);
 
@@ -91,6 +93,7 @@ function extractLocaleKeysFromCode(code: string): string[] {
 }
 
 // Multilingual Automated Localization Updater
+// Multilingual Automated Localization Updater
 async function updateLocalesForWidgetAndCodeKeys(
   oldNameEN: string | undefined,
   newNameEN: string,
@@ -101,74 +104,133 @@ async function updateLocalesForWidgetAndCodeKeys(
   oldCodeKeys: string[],
   newCodeKeys: string[]
 ) {
-  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  const standardLanguages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  let allLanguages = [...standardLanguages];
+
+  // Dynamically load all languages from Supabase to support dynamically added languages!
+  try {
+    const { data: dbLangs } = await supabaseAdmin
+      .from('languages')
+      .select('code');
+    if (dbLangs && dbLangs.length > 0) {
+      const dbCodes = dbLangs.map(l => l.code.toLowerCase());
+      allLanguages = Array.from(new Set([...allLanguages, ...dbCodes]));
+    }
+  } catch (err) {
+    console.error('[API LOCALES] Error fetching registered languages for dynamic localization:', err);
+  }
+
   const localesDir = path.join(process.cwd(), 'src', 'app', 'admin', 'curriculum', 'locales');
   
-  for (const lang of languages) {
+  for (const lang of allLanguages) {
+    const isStandard = standardLanguages.includes(lang);
     const filePath = path.join(localesDir, `${lang}.ts`);
-    if (!fs.existsSync(filePath)) continue;
+    const record: Record<string, string> = {};
+
+    // 1. Read existing translations from disk if standard
+    if (isStandard && fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+        let match;
+        while ((match = entryRegex.exec(content)) !== null) {
+          record[match[1]] = match[2];
+        }
+      } catch (err) {
+        console.error(`[API LOCALES] Error reading locale file ${lang}.ts:`, err);
+      }
+    }
+
+    // Also fetch/merge from database system_parameters for all non-English languages to ensure synchronization
+    if (lang !== 'en') {
+      try {
+        const { data: paramData } = await supabaseAdmin
+          .from('system_parameters')
+          .select('value')
+          .eq('key', `ui_strings_${lang.toUpperCase()}`)
+          .single();
+        if (paramData?.value) {
+          const dbRecord = JSON.parse(paramData.value);
+          Object.assign(record, dbRecord);
+        }
+      } catch (err) {
+        console.warn(`[API LOCALES] No existing system_parameters found for key ui_strings_${lang.toUpperCase()}`);
+      }
+    }
     
-    try {
-      const content = fs.readFileSync(filePath, 'utf8');
-      const record: Record<string, string> = {};
-      
-      const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
-      let match;
-      while ((match = entryRegex.exec(content)) !== null) {
-        record[match[1]] = match[2];
-      }
-      
-      // 1. Delete old metadata keys if changed
-      if (oldNameEN && record[oldNameEN] !== undefined) {
-        delete record[oldNameEN];
-      }
-      if (oldDescEN && record[oldDescEN] !== undefined) {
-        delete record[oldDescEN];
-      }
+    // 2. Delete old metadata keys if changed
+    if (oldNameEN && record[oldNameEN] !== undefined) {
+      delete record[oldNameEN];
+    }
+    if (oldDescEN && record[oldDescEN] !== undefined) {
+      delete record[oldDescEN];
+    }
 
-      // Delete old code visual keys
-      for (const oldKey of oldCodeKeys) {
-        if (record[oldKey] !== undefined) {
-          delete record[oldKey];
-        }
+    // Delete old code visual keys
+    for (const oldKey of oldCodeKeys) {
+      if (record[oldKey] !== undefined) {
+        delete record[oldKey];
       }
-      
-      // 2. Insert new metadata keys with target translation
+    }
+    
+    // 3. Insert new metadata keys with target translation
+    if (lang === 'en') {
+      record[newNameEN] = newNameEN;
+      record[newDescEN] = newDescEN;
+    } else if (lang === 'fr') {
+      record[newNameEN] = nameFR;
+      record[newDescEN] = descFR;
+    } else {
+      const transName = await translateText(newNameEN, lang);
+      const transDesc = await translateText(newDescEN, lang);
+      record[newNameEN] = transName;
+      record[newDescEN] = transDesc;
+    }
+
+    // Translate and insert new code visual keys
+    for (const newKey of newCodeKeys) {
       if (lang === 'en') {
-        record[newNameEN] = newNameEN;
-        record[newDescEN] = newDescEN;
+        record[newKey] = newKey;
       } else if (lang === 'fr') {
-        record[newNameEN] = nameFR;
-        record[newDescEN] = descFR;
+        record[newKey] = await translateText(newKey, 'fr');
       } else {
-        const transName = await translateText(newNameEN, lang);
-        const transDesc = await translateText(newDescEN, lang);
-        record[newNameEN] = transName;
-        record[newDescEN] = transDesc;
+        record[newKey] = await translateText(newKey, lang);
       }
-
-      // Translate and insert new code visual keys
-      for (const newKey of newCodeKeys) {
-        if (lang === 'en') {
-          record[newKey] = newKey;
-        } else if (lang === 'fr') {
-          record[newKey] = await translateText(newKey, 'fr');
-        } else {
-          record[newKey] = await translateText(newKey, lang);
+    }
+    
+    // 4. Formulate back to disk if standard
+    if (isStandard) {
+      try {
+        let output = 'export const locale: Record<string, string> = {\n';
+        for (const [k, v] of Object.entries(record)) {
+          output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
         }
+        output += '};\n';
+        fs.writeFileSync(filePath, output, 'utf8');
+        console.log(`[API LOCALES] Updated disk ${lang}.ts translations for "${newNameEN}" & visual keys`);
+      } catch (err) {
+        console.error(`[API LOCALES] Error writing locale file ${lang}.ts:`, err);
       }
-      
-      // 3. Formulate back to disk
-      let output = 'export const locale: Record<string, string> = {\n';
-      for (const [k, v] of Object.entries(record)) {
-        output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
+    }
+
+    // 5. Upsert back to database system_parameters for all non-English languages
+    if (lang !== 'en') {
+      try {
+        const { error: upsertError } = await supabaseAdmin
+          .from('system_parameters')
+          .upsert({
+            key: `ui_strings_${lang.toUpperCase()}`,
+            value: JSON.stringify(record),
+            updated_at: new Date().toISOString()
+          });
+        if (upsertError) {
+          console.error(`[API LOCALES] Error upserting ui_strings_${lang.toUpperCase()} to database:`, upsertError.message);
+        } else {
+          console.log(`[API LOCALES] Upserted database ui_strings_${lang.toUpperCase()} translations for "${newNameEN}"`);
+        }
+      } catch (err) {
+        console.error(`[API LOCALES] Error updating database system_parameters for language ${lang}:`, err);
       }
-      output += '};\n';
-      
-      fs.writeFileSync(filePath, output, 'utf8');
-      console.log(`[API LOCALES] Updated ${lang}.ts translations for "${newNameEN}" & visual keys`);
-    } catch (err) {
-      console.error(`[API LOCALES] Error updating locale file ${lang}.ts:`, err);
     }
   }
 }
@@ -360,10 +422,23 @@ async function updateDraftTranslationsCache(
     draft.draftTranslations = {};
   }
   
-  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  const standardLanguages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  let allLanguages = [...standardLanguages];
+
+  try {
+    const { data: dbLangs } = await supabaseAdmin
+      .from('languages')
+      .select('code');
+    if (dbLangs && dbLangs.length > 0) {
+      const dbCodes = dbLangs.map(l => l.code.toLowerCase());
+      allLanguages = Array.from(new Set([...allLanguages, ...dbCodes]));
+    }
+  } catch (err) {
+    console.error('[API LOCALES] Error fetching languages for draft cache:', err);
+  }
   
   // Initialize language records
-  for (const lang of languages) {
+  for (const lang of allLanguages) {
     if (!draft.draftTranslations[lang]) {
       draft.draftTranslations[lang] = {};
     }
@@ -372,7 +447,7 @@ async function updateDraftTranslationsCache(
   // Translate and cache metadata
   if (metadata) {
     const { nameEN, nameFR, descEN, descFR } = metadata;
-    for (const lang of languages) {
+    for (const lang of allLanguages) {
       const record = draft.draftTranslations[lang];
       if (lang === 'en') {
         record[nameEN] = nameEN;
@@ -390,7 +465,7 @@ async function updateDraftTranslationsCache(
   // Translate and cache code visual keys
   if (codeKeys) {
     for (const key of codeKeys) {
-      for (const lang of languages) {
+      for (const lang of allLanguages) {
         const record = draft.draftTranslations[lang];
         if (lang === 'en') {
           record[key] = key;
@@ -433,81 +508,139 @@ async function applyDraftTranslationsToLocales(
   }
 
   const draftTranslations = catalogInfo.draft.draftTranslations;
-  const languages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  const standardLanguages = ['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur'];
+  let allLanguages = [...standardLanguages];
+
+  try {
+    const { data: dbLangs } = await supabaseAdmin
+      .from('languages')
+      .select('code');
+    if (dbLangs && dbLangs.length > 0) {
+      const dbCodes = dbLangs.map(l => l.code.toLowerCase());
+      allLanguages = Array.from(new Set([...allLanguages, ...dbCodes]));
+    }
+  } catch (err) {
+    console.error('[API LOCALES] Error fetching languages for draft commit:', err);
+  }
+
   const localesDir = path.join(process.cwd(), 'src', 'app', 'admin', 'curriculum', 'locales');
 
-  for (const lang of languages) {
+  for (const lang of allLanguages) {
+    const isStandard = standardLanguages.includes(lang);
     const filePath = path.join(localesDir, `${lang}.ts`);
-    if (!fs.existsSync(filePath)) continue;
+    const record: Record<string, string> = {};
 
-    try {
-      const content = fs.readFileSync(filePath, 'utf8');
-      const record: Record<string, string> = {};
-
-      const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
-      let match;
-      while ((match = entryRegex.exec(content)) !== null) {
-        record[match[1]] = match[2];
-      }
-
-      // 1. Delete old metadata keys if changed
-      if (oldNameEN && record[oldNameEN] !== undefined) {
-        delete record[oldNameEN];
-      }
-      if (oldDescEN && record[oldDescEN] !== undefined) {
-        delete record[oldDescEN];
-      }
-
-      // Delete old code visual keys
-      for (const oldKey of oldCodeKeys) {
-        if (record[oldKey] !== undefined) {
-          delete record[oldKey];
+    // 1. Read existing translations from disk if standard
+    if (isStandard && fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const entryRegex = /"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+        let match;
+        while ((match = entryRegex.exec(content)) !== null) {
+          record[match[1]] = match[2];
         }
+      } catch (err) {
+        console.error(`[API LOCALES] Error reading locale file ${lang}.ts:`, err);
       }
+    }
 
-      // 2. Insert new metadata keys and new code visual keys from cache
-      const draftRecord = draftTranslations[lang] || {};
+    // Also fetch/merge from database system_parameters for all non-English languages to ensure synchronization
+    if (lang !== 'en') {
+      try {
+        const { data: paramData } = await supabaseAdmin
+          .from('system_parameters')
+          .select('value')
+          .eq('key', `ui_strings_${lang.toUpperCase()}`)
+          .single();
+        if (paramData?.value) {
+          const dbRecord = JSON.parse(paramData.value);
+          Object.assign(record, dbRecord);
+        }
+      } catch (err) {
+        console.warn(`[API LOCALES] No existing system_parameters found for key ui_strings_${lang.toUpperCase()}`);
+      }
+    }
 
-      // Name
-      if (draftRecord[newNameEN] !== undefined) {
-        record[newNameEN] = draftRecord[newNameEN];
+    // 1. Delete old metadata keys if changed
+    if (oldNameEN && record[oldNameEN] !== undefined) {
+      delete record[oldNameEN];
+    }
+    if (oldDescEN && record[oldDescEN] !== undefined) {
+      delete record[oldDescEN];
+    }
+
+    // Delete old code visual keys
+    for (const oldKey of oldCodeKeys) {
+      if (record[oldKey] !== undefined) {
+        delete record[oldKey];
+      }
+    }
+
+    // 2. Insert new metadata keys and new code visual keys from cache
+    const draftRecord = draftTranslations[lang] || {};
+
+    // Name
+    if (draftRecord[newNameEN] !== undefined) {
+      record[newNameEN] = draftRecord[newNameEN];
+    } else {
+      if (lang === 'en') record[newNameEN] = newNameEN;
+      else if (lang === 'fr') record[newNameEN] = catalogInfo.draft.nameFR || newNameEN;
+      else record[newNameEN] = await translateText(newNameEN, lang);
+    }
+
+    // Description
+    if (draftRecord[newDescEN] !== undefined) {
+      record[newDescEN] = draftRecord[newDescEN];
+    } else {
+      if (lang === 'en') record[newDescEN] = newDescEN;
+      else if (lang === 'fr') record[newDescEN] = catalogInfo.draft.descFR || newDescEN;
+      else record[newDescEN] = await translateText(newDescEN, lang);
+    }
+
+    // Code visual keys
+    for (const newKey of newCodeKeys) {
+      if (draftRecord[newKey] !== undefined) {
+        record[newKey] = draftRecord[newKey];
       } else {
-        if (lang === 'en') record[newNameEN] = newNameEN;
-        else if (lang === 'fr') record[newNameEN] = catalogInfo.draft.nameFR || newNameEN;
-        else record[newNameEN] = await translateText(newNameEN, lang);
+        if (lang === 'en') record[newKey] = newKey;
+        else if (lang === 'fr') record[newKey] = await translateText(newKey, 'fr');
+        else record[newKey] = await translateText(newKey, lang);
       }
+    }
 
-      // Description
-      if (draftRecord[newDescEN] !== undefined) {
-        record[newDescEN] = draftRecord[newDescEN];
-      } else {
-        if (lang === 'en') record[newDescEN] = newDescEN;
-        else if (lang === 'fr') record[newDescEN] = catalogInfo.draft.descFR || newDescEN;
-        else record[newDescEN] = await translateText(newDescEN, lang);
+    // 3. Formulate back to disk if standard
+    if (isStandard) {
+      try {
+        let output = 'export const locale: Record<string, string> = {\n';
+        for (const [k, v] of Object.entries(record)) {
+          output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
+        }
+        output += '};\n';
+        fs.writeFileSync(filePath, output, 'utf8');
+        console.log(`[API LOCALES] Committed pre-cached ${lang}.ts translations for "${newNameEN}"`);
+      } catch (err) {
+        console.error(`[API LOCALES] Error committing locale file ${lang}.ts:`, err);
       }
+    }
 
-      // Code visual keys
-      for (const newKey of newCodeKeys) {
-        if (draftRecord[newKey] !== undefined) {
-          record[newKey] = draftRecord[newKey];
+    // 4. Upsert back to database system_parameters for all non-English languages
+    if (lang !== 'en') {
+      try {
+        const { error: upsertError } = await supabaseAdmin
+          .from('system_parameters')
+          .upsert({
+            key: `ui_strings_${lang.toUpperCase()}`,
+            value: JSON.stringify(record),
+            updated_at: new Date().toISOString()
+          });
+        if (upsertError) {
+          console.error(`[API LOCALES] Error upserting ui_strings_${lang.toUpperCase()} to database:`, upsertError.message);
         } else {
-          if (lang === 'en') record[newKey] = newKey;
-          else if (lang === 'fr') record[newKey] = await translateText(newKey, 'fr');
-          else record[newKey] = await translateText(newKey, lang);
+          console.log(`[API LOCALES] Committed database ui_strings_${lang.toUpperCase()} translations for "${newNameEN}"`);
         }
+      } catch (err) {
+        console.error(`[API LOCALES] Error committing database system_parameters for language ${lang}:`, err);
       }
-
-      // 3. Formulate back to disk
-      let output = 'export const locale: Record<string, string> = {\n';
-      for (const [k, v] of Object.entries(record)) {
-        output += `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
-      }
-      output += '};\n';
-
-      fs.writeFileSync(filePath, output, 'utf8');
-      console.log(`[API LOCALES] Committed pre-cached ${lang}.ts translations for "${newNameEN}"`);
-    } catch (err) {
-      console.error(`[API LOCALES] Error committing locale file ${lang}.ts:`, err);
     }
   }
 }

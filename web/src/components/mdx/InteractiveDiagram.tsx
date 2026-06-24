@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Info, Award } from 'lucide-react';
+import { Eye, EyeOff, Info } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface Hotspot {
   id: string;
@@ -23,77 +25,112 @@ interface InteractiveDiagramProps {
 const DEFAULT_CELL_HOTSPOTS: Hotspot[] = [
   {
     id: "noyau",
-    name: "Noyau (Nucleus)",
+    name: "Nucleus",
     x: 50,
     y: 50,
-    description: "Le centre de contrôle de la cellule. Il contient l'ADN sous forme de chromatine et dirige la synthèse des protéines ainsi que la division cellulaire."
+    description: "The control center of the cell. It contains DNA as chromatin and directs protein synthesis and cell division."
   },
   {
     id: "mitochondrie",
-    name: "Mitochondrie",
+    name: "Mitochondria",
     x: 25,
     y: 40,
-    description: "La centrale énergétique de la cellule. C'est ici que se produit la respiration cellulaire pour générer de l'ATP, le carburant de la vie."
+    description: "The powerhouse of the cell. This is where cellular respiration occurs to generate ATP, the fuel of life."
   },
   {
     id: "cytoplasme",
-    name: "Cytoplasme",
+    name: "Cytoplasm",
     x: 70,
     y: 35,
-    description: "Le fluide gélatineux (principalement composé d'eau) qui remplit la cellule et suspend tous les autres organites."
+    description: "The gelatinous fluid (mainly composed of water) that fills the cell and suspends all other organelles."
   },
   {
     id: "membrane",
-    name: "Membrane Plasmique",
+    name: "Plasma Membrane",
     x: 88,
     y: 50,
-    description: "La barrière sélective externe de la cellule, régulant l'entrée et la sortie des nutriments et des déchets."
+    description: "The selective outer barrier of the cell, regulating the entry and exit of nutrients and wastes."
   },
   {
     id: "ribosome",
     name: "Ribosomes",
     x: 60,
     y: 70,
-    description: "De minuscules machines moléculaires responsables de la synthèse des protéines à partir du code génétique ARN."
+    description: "Tiny molecular machines responsible for synthesizing proteins from the RNA genetic code."
   }
 ];
 
 const DEFAULT_NEURON_HOTSPOTS: Hotspot[] = [
   {
     id: "soma",
-    name: "Soma (Corps cellulaire)",
+    name: "Soma (Cell Body)",
     x: 35,
     y: 50,
-    description: "La partie centrale du neurone contenant le noyau cellulaire et les organites essentiels. C'est ici que sont intégrés les signaux électriques reçus avant d'être transmis à l'axone."
+    description: "The central part of the neuron containing the cell nucleus and essential organelles. This is where received electrical signals are integrated before being transmitted to the axon."
   },
   {
     id: "dendrites",
     name: "Dendrites",
     x: 15,
     y: 25,
-    description: "De courtes ramifications arborescentes prolongeant le corps cellulaire. Elles agissent comme des antennes réceptrices pour capter les signaux chimiques (neurotransmetteurs) provenant d'autres neurones."
+    description: "Short branching extensions prolonging the cell body. They act as receiving antennas to capture chemical signals (neurotransmitters) from other neurons."
   },
   {
     id: "axone",
-    name: "Axone",
+    name: "Axon",
     x: 55,
     y: 52,
-    description: "Un long prolongement unique qui conduit le message électrique (potentiel d'action) depuis le corps cellulaire jusqu'aux boutons terminaux pour le transmettre à d'autres cellules."
+    description: "A long unique extension that conducts the electrical message (action potential) from the cell body to the terminal buttons to transmit it to other cells."
   },
   {
     id: "myeline",
-    name: "Gaine de myéline",
+    name: "Myelin Sheath",
     x: 72,
     y: 44,
-    description: "Une enveloppe protective riche en lipides formée par des cellules de Schwann. Elle isole l'axone et augmente considérablement la vitesse de propagation de l'influx nerveux par conduction saltatoire."
+    description: "A protective envelope rich in lipids formed by Schwann cells. It insulates the axon and significantly increases the speed of nerve impulse propagation by saltatory conduction."
   },
   {
     id: "synapse",
-    name: "Synapse (Terminaisons axonales)",
+    name: "Synapse (Axon Terminals)",
     x: 90,
     y: 62,
-    description: "Les ramifications terminales de l'axone contenant des vésicules de neurotransmetteurs. C'est ici que l'influx électrique est converti en signal chimique pour franchir la fente synaptique."
+    description: "The terminal branches of the axon containing vesicles of neurotransmitters. This is where the electrical impulse is converted into a chemical signal to cross the synaptic cleft."
   }
+];
+
+// Dummy array to force extraction of all localized strings by the backend i18n parser
+const _dummy_translations = (t: any) => [
+  t("Nucleus"),
+  t("The control center of the cell. It contains DNA as chromatin and directs protein synthesis and cell division."),
+  t("Mitochondria"),
+  t("The powerhouse of the cell. This is where cellular respiration occurs to generate ATP, the fuel of life."),
+  t("Cytoplasm"),
+  t("The gelatinous fluid (mainly composed of water) that fills the cell and suspends all other organelles."),
+  t("Plasma Membrane"),
+  t("The selective outer barrier of the cell, regulating the entry and exit of nutrients and wastes."),
+  t("Ribosomes"),
+  t("Tiny molecular machines responsible for synthesizing proteins from the RNA genetic code."),
+
+  t("Soma (Cell Body)"),
+  t("The central part of the neuron containing the cell nucleus and essential organelles. This is where received electrical signals are integrated before being transmitted to the axon."),
+  t("Dendrites"),
+  t("Short branching extensions prolonging the cell body. They act as receiving antennas to capture chemical signals (neurotransmitters) from other neurons."),
+  t("Axon"),
+  t("A long unique extension that conducts the electrical message (action potential) from the cell body to the terminal buttons to transmit it to other cells."),
+  t("Myelin Sheath"),
+  t("A protective envelope rich in lipids formed by Schwann cells. It insulates the axon and significantly increases the speed of nerve impulse propagation by saltatory conduction."),
+  t("Synapse (Axon Terminals)"),
+  t("The terminal branches of the axon containing vesicles of neurotransmitters. This is where the electrical impulse is converted into a chemical signal to cross the synaptic cleft."),
+
+  // UI labels
+  t("INTERACTIVE EXPLORATION"),
+  t("Hide Labels"),
+  t("Show Labels"),
+  t("ACTIVE COMPONENT"),
+  t("Select a component"),
+  t("Click on the bulb icons on the diagram to display details and physiological characteristics."),
+  t("Neuron Anatomy"),
+  t("Interactive Diagram: Eukaryotic Cell")
 ];
 
 export const InteractiveDiagram = ({
@@ -103,6 +140,9 @@ export const InteractiveDiagram = ({
   hotspotsBase64,
   gradeLevel = "high_school"
 }: InteractiveDiagramProps) => {
+  const { language } = useLanguage();
+  const t = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const [showLabels, setShowLabels] = useState(false);
 
@@ -135,20 +175,40 @@ export const InteractiveDiagram = ({
   
   const defaultHotspots = resolvedType === 'neuron' ? DEFAULT_NEURON_HOTSPOTS : DEFAULT_CELL_HOTSPOTS;
   // If hotspots are empty, omitted, or if they match DEFAULT_CELL_HOTSPOTS but it is a neuron, load default hotspots
-  const activeHotspots = (!Array.isArray(resolvedHotspots) || resolvedHotspots.length === 0 || (resolvedHotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
+  const activeHotspotsRaw = (!Array.isArray(resolvedHotspots) || resolvedHotspots.length === 0 || (resolvedHotspots === DEFAULT_CELL_HOTSPOTS && isNeuron))
     ? defaultHotspots 
     : resolvedHotspots;
+
+  // Localize hotspots on-the-fly!
+  const activeHotspots = React.useMemo(() => {
+    return activeHotspotsRaw.map(spot => ({
+      ...spot,
+      name: t[spot.name] || spot.name,
+      description: t[spot.description] || spot.description
+    }));
+  }, [activeHotspotsRaw, t]);
+
+  // Adjust selected hotspot if references updated due to re-render or localization changes
+  useEffect(() => {
+    if (selectedHotspot) {
+      const found = activeHotspots.find(s => s.id === selectedHotspot.id);
+      if (found) {
+        setSelectedHotspot(found);
+      }
+    }
+  }, [activeHotspots]);
   
-  const resolvedTitle = title 
+  const resolvedTitleRaw = title 
     ? title 
-    : (resolvedType === 'neuron' ? "Anatomie du Neurone" : "Diagramme Interactif : La Cellule Eucaryote");
+    : (resolvedType === 'neuron' ? "Neuron Anatomy" : "Interactive Diagram: Eukaryotic Cell");
+  const resolvedTitle = t[resolvedTitleRaw] || resolvedTitleRaw;
 
   return (
     <div className="my-8 bg-slate-900/20 border border-slate-800 rounded-[32px] p-6 md:p-8 space-y-6 backdrop-blur-md">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">
-            🔬 EXPLORATION INTERACTIVE
+            🔬 {t["INTERACTIVE EXPLORATION"] || "INTERACTIVE EXPLORATION"}
           </span>
           <h4 className="text-base font-black text-white uppercase tracking-wider">{resolvedTitle}</h4>
         </div>
@@ -158,11 +218,11 @@ export const InteractiveDiagram = ({
         >
           {showLabels ? (
             <>
-              <EyeOff className="w-3.5 h-3.5" /> Masquer les étiquettes
+              <EyeOff className="w-3.5 h-3.5" /> {t["Hide Labels"] || "Hide Labels"}
             </>
           ) : (
             <>
-              <Eye className="w-3.5 h-3.5" /> Révéler les étiquettes
+              <Eye className="w-3.5 h-3.5" /> {t["Show Labels"] || "Show Labels"}
             </>
           )}
         </button>
@@ -270,7 +330,7 @@ export const InteractiveDiagram = ({
               <line x1="200" y1="20" x2="200" y2="380" stroke="#334155" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="5,5" />
               <line x1="20" y1="200" x2="380" y2="200" stroke="#334155" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="5,5" />
 
-              {/* Dendrites - Organic, Complex Branching Tree (drawn behind soma) */}
+              {/* Dendrites */}
               <g stroke="#0f766e" strokeLinecap="round" fill="none" strokeWidth="2.5" opacity="0.85">
                 {/* Dendrite Branch 1: Top-Left */}
                 <path d="M 120 165 C 95 140, 80 125, 45 105" />
@@ -300,7 +360,7 @@ export const InteractiveDiagram = ({
                 <path d="M 140 275 C 125 280, 110 290, 95 295" strokeWidth="1.8" />
               </g>
 
-              {/* Dendritic Spines (Épines Dendritiques) - Tiny realistic neural inputs */}
+              {/* Dendritic Spines */}
               <g fill="#14b8a6" opacity="0.6">
                 <circle cx="65" cy="118" r="2" />
                 <circle cx="50" cy="108" r="2" />
@@ -318,17 +378,17 @@ export const InteractiveDiagram = ({
                 <circle cx="124" cy="320" r="1.5" />
               </g>
 
-              {/* Axon Hillock (Cône d'implantation de l'axone) - smooth realistic transition */}
+              {/* Axon Hillock */}
               <path d="M 165 188 Q 185 196, 192 198 L 192 202 Q 185 204, 165 212 Z" fill="#10b981" fillOpacity="0.4" />
 
-              {/* Axon (glowing neural core cable) */}
+              {/* Axon */}
               <path d="M 175 200 L 330 200" fill="none" stroke="url(#axonGrad)" strokeWidth="4" strokeLinecap="round" />
 
-              {/* Myelin Sheaths with realistic Schwann Cell nucleuses */}
+              {/* Myelin Sheaths with Schwann Cell nucleuses */}
               <g stroke="#d97706" strokeWidth="1.5">
                 {/* Sheath 1 */}
                 <rect x="195" y="185" width="32" height="30" rx="7" fill="url(#myelineGrad)" fillOpacity="0.4" />
-                <ellipse cx="211" cy="200" rx="3.5" ry="2" fill="#78350f" stroke="none" /> {/* Schwann nucleus */}
+                <ellipse cx="211" cy="200" rx="3.5" ry="2" fill="#78350f" stroke="none" />
 
                 {/* Sheath 2 */}
                 <rect x="240" y="185" width="32" height="30" rx="7" fill="url(#myelineGrad)" fillOpacity="0.4" />
@@ -350,7 +410,7 @@ export const InteractiveDiagram = ({
                 transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
               />
 
-              {/* Soma (Corps Cellulaire) - Detailed scientifically realistic multipolar body */}
+              {/* Soma */}
               <path 
                 d="M 140 152 
                    C 146 160, 158 162, 164 168 
@@ -370,11 +430,11 @@ export const InteractiveDiagram = ({
               />
               <circle cx="140" cy="200" r="32" fill="url(#somaGlow)" />
 
-              {/* Nucleus & Nucleolus (Noyau et nucléole) */}
+              {/* Nucleus & Nucleolus */}
               <circle cx="140" cy="200" r="13" fill="url(#nucleusGlow)" stroke="#c084fc" strokeWidth="1.5" />
               <circle cx="140" cy="200" r="4.5" fill="#6d28d9" />
 
-              {/* Synaptic Terminals (Terminaisons axonales) - Realistic Terminal Arborization */}
+              {/* Synaptic Terminals */}
               <g stroke="#db2777" strokeWidth="2" strokeLinecap="round" fill="none">
                 {/* Branch 1 */}
                 <path d="M 330 200 C 342 192, 350 180, 368 180" />
@@ -525,7 +585,7 @@ export const InteractiveDiagram = ({
                 className="bg-slate-900/50 border border-emerald-500/10 rounded-2xl p-6 space-y-4 shadow-xl border-l-4 border-l-emerald-500 relative"
               >
                 <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest block">
-                  📍 ORGANE CLIQUE
+                  📍 {t["ACTIVE COMPONENT"] || "ACTIVE COMPONENT"}
                 </span>
                 <h5 className="text-sm font-black text-white">{selectedHotspot.name}</h5>
                 <p className="text-xs text-slate-300 leading-relaxed font-medium">
@@ -543,10 +603,10 @@ export const InteractiveDiagram = ({
                   <Info className="w-5 h-5" />
                 </div>
                 <h5 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                  Sélectionnez un élément
+                  {t["Select a component"] || "Select a component"}
                 </h5>
                 <p className="text-[11px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
-                  Cliquez sur les icônes d'ampoule du schéma pour afficher les détails et caractéristiques physiologiques.
+                  {t["Click on the bulb icons on the diagram to display details and physiological characteristics."] || "Click on the bulb icons on the diagram to display details and physiological characteristics."}
                 </p>
               </motion.div>
             )}

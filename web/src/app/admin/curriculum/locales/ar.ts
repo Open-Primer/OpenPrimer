@@ -601,5 +601,8 @@ export const locale: Record<string, string> = {
   "Edit Parameters": "تعديل المعلمات",
   "Personality saved successfully.": "تم حفظ الشخصية بنجاح.",
   "Default personality updated.": "تم تحديث الشخصية الافتراضية.",
+  "Refresh Random Parameters": "تحديث المعلمات العشوائية",
+  "Dynamic Sandbox Controls": "عناصر تحكم علبة الرمل الديناميكية",
 };
+
 

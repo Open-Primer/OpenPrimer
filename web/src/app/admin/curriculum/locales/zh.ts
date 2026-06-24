@@ -596,5 +596,8 @@ export const locale: Record<string, string> = {
   "Edit Parameters": "编辑参数",
   "Personality saved successfully.": "角色保存成功。",
   "Default personality updated.": "默认角色已更新。",
+  "Refresh Random Parameters": "刷新随机参数",
+  "Dynamic Sandbox Controls": "动态沙盒控件",
 };
+
 

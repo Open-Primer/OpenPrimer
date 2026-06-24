@@ -2,6 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import { Compass, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface Geometry2DProps {
   preset: 'triangle' | 'circle' | 'vector';
@@ -10,6 +12,11 @@ interface Geometry2DProps {
 }
 
 export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeLevel }: Geometry2DProps) => {
+  const { language } = useLanguage();
+  const t = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+
+  const displayTitle = t[title] || title;
+
   const svgRef = useRef<SVGSVGElement>(null);
   
   const [points, setPoints] = useState<Record<string, { x: number; y: number }>>(() => {
@@ -112,7 +119,7 @@ export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeL
       <div className="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-3">
         <Compass className="w-4 h-4 text-emerald-400" />
         <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">
-          {title}
+          {displayTitle}
         </span>
       </div>
 
@@ -216,30 +223,30 @@ export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeL
         <div className="flex-1 w-full bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-center gap-3">
           <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1 select-none">
             <Sparkles className="w-3.5 h-3.5" />
-            Mesures en temps réel
+            {t["Mesures en temps réel"] || "Mesures en temps réel"}
           </span>
 
           <div className="space-y-2.5 text-xs text-slate-350">
             {preset === 'triangle' && (
               <>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Côté AB :</span>
+                  <span>{t["Côté AB :"] || "Côté AB :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.ab} cm</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Côté BC :</span>
+                  <span>{t["Côté BC :"] || "Côté BC :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.bc} cm</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Côté CA :</span>
+                  <span>{t["Côté CA :"] || "Côté CA :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.ca} cm</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800 pb-1 font-bold text-blue-400">
-                  <span>Périmètre :</span>
+                  <span>{t["Périmètre :"] || "Périmètre :"}</span>
                   <span className="font-mono">{metrics.perimeter} cm</span>
                 </div>
                 <div className="flex justify-between font-bold text-emerald-400">
-                  <span>Aire :</span>
+                  <span>{t["Aire :"] || "Aire :"}</span>
                   <span className="font-mono">{metrics.area} cm²</span>
                 </div>
               </>
@@ -248,15 +255,15 @@ export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeL
             {preset === 'circle' && (
               <>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Angle θ :</span>
+                  <span>{t["Angle θ :"] || "Angle θ :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.angleDeg}°</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800 pb-1 text-emerald-400 font-bold">
-                  <span>Cosinus (X) :</span>
+                  <span>{t["Cosinus (X) :"] || "Cosinus (X) :"}</span>
                   <span className="font-mono">{metrics.cos}</span>
                 </div>
                 <div className="flex justify-between text-rose-400 font-bold">
-                  <span>Sinus (Y) :</span>
+                  <span>{t["Sinus (Y) :"] || "Sinus (Y) :"}</span>
                   <span className="font-mono">{metrics.sin}</span>
                 </div>
               </>
@@ -265,15 +272,15 @@ export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeL
             {preset === 'vector' && (
               <>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Composante X :</span>
+                  <span>{t["Composante X :"] || "Composante X :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.dx}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800 pb-1">
-                  <span>Composante Y :</span>
+                  <span>{t["Composante Y :"] || "Composante Y :"}</span>
                   <span className="font-mono font-bold text-slate-100">{metrics.dy}</span>
                 </div>
                 <div className="flex justify-between text-rose-400 font-bold">
-                  <span>Norme ||V|| :</span>
+                  <span>{t["Norme ||V|| :"] || "Norme ||V|| :"}</span>
                   <span className="font-mono">{metrics.magnitude}</span>
                 </div>
               </>
@@ -284,3 +291,20 @@ export const Geometry2D = ({ preset, title = "Sandbox de Géométrie 2D", gradeL
     </div>
   );
 };
+
+// Dummy array to force extraction of all localized strings by the backend i18n parser
+const _dummy_translations = (t: any) => [
+  t("Sandbox de Géométrie 2D"),
+  t("Mesures en temps réel"),
+  t("Côté AB :"),
+  t("Côté BC :"),
+  t("Côté CA :"),
+  t("Périmètre :"),
+  t("Aire :"),
+  t("Angle θ :"),
+  t("Cosinus (X) :"),
+  t("Sinus (Y) :"),
+  t("Composante X :"),
+  t("Composante Y :"),
+  t("Norme ||V|| :")
+];

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, Sliders, Play, Info, Award, CircleDot } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface Lobe {
   x: number;
@@ -14,12 +16,9 @@ interface Lobe {
 
 interface OrbitalPreset {
   id: string;
-  nameFR: string;
-  nameEN: string;
-  descriptionFR: string;
-  descriptionEN: string;
-  geometryFR: string;
-  geometryEN: string;
+  name: string;
+  description: string;
+  geometry: string;
   lobes: Lobe[];
 }
 
@@ -31,24 +30,18 @@ interface QuantumOrbitalExplorerProps {
 const ORBITALS: OrbitalPreset[] = [
   {
     id: "1s",
-    nameFR: "Orbitale 1s",
-    nameEN: "1s Orbital",
-    descriptionFR: "Orbitale de plus basse énergie, de symétrie sphérique. La probabilité de présence de l'électron est maximale au centre.",
-    descriptionEN: "The lowest energy orbital, showing perfect spherical symmetry. Electron probability density peaks at the nucleus.",
-    geometryFR: "Sphérique (l = 0, m = 0)",
-    geometryEN: "Spherical (l = 0, m = 0)",
+    name: "1s Orbital",
+    description: "The lowest energy orbital, showing perfect spherical symmetry. Electron probability density peaks at the nucleus.",
+    geometry: "Spherical (l = 0, m = 0)",
     lobes: [
       { x: 0, y: 0, z: 0, radius: 26, color: '#3b82f6', phase: '+' }
     ]
   },
   {
     id: "2s",
-    nameFR: "Orbitale 2s",
-    nameEN: "2s Orbital",
-    descriptionFR: "Orbitale sphérique comportant un nœud radial (surface sphérique où la probabilité de présence est nulle).",
-    descriptionEN: "Spherical orbital with a radial node (a spherical shell where electron probability drops to zero).",
-    geometryFR: "Sphérique avec nœud (l = 0, m = 0)",
-    geometryEN: "Spherical with Node (l = 0, m = 0)",
+    name: "2s Orbital",
+    description: "Spherical orbital with a radial node (a spherical shell where electron probability drops to zero).",
+    geometry: "Spherical with Node (l = 0, m = 0)",
     lobes: [
       { x: 0, y: 0, z: 0, radius: 28, color: '#3b82f6', phase: '+' },
       { x: 0, y: 0, z: 0, radius: 13, color: '#ef4444', phase: '-' } // Inner node lobe
@@ -56,12 +49,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "2pz",
-    nameFR: "Orbitale 2p_z",
-    nameEN: "2p_z Orbital",
-    descriptionFR: "Comporte deux lobes opposés séparés par un plan nodal (le plan xy). Les phases d'onde positive (bleu) et négative (rouge) représentent le signe de la fonction d'onde.",
-    descriptionEN: "Features two opposing lobes separated by a nodal plane (the xy-plane). Wave phases of positive (blue) and negative (red) represent wave sign.",
-    geometryFR: "Haltère / Bilobée (l = 1, m = 0)",
-    geometryEN: "Dumbbell / Bilobed (l = 1, m = 0)",
+    name: "2p_z Orbital",
+    description: "Features two opposing lobes separated by a nodal plane (the xy-plane). Wave phases of positive (blue) and negative (red) represent wave sign.",
+    geometry: "Dumbbell / Bilobed (l = 1, m = 0)",
     lobes: [
       { x: 0, y: 0.7, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
       { x: 0, y: -0.7, z: 0, radius: 22, color: '#ef4444', phase: '-' }
@@ -69,12 +59,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "2px",
-    nameFR: "Orbitale 2p_x",
-    nameEN: "2p_x Orbital",
-    descriptionFR: "Orbitale bilobée orientée le cours de l'axe x. Le plan de symétrie yz est un plan nodal.",
-    descriptionEN: "Bilobed orbital oriented along the x-axis. The yz-plane acts as a nodal plane.",
-    geometryFR: "Haltère / Bilobée (l = 1, m = ±1)",
-    geometryEN: "Dumbbell / Bilobed (l = 1, m = ±1)",
+    name: "2p_x Orbital",
+    description: "Bilobed orbital oriented along the x-axis. The yz-plane acts as a nodal plane.",
+    geometry: "Dumbbell / Bilobed (l = 1, m = ±1)",
     lobes: [
       { x: 0.7, y: 0, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
       { x: -0.7, y: 0, z: 0, radius: 22, color: '#ef4444', phase: '-' }
@@ -82,12 +69,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "3d",
-    nameFR: "Orbitale 3d_xy",
-    nameEN: "3d_xy Orbital",
-    descriptionFR: "Orbitale à quatre lobes (quadripolaire). Les lobes de signes opposés alternent dans les quatre quadrants.",
-    descriptionEN: "Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants.",
-    geometryFR: "Trèfle / Quadrilobée (l = 2, m = ±2)",
-    geometryEN: "Clover / Quadrupolar (l = 2, m = ±2)",
+    name: "3d_xy Orbital",
+    description: "Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants.",
+    geometry: "Clover / Quadrupolar (l = 2, m = ±2)",
     lobes: [
       { x: 0.55, y: 0.55, z: 0, radius: 17, color: '#3b82f6', phase: '+' },
       { x: -0.55, y: -0.55, z: 0, radius: 17, color: '#3b82f6', phase: '+' },
@@ -97,12 +81,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "sp",
-    nameFR: "Hybride sp",
-    nameEN: "sp Hybrid",
-    descriptionFR: "Combinaison linéaire d'une orbitale s et d'une orbitale p. Donne deux orbitales hybrides orientées à 180° (géométrie linéaire).",
-    descriptionEN: "Linear combination of one s and one p orbital. Creates two hybrid orbitals pointing at 180° (linear geometry).",
-    geometryFR: "Linéaire (Angle de 180°)",
-    geometryEN: "Linear (180° angle)",
+    name: "sp Hybrid",
+    description: "Linear combination of one s and one p orbital. Creates two hybrid orbitals pointing at 180° (linear geometry).",
+    geometry: "Linear (180° angle)",
     lobes: [
       { x: 0.6, y: 0, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
       { x: -0.2, y: 0, z: 0, radius: 10, color: '#ef4444', phase: '-' },
@@ -112,12 +93,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "sp2",
-    nameFR: "Hybride sp²",
-    nameEN: "sp² Hybrid",
-    descriptionFR: "Combinaison linéaire d'une orbitale s et de deux orbitales p. Forme trois orbitales hybrides orientées à 120° dans un plan.",
-    descriptionEN: "Linear combination of one s and two p orbitals. Shapes three hybrid orbitals coplanar at 120°.",
-    geometryFR: "Trigonale Plane (Angle de 120°)",
-    geometryEN: "Trigonal Planar (120° angle)",
+    name: "sp² Hybrid",
+    description: "Linear combination of one s and two p orbitals. Shapes three hybrid orbitals coplanar at 120°.",
+    geometry: "Trigonal Planar (120° angle)",
     lobes: [
       // Lobe 1
       { x: 0.6, y: 0, z: 0, radius: 21, color: '#3b82f6', phase: '+' },
@@ -132,12 +110,9 @@ const ORBITALS: OrbitalPreset[] = [
   },
   {
     id: "sp3",
-    nameFR: "Hybride sp³",
-    nameEN: "sp³ Hybrid",
-    descriptionFR: "Combinaison d'une orbitale s et de trois orbitales p. Produit quatre orbitales hybrides orientées vers les sommets d'un tétraèdre régulier.",
-    descriptionEN: "Combination of one s and three p orbitals. Yields four hybrid orbitals oriented toward the vertices of a regular tetrahedron.",
-    geometryFR: "Tétraédrique (Angle de 109.5°)",
-    geometryEN: "Tetrahedral (109.5° angle)",
+    name: "sp³ Hybrid",
+    description: "Combination of one s and three p orbitals. Yields four hybrid orbitals oriented toward the vertices of a regular tetrahedron.",
+    geometry: "Tetrahedral (109.5° angle)",
     lobes: [
       // Lobe 1 (Top)
       { x: 0, y: 0.65, z: 0, radius: 19, color: '#3b82f6', phase: '+' },
@@ -155,10 +130,54 @@ const ORBITALS: OrbitalPreset[] = [
   }
 ];
 
+const _dummy_translations = (t: any) => [
+  t("1s Orbital"),
+  t("The lowest energy orbital, showing perfect spherical symmetry. Electron probability density peaks at the nucleus."),
+  t("Spherical (l = 0, m = 0)"),
+  t("2s Orbital"),
+  t("Spherical orbital with a radial node (a spherical shell where electron probability drops to zero)."),
+  t("Spherical with Node (l = 0, m = 0)"),
+  t("2p_z Orbital"),
+  t("Features two opposing lobes separated by a nodal plane (the xy-plane). Wave phases of positive (blue) and negative (red) represent wave sign."),
+  t("Dumbbell / Bilobed (l = 1, m = 0)"),
+  t("2p_x Orbital"),
+  t("Bilobed orbital oriented along the x-axis. The yz-plane acts as a nodal plane."),
+  t("Dumbbell / Bilobed (l = 1, m = ±1)"),
+  t("3d_xy Orbital"),
+  t("Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants."),
+  t("Clover / Quadrupolar (l = 2, m = ±2)"),
+  t("sp Hybrid"),
+  t("Linear combination of one s and one p orbital. Creates two hybrid orbitals pointing at 180° (linear geometry)."),
+  t("Linear (180° angle)"),
+  t("sp² Hybrid"),
+  t("Linear combination of one s and two p orbitals. Shapes three hybrid orbitals coplanar at 120°."),
+  t("Trigonal Planar (120° angle)"),
+  t("sp³ Hybrid"),
+  t("Combination of one s and three p orbitals. Yields four hybrid orbitals oriented toward the vertices of a regular tetrahedron."),
+  t("Tetrahedral (109.5° angle)"),
+
+  // UI labels
+  t("Quantum Orbital & Hybridization Explorer"),
+  t("Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."),
+  t("Aufbau Shell Filler"),
+  t("Empty"),
+  t("Subshell 2p"),
+  t("Subshell 2s"),
+  t("Subshell 1s"),
+  t("Bond Geometry"),
+  t("Add Electron"),
+  t("Remove Electron"),
+  t("Toggle Auto Rotation"),
+  t("Toggle Wave Sign Phases (+ / -)")
+];
+
 export const QuantumOrbitalExplorer = ({
   initialPresetId = "1s",
   gradeLevel = "high_school"
 }: QuantumOrbitalExplorerProps) => {
+
+  const { language } = useLanguage();
+  const t = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
 
   const [activePreset, setActivePreset] = useState<OrbitalPreset>(() => {
     return ORBITALS.find(o => o.id === initialPresetId) || ORBITALS[0];
@@ -395,7 +414,7 @@ export const QuantumOrbitalExplorer = ({
         {count >= 2 && (
           <span className="text-amber-400 font-black text-sm select-none animate-fadeIn">↓</span>
         )}
-        {count === 0 && <span className="text-slate-700 font-extrabold text-[8px] select-none uppercase tracking-wide">Empty</span>}
+        {count === 0 && <span className="text-slate-700 font-extrabold text-[8px] select-none uppercase tracking-wide">{t["Empty"]}</span>}
       </div>
     );
   };
@@ -407,10 +426,10 @@ export const QuantumOrbitalExplorer = ({
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Sliders className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>Quantum Orbital & Hybridization Explorer</span>
+            <span>{t["Quantum Orbital & Hybridization Explorer"]}</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            Drag to rotate 3D wave probability density. Step through energy levels on the sidebar.
+            {t["Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."]}
           </p>
         </div>
 
@@ -454,7 +473,7 @@ export const QuantumOrbitalExplorer = ({
                   ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                   : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
               }`}
-              title="Toggle Auto Rotation"
+              title={t["Toggle Auto Rotation"]}
             >
               <RotateCw className={`w-3.5 h-3.5 ${autoRotate ? 'animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
             </button>
@@ -466,7 +485,7 @@ export const QuantumOrbitalExplorer = ({
                   ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
                   : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
               }`}
-              title="Toggle Wave Sign Phases (+ / -)"
+              title={t["Toggle Wave Sign Phases (+ / -)"]}
             >
               <Eye className="w-3.5 h-3.5" />
             </button>
@@ -487,7 +506,7 @@ export const QuantumOrbitalExplorer = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-[9px] font-black uppercase text-cyan-400 tracking-widest bg-cyan-500/5 border border-cyan-500/10 px-2.5 py-1 rounded-lg w-max block">
-                Aufbau Shell Filler
+                {t["Aufbau Shell Filler"]}
               </span>
               
               {/* Interactive electron counter */}
@@ -495,7 +514,7 @@ export const QuantumOrbitalExplorer = ({
                 <button 
                   onClick={() => setElectronCount(e => Math.max(1, e - 1))}
                   className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
-                  title="Remove Electron"
+                  title={t["Remove Electron"]}
                 >
                   -
                 </button>
@@ -505,7 +524,7 @@ export const QuantumOrbitalExplorer = ({
                 <button 
                   onClick={() => setElectronCount(e => Math.min(10, e + 1))}
                   className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
-                  title="Add Electron"
+                  title={t["Add Electron"]}
                 >
                   +
                 </button>
@@ -518,7 +537,7 @@ export const QuantumOrbitalExplorer = ({
               
               {/* 2p Subshell (degenerates) */}
               <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Subshell 2p</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2p"]}</span>
                 <div className="flex gap-2">
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] font-mono font-black text-slate-400">2p_x</span>
@@ -537,7 +556,7 @@ export const QuantumOrbitalExplorer = ({
 
               {/* 2s Subshell */}
               <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Subshell 2s</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2s"]}</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-mono font-black text-slate-400">2s</span>
                   {renderShellElectrons('2s')}
@@ -546,7 +565,7 @@ export const QuantumOrbitalExplorer = ({
 
               {/* 1s Subshell */}
               <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Subshell 1s</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 1s"]}</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-mono font-black text-slate-400">1s</span>
                   {renderShellElectrons('1s')}
@@ -559,15 +578,15 @@ export const QuantumOrbitalExplorer = ({
           <div className="pt-4 border-t border-slate-850/80 space-y-2">
             <h5 className="text-xs font-black text-white flex items-center gap-1.5">
               <CircleDot className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{activePreset.nameFR}</span>
+              <span>{t[activePreset.name] || activePreset.name}</span>
             </h5>
             <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-              {activePreset.descriptionFR}
+              {t[activePreset.description] || activePreset.description}
             </p>
             
             <div className="bg-slate-950/40 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
-              <span className="text-slate-500 uppercase">Géométrie de liaison</span>
-              <span className="text-cyan-400 font-black">{activePreset.geometryFR}</span>
+              <span className="text-slate-500 uppercase">{t["Bond Geometry"]}</span>
+              <span className="text-cyan-400 font-black">{t[activePreset.geometry] || activePreset.geometry}</span>
             </div>
           </div>
 
@@ -577,3 +596,4 @@ export const QuantumOrbitalExplorer = ({
     </div>
   );
 };
+

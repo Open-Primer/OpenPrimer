@@ -89,6 +89,68 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   ]
 };
 
+const VALIDATION_LOCALES: Record<string, {
+  title: string;
+  desc: string;
+  confirm: string;
+  cancel: string;
+}> = {
+  FR: {
+    title: "Confirmer la validation ?",
+    desc: "Êtes-vous sûr de vouloir valider cette version ? Les modifications seront appliquées instantanément sur l'ensemble du site. Une fois validé, il ne sera plus possible d'annuler ou de revenir en arrière.",
+    confirm: "Confirmer la validation",
+    cancel: "Annuler"
+  },
+  EN: {
+    title: "Confirm Promotion & Validation?",
+    desc: "Are you sure you want to validate this version? These changes will be applied instantly across the entire site. Once validated, there is no possibility of rollback or undo.",
+    confirm: "Confirm Validation",
+    cancel: "Cancel"
+  },
+  ES: {
+    title: "¿Confirmar la validación?",
+    desc: "¿Está seguro de que desea validar esta versión? Los cambios se aplicarán instantáneamente en todo el sitio. Una vez validada, no habrá posibilidad de deshacer o revertir.",
+    confirm: "Confirmar validación",
+    cancel: "Cancelar"
+  },
+  DE: {
+    title: "Validierung bestätigen?",
+    desc: "Sind Sie sicher, dass Sie diese Version validieren möchten? Die Änderungen werden sofort auf der gesamten Website wirksam. Nach der Validierung gibt es keine Möglichkeit eines Rollbacks oder Rückgängigmachens.",
+    confirm: "Validierung bestätigen",
+    cancel: "Abbrechen"
+  },
+  ZH: {
+    title: "确认验证？",
+    desc: "您确定要验证此版本吗？更改将立即应用到整个网站。一旦验证，将无法撤销或恢复。",
+    confirm: "确认验证",
+    cancel: "取消"
+  },
+  PT: {
+    title: "Confirmar validação?",
+    desc: "Tem certeza de que deseja validar esta versão? As alterações serão aplicadas instantaneamente em todo o site. Uma vez validada, não haverá possibilidade de desfazer ou reverter.",
+    confirm: "Confirmar validação",
+    cancel: "Cancelar"
+  },
+  AR: {
+    title: "تأكيد التحقق من الصحة؟",
+    desc: "هل أنت متأكد من أنك تريد التحقق من صحة هذا الإصدار؟ سيتم تطبيق التغييرات فورًا على الموقع بأكمله. بمجرد التحقق من صحتها، لن يكون هناك أي احتمال للتراجع أو الإلغاء.",
+    confirm: "تأكيد التحقق من الصحة",
+    cancel: "إلغاء"
+  },
+  HI: {
+    title: "सत्यापन की पुष्टि करें?",
+    desc: "क्या आप वाकई इस संस्करण को सत्यापित करना चाहते हैं? ये परिवर्तन तुरंत पूरी साइट पर लागू हो जाएंगे। एक बार सत्यापित होने के बाद, वापस लौटने या पूर्ववत करने की कोई संभावना नहीं होगी।",
+    confirm: "सत्यापन की पुष्टि करें",
+    cancel: "रद्द करें"
+  },
+  UR: {
+    title: "توثیق کی تصدیق کریں؟",
+    desc: "کیا آپ واقعی اس ورژن کی توثیق کرنا چاہتے ہیں؟ یہ تبدیلیاں فوری طور پر پوری سائٹ پر لاگو ہو جائیں گی۔ ایک بار توثیق ہو جانے کے بعد، واپس جانے یا کالعدم کرنے کا کوئی امکان نہیں ہو گا۔",
+    confirm: "توثیق کی تصدیق کریں",
+    cancel: "منسوخ کریں"
+  }
+};
+
 export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   lang,
   t,
@@ -103,6 +165,132 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   
   // Custom interactive preset selected for previewing
   const [activePresetIndex, setActivePresetIndex] = useState(0);
+
+  // Sandbox Parameter Randomizer overrides
+  const [randomProps, setRandomProps] = useState<Record<string, any> | null>(null);
+  const [diceRotation, setDiceRotation] = useState(0);
+
+  const generateRandomProps = (widgetId: string): Record<string, any> => {
+    switch (widgetId) {
+      case 'StructureViewer3D': {
+        const presets = ["water", "nacl", "graphene", "co2", "ch4", "ethanol"];
+        const presetId = presets[Math.floor(Math.random() * presets.length)];
+        return { presetId };
+      }
+      case 'QuantumOrbitalExplorer': {
+        const orbitals = ["1s", "2s", "2pz", "sp", "sp2", "sp3"];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          initialPresetId: orbitals[Math.floor(Math.random() * orbitals.length)],
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'DynamicSimulation': {
+        const presets = ['mitosis', 'carnot', 'wave', 'double_slit', 'enzyme'];
+        return { preset: presets[Math.floor(Math.random() * presets.length)] };
+      }
+      case 'ChemicalStoichiometry': {
+        const equations = ["H2O", "CH4", "NH3", "C6H12O6"];
+        return { reaction: equations[Math.floor(Math.random() * equations.length)] };
+      }
+      case 'BasicMathExplorer': {
+        const tabs = ['add-sub', 'mul-div', 'fractions', 'parentheses'];
+        const modes = ['add', 'sub', 'mul', 'div'];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          initialTab: tabs[Math.floor(Math.random() * tabs.length)],
+          initialMode: modes[Math.floor(Math.random() * modes.length)],
+          initialNumA: Math.floor(Math.random() * 20) + 1,
+          initialNumB: Math.floor(Math.random() * 10) + 1,
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'FunctionPlotter': {
+        const modes = ['linear', 'compound-interest', 'supply-demand', 'expression'];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          mode: modes[Math.floor(Math.random() * modes.length)],
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)],
+          xMin: 0,
+          xMax: Math.floor(Math.random() * 15) + 10
+        };
+      }
+      case 'ComparisonSlider': {
+        const layouts = ['clip', 'split'];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          beforeLabel: "State A (Randomized)",
+          afterLabel: "State B (Randomized)",
+          beforeContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-blue-950/40 text-blue-400 p-8 border border-blue-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📊"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, "Spectroscopy Phase A")),
+          afterContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-emerald-950/40 text-emerald-400 p-8 border border-emerald-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📈"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, "Spectroscopy Phase B")),
+          layout: layouts[Math.floor(Math.random() * layouts.length)],
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'CodeSandbox': {
+        const languages = ['html', 'javascript', 'css'];
+        const randLang = languages[Math.floor(Math.random() * languages.length)];
+        const templates = {
+          html: `<h1>Randomized Canvas</h1>\n<p style="color: coral;">Generated seed: ${Math.random().toFixed(4)}</p>`,
+          javascript: `console.log("Random parameters initialized!");\nconst seed = ${Math.random().toFixed(4)};\nalert("Randomizer Seed: " + seed);`,
+          css: `body {\n  background: linear-gradient(135deg, #1e1b4b, #111827);\n  color: #10b981;\n  font-family: system-ui;\n}`
+        };
+        return {
+          language: randLang,
+          initialCode: templates[randLang as keyof typeof templates],
+          title: "Randomized Code Experiment"
+        };
+      }
+      case 'DataChart': {
+        const types = ['bar', 'pie', 'donut', 'line'];
+        const levels = ["middle_school", "high_school", "university"];
+        const randVal1 = Math.floor(Math.random() * 50) + 10;
+        const randVal2 = Math.floor(Math.random() * 50) + 10;
+        const randVal3 = Math.floor(Math.random() * 50) + 10;
+        const randData = [
+          { label: "Alpha", value: randVal1 },
+          { label: "Beta", value: randVal2 },
+          { label: "Gamma", value: randVal3 }
+        ];
+        return {
+          title: "Randomized Metric Series",
+          type: types[Math.floor(Math.random() * types.length)],
+          data: randData,
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'InteractiveDiagram': {
+        const types = ['cell', 'neuron'];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          type: types[Math.floor(Math.random() * types.length)],
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'FunctionManipulator': {
+        const levels = ["middle_school", "high_school", "university"];
+        return { gradeLevel: levels[Math.floor(Math.random() * levels.length)] };
+      }
+      case 'EquationManipulator': {
+        const levels = ["middle_school", "high_school", "university"];
+        return { gradeLevel: levels[Math.floor(Math.random() * levels.length)] };
+      }
+      case 'Geometry2D': {
+        const presets = ['triangle', 'circle', 'vector'];
+        const levels = ["middle_school", "high_school", "university"];
+        return {
+          preset: presets[Math.floor(Math.random() * presets.length)],
+          gradeLevel: levels[Math.floor(Math.random() * levels.length)]
+        };
+      }
+      case 'GestaltInteractive': {
+        const levels = ["middle_school", "high_school", "university"];
+        return { gradeLevel: levels[Math.floor(Math.random() * levels.length)] };
+      }
+      default:
+        return {};
+    }
+  };
 
   const DISCIPLINES_LIST = React.useMemo(() => {
     const staticEn = DISCIPLINES.map(d => d.EN);
@@ -188,6 +376,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [widgetToValidate, setWidgetToValidate] = useState<string | null>(null);
 
   // Parameter Edit States
   const [editNameFR, setEditNameFR] = useState('');
@@ -367,6 +556,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
   useEffect(() => {
     setActivePresetIndex(0);
+    setRandomProps(null);
     setErrorDetails(null);
     setPrompt('');
   }, [selectedWidget]);
@@ -853,29 +1043,59 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     }
 
     const presets = SANDBOX_PRESETS[selectedWidget.id] || [];
-    const activeProps = presets[activePresetIndex]?.props || {};
+    const activeProps = randomProps !== null ? randomProps : (presets[activePresetIndex]?.props || {});
 
     try {
       return (
         <div className="bg-slate-950/20 rounded-[30px] border border-slate-850 p-6 min-h-[350px] flex flex-col justify-between shadow-inner">
-          {presets.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-900">
-              <span className="text-[8px] font-black uppercase text-slate-500 flex items-center gap-1.5 self-center mr-2">
-                <Layers className="w-3 h-3" /> PRESET:
-              </span>
-              {presets.map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActivePresetIndex(idx)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${activePresetIndex === idx ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/10' : 'bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white'}`}
-                >
-                  {tr(p.label)}
-                </button>
-              ))}
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-4 border-b border-slate-900">
+            <div className="flex flex-wrap gap-2 items-center">
+              {presets.length > 0 ? (
+                <>
+                  <span className="text-[8px] font-black uppercase text-slate-500 flex items-center gap-1.5 self-center mr-2">
+                    <Layers className="w-3 h-3" /> PRESET:
+                  </span>
+                  {presets.map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActivePresetIndex(idx);
+                        setRandomProps(null);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${randomProps === null && activePresetIndex === idx ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/10' : 'bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white'}`}
+                    >
+                      {tr(p.label)}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <span className="text-[8px] font-black uppercase text-slate-500 flex items-center gap-1.5 self-center">
+                  <Sparkles className="w-3 h-3 text-teal-400 animate-pulse" /> {tr("Dynamic Sandbox Controls")}
+                </span>
+              )}
             </div>
-          )}
+
+            <button
+              onClick={() => {
+                setDiceRotation(prev => prev + 360);
+                setRandomProps(generateRandomProps(selectedWidget.id));
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-teal-500/10 to-emerald-500/10 hover:from-teal-500/20 hover:to-emerald-500/20 text-teal-400 border border-teal-500/20 hover:border-teal-500/40 transition-all hover:scale-[1.02] active:scale-95 shadow-md shadow-teal-500/5"
+            >
+              <span
+                style={{
+                  transform: `rotate(${diceRotation}deg)`,
+                  transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  display: 'inline-block'
+                }}
+              >
+                🎲
+              </span>
+              {tr("Refresh Random Parameters")}
+            </button>
+          </div>
           <div className="w-full h-full flex-grow relative overflow-hidden">
-            <WidgetComponent key={`${selectedWidget.id}_v${widgetVersionKey}`} {...activeProps} />
+            <WidgetComponent key={`${selectedWidget.id}_v${widgetVersionKey}_r${randomProps ? JSON.stringify(randomProps) : 'preset_' + activePresetIndex}`} {...activeProps} />
           </div>
         </div>
       );
@@ -1137,7 +1357,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     {tr("Restaurer l'original")}
                   </button>
                   <button
-                    onClick={() => handleValidateWidget(selectedWidget.id)}
+                    onClick={() => setWidgetToValidate(selectedWidget.id)}
                     className="px-3.5 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 font-black rounded-lg text-[9px] font-black uppercase tracking-wider hover:scale-[1.02] transition-all cursor-pointer shadow-lg shadow-teal-500/10"
                   >
                     {tr("Valider la version")}
@@ -2065,6 +2285,59 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 {renderLiveWidget()}
               </div>
             </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CONFIRM VALIDATION MODAL */}
+      <AnimatePresence>
+        {widgetToValidate && (
+          <div 
+            onClick={() => setWidgetToValidate(null)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[1000] flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-[35px] max-w-md w-full p-8 shadow-2xl relative overflow-hidden cursor-default space-y-6 text-center"
+            >
+              <div className="mx-auto w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full flex items-center justify-center animate-pulse">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).title}
+                </h4>
+                <p className="text-[10px] text-slate-300 leading-relaxed font-medium">
+                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).desc}
+                </p>
+              </div>
+
+              <div className="flex justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setWidgetToValidate(null)}
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).cancel}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const id = widgetToValidate;
+                    setWidgetToValidate(null);
+                    await handleValidateWidget(id);
+                  }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-teal-500/10"
+                >
+                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).confirm}
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

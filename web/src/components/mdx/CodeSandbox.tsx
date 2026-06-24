@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, RotateCcw, Copy, Check, Code, Terminal, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface CodeSandboxProps {
   initialCode?: string;
@@ -31,8 +33,107 @@ ${trimmed}
   }
 }
 
-export function CodeSandbox({
-  initialCode = `<!-- Modifiez ce code pour voir le résultat en temps réel ! -->
+const DEFAULT_CODE_EN = `<!-- Edit this code to see real-time updates! -->
+<div class="card">
+  <h1>Hello OpenPrimer! 🚀</h1>
+  <p>This is a real-time interactive sandbox.</p>
+  <button id="btn">Click me!</button>
+</div>
+
+<style>
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0f172a;
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    margin: 0;
+  }
+  .card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    backdrop-filter: blur(12px);
+    padding: 2.5rem;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #34d399, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  }
+  button:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  const button = document.getElementById('btn');
+  button.addEventListener('click', () => {
+    button.textContent = 'Magic! 🎉';
+    button.style.background = '#059669';
+    
+    // Create simple confetti animation
+    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899'];
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.style.position = 'fixed';
+      particle.style.width = '8px';
+      particle.style.height = '8px';
+      particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+      particle.style.borderRadius = '50%';
+      particle.style.left = '50%';
+      particle.style.top = '50%';
+      particle.style.transform = 'translate(-50%, -50%)';
+      particle.style.transition = 'all 1s cubic-bezier(0.16, 1, 0.3, 1)';
+      document.body.appendChild(particle);
+      
+      setTimeout(() => {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 50 + Math.random() * 100;
+        particle.style.left = \`calc(50% + \${Math.cos(angle) * radius}px)\`;
+        particle.style.top = \`calc(50% + \${Math.sin(angle) * radius}px)\`;
+        particle.style.opacity = '0';
+        setTimeout(() => particle.remove(), 1000);
+      }, 50);
+    }
+  });
+</script>`;
+
+const DEFAULT_CODE_FR = `<!-- Modifiez ce code pour voir le résultat en temps réel ! -->
 <div class="card">
   <h1>Bonjour OpenPrimer ! 🚀</h1>
   <p>Ceci est un bac à sable interactif en temps réel.</p>
@@ -130,28 +231,48 @@ export function CodeSandbox({
       }, 50);
     }
   });
-</script>`,
-  title = "Bac à Sable Interactif",
+</script>`;
+
+const _dummy_translations = (t: any) => [
+  t("Client Sandbox"),
+  t("Run"),
+  t("Reset"),
+  t("Copy Code"),
+  t("Execute Code"),
+  t("Code Editor"),
+  t("Write your code here..."),
+  t("Live Preview"),
+  t("🔒 Secure Sandbox (CSP active)"),
+  t("Interactive Sandbox")
+];
+
+export function CodeSandbox({
+  initialCode,
+  title = "Interactive Sandbox",
   language = "html",
   height = "420px"
 }: CodeSandboxProps) {
-  const [code, setCode] = useState(initialCode);
+  const { language: currentLang } = useLanguage();
+  const t = (STATIC_UI_STRINGS[currentLang.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+
+  const resolvedDefaultCode = currentLang.toLowerCase() === 'fr' ? DEFAULT_CODE_FR : DEFAULT_CODE_EN;
+  const [code, setCode] = useState(() => initialCode || resolvedDefaultCode);
   const [copied, setCopied] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Synchronize on initialization or initialCode reset
   useEffect(() => {
-    setCode(initialCode);
+    setCode(initialCode || resolvedDefaultCode);
     setPreviewKey(prev => prev + 1);
-  }, [initialCode]);
+  }, [initialCode, resolvedDefaultCode]);
 
   const runCode = () => {
     setPreviewKey(prev => prev + 1);
   };
 
   const resetCode = () => {
-    setCode(initialCode);
+    setCode(initialCode || resolvedDefaultCode);
     setPreviewKey(prev => prev + 1);
   };
 
@@ -192,9 +313,9 @@ export function CodeSandbox({
           </div>
           <div>
             <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
-              Bac à Sable Client
+              {t["Client Sandbox"] || "Client Sandbox"}
             </span>
-            <h4 className="text-sm font-bold text-slate-100">{title}</h4>
+            <h4 className="text-sm font-bold text-slate-100">{t[title] || title}</h4>
           </div>
         </div>
 
@@ -203,16 +324,16 @@ export function CodeSandbox({
           <button
             onClick={runCode}
             className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/40 text-emerald-400 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
-            title="Exécuter le code"
+            title={t["Execute Code"] || "Execute Code"}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            Lancer
+            {t["Run"] || "Run"}
           </button>
           
           <button
             onClick={resetCode}
             className="p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-400 hover:text-slate-100 transition-all cursor-pointer"
-            title="Réinitialiser"
+            title={t["Reset"] || "Reset"}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -220,7 +341,7 @@ export function CodeSandbox({
           <button
             onClick={copyCode}
             className="p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-400 hover:text-slate-100 transition-all cursor-pointer"
-            title="Copier le code"
+            title={t["Copy Code"] || "Copy Code"}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -234,7 +355,7 @@ export function CodeSandbox({
           <div className="flex items-center justify-between px-4 py-2 bg-slate-950 border-b border-slate-900 text-[11px] font-bold text-slate-500 tracking-wider uppercase">
             <span className="flex items-center gap-1.5">
               <Terminal className="w-3 h-3 text-slate-500" />
-              Éditeur de code
+              {t["Code Editor"] || "Code Editor"}
             </span>
             <span>{language.toUpperCase()}</span>
           </div>
@@ -246,7 +367,7 @@ export function CodeSandbox({
               className="w-full p-4 bg-slate-950 text-slate-300 font-mono text-[13px] leading-relaxed resize-none outline-none focus:ring-0 select-text overflow-y-auto"
               style={{ height }}
               spellCheck={false}
-              placeholder="Écrivez votre code ici..."
+              placeholder={t["Write your code here..."] || "Write your code here..."}
             />
           </div>
         </div>
@@ -256,11 +377,11 @@ export function CodeSandbox({
           <div className="flex items-center justify-between px-4 py-2 bg-slate-950 border-b border-slate-900 text-[11px] font-bold text-slate-500 tracking-wider uppercase">
             <span className="flex items-center gap-1.5">
               <ExternalLink className="w-3 h-3 text-slate-500" />
-              Aperçu en direct
+              {t["Live Preview"] || "Live Preview"}
             </span>
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline-block text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                🔒 Bac à sable sécurisé (CSP active)
+                {t["🔒 Secure Sandbox (CSP active)"] || "🔒 Secure Sandbox (CSP active)"}
               </span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>

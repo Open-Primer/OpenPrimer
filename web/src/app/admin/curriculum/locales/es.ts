@@ -599,5 +599,7 @@ export const locale: Record<string, string> = {
   "Edit Parameters": "Editar parámetros",
   "Personality saved successfully.": "Personalidad guardada con éxito.",
   "Default personality updated.": "Personalidad predeterminada actualizada.",
+  "Refresh Random Parameters": "Refrescar parámetros aleatorios",
+  "Dynamic Sandbox Controls": "Controles dinámicos del sandbox",
 };
 
