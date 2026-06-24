@@ -586,6 +586,28 @@ const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     HI: "Y-अवरोधन (b)",
     UR: "Y-انٹرسیپٹ (b)"
   },
+  loss_aversion: {
+    EN: "Loss Aversion (λ)",
+    FR: "Aversion à la Perte (λ)",
+    ES: "Aversión a la Pérdida (λ)",
+    DE: "Verlustaversion (λ)",
+    ZH: "损失厌恶 (λ)",
+    PT: "Aversão à Perda (λ)",
+    AR: "تجنب الخسارة (λ)",
+    HI: "हानि घृणा (λ)",
+    UR: "نقصان سے بچنا (λ)"
+  },
+  marginal_sensitivity: {
+    EN: "Marginal Sensitivity (α = β)",
+    FR: "Sensibilité Marginale (α = β)",
+    ES: "Sensibilidad Marginal (α = β)",
+    DE: "Marginale Sensitivität (α = β)",
+    ZH: "边际敏感度 (α = β)",
+    PT: "Sensibilidade Marginal (α = β)",
+    AR: "الحساسية الهامشية (α = β)",
+    HI: "सीमांत संवेदनशीलता (α = β)",
+    UR: "حاشیاتی حساسیت (α = β)"
+  },
   initial_capital: {
     EN: "Initial Capital (P)",
     FR: "Capital Initial (P)",
@@ -911,10 +933,10 @@ export const FunctionPlotter = ({
   // Find if initial expression or preset matches our catalog
   const defaultPreset = expression ? MATH_PRESETS.find(p => p.id === expression.toLowerCase().trim()) : null;
   const initialExpression = defaultPreset ? defaultPreset.formula : (expression || "sin(x)/x");
-  const initialXMin = defaultPreset ? defaultPreset.xMin : (xMin !== undefined ? xMin : -10);
-  const initialXMax = defaultPreset ? defaultPreset.xMax : (xMax !== undefined ? xMax : 10);
-  const initialYMin = defaultPreset ? defaultPreset.yMin : (yMin !== undefined ? yMin : -10);
-  const initialYMax = defaultPreset ? defaultPreset.yMax : (yMax !== undefined ? yMax : 10);
+  const initialXMin = defaultPreset ? defaultPreset.xMin : (xMin !== undefined ? xMin : (resolvedMode === 'linear' ? -50 : -10));
+  const initialXMax = defaultPreset ? defaultPreset.xMax : (xMax !== undefined ? xMax : (resolvedMode === 'linear' ? 50 : 10));
+  const initialYMin = defaultPreset ? defaultPreset.yMin : (yMin !== undefined ? yMin : (resolvedMode === 'linear' ? -100 : -10));
+  const initialYMax = defaultPreset ? defaultPreset.yMax : (yMax !== undefined ? yMax : (resolvedMode === 'linear' ? 50 : 10));
 
   // Stateful plot parameters
   const [plottedExpression, setPlottedExpression] = useState(initialExpression);
@@ -935,36 +957,48 @@ export const FunctionPlotter = ({
     if (expression !== undefined) {
       const p = MATH_PRESETS.find(x => x.id === expression.toLowerCase().trim());
       const formula = p ? p.formula : expression;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlottedExpression(formula);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpressionInput(formula);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsValidExpr(true);
       if (p) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setXMinVal(p.xMin);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setXMaxVal(p.xMax);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setYMinVal(p.yMin);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setYMaxVal(p.yMax);
       }
     }
   }, [expression]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (xMin !== undefined) setXMinVal(xMin);
   }, [xMin]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (xMax !== undefined) setXMaxVal(xMax);
   }, [xMax]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (yMin !== undefined) setYMinVal(yMin);
   }, [yMin]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (yMax !== undefined) setYMaxVal(yMax);
   }, [yMax]);
 
-  const [slope, setSlope] = useState(1);
-  const [intercept, setIntercept] = useState(20);
+  const [slope, setSlope] = useState(resolvedMode === 'linear' ? 2.25 : 1); // Loss Aversion (λ) default is 2.25
+  const [intercept, setIntercept] = useState(resolvedMode === 'linear' ? 0.88 : 20); // Sensitivity (α = β) default is 0.88
+
   const [principal, setPrincipal] = useState(100);
   const [rate, setRate] = useState(5);
   const [demandShift, setDemandShift] = useState(0);
@@ -996,6 +1030,28 @@ export const FunctionPlotter = ({
   const getSvgY = (mathY: number, maxY = 100, minY = 0) => height - padding - ((mathY - minY) / (maxY - minY)) * (height - 2 * padding);
   const getMathX = (svgX: number, maxX = 100, minX = 0) => minX + ((svgX - padding) / (width - 2 * padding)) * (maxX - minX);
   const getMathY = (svgY: number, maxY = 100, minY = 0) => minY + ((height - padding - svgY) / (height - 2 * padding)) * (maxY - minY);
+
+  // S-Curve Prospect Theory Math formula helper
+  const getProspectValue = (x: number, lambdaVal: number, alphaBetaVal: number) => {
+    if (x >= 0) {
+      return Math.pow(x, alphaBetaVal);
+    } else {
+      return -lambdaVal * Math.pow(-x, alphaBetaVal);
+    }
+  };
+
+  const getYValueForMode = (x: number) => {
+    if (resolvedMode === 'linear') {
+      return getProspectValue(x, slope, intercept);
+    } else if (resolvedMode === 'compound-interest') {
+      return principal * Math.pow(1 + rate / 100, x);
+    } else if (resolvedMode === 'supply-demand') {
+      return getSupplyY(x);
+    } else if (isExpressionMode) {
+      return safeEvaluate(plottedExpression, x);
+    }
+    return 0;
+  };
 
   const getDemandY = (x: number) => Math.max(0, Math.min(100, 85 - 0.7 * x + demandShift));
   const getSupplyY = (x: number) => Math.max(0, Math.min(100, 15 + 0.6 * x + supplyShift));
@@ -1029,9 +1085,13 @@ export const FunctionPlotter = ({
 
   if (resolvedMode === 'linear') {
     const ptArray: string[] = [];
-    for (let x = 0; x <= 100; x += 5) {
-      const y = slope * x + intercept;
-      if (y >= 0 && y <= 100) ptArray.push(`${getSvgX(x)},${getSvgY(y)}`);
+    const step = (xMaxVal - xMinVal) / 150;
+    for (let i = 0; i <= 150; i++) {
+      const x = xMinVal + i * step;
+      const y = getProspectValue(x, slope, intercept);
+      if (!isNaN(y) && isFinite(y) && y >= yMinVal && y <= yMaxVal) {
+        ptArray.push(`${getSvgX(x, xMaxVal, xMinVal)},${getSvgY(y, yMaxVal, yMinVal)}`);
+      }
     }
     points = ptArray.join(" ");
   } else if (resolvedMode === 'compound-interest') {
@@ -1162,10 +1222,35 @@ export const FunctionPlotter = ({
           <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} onMouseMove={handleSvgMouseMove} onMouseDown={handleSvgMouseDown} onMouseLeave={handleSvgMouseLeave} onTouchMove={handleSvgTouchMove} className="w-full h-auto max-w-[360px] cursor-crosshair overflow-visible">
             
             {/* Grid markings & subdivisions */}
-            {!isExpressionMode ? [0, 25, 50, 75, 100].map((val) => {
-              const sx = getSvgX(val); const sy = getSvgY(val);
-              return (<g key={val} className="opacity-30"><line x1={sx} y1={padding} x2={sx} y2={height - padding} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" /><line x1={padding} y1={sy} x2={width - padding} y2={sy} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" /></g>);
-            }) : Array.from({ length: 5 }).map((_, i) => {
+            {!isExpressionMode ? (
+              resolvedMode === 'linear' ? (
+                <>
+                  {[-50, -25, 0, 25, 50].map((xVal) => {
+                    const sx = getSvgX(xVal, 50, -50);
+                    return (
+                      <g key={`gx-${xVal}`} className="opacity-25">
+                        <line x1={sx} y1={padding} x2={sx} y2={height - padding} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" />
+                        <text x={sx} y={height - padding + 12} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="middle">{xVal}</text>
+                      </g>
+                    );
+                  })}
+                  {[-100, -50, 0, 50].map((yVal) => {
+                    const sy = getSvgY(yVal, 50, -100);
+                    return (
+                      <g key={`gy-${yVal}`} className="opacity-25">
+                        <line x1={padding} y1={sy} x2={width - padding} y2={sy} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" />
+                        <text x={padding - 6} y={sy + 3} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="end">{yVal}</text>
+                      </g>
+                    );
+                  })}
+                </>
+              ) : (
+                [0, 25, 50, 75, 100].map((val) => {
+                  const sx = getSvgX(val); const sy = getSvgY(val);
+                  return (<g key={val} className="opacity-30"><line x1={sx} y1={padding} x2={sx} y2={height - padding} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" /><line x1={padding} y1={sy} x2={width - padding} y2={sy} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" /></g>);
+                })
+              )
+            ) : Array.from({ length: 5 }).map((_, i) => {
               const xVal = xMinVal + (i * (xMaxVal - xMinVal)) / 4; const yVal = yMinVal + (i * (yMaxVal - yMinVal)) / 4;
               const sx = getSvgX(xVal, xMaxVal, xMinVal); const sy = getSvgY(yVal, yMaxVal, yMinVal);
               return (
@@ -1180,10 +1265,18 @@ export const FunctionPlotter = ({
 
             {/* Coordinate Axes */}
             {!isExpressionMode ? (
-              <>
-                <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke={axisStrokeColor} strokeWidth="1.5" />
-                <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke={axisStrokeColor} strokeWidth="1.5" />
-              </>
+              resolvedMode === 'linear' ? (
+                <>
+                  {/* Centered Crossing Axes for Prospect Theory S-Curve */}
+                  <line x1={padding} y1={getSvgY(0, 50, -100)} x2={width - padding} y2={getSvgY(0, 50, -100)} stroke={axisStrokeColor} strokeWidth="1.5" />
+                  <line x1={getSvgX(0, 50, -50)} y1={padding} x2={getSvgX(0, 50, -50)} y2={height - padding} stroke={axisStrokeColor} strokeWidth="1.5" />
+                </>
+              ) : (
+                <>
+                  <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke={axisStrokeColor} strokeWidth="1.5" />
+                  <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke={axisStrokeColor} strokeWidth="1.5" />
+                </>
+              )
             ) : (
               <>
                 {yMinVal < 0 && yMaxVal > 0 && (
@@ -1218,8 +1311,20 @@ export const FunctionPlotter = ({
             {isHovering && mouseCoords && (
               <g className="transition-opacity duration-150">
                 <circle
-                  cx={getSvgX(mouseCoords.x, xMaxVal, xMinVal)}
-                  cy={getSvgY(isExpressionMode ? safeEvaluate(plottedExpression, mouseCoords.x) : getSupplyY(mouseCoords.x), yMaxVal, yMinVal)}
+                  cx={isExpressionMode 
+                    ? getSvgX(mouseCoords.x, xMaxVal, xMinVal) 
+                    : (resolvedMode === 'linear' 
+                        ? getSvgX(mouseCoords.x, 50, -50) 
+                        : (resolvedMode === 'compound-interest' 
+                            ? getSvgX(mouseCoords.x, 30, 0) 
+                            : getSvgX(mouseCoords.x)))}
+                  cy={isExpressionMode 
+                    ? getSvgY(safeEvaluate(plottedExpression, mouseCoords.x), yMaxVal, yMinVal) 
+                    : (resolvedMode === 'linear' 
+                        ? getSvgY(getYValueForMode(mouseCoords.x), 50, -100) 
+                        : (resolvedMode === 'compound-interest' 
+                            ? getSvgY(getYValueForMode(mouseCoords.x), principal * Math.pow(1.15, 30), 0) 
+                            : getSvgY(getYValueForMode(mouseCoords.x))))}
                   r="4.5"
                   fill="#10b981"
                   stroke="#ffffff"
@@ -1237,7 +1342,9 @@ export const FunctionPlotter = ({
               x: {mouseCoords.x.toFixed(2)} | y: {
                 isExpressionMode 
                   ? (safeEvaluate(plottedExpression, mouseCoords.x) ? safeEvaluate(plottedExpression, mouseCoords.x).toFixed(2) : "NaN")
-                  : (resolvedMode === 'supply-demand' ? `QD: ${currentQD.toFixed(0)} QS: ${currentQS.toFixed(0)}` : getSupplyY(mouseCoords.x).toFixed(2))
+                  : (resolvedMode === 'supply-demand' 
+                      ? `QD: ${currentQD.toFixed(0)} QS: ${currentQS.toFixed(0)}` 
+                      : getYValueForMode(mouseCoords.x).toFixed(2))
               }
             </div>
           )}
@@ -1263,17 +1370,17 @@ export const FunctionPlotter = ({
               <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('slope')}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('loss_aversion')}</span>
                     <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{slope.toFixed(2)}</span>
                   </div>
-                  <input type="range" min="-2" max="3" step="0.05" value={slope} onChange={(e) => setSlope(parseFloat(e.target.value))} className="w-full" />
+                  <input type="range" min="1.0" max="4.0" step="0.05" value={slope} onChange={(e) => setSlope(parseFloat(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('intercept')}</span>
-                    <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{intercept}</span>
+                    <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getUiString('marginal_sensitivity')}</span>
+                    <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{intercept.toFixed(2)}</span>
                   </div>
-                  <input type="range" min="0" max="60" step="1" value={intercept} onChange={(e) => setIntercept(parseInt(e.target.value))} className="w-full" />
+                  <input type="range" min="0.1" max="1.2" step="0.01" value={intercept} onChange={(e) => setIntercept(parseFloat(e.target.value))} className="w-full" />
                 </div>
               </>
             )}

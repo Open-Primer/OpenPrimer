@@ -1223,4 +1223,69 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-paper .profile-dropdown-menu p.text-white { color: #0f172a !important; }
 .theme-paper .profile-dropdown-menu p.text-slate-500 { color: #64748b !important; }
 
+/* Wikipedia Pill Badges */
+.prose a[href*="wikipedia.org"],
+.custom-alert a[href*="wikipedia.org"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  font-family: inherit !important;
+  font-size: 0.8125rem !important; /* Slightly smaller for elegance */
+  font-weight: 600 !important;
+  padding: 0.125rem 0.5rem !important;
+  border-radius: 9999px !important;
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  vertical-align: middle !important;
+  margin: 0 0.15rem !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* Default Dark Theme / General */
+.prose a[href*="wikipedia.org"],
+.custom-alert a[href*="wikipedia.org"] {
+  background-color: rgba(56, 189, 248, 0.08) !important; /* sky-400 at 8% */
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  color: #38bdf8 !important; /* sky-400 */
+}
+
+.prose a[href*="wikipedia.org"]:hover,
+.custom-alert a[href*="wikipedia.org"]:hover {
+  background-color: rgba(56, 189, 248, 0.16) !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #7dd3fc !important; /* sky-300 */
+  box-shadow: 0 2px 6px -1px rgba(56, 189, 248, 0.2) !important;
+  transform: translateY(-0.5px) !important;
+}
+
+/* Paper Theme */
+.theme-paper .prose a[href*="wikipedia.org"],
+.theme-paper .custom-alert a[href*="wikipedia.org"] {
+  background-color: #f0ebd4 !important;
+  border-color: #dbd5be !important;
+  color: #7c2d12 !important; /* warm brown/orange for paper */
+}
+
+.theme-paper .prose a[href*="wikipedia.org"]:hover,
+.theme-paper .custom-alert a[href*="wikipedia.org"]:hover {
+  background-color: #e5deb8 !important;
+  border-color: #c4b998 !important;
+  color: #431407 !important;
+}
+
+/* Focus Theme */
+.theme-focus .prose a[href*="wikipedia.org"],
+.theme-focus .custom-alert a[href*="wikipedia.org"] {
+  background-color: transparent !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.theme-focus .prose a[href*="wikipedia.org"]:hover,
+.theme-focus .custom-alert a[href*="wikipedia.org"]:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
 

@@ -14,7 +14,7 @@ function cn(...inputs: ClassValue[]) {
 
 interface EssayEvaluationProps {
   prompt: string;
-  gradingSystem: '0/10' | '0/20' | 'A-F' | 'pass-fail';
+  gradingSystem?: '0/10' | '0/20' | 'A-F' | 'pass-fail';
   subject?: string;
   durationLimit?: number; // in seconds
   isFinal?: boolean;
@@ -25,37 +25,37 @@ import { STATIC_UI_STRINGS } from '@/lib/translations';
 const formatGradingSystem = (system: string, lang: string): string => {
   const lUpper = (lang || 'EN').toUpperCase();
   if (system === '0/20') {
-    if (lUpper === 'FR') return 'de 0 à 20';
-    if (lUpper === 'ES') return 'de 0 a 20';
-    if (lUpper === 'DE') return '0 bis 20';
-    if (lUpper === 'ZH') return '0 到 20';
-    return '0 to 20';
+    if (lUpper === 'FR') return 'Note sur 20 (Correction et évaluation personnalisée par le Tuteur IA)';
+    if (lUpper === 'ES') return 'Calificación sobre 20 (Corrección y evaluación personalizada por el Tutor IA)';
+    if (lUpper === 'DE') return 'Bewertung auf einer Skala von 0 bis 20 (Korrektur und Feedback durch den KI-Tutor)';
+    if (lUpper === 'ZH') return '20分制评分（由人工智能导师进行个性化批改与评估）';
+    return 'Score out of 20 (AI Tutor grading and personalized feedback)';
   }
   if (system === '0/10') {
-    if (lUpper === 'FR') return 'de 0 à 10';
-    if (lUpper === 'ES') return 'de 0 a 10';
-    if (lUpper === 'DE') return '0 bis 10';
-    if (lUpper === 'ZH') return '0 到 10';
-    return '0 to 10';
+    if (lUpper === 'FR') return 'Note sur 10 (Correction et évaluation personnalisée par le Tuteur IA)';
+    if (lUpper === 'ES') return 'Calificación sobre 10 (Corrección y evaluación personalizada por el Tutor IA)';
+    if (lUpper === 'DE') return 'Bewertung auf einer Skala von 0 bis 10 (Korrektur und Feedback durch den KI-Tutor)';
+    if (lUpper === 'ZH') return '10分制评分（由人工智能导师进行个性化批改与评估）';
+    return 'Score out of 10 (AI Tutor grading and personalized feedback)';
   }
   if (system === 'A-F') {
-    if (lUpper === 'FR') return 'de A à F';
-    if (lUpper === 'ES') return 'de A a F';
-    if (lUpper === 'DE') return 'A bis F';
-    if (lUpper === 'ZH') return 'A 到 F';
-    return 'A to F';
+    if (lUpper === 'FR') return 'Lettres de A à F (Correction et évaluation personnalisée par le Tuteur IA)';
+    if (lUpper === 'ES') return 'Letras de A a F (Corrección y evaluación personalizada por el Tutor IA)';
+    if (lUpper === 'DE') return 'Noten A bis F (Korrektur und Feedback durch den KI-Tutor)';
+    if (lUpper === 'ZH') return 'A-F 等级制（由人工智能导师进行个性化批改与评估）';
+    return 'Letter grades A to F (AI Tutor grading and personalized feedback)';
   }
   if (system === 'pass-fail') {
-    if (lUpper === 'FR') return 'admis/ajourné';
-    if (lUpper === 'ES') return 'aprobado/reprobado';
-    if (lUpper === 'DE') return 'bestanden/nicht bestanden';
-    if (lUpper === 'ZH') return '通过/不通过';
-    return 'pass/fail';
+    if (lUpper === 'FR') return 'Admis ou Ajourné (Correction et évaluation personnalisée par le Tuteur IA)';
+    if (lUpper === 'ES') return 'Aprobado o Reprobado (Corrección y evaluación personalizada por el Tutor IA)';
+    if (lUpper === 'DE') return 'Bestanden oder Nicht bestanden (Korrektur und Feedback durch den KI-Tutor)';
+    if (lUpper === 'ZH') return '及格/不及格（由人工智能导师进行个性化批改与评估）';
+    return 'Pass or Fail (AI Tutor grading and personalized feedback)';
   }
   return system;
 };
 
-export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit, isFinal = false }: EssayEvaluationProps) => {
+export const EssayEvaluation = ({ prompt, gradingSystem = '0/20', subject, durationLimit, isFinal = false }: EssayEvaluationProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
@@ -654,10 +654,24 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
           <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
+        {/* Pre-flight Checklist */}
+        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
+          <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">💡 Checklist</p>
+          <ul className="list-disc list-inside space-y-2 leading-relaxed text-sm text-slate-300">
+            <li>{t.prep_advice}</li>
+            <li>{actualDurationLimit ? t.time_focus.replace('{time}', formatDurationText(actualDurationLimit)) : t.time_focus_default}</li>
+            {isFinal && (
+              <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
+                <span>{t.summative_single_attempt_warning}</span>
+              </li>
+            )}
+          </ul>
+        </div>
+
         {/* Evaluation Mode Info Card */}
-        <div className="bg-slate-950/80 border border-violet-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
-          <p className="font-black text-violet-400 uppercase tracking-widest text-[9px]">📋 {t.eval_mode_label}</p>
-          <div className="grid grid-cols-1 gap-2 text-xs text-slate-300">
+        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
+          <p className="font-black text-violet-400 uppercase tracking-widest text-[10px]">📋 {t.eval_mode_label}</p>
+          <div className="grid grid-cols-1 gap-2.5 text-sm text-slate-300">
             <div className="flex items-start gap-2">
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>{submissionTypeLabel}</span>
@@ -666,6 +680,14 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
             </div>
+            {actualDurationLimit && (
+              <div className="flex items-start gap-2">
+                <span className="text-violet-400 font-black shrink-0">▸</span>
+                <span>
+                  {t.time_limit} <strong className="text-violet-300">{formatDurationText(actualDurationLimit)}</strong>
+                </span>
+              </div>
+            )}
             <div className={cn("flex items-start gap-2", isFinal && "text-red-400 font-bold text-sm bg-red-500/10 p-3 rounded-xl border border-red-500/20 my-1 w-full")}>
               {isFinal ? (
                 <span className="shrink-0 text-red-400 text-base">⚠️</span>
@@ -675,20 +697,6 @@ export const EssayEvaluation = ({ prompt, gradingSystem, subject, durationLimit,
               <span>{isFinal ? t.eval_attempts_single.toUpperCase() : t.eval_attempts_unlimited}</span>
             </div>
           </div>
-        </div>
-
-        {/* Pre-flight Checklist */}
-        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-xs text-slate-350 max-w-md mx-auto space-y-2">
-          <p className="font-black text-slate-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
-          <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
-            <li>{t.prep_advice}</li>
-            <li>{actualDurationLimit ? t.time_focus.replace('{time}', formatDurationText(actualDurationLimit)) : t.time_focus_default}</li>
-            {isFinal && (
-              <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
-                <span>{t.summative_single_attempt_warning}</span>
-              </li>
-            )}
-          </ul>
         </div>
 
         <div className="pt-2">

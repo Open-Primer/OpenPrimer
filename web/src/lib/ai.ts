@@ -1550,21 +1550,27 @@ ${widgetsDescription}
 
 ### RIGOROUS WRITING & PEDAGOGICAL STYLING CONSTRAINTS:
 1. **Academic Density & Zero-Placeholders**:
-   - Write fully developed paragraphs. Skeletons, placeholders, comments like "write your section here", vague lists, and bullet points without substance are strictly prohibited and will cause immediate failure.
+   - Write fully developed, long paragraphs. Skeletons, placeholders, comments like "write your section here", vague lists, and bullet points without substance are strictly prohibited and will cause immediate failure.
    - You must write the actual text of all sections (Introduction, the main concepts body, and Conclusion). Do NOT write headings like '## Glossaire' or '## Références', as these are appended programmatically from the pre-generated widgets!
+   - **Target Lesson Length**: For university levels (Licence L1-L3), you MUST write an extremely detailed and thorough academic text. Aim for **3000 to 5000 words of rich narrative text** (excluding widgets and final questions) spread across at least 4 to 5 conceptual sections (each starting with a '## ' heading). Provide extensive theoretical discussions, historical background, detailed real-world examples, and formal proofs where appropriate.
+
 2. **Author Quotes with Citations**:
    - Systematically weave high-impact, contextually relevant quotes from notable thinkers and scientists formatted as:
      > "Quote text..." — Author name, *Book/Publication Title*, Publisher, City, Year, p. Page
      Every quote must be in the course language (or translated in brackets immediately following the quote) and must be followed by a dedicated paragraph explaining its conceptual implications.
+
 2b. **In-text Bibliography Citations**:
    - Cite the pre-generated bibliography references listed in the widgets description inside your narrative text using standard markdown links: \`[1](#ref-1)\`, \`[2](#ref-2)\`, etc. at appropriate, highly relevant academic moments.
+
 3. **Controlled Digressions (Encadrés Épistémologiques)**:
    - If the level is university level (L1, L2, L3), systematically insert at least one historical controversy or limits-of-concept box:
      <Epistemology title="Title of Digression">Detailed epistemological discussion...</Epistemology>
+
 4. **Contextual Mini-Biographies (Minibios)**:
    - Include at least one detailed biographical box inside the main text using:
      > [!INFO] **Mini-Biographie : Name (Dates)**
      Write 8-12 lines of biography (4-6 for primary level) and systematically include a direct, working Wikipedia markdown link at the end: \`[En savoir plus sur Wikipédia](...)\`.
+
 5. **Connected Entities Hover-Cards**:
    - Wrap every historical figure, author, artwork, geographic location, fictional character, or historical event mentioned inline in their respective custom overlay component with a 2-3 line biographical/description attribute as fallback:
      - <RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>
@@ -1573,21 +1579,27 @@ ${widgetsDescription}
      - <EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>
      - <FictionalCharacter name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</FictionalCharacter>
      *Constraint*: Do NOT require or place these tags inside JSX attribute properties (like inside component props or diagnostic quiz questions), as nesting JSX is syntactically invalid there. Keep names as plain text when inside properties. Do not wrap names inside markdown image captions.
-6. **Visual Assets Accessibility & Captions**:
-   - For decorative/illustrative imagery (Pollinations.ai), use English prompts with underscores:
-     ![Alt Text](https://image.pollinations.ai/prompt/english_descriptive_prompt?width=800&height=600&nologo=true)
-   - Caption every single image, audio or video player immediately below using:
-     *Figure X : [Title] - [Description]. Source : ...* (use "Wikimedia Commons" or specify AI-generated origin).
-     For external resources, link them with a footnote tag: <sup><a id="ref-src-X" href="#ref-X">X</a></sup>. No link for flowcharts or AI images.
-   - For complex scientific, anatomical, biological or geographical diagrams, prefer using a real Wikipedia/Wikimedia Commons direct image URL.
+
+6. **Visual Assets Density, Sourcing & Captions**:
+   - To offer a visually stunning, premium experience, each lesson for Licence (L1-L3) must contain a rich density of images:
+     - **Sourced/Factual Images (Systematically include 5 to 6)**: For real historical paintings, portraits of notable scientists/philosophers, geographical maps, anatomical diagrams, or historical monuments, use standard Pollinations URLs BUT set the alt text to the **EXACT, precise, search-friendly English Wikipedia title** of the subject (e.g. \`![Adam_Smith](https://image.pollinations.ai/...)\` or \`![La_Escuela_de_Atenas](https://image.pollinations.ai/...)\`). The media resolver will automatically intercept these URLs, search Wikipedia/Wikimedia for the exact title, download the real public-domain/Creative Commons image, and upload it to Supabase. If you write an obscure or bloated alt text, the search will fail and the image will be deleted.
+     - **Decorative AI Illustrations (Systematically include 1 to 2)**: For general atmospheres or abstract educational metaphors, use Pollinations URLs with general descriptive alt text that **does NOT contain factual words** (avoid: "portrait", "molecule", "painting", "fresco", "graph", "curve", "diagram", "monument"). This ensures they bypass the factual filter and remain as beautiful AI illustrations.
+     - **Strict Prohibition on Graphical Curves/Data Plots as Images**: Do NOT use images to represent mathematical curves, functions, or statistical plots. Instead, always use the pre-generated interactive components (like \`[[WIDGET:id]]\` for \`<DataChart />\` or \`<FunctionPlotter />\`).
+     - Caption every single image, audio or video player immediately below using:
+       *Figure X : [Title] - [Description]. Source : ...* (use "Wikimedia Commons" or specify AI-generated origin).
+       For external resources, link them with a footnote tag: <sup><a id="ref-src-X" href="#ref-X">X</a></sup>. No link for flowcharts or AI images.
+
 7. **Discipline Adaptation**:
    - biology/anatomy: focus on visual illustrations and anatomical mapping.
    - math/physics: use advanced LaTeX formulas ($ and $$), systematic definitions, and proof.
    - humanities/philosophy: focus on comparative dialectics, historical controversy, and rhetoric.
+
 8. **Level Adaptation**:
    - Tailor vocabulary, tone, mathematical rigor and paragraph density strictly to the presumption of "${levelInput}".
+
 9. **No Code Block Wrappers**:
    - Return ONLY the raw MDX content. Do not wrap the response in markdown code blocks (\`\`\`).
+
 10. **STRICT PROHIBITION ON RAW INTERACTIVE JSX TAGS**:
     - You MUST NEVER write raw JSX/HTML tags for interactive components (such as \`<DataChart>\`, \`<Video>\`, \`<Quiz>\`, \`<DiagnosticQuiz>\`, \`<SolvedExercise>\`, \`<UnsolvedExercise>\`, \`<Mermaid>\` or \`<CodeSandbox>\`) inside your narrative text.
     - Instead, you MUST EXCLUSIVELY use the pre-generated bracketed anchor tags (e.g. \`[[WIDGET:prerequisites]]\`, \`[[WIDGET:comp_02]]\`).
@@ -1693,7 +1705,7 @@ Your Checkpoints:
 4. "Multimedia, Illustrations, & Non-Text Media Density":
    This checkpoint is DISCIPLINE-AWARE. Evaluate the illustration requirement against the course subject and level ("${levelInput}", course: "${correctedCourseName}"):
    - Verify that the image density conforms to age-adaptation: for primary CP-CM2, reject if text dominates over visuals/simulators (the text/image ratio must be reversed: let visuals, games, and simulations dominate, and keep text explanations short and simple).
-   - Check that the minimum media baseline/diversity is respected: even for advanced university levels (Licence L1-L3), reject if the lesson lacks at least 1 illustration/diagram, 1 or 2 graphs/curves/simulations (e.g. using \`<FunctionPlotter />\` or a Markdown table chart toggle), and 1 or 2 source images (painting, sculpture, historical photo, monument, map).
+   - **STRICT MEDIA BASELINE FOR LICENCE (L1-L3)**: You MUST systematically reject (approved: false) if a Licence-level lesson contains fewer than 5 to 6 distinct factual/sourced images/figures (e.g. \`<CustomFigure />\` or markdown images) or fewer than 1 to 2 decorative/conceptual AI-generated illustrations. This density is a strict requirement to provide a visually premium educational experience.
    - For VISUAL, SPATIAL, HISTORICAL, or EMPIRICAL disciplines: A text-only lesson is UNACCEPTABLE. Reject immediately if the content lacks at least 2 to 3 '<CustomFigure />' / '<Image />' elements, at least one '<Mermaid />' flowchart, or at least one '<InteractiveDiagram />'.
    - For QUANTITATIVE or EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics, computer science): The absence of inline illustrations may be acceptable IF the content compensates with visual interactive components. Reject if NONE of these are present.
    - For TEXTUAL, PHILOSOPHICAL, LITERARY, or HUMANISTIC disciplines: A text-dominant lesson is pedagogically acceptable. However, you MUST flag (in the critique, without setting "approved" to false for this reason alone) if ZERO visual elements are present, as at least a minimal enrichment would still be beneficial.

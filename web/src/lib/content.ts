@@ -356,15 +356,10 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
     } catch (err) {
       console.error("[Navigation Tree DB] Failed to fetch lessons from database:", err);
     }
+    // Return empty list if no lessons found in the requested language
+    return [];
   }
 
-  if (parts.length === 3) {
-    return [{
-      name: 'Introduction',
-      type: 'file',
-      path: '/' + dir + '/introduction'
-    }];
-  }
   return [];
 }
 

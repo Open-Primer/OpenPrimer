@@ -113,44 +113,44 @@ export const EntityLink = ({
 
   let Icon = Globe;
   let headerLabel = isFr ? 'Encyclopédie' : 'Encyclopedia';
-  let borderClass = "border-sky-400 text-sky-300 hover:text-sky-200";
+  let borderClass = "border-sky-400 text-sky-300 hover:text-sky-200 [.theme-paper_&]:border-sky-500/50 [.theme-paper_&]:text-sky-800 [.theme-paper_&]:hover:text-sky-950";
   let iconBoxClass = "bg-sky-600/20 text-sky-400 [.theme-paper_&]:bg-sky-100 [.theme-paper_&]:text-sky-700";
   let linkClass = "text-sky-400 hover:text-sky-300 [.theme-paper_&]:text-sky-700 [.theme-paper_&]:hover:text-sky-850";
 
   if (resolvedType === 'person') {
     Icon = User;
     headerLabel = isFr ? 'Biographie' : 'Biography';
-    borderClass = "border-violet-400 text-violet-300 hover:text-violet-200";
+    borderClass = "border-violet-400 text-violet-300 hover:text-violet-200 [.theme-paper_&]:border-violet-500/50 [.theme-paper_&]:text-violet-800 [.theme-paper_&]:hover:text-violet-950";
     iconBoxClass = "bg-violet-600/20 text-violet-400 [.theme-paper_&]:bg-violet-100 [.theme-paper_&]:text-violet-700";
     linkClass = "text-violet-400 hover:text-violet-300 [.theme-paper_&]:text-violet-700 [.theme-paper_&]:hover:text-violet-850";
   } else if (resolvedType === 'character') {
     Icon = Sparkles;
     headerLabel = isFr ? 'Personnage' : 'Character';
-    borderClass = "border-fuchsia-400 text-fuchsia-300 hover:text-fuchsia-200";
+    borderClass = "border-fuchsia-400 text-fuchsia-300 hover:text-fuchsia-200 [.theme-paper_&]:border-fuchsia-500/50 [.theme-paper_&]:text-fuchsia-800 [.theme-paper_&]:hover:text-fuchsia-950";
     iconBoxClass = "bg-fuchsia-600/20 text-fuchsia-400 [.theme-paper_&]:bg-fuchsia-100 [.theme-paper_&]:text-fuchsia-700";
     linkClass = "text-fuchsia-400 hover:text-fuchsia-300 [.theme-paper_&]:text-fuchsia-700 [.theme-paper_&]:hover:text-fuchsia-850";
   } else if (resolvedType === 'location') {
     Icon = MapPin;
     headerLabel = isFr ? 'Lieu' : 'Location';
-    borderClass = "border-emerald-400 text-emerald-300 hover:text-emerald-200";
+    borderClass = "border-emerald-400 text-emerald-300 hover:text-emerald-200 [.theme-paper_&]:border-emerald-600/50 [.theme-paper_&]:text-emerald-800 [.theme-paper_&]:hover:text-emerald-950";
     iconBoxClass = "bg-emerald-600/20 text-emerald-400 [.theme-paper_&]:bg-emerald-100 [.theme-paper_&]:text-emerald-700";
     linkClass = "text-emerald-400 hover:text-emerald-300 [.theme-paper_&]:text-emerald-700 [.theme-paper_&]:hover:text-emerald-850";
   } else if (resolvedType === 'event') {
     Icon = Calendar;
     headerLabel = isFr ? 'Événement' : 'Event';
-    borderClass = "border-amber-400 text-amber-300 hover:text-amber-200";
+    borderClass = "border-amber-400 text-amber-300 hover:text-amber-200 [.theme-paper_&]:border-amber-600/50 [.theme-paper_&]:text-amber-800 [.theme-paper_&]:hover:text-amber-950";
     iconBoxClass = "bg-amber-600/20 text-amber-400 [.theme-paper_&]:bg-amber-100 [.theme-paper_&]:text-amber-700";
     linkClass = "text-amber-400 hover:text-amber-300 [.theme-paper_&]:text-amber-700 [.theme-paper_&]:hover:text-amber-850";
   } else if (resolvedType === 'artwork') {
     Icon = Palette;
     headerLabel = isFr ? 'Œuvre d\'art' : 'Artwork';
-    borderClass = "border-pink-400 text-pink-300 hover:text-pink-200";
+    borderClass = "border-pink-400 text-pink-300 hover:text-pink-200 [.theme-paper_&]:border-pink-500/50 [.theme-paper_&]:text-pink-800 [.theme-paper_&]:hover:text-pink-950";
     iconBoxClass = "bg-pink-600/20 text-pink-400 [.theme-paper_&]:bg-pink-100 [.theme-paper_&]:text-pink-700";
     linkClass = "text-pink-400 hover:text-pink-300 [.theme-paper_&]:text-pink-700 [.theme-paper_&]:hover:text-pink-850";
   } else if (resolvedType === 'website' || resolvedType === 'project') {
     Icon = Globe;
     headerLabel = isFr ? 'Projet / Site' : 'Project / Website';
-    borderClass = "border-teal-400 text-teal-300 hover:text-teal-200";
+    borderClass = "border-teal-400 text-teal-300 hover:text-teal-200 [.theme-paper_&]:border-teal-500/50 [.theme-paper_&]:text-teal-800 [.theme-paper_&]:hover:text-teal-950";
     iconBoxClass = "bg-teal-600/20 text-teal-400 [.theme-paper_&]:bg-teal-100 [.theme-paper_&]:text-teal-700";
     linkClass = "text-teal-400 hover:text-teal-300 [.theme-paper_&]:text-teal-700 [.theme-paper_&]:hover:text-teal-850";
   }

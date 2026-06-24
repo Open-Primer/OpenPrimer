@@ -160,7 +160,7 @@ export const DataChart = ({
   const paddingLeft = 55;
   const paddingRight = 20;
   const paddingTop = 30;
-  const paddingBottom = 45;
+  const paddingBottom = 55; // Increased to give room for rotated labels
 
   const chartWidth = width - paddingLeft - paddingRight;
   const chartHeight = height - paddingTop - paddingBottom;
@@ -202,6 +202,9 @@ export const DataChart = ({
         <div className="relative w-full">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
             <defs>
+              <clipPath id="chart-clip">
+                <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
+              </clipPath>
               {PRESET_GRADIENTS.map((g) => (
                 <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
@@ -239,8 +242,17 @@ export const DataChart = ({
             {normalized.xValues.map((xVal, gIdx) => {
               const xCenter = paddingLeft + gIdx * groupWidth + groupWidth / 2;
               return (
-                <text key={gIdx} x={xCenter} y={height - paddingBottom + 16} fill="#94a3b8" fontSize="10" fontWeight="bold" textAnchor="middle">
-                  {xVal}
+                <text 
+                  key={gIdx} 
+                  x={xCenter} 
+                  y={height - paddingBottom + 12} 
+                  fill="#94a3b8" 
+                  fontSize="8.5" 
+                  fontWeight="bold" 
+                  textAnchor="end"
+                  transform={`rotate(-25, ${xCenter}, ${height - paddingBottom + 12})`}
+                >
+                  {String(xVal).length > 25 ? `${String(xVal).slice(0, 23)}..` : String(xVal)}
                 </text>
               );
             })}
@@ -279,7 +291,8 @@ export const DataChart = ({
                       x={barX}
                       y={barY}
                       width={barWidth}
-                      height={Math.max(barHeight, 2)}
+                      height={Math.max(barHeight + 10, 2)} /* Offset downwards to clip flat at the baseline */
+                      clipPath="url(#chart-clip)"
                       rx="4"
                       ry="4"
                       fill={fillUrl}
@@ -287,7 +300,7 @@ export const DataChart = ({
                       strokeWidth={isHovered ? "2" : "1"}
                       filter={isHovered ? "url(#shadow)" : ""}
                       initial={{ height: 0, y: height - paddingBottom }}
-                      animate={{ height: Math.max(barHeight, 2), y: barY }}
+                      animate={{ height: Math.max(barHeight + 10, 2), y: barY }}
                       transition={{ duration: 0.8, ease: "easeOut", delay: gIdx * 0.04 }}
                     />
                   </g>
@@ -331,6 +344,9 @@ export const DataChart = ({
         <div className="relative w-full">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
             <defs>
+              <clipPath id="chart-clip-single">
+                <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
+              </clipPath>
               {PRESET_GRADIENTS.map((g) => (
                 <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
@@ -385,7 +401,8 @@ export const DataChart = ({
                     x={x}
                     y={y}
                     width={barWidth}
-                    height={Math.max(barHeight, 2)}
+                    height={Math.max(barHeight + 10, 2)} /* Offset downwards to clip flat at the baseline */
+                    clipPath="url(#chart-clip-single)"
                     rx="6"
                     ry="6"
                     fill={fillUrl}
@@ -393,7 +410,7 @@ export const DataChart = ({
                     strokeWidth={isHovered ? "2" : "1"}
                     filter={isHovered ? "url(#shadow)" : ""}
                     initial={{ height: 0, y: height - paddingBottom }}
-                    animate={{ height: Math.max(barHeight, 2), y }}
+                    animate={{ height: Math.max(barHeight + 10, 2), y }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.05 }}
                   />
 
@@ -401,8 +418,16 @@ export const DataChart = ({
                     <circle cx={x + barWidth / 2} cy={y} r="8" fill={grad.end} className="animate-ping opacity-30 pointer-events-none" />
                   )}
 
-                  <text x={x + barWidth / 2} y={height - paddingBottom + 16} fill={isHovered ? "#3b82f6" : "#94a3b8"} fontSize="9" fontWeight="bold" textAnchor="middle">
-                    {item.label.length > 8 ? `${item.label.slice(0, 6)}..` : item.label}
+                  <text 
+                    x={x + barWidth / 2} 
+                    y={height - paddingBottom + 12} 
+                    fill={isHovered ? "#3b82f6" : "#94a3b8"} 
+                    fontSize="8.5" 
+                    fontWeight="bold" 
+                    textAnchor="end"
+                    transform={`rotate(-25, ${x + barWidth / 2}, ${height - paddingBottom + 12})`}
+                  >
+                    {item.label.length > 25 ? `${item.label.slice(0, 23)}..` : item.label}
                   </text>
                 </g>
               );

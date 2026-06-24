@@ -14,18 +14,11 @@ interface CourseSpec {
 
 const coursesToGenerate: CourseSpec[] = [
   {
-    name: "Fundamentos de la Filosofía",
-    subject: "Philosophy",
+    name: "Introduction to Cognitive Psychology",
+    subject: "Psychology",
     level: "L1",
-    targetLang: "es",
-    description: "Un viaje sistemático y avanzado a través de las cuestiones centrales de la existencia, el conocimiento, la ética y la metafísica."
-  },
-  {
-    name: "Introduction à l'Économie Comportementale",
-    subject: "Économie",
-    level: "L1",
-    targetLang: "fr",
-    description: "Une exploration captivante de la psychologie des décisions économiques, remettant en question l'hypothèse de l'agent rationnel à travers les biais cognitifs, les heuristiques et la théorie des perspectives."
+    targetLang: "en",
+    description: "An introductory course exploring how the human mind processes information, memory, attention, and decision-making."
   }
 ];
 
