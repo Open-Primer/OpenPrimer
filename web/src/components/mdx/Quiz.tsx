@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CheckCircle2, XCircle, ChevronRight, Play, Timer, RefreshCw, Lock, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, ChevronRight, Play, Timer, RefreshCw, Lock, Sparkles, ShieldAlert } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { progressService } from '@/lib/db';
+import { progressService, dbService } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 
 function cn(...inputs: ClassValue[]) {
@@ -34,9 +34,21 @@ interface QuizProps {
   children: React.ReactNode;
   durationLimit?: number; // in seconds
   isFinal?: boolean;
+  calculatorAllowed?: boolean;
+  externalDocumentsAllowed?: boolean;
+  webBrowsingAllowed?: boolean;
+  aiTutorAssistanceAllowed?: boolean;
 }
 
-export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) => {
+export const Quiz = ({
+  children,
+  durationLimit,
+  isFinal = false,
+  calculatorAllowed = false,
+  externalDocumentsAllowed = false,
+  webBrowsingAllowed = false,
+  aiTutorAssistanceAllowed = false,
+}: QuizProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
@@ -73,6 +85,8 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
   const estTimeText = estTimeTexts[langKey] || estTimeTexts.EN;
 
   const [extendTime, setExtendTime] = useState(false);
+  const [level, setLevel] = useState('L1');
+  const [courseHours, setCourseHours] = useState(150);
 
   useEffect(() => {
     const handlePrefsChange = () => {
@@ -89,7 +103,37 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
     return () => window.removeEventListener('op_accessibility_preferences_changed', handlePrefsChange);
   }, []);
 
-  const actualDurationLimit = durationLimit ? (extendTime ? Math.round(durationLimit * 1.25) : durationLimit) : undefined;
+  const isPrimary = level.startsWith('P') || level.startsWith('M') || level.toLowerCase().includes('primary') || level.toLowerCase().includes('maternelle') || ['1', '2', '3'].includes(level);
+  
+  // Parse all questions
+  const parsedQuestions = (React.Children.toArray(children) as React.ReactElement[]).filter(
+    (child) => {
+      if (!React.isValidElement(child)) return false;
+      const typeName = (child.type as any)?.name || String(child.type);
+      return typeName === 'Question' || typeName === 'QuestionComponent' || 'q' in (child.props as any);
+    }
+  );
+
+  // Proportional scaling for questions
+  const maxQuestions = isPrimary ? 10 : 50;
+  const targetNumQuestions = isFinal 
+    ? Math.min(maxQuestions, Math.max(5, Math.round(courseHours / 3)))
+    : undefined;
+
+  const questions = isFinal && targetNumQuestions 
+    ? parsedQuestions.slice(0, targetNumQuestions)
+    : parsedQuestions;
+
+  // Proportional scaling for duration
+  let calculatedDuration = durationLimit;
+  if (isFinal && !calculatedDuration) {
+    const secondsPerQuestion = isPrimary ? 120 : 60;
+    calculatedDuration = questions.length * secondsPerQuestion;
+  }
+  const baselineDuration = calculatedDuration || durationLimit;
+  const actualDurationLimit = baselineDuration
+    ? extendTime ? Math.round(baselineDuration * 1.25) : baselineDuration
+    : undefined;
 
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(actualDurationLimit || 0);
@@ -105,22 +149,34 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const totalQuestions = questions.length;
+  const totalAnswered = Object.keys(answers).length;
+  const totalCorrect = Object.values(answers).filter(Boolean).length;
+  const isFinished = totalAnswered === totalQuestions || isTimeUp;
+
   useEffect(() => {
     if (!isStarted && actualDurationLimit) {
       setTimeLeft(actualDurationLimit);
     }
   }, [actualDurationLimit, isStarted]);
-  const questions = (React.Children.toArray(children) as React.ReactElement[]).filter(
-    (child) => {
-      if (!React.isValidElement(child)) return false;
-      const typeName = (child.type as any)?.name || String(child.type);
-      return typeName === 'Question' || typeName === 'QuestionComponent' || 'q' in (child.props as any);
+
+  // Dispatch Lockdown for AI Tutor chatbot overlay
+  useEffect(() => {
+    if (isFinal && !aiTutorAssistanceAllowed) {
+      if (isStarted && !isFinished && !isTimeUp) {
+        // Exam is active, lockdown assistance
+        window.dispatchEvent(new CustomEvent('op_disable_tutor_assistance', { detail: { disabled: true } }));
+      } else {
+        // Exam finished or not started, release lockdown
+        window.dispatchEvent(new CustomEvent('op_disable_tutor_assistance', { detail: { disabled: false } }));
+      }
     }
-  );
-  const totalQuestions = questions.length;
-  const totalAnswered = Object.keys(answers).length;
-  const totalCorrect = Object.values(answers).filter(Boolean).length;
-  const isFinished = totalAnswered === totalQuestions || isTimeUp;
+    return () => {
+      if (isFinal && !aiTutorAssistanceAllowed) {
+        window.dispatchEvent(new CustomEvent('op_disable_tutor_assistance', { detail: { disabled: false } }));
+      }
+    };
+  }, [isStarted, isFinished, isTimeUp, isFinal, aiTutorAssistanceAllowed]);
 
   // Fetch tutor feedback on quiz completion
   useEffect(() => {
@@ -252,6 +308,18 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
     const pathname = window.location.pathname;
     const parts = pathname.split('/');
     const courseSlug = parts[3] || 'Classical_Mechanics';
+
+    // Fetch the level and hours directly from the course data
+    dbService.getSyllabus(courseSlug).then(({ data }) => {
+      if (data) {
+        if (data.level) setLevel(data.level);
+        if (data.hours) setCourseHours(data.hours);
+      } else {
+        setLevel(parts[1] || 'L1');
+      }
+    }).catch(() => {
+      setLevel(parts[1] || 'L1');
+    });
 
     const session = localStorage.getItem('op_session');
     setIsLoggedIn(session === 'true');
@@ -428,6 +496,79 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
           <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
+        {/* Dynamic Aids/Rules Card if Final */}
+        {isFinal && (
+          <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3.5">
+            <p className="font-black text-rose-400 uppercase tracking-widest text-[10px] flex items-center gap-1.5">
+              <ShieldAlert className="w-4 h-4" />
+              <span>
+                {language === 'FR' ? "📋 Consignes & Matériaux de l'épreuve"
+                  : language === 'ES' ? "📋 Instrucciones y materiales del examen"
+                  : language === 'DE' ? "📋 Prüfungsregeln & Hilfsmittel"
+                  : language === 'ZH' ? "📋 考试说明与适用材料"
+                  : "📋 Rules & Assessment Materials"}
+              </span>
+            </p>
+            <div className="grid grid-cols-2 gap-3 text-xs leading-relaxed text-slate-300 border-t border-slate-800/60 pt-3">
+              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                <span className={calculatorAllowed ? "text-emerald-400" : "text-rose-500"}>
+                  {calculatorAllowed ? "✓" : "✖"}
+                </span>
+                <span>
+                  {language === 'FR' ? `Calculatrice ${calculatorAllowed ? "Autorisée" : "Interdite"}`
+                    : language === 'ES' ? `Calculadora ${calculatorAllowed ? "Permitida" : "Prohibida"}`
+                    : language === 'DE' ? `Taschenrechner ${calculatorAllowed ? "Erlaubt" : "Unzulässig"}`
+                    : language === 'ZH' ? `计算器 ${calculatorAllowed ? "允许使用" : "禁止使用"}`
+                    : `Calculator ${calculatorAllowed ? "Allowed" : "Prohibited"}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                <span className={externalDocumentsAllowed ? "text-emerald-400" : "text-rose-500"}>
+                  {externalDocumentsAllowed ? "✓" : "✖"}
+                </span>
+                <span>
+                  {language === 'FR' ? `Documents ${externalDocumentsAllowed ? "Autorisés" : "Interdits"}`
+                    : language === 'ES' ? `Documentos ${externalDocumentsAllowed ? "Permitidos" : "Prohibidos"}`
+                    : language === 'DE' ? `Unterlagen ${externalDocumentsAllowed ? "Erlaubt" : "Unzulässig"}`
+                    : language === 'ZH' ? `参考资料 ${externalDocumentsAllowed ? "允许使用" : "禁止使用"}`
+                    : `Documents ${externalDocumentsAllowed ? "Allowed" : "Prohibited"}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                <span className={webBrowsingAllowed ? "text-emerald-400" : "text-rose-500"}>
+                  {webBrowsingAllowed ? "✓" : "✖"}
+                </span>
+                <span>
+                  {language === 'FR' ? `Navigation Web ${webBrowsingAllowed ? "Autorisée" : "Interdite"}`
+                    : language === 'ES' ? `Navegación Web ${webBrowsingAllowed ? "Permitida" : "Prohibida"}`
+                    : language === 'DE' ? `Web-Browsing ${webBrowsingAllowed ? "Erlaubt" : "Unzulässig"}`
+                    : language === 'ZH' ? `网页浏览 ${webBrowsingAllowed ? "允许" : "禁止"}`
+                    : `Web Browsing ${webBrowsingAllowed ? "Allowed" : "Prohibited"}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                <span className={aiTutorAssistanceAllowed ? "text-emerald-400" : "text-rose-500"}>
+                  {aiTutorAssistanceAllowed ? "✓" : "✖"}
+                </span>
+                <span>
+                  {language === 'FR' ? `Tuteur IA ${aiTutorAssistanceAllowed ? "Actif" : "Désactivé"}`
+                    : language === 'ES' ? `Tutor IA ${aiTutorAssistanceAllowed ? "Activo" : "Desactivado"}`
+                    : language === 'DE' ? `KI-Tutor ${aiTutorAssistanceAllowed ? "Aktiv" : "Deaktiviert"}`
+                    : language === 'ZH' ? `AI 导师 ${aiTutorAssistanceAllowed ? "可用" : "禁用"}`
+                    : `AI Tutor ${aiTutorAssistanceAllowed ? "Enabled" : "Disabled"}`}
+                </span>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 italic text-center mt-1 select-none">
+              {language === 'FR' ? "Note : Même s'il n'y a pas de contrôle physique, vous devez respecter ces modalités d'examen."
+                : language === 'ES' ? "Nota: Aunque no haya supervisión física, debe respetar estas modalidades de examen."
+                : language === 'DE' ? "Hinweis: Auch ohne physische Aufsicht müssen diese Prüfungsregeln eingehalten werden."
+                : language === 'ZH' ? "注：即使没有物理监考，您也必须遵守这些考试规则。"
+                : "Note: Even without physical proctoring, you must respect these exam modalities."}
+            </p>
+          </div>
+        )}
+
         {/* Evaluation Mode Info Card */}
         <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
           <p className="font-black text-blue-400 uppercase tracking-widest text-xs">📋 {t.eval_mode_label}</p>
@@ -435,6 +576,16 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>
               <span>{questionsLabel}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-black shrink-0">▸</span>
+              <span>
+                {language === 'FR' ? `Barème : Score sur ${totalQuestions} (en %)`
+                  : language === 'ES' ? `Calificación: Puntuación sobre ${totalQuestions} (en %)`
+                  : language === 'DE' ? `Bewertung: Ergebnis von ${totalQuestions} (in %)`
+                  : language === 'ZH' ? `评分：${totalQuestions} 分中的得分 (百分比)`
+                  : `Grading: Score out of ${totalQuestions} (in %)`}
+              </span>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>

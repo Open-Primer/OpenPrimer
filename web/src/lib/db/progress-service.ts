@@ -449,10 +449,10 @@ export const progressService = {
     }
   },
 
-  getEnrollmentDate: (slug: string): string => {
-    if (typeof window === 'undefined') return new Date().toISOString();
+  getEnrollmentDate: (slug: string): string | undefined => {
+    if (typeof window === 'undefined') return undefined;
     const dates = JSON.parse(window.localStorage.getItem('op_enrollment_dates') || '{}');
-    return dates[slug] || new Date().toISOString();
+    return dates[slug] || undefined;
   },
 
   // Lesson Timers
@@ -753,10 +753,12 @@ export const progressService = {
       for (const slug in progressMap) {
         if (progressMap[slug] === 100) {
           const enrollDate = progressService.getEnrollmentDate(slug);
-          const compDate = new Date().toISOString();
-          const diff = (new Date(compDate).getTime() - new Date(enrollDate).getTime()) / (24 * 60 * 60 * 1000);
-          if (diff <= 3) {
-            fastLearner = true;
+          if (enrollDate) {
+            const compDate = new Date().toISOString();
+            const diff = (new Date(compDate).getTime() - new Date(enrollDate).getTime()) / (24 * 60 * 60 * 1000);
+            if (diff <= 3) {
+              fastLearner = true;
+            }
           }
         }
       }
@@ -904,10 +906,12 @@ export const progressService = {
               for (const slug in progressMap) {
                 if (progressMap[slug] === 100) {
                   const enrollDate = progressService.getEnrollmentDate(slug);
-                  const compDate = new Date().toISOString();
-                  const diff = (new Date(compDate).getTime() - new Date(enrollDate).getTime()) / (24 * 60 * 60 * 1000);
-                  if (diff <= 3) {
-                    earned = true;
+                  if (enrollDate) {
+                    const compDate = new Date().toISOString();
+                    const diff = (new Date(compDate).getTime() - new Date(enrollDate).getTime()) / (24 * 60 * 60 * 1000);
+                    if (diff <= 3) {
+                      earned = true;
+                    }
                   }
                 }
               }

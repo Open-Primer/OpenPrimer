@@ -879,7 +879,7 @@ export const CatalogPage = () => {
             </div>
           ) : sortedCourses.length > 0 ? sortedCourses.map((course) => {
             const isEnrolled = enrolledIds.includes(course.id);
-            const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || m.title_key === course.title_key);
+            const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || (m.title_key && course.title_key && m.title_key === course.title_key));
             
             const isBrowser = typeof window !== 'undefined';
             const localProgressMap = isBrowser ? (() => {
@@ -897,7 +897,7 @@ export const CatalogPage = () => {
               course.childCourses.forEach((childId: number) => {
                 const childCourse = sortedCourses.find(c => c.id === childId);
                 if (childCourse) {
-                  const childActive = userProgress?.activeModules?.find((m: any) => m.slug === childCourse.slug || m.id === childCourse.id || m.title_key === childCourse.title_key);
+                  const childActive = userProgress?.activeModules?.find((m: any) => m.slug === childCourse.slug || m.id === childCourse.id || (m.title_key && childCourse.title_key && m.title_key === childCourse.title_key));
                   const childLocal = typeof localProgressMap[childCourse.slug] === 'number'
                     ? localProgressMap[childCourse.slug]
                     : (typeof localProgressMap[childCourse.id] === 'number' ? localProgressMap[childCourse.id] : 0);

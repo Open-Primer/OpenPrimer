@@ -7,6 +7,7 @@ import { AudioReader } from '@/components/AudioReader';
 import { usePathname } from 'next/navigation';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;
@@ -36,6 +37,71 @@ export const CourseClientWrapper = ({
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
   const [tutorEnabled, setTutorEnabled] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Global relative anchor click interceptor for loading transitions
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      const targetAttr = anchor.getAttribute('target');
+
+      if (
+        href &&
+        href.startsWith('/') &&
+        !href.startsWith('//') &&
+        !href.startsWith('#') &&
+        targetAttr !== '_blank' &&
+        !e.defaultPrevented &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.button === 0
+      ) {
+        setIsNavigating(true);
+        document.body.style.cursor = 'wait';
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+
+  // Reset navigation states on path changes
+  useEffect(() => {
+    setIsNavigating(false);
+    document.body.style.cursor = 'default';
+  }, [pathname]);
+
+  // Scan MDX content for quizzes and register requirements
+  useEffect(() => {
+    if (pageContext && pathname) {
+      const hasQuiz = pageContext.includes('<Quiz') || 
+                      pageContext.includes('<EssayEvaluation') || 
+                      pageContext.includes('<Interactive');
+      if (hasQuiz) {
+        try {
+          const storage = getProgressionStorage();
+          if (storage) {
+            const quizzesRequired = JSON.parse(storage.getItem('op_quizzes_required') || '{}');
+            if (!quizzesRequired[pathname]) {
+              quizzesRequired[pathname] = true;
+              storage.setItem('op_quizzes_required', JSON.stringify(quizzesRequired));
+              window.dispatchEvent(new Event('op_progress_updated'));
+            }
+          }
+        } catch (e) {
+          console.error("Error writing op_quizzes_required:", e);
+        }
+      }
+    }
+  }, [pageContext, pathname]);
 
   // Reset step & action when selection changes or is closed
   useEffect(() => {
@@ -484,15 +550,29 @@ export const CourseClientWrapper = ({
       });
 
       if (flatPages.length > 0) {
-        const lessonProgressMap = JSON.parse(storage.getItem('op_lesson_scroll_progress') || '{}');
-        
-        let totalPercentageSum = 0;
-        flatPages.forEach(path => {
-          totalPercentageSum += (lessonProgressMap[path] ?? 0);
-        });
-        const calculatedCoursePercent = Math.round(totalPercentageSum / flatPages.length);
+        const visitedPages = JSON.parse(storage.getItem('op_visited_pages') || '[]');
+        const quizzesRequired = JSON.parse(storage.getItem('op_quizzes_required') || '{}');
+        const quizResults = JSON.parse(storage.getItem('op_quiz_results') || '{}');
 
-        const finalProgress = progressService.getCapPercentage(slug, calculatedCoursePercent);
+        const regularPages = flatPages.slice(0, -1);
+        const finalPage = flatPages[flatPages.length - 1];
+
+        let completedRegularCount = 0;
+        regularPages.forEach(path => {
+          const isVisited = visitedPages.includes(path);
+          const requiresQuiz = !!quizzesRequired[path];
+          const quizDone = !!quizResults[path];
+          if (isVisited && (!requiresQuiz || quizDone)) {
+            completedRegularCount++;
+          }
+        });
+
+        const regularProgress = regularPages.length > 0 ? Math.round((completedRegularCount / regularPages.length) * 90) : 90;
+
+        const evalStatus = progressService.checkFinalEvaluationStatus(slug, finalPage);
+        const finalTenPercent = (evalStatus.completed && evalStatus.passed) ? 10 : 0;
+
+        const finalProgress = Math.min(100, regularProgress + finalTenPercent);
 
         const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
         const currentCourseProgress = progressMap[slug] ?? 0;
@@ -644,7 +724,21 @@ export const CourseClientWrapper = ({
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.default}`}>
+    <div className={`min-h-screen transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.default} ${isNavigating ? 'cursor-wait select-none' : ''}`}>
+      <AnimatePresence>
+        {isNavigating && (
+          <motion.div
+            initial={{ width: '0%', opacity: 1 }}
+            animate={{ width: '90%' }}
+            exit={{ width: '100%', opacity: 0 }}
+            transition={{ 
+              width: { duration: 8, ease: 'easeOut' },
+              opacity: { duration: 0.3 }
+            }}
+            className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-500 z-[9999]"
+          />
+        )}
+      </AnimatePresence>
       <TopNav toggleSidebar={() => setSidebarOpen(!sidebarOpen)} isCoursePage={true} />
       
       <div className="flex pt-16 h-[calc(100vh-64px)] overflow-hidden">
@@ -652,7 +746,7 @@ export const CourseClientWrapper = ({
         <Sidebar items={navItems} isOpen={sidebarOpen} />
 
         {/* Unified Reading Pane */}
-        <main ref={mainRef} className={`flex-1 h-full overflow-y-auto custom-scrollbar scroll-smooth transition-all ${readingMode === 'paper' ? 'px-4' : ''}`}>
+        <main ref={mainRef} className={`flex-1 h-full overflow-y-auto custom-scrollbar scroll-smooth transition-all ${readingMode === 'paper' ? 'px-4' : ''} ${isNavigating ? 'opacity-40 pointer-events-none' : ''}`}>
           <div className={`${readingMode === 'paper' ? 'max-w-3xl mx-auto py-12' : ''}`}>
             {children}
           </div>

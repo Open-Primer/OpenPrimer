@@ -3,17 +3,38 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { User, Sparkles, MapPin, Globe, ExternalLink, Calendar, Palette } from 'lucide-react';
+import { 
+  User, 
+  Sparkles, 
+  MapPin, 
+  Globe, 
+  ExternalLink, 
+  Calendar, 
+  Palette, 
+  Brain, 
+  BookOpen, 
+  Clock, 
+  Award, 
+  Building,
+  Leaf,
+  FlaskConical,
+  Orbit
+} from 'lucide-react';
 
 export interface EntityLinkProps {
   name: string;
   lang: string;
   children: React.ReactNode;
-  type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork' | 'website' | 'project';
+  type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork' | 'website' | 'project' | 'concept' | 'theorem' | 'institution' | 'species' | 'chemical' | 'celestial';
   bio?: string;
   description?: string;
   url?: string;
   href?: string;
+  century?: string;
+  lifespan?: string;
+  dates?: string;
+  creation?: string;
+  era?: string;
 }
 
 const getLocalizedName = (name: string, lang: string): string => {
@@ -68,6 +89,309 @@ const getLocalizedName = (name: string, lang: string): string => {
   return name;
 };
 
+const extractDatesOrCentury = (desc: string | null, extract: string | null): string | null => {
+  if (!desc && !extract) return null;
+  const text = `${desc || ''} ${extract || ''}`.slice(0, 150);
+  const parenRegex = /\(([^)]*(?:\d{3,4}|[IVXLCDM]+e?\s*siècle|century|BC|av\.|J\.-C\.)[^)]*)\)/i;
+  const match = text.match(parenRegex);
+  if (match) {
+    const cleaned = match[1].trim();
+    if (cleaned.length > 3 && cleaned.length < 45) {
+      if (!cleaned.includes('anglais') && !cleaned.includes('latin') && !cleaned.includes('prononcé')) {
+        return cleaned;
+      }
+    }
+  }
+  if (desc) {
+    const centuryRegex = /(\b[IVXLCDM]+e?\s*siècle\b|\b\d+(?:th|st|nd|rd)\s*century\b)/i;
+    const centMatch = desc.match(centuryRegex);
+    if (centMatch) {
+      return centMatch[1].trim();
+    }
+  }
+  return null;
+};
+
+const extractEntityMetadata = (
+  type: string,
+  desc: string | null,
+  summary: string | null,
+  isFr: boolean
+): { icon: any; label: string | null } => {
+  const textDesc = desc || '';
+  const textSummary = summary || '';
+  const combined = `${textDesc} ${textSummary}`.trim();
+
+  if (!combined) {
+    return { icon: Globe, label: null };
+  }
+
+  // 1. PERSON: Lifespan, dates or century
+  if (type === 'person') {
+    const dates = extractDatesOrCentury(desc, summary);
+    return { icon: Calendar, label: dates };
+  }
+
+  // 2. CHARACTER: Creator and creation year
+  if (type === 'character') {
+    const creatorRegexFr = /\b(?:créé par|personnage de)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
+    const creatorRegexEn = /\b(?:created by|introduced by|character in)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
+    const match = combined.match(isFr ? creatorRegexFr : creatorRegexEn);
+    let creator = match ? match[1].trim() : null;
+    if (creator && (creator.toLowerCase().endsWith(' in') || creator.toLowerCase().endsWith(' dans'))) {
+      creator = creator.substring(0, creator.length - 3).trim();
+    }
+    const yearMatch = combined.match(/\b(1\d{3}|20\d{2})\b/);
+    const year = yearMatch ? yearMatch[1] : null;
+
+    let label = null;
+    if (creator && year) {
+      label = isFr ? `Créateur : ${creator} (${year})` : `Creator: ${creator} (${year})`;
+    } else if (creator) {
+      label = isFr ? `Créateur : ${creator}` : `Creator: ${creator}`;
+    } else if (year) {
+      label = isFr ? `Créé en ${year}` : `Created in ${year}`;
+    }
+    return { icon: Sparkles, label };
+  }
+
+  // 3. LOCATION: Country, continent or region
+  if (type === 'location') {
+    const continentsFr = ['Europe', 'Asie', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Océanie', 'Antarctique'];
+    const continentsEn = ['Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania', 'Antarctica'];
+    const countriesFr = ['France', 'Italie', 'Espagne', 'Allemagne', 'Angleterre', 'Royaume-Uni', 'Grèce', 'Égypte', 'Chine', 'Japon', 'Canada', 'États-Unis', 'Brésil', 'Inde', 'Russie', 'Belgique', 'Suisse'];
+    const countriesEn = ['France', 'Italy', 'Spain', 'Germany', 'England', 'United Kingdom', 'Greece', 'Egypt', 'China', 'Japan', 'Canada', 'United States', 'Brazil', 'India', 'Russia', 'Belgium', 'Switzerland'];
+    
+    const continents = isFr ? continentsFr : continentsEn;
+    const countries = isFr ? countriesFr : countriesEn;
+    
+    let matchedCountry = null;
+    let matchedContinent = null;
+    
+    for (const c of countries) {
+      if (new RegExp(`\\b${c}\\b`, 'i').test(combined)) {
+        matchedCountry = c;
+        break;
+      }
+    }
+    for (const cont of continents) {
+      if (new RegExp(`\\b${cont}\\b`, 'i').test(combined)) {
+        matchedContinent = cont;
+        break;
+      }
+    }
+    
+    if (matchedCountry && matchedContinent) {
+      return { icon: MapPin, label: `${matchedCountry} / ${matchedContinent}` };
+    } else if (matchedCountry) {
+      return { icon: MapPin, label: matchedCountry };
+    } else if (matchedContinent) {
+      return { icon: MapPin, label: matchedContinent };
+    }
+
+    const geoRegexFr = /\b(?:en|au|dans l'|dans le|de l'|aux)\s*([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s.-]{2,30})/i;
+    const geoRegexEn = /\b(?:in|of|across|at)\s+([A-Z][A-Za-z\s.-]{2,30})/i;
+    const match = combined.match(isFr ? geoRegexFr : geoRegexEn);
+    if (match) {
+      const parsedGeo = match[1].trim().replace(/[.,;]$/, '');
+      if (parsedGeo.length > 2 && !parsedGeo.toLowerCase().startsWith('the ') && !parsedGeo.toLowerCase().startsWith('les ')) {
+        return { icon: MapPin, label: parsedGeo };
+      }
+    }
+    return { icon: MapPin, label: isFr ? 'Lieu géographique' : 'Geographic place' };
+  }
+
+  // 4. EVENT: Dates or epoch
+  if (type === 'event') {
+    const dates = extractDatesOrCentury(desc, summary);
+    return { icon: Clock, label: dates ? (isFr ? `Époque : ${dates}` : `Epoch: ${dates}`) : (isFr ? 'Événement' : 'Event') };
+  }
+
+  // 5. ARTWORK: Artist and creation date
+  if (type === 'artwork') {
+    const artistRegexFr = /\b(?:tableau de|peinture de|sculpture de|roman de|œuvre de)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
+    const artistRegexEn = /\b(?:painting by|sculpture by|novel by|work by)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
+    const match = combined.match(isFr ? artistRegexFr : artistRegexEn);
+    const artist = match ? match[1].trim() : null;
+
+    const yearMatch = combined.match(/\b(1\d{3}|20\d{2})\b/);
+    const year = yearMatch ? yearMatch[1] : null;
+
+    let label = null;
+    if (artist && year) {
+      label = `${artist} (${year})`;
+    } else if (artist) {
+      label = isFr ? `Artiste : ${artist}` : `Artist: ${artist}`;
+    } else if (year) {
+      label = year;
+    }
+    return { icon: Palette, label };
+  }
+
+  // 6. CONCEPT: Academic / scientific domain
+  if (type === 'concept') {
+    const conceptCreatorFr = /\b(?:conçu par|introduit par|formulé par|théorie de)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
+    const conceptCreatorEn = /\b(?:coined by|introduced by|formulated by|theory of)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
+    const creatorMatch = combined.match(isFr ? conceptCreatorFr : conceptCreatorEn);
+    const creator = creatorMatch ? creatorMatch[1].trim() : null;
+
+    const domainsFr = ['Physique', 'Mathématiques', 'Philosophie', 'Économie', 'Biologie', 'Chimie', 'Informatique', 'Sociologie', 'Psychologie', 'Statistique'];
+    const domainsEn = ['Physics', 'Mathematics', 'Philosophy', 'Economics', 'Biology', 'Chemistry', 'Computer Science', 'Sociology', 'Psychology', 'Statistics'];
+    const domains = isFr ? domainsFr : domainsEn;
+
+    let domain = null;
+    for (const d of domains) {
+      const domRegex = new RegExp(`\\b${d}\\b`, 'i');
+      if (combined.match(domRegex)) {
+        domain = d;
+        break;
+      }
+    }
+
+    if (domain && creator) {
+      return { icon: Brain, label: isFr ? `${domain} (par ${creator})` : `${domain} (by ${creator})` };
+    } else if (domain) {
+      return { icon: Brain, label: isFr ? `Domaine : ${domain}` : `Field: ${domain}` };
+    } else if (creator) {
+      return { icon: Brain, label: isFr ? `Formulé par ${creator}` : `Formulated by ${creator}` };
+    }
+    return { icon: Brain, label: isFr ? 'Concept académique' : 'Academic concept' };
+  }
+
+  // 7. THEOREM: Laws or theorems
+  if (type === 'theorem') {
+    const theoremCreatorFr = /\b(?:théorème de|loi de|découvert par|formulé par)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
+    const theoremCreatorEn = /\b(?:theorem of|law of|formulated by|discovered by)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
+    const creatorMatch = combined.match(isFr ? theoremCreatorFr : theoremCreatorEn);
+    const creator = creatorMatch ? creatorMatch[1].trim() : null;
+    
+    const dates = extractDatesOrCentury(desc, summary);
+    
+    if (creator && dates) {
+      return { icon: Award, label: `${creator} (${dates})` };
+    } else if (creator) {
+      return { icon: Award, label: isFr ? `Loi / Théorème de ${creator}` : `Law / Theorem of ${creator}` };
+    } else if (dates) {
+      return { icon: Award, label: isFr ? `Loi / Théorème (${dates})` : `Law / Theorem (${dates})` };
+    }
+    return { icon: Award, label: isFr ? 'Loi / Théorème' : 'Law / Theorem' };
+  }
+
+  // 8. INSTITUTION: Academies or Universities
+  if (type === 'institution') {
+    const foundingFr = /\b(?:fondée en|établie en|créée en)\s+(\d{3,4})\b/i;
+    const foundingEn = /\b(?:founded in|established in|created in)\s+(\d{3,4})\b/i;
+    const foundingMatch = combined.match(isFr ? foundingFr : foundingEn);
+    const year = foundingMatch ? foundingMatch[1] : null;
+    
+    const locationFr = /\b(?:à|en|de)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s.-]{2,30})/i;
+    const locationEn = /\b(?:in|at|of)\s+([A-Z][A-Za-z\s.-]{2,30})/i;
+    const locMatch = combined.match(isFr ? locationFr : locationEn);
+    let loc = locMatch ? locMatch[1].trim().replace(/[.,;]$/, '') : null;
+    if (loc && (loc.toLowerCase().startsWith('the ') || loc.toLowerCase() === 'university' || loc.toLowerCase() === 'université')) {
+      loc = null;
+    }
+    
+    const isUnivFr = combined.includes('université') || combined.includes('faculté') || combined.includes('école') || combined.includes('college');
+    const isUnivEn = combined.includes('university') || combined.includes('college') || combined.includes('school') || combined.includes('academy');
+    const baseLabel = isFr 
+      ? (isUnivFr ? 'Université / École' : 'Institution') 
+      : (isUnivEn ? 'University / College' : 'Institution');
+      
+    if (year && loc) {
+      return { icon: Building, label: `${baseLabel} (${loc}, ${year})` };
+    } else if (year) {
+      return { icon: Building, label: isFr ? `${baseLabel} (Fondée en ${year})` : `${baseLabel} (Founded in ${year})` };
+    } else if (loc) {
+      return { icon: Building, label: `${baseLabel} (${loc})` };
+    }
+    return { icon: Building, label: baseLabel };
+  }
+
+  // 9. SPECIES: Organisms or species classification
+  if (type === 'species') {
+    const familyFr = /\b(?:famille des|famille de la|famille de l'|famille de|de la famille des)\s+([A-Z\u00C0-\u00DC][a-z\u00C0-\u00DC\u00df\s'-]{2,25})/i;
+    const familyEn = /\b(?:family of|family)\s+([A-Z][a-z\s'-]{2,25})/i;
+    const famMatch = combined.match(isFr ? familyFr : familyEn);
+    const family = famMatch ? famMatch[1].trim() : null;
+    
+    const classTermsFr = ['mammifère', 'reptile', 'oiseau', 'poisson', 'amphibien', 'insecte', 'plante', 'champignon', 'bactérie', 'virus'];
+    const classTermsEn = ['mammal', 'reptile', 'bird', 'fish', 'amphibian', 'insect', 'plant', 'fungus', 'bacteria', 'virus'];
+    const classTerms = isFr ? classTermsFr : classTermsEn;
+    
+    let matchedClass = null;
+    for (const t of classTerms) {
+      if (new RegExp(`\\b${t}s?\\b`, 'i').test(combined)) {
+        matchedClass = t.charAt(0).toUpperCase() + t.slice(1);
+        break;
+      }
+    }
+    
+    if (family && matchedClass) {
+      return { icon: Leaf, label: `${matchedClass} / Famille : ${family}` };
+    } else if (family) {
+      return { icon: Leaf, label: isFr ? `Famille : ${family}` : `Family: ${family}` };
+    } else if (matchedClass) {
+      return { icon: Leaf, label: matchedClass };
+    }
+    return { icon: Leaf, label: isFr ? 'Espèce / Organisme' : 'Species / Organism' };
+  }
+
+  // 10. CHEMICAL: Chemical formula and compounds
+  if (type === 'chemical') {
+    const formulaMatch = combined.match(/\b([A-Z][a-z]?\d*(?:[A-Z][a-z]?\d*)+)\b/);
+    const formula = formulaMatch ? formulaMatch[1] : null;
+    
+    const compoundFr = /\b(?:composé chimique|composé organique|gaz noble|acide|base|alcane|alcène|alcool|métal)\b/i;
+    const compoundEn = /\b(?:chemical compound|organic compound|noble gas|acid|base|alkane|alkene|alcohol|metal)\b/i;
+    const compMatch = combined.match(isFr ? compoundFr : compoundEn);
+    let compType = compMatch ? compMatch[0].trim() : null;
+    if (compType) {
+      compType = compType.charAt(0).toUpperCase() + compType.slice(1);
+    }
+    
+    if (formula && compType) {
+      return { icon: FlaskConical, label: `${compType} (Formule : ${formula})` };
+    } else if (formula) {
+      return { icon: FlaskConical, label: isFr ? `Formule : ${formula}` : `Formula: ${formula}` };
+    } else if (compType) {
+      return { icon: FlaskConical, label: compType };
+    }
+    return { icon: FlaskConical, label: isFr ? 'Molécule / Chimie' : 'Molecule / Chemical' };
+  }
+
+  // 11. CELESTIAL: Celestial body or space details
+  if (type === 'celestial') {
+    const bodyTermsFr = ['planète', 'étoile', 'galaxie', 'nébuleuse', 'astéroïde', 'comète', 'sonde spatiale', 'satellite', 'constellation'];
+    const bodyTermsEn = ['planet', 'star', 'galaxy', 'nebula', 'asteroid', 'comet', 'space probe', 'satellite', 'constellation'];
+    const bodyTerms = isFr ? bodyTermsFr : bodyTermsEn;
+    
+    let matchedBody = null;
+    for (const t of bodyTerms) {
+      if (new RegExp(`\\b${t}s?\\b`, 'i').test(combined)) {
+        matchedBody = t.charAt(0).toUpperCase() + t.slice(1);
+        break;
+      }
+    }
+    
+    const constellationFr = /\b(?:dans la constellation de|constellation de la|constellation du|constellation de l'|constellation de)\s+([A-Z\u00C0-\u00DC][a-z\u00C0-\u00DC\u00df\s'-]{2,25})/i;
+    const constellationEn = /\b(?:in the constellation of|constellation of|constellation)\s+([A-Z][a-z\s'-]{2,25})/i;
+    const constMatch = combined.match(isFr ? constellationFr : constellationEn);
+    const constellation = constMatch ? constMatch[1].trim() : null;
+    
+    if (matchedBody && constellation) {
+      return { icon: Orbit, label: `${matchedBody} / Constellation : ${constellation}` };
+    } else if (constellation) {
+      return { icon: Orbit, label: isFr ? `Constellation : ${constellation}` : `Constellation: ${constellation}` };
+    } else if (matchedBody) {
+      return { icon: Orbit, label: matchedBody };
+    }
+    return { icon: Orbit, label: isFr ? 'Corps céleste / Espace' : 'Celestial body / Space' };
+  }
+
+  return { icon: Globe, label: null };
+};
+
 export const EntityLink = ({ 
   name, 
   lang, 
@@ -76,7 +400,12 @@ export const EntityLink = ({
   bio,
   description,
   url: propUrl,
-  href: propHref
+  href: propHref,
+  century,
+  lifespan,
+  dates,
+  creation,
+  era
 }: EntityLinkProps) => {
   const [prevLang, setPrevLang] = useState(lang);
   const [activeLang, setActiveLang] = useState(() => {
@@ -93,6 +422,7 @@ export const EntityLink = ({
   }
 
   const [summary, setSummary] = useState<string | null>(null);
+  const [apiDescription, setApiDescription] = useState<string | null>(null);
   const [wikiUrl, setWikiUrl] = useState<string | null>(null);
   const [exists, setExists] = useState<boolean | null>(name && activeLang ? null : false);
   const [isOpen, setIsOpen] = useState(false);
@@ -127,6 +457,7 @@ export const EntityLink = ({
           if (isMounted) {
             setSummary(data.extract || null);
             setWikiUrl(data.content_urls?.desktop?.page || null);
+            setApiDescription(data.description || null);
             setExists(true);
           }
         } else {
@@ -157,14 +488,17 @@ export const EntityLink = ({
   const handleMouseLeave = () => {
     const id = setTimeout(() => {
       setIsOpen(false);
-    }, 150);
+    }, 400); // Smooth delay of 400ms
     setTimeoutId(id);
   };
 
   const resolvedType = type || 'entity';
   const isFr = activeLang.toLowerCase().trim() === 'fr';
 
-  let Icon = Globe;
+  const metaInfo = extractEntityMetadata(resolvedType, apiDescription, summary, isFr);
+  const resolvedDates = dates || lifespan || century || (creation ? (isFr ? `Création : ${creation}` : `Created: ${creation}`) : era) || metaInfo.label;
+
+  let Icon = metaInfo.icon || Globe;
   let headerLabel = isFr ? 'Encyclopédie' : 'Encyclopedia';
   let borderClass = "border-sky-400 text-sky-300 hover:text-sky-200 [.theme-paper_&]:border-sky-500/50 [.theme-paper_&]:text-sky-800 [.theme-paper_&]:hover:text-sky-950";
   let iconBoxClass = "bg-sky-600/20 text-sky-400 [.theme-paper_&]:bg-sky-100 [.theme-paper_&]:text-sky-700";
@@ -200,6 +534,42 @@ export const EntityLink = ({
     borderClass = "border-pink-400 text-pink-300 hover:text-pink-200 [.theme-paper_&]:border-pink-500/50 [.theme-paper_&]:text-pink-800 [.theme-paper_&]:hover:text-pink-950";
     iconBoxClass = "bg-pink-600/20 text-pink-400 [.theme-paper_&]:bg-pink-100 [.theme-paper_&]:text-pink-700";
     linkClass = "text-pink-400 hover:text-pink-300 [.theme-paper_&]:text-pink-700 [.theme-paper_&]:hover:text-pink-850";
+  } else if (resolvedType === 'concept') {
+    Icon = Brain;
+    headerLabel = isFr ? 'Concept / Notion' : 'Concept / Notion';
+    borderClass = "border-indigo-400 text-indigo-300 hover:text-indigo-200 [.theme-paper_&]:border-indigo-500/50 [.theme-paper_&]:text-indigo-800 [.theme-paper_&]:hover:text-indigo-950";
+    iconBoxClass = "bg-indigo-600/20 text-indigo-400 [.theme-paper_&]:bg-indigo-100 [.theme-paper_&]:text-indigo-700";
+    linkClass = "text-indigo-400 hover:text-indigo-300 [.theme-paper_&]:text-indigo-700 [.theme-paper_&]:hover:text-indigo-850";
+  } else if (resolvedType === 'theorem') {
+    Icon = Award;
+    headerLabel = isFr ? 'Théorème / Loi' : 'Theorem / Law';
+    borderClass = "border-rose-400 text-rose-300 hover:text-rose-200 [.theme-paper_&]:border-rose-500/50 [.theme-paper_&]:text-rose-800 [.theme-paper_&]:hover:text-rose-950";
+    iconBoxClass = "bg-rose-600/20 text-rose-400 [.theme-paper_&]:bg-rose-100 [.theme-paper_&]:text-rose-700";
+    linkClass = "text-rose-400 hover:text-rose-300 [.theme-paper_&]:text-rose-700 [.theme-paper_&]:hover:text-rose-850";
+  } else if (resolvedType === 'institution') {
+    Icon = Building;
+    headerLabel = isFr ? 'Institution' : 'Institution';
+    borderClass = "border-cyan-400 text-cyan-300 hover:text-cyan-200 [.theme-paper_&]:border-cyan-500/50 [.theme-paper_&]:text-cyan-800 [.theme-paper_&]:hover:text-cyan-950";
+    iconBoxClass = "bg-cyan-600/20 text-cyan-400 [.theme-paper_&]:bg-cyan-100 [.theme-paper_&]:text-cyan-700";
+    linkClass = "text-cyan-400 hover:text-cyan-300 [.theme-paper_&]:text-cyan-700 [.theme-paper_&]:hover:text-cyan-850";
+  } else if (resolvedType === 'species') {
+    Icon = Leaf;
+    headerLabel = isFr ? 'Espèce / Vivant' : 'Species / Organism';
+    borderClass = "border-green-400 text-green-300 hover:text-green-200 [.theme-paper_&]:border-green-600/50 [.theme-paper_&]:text-green-800 [.theme-paper_&]:hover:text-green-950";
+    iconBoxClass = "bg-green-600/20 text-green-400 [.theme-paper_&]:bg-green-100 [.theme-paper_&]:text-green-700";
+    linkClass = "text-green-400 hover:text-green-300 [.theme-paper_&]:text-green-700 [.theme-paper_&]:hover:text-green-850";
+  } else if (resolvedType === 'chemical') {
+    Icon = FlaskConical;
+    headerLabel = isFr ? 'Matière / Chimie' : 'Chemical / Molecule';
+    borderClass = "border-orange-400 text-orange-300 hover:text-orange-200 [.theme-paper_&]:border-orange-500/50 [.theme-paper_&]:text-orange-800 [.theme-paper_&]:hover:text-orange-950";
+    iconBoxClass = "bg-orange-600/20 text-orange-400 [.theme-paper_&]:bg-orange-100 [.theme-paper_&]:text-orange-700";
+    linkClass = "text-orange-400 hover:text-orange-300 [.theme-paper_&]:text-orange-700 [.theme-paper_&]:hover:text-orange-850";
+  } else if (resolvedType === 'celestial') {
+    Icon = Orbit;
+    headerLabel = isFr ? 'Astro / Espace' : 'Celestial Body';
+    borderClass = "border-blue-400 text-blue-300 hover:text-blue-200 [.theme-paper_&]:border-blue-600/50 [.theme-paper_&]:text-blue-800 [.theme-paper_&]:hover:text-blue-950";
+    iconBoxClass = "bg-blue-600/20 text-blue-400 [.theme-paper_&]:bg-blue-100 [.theme-paper_&]:text-blue-700";
+    linkClass = "text-blue-400 hover:text-blue-300 [.theme-paper_&]:text-blue-700 [.theme-paper_&]:hover:text-blue-850";
   } else if (resolvedType === 'website' || resolvedType === 'project') {
     Icon = Globe;
     headerLabel = isFr ? 'Projet / Site' : 'Project / Website';
@@ -247,6 +617,12 @@ export const EntityLink = ({
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
               </div>
             </div>
+            {resolvedDates && (
+              <div className="flex items-center gap-1.5 mb-3 text-xs font-semibold text-slate-400 [.theme-paper_&]:text-slate-600 border-b border-slate-800/40 pb-2 [.theme-paper_&]:border-slate-200/50">
+                <Icon className="w-3.5 h-3.5 text-slate-500 [.theme-paper_&]:text-slate-400" />
+                <span>{resolvedDates}</span>
+              </div>
+            )}
             {resolvedSummary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
                 &ldquo;{resolvedSummary}&rdquo;
@@ -326,9 +702,54 @@ export const Artwork = (props: Omit<EntityLinkProps, 'type'>) => (
   <EntityLink {...props} type="artwork" />
 );
 
+/** ConceptLink: General academic / scientific concept or theory — indigo overlay */
+export const ConceptLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="concept" />
+);
+
+/** TheoremLink: Mathematical, physical, or logical law or theorem — rose overlay */
+export const TheoremLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="theorem" />
+);
+
+/** InstitutionLink: Universities, academies, or societies — cyan overlay */
+export const InstitutionLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="institution" />
+);
+
 /** Website or Project external link — teal hover card */
 export const WebsiteLink = (props: EntityLinkProps) => (
   <EntityLink {...props} type="website" />
 );
 
 export const ProjectLink = WebsiteLink;
+
+/** SpeciesLink: Biological species, plants, animals, organisms — green/lime overlay */
+export const SpeciesLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="species" />
+);
+
+export const SpeciesLien = SpeciesLink;
+export const EspeceLien = SpeciesLink;
+export const EspèceLien = SpeciesLink;
+export const OrganismeLien = SpeciesLink;
+
+/** ChemicalLink: Chemical molecules, compounds, elements — orange overlay */
+export const ChemicalLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="chemical" />
+);
+
+export const ChemicalLien = ChemicalLink;
+export const MoleculesLien = ChemicalLink;
+export const MoleculeLien = ChemicalLink;
+export const ChimieLien = ChemicalLink;
+
+/** CelestialLink: Planets, stars, constellations, celestial bodies — blue overlay */
+export const CelestialLink = (props: Omit<EntityLinkProps, 'type'>) => (
+  <EntityLink {...props} type="celestial" />
+);
+
+export const CelestialLien = CelestialLink;
+export const CorpsCeleste = CelestialLink;
+export const CorpsCéleste = CelestialLink;
+export const AstroLien = CelestialLink;

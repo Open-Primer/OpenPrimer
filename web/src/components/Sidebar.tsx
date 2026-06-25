@@ -187,9 +187,34 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         if (storage) {
           const visited = JSON.parse(storage.getItem('op_visited_pages') || '[]');
           dbVisited = visited;
-          const visitedCount = flatPages.filter(p => visited.some((v: string) => cleanPath(v) === cleanPath(p.path))).length;
-          const totalPages = flatPages.length;
-          dbProgress = totalPages > 0 ? Math.round((visitedCount / totalPages) * 100) : 0;
+
+          const quizResults = JSON.parse(storage.getItem('op_quiz_results') || '{}');
+          const quizzesRequired = JSON.parse(storage.getItem('op_quizzes_required') || '{}');
+
+          const paths = flatPages.map(p => p.path).filter(Boolean);
+          if (paths.length > 0) {
+            const regularPages = paths.slice(0, -1);
+            const finalPage = paths[paths.length - 1];
+
+            let completedRegularCount = 0;
+            regularPages.forEach(path => {
+              const isVisited = visited.some((v: string) => cleanPath(v) === cleanPath(path));
+              const requiresQuiz = !!quizzesRequired[path];
+              const quizDone = !!quizResults[path];
+              if (isVisited && (!requiresQuiz || quizDone)) {
+                completedRegularCount++;
+              }
+            });
+
+            const regularProgress = regularPages.length > 0 ? Math.round((completedRegularCount / regularPages.length) * 90) : 90;
+
+            const evalStatus = progressService.checkFinalEvaluationStatus(activeSlug, finalPage);
+            const finalTenPercent = (evalStatus.completed && evalStatus.passed) ? 10 : 0;
+
+            dbProgress = Math.min(100, regularProgress + finalTenPercent);
+          } else {
+            dbProgress = 0;
+          }
 
           const progressMap = JSON.parse(storage.getItem('op_course_progress') || '{}');
           progressMap[activeSlug.toLowerCase()] = dbProgress;
@@ -344,7 +369,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
         </div>
       )}
 
-      <div className="flex-1 space-y-10 overflow-y-auto custom-scrollbar pr-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 flex flex-col gap-1.5">
         {searchQuery.trim() ? (
           isSearching ? (
             <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-4 animate-pulse">
@@ -443,9 +468,9 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
 
           // Otherwise it is a module with children
           return (
-            <div key={item.name} className="space-y-4">
+            <div key={item.name} className="mt-6 first:mt-0 flex flex-col gap-2.5">
               <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2">{item.name}</h4>
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1">
                 {item.children?.map((page) => {
                   const isActive = cleanPath(pathname) === cleanPath(page.path);
                   const isCompleted = visitedPages.some(vp => cleanPath(vp) === cleanPath(page.path));

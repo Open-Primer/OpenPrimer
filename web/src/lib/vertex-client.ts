@@ -119,8 +119,8 @@ function handleSuccessfulRequest(actualTokens: number) {
  * 429 Rate Limit handler: Shrinks capacities by 20% (AIMD - Multiplicative Decrease).
  */
 function handleRateLimitError() {
-  _rpmCapacity = Math.max(10, Math.floor(_rpmCapacity * 0.8));
-  _tpmCapacity = Math.max(100000, Math.floor(_tpmCapacity * 0.8));
+  _rpmCapacity = Math.min(MAX_RPM_CEILING, Math.max(1, Math.floor(_rpmCapacity * 0.8)));
+  _tpmCapacity = Math.min(MAX_TPM_CEILING, Math.max(10000, Math.floor(_tpmCapacity * 0.8)));
   console.warn(`[RATE LIMITER] ⚠️ 429 Resource Exhausted detected. Adapting local ceilings down to: RPM ${_rpmCapacity}, TPM ${_tpmCapacity}`);
 }
 

@@ -1161,6 +1161,17 @@ body:not(.theme-paper):not(.theme-focus) footer {
   color: #bfdbfe !important; /* blue-200 */
 }
 
+/* Ensure custom alert text inside paper theme is highly visible */
+.theme-paper .custom-alert .alert-content strong {
+  color: #0f172a !important; /* Dark slate for strong text */
+}
+.theme-paper .custom-alert .alert-content a {
+  color: #1d4ed8 !important; /* Deep blue for links */
+}
+.theme-paper .custom-alert .alert-content a:hover {
+  color: #1e40af !important; /* Darker blue on hover */
+}
+
 /* Lists inside alerts */
 .custom-alert .alert-content ul,
 .custom-alert .alert-content ol {
@@ -1267,4 +1278,73 @@ body:not(.theme-paper):not(.theme-focus) footer {
   color: #ffffff !important;
 }
 
+/* Ensure biography alert wikipedia links look exactly like standard inline text reference links */
+.custom-alert.alert-biography a[href*="wikipedia"],
+.alert-biography a[href*="wikipedia"],
+.theme-paper .custom-alert.alert-biography a[href*="wikipedia"],
+.theme-paper .alert-biography a[href*="wikipedia"],
+.theme-focus .custom-alert.alert-biography a[href*="wikipedia"],
+.theme-focus .alert-biography a[href*="wikipedia"] {
+  display: inline !important;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-weight: normal !important;
+  font-size: inherit !important;
+  text-decoration: underline !important;
+  transition: none !important;
+  color: inherit !important;
+}
 
+.custom-alert.alert-biography a[href*="wikipedia"]:hover,
+.alert-biography a[href*="wikipedia"]:hover {
+  color: #38bdf8 !important;
+  text-decoration: underline !important;
+}
+
+.theme-paper .custom-alert.alert-biography a[href*="wikipedia"]:hover,
+.theme-paper .alert-biography a[href*="wikipedia"]:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+}
+
+.theme-focus .custom-alert.alert-biography a[href*="wikipedia"]:hover,
+.theme-focus .alert-biography a[href*="wikipedia"]:hover {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+/* Make Learning Objectives Layout highly compact and readable in all themes */
+.objectives-container,
+.objectives-container * {
+  text-shadow: none !important;
+}
+
+.objectives-container p,
+.objectives-container li,
+.objectives-container ul,
+.objectives-container ol,
+.theme-paper .objectives-container p,
+.theme-paper .objectives-container li,
+.theme-paper .objectives-container ul,
+.theme-paper .objectives-container ol,
+.theme-focus .objectives-container p,
+.theme-focus .objectives-container li,
+.theme-focus .objectives-container ul,
+.theme-focus .objectives-container ol {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+/* Ensure paper/focus mode text elements inside Objectives are also compact */
+.theme-paper .objectives-container .text-slate-300,
+.theme-focus .objectives-container .text-slate-300 {
+  font-size: 0.85rem !important;
+}

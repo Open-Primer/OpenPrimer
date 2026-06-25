@@ -108,12 +108,19 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
   const glossarySection = content.slice(glossaryIndex);
 
   const lines = glossarySection.split(/\r?\n/);
-  const processedLines = [];
+  
+  // First pass: identify items that need wikipedia lookup
+  const parsedItems: {
+    lineIndex: number;
+    originalLine: string;
+    term: string;
+    definition: string;
+  }[] = [];
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmed = line.trim();
     if (!trimmed.startsWith('-') && !trimmed.startsWith('*')) {
-      processedLines.push(line);
       continue;
     }
 
@@ -134,26 +141,38 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
 
       // Strip bold/italic markdown from term
       term = term.replace(/^\*+/, '').replace(/\*+$/, '').trim();
-
-      // Strip leftover closing bold/italic from definition
       definition = definition.replace(/^\*+\s*/, '').replace(/\*+\s*$/, '').trim();
 
-      if (term && definition) {
-        if (!definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
-          const wikiUrl = await checkWikipediaPage(term, lang);
-          if (wikiUrl) {
-            const wikiLabel = getWikipediaLabel(lang);
-            const separator = definition.endsWith('.') ? ' ' : '. ';
-            definition = `${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
-          }
-        }
-        processedLines.push(`- **${term}** : ${definition}`);
-      } else {
-        processedLines.push(line);
+      if (term && definition && !definition.includes('wikipedia.org/wiki/') && !definition.includes('wikipedia.org')) {
+        parsedItems.push({
+          lineIndex: i,
+          originalLine: line,
+          term,
+          definition
+        });
       }
-    } else {
-      processedLines.push(line);
     }
+  }
+
+  // Fetch Wikipedia pages in parallel
+  const wikipediaUrls = await Promise.all(
+    parsedItems.map(item => checkWikipediaPage(item.term, lang))
+  );
+
+  // Second pass: rebuild lines
+  const processedLines = [...lines];
+  for (let i = 0; i < parsedItems.length; i++) {
+    const item = parsedItems[i];
+    const wikiUrl = wikipediaUrls[i];
+    let definition = item.definition;
+
+    if (wikiUrl) {
+      const wikiLabel = getWikipediaLabel(lang);
+      const separator = definition.endsWith('.') ? ' ' : '. ';
+      definition = `${definition}${separator}[[${wikiLabel}](${wikiUrl})]`;
+    }
+
+    processedLines[item.lineIndex] = `- **${item.term}** : ${definition}`;
   }
 
   return preGlossary + processedLines.join('\n');
@@ -1777,6 +1796,10 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     ŒuvreDart: 'Artwork',
     SiteWeb: 'WebsiteLink',
     ProjetLien: 'WebsiteLink',
+    ConceptLien: 'ConceptLink',
+    TheoremeLien: 'TheoremLink',
+    ThéorèmeLien: 'TheoremLink',
+    InstitutionLien: 'InstitutionLink',
 
     // Interactive Widgets
     ManipulateurFonction: 'FunctionManipulator',
@@ -1926,7 +1949,7 @@ function deduplicateHistoricalPersons(mdx: string): string {
   });
 
   // Strip all overlay/entity tags inside markdown headings (e.g. ### <HistoricalPerson ...>Name</HistoricalPerson> -> ### Name)
-  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary)';
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien)';
   processed = processed.replace(/^(#{1,6}\s+)([\s\S]*?)$/gm, (match: string, prefix: string, content: string) => {
     const stripped = content.replace(new RegExp(`<${entityTagsPattern}\\b[^>]*?>([\\s\\S]*?)<\\/${entityTagsPattern}>`, 'gi'), '$1');
     return `${prefix}${stripped}`;
@@ -1977,7 +2000,8 @@ function deduplicateHistoricalPersons(mdx: string): string {
 
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
-    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink', 'WebsiteLink', 'ProjectLink', 'SiteWeb'
+    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink', 'WebsiteLink', 'ProjectLink', 'SiteWeb',
+    'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien'
   ];
   const blockTags = [
     'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres',
@@ -2152,8 +2176,15 @@ function healPollinationsUrls(mdx: string): string {
     const cleanedPrompt = decoded
       .replace(/[\s\-_]+/g, '_')
       .replace(/[^a-zA-Z0-9_]/g, '');
-    const queryStr = query ? `?${query}` : '';
-    return `${prefix}${cleanedPrompt}${queryStr}`;
+    
+    // Parse existing query params and merge with optimized defaults to restrict storage size at source
+    const params = new URLSearchParams(query || '');
+    if (!params.has('width')) params.set('width', '640');
+    if (!params.has('height')) params.set('height', '480');
+    if (!params.has('nologo')) params.set('nologo', 'true');
+    if (!params.has('private')) params.set('private', 'true');
+    
+    return `${prefix}${cleanedPrompt}?${params.toString()}`;
   });
 }
 
@@ -2643,6 +2674,14 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   const bloomRegex = new RegExp(`<(${bloomVerbs})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
   processed = processed.replace(bloomRegex, (match, verb, complement) => {
     return `**${verb}**${complement}`;
+  });
+
+  // 1.5 Strip overlay entity tags (like <RealPerson>, <Location>, etc.) that erroneously wrap common Bloom verbs or lowercase verbs
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien)';
+  const entityVerbsPattern = `<(${entityTagsPattern})\\b[^>]*?>\\s*(${bloomVerbs}|analyser|évaluer|créer|saisir|comprendre|appliquer|déterminer|identifier|expliquer|distinguer|mettre|réaliser|concevoir|synthétiser|sélectionner|résoudre|développer|classer|comparer|discuter|décrire|définir|démontrer|illustrer|analyze|evaluate|create|understand|apply|determine|identify|explain|distinguish|implement|design|synthesize|select|solve|develop|classify|compare|discuss|describe|define|demonstrate|illustrate)\\s*<\\/\\1>`;
+  const entityVerbsRegex = new RegExp(entityVerbsPattern, 'gi');
+  processed = processed.replace(entityVerbsRegex, (match, tag, verb) => {
+    return verb;
   });
 
   // 2. Wrap unfenced Mermaid diagram blocks in triple-backticks
@@ -3480,7 +3519,7 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb'];
+  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien'];
   const tagPattern = new RegExp(
     `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
     'gi'

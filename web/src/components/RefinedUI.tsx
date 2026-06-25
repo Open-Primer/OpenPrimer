@@ -358,6 +358,7 @@ interface AITutorOverlayProps {
   courseLevel?: string;
   courseTitle?: string;
   courseSubject?: string;
+  isDashboardMode?: boolean;
 }
 
 // --- COMPONENT: AI TUTOR OVERLAY ---
@@ -366,10 +367,29 @@ export const AITutorOverlay = ({
   pageContext,
   courseLevel,
   courseTitle,
-  courseSubject
+  courseSubject,
+  isDashboardMode = false
 }: AITutorOverlayProps = {}) => {
   const { language: contextLang } = useLanguage();
   const lang = propLang || contextLang;
+  
+  const [tutorAssistanceBlocked, setTutorAssistanceBlocked] = useState(false);
+
+  useEffect(() => {
+    const handleLockdown = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.disabled === 'boolean') {
+        setTutorAssistanceBlocked(customEvent.detail.disabled);
+      }
+    };
+    window.addEventListener('op_disable_tutor_assistance', handleLockdown);
+    return () => {
+      window.removeEventListener('op_disable_tutor_assistance', handleLockdown);
+    };
+  }, []);
+
+  if (tutorAssistanceBlocked) return null;
+
   const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
   const [isOpen, setIsOpen] = useState(false);
   const [showTutorModal, setShowTutorModal] = useState(false);
@@ -431,7 +451,7 @@ export const AITutorOverlay = ({
   useEffect(() => {
     let active = true;
     async function fetchAdvice() {
-      if (!isCurriculumPage) return;
+      if (!isCurriculumPage || isDashboardMode) return;
       const savedProfile = localStorage.getItem('op_user_profile');
       const loggedIn = localStorage.getItem('op_session') === 'true';
       let userId = 'u1';
@@ -675,8 +695,38 @@ export const AITutorOverlay = ({
     { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: t.test_me_prompt }
   ];
 
+  const DASHBOARD_QUICK_ACTIONS = lang.toUpperCase() === 'FR' ? [
+    { 
+      label: "Discuter de mon cursus", 
+      icon: <GraduationCap className="w-3 h-3" />, 
+      prompt: "Bonjour ! Je souhaiterais discuter de mon cursus actuel, de ma progression et de la pertinence des modules choisis." 
+    },
+    { 
+      label: "Planifier ma progression", 
+      icon: <Sparkles className="w-3 h-3" />, 
+      prompt: "Pourrais-tu m'aider à planifier la suite de mon apprentissage et me conseiller sur le prochain module à aborder ?" 
+    }
+  ] : [
+    { 
+      label: "Discuss my curriculum", 
+      icon: <GraduationCap className="w-3 h-3" />, 
+      prompt: "Hello! I would like to discuss my current curriculum, my progress, and the relevance of the chosen modules." 
+    },
+    { 
+      label: "Plan my progression", 
+      icon: <Sparkles className="w-3 h-3" />, 
+      prompt: "Could you help me plan the next steps of my learning journey and advise me on which module to tackle next?" 
+    }
+  ];
+
   // Persist history based on course slug instead of specific page pathname
-  const courseSlug = isCurriculumPage ? segments[2] : 'global';
+  const courseSlug = isDashboardMode ? 'curriculum_dashboard' : (isCurriculumPage ? segments[2] : 'global');
+
+  const welcomeMessage = isDashboardMode
+    ? (lang.toUpperCase() === 'FR'
+      ? "Bonjour ! Je suis ravi de vous retrouver sur votre tableau de bord. Comment puis-je vous aider aujourd'hui à faire le point sur votre cursus, analyser votre progression ou planifier les prochaines étapes de votre apprentissage ?"
+      : "Hello! I am delighted to welcome you back to your dashboard. How can I help you today to review your curriculum, analyze your progress, or plan the next steps of your learning journey?")
+    : t.welcome;
 
   useEffect(() => {
     const key = `op_tutor_hist_${courseSlug}_${lang.toUpperCase()}`;
@@ -684,9 +734,9 @@ export const AITutorOverlay = ({
     if (saved) {
       setMessages(JSON.parse(saved));
     } else {
-      setMessages([{ role: 'assistant', content: t.welcome }]);
+      setMessages([{ role: 'assistant', content: welcomeMessage }]);
     }
-  }, [courseSlug, lang, t.welcome]);
+  }, [courseSlug, lang, welcomeMessage]);
 
   useEffect(() => {
     if (messages.length > 1) {
@@ -1014,7 +1064,8 @@ export const AITutorOverlay = ({
     }, 150);
   };
 
-  if (!isCurriculumPage || (!tutorEnabled && !hasGlossaryInProp)) return null;
+  if (!isDashboardMode && (!isCurriculumPage || (!tutorEnabled && !hasGlossaryInProp))) return null;
+  if (isDashboardMode && !tutorEnabled) return null;
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 font-sans text-slate-100">
@@ -1040,7 +1091,7 @@ export const AITutorOverlay = ({
               <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
-            {isLoggedIn && tutorEnabled && (
+            {isLoggedIn && tutorEnabled && !isDashboardMode && (
               <div className="flex border-b border-slate-800/50 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500 shrink-0 select-none">
                 <button
                   onClick={() => setActiveTab('chat')}
@@ -1109,8 +1160,8 @@ export const AITutorOverlay = ({
                       ))}
                     </div>
 
-                    <div className="px-6 py-4 grid grid-cols-2 gap-2 bg-slate-950/20 border-t border-slate-800/50">
-                       {QUICK_ACTIONS.map(qa => (
+                    <div className={`px-6 py-4 grid ${isDashboardMode ? 'grid-cols-1' : 'grid-cols-2'} gap-2 bg-slate-950/20 border-t border-slate-800/50`}>
+                       {(isDashboardMode ? DASHBOARD_QUICK_ACTIONS : QUICK_ACTIONS).map(qa => (
                          <button key={qa.label} disabled={isGenerating} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
                            {qa.icon} {qa.label}
                          </button>

@@ -1323,7 +1323,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
   }
 
   // If lessonOffset is 0, clear any existing lessons for this course and language to avoid duplicates from previous failed runs.
-  if (lessonOffset === 0 && !process.env.REGENERATE_CHAPTER_1_ONLY) {
+  if (lessonOffset === 0 && !process.env.REGENERATE_CHAPTER_1_ONLY && process.env.ONLY_SECOND_LESSON !== 'true') {
     const cleanSlug = cleanPathSegment(correctedCourseName);
     await appendTaskLog(`[AI GENERATOR] lessonOffset is 0. Clearing existing lessons for course "${cleanSlug}" and language "${targetLang.toLowerCase()}" to prevent duplicate chapters.`);
     try {
@@ -1666,7 +1666,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
    - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, or <FillInBlanks>) in your prose.
    - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <Artwork>, <Location>, and <EventLink>.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, and <InstitutionLink>.
 
 2. NO RAW HTML FOR LISTS:
    - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
@@ -1767,12 +1767,18 @@ ${formattedCatalogList}
      > [!INFO] **Mini-Biography: Name (Dates)**
      > Write 8-12 lines of biography detailing their main academic contribution. Systematically include a direct working Wikipedia link at the end: \`[Read more on Wikipedia](...)\`.
 6. **Entity Hover-Cards**:
-   - Wrap named historical figures, landmark artworks, locations, events, or fictional characters mentioned inline in Hover-Card components with a short description:
+   - Wrap named historical figures, landmark artworks, locations, events, fictional characters, scientific concepts, mathematical theorems, or academic institutions mentioned inline in Hover-Card components with a short description:
      - \`<RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>\`
+     - \`<FictionalCharacter name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Character Name</FictionalCharacter>\`
      - \`<Artwork name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Title</Artwork>\`
      - \`<Location name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</Location>\`
      - \`<EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>\`
-     *Constraint*: Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
+     - \`<ConceptLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Concept Name</ConceptLink>\`
+     - \`<TheoremLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Theorem/Law Name</TheoremLink>\`
+     - \`<InstitutionLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Institution Name</InstitutionLink>\`
+   *Strict Constraints*:
+   - ABSOLUTELY FORBIDDEN to wrap verbs (especially action/Bloom verbs like "analyser", "comprendre", "créer", "identifier", etc.) inside these entity tags. Verbs must remain as plain text or bold text, never wrapped in hover-cards. Only wrap true named entities or technical terms.
+   - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
 7. **Factual Images & Captions**:
    - Include 5 to 6 factual/sourced images and 1 to 2 decorative AI illustrations for Licence level.
    - Factual images (historical figures, maps, diagrams) MUST use standard Markdown image tags where the Alt Text is the **EXACT, search-friendly English Wikipedia title** of the subject, and the source URL points to the Pollinations API:
@@ -1858,7 +1864,8 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - For higher education, verify that at least one \`<Epistemology>\` controversy/limit box is present with deep theoretical content.
    - Verify that at least one contextual Mini-Biography is present, is substantial (8-12 lines), and contains a working, direct Wikipedia Markdown link at the very end.
 6. **Connected Entity Hover-Cards**:
-   - Verify that historical figures, artworks, locations, and events mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<Artwork>\`, \`<Location>\`, \`<EventLink>\`.
+   - Verify that named entities mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<FictionalCharacter>\`, \`<Location>\`, \`<EventLink>\`, \`<Artwork>\`, \`<ConceptLink>\`, \`<TheoremLink>\`, or \`<InstitutionLink>\`.
+   - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
 7. **Visual Assets Density, Sourcing & Captions**:
@@ -4234,7 +4241,7 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
   }
 
   // Validate and fix Markdown links: [text](url)
-  const linkRegex = /\[([^\]]+)\]\(((?:https?:\/\/|\/\/)[^\s)]+)\)/gi;
+  const linkRegex = /(?<!\!)\[([^\]]+)\]\(((?:https?:\/\/|\/\/)[^\s)]+)\)/gi;
   let linkMatch;
   const links: { fullMatch: string; text: string; url: string }[] = [];
   while ((linkMatch = linkRegex.exec(updatedMdx)) !== null) {

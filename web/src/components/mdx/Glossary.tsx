@@ -129,7 +129,7 @@ export const Glossary = ({
   const handleMouseLeave = () => {
     const id = setTimeout(() => {
       setIsOpen(false);
-    }, 150);
+    }, 400); // Smooth delay of 400ms to match entity cards
     setTimeoutId(id);
   };
 

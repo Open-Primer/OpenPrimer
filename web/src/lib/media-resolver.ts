@@ -781,7 +781,9 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       const wikiImage = await fetchWikipediaImage(queryName, targetLang);
       if (wikiImage) {
         console.log(`[MEDIA-RESOLVER] Found real historical image on Wikipedia for "${queryName}": ${wikiImage}`);
-        sourceUrl = wikiImage;
+        // Bypass storage/upload for direct Wikipedia images as requested by user
+        updatedContent = updatedContent.replace(fullMatch, `![${altText}](${wikiImage})`);
+        continue;
       }
 
       // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
@@ -791,7 +793,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         continue;
       }
 
-      // Download and upload to Supabase Storage
+      // Download and upload to Supabase Storage (Only for generated or other custom external images)
       try {
         let buffer: Buffer | null = null;
         let contentType = 'image/jpeg';
@@ -861,7 +863,10 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         const wikiImage = await fetchWikipediaImage(queryName, targetLang);
         if (wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
-          sourceUrl = wikiImage;
+          // Bypass storage/upload for direct Wikipedia images as requested by user
+          const updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${wikiImage}"`);
+          updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+          continue;
         }
       }
 
@@ -872,7 +877,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         continue;
       }
 
-      // Download and upload to Supabase Storage
+      // Download and upload to Supabase Storage (Only for generated or other custom external images)
       try {
         let buffer: Buffer | null = null;
         let contentType = 'image/jpeg';

@@ -8,8 +8,9 @@ import { Glossary } from './Glossary';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
-import { RealPerson, HistoricalPerson, FictionalCharacter, Location, EntityLink, EventLink, HistoricalEventLink, EvenementHistorique, Artwork, WebsiteLink, ProjectLink } from './HistoricalPerson';
+import { RealPerson, HistoricalPerson, FictionalCharacter, Location, EntityLink, EventLink, HistoricalEventLink, EvenementHistorique, Artwork, WebsiteLink, ProjectLink, ConceptLink, TheoremLink, InstitutionLink, SpeciesLink, SpeciesLien, EspeceLien, EspèceLien, OrganismeLien, ChemicalLink, ChemicalLien, MoleculesLien, MoleculeLien, ChimieLien, CelestialLink, CelestialLien, CorpsCeleste, CorpsCéleste, AstroLien } from './HistoricalPerson';
 import { EssayEvaluation } from './EssayEvaluation';
+import { OralEvaluation } from './OralEvaluation';
 import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
 import { DiagnosticQuiz } from './DiagnosticQuiz';
@@ -336,7 +337,7 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: s
       <img 
         src={src} 
         alt={alt} 
-        className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50" 
+        className="rounded-2xl max-w-full h-auto max-h-[450px] object-contain shadow-md border border-slate-900/10 dark:border-slate-800/50" 
         onError={() => setFailed(true)} 
       />
       {caption && <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4 select-none">{caption}</p>}
@@ -547,7 +548,7 @@ const Objectives = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="my-8 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
+    <div className="objectives-container my-8 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-600/5 rounded-full blur-[40px] pointer-events-none" />
       <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
@@ -1155,23 +1156,31 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
 
   const childrenArray = React.Children.toArray(children);
   
-  // Check if children contain a Quiz component
-  const hasQuiz = childrenArray.some(
-    child => React.isValidElement(child) && (child.type === Quiz || (child.type as any)?.name === 'Quiz')
+  // Check if children contain any structured evaluation component
+  const hasStructuredComponent = childrenArray.some(
+    child => React.isValidElement(child) && (
+      child.type === Quiz || (child.type as any)?.name === 'Quiz' ||
+      child.type === EssayEvaluation || (child.type as any)?.name === 'EssayEvaluation' ||
+      child.type === OralEvaluation || (child.type as any)?.name === 'OralEvaluation' || (child.type as any)?.name === 'EvaluationOrale'
+    )
   );
 
   const finalChildren = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       const type = child.type;
       const typeName = typeof type === 'string' ? type : (type as any)?.name;
-      if (type === Quiz || typeName === 'Quiz' || type === EssayEvaluation || typeName === 'EssayEvaluation') {
+      if (
+        type === Quiz || typeName === 'Quiz' || 
+        type === EssayEvaluation || typeName === 'EssayEvaluation' ||
+        type === OralEvaluation || typeName === 'OralEvaluation' || typeName === 'EvaluationOrale'
+      ) {
         return React.cloneElement(child, { isFinal: true } as any);
       }
     }
     return child;
   });
 
-  if (hasQuiz) {
+  if (hasStructuredComponent) {
     return (
       <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-amber-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
         <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-amber-500/5 rounded-full blur-[40px] pointer-events-none" />
@@ -1518,6 +1527,13 @@ const components = {
   PersonnageFictif: FictionalCharacter,  // French alias
   Location,
   Place: Location,
+  ConceptLink,
+  ConceptLien: ConceptLink,
+  TheoremLink,
+  TheoremeLien: TheoremLink,
+  ThéorèmeLien: TheoremLink,
+  InstitutionLink,
+  InstitutionLien: InstitutionLink,
   Event: EventLink,                      // Canonical: event entity overlay
   HistoricalEventLink,                   // Backward-compat alias
   EvenementHistorique,                   // French alias
@@ -1528,7 +1544,24 @@ const components = {
   ProjectLink,
   SiteWeb: WebsiteLink,
   ProjetLien: WebsiteLink,
+  SpeciesLink,
+  SpeciesLien,
+  EspeceLien,
+  EspèceLien,
+  OrganismeLien,
+  ChemicalLink,
+  ChemicalLien,
+  MoleculesLien,
+  MoleculeLien,
+  ChimieLien,
+  CelestialLink,
+  CelestialLien,
+  CorpsCeleste,
+  CorpsCéleste,
+  AstroLien,
   EssayEvaluation,
+  OralEvaluation,
+  EvaluationOrale: OralEvaluation,
   Prerequisites,
   Epistemology,
   DiagnosticQuiz,
@@ -2268,7 +2301,7 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 10. Replace inline named components with text formatting
-  clean = clean.replace(/<(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien)\b[^>]*?>([\s\S]*?)<\/(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien)>/gi, '**$1**');
+  clean = clean.replace(/<(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)\b[^>]*?>([\s\S]*?)<\/(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)>/gi, '**$1**');
   clean = clean.replace(/<Artwork\b[^>]*?>([\s\S]*?)<\/Artwork>/gi, '*$1*');
   
   // Strip remaining custom tag structures but preserve their content
