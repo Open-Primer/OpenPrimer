@@ -1,0 +1,645 @@
+---
+title: "Évaluation Finale"
+subject: "Biophysique neuronale et modélisation neuro-computationnelle"
+level: "L3"
+module: "Évaluation Finale"
+order: 6
+summative: true
+---
+
+<Prerequisites items={[
+  {
+    title: "Neurophysiologie Fondamentale",
+    slug: "neurophysiologie-fondamentale",
+    level: "L2",
+    subject: "Biologie"
+  },
+  {
+    title: "Introduction à la Modélisation Mathématique",
+    slug: "introduction-modelisation-mathematique",
+    level: "L2",
+    subject: "Mathématiques Appliquées"
+  }
+]} />
+
+<DiagnosticQuiz
+  question="Quel est le rôle principal du potentiel d'action dans la communication neuronale ?"
+  options="Il permet le transport actif des neurotransmetteurs à travers la membrane.|||Il assure la transmission rapide et non décrémentielle de l'information sur de longues distances.|||Il régule l'expression génique des protéines membranaires.|||Il maintient le potentiel de repos de la membrane neuronale."
+  correctIndex="1"
+  targetSectionId="evaluation-finale-sommative"
+  sectionTitle="Évaluation Finale Sommative"
+/>
+
+
+
+## Introduction
+
+Chers étudiants,
+
+Nous voici parvenus au terme de notre parcours intensif à travers la biophysique neuronale et la modélisation neuro-compCe cours a été conçu comme une exploration rigoureuse des principes fondamentaux qui régissent l'activité électrique des neurones, depuis les mouvements ioniques microscopiques jusqu'à l'émergence de comportements complexes au sein de réseaux neuronaux. Nous avons navigué entre l'expérimentation biologique et l'abstraction mathématique, cherchant à comprendre comment les propriétés physiques des membranes cellulaires et des canaux ioniques donnent naissance à la dynamique fascinante du système nerveux. Cette dernière leçon ne marque pas une fin, mais plutôt une étape cruciale : celle de la synthèse de vos acquis et de l'application de vos connaissances à des problèmes complexes à travers une évaluation finale sommative exhaustive, conçue pour consolider et valider votre maîtrise des concepts clés. Préparez-vous à mobiliser l'intégralité de vos compétences analytiques et de modélisation, en intégrant les approches expérimentales et théoriques qui sont le moteur des neurosciences modernes.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Analyser les mécanismes biophysiques sous-jacents à l'excitabilité neuronale et à la transmission synaptique.</li>
+      <li>Évaluer la pertinence et les limites des différents modèles neuro-computationnels pour décrire l'activité neuronale à diverses échelles.</li>
+      <li>Distinguer les méthodes expérimentales clés utilisées pour sonder l'activité neuronale et leurs implications pour la modélisation.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer les équations fondamentales de la biophysique neuronale (Nernst, Goldman, Hodgkin-Huxley) pour résoudre des problèmes quantitatifs.</li>
+      <li>Concevoir des schémas de modélisation simplifiés pour des phénomènes neuronaux spécifiques (potentiel d'action, intégration synaptique).</li>
+      <li>Interpréter des données expérimentales à la lumière des modèles théoriques et proposer des hypothèses testables.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer un esprit critique face aux simplifications inhérentes à la modélisation et aux interprétations des données.</li>
+      <li>Apprécier l'interdisciplinarité nécessaire à la compréhension du cerveau, à l'interface entre biologie, physique, mathématiques et informatique.</li>
+      <li>Cultiver une curiosité intellectuelle pour les défis non résolus de la neuroscience computationnelle.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+═══════════════════════════════════════════
+## ÉVALUATION FINALE SOMMATIVE
+═══════════════════════════════════════════
+
+Bienvenue à l'évaluation finale sommative de ce cours de Biophysique neuronale et modélisation neuro-computationnelle. Cet examen est conçu pour évaluer votre compréhension globale des concepts fondamentaux et votre capacité à les appliquer à des problèmes concrets. Il couvre l'intégralité des thématiques abordées, de la biophysique des canaux ioniques à la dynamique des réseaux neuronaux. L'objectif est de vérifier votre maîtrise des connaissances théoriques, votre aptitude à la résolution de problèmes quantitatifs et votre esprit critique face aux modèles. Prenez le temps de lire attentivement chaque question et de formuler des réponses claires, précises et argumentées. Bonne chance !
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Démontrer une compréhension approfondie des mécanismes biophysiques de l'excitabilité et de la propagation neuronale.</li>
+      <li>Identifier et expliquer les principes fondamentaux des modèles neuronaux à différentes échelles (neurone unique, réseau).</li>
+      <li>Reconnaître les implications des propriétés biophysiques pour la fonction et la dysfonction du système nerveux.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Calculer des potentiels d'équilibre et des conductances membranaires à partir de données ioniques.</li>
+      <li>Analyser des courbes de courant-tension et des dynamiques de potentiel d'action.</li>
+      <li>Appliquer des concepts de modélisation pour interpréter des résultats expérimentaux ou prédire des comportements neuronaux.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une démarche scientifique rigoureuse dans l'analyse des phénomènes neurobiologiques.</li>
+      <li>Faire preuve d'autonomie dans la résolution de problèmes complexes de biophysique et de modélisation.</li>
+      <li>Développer une approche intégrative, reliant les échelles microscopiques aux fonctions macroscopiques du cerveau.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Évaluation Finale
+
+<Quiz durationLimit={3600}>
+  <Question q="Quelle est la principale force motrice du mouvement des ions à travers une membrane neuronale au repos ?" explanation="Le mouvement des ions est influencé par deux forces : le gradient de concentration (force chimique) et le gradient électrique (force électrique). Le potentiel d'équilibre de Nernst représente le potentiel membranaire où ces deux forces s'équilibrent pour un ion donné. La combinaison de ces deux forces est le gradient électrochimique.">
+  <Option text="Le gradient de concentration électrochimique." correct={true} />
+  <Option text="La pompe Na+/K+-ATPase uniquement." correct={false} />
+  <Option text="La perméabilité sélective de la membrane aux protéines." correct={false} />
+  <Option text="Le potentiel d'action." correct={false} />
+</Question>
+  <Question q="Comment le potentiel d'équilibre de Nernst pour un ion donné est-il affecté par une augmentation de sa concentration extracellulaire ?" explanation="Selon l'équation de Nernst, pour un ion positif (cation) comme le Na+ ou le K+, une augmentation de sa concentration extracellulaire (ou une diminution intracellulaire) rend le potentiel d'équilibre plus positif. Pour un ion négatif (anion) comme le Cl-, c'est l'inverse : une augmentation de sa concentration extracellulaire rendrait son potentiel d'équilibre plus négatif (car z=-1 dans l'équation).">
+  <Option text="Il devient plus positif si l'ion est un cation." correct={true} />
+  <Option text="Il devient plus négatif si l'ion est un cation." correct={false} />
+  <Option text="Il reste inchangé." correct={false} />
+  <Option text="Il devient nul." correct={false} />
+</Question>
+  <Question q="Quel est le rôle principal de la pompe Na+/K+-ATPase dans le maintien du potentiel de repos ?" explanation="La pompe Na+/K+-ATPase est une protéine de transport actif qui expulse 3 ions Na+ et importe 2 ions K+ contre leurs gradients électrochimiques, contribuant ainsi de manière fondamentale au maintien des gradients ioniques essentiels à l'excitabilité neuronale. Elle a également une petite contribution directe au potentiel de repos car elle est électrogénique (3 charges positives sortent pour 2 qui entrent).">
+  <Option text="Elle maintient les gradients de concentration du Na+ et du K+." correct={true} />
+  <Option text="Elle génère directement le potentiel d'action." correct={false} />
+  <Option text="Elle est responsable de la repolarisation rapide de la membrane." correct={false} />
+  <Option text="Elle permet la diffusion passive des ions à travers la membrane." correct={false} />
+</Question>
+  <Question q="Quelles sont les deux principales propriétés des canaux ioniques voltage-dépendants qui sont cruciales pour la génération du potentiel d'action ?" explanation="Les canaux voltage-dépendants s'ouvrent et se ferment en réponse aux changements de potentiel membranaire (dépendance au voltage) et leur cinétique d'ouverture/fermeture est rapide et transitoire (cinétique), permettant la dynamique rapide du potentiel d'action.">
+  <Option text="La dépendance au voltage et la cinétique d'activation/désactivation." correct={true} />
+  <Option text="La sélectivité ionique et la perméabilité constante." correct={false} />
+  <Option text="La dépendance au ligand et la conductance élevée." correct={false} />
+  <Option text="La pompe ionique et la résistance membranaire." correct={false} />
+</Question>
+  <Question q="Décrivez la phase de dépolarisation rapide du potentiel d'action." explanation="La dépolarisation rapide est due à l'ouverture massive et rapide des canaux Na+ voltage-dépendants, entraînant un afflux d'ions Na+ dans la cellule. Cet afflux de charges positives rend le potentiel membranaire très positif, le rapprochant du potentiel d'équilibre du sodium (ENa).">
+  <Option text="Ouverture rapide des canaux Na+ voltage-dépendants, entraînant un afflux de Na+." correct={true} />
+  <Option text="Ouverture lente des canaux K+ voltage-dépendants, entraînant un efflux de K+." correct={false} />
+  <Option text="Fermeture des canaux Na+ voltage-dépendants et activation de la pompe Na+/K+-ATPase." correct={false} />
+  <Option text="Libération de neurotransmetteurs dans la fente synaptique." correct={false} />
+</Question>
+  <Question q="Quel est le rôle de l'inactivation des canaux Na+ voltage-dépendants dans le potentiel d'action ?" explanation="L'inactivation des canaux Na+ est essentielle pour la repolarisation (en arrêtant l'afflux de Na+ et permettant aux canaux K+ de dominer) et pour la période réfractaire absolue, empêchant un nouveau potentiel d'action immédiat et assurant la propagation unidirectionnelle du signal.">
+  <Option text="Elle contribue à la repolarisation et à la période réfractaire absolue." correct={true} />
+  <Option text="Elle initie la dépolarisation rapide." correct={false} />
+  <Option text="Elle maintient le potentiel de repos." correct={false} />
+  <Option text="Elle augmente la durée du potentiel d'action." correct={false} />
+</Question>
+  <Question q="Le modèle de Hodgkin-Huxley est un modèle de type 'conductance'. Qu'est-ce que cela signifie ?" explanation="Un modèle de conductance décrit les flux ioniques à travers la membrane en termes de conductances variables (g) pour chaque type d'ion. Ces conductances dépendent du voltage et du temps, et sont multipliées par la force motrice électrochimique (Vm - Eion) pour calculer le courant ionique.">
+  <Option text="Il décrit les courants ioniques en fonction de conductances variables dépendant du voltage et du temps." correct={true} />
+  <Option text="Il modélise la membrane comme une simple résistance et une capacité constantes." correct={false} />
+  <Option text="Il se concentre uniquement sur les changements de concentration ionique." correct={false} />
+  <Option text="Il ne prend en compte que les propriétés passives de la membrane." correct={false} />
+</Question>
+  <Question q="Quelle est la principale différence entre une synapse électrique et une synapse chimique ?" explanation="Les synapses électriques transmettent le courant directement via des jonctions communicantes (gap junctions), permettant une transmission très rapide et bidirectionnelle. Les synapses chimiques utilisent des neurotransmetteurs libérés dans la fente synaptique et sont plus lentes, unidirectionnelles et modulables, offrant une plus grande flexibilité de traitement de l'information.">
+  <Option text="Les synapses électriques utilisent des jonctions communicantes, les chimiques des neurotransmetteurs." correct={true} />
+  <Option text="Les synapses électriques sont unidirectionnelles, les chimiques bidirectionnelles." correct={false} />
+  <Option text="Les synapses électriques sont plus lentes que les chimiques." correct={false} />
+  <Option text="Les synapses chimiques ne peuvent pas être modulées." correct={false} />
+</Question>
+  <Question q="Quel est le rôle du Ca2+ dans la transmission synaptique chimique ?" explanation="L'entrée de Ca2+ dans la terminaison présynaptique, déclenchée par la dépolarisation du potentiel d'action, est le signal clé qui provoque la fusion des vésicules synaptiques avec la membrane présynaptique et la libération subséquente des neurotransmetteurs dans la fente synaptique.">
+  <Option text="Il déclenche la fusion des vésicules synaptiques et la libération de neurotransmetteurs." correct={true} />
+  <Option text="Il hyperpolarise la membrane postsynaptique." correct={false} />
+  <Option text="Il est le principal neurotransmetteur excitateur." correct={false} />
+  <Option text="Il inactive les récepteurs postsynaptiques." correct={false} />
+</Question>
+  <Question q="Qu'est-ce qu'un potentiel postsynaptique excitateur (PPSE) et comment est-il généré ?" explanation="Un PPSE est une dépolarisation locale et transitoire de la membrane postsynaptique, générée par l'ouverture de canaux ioniques perméables aux cations (comme Na+ et parfois Ca2+), ce qui rapproche le potentiel membranaire du seuil de déclenchement d'un potentiel d'action.">
+  <Option text="Une dépolarisation locale due à l'entrée de cations (ex: Na+)." correct={true} />
+  <Option text="Une hyperpolarisation locale due à l'entrée de Cl-." correct={false} />
+  <Option text="Un potentiel d'action complet déclenché par un neurotransmetteur." correct={false} />
+  <Option text="Une inhibition de la libération de neurotransmetteurs." correct={false} />
+</Question>
+  <Question q="Quel est le principe de la sommation spatiale des potentiels postsynaptiques ?" explanation="La sommation spatiale se produit lorsque plusieurs potentiels postsynaptiques (PPSE ou PPSI) provenant de différentes synapses, mais arrivant simultanément ou presque, s'additionnent algébriquement pour influencer le potentiel membranaire au niveau du cône d'émergence de l'axone, où le potentiel d'action est initié.">
+  <Option text="L'addition de potentiels postsynaptiques provenant de différentes synapses actives simultanément." correct={true} />
+  <Option text="L'addition de potentiels postsynaptiques provenant de la même synapse à des moments différents." correct={false} />
+  <Option text="La propagation d'un potentiel d'action le long de l'axone." correct={false} />
+  <Option text="L'inhibition d'un neurone par un autre." correct={false} />
+</Question>
+  <Question q="Qu'est-ce que la plasticité synaptique et pourquoi est-elle cruciale ?" explanation="La plasticité synaptique est la capacité des synapses à modifier l'efficacité de leur transmission en réponse à l'activité neuronale. Elle est considérée comme le mécanisme cellulaire fondamental de l'apprentissage et de la mémoire, permettant au cerveau de s'adapter et de stocker des informations.">
+  <Option text="La capacité des synapses à modifier leur efficacité en fonction de l'activité, essentielle pour l'apprentissage et la mémoire." correct={true} />
+  <Option text="La capacité d'un neurone à générer des potentiels d'action plus grands." correct={false} />
+  <Option text="La régulation de la concentration ionique extracellulaire." correct={false} />
+  <Option text="Le processus de myélinisation des axones." correct={false} />
+</Question>
+  <Question q="Quel est l'avantage principal de la propagation saltatoire du potentiel d'action dans les axones myélinisés ?" explanation="La myéline isole l'axone et force le potentiel d'action à 'sauter' d'un nœud de Ranvier à l'autre, où les canaux ioniques voltage-dépendants sont concentrés. Ce mécanisme augmente considérablement la vitesse de conduction nerveuse et réduit la consommation d'énergie métabolique.">
+  <Option text="Augmentation significative de la vitesse de conduction et économie d'énergie." correct={true} />
+  <Option text="Diminution de l'amplitude du potentiel d'action." correct={false} />
+  <Option text="Propagation bidirectionnelle du signal." correct={false} />
+  <Option text="Réduction de la période réfractaire." correct={false} />
+</Question>
+  <Question q="Dans un modèle de neurone 'Integrate-and-Fire', qu'est-ce qui déclenche la décharge d'un potentiel d'action ?" explanation="Dans ce modèle simplifié, le neurone intègre les courants d'entrée, et lorsque son potentiel membranaire atteint un seuil prédéfini, il 'tire' un potentiel d'action (souvent représenté comme un événement ponctuel) et est réinitialisé à un potentiel de repos ou de réinitialisation.">
+  <Option text="Le potentiel membranaire atteint un seuil prédéfini." correct={true} />
+  <Option text="L'ouverture des canaux K+ voltage-dépendants." correct={false} />
+  <Option text="La fermeture des canaux Na+ voltage-dépendants." correct={false} />
+  <Option text="La concentration extracellulaire de calcium diminue." correct={false} />
+</Question>
+  <Question q="Quel est l'objectif principal de la modélisation des réseaux neuronaux ?" explanation="La modélisation des réseaux neuronaux vise à comprendre comment l'interaction dynamique et complexe de nombreux neurones individuels donne naissance à des fonctions émergentes comme le traitement de l'information, l'apprentissage, la mémoire et le comportement, qui ne peuvent être expliquées par l'étude des neurones isolés.">
+  <Option text="Comprendre les propriétés émergentes du traitement de l'information par des ensembles de neurones." correct={true} />
+  <Option text="Détailler la structure moléculaire de chaque canal ionique." correct={false} />
+  <Option text="Mesurer précisément le potentiel de repos de chaque neurone." correct={false} />
+  <Option text="Prédire la trajectoire d'un ion unique dans le cytoplasme." correct={false} />
+</Question>
+  <Question q="Qu'est-ce qu'un réseau de neurones artificiels (RNA) et comment se distingue-t-il des réseaux biologiques ?" explanation="Les RNA sont des modèles informatiques inspirés des réseaux biologiques, mais ils sont souvent des simplifications abstraites qui ne reproduisent pas fidèlement la biophysique neuronale. Ils sont optimisés pour des tâches de calcul spécifiques (reconnaissance de formes, prédiction) plutôt que pour la fidélité biologique.">
+  <Option text="Un modèle informatique inspiré des réseaux biologiques, souvent plus abstrait et optimisé pour des tâches spécifiques." correct={true} />
+  <Option text="Une réplique exacte d'un cerveau biologique dans un ordinateur." correct={false} />
+  <Option text="Un type de neurone biologique spécialisé dans le traitement de l'information." correct={false} />
+  <Option text="Une technique d'imagerie cérébrale." correct={false} />
+</Question>
+  <Question q="Quel est le principe de base de l'apprentissage Hebbien ?" explanation="L'apprentissage Hebbien, souvent résumé par 'Neurons that fire together, wire together', postule que la force d'une synapse augmente si les activités pré- et postsynaptiques sont corrélées temporellement, renforçant ainsi la connexion entre les neurones co-activés.">
+  <Option text="La force d'une synapse augmente si les activités pré- et postsynaptiques sont corrélées." correct={true} />
+  <Option text="La force d'une synapse diminue si les activités pré- et postsynaptiques sont corrélées." correct={false} />
+  <Option text="Les neurones qui ne tirent pas ensemble se déconnectent." correct={false} />
+  <Option text="L'apprentissage est indépendant de l'activité synaptique." correct={false} />
+</Question>
+  <Question q="Qu'est-ce que le 'problème inverse' en neurosciences computationnelles ?" explanation="Le problème inverse consiste à déduire les causes (les mécanismes neuronaux sous-jacents, les paramètres du modèle) à partir des effets observés (les données expérimentales). C'est un défi majeur car de nombreuses configurations de paramètres peuvent produire des résultats similaires, rendant l'identification unique des mécanismes difficile.">
+  <Option text="Déduire les mécanismes neuronaux sous-jacents à partir des données expérimentales observées." correct={true} />
+  <Option text="Prédire les données expérimentales à partir d'un modèle connu." correct={false} />
+  <Option text="La difficulté de simuler des réseaux neuronaux de grande taille." correct={false} />
+  <Option text="Le défi de la validation expérimentale des modèles." correct={false} />
+</Question>
+  <Question q="Quelle technique expérimentale permet de mesurer les courants ioniques à travers des canaux uniques ou la membrane entière d'un neurone ?" explanation="La technique du patch-clamp, développée par <RealPerson name=&quot;Erwin_Neher">
+Erwin Neher (né en 1944) et <RealPerson name="Bert_Sakmann" lang="fr" bio="Physiologiste cellulaire allemand, lauréat du prix Nobel de physiologie ou médecine en 1991 pour ses travaux sur la fonction des canaux ioniques dans les cellules.">Bert Sakmann (né en 1942)</RealPerson>, est la méthode de choix pour étudier les courants ioniques à l'échelle du canal unique ou de la cellule entière avec une résolution temporelle et spatiale élevée.">
+  <Option text="Le patch-clamp." correct={true} />
+  <Option text="L'électroencéphalographie (EEG)." correct={false} />
+  <Option text="L'imagerie par résonance magnétique fonctionnelle (IRMf)." correct={false} />
+  <Option text="L'optogénétique." correct={false} />
+</Question>
+  <Question q="L'optogénétique permet de contrôler l'activité neuronale avec la lumière. Quel est le principe sous-jacent ?" explanation="L'optogénétique utilise des protéines microbiennes sensibles à la lumière (opsines) qui sont génétiquement exprimées dans les neurones cibles. Ces opsines fonctionnent comme des canaux ioniques ou des pompes qui s'ouvrent/s'activent en réponse à la lumière d'une longueur d'onde spécifique, modifiant ainsi le potentiel membranaire et l'activité neuronale.">
+  <Option text="Expression de protéines sensibles à la lumière (opsines) qui modifient la perméabilité ionique de la membrane." correct={true} />
+  <Option text="Injection de substances chimiques qui activent ou inhibent les neurones." correct={false} />
+  <Option text="Utilisation de champs magnétiques pour stimuler les neurones." correct={false} />
+  <Option text="Mesure de l'activité électrique des neurones par des électrodes." correct={false} />
+</Question>
+  <Question q="Qu'est-ce que le codage par fréquence (rate coding) en neurosciences computationnelles ?" explanation="Le codage par fréquence est une hypothèse selon laquelle l'information neuronale est encodée par la fréquence de décharge des potentiels d'action d'un neurone ou d'un groupe de neurones. Une fréquence de décharge plus élevée indique généralement une plus grande intensité du stimulus ou une plus grande activation.">
+  <Option text="L'information est encodée par la fréquence des potentiels d'action d'un neurone." correct={true} />
+  <Option text="L'information est encodée par le moment précis de chaque potentiel d'action." correct={false} />
+  <Option text="L'information est encodée par l'amplitude des potentiels d'action." correct={false} />
+  <Option text="L'information est encodée par la durée de la période réfractaire." correct={false} />
+</Question>
+  <Question q="Pourquoi la myéline est-elle si importante pour la fonction du système nerveux central ?" explanation="La myéline, en formant une gaine isolante autour des axones, augmente considérablement la vitesse de conduction nerveuse par propagation saltatoire et réduit drastiquement la consommation d'énergie nécessaire à la transmission du signal, des propriétés essentielles pour les fonctions cognitives complexes et la coordination motrice.">
+  <Option text="Elle augmente la vitesse de conduction nerveuse et réduit la consommation d'énergie." correct={true} />
+  <Option text="Elle génère les neurotransmetteurs." correct={false} />
+  <Option text="Elle est le site principal de la plasticité synaptique." correct={false} />
+  <Option text="Elle protège les neurones des agents pathogènes." correct={false} />
+</Question>
+  <Question q="Quel est le rôle des interneurones inhibiteurs dans les réseaux neuronaux ?" explanation="Les interneurones inhibiteurs libèrent des neurotransmetteurs (souvent GABA) qui hyperpolarisent ou stabilisent le potentiel membranaire des neurones cibles, réduisant ainsi leur excitabilité. Ils sont cruciaux pour la régulation fine de l'activité des réseaux, la synchronisation des oscillations neuronales et la formation de motifs d'activité complexes.">
+  <Option text="Ils régulent l'activité des réseaux en diminuant l'excitabilité des neurones cibles." correct={true} />
+  <Option text="Ils augmentent l'excitabilité des neurones cibles." correct={false} />
+  <Option text="Ils sont responsables de la propagation des potentiels d'action sur de longues distances." correct={false} />
+  <Option text="Ils synthétisent les neurotransmetteurs excitateurs." correct={false} />
+</Question>
+  <Question q="Qu'est-ce qu'une conductance dans le contexte de la biophysique neuronale ?" explanation="Une conductance (g) est l'inverse d'une résistance et mesure la facilité avec laquelle les ions peuvent traverser la membrane via des canaux ioniques. Elle est exprimée en Siemens (S) et est un paramètre clé dans les modèles de type Hodgkin-Huxley.">
+  <Option text="La facilité avec laquelle les ions peuvent traverser la membrane via des canaux ioniques." correct={true} />
+  <Option text="La différence de potentiel électrique à travers la membrane." correct={false} />
+  <Option text="La concentration d'un ion de part et d'autre de la membrane." correct={false} />
+  <Option text="Le temps nécessaire pour qu'un potentiel d'action se déclenche." correct={false} />
+</Question>
+  <Question q="Quel est l'impact d'une augmentation de la résistance membranaire (Rm) sur la constante de temps membranaire (τm) ?" explanation="La constante de temps membranaire est donnée par la relation τm = Rm * Cm, où Cm est la capacité membranaire. Donc, une augmentation de Rm, pour une capacité membranaire (Cm) constante, entraînera une augmentation proportionnelle de τm, ce qui signifie que le potentiel membranaire répondra plus lentement aux changements de courant.">
+  <Option text="Elle augmente la constante de temps membranaire (τm)." correct={true} />
+  <Option text="Elle diminue la constante de temps membranaire (τm)." correct={false} />
+  <Option text="Elle n'a aucun impact sur la constante de temps membranaire (τm)." correct={false} />
+  <Option text="Elle rend la membrane plus excitable." correct={false} />
+</Question>
+</Quiz>
+
+### Exercices Résolus
+
+<SolvedExercise title="Calcul du Potentiel d'Équilibre de Nernst et du Potentiel de Repos de Goldman-Hodgkin-Katz">
+**Problème :**
+Considérons un neurone hypothétique à 37°C dont les concentrations ioniques intracellulaires et extracellulaires sont les suivantes :
+*   [K+]int = 140 mM, [K+]ext = 5 mM
+*   [Na+]int = 15 mM, [Na+]ext = 145 mM
+*   [Cl-]int = 10 mM, [Cl-]ext = 110 mM
+
+La perméabilité relative de la membrane au repos est Pk : PNa : PCl = 1 : 0.04 : 0.45.
+
+1.  Calculez le potentiel d'équilibre de Nernst pour chaque ion (EK, ENa, ECl).
+2.  Calculez le potentiel de repos de la membrane (Vm) en utilisant l'équation de Goldman-Hodgkin-Katz.
+
+**Solution Détaillée :**
+
+**1. Calcul des potentiels d'équilibre de Nernst :**
+L'équation de Nernst est donnée par :
+$E_{ion} = \frac{RT}{zF} \ln \frac{[ion]_{ext}}{[ion]_{int}}$
+où :
+*   R est la constante des gaz parfaits (8.314 J/(mol·K))
+*   T est la température absolue en Kelvin (37°C = 310.15 K)
+*   z est la valence de l'ion (+1 pour K+ et Na+, -1 pour Cl-)
+*   F est la constante de Faraday (96485 C/mol)
+
+À 37°C (310.15 K), le facteur $\frac{RT}{F}$ est d'environ $26.7 \text{ mV}$. Pour les calculs, nous utiliserons cette valeur.
+
+*   **Pour le Potassium (K+) :** (z = +1)
+    $E_K = 26.7 \text{ mV} \times \ln \frac{5 \text{ mM}}{140 \text{ mM}} = 26.7 \text{ mV} \times \ln(0.035714) \approx 26.7 \text{ mV} \times (-3.332) \approx -88.9 \text{ mV}$
+
+*   **Pour le Sodium (Na+) :** (z = +1)
+    $E_{Na} = 26.7 \text{ mV} \times \ln \frac{145 \text{ mM}}{15 \text{ mM}} = 26.7 \text{ mV} \times \ln(9.6667) \approx 26.7 \text{ mV} \times (2.268) \approx +60.6 \text{ mV}$
+
+*   **Pour le Chlore (Cl-) :** (z = -1)
+    Pour les anions, l'équation de Nernst est souvent écrite avec les concentrations inversées pour obtenir un résultat directement en mV, ou on utilise la formule standard avec z=-1 :
+    $E_{Cl} = \frac{26.7 \text{ mV}}{-1} \times \ln \frac{110 \text{ mM}}{10 \text{ mM}} = -26.7 \text{ mV} \times \ln(11) \approx -26.7 \text{ mV} \times (2.398) \approx -64.0 \text{ mV}$
+
+**2. Calcul du potentiel de repos de Goldman-Hodgkin-Katz (GHK) :**
+L'équation GHK est une extension de Nernst qui prend en compte la perméabilité relative de la membrane à plusieurs ions :
+$V_m = \frac{RT}{F} \ln \frac{P_K[K^+]_{ext} + P_{Na}[Na^+]_{ext} + P_{Cl}[Cl^-]_{int}}{P_K[K^+]_{int} + P_{Na}[Na^+]_{int} + P_{Cl}[Cl^-]_{ext}}$
+En utilisant les perméabilités relatives données (Pk = 1, PNa = 0.04, PCl = 0.45) :
+
+$V_m = 26.7 \text{ mV} \times \ln \frac{(1 \times 5) + (0.04 \times 145) + (0.45 \times 10)}{(1 \times 140) + (0.04 \times 15) + (0.45 \times 110)}$
+$V_m = 26.7 \text{ mV} \times \ln \frac{5 + 5.8 + 4.5}{140 + 0.6 + 49.5}$
+$V_m = 26.7 \text{ mV} \times \ln \frac{15.3}{190.1}$
+$V_m = 26.7 \text{ mV} \times \ln(0.08048) \approx 26.7 \text{ mV} \times (-2.519) \approx -67.2 \text{ mV}$
+
+Le potentiel de repos de la membrane est d'environ -67.2 mV. Ce résultat est dominé par le potentiel d'équilibre du potassium, car la membrane est la plus perméable au K+ au repos, mais est légèrement dépolarisé par la perméabilité non négligeable au Na+ et au Cl-, ce qui explique qu'il soit moins négatif que EK.
+</SolvedExercise>
+
+<SolvedExercise title="Analyse du Modèle de Hodgkin-Huxley Simplifié">
+**Problème :**
+Le modèle de Hodgkin-Huxley décrit le courant membranaire total $I_m$ comme la somme des courants ioniques (Na+, K+) et d'un courant de fuite (L) :
+$I_m = C_m \frac{dV}{dt} + I_{Na} + I_K + I_L$
+où $I_{Na} = g_{Na}m^3h(V - E_{Na})$, $I_K = g_K n^4(V - E_K)$, et $I_L = g_L(V - E_L)$.
+Les variables $m, h, n$ sont des variables d'activation/inactivation qui évoluent selon des équations différentielles de la forme $\frac{dx}{dt} = \alpha_x(1-x) - \beta_x x$.
+
+Expliquez qualitativement comment les changements dans les conductances maximales ($g_{Na}, g_K, g_L$) et les potentiels d'équilibre ($E_{Na}, E_K, E_L$) affecteraient les différentes phases du potentiel d'action.
+
+**Solution Détaillée :**
+
+Le modèle de Hodgkin-Huxley est un modèle de conductance, ce qui signifie que les courants ioniques sont décrits par la loi d'Ohm ($I = g(V-E)$), où $g$ est la conductance et $(V-E)$ est la force motrice électrochimique. Les conductances $g_{Na}$ et $g_K$ sont dynamiques et dépendent du voltage et du temps, via les variables d'activation ($m, n$) et d'inactivation ($h$).
+
+*   **Conductance maximale du Sodium ($g_{Na}$)** :
+    *   **Impact :** $g_{Na}$ représente la conductance maximale que les canaux Na+ voltage-dépendants peuvent atteindre. Une augmentation de $g_{Na}$ signifie qu'un plus grand nombre de canaux Na+ peuvent s'ouvrir ou que chaque canal a une conductance unitaire plus élevée. Cela entraînerait un afflux de Na+ plus important et plus rapide lors de la phase de dépolarisation.
+    *   **Phases affectées :**
+        *   **Dépolarisation rapide (phase ascendante) :** L'amplitude maximale du potentiel d'action augmenterait (le pic serait plus positif, se rapprochant davantage de $E_{Na}$) et la vitesse de dépolarisation serait plus rapide.
+        *   **Seuil de déclenchement :** Le seuil de déclenchement pourrait être légèrement abaissé car un courant Na+ plus puissant peut atteindre le point de non-retour plus facilement.
+    *   **Conséquence :** Le neurone deviendrait plus excitable, produisant des potentiels d'action plus amples et plus rapides.
+
+*   **Conductance maximale du Potassium ($g_K$)** :
+    *   **Impact :** $g_K$ représente la conductance maximale des canaux K+ voltage-dépendants. Une augmentation de $g_K$ entraînerait un efflux de K+ plus important et plus rapide lors de la phase de repolarisation.
+    *   **Phases affectées :**
+        *   **Repolarisation (phase descendante) :** La repolarisation serait plus rapide, ramenant le potentiel membranaire vers $E_K$ plus promptement.
+        *   **Hyperpolarisation post-potentiel d'action (post-hyperpolarisation) :** L'hyperpolarisation serait plus prononcée et/ou plus longue, car plus de K+ sortirait de la cellule, éloignant davantage le potentiel membranaire du potentiel de repos.
+    *   **Conséquence :** Potentiels d'action plus courts et une période réfractaire relative potentiellement plus longue en raison d'une hyperpolarisation plus profonde.
+
+*   **Conductance de fuite ($g_L$)** :
+    *   **Impact :** $g_L$ représente la conductance des canaux ioniques non voltage-dépendants, principalement K+ et Cl-, qui sont ouverts au repos. Une augmentation de $g_L$ rend la membrane plus "fuyante", c'est-à-dire moins résistante aux flux ioniques passifs.
+    *   **Phases affectées :**
+        *   **Potentiel de repos :** Le potentiel de repos serait modifié, se rapprochant de $E_L$. Si $E_L$ est proche de $E_K$, une augmentation de $g_L$ pourrait hyperpolariser légèrement le neurone. La résistance membranaire d'entrée diminuerait, rendant le neurone moins sensible aux petits courants synaptiques.
+        *   **Seuil de déclenchement :** Le seuil de déclenchement serait plus difficile à atteindre car les courants d'entrée excitateurs seraient plus facilement "court-circuités" par les fuites, nécessitant un stimulus plus fort.
+    *   **Conséquence :** Le neurone deviendrait moins excitable, avec une intégration synaptique moins efficace.
+
+*   **Potentiel d'équilibre du Sodium ($E_{Na}$)** :
+    *   **Impact :** $E_{Na}$ est le potentiel vers lequel le potentiel membranaire tend lorsque les canaux Na+ sont ouverts. Une augmentation de $E_{Na}$ (par exemple, due à une augmentation de la concentration extracellulaire de Na+) rendrait ce potentiel plus positif.
+    *   **Phases affectées :**
+        *   **Dépolarisation rapide :** Le pic du potentiel d'action serait plus positif, car le potentiel membranaire s'approcherait davantage de ce nouveau $E_{Na}$ plus positif.
+    *   **Conséquence :** Potentiels d'action plus amples.
+
+*   **Potentiel d'équilibre du Potassium ($E_K$)** :
+    *   **Impact :** $E_K$ est le potentiel vers lequel le potentiel membranaire tend lorsque les canaux K+ sont ouverts. Une augmentation de $E_K$ (par exemple, due à une augmentation de la concentration extracellulaire de K+) rendrait ce potentiel moins négatif (plus dépolarisé).
+    *   **Phases affectées :**
+        *   **Repolarisation et hyperpolarisation post-potentiel d'action :** La repolarisation et l'hyperpolarisation seraient moins prononcées, car le potentiel membranaire ne pourrait pas atteindre un niveau aussi négatif. Le potentiel de repos pourrait également être dépolarisé.
+    *   **Conséquence :** Potentiels d'action moins repolarisés, et le neurone pourrait devenir plus excitable si le potentiel de repos est dépolarisé et plus proche du seuil. Des niveaux élevés de K+ extracellulaire peuvent même entraîner une hyperexcitabilité pathologique.
+
+*   **Potentiel d'équilibre de fuite ($E_L$)** :
+    *   **Impact :** $E_L$ est le potentiel vers lequel le potentiel membranaire tend au repos en l'absence d'autres courants voltage-dépendants. Une modification de $E_L$ (par exemple, modification des concentrations de Cl- ou K+ si ce sont les ions de fuite dominants) affecterait le potentiel de repos.
+    *   **Phases affectées :**
+        *   **Potentiel de repos :** Le potentiel de repos serait directement modifié, se rapprochant du nouveau $E_L$.
+        *   **Seuil de déclenchement :** Si le potentiel de repos est dépolarisé (plus proche du seuil), le neurone devient plus excitable ; s'il est hyperpolarisé, il devient moins excitable.
+    *   **Conséquence :** Modification de l'excitabilité globale du neurone et de sa fréquence de décharge spontanée.
+</SolvedExercise>
+
+<SolvedExercise title="Modélisation Simplifiée de l'Intégration Synaptique">
+**Problème :**
+Un neurone reçoit des entrées de deux synapses excitatrices (E1, E2) et une synapse inhibitrice (I1). Chaque synapse excitatrice génère un PPSE de 5 mV d'amplitude maximale, et la synapse inhibitrice génère un PPSI de -3 mV d'amplitude maximale. On suppose que les potentiels postsynaptiques se somment linéairement et que le seuil de déclenchement d'un potentiel d'action est de -55 mV, avec un potentiel de repos de -70 mV.
+
+1.  Quel est le potentiel membranaire si seule la synapse E1 est activée ?
+2.  Quel est le potentiel membranaire si les synapses E1 et E2 sont activées simultanément (sommation spatiale) ?
+3.  Quel est le potentiel membranaire si les synapses E1, E2 et I1 sont activées simultanément ?
+4.  Dans quel(s) cas le neurone déclenchera-t-il un potentiel d'action ?
+
+**Solution Détaillée :**
+
+Le potentiel de repos (Vm_repos) est de -70 mV. Le seuil de déclenchement d'un potentiel d'action (Vm_seuil) est de -55 mV.
+
+**1. Potentiel membranaire si seule la synapse E1 est activée :**
+Lorsque seule la synapse E1 est activée, elle génère un PPSE de +5 mV.
+Potentiel membranaire = Vm_repos + PPSE_E1
+Potentiel membranaire = -70 mV + 5 mV = -65 mV
+
+**2. Potentiel membranaire si les synapses E1 et E2 sont activées simultanément (sommation spatiale) :**
+Lorsque les synapses E1 et E2 sont activées simultanément, leurs PPSE s'additionnent.
+Potentiel membranaire = Vm_repos + PPSE_E1 + PPSE_E2
+Potentiel membranaire = -70 mV + 5 mV + 5 mV = -60 mV
+
+**3. Potentiel membranaire si les synapses E1, E2 et I1 sont activées simultanément :**
+Lorsque les trois synapses sont activées simultanément, les PPSE s'additionnent et le PPSI se soustrait.
+Potentiel membranaire = Vm_repos + PPSE_E1 + PPSE_E2 + PPSI_I1
+Potentiel membranaire = -70 mV + 5 mV + 5 mV - 3 mV = -63 mV
+
+**4. Dans quel(s) cas le neurone déclenchera-t-il un potentiel d'action ?**
+Un potentiel d'action est déclenché si le potentiel membranaire atteint ou dépasse le seuil de -55 mV.
+
+*   **Cas 1 (E1 seule) :** Potentiel membranaire = -65 mV. Comme -65 mV &lt; -55 mV, le neurone ne déclenche pas de potentiel d'action.
+*   **Cas 2 (E1 + E2) :** Potentiel membranaire = -60 mV. Comme -60 mV &lt; -55 mV, le neurone ne déclenche pas de potentiel d'action.
+*   **Cas 3 (E1 + E2 + I1) :** Potentiel membranaire = -63 mV. Comme -63 mV &lt; -55 mV, le neurone ne déclenche pas de potentiel d'action.
+
+Dans aucun des cas présentés, le neurone ne déclenchera un potentiel d'action, car le potentiel membranaire n'atteint jamais le seuil de -55 mV. Cela illustre l'importance de l'intégration des signaux excitateurs et inhibiteurs pour déterminer la réponse finale du neurone. Pour déclencher un PA, il faudrait soit des PPSE plus amples, soit plus de synapses excitatrices actives, soit une inhibition moindre, ou une combinaison de ces facteurs. Cet exercice met en évidence le rôle crucial de la sommation synaptique dans la décision d'un neurone de décharger.
+</SolvedExercise>
+
+### Exercices Interactifs
+
+<UnsolvedExercise
+  question="Un neurone a un potentiel de repos de -70 mV. L'ouverture de canaux ioniques spécifiques provoque un courant entrant de 10 nA, dépolarisant la membrane. Si la résistance d'entrée du neurone est de 10 MΩ, quel sera le nouveau potentiel membranaire (en mV) après l'établissement de ce courant ?"
+  correctAnswer={30}
+  tolerance={0.1}
+  placeholder="Entrez le potentiel en mV"
+  hint="Utilisez la loi d'Ohm pour calculer le changement de potentiel : ΔV = I * R. Le nouveau potentiel sera V_repos + ΔV."
+  solution="Pour résoudre ce problème, nous utilisons la loi d'Ohm pour calculer le changement de potentiel membranaire (ΔV) induit par le courant entrant. La loi d'Ohm s'écrit ΔV = I * R.
+Données :
+Courant (I) = 10 nA = 10 * 10^-9 A
+Résistance d'entrée (R) = 10 MΩ = 10 * 10^6 Ω
+
+Calcul du changement de potentiel :
+ΔV = (10 * 10^-9 A) * (10 * 10^6 Ω) = 100 * 10^-3 V = 100 mV.
+
+Le nouveau potentiel membranaire (V_final) est la somme du potentiel de repos (V_repos) et du changement de potentiel (ΔV).
+V_final = V_repos + ΔV
+V_final = -70 mV + 100 mV = 30 mV.
+
+Un courant entrant dépolarisant (par exemple, un afflux de cations comme Na+) rend le potentiel membranaire plus positif, comme le montre ce calcul."
+  unit="mV"
+/>
+
+<UnsolvedExercise
+  question="Un neurone 'Integrate-and-Fire' a une constante de temps membranaire (τm) de 20 ms. Il reçoit un courant constant de 0.5 nA. Si sa résistance d'entrée (Rm) est de 40 MΩ et son potentiel de repos est de -70 mV, quel est le potentiel membranaire (en mV) après 20 ms de stimulation, en supposant qu'il n'y a pas eu de décharge ?"
+  correctAnswer={-57.36}
+  tolerance={0.1}
+  placeholder="Entrez le potentiel en mV"
+  hint="Utilisez l'équation de la constante de temps pour un circuit RC : V(t) = V_repos + (V_inf - V_repos) * (1 - e^(-t/τm)), où V_inf est le potentiel à l'état stable, calculé par V_inf = V_repos + I * Rm."
+  solution="Pour résoudre ce problème, nous devons d'abord calculer le potentiel membranaire à l'état stable (V_inf) que le neurone atteindrait si le courant était maintenu indéfiniment. Ensuite, nous utiliserons l'équation de la constante de temps pour déterminer le potentiel après 20 ms.
+
+1.  **Calcul du potentiel à l'état stable (V_inf) :**
+    V_inf = V_repos + I * Rm
+    Données :
+    V_repos = -70 mV
+    Courant (I) = 0.5 nA = 0.5 * 10^-9 A
+    Résistance d'entrée (Rm) = 40 MΩ = 40 * 10^6 Ω
+
+    V_inf = -70 mV + (0.5 * 10^-9 A) * (40 * 10^6 Ω)
+    V_inf = -70 mV + 20 mV
+    V_inf = -50 mV
+
+2.  **Calcul du potentiel membranaire après 20 ms en utilisant l'équation de la constante de temps :**
+    L'équation pour la charge d'un circuit RC (modèle Integrate-and-Fire) est :
+    V(t) = V_repos + (V_inf - V_repos) * (1 - e^(-t/τm))
+    Données :
+    t = 20 ms
+    τm = 20 ms
+    V_repos = -70 mV
+    V_inf = -50 mV
+
+    V(20 ms) = -70 mV + (-50 mV - (-70 mV)) * (1 - e^(-20 ms / 20 ms))
+    V(20 ms) = -70 mV + (20 mV) * (1 - e^(-1))
+    V(20 ms) = -70 mV + 20 mV * (1 - 0.367879)
+    V(20 ms) = -70 mV + 20 mV * (0.632121)
+    V(20 ms) = -70 mV + 12.64242 mV
+    V(20 ms) = -57.35758 mV
+
+Arrondi à deux décimales, le potentiel membranaire après 20 ms est de **-57.36 mV**."
+  unit="mV"
+/>
+
+<UnsolvedExercise
+  question="Un canal ionique a une conductance de 100 pS. Combien d'ions K+ (en millions) traversent ce canal en 1 ms si la force motrice électrochimique pour le K+ est de 20 mV ? (Charge élémentaire e = 1.602 x 10^-19 C)."
+  correctAnswer={0.01248}
+  tolerance={0.00001}
+  placeholder="Entrez le nombre d'ions (en millions)"
+  hint="Calculez d'abord le courant (I = g * ΔV), puis la charge totale (Q = I * Δt), et enfin le nombre d'ions (N = Q / e)."
+  solution="Pour déterminer le nombre d'ions K+ qui traversent le canal, nous allons suivre les étapes suivantes :
+
+1.  **Calcul du courant (I) traversant le canal :**
+    La loi d'Ohm pour un canal ionique est I = g * ΔV, où g est la conductance et ΔV est la force motrice électrochimique.
+    Données :
+    Conductance (g) = 100 pS = 100 * 10^-12 S
+    Force motrice (ΔV) = 20 mV = 20 * 10^-3 V
+
+    I = (100 * 10^-12 S) * (20 * 10^-3 V) = 2000 * 10^-15 A = 2 pA.
+
+2.  **Calcul de la charge totale (Q) qui traverse le canal pendant le temps donné :**
+    La charge est donnée par Q = I * Δt.
+    Données :
+    Courant (I) = 2 pA = 2 * 10^-12 A
+    Temps (Δt) = 1 ms = 1 * 10^-3 s
+
+    Q = (2 * 10^-12 A) * (1 * 10^-3 s) = 2 * 10^-15 C.
+
+3.  **Calcul du nombre d'ions (N) correspondant à cette charge :**
+    Le nombre d'ions est N = Q / e, où e est la charge élémentaire.
+    Données :
+    Charge totale (Q) = 2 * 10^-15 C
+    Charge élémentaire (e) = 1.602 * 10^-19 C/ion
+
+    N = (2 * 10^-15 C) / (1.602 * 10^-19 C/ion) = 12484.3945 ions.
+
+4.  **Conversion en millions d'ions :**
+    Pour exprimer ce nombre en millions, nous divisons par 10^6 :
+    N_millions = 12484.3945 / 10^6 = 0.0124843945 millions d'ions.
+
+Arrondi à 5 décimales, cela donne **0.01248 millions** d'ions K+."
+  unit="millions"
+/>
+
+### Simulateur Interactif : Modèle de Neurone Intégrateur
+
+<CodeSandbox initialCode={`
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Paramètres du neurone Integrate-and-Fire
+R_m = 10.0  # Résistance membranaire (MOhms)
+tau_m = 10.0 # Constante de temps membranaire (ms)
+V_rest = -70.0 # Potentiel de repos (mV)
+V_threshold = -55.0 # Seuil de décharge (mV)
+V_reset = -75.0 # Potentiel de réinitialisation après décharge (mV)
+I_e = 1.5 # Courant d'entrée externe (nA)
+
+dt = 0.1 # Pas de temps (ms)
+T_sim = 100.0 # Durée de la simulation (ms)
+num_steps = int(T_sim / dt)
+
+V = np.zeros(num_steps)
+V[0] = V_rest
+spike_times = []
+
+for i in range(1, num_steps):
+    # Équation différentielle du modèle Integrate-and-Fire
+    # dV/dt = (-(V - V_rest) + R_m * I_e) / tau_m
+    dVdt = (-(V[i-1] - V_rest) + R_m * I_e) / tau_m
+    V[i] = V[i-1] + dVdt * dt
+
+    # Condition de décharge (spike)
+    if V[i] >= V_threshold:
+        V[i] = V_reset # Réinitialisation après décharge
+        spike_times.append(i * dt)
+
+time = np.arange(0, T_sim, dt)
+
+plt.figure(figsize=(10, 6))
+plt.plot(time, V, label='Potentiel Membranaire')
+for s_time in spike_times:
+    plt.axvline(x=s_time, color='r', linestyle='--', linewidth=0.8)
+plt.xlabel('Temps (ms)')
+plt.ylabel('Potentiel Membranaire (mV)')
+plt.title('Simulation d\'un Neurone Integrate-and-Fire')
+plt.axhline(y=V_threshold, color='k', linestyle=':', label='Seuil de décharge')
+plt.axhline(y=V_rest, color='g', linestyle=':', label='Potentiel de repos')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+print(f"Nombre de potentiels d'action : {len(spike_times)}")
+print(f"Fréquence de décharge : {len(spike_times) / (T_sim / 1000):.2f} Hz")
+`} title="Simulateur de Neurone Integrate-and-Fire" language="python" />
+*Figure 2 : Simulateur interactif d'un neurone Integrate-and-Fire. Ce bac à sable permet d'expérimenter avec les paramètres clés d'un modèle de neurone simplifié (résistance membranaire, constante de temps, seuil de décharge, courant d'entrée) et d'observer l'impact sur la dynamique du potentiel membranaire et la fréquence de décharge. Les modifications des paramètres dans le code Python affecteront directement le comportement simulé du neurone. Source : Code généré par une intelligence artificielle à titre d'illustration pédagogique.*
+
+### Diagramme Interactif : La Synapse Chimique
+
+<InteractiveDiagram title="La Synapse Chimique" type="custom" hotspotsBase64="W3siaWQiOiJwcmUiLCJuYW1lIjoiTWVtYnJhbmUgcHLDqXN5bmFwdGlxdWUiLCJ4IjoyNSwieSI6MzUsImRlc2NyaXB0aW9uIjoiTCdleHRyw6ltaXTDqSBheG9uYWxlIGR1IG5ldXJvbmUgw6ltZXR0ZXVyLiBMJ2Fycml2w6llIGQndW4gcG90ZW50aWVsIGQnYWN0aW9uIMOgIGNldHRlIG1lbWJyYW5lIHByb3ZvcXVlIGxhIGTDqXBvbGFyaXNhdGlvbiBldCBsJ291dmVydHVyZSBkZSBjYW5hdXggY2FsY2lxdWVzIHZvbHRhZ2UtZMOpcGVuZGFudHMsIGluaXRpYW50IGxhIGxpYsOpcmF0aW9uIGRlcyBuZXVyb3RyYW5zbWV0dGV1cnMuIn0seyJpZCI6InZlcyIsIm5hbWUiOiJWw6lzaWN1bGVzIHN5bmFwdGlxdWVzIiwieCI6NDAsInkiOjQwLCJkZXNjcmlwdGlvbiI6IkRlIHBldGl0cyBzYWNzIG1lbWJyYW5haXJlcyBzcGjDqXJpcXVlcyBvdSBvdm/Dr2RlcywgcmVtcGxpcyBkZSBuZXVyb3RyYW5zbWV0dGV1cnMuIEwnZW50csOpZSBkZSBDYTIrIGRhbnMgbGUgdGVybWluYWwgcHLDqXN5bmFwdGlxdWUgZMOpY2xlbmNoZSBsZXVyIGZ1c2lvbiBhdmVjIGxhIG1lbWJyYW5lIHByw6lzeW5hcHRpcXVlIGV0IGwnZXhvY3l0b3NlIGRlcyBuZXVyb3RyYW5zbWV0dGV1cnMgZGFucyBsYSBmZW50ZSBzeW5hcHRpcXVlLiJ9LHsiaWQiOiJmZW50ZSIsIm5hbWUiOiJGZW50ZSBzeW5hcHRpcXVlIiwieCI6NTUsInkiOjUwLCJkZXNjcmlwdGlvbiI6IkwnZXNwYWNlIGV4dHJhY2VsbHVsYWlyZSDDqXRyb2l0IChlbnZpcm9uIDIwLTQwIG5tKSBlbnRyZSBsYSBtZW1icmFuZSBwcsOpc3luYXB0aXF1ZSBldCBsYSBtZW1icmFuZSBwb3N0c3luYXB0aXF1ZS4gTGVzIG5ldXJvdHJhbnNtZXR0ZXVycyBkaWZmdXNlbnQgw6AgdHJhdmVycyBjZXQgZXNwYWNlIHBvdXIgYXR0ZWluZHJlIGxlcyByw6ljZXB0ZXVycyBwb3N0c3luYXB0aXF1ZXMuIn0seyJpZCI6InJlY2VwdGV1ciIsIm5hbWUiOiJSw6ljZXB0ZXVycyBwb3N0c3luYXB0aXF1ZXMiLCJ4Ijo3NSwieSI6NjUsImRlc2NyaXB0aW9uIjoiUHJvdMOpaW5lcyB0cmFuc21lbWJyYW5haXJlcyBzcMOpY2lhbGlzw6llcyBzaXR1w6llcyBzdXIgbGEgbWVtYnJhbmUgcG9zdHN5bmFwdGlxdWUuIExhIGxpYWlzb24gZGVzIG5ldXJvdHJhbnNtZXR0ZXVycyDDoCBjZXMgcsOpY2VwdGV1cnMgaW5kdWl0IHVuIGNoYW5nZW1lbnQgZGUgY29uZm9ybWF0aW9uLCBlbnRyYcOubmFudCBsJ291dmVydHVyZSBkZSBjYW5hdXggaW9uaXF1ZXMgKHLDqWNlcHRldXJzIGlvbm90cm9waXF1ZXMpIG91IGwnYWN0aXZhdGlvbiBkZSB2b2llcyBkZSBzaWduYWxpc2F0aW9uIGludHJhY2VsbHVsYWlyZXMgKHLDqWNlcHRldXJzIG3DqXRhYm90cm9waXF1ZXMpLiJ9LHsiaWQiOiJwb3N0IiwibmFtZSI6Ik1lbWJyYW5lIHBvc3RzeW5hcHRpcXVlIiwieCI6ODAsInkiOjc1LCJkZXNjcmlwdGlvbiI6IkxhIG1lbWJyYW5lIGR1IG5ldXJvbmUgcmVjZXZldXIsIG/DuSBsZXMgcsOpY2VwdGV1cnMgcG9zdHN5bmFwdGlxdWVzIHRyYW5zZm9ybWVudCBsZSBzaWduYWwgY2hpbWlxdWUgKG5ldXJvdHJhbnNtZXR0ZXVyKSBlbiB1biBzaWduYWwgw6lsZWN0cmlxdWUgKFBQU0Ugb3UgUFBTSSkgcXVpIHBldXQgbW9kaWZpZXIgbCdleGNpdGFiaWxpdMOpIGR1IG5ldXJvbmUgcG9zdHN5bmFwdGlxdWUuIn0seyJpZCI6Im5ldXJvIiwibmFtZSI6Ik5ldXJvdHJhbnNtZXR0ZXVycyIsIngiOjUwLCJ5Ijo0NSwiZGVzY3JpcHRpb24iOiJNb2zDqWN1bGVzIGNoaW1pcXVlcyBzeW50aMOpdGlzw6llcyBwYXIgbGUgbmV1cm9uZSBwcsOpc3luYXB0aXF1ZSwgc3RvY2vDqWVzIGRhbnMgbGVzIHbDqXNpY3VsZXMsIGV0IGxpYsOpcsOpZXMgZGFucyBsYSBmZW50ZSBzeW5hcHRpcXVlLiBJbHMgYWdpc3NlbnQgY29tbWUgbWVzc2FnZXJzIHBvdXIgdHJhbnNtZXR0cmUgbGUgc2lnbmFsIGQndW4gbmV1cm9uZSDDoCBsJ2F1dHJlIGVuIHNlIGxpYW50IGF1eCByw6ljZXB0ZXVycyBzcMOpY2lmaXF1ZXMuIn1d" />
+*Figure 3 : Diagramme interactif de la synapse chimique. Explorez les différents composants et leur rôle dans la transmission de l'information entre neurones. Chaque zone interactive fournit une description détaillée de sa fonction. Source : Image générée par une intelligence artificielle à titre d'illustration pédagogique.*
+
+
+
+
+
+</figure>
+
+### Glossaire
+
+
+- **Potentiel d'action** : Signal électrique transitoire, rapide et auto-généré qui se propage le long de l
+
+
+- **Potentiel de Nernst** : Potentiel membranaire théorique auquel la force électrique s
+
+
+- **Équation de Goldman-Hodgkin-Katz** : Équation qui calcule le potentiel membranaire de repos en tenant compte des gradients de concentration et des perméabilités relatives de plusieurs ions (généralement Na+, K+, Cl-) à travers la membrane. Elle est une généralisation de l
+
+
+- **Canaux ioniques voltage-dépendants** : Protéines transmembranaires qui forment<References items={[
+  {
+    num: 1,
+    text: "Hille, Bertil. 2001. « Ion Channels of Excitable Membranes ». 3rd ed. Sunderland, MA: Sinauer Associates. Un ouvrage fondatemutal pour la biophysique des canaux ioniques.",
+    scholarUrl: "https://books.google.com/books?q=Hille%20%22Ion%20Channels%20of%20Excitable%20Membranes%22%202001",
+    scholarText: "Google Books"
+  },
+  {
+    num: 2,
+    text: "Jacobson, Daniel, and Wu, Samuel M. 1995. « Foundations of Cellular Neurophysiology ». Cambridge, MA: MIT Press. Une référence exhaustive sur la physiologie cellulaire des neurones.",
+    scholarUrl: "https://books.google.com/books?q=Johnston%20%22Foundations%20of%20Cellular%20Neurophysiology%22%201995",
+    scholarText: "Google Books"
+  },
+  {
+    num: 3,
+    text: "Kandel, Eric R., Schwartz, James H., Jessell, Thomas M., Siegelbaum, Steven A., and Hudspeth, A. J. 2013. « Principles of Neural Science ». 5th ed. New York: McGraw-Hill Education. La 'bible' des neurosciences, couvrant tous les aspects du système nerveux.",
+    scholarUrl: "https://books.google.com/books?q=Kandel%20%22Principles%20of%20Neural%20Science%22%202013",
+    scholarText: "Google Books"
+  },
+  {
+    num: 4,
+    text: "Dayan, Peter, and Abbott, Laurence F. 2001. « Theoretical Neuroscience: Computational and Mathematical Modeling of Neural Systems ». Cambridge, MA: MIT Press. L'ouvrage de référence pour la neuroscience computationnelle.",
+    scholarUrl: "https://books.google.com/books?q=Dayan%20%22Theoretical%20Neuroscience%22%202001",
+    scholarText: "Google Books"
+  },
+  {
+    num: 5,
+    text: "Hodgkin, Alan L., and Huxley, Andrew F. 1952. \"A Quantitative Description of Membrane Current and Its Application to Conduction and Excitation in Nerve.\" « The Journal of Physiology » 117 (4): 500–544. L'article original et fondateur du modèle de Hodgkin-Huxley.",
+    scholarUrl: "https://scholar.google.com/scholar?q=Hodgkin%20%22A%20Quantitative%20Description%20of%20Membrane%20Current%20and%20Its%20Appli%22%201952",
+    scholarText: "Google Scholar"
+  },
+  {
+    num: 6,
+    text: "Gerstner, Wulfram, Kistler, Werner M., Naud, Richard, and Paninski, Liam. 2014. « Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition ». Cambridge, UK: Cambridge University Press. Un manuel moderne et complet sur la dynamique neuronale et la modélisation.",
+    scholarUrl: "https://books.google.com/books?q=Gerstner%20%22Neuronal%20Dynamics%22%202014",
+    scholarText: "Google Books"
+  },
+  {
+    num: 7,
+    text: "Neher, Erwin, and Sakmann, Bert. 1976. \"Single-Channel Currents Recorded from Membrane of Denervated Frog Muscle Fibres.\" « Nature » 260 (5554): 799–802. L'article pionnier décrivant la technique du patch-clamp.",
+    scholarUrl: "https://scholar.google.com/scholar?q=Neher%20%22Single%22%201976",
+    scholarText: "Google Scholar"
+  },
+  {
+    num: 8,
+    text: "Deisseroth, Karl. 2011. \"Optogenetics.\" « Nature Methods » 8 (1): 26–29. Une revue concise sur la technique de l'optogénétique.",
+    scholarUrl: "https://books.google.com/books?q=Deisseroth%20%22Optogenetics.%22%202011",
+    scholarText: "Google Books"
+  },
+  {
+    num: 9,
+    text: "Traub, Roger D., and Miles, Richard, 1991. « Neuronal Networks of the Hippocampus ». Cambridge, UK: Cambridge University Press. Un livre classique sur la modélisation des réseaux neuronaux dans l'hippocampe.",
+    scholarUrl: "https://books.google.com/books?q=Traub%20%22Neuronal%20Networks%20of%20the%20Hippocampus%22%201991",
+    scholarText: "Google Books"
+  },
+  {
+    num: 10,
+    text: "Koch, Christoph. 2004. « The Quest for Consciousness: A Neurobiological Approach ». Englewood, CO: Roberts &amp; Company Publishers. Une exploration des bases neurobiologiques de la conscience.",
+    scholarUrl: "https://books.google.com/books?q=Koch%20%22The%20Quest%20for%20Consciousness%22%202004",
+    scholarText: "Google Books"
+  },
+  {
+    num: 11,
+    text: "Rolls, Edmund T., and Deco, Gustavo. 2010. « The Noisy Brain: Stochastic Dynamics as a Principle of Brain Function ». Oxford, UK: Oxford University Press. Un ouvrage sur le rôle du bruit et de la stochasticité dans le fonctionnement cérébral.",
+    scholarUrl: "https://books.google.com/books?q=Rolls%20%22The%20Noisy%20Brain%22%202010",
+    scholarText: "Google Books"
+  },
+  {
+    num: 12,
+    text: "Brette, Romain, and Gerstner, Wulfram. 2005. \"Adaptive Exponential Integrate-and-Fire Model as an Effective Description of Neuronal Activity.\" « Journal of Neurophysiology » 94 (5): 3637–3642. Un article clé sur l'évolution des modèles Integrate-and-Fire.",
+    scholarUrl: "https://scholar.google.com/scholar?q=Brette%20%22Adaptive%20Exponential%20Integrate%22%202005",
+    scholarText: "Google Scholar"
+  }
+]} />
