@@ -2675,7 +2675,163 @@ function escapeRegex(str: string): string {
   return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+function healFrenchTypography(text: string): string {
+  let result = '';
+  let inCodeBlock = false;
+  let inInlineCode = false;
+  let inMathBlock = false;
+  let inInlineMath = false;
+  let inJsxTag = false;
+  let quoteCharInTag: string | null = null;
+  
+  let quoteCount = 0; // To alternate between « and »
+  
+  let i = 0;
+  while (i < text.length) {
+    const char = text[i];
+    
+    // Handle code blocks
+    if (text.substring(i, i + 3) === '```') {
+      inCodeBlock = !inCodeBlock;
+      result += '```';
+      i += 3;
+      continue;
+    }
+    if (inCodeBlock) {
+      result += char;
+      i++;
+      continue;
+    }
+    
+    // Handle inline code
+    if (char === '`') {
+      inInlineCode = !inInlineCode;
+      result += '`';
+      i++;
+      continue;
+    }
+    if (inInlineCode) {
+      result += char;
+      i++;
+      continue;
+    }
+    
+    // Handle math blocks
+    if (text.substring(i, i + 2) === '$$') {
+      inMathBlock = !inMathBlock;
+      result += '$$';
+      i += 2;
+      continue;
+    }
+    if (inMathBlock) {
+      result += char;
+      i++;
+      continue;
+    }
+    if (char === '$') {
+      inInlineMath = !inInlineMath;
+      result += '$';
+      i++;
+      continue;
+    }
+    if (inInlineMath) {
+      result += char;
+      i++;
+      continue;
+    }
+    
+    // Handle JSX/HTML tag boundary
+    if (!inJsxTag && char === '<' && /^[a-zA-Z/!]/.test(text[i + 1] || '')) {
+      inJsxTag = true;
+      quoteCharInTag = null;
+      result += '<';
+      i++;
+      continue;
+    }
+    if (inJsxTag) {
+      result += char;
+      // Handle quotes inside JSX tags (attributes)
+      if (quoteCharInTag === null) {
+        if (char === '"' || char === "'") {
+          quoteCharInTag = char;
+        } else if (char === '>') {
+          inJsxTag = false;
+        }
+      } else {
+        if (char === quoteCharInTag) {
+          quoteCharInTag = null;
+        }
+      }
+      i++;
+      continue;
+    }
+    
+    // Standard prose quote conversion (French target)
+    if (char === '"') {
+      if (quoteCount % 2 === 0) {
+        result += '« '; // opening guillemet with non-breaking space
+      } else {
+        result += ' »'; // closing guillemet with non-breaking space
+      }
+      quoteCount++;
+      i++;
+      continue;
+    }
+    
+    result += char;
+    i++;
+  }
+  
+  return result;
+}
 
+function healFrenchAccents(text: string): string {
+  const wordReplacements: [RegExp, string][] = [
+    [/\b([aA])\s+la\s+fin\b/g, 'à la fin'],
+    [/\b([aA])\s+partir\b/g, 'à partir'],
+    [/\b([aA])\s+travers\b/g, 'à travers'],
+    [/\bdeja\b/g, 'déjà'],
+    [/\bDeja\b/g, 'Déjà'],
+    [/\btres\b/g, 'très'],
+    [/\bTres\b/g, 'Très'],
+    [/\b([eE])lement\b/g, 'élément'],
+    [/\b([eE])lements\b/g, 'éléments'],
+    [/\b([eE])nergie\b/g, 'énergie'],
+    [/\b([eE])nergies\b/g, 'énergies'],
+    [/\b([eE])toile\b/g, 'étoile'],
+    [/\b([eE])toiles\b/g, 'étoiles'],
+    [/\b([gG])enerale\b/g, 'générale'],
+    [/\b([gG])eneral\b/g, 'général'],
+    [/\b([cC])reer\b/g, 'créer'],
+    [/\b([eE])valuer\b/g, 'évaluer'],
+    [/\b([aA])nalyser\b/g, 'analyser'],
+    [/\b([sS])ysteme\b/g, 'système'],
+    [/\b([sS])ystemes\b/g, 'systèmes'],
+    [/\b([tT])heorie\b/g, 'théorie'],
+    [/\b([tT])heories\b/g, 'théories'],
+    [/\b([mM])ethode\b/g, 'méthode'],
+    [/\b([mM])ethodes\b/g, 'méthodes'],
+    [/\b([pP])hysique\b/g, 'physique'],
+    [/\b([cC])olere\b/g, 'colère'],
+    [/\b([pP])recis\b/g, 'précis'],
+    [/\b([pP])recise\b/g, 'précise'],
+    [/\b([pP])recises\b/g, 'précises'],
+    [/\b([aA])cademique\b/g, 'académique'],
+    [/\b([aA])cademiques\b/g, 'académiques'],
+    [/\b([pP])edagogique\b/g, 'pédagogique'],
+    [/\b([pP])edagogiques\b/g, 'pédagogiques'],
+    [/\b([gG])enese\b/g, 'genèse'],
+    [/\b([eE])volution\b/g, 'évolution'],
+    [/\b([eE])volutions\b/g, 'évolutions'],
+    [/\b([pP])resence\b/g, 'présence']
+  ];
+  
+  let processed = text;
+  for (const [regex, replacement] of wordReplacements) {
+    processed = processed.replace(regex, replacement);
+  }
+  return processed;
+}
 
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string): string {
   // Apply systematic healing first so high-fidelity content and components are injected automatically
@@ -2686,6 +2842,15 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   processed = decodeHtmlEncodedTags(processed);
+
+  // Apply French-specific programmatic helpers (typographer and accents) to the prose
+  if (lang.toLowerCase() === 'fr') {
+    processed = healFrenchTypography(processed);
+    processed = healFrenchAccents(processed);
+  }
+
+  // Strip empty/self-closing blocks that crash the MDX compiler (like <CriticalThinking /> or <WhatsNext />)
+  processed = processed.replace(/<(CriticalThinking|ScientificMethod|HistoricalAnecdote|HistoricalEvent|WhatsNext|DidYouKnow|BrilliantIdea|PointOfView|DebatScientifique|ScientificDebate|Epistemology)\s*\/?>/gi, '');
 
   // 1. Convert pseudo-Bloom tag names (like <Analyser> or <Évaluer>) into bold text
   const bloomVerbs = 'Analyser|Évaluer|Créer|Saisir|Comprendre|Appliquer|Déterminer|Identifier|Expliquer|Distinguer|Mettre|Réaliser|Concevoir|Synthétiser|Sélectionner|Résoudre|Développer|Classer|Comparer|Discuter|Décrire|Définir|Démontrer|Illustrer|Analyze|Evaluate|Create|Understand|Apply|Determine|Identify|Explain|Distinguish|Implement|Design|Synthesize|Select|Solve|Develop|Classify|Compare|Discuss|Describe|Define|Demonstrate|Illustrate';

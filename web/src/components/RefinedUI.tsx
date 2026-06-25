@@ -394,6 +394,32 @@ export const AITutorOverlay = ({
   const [isOpen, setIsOpen] = useState(false);
   const [showTutorModal, setShowTutorModal] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: t.welcome }]);
+
+  // Active Cognitive Bridge States
+  const [isGlowing, setIsGlowing] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const glowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTutorToggle = () => {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+    
+    if (nextOpen) {
+      setIsGlowing(false);
+      if (glowTimeoutRef.current) {
+        clearTimeout(glowTimeoutRef.current);
+        glowTimeoutRef.current = null;
+      }
+      
+      if (pendingPrompt) {
+        setActiveTab('chat');
+        setTimeout(() => {
+          handleSend(pendingPrompt);
+          setPendingPrompt(null);
+        }, 150);
+      }
+    }
+  };
   const [input, setInput] = useState('');
   const [readingProgress, setReadingProgress] = useState<{
     textSnippet: string;
@@ -995,6 +1021,56 @@ export const AITutorOverlay = ({
     };
   }, [messages, persona, lang]);
 
+  // Listen for active cognitive bridge exercise completion
+  useEffect(() => {
+    const handleExerciseCompleted = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail;
+      if (!detail) return;
+
+      const isFR = lang.toUpperCase() === 'FR';
+      const promptHeader = detail.success
+        ? (isFR ? "[CONTEXTE : EXERCICE RÉUSSI]\nL'étudiant a répondu correctement à l'exercice suivant :\n" : "[CONTEXT: EXERCISE COMPLETED SUCCESS]\nThe student successfully answered the following exercise:\n")
+        : (isFR ? "[CONTEXTE : EXERCICE EN ERREUR]\nL'étudiant s'est trompé sur l'exercice suivant :\n" : "[CONTEXT: EXERCISE COMPLETED INCORRECT]\nThe student made a mistake in the following exercise:\n");
+
+      const questionLabel = isFR ? "Question/Contexte : " : "Question/Context: ";
+      const selectedLabel = isFR ? "Leur réponse : " : "Their answer: ";
+      const correctLabel = isFR ? "Bonne réponse : " : "Correct answer: ";
+      const explLabel = isFR ? "Explication/Indication : " : "Explanation: ";
+      
+      const instructions = detail.success
+        ? (isFR
+            ? "\nFournis un commentaire très court (1-2 phrases) et engageant pour les féliciter, expliquer brièvement pourquoi ce concept est important, et maintenir leur élan."
+            : "\nProvide a very brief (1-2 sentences), engaging comment to congratulate them, briefly explain why this concept is important, and keep their momentum going.")
+        : (isFR
+            ? "\nAgis en tuteur socratique et bienveillant. Fournis une explication très courte (2-3 phrases), encourageante et sans jugement pour les aider à comprendre leur erreur ou leur donner le bon déclic intuitif."
+            : "\nAct as an encouraging, supportive, and socratic tutor. Provide a very brief (2-3 sentences) explanation to help them understand their mistake or give them the right intuitive click without being judgmental.");
+
+      const prompt = `${promptHeader}${questionLabel}"${detail.question}"\n${selectedLabel}"${detail.selectedAnswer}"\n${correctLabel}"${detail.correctAnswer}"\n${detail.explanation ? `${explLabel}"${detail.explanation}"\n` : ''}${instructions}`;
+
+      if (isOpen) {
+        // If tutor panel is open, send immediately
+        setActiveTab('chat');
+        handleSend(prompt);
+      } else {
+        // If tutor panel is closed, trigger elegant glow for 8 seconds and store pending prompt
+        setIsGlowing(true);
+        setPendingPrompt(prompt);
+
+        if (glowTimeoutRef.current) clearTimeout(glowTimeoutRef.current);
+        glowTimeoutRef.current = setTimeout(() => {
+          setIsGlowing(false);
+        }, 8000);
+      }
+    };
+
+    window.addEventListener('op_exercise_completed', handleExerciseCompleted);
+    return () => {
+      window.removeEventListener('op_exercise_completed', handleExerciseCompleted);
+      if (glowTimeoutRef.current) clearTimeout(glowTimeoutRef.current);
+    };
+  }, [messages, persona, lang, isOpen]);
+
   // Keyboard navigation for Spaced Repetition flashcards
   useEffect(() => {
     if (!isOpen || activeTab !== 'flashcards' || flashcards.length === 0) return;
@@ -1568,13 +1644,24 @@ export const AITutorOverlay = ({
       <motion.button 
         whileHover={{ scale: 1.1 }} 
         whileTap={{ scale: 0.9 }} 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 rounded-full bg-blue-600 text-white shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative border border-white/10 group cursor-pointer"
+        onClick={handleTutorToggle}
+        className={`w-16 h-16 rounded-full text-white flex items-center justify-center relative border group cursor-pointer transition-all duration-300 ${
+          isGlowing 
+            ? "bg-gradient-to-r from-violet-650 to-blue-600 border-violet-400/40 animate-pulse shadow-[0_0_50px_rgba(139,92,246,0.85),_0_0_20px_rgba(37,99,235,0.6)]" 
+            : "bg-blue-600 border-white/10 shadow-[0_0_40px_rgba(37,99,235,0.4)]"
+        }`}
       >
         {tutorEnabled ? (
-          <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+          <Sparkles className={`w-7 h-7 group-hover:rotate-12 transition-transform ${isGlowing ? 'animate-bounce text-violet-200' : ''}`} />
         ) : (
-          <Brain className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+          <Brain className={`w-7 h-7 group-hover:rotate-12 transition-transform ${isGlowing ? 'animate-bounce text-violet-200' : ''}`} />
+        )}
+        {/* Glowing Indicator Dot */}
+        {isGlowing && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-violet-500 rounded-full border-2 border-slate-900 shadow-md flex items-center justify-center animate-bounce">
+            <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-75" />
+            <Sparkles className="w-2.5 h-2.5 text-white" />
+          </span>
         )}
       </motion.button>
     </div>

@@ -1,6 +1,6 @@
 # 📐 OpenPrimer Multi-Agent JSON Schemas
 
-This document centralizes the exact structural JSON schemas used by all agents in the OpenPrimer generation pipeline, preserved and validated in `web/drafts_revisions/`.
+This document centralizes the exact structural JSON schemas used by all agents in the OpenPrimer generation, translation, and revision pipelines, preserved and validated in `web/drafts_revisions/`.
 
 ---
 
@@ -9,14 +9,15 @@ This document centralizes the exact structural JSON schemas used by all agents i
 ```mermaid
 graph TD
     A[Agent 0: Curriculum Planner] -- Generates courses list --> B[Agent 1 & 2: Primary Pedagogical Architect]
-    B -- Generates lesson structure & profiling --> C[Agent 3 Stage 1: Widgets Designer]
-    C -- Generates interactive components & quiz metadata --> D[Agent 3 Stage 2: Academic Writer]
-    D -- Produces final MDX narrative --> E[Agent 4: Verifier / Critiquer]
+    B -- Generates lesson structure & profiling --> C[Agent 3A: Narrative Scribe]
+    C -- Produces MDX prose with WIDGET anchors --> D[Agent 3B: Widgets Architect]
+    D -- Parses anchors and generates widgets JSON --> E[Agent 4A / 4B: Narrative & Widgets Critics]
+    E -- Audits and approves content --> F[Stitching Engine & Self-Healing]
 ```
 
 ---
 
-## 1. 🗂️ Agent 0 (Curriculum Planner)
+## 1. 🗂️ Agent 0 (Curriculum Planner Schema)
 * **File Reference**: [`agent0_curriculum_schema.json`](file:///C:/Silvere/Encours/Developpement/OpenPrimer/web/drafts_revisions/agent0_curriculum_schema.json)
 * **Role**: Defines the high-level curriculum description and maps out the list of constituent courses/modules for a given discipline and academic level.
 
@@ -51,7 +52,7 @@ graph TD
 
 ---
 
-## 2. 🏛️ Agent 1 & 2 (Primary Pedagogical Architect)
+## 2. 🏛️ Agent 1 & 2 (Primary Pedagogical Architect Schema)
 * **File Reference**: [`agent1_2_syllabus_schema.json`](file:///C:/Silvere/Encours/Developpement/OpenPrimer/web/drafts_revisions/agent1_2_syllabus_schema.json)
 * **Role**: Analyzes the disciplinary epistemological DNA and plans the sequential lessons (chapters list), defining target level strategies, expected cognitive artifacts, and technical depths.
 
@@ -66,10 +67,7 @@ graph TD
       "properties": {
         "discipline": { "type": "string" },
         "description": { "type": "string" },
-        "epistemologicalMatrix": { 
-          "type": "string", 
-          "enum": ["Déductive", "Empirique", "Discursive", "Ingénierie"] 
-        },
+        "epistemologicalMatrix": { "type": "string" },
         "targetLevel": { "type": "string" },
         "pedagogicalStrategy": { "type": "string", "description": "Explanation of the custom teaching approach." }
       },
@@ -95,14 +93,14 @@ graph TD
 
 ---
 
-## 3. 🧩 Agent 3 Stage 1 (Widgets Designer)
-* **File Reference**: [`agent3_widgets_schema.json`](file:///C:/Silvere/Encours/Developpement/OpenPrimer/web/drafts_revisions/agent3_widgets_schema.json)
+## 3. 🧩 Agent 3B (Widgets Architect Schema)
+* **File Reference**: [`agent3b_widgets_schema.json`](file:///C:/Silvere/Encours/Developpement/OpenPrimer/web/drafts_revisions/agent3b_widgets_schema.json)
 * **Role**: Produces the structured, interactive "WFTA" (Widgets First, Text After) pedagogical components—including prerequisites, diagnostic quizzes, learning objectives, custom interactive tools (hotspots, sandboxes, function plotters), conclusion points, somatic final evaluations, glossary terms, and bibliography.
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Agent 3 Stage 1 Widgets Schema",
+  "title": "Agent 3B Widgets Schema",
   "type": "object",
   "properties": {
     "prerequisites": {
@@ -222,9 +220,9 @@ graph TD
 
 ---
 
-## 4. 🔍 Agent 4 (Verifier / Critiquer)
+## 4. 🔬 Agent 4 (Critics/Validation Verification Schema)
 * **File Reference**: [`agent4_verification_schema.json`](file:///C:/Silvere/Encours/Developpement/OpenPrimer/web/drafts_revisions/agent4_verification_schema.json)
-* **Role**: Evaluates the finished MDX lesson narrative and code layout against strict compilation guidelines, educational standards, and factual accuracy. Reports validation results and feedback.
+* **Role**: Evaluates the output of preceding stages (both narratives and widgets arrays) and decides whether to approve, or reject and provide detailed structured critiques.
 
 ```json
 {
@@ -232,14 +230,8 @@ graph TD
   "title": "Agent 4 Verification Schema",
   "type": "object",
   "properties": {
-    "approved": {
-      "type": "boolean",
-      "description": "True if content is 100% compliant, false if compilation errors or structural violations exist."
-    },
-    "critique": {
-      "type": "string",
-      "description": "Detailed breakdown of the audit, highlighting line-level issues, spelling errors, or invalid component props."
-    }
+    "approved": { "type": "boolean" },
+    "critique": { "type": "string" }
   },
   "required": ["approved", "critique"]
 }

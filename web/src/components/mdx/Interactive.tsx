@@ -315,7 +315,9 @@ export const FillInBlanks = ({
       const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
       return `op_fib_block_${window.location.pathname}_${sentenceHash}`;
     }
-    const hashStr = (question || sentence) + answersList.join('-');
+    const safeQuestion = typeof question === 'string' ? question : (question ? String(question) : '');
+    const safeSentence = typeof sentence === 'string' ? sentence : (sentence ? String(sentence) : '');
+    const hashStr = (safeQuestion || safeSentence) + answersList.join('-');
     const sentenceHash = hashStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     return `op_fib_${window.location.pathname}_${sentenceHash}`;
   }, [question, sentence, answersList, children, blockAnswers]);
@@ -388,11 +390,13 @@ export const FillInBlanks = ({
   const checkBlock = () => {
     const sortedItems = Object.values(registry).sort((a, b) => a.index - b.index);
     const valuesArray: string[] = [];
+    let allCorrect = true;
 
     sortedItems.forEach(item => {
       const correct = item.value.trim().toLowerCase() === item.answer.trim().toLowerCase();
       item.setCorrectness(correct);
       valuesArray.push(item.value);
+      if (!correct) allCorrect = false;
     });
 
     setIsSubmitted(true);
@@ -403,6 +407,26 @@ export const FillInBlanks = ({
         values: valuesArray,
         isSubmitted: true
       }));
+    }
+
+    // Dispatch Cognitive Bridge Event
+    if (typeof window !== 'undefined') {
+      const selectedStr = sortedItems.map(item => item.value).join(', ');
+      const correctStr = sortedItems.map(item => item.answer).join(', ');
+      
+      const event = new CustomEvent('op_exercise_completed', {
+        detail: {
+          type: 'fill_in_blanks',
+          success: allCorrect,
+          question: language === 'FR' ? 'Texte à trous (groupe)' : 'Fill in the blanks (group)',
+          selectedAnswer: selectedStr,
+          correctAnswer: correctStr,
+          explanation: allCorrect 
+            ? (language === 'FR' ? "Tous les espaces ont été correctement complétés." : "All blanks have been correctly filled.")
+            : (language === 'FR' ? "Certains espaces n'ont pas la bonne réponse." : "Some blanks have the wrong answer.")
+        }
+      });
+      window.dispatchEvent(event);
     }
   };
 
@@ -427,8 +451,21 @@ export const FillInBlanks = ({
 
   // 2. Determine segments list (standalone mode)
   const segments = React.useMemo(() => {
-    const textToSplit = question || sentence || '';
-    if (!textToSplit) return [];
+    let textToSplit = '';
+    if (question && typeof question === 'string') {
+      textToSplit = question;
+    } else if (sentence && typeof sentence === 'string') {
+      textToSplit = sentence;
+    } else if (question) {
+      textToSplit = String(question);
+    } else if (sentence) {
+      textToSplit = String(sentence);
+    }
+
+    if (!textToSplit || textToSplit === '[object Object]') {
+      return [];
+    }
+
     const placeholderRegex = /_{2,}|-{2,}|\.{3,}|\[\.\.\.\]/g;
     return textToSplit.split(placeholderRegex);
   }, [question, sentence]);
@@ -519,6 +556,28 @@ export const FillInBlanks = ({
         storage.setItem('op_visited_pages', JSON.stringify(visited));
         window.dispatchEvent(new Event('op_progress_updated'));
       }
+    }
+
+    // Dispatch Cognitive Bridge Event
+    if (typeof window !== 'undefined') {
+      const isSuccess = correctness.every(Boolean);
+      const safeQuestion = typeof question === 'string' ? question : (question ? String(question) : '');
+      const safeSentence = typeof sentence === 'string' ? sentence : (sentence ? String(sentence) : '');
+      const exerciseText = safeQuestion || safeSentence || 'Texte à trous';
+
+      const event = new CustomEvent('op_exercise_completed', {
+        detail: {
+          type: 'fill_in_blanks',
+          success: isSuccess,
+          question: exerciseText,
+          selectedAnswer: userInputs.join(', '),
+          correctAnswer: answersList.join(', '),
+          explanation: isSuccess 
+            ? (language === 'FR' ? "Tous les mots saisis sont corrects !" : "All words entered are correct!")
+            : (language === 'FR' ? "Certains mots saisis sont incorrects." : "Some words entered are incorrect.")
+        }
+      });
+      window.dispatchEvent(event);
     }
   };
 

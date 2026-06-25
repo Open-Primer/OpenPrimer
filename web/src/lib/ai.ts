@@ -1807,6 +1807,9 @@ ${formattedCatalogList}
       // Pre-verifier 1: MDX Text Preprocessor & Cleaner
       let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
 
+      // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees it!
+      cleanedNarrative = preprocessMdx(cleanedNarrative, targetLang.toLowerCase(), false, item.slug);
+
       lessonStats.narrativeAttempts++;
       saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_1.md`, cleanedNarrative);
 
@@ -1930,7 +1933,11 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
           saveDraftRevision(`prompt_stage1_refiner_${item.slug}_attempt_${narrativeIteration + 1}.md`, narrativeRefinerPrompt);
 
           const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
-          cleanedNarrative = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          
+          // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
+          cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
+          
           lessonStats.narrativeAttempts++;
           saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
         }

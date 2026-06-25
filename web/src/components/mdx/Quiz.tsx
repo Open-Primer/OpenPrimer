@@ -910,6 +910,21 @@ export const Question = ({
     if (onAnswer) {
       onAnswer(correct);
     }
+
+    // Dispatch Cognitive Bridge Event
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('op_exercise_completed', {
+        detail: {
+          type: 'quiz',
+          success: correct,
+          question: q,
+          selectedAnswer: finalOptions[index]?.text,
+          correctAnswer: finalOptions.find((o) => o.correct === true)?.text,
+          explanation: explanation || undefined
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   return (

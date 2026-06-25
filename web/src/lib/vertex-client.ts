@@ -12,7 +12,16 @@
 import { ModelId, TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES } from './ai-config';
 
 const PROJECT_ID = process.env.VERTEX_PROJECT_ID || 'openprimer-free';
-const LOCATION   = process.env.VERTEX_LOCATION   || 'us-central1';
+
+// Pool of high-capacity regional endpoints to support dynamic failover on 429 errors
+const REGIONS_POOL = [
+  process.env.VERTEX_LOCATION || 'us-central1',
+  'europe-west1',
+  'us-east4',
+  'asia-east1',
+  'us-west1'
+];
+let currentRegionIndex = 0;
 
 // ─────────────────────────────────────────────────────────────────
 // ADAPTIVE RATE LIMITER — Token Bucket with RPM + TPM Support
@@ -294,8 +303,6 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
   let lastError = '';
 
   for (const model of modelsToTry) {
-    const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${model}:${method}`;
-
     const body: Record<string, unknown> = { contents: req.contents };
     if (req.systemInstruction) {
       body.systemInstruction = { parts: [{ text: req.systemInstruction }] };
@@ -309,8 +316,10 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
     const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const currentLocation = REGIONS_POOL[currentRegionIndex];
+      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
       try {
-        console.log(`[VERTEX] Attempting call with model "${model}" (attempt ${attempt}/${maxRetries})...`);
+        console.log(`[VERTEX] Attempting call with model "${model}" in region "${currentLocation}" (attempt ${attempt}/${maxRetries})...`);
         const startTime = Date.now();
         response = await fetch(url, {
           method: 'POST',
@@ -322,7 +331,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
         });
 
         if (response.ok) {
-          console.log(`[VERTEX] ✅ Call succeeded with model "${model}".`);
+          console.log(`[VERTEX] ✅ Call succeeded with model "${model}" in region "${currentLocation}".`);
           
           const durationMs = Date.now() - startTime;
           const clonedResponse = response.clone();
@@ -358,7 +367,13 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
         } else if (response.status === 429) {
           handleRateLimitError();
           const errText = await response.text();
-          lastError = `[VERTEX] Model "${model}" failed (429 RESOURCE_EXHAUSTED): ${errText.slice(0, 300)}`;
+          const oldRegion = REGIONS_POOL[currentRegionIndex];
+          
+          // Dynamic Regional Failover: Rotate region circular pool to bypass regional exhaustion
+          currentRegionIndex = (currentRegionIndex + 1) % REGIONS_POOL.length;
+          const newRegion = REGIONS_POOL[currentRegionIndex];
+          
+          lastError = `[VERTEX] Model "${model}" failed in region "${oldRegion}" (429 RESOURCE_EXHAUSTED). Rotating to region "${newRegion}". ${errText.slice(0, 300)}`;
           
           if (attempt < maxRetries) {
             // Apply Decorrelated Jitter: wait_time = random(0, min(cap, base * 2^attempt))

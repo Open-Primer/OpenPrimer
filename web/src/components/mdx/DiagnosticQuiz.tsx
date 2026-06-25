@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, ArrowRight, Play } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface DiagnosticQuizProps {
-  question: string;
+  question?: string;
   options?: string[] | string;
   correctIndex?: number | string;
   targetSectionId: string;
   sectionTitle: string;
+  children?: React.ReactNode;
 }
 
 const STRINGS = {
@@ -52,7 +53,7 @@ const STRINGS = {
   ZH: {
     badge: "自适应诊断测试",
     prompt: "测试您的知识以跳过此部分：",
-    success: "🏆 知识点已验证！您已掌握本节的先决条件。您可以继续阅读或直接跳过至下一节。",
+    success: "🏆 知识点已验证！您已掌握本节 of 先决条件。您可以继续阅读或直接跳过至下一节。",
     fail: "❌ 建议：我们建议您阅读此部分以建立坚实的基础。",
     skip_btn: "直接跳过至",
     submit: "检查答案",
@@ -65,8 +66,12 @@ export const DiagnosticQuiz = ({
   options,
   correctIndex,
   targetSectionId,
-  sectionTitle
+  sectionTitle,
+  children
 }: DiagnosticQuizProps) => {
+  const { language } = useLanguage();
+  const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
+
   const isPlaceholder = (str: string) => {
     if (!str) return true;
     const s = str.toLowerCase().trim();
@@ -82,16 +87,70 @@ export const DiagnosticQuiz = ({
     );
   };
 
-  const resolvedOptions = Array.isArray(options)
-    ? options
-    : typeof options === 'string' && options
-      ? options.split('|||')
-      : [];
+  // 1. Parse and extract question text, options, and correct index from either props or children
+  let resolvedQuestion = question || "";
+  let resolvedOptions: string[] = [];
+  let resolvedCorrectIndex = 0;
 
+  if (children) {
+    const childrenArray = React.Children.toArray(children) as React.ReactElement[];
+    
+    // Find Question child
+    const questionChild = childrenArray.find(
+      (child) =>
+        React.isValidElement(child) &&
+        (String((child.type as any)?.name || child.type) === 'Question' ||
+         (child.props as any)?.mdxType === 'Question')
+    );
+    if (questionChild) {
+      resolvedQuestion = String(
+        (questionChild.props as any)?.children || 
+        (questionChild.props as any)?.q || 
+        ""
+      );
+    }
+
+    // Find Option children
+    const optionChildren = childrenArray.filter(
+      (child) =>
+        React.isValidElement(child) &&
+        (String((child.type as any)?.name || child.type) === 'Option' ||
+         (child.props as any)?.mdxType === 'Option')
+    );
+    
+    if (optionChildren.length > 0) {
+      resolvedOptions = optionChildren.map(
+        (opt) => String((opt.props as any)?.text || (opt.props as any)?.children || '')
+      );
+      // Determine correct index from option correct prop
+      const correctIdx = optionChildren.findIndex(
+        (opt) => (opt.props as any)?.correct === true || (opt.props as any)?.isCorrect === true
+      );
+      if (correctIdx !== -1) {
+        resolvedCorrectIndex = correctIdx;
+      }
+    }
+  }
+
+  // Fallback to props if options not populated via children
+  if (resolvedOptions.length === 0 && options) {
+    resolvedOptions = Array.isArray(options)
+      ? options
+      : typeof options === 'string' && options
+        ? options.split('|||').map(s => s.trim())
+        : [];
+    
+    resolvedCorrectIndex = typeof correctIndex === 'number'
+      ? correctIndex
+      : typeof correctIndex === 'string'
+        ? parseInt(correctIndex, 10)
+        : 0;
+  }
+
+  // Skip rendering if vital fields are missing or placeholder
   if (
-    !question ||
-    isPlaceholder(question) ||
-    !resolvedOptions ||
+    !resolvedQuestion ||
+    isPlaceholder(resolvedQuestion) ||
     resolvedOptions.length === 0 ||
     resolvedOptions.some(opt => isPlaceholder(opt)) ||
     isPlaceholder(targetSectionId) ||
@@ -100,25 +159,32 @@ export const DiagnosticQuiz = ({
     return null;
   }
 
-  const { language } = useLanguage();
-  const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
-
-  console.log("DiagnosticQuiz Received Props:", { question, options, correctIndex, targetSectionId, sectionTitle });
-
-  const resolvedCorrectIndex = typeof correctIndex === 'number'
-    ? correctIndex
-    : typeof correctIndex === 'string'
-      ? parseInt(correctIndex, 10)
-      : 0;
-
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
   const handleSubmit = () => {
     if (selectedIdx === null) return;
-    setIsCorrect(selectedIdx === resolvedCorrectIndex);
+    const isCorrectAns = selectedIdx === resolvedCorrectIndex;
+    setIsCorrect(isCorrectAns);
     setIsSubmitted(true);
+
+    // Dispatch Cognitive Bridge Event
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('op_exercise_completed', {
+        detail: {
+          type: 'diagnostic',
+          success: isCorrectAns,
+          question: resolvedQuestion,
+          selectedAnswer: resolvedOptions[selectedIdx],
+          correctAnswer: resolvedOptions[resolvedCorrectIndex],
+          explanation: sectionTitle 
+            ? (language === 'FR' ? `Permet de valider et sauter la section "${sectionTitle}"` : `Allows validating and skipping the section "${sectionTitle}"`)
+            : undefined
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const handleReset = () => {
@@ -178,7 +244,7 @@ export const DiagnosticQuiz = ({
         <div className="space-y-4">
           <div className="space-y-1">
             <span className="text-slate-400 text-xs font-semibold">{t.prompt}</span>
-            <p className="text-white text-sm font-bold leading-relaxed">{question}</p>
+            <p className="text-white text-sm font-bold leading-relaxed">{resolvedQuestion}</p>
           </div>
 
           <div className="grid gap-2.5">

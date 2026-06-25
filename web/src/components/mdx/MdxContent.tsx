@@ -16,6 +16,10 @@ import { Epistemology } from './Epistemology';
 import { DiagnosticQuiz } from './DiagnosticQuiz';
 import { AudioPlayer } from './AudioPlayer';
 import { References } from './References';
+import { BiophysicsSimulator } from './BiophysicsSimulator';
+import { CardSort } from './CardSort';
+import { SocraticInput } from './SocraticInput';
+import { Timeline } from './Timeline';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -1596,6 +1600,14 @@ const components = {
   StoichiometrieChimique: ChemicalStoichiometry,
   BasicMathExplorer,
   ExplorateurMathsBase: BasicMathExplorer,
+  BiophysicsSimulator,
+  SimulateurBiophysique: BiophysicsSimulator,
+  CardSort,
+  AssociationPaires: CardSort,
+  SocraticInput,
+  AnalyseSocratique: SocraticInput,
+  Timeline,
+  FriseChronologique: Timeline,
   pre: PreCodeInterceptor,
 
   // New Custom Pedagogical Blocks

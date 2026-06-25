@@ -911,6 +911,21 @@ export default function CurriculumPage() {
                                       </span>
                                     )}
 
+                                    {/* Mandatory vs Optional Status Badge */}
+                                    {parentCurriculum && !isCurr && (
+                                      isMandatoryChild ? (
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-500 flex items-center gap-1.5 select-none shadow-[0_0_15px_rgba(245,158,11,0.05)] animate-pulse">
+                                          <Icons.Lock className="w-3.5 h-3.5 text-amber-500" />
+                                          {lang === 'FR' ? 'Obligatoire' : 'Mandatory'}
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-slate-800/60 border border-slate-700/50 rounded-xl text-slate-400 flex items-center gap-1.5 select-none">
+                                          <Icons.Unlock className="w-3.5 h-3.5 text-slate-400" />
+                                          {lang === 'FR' ? 'Optionnel' : 'Optional'}
+                                        </span>
+                                      )
+                                    )}
+
                                     {/* Multilingual / translation mismatch badge */}
                                     {!isCurr && courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
                                       <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={lang === 'FR' ? 'Non disponible dans votre langue active' : 'Not available in your active language'}>
