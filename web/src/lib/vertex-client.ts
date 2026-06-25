@@ -18,7 +18,6 @@ const REGIONS_POOL = [
   process.env.VERTEX_LOCATION || 'us-central1',
   'europe-west1',
   'us-east4',
-  'asia-east1',
   'us-west1'
 ];
 let currentRegionIndex = 0;

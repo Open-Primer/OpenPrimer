@@ -2423,15 +2423,10 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
     if (course?.isCurriculum) {
       console.log(`[TRANSLATOR] Target "${courseSlug}" is a curriculum. Cascading translation to all child courses first...`);
       
-      const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 5000);
-      
       const childIds = course.childCourses || [];
-      const childPromises = childIds.map(async (childId, index) => {
+      for (const childId of childIds) {
         const childCourse = allCourses?.find(c => c.id === childId);
         if (childCourse && childCourse.slug) {
-          const delay = index * INTER_LESSON_DELAY_MS;
-          console.log(`[TRANSLATOR] Staggering child translation for "${childCourse.slug}" by ${delay / 1000}s...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
           try {
             console.log(`[TRANSLATOR] Translating curriculum child course: "${childCourse.slug}" to "${targetLang}"...`);
             await translateCourseContent(childCourse.slug, targetLang);
@@ -2439,16 +2434,12 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.error(`[TRANSLATOR ERROR] Failed to translate curriculum child course "${childCourse.slug}":`, childErr);
           }
         }
-      });
-      await Promise.all(childPromises);
+      }
       
       const optionalIds = course.optionalCourses || [];
-      const optionalPromises = optionalIds.map(async (optId, index) => {
+      for (const optId of optionalIds) {
         const optCourse = allCourses?.find(c => c.id === optId);
         if (optCourse && optCourse.slug) {
-          const delay = index * INTER_LESSON_DELAY_MS;
-          console.log(`[TRANSLATOR] Staggering optional translation for "${optCourse.slug}" by ${delay / 1000}s...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
           try {
             console.log(`[TRANSLATOR] Translating curriculum optional course: "${optCourse.slug}" to "${targetLang}"...`);
             await translateCourseContent(optCourse.slug, targetLang);
@@ -2456,8 +2447,7 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.error(`[TRANSLATOR ERROR] Failed to translate curriculum optional course "${optCourse.slug}":`, optErr);
           }
         }
-      });
-      await Promise.all(optionalPromises);
+      }
     } else {
       // 1. Fetch only primary source lessons for this course to avoid duplicates
       const sourceLang = (course?.languages && course.languages.length > 0)
