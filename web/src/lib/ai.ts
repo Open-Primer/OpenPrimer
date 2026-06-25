@@ -663,7 +663,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     let compStr = '';
 
     if (comp.componentType === "Quiz") {
-      compStr = `<Quiz durationLimit={${comp.props.durationLimit || 300}}>\n  ${comp.props.questions.map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${q.options.map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+      compStr = `<Quiz durationLimit={${comp.props.durationLimit || 300}}${comp.props.limit ? ` limit={${comp.props.limit}}` : ''}>\n  ${comp.props.questions.map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${q.options.map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
     } else if (comp.componentType === "FillInBlanks") {
       compStr = `<FillInBlanks sentence="${comp.props.sentence.replace(/"/g, '&quot;')}" answer="${comp.props.answer.replace(/"/g, '&quot;')}" />`;
     } else if (comp.componentType === "SolvedExercise") {
@@ -739,7 +739,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   let finalEvalStr = '';
   if (widgets.finalEvaluation.type === "Quiz") {
     const fProps = widgets.finalEvaluation.props || {};
-    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
   } else {
     finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
   }
@@ -1666,7 +1666,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
    - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, or <FillInBlanks>) in your prose.
    - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, and <InstitutionLink>.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>.
 
 2. NO RAW HTML FOR LISTS:
    - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
@@ -1776,6 +1776,9 @@ ${formattedCatalogList}
      - \`<ConceptLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Concept Name</ConceptLink>\`
      - \`<TheoremLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Theorem/Law Name</TheoremLink>\`
      - \`<InstitutionLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Institution Name</InstitutionLink>\`
+     - \`<SpeciesLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Species Name</SpeciesLink>\`
+     - \`<ChemicalLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
+     - \`<CelestialLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Celestial Body/Space Mission</CelestialLink>\`
    *Strict Constraints*:
    - ABSOLUTELY FORBIDDEN to wrap verbs (especially action/Bloom verbs like "analyser", "comprendre", "créer", "identifier", etc.) inside these entity tags. Verbs must remain as plain text or bold text, never wrapped in hover-cards. Only wrap true named entities or technical terms.
    - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
@@ -1864,7 +1867,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - For higher education, verify that at least one \`<Epistemology>\` controversy/limit box is present with deep theoretical content.
    - Verify that at least one contextual Mini-Biography is present, is substantial (8-12 lines), and contains a working, direct Wikipedia Markdown link at the very end.
 6. **Connected Entity Hover-Cards**:
-   - Verify that named entities mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<FictionalCharacter>\`, \`<Location>\`, \`<EventLink>\`, \`<Artwork>\`, \`<ConceptLink>\`, \`<TheoremLink>\`, or \`<InstitutionLink>\`.
+   - Verify that named entities mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<FictionalCharacter>\`, \`<Location>\`, \`<EventLink>\`, \`<Artwork>\`, \`<ConceptLink>\`, \`<TheoremLink>\`, \`<InstitutionLink>\`, \`<SpeciesLink>\`, \`<ChemicalLink>\`, or \`<CelestialLink>\`.
    - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
@@ -1940,6 +1943,16 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
 
+      const cleanLevel = (levelInput || 'L1').trim().toLowerCase();
+      const isLvlPrimary = cleanLevel.startsWith('p') || cleanLevel.startsWith('m') || cleanLevel.includes('primary') || cleanLevel.includes('maternelle') || ['1', '2', '3', 'foundation_1', 'foundation_2'].includes(cleanLevel);
+      const isLvlSecondary = cleanLevel.includes('secondary') || cleanLevel.startsWith('coll') || cleanLevel.startsWith('lyc') || cleanLevel.includes('preuni') || ['secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3'].includes(cleanLevel);
+
+      const finalQuizPoolCount = isLvlPrimary ? 10 : isLvlSecondary ? 25 : 60;
+      const finalQuizDisplayLimit = isLvlPrimary ? 5 : isLvlSecondary ? 15 : 30;
+
+      const sectionQuizPoolCount = isLvlPrimary ? 5 : isLvlSecondary ? 10 : 20;
+      const sectionQuizDisplayLimit = isLvlPrimary ? 3 : isLvlSecondary ? 5 : 10;
+
       const widgetsPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to parse the approved academic narrative draft of the lesson, extract all custom and standard bracketed widget anchors (\`[[WIDGET:id]]\`), and generate a valid JSON object conforming strictly to the requested \`lessonWidgetsSchema\` to fully define each anchor.
 
@@ -2009,7 +2022,11 @@ Your generated JSON must contain the following top-level keys:
 5. **\`whatsNext\`**:
    - Provide 2 to 3 engaging next steps or follow-up courses, each with \`title\`, \`description\`, and \`slug\`.
 6. **\`finalEvaluation\`**:
-   - A comprehensive final test. This must be a structured JSON object representing either a high-fidelity MCQ Quiz (with 5-10 questions following the Flat-Prop format) or an \`EssayEvaluation\` with a detailed prompt.
+   - A comprehensive final test. This must be a structured JSON object representing either an \`EssayEvaluation\` with a detailed prompt, or a high-fidelity MCQ \`Quiz\`.
+   - **MCQ Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
+     - You MUST generate a pool of EXACTLY ${finalQuizPoolCount} questions in the \`props.questions\` array.
+     - You MUST specify \`props.limit\`: ${finalQuizDisplayLimit} in the \`props\` object.
+     - This ensures there are enough extra questions in the pool so that the platform randomly shuffles and selects ${finalQuizDisplayLimit} questions at runtime, preventing repetition.
 7. **\`glossary\`**:
    - An array of at least 3 key academic terms with clear definitions.
 8. **\`references\`**:
@@ -2019,6 +2036,10 @@ Your generated JSON must contain the following top-level keys:
    - Make sure any inline citations used in the narrative draft (e.g. \`[1](#ref-1)\`) map perfectly to their respective index in this array (e.g., \`references[0]\` is index 1).
 9. **\`interactiveComponents\`**:
    - An array of all custom interactive components. Every custom \`[[WIDGET:id]]\` anchor in the narrative draft MUST have a corresponding object here where \`id\` matches the anchor suffix exactly, \`componentType\` matches the selected widget ID, \`sectionAnchor\` is the heading title of the parent section, and \`props\` specifies its data properties.
+   - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
+     - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
+     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
+     - This guarantees the pool is larger than the visible slice for retry randomisation.
 
 ---
 
@@ -2590,7 +2611,7 @@ ${currentTranslation}
 
 Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
-2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. Do NOT nest wrapper components (e.g. nesting <WhatsNext> inside itself is strictly forbidden).
+2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. Do NOT nest wrapper components (e.g. nesting <WhatsNext> inside itself is strictly forbidden).
 3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs) preserved exactly as in the original?
 4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
@@ -3193,7 +3214,7 @@ ${lesson.content}
 INSTRUCTIONS:
 1. Revise the content to address the issues specified in the feedback.
 2. Maintain high academic density, rigor, and the target language of the lesson.
-3. Preserve all MDX custom React components (<Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Location>, <DataChart>, <DynamicSimulation>, etc.) exactly as they are, including all their attributes, unless the feedback specifically requests to change/fix them.
+3. Preserve all MDX custom React components (<Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Location>, <DataChart>, <DynamicSimulation>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) exactly as they are, including all their attributes, unless the feedback specifically requests to change/fix them.
 4. Keep the frontmatter block at the top intact.
 5. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your output. Return ONLY the raw revised MDX content.
 6. Make precise edits. Do not lose other parts of the lesson.`;
@@ -3268,7 +3289,7 @@ ${currentMdx}
 
 Your validation checklist:
 1. Did the revision fully address the student concerns and instructions in the revision instructions list?
-2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
+2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
 3. Zero placeholders and empty tags: Are there any placeholders, skeletal sentences, or unfinished sections? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. If a component is present, it must contain full text/children.
 4. No nested wrappers: Ensure you do NOT nest wrapper tags inside each other (e.g. self-nesting is strictly forbidden).
 4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
@@ -3616,7 +3637,7 @@ ${content}
 INSTRUCTIONS:
 1. Fix the tags that are unclosed, incorrectly nested, or contain invalid syntax.
 2. For unclosed JSX/HTML tags, either close them properly or wrap the content correctly. For example, if it says "Expected a closing tag for <a>", make sure all <a> tags are closed with </a>.
-3. Make sure custom components like <Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Epistemology>, etc. are well-formed and closed.
+3. Make sure custom components like <Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Epistemology>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc. are well-formed and closed.
 4. Do NOT change the learning objectives, pedagogical content, or text substance. Just repair the MDX structure so that Acorn or the MDX parser doesn't crash.
 5. Return ONLY the repaired MDX content. Do NOT wrap the response in markdown code blocks (\`\`\`).
 6. Do NOT add any conversational explanation before or after the code. Just output the clean, fixed MDX.`;
@@ -4568,6 +4589,9 @@ function sanitizeMdxFallback(mdx: string): string {
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson',
     'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink',
+    'SpeciesLink', 'SpeciesLien', 'EspeceLien', 'EspèceLien', 'OrganismeLien',
+    'ChemicalLink', 'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien',
+    'CelestialLink', 'CelestialLien', 'CorpsCeleste', 'CorpsCéleste', 'AstroLien',
     'Artwork', 'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote',
     'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres', 'IdeeBrillante', 'BrilliantIdea',
     'PointOfView', 'DidYouKnow', 'SolvedExercise', 'UnsolvedExercise',

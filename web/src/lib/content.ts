@@ -1800,6 +1800,18 @@ function normalizeFrenchPedagogicalTags(mdx: string): string {
     TheoremeLien: 'TheoremLink',
     ThéorèmeLien: 'TheoremLink',
     InstitutionLien: 'InstitutionLink',
+    SpeciesLien: 'SpeciesLink',
+    EspeceLien: 'SpeciesLink',
+    EspèceLien: 'SpeciesLink',
+    OrganismeLien: 'SpeciesLink',
+    ChemicalLien: 'ChemicalLink',
+    MoleculesLien: 'ChemicalLink',
+    MoleculeLien: 'ChemicalLink',
+    ChimieLien: 'ChemicalLink',
+    CelestialLien: 'CelestialLink',
+    CorpsCeleste: 'CelestialLink',
+    CorpsCéleste: 'CelestialLink',
+    AstroLien: 'CelestialLink',
 
     // Interactive Widgets
     ManipulateurFonction: 'FunctionManipulator',
@@ -1949,7 +1961,7 @@ function deduplicateHistoricalPersons(mdx: string): string {
   });
 
   // Strip all overlay/entity tags inside markdown headings (e.g. ### <HistoricalPerson ...>Name</HistoricalPerson> -> ### Name)
-  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien)';
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
   processed = processed.replace(/^(#{1,6}\s+)([\s\S]*?)$/gm, (match: string, prefix: string, content: string) => {
     const stripped = content.replace(new RegExp(`<${entityTagsPattern}\\b[^>]*?>([\\s\\S]*?)<\\/${entityTagsPattern}>`, 'gi'), '$1');
     return `${prefix}${stripped}`;
@@ -1984,6 +1996,9 @@ function deduplicateHistoricalPersons(mdx: string): string {
     let typeName = tagLower;
     if (typeName === 'realperson') typeName = 'historicalperson';
     if (typeName === 'historicaleventlink' || typeName === 'evenementhistorique' || typeName === 'événementhistorique') typeName = 'eventlink';
+    if (['specieslien', 'especelien', 'espècelien', 'organismelien'].includes(typeName)) typeName = 'specieslink';
+    if (['chemicallien', 'moleculeslien', 'moleculelien', 'chimielien'].includes(typeName)) typeName = 'chemicallink';
+    if (['celestiallien', 'corpsceleste', 'corpscéleste', 'astrolien'].includes(typeName)) typeName = 'celestiallink';
 
     const seenKey = `${typeName}:${normKey}`;
 
@@ -2001,7 +2016,10 @@ function deduplicateHistoricalPersons(mdx: string): string {
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
     'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink', 'WebsiteLink', 'ProjectLink', 'SiteWeb',
-    'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien'
+    'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien',
+    'SpeciesLink', 'SpeciesLien', 'EspeceLien', 'EspèceLien', 'OrganismeLien',
+    'ChemicalLink', 'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien',
+    'CelestialLink', 'CelestialLien', 'CorpsCeleste', 'CorpsCéleste', 'AstroLien'
   ];
   const blockTags = [
     'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent', 'HistoricalFact', 'WhatsNext', 'EtApres',
@@ -2677,7 +2695,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   });
 
   // 1.5 Strip overlay entity tags (like <RealPerson>, <Location>, etc.) that erroneously wrap common Bloom verbs or lowercase verbs
-  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien)';
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
   const entityVerbsPattern = `<(${entityTagsPattern})\\b[^>]*?>\\s*(${bloomVerbs}|analyser|évaluer|créer|saisir|comprendre|appliquer|déterminer|identifier|expliquer|distinguer|mettre|réaliser|concevoir|synthétiser|sélectionner|résoudre|développer|classer|comparer|discuter|décrire|définir|démontrer|illustrer|analyze|evaluate|create|understand|apply|determine|identify|explain|distinguish|implement|design|synthesize|select|solve|develop|classify|compare|discuss|describe|define|demonstrate|illustrate)\\s*<\\/\\1>`;
   const entityVerbsRegex = new RegExp(entityVerbsPattern, 'gi');
   processed = processed.replace(entityVerbsRegex, (match, tag, verb) => {
@@ -3519,7 +3537,12 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = ['RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien'];
+  const inlineTags = [
+    'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien',
+    'SpeciesLink', 'SpeciesLien', 'EspeceLien', 'EspèceLien', 'OrganismeLien',
+    'ChemicalLink', 'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien',
+    'CelestialLink', 'CelestialLien', 'CorpsCeleste', 'CorpsCéleste', 'AstroLien'
+  ];
   const tagPattern = new RegExp(
     `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
     'gi'

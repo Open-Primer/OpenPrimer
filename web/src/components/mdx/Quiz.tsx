@@ -38,6 +38,7 @@ interface QuizProps {
   externalDocumentsAllowed?: boolean;
   webBrowsingAllowed?: boolean;
   aiTutorAssistanceAllowed?: boolean;
+  limit?: number;
 }
 
 export const Quiz = ({
@@ -48,6 +49,7 @@ export const Quiz = ({
   externalDocumentsAllowed = false,
   webBrowsingAllowed = false,
   aiTutorAssistanceAllowed = false,
+  limit,
 }: QuizProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -87,6 +89,7 @@ export const Quiz = ({
   const [extendTime, setExtendTime] = useState(false);
   const [level, setLevel] = useState('L1');
   const [courseHours, setCourseHours] = useState(150);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     const handlePrefsChange = () => {
@@ -120,9 +123,27 @@ export const Quiz = ({
     ? Math.min(maxQuestions, Math.max(5, Math.round(courseHours / 3)))
     : undefined;
 
-  const questions = isFinal && targetNumQuestions 
-    ? parsedQuestions.slice(0, targetNumQuestions)
-    : parsedQuestions;
+  // Resolve questions via stable Fisher-Yates shuffle on resetKey / mount
+  const questions = React.useMemo(() => {
+    // Fisher-Yates Shuffle
+    const shuffleArray = <T,>(array: T[]): T[] => {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = temp;
+      }
+      return copy;
+    };
+
+    const shuffled = shuffleArray(parsedQuestions);
+    const targetLimit = limit ?? (isFinal && targetNumQuestions ? targetNumQuestions : undefined);
+    const finalLimit = targetLimit 
+      ? Math.min(targetLimit, parsedQuestions.length)
+      : parsedQuestions.length;
+    return shuffled.slice(0, finalLimit);
+  }, [resetKey, parsedQuestions.length, limit, isFinal, targetNumQuestions]);
 
   // Proportional scaling for duration
   let calculatedDuration = durationLimit;
@@ -139,7 +160,6 @@ export const Quiz = ({
   const [timeLeft, setTimeLeft] = useState(actualDurationLimit || 0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
-  const [resetKey, setResetKey] = useState(0);
   const [isCourseCompleted, setIsCourseCompleted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -209,7 +229,7 @@ export const Quiz = ({
               messages: [
                 {
                   role: 'user',
-                  content: `L'étudiant vient de terminer le quiz de fin de cours.\nScore obtenu : ${totalCorrect}/${totalQuestions}.\nVoici les résultats :\n${qResults.map((r, i) => `Question ${i+1}: "${r.question}" - Réponse : ${r.correct ? 'CORRECTE' : 'INCORRECTE'}`).join('\n')}\n\nGénère un commentaire personnalisé d'un paragraphe sur son résultat (forces et faiblesses) et propose des explications complémentaires constructives pour creuser les notions non validées.`
+                  content: `The student has just completed the end-of-course quiz.\nScore obtained: ${totalCorrect}/${totalQuestions}.\nHere are the results:\n${qResults.map((r, i) => `Question ${i+1}: "${r.question}" - Answer: ${r.correct ? 'CORRECT' : 'INCORRECT'}`).join('\n')}\n\nGenerate a personalized feedback comment of one paragraph about their result (strengths and weaknesses) and offer constructive complementary explanations to deepen understanding of any unvalidated concepts. Please reply in the requested language.`
                 }
               ],
               persona: 'curious_polymath',
@@ -693,6 +713,12 @@ export const Quiz = ({
           <span>
             {language === 'FR' 
               ? `⏳ Attention ! Il reste moins de ${isFifteenPercentLeft ? '15%' : '20%'} du temps imparti (${formatTime(timeLeft)} restants). Hâtez-vous de répondre !`
+              : language === 'ES'
+              ? `⏳ ¡Atención! Queda menos del ${isFifteenPercentLeft ? '15%' : '20%'} del tiempo asignado (${formatTime(timeLeft)} restantes). ¡Dése prisa para responder!`
+              : language === 'DE'
+              ? `⏳ Achtung! Es verbleiben weniger als ${isFifteenPercentLeft ? '15%' : '20%'} der zugewiesenen Zeit (${formatTime(timeLeft)} übrig). Bitte beeilen Sie sich mit der Antwort!`
+              : language === 'ZH'
+              ? `⏳ 注意！剩余时间已不足 ${isFifteenPercentLeft ? '15' : '20'}%（还剩 ${formatTime(timeLeft)}）。请尽快答题！`
               : `⏳ Warning! Less than ${isFifteenPercentLeft ? '15%' : '20%'} of the allocated time is left (${formatTime(timeLeft)} remaining). Hurry up to answer!`}
           </span>
         </div>
@@ -778,13 +804,23 @@ export const Quiz = ({
                   <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
                 </div>
                 <h4 className="text-xs font-black uppercase text-violet-400 tracking-widest">
-                  {language === 'FR' ? 'Commentaire du Tuteur' : 'Tutor Feedback'}
+                  {language === 'FR' ? 'Commentaire du Tuteur' 
+                    : language === 'ES' ? 'Comentarios del tutor'
+                    : language === 'DE' ? 'Feedback des Tutors'
+                    : language === 'ZH' ? '导师反馈'
+                    : 'Tutor Feedback'}
                 </h4>
               </div>
               {isTutorLoading && !tutorComment ? (
                 <div className="flex items-center gap-2 text-slate-400 text-xs italic">
                   <div className="w-3.5 h-3.5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                  <span>{language === 'FR' ? 'Le tuteur analyse vos résultats...' : 'Tutor analyzing your results...'}</span>
+                  <span>
+                    {language === 'FR' ? 'Le tuteur analyse vos résultats...' 
+                      : language === 'ES' ? 'El tutor está analizando sus resultados...'
+                      : language === 'DE' ? 'Der Tutor analysiert Ihre Ergebnisse...'
+                      : language === 'ZH' ? '导师正在分析您的结果...'
+                      : 'Tutor analyzing your results...'}
+                  </span>
                 </div>
               ) : (
                 <p className="text-slate-300 text-xs leading-relaxed font-medium italic pl-1 whitespace-pre-line">
@@ -918,18 +954,36 @@ export const Question = ({
       {isReadOnly && (
         <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2 mt-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Votre réponse :' : 'Your answer:'}</span>
+            <span className="text-slate-400 font-semibold">
+              {language === 'FR' ? 'Votre réponse :' 
+                : language === 'ES' ? 'Su respuesta:'
+                : language === 'DE' ? 'Ihre Antwort:'
+                : language === 'ZH' ? '您的回答：'
+                : 'Your answer:'}
+            </span>
             {selected !== null ? (
               <span className={isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
                 {finalOptions[selected]?.text}
               </span>
             ) : (
-              <span className="text-red-400 font-bold italic">{language === 'FR' ? 'Aucune réponse (temps écoulé)' : 'No answer (time out)'}</span>
+              <span className="text-red-400 font-bold italic">
+                {language === 'FR' ? 'Aucune réponse (temps écoulé)' 
+                  : language === 'ES' ? 'Sin respuesta (tiempo agotado)'
+                  : language === 'DE' ? 'Keine Antwort (Zeitüberschreitung)'
+                  : language === 'ZH' ? '未作答 (超时)'
+                  : 'No answer (time out)'}
+              </span>
             )}
           </div>
           {!isCorrect && (
             <div className="flex items-center gap-2 border-t border-slate-800/40 pt-2">
-              <span className="text-slate-400 font-semibold">{language === 'FR' ? 'Bonne réponse :' : 'Correct answer:'}</span>
+              <span className="text-slate-400 font-semibold">
+                {language === 'FR' ? 'Bonne réponse :' 
+                  : language === 'ES' ? 'Respuesta correcta:'
+                  : language === 'DE' ? 'Richtige Antwort:'
+                  : language === 'ZH' ? '正确答案：'
+                  : 'Correct answer:'}
+              </span>
               <span className="text-emerald-400 font-bold">
                 {finalOptions.find((o) => o.correct === true)?.text}
               </span>

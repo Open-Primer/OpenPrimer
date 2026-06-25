@@ -307,7 +307,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       body.safetySettings = req.safetySettings;
     }
 
-    const maxRetries = 5;
+    const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[VERTEX] Attempting call with model "${model}" (attempt ${attempt}/${maxRetries})...`);
