@@ -419,7 +419,7 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
       : language === 'ZH' ? `📝 ${totalQuestions} 道选择题`
       : `📝 ${totalQuestions} multiple-choice question(s)`;
     return (
-      <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-6">
+      <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-4">
         <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/20">
           <CheckCircle2 className="w-8 h-8" />
         </div>
@@ -430,11 +430,21 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
 
         {/* Evaluation Mode Info Card */}
         <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
-          <p className="font-black text-blue-400 uppercase tracking-widest text-[9px]">📋 {t.eval_mode_label}</p>
-          <div className="grid grid-cols-1 gap-2 text-xs text-slate-300">
+          <p className="font-black text-blue-400 uppercase tracking-widest text-xs">📋 {t.eval_mode_label}</p>
+          <div className="grid grid-cols-1 gap-2.5 text-sm text-slate-300">
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>
               <span>{questionsLabel}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-black shrink-0">▸</span>
+              <span>
+                {language === 'FR' ? `Durée : ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Illimitée'}`
+                  : language === 'ES' ? `Duración: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Ilimitada'}`
+                  : language === 'DE' ? `Dauer: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Unbegrenzt'}`
+                  : language === 'ZH' ? `时长：${actualDurationLimit ? formatDurationText(actualDurationLimit) : '无限制'}`
+                  : `Duration: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Unlimited'}`}
+              </span>
             </div>
             <div className={cn("flex items-start gap-2", isFinal && "text-red-400 font-bold text-sm bg-red-500/10 p-3 rounded-xl border border-red-500/20 my-1")}>
               {isFinal ? (
@@ -448,8 +458,8 @@ export const Quiz = ({ children, durationLimit, isFinal = false }: QuizProps) =>
         </div>
 
         {/* Pre-flight Checklist Card */}
-        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-xs max-w-md mx-auto space-y-2">
-          <p className="font-black text-slate-400 uppercase tracking-widest text-[9px]">💡 Checklist</p>
+        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-sm max-w-md mx-auto space-y-2">
+          <p className="font-black text-slate-400 uppercase tracking-widest text-xs">💡 Checklist</p>
           <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
             <li>

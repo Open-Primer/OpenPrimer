@@ -72,6 +72,49 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
   }
 }
 
+export function saveDraftRevision(filename: string, content: string) {
+  try {
+    const dir = path.resolve(process.cwd(), 'drafts_revisions');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(dir, filename), content, 'utf8');
+    console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename}`);
+  } catch (err) {
+    console.error(`[DRAFTS_REVISIONS] Error saving ${filename}:`, err);
+  }
+}
+
+export function generateStatsMarkdown(stats: any): string {
+  return `# 📊 Generation Statistics: ${stats.lessonTitle}
+
+- **Course Name**: ${stats.courseName}
+- **Lesson Title**: ${stats.lessonTitle}
+- **Lesson Slug**: ${stats.lessonSlug}
+- **Academic Level**: ${stats.level}
+- **Target Language**: ${stats.language.toUpperCase()}
+- **Generation Date**: ${new Date(stats.startTime).toLocaleString()}
+- **Status**: ${stats.status === 'success' ? '✅ SUCCESS' : '❌ FAILED'}
+${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
+
+## ⏱️ Performance Metrics
+- **Total Duration**: ${stats.durationSeconds} seconds
+- **Syllabus Generation Attempts**: ${stats.syllabusAttempts}
+- **Narrative Scribe Attempts**: ${stats.narrativeAttempts}
+- **Narrative Critic Rejections**: ${stats.narrativeRejections}
+- **Widgets Architect Attempts**: ${stats.widgetsAttempts}
+- **Widgets Critic Rejections**: ${stats.widgetsRejections}
+- **MDX Self-Healing Attempts**: ${stats.selfHealingAttempts}
+
+## 🪙 Token & Cost Estimation
+- **Prompt Tokens**: ${stats.tokenMetrics.promptTokens.toLocaleString()}
+- **Candidates Tokens**: ${stats.tokenMetrics.candidatesTokens.toLocaleString()}
+- **Total Tokens**: ${(stats.tokenMetrics.promptTokens + stats.tokenMetrics.candidatesTokens).toLocaleString()}
+- **Estimated Cost (Gemini 2.5 Flash)**: $${((stats.tokenMetrics.promptTokens * 0.075 / 1000000) + (stats.tokenMetrics.candidatesTokens * 0.30 / 1000000)).toFixed(6)}
+  *(Based on official pricing: $0.075 / 1M input tokens, $0.30 / 1M output tokens)*
+`;
+}
+
 async function mapConcurrent<T, R>(
   items: T[],
   concurrency: number,
@@ -1265,6 +1308,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     let parsedSyllabus: any = null;
     let lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = [];
     let courseContext: any = {};
+    let originalSyllabusLessonsLength = 0;
 
     if (taskId && extra && extra.syllabus) {
       await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
@@ -1372,20 +1416,16 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         : (parsedSyllabus.lessons || []);
       courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
 
-      if (process.env.ONLY_FIRST_LESSON === 'true') {
-        lessonsList = lessonsList.slice(0, 1);
-        console.log(`[ONLY_FIRST_LESSON] Sliced lessons list to only generate the first lesson: "${lessonsList[0]?.title}"`);
+      // Export syllabus prompt, schema, and outputs
+      const courseSlug = cleanPathSegment(correctedCourseName);
+      saveDraftRevision(`prompt_stage0_syllabus_${courseSlug}.md`, promptSyllabus);
+      saveDraftRevision(`agent1_2_syllabus_schema.json`, JSON.stringify(syllabusSchema, null, 2));
+      if (rawJson) {
+        saveDraftRevision(`draft_stage0_syllabus_${courseSlug}.json`, rawJson);
       }
-
-      if (!lessonsList || lessonsList.length === 0) {
-        throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model generated an empty or invalid syllabus for course "${correctedCourseName}". Lessons list is empty.`);
+      if (parsedSyllabus) {
+        saveDraftRevision(`final_stage0_syllabus_${courseSlug}.json`, JSON.stringify(parsedSyllabus, null, 2));
       }
-
-      lessonsList.forEach((les: any, idx: number) => {
-        if (!les || typeof les !== 'object' || !les.title || !les.slug) {
-          throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus lesson at index ${idx} is missing a title or slug: ${JSON.stringify(les)}`);
-        }
-      });
 
       // Save the syllabus to the task description to ensure durability on retries
       if (taskId) {
@@ -1419,6 +1459,28 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     }
   }
 
+  // --- Scoping, Slicing & Verification of Syllabus lessons (supports both generated and cached) ---
+  if (!lessonsList || lessonsList.length === 0) {
+    throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus lessons list is empty or invalid for course "${correctedCourseName}".`);
+  }
+
+  lessonsList.forEach((les: any, idx: number) => {
+    if (!les || typeof les !== 'object' || !les.title || !les.slug) {
+      throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus lesson at index ${idx} is missing a title or slug: ${JSON.stringify(les)}`);
+    }
+    les.originalIndex = idx;
+  });
+
+  originalSyllabusLessonsLength = lessonsList.length;
+
+  if (process.env.ONLY_FIRST_LESSON === 'true') {
+    lessonsList = lessonsList.slice(0, 1);
+    console.log(`[ONLY_FIRST_LESSON] Sliced lessons list to only generate the first lesson: "${lessonsList[0]?.title}"`);
+  } else if (process.env.ONLY_SECOND_LESSON === 'true') {
+    lessonsList = lessonsList.slice(1, 2);
+    console.log(`[ONLY_SECOND_LESSON] Sliced lessons list to only generate the second lesson: "${lessonsList[0]?.title}"`);
+  }
+
   await appendTaskLog(`[AI GENERATOR] Syllabus loaded. Total lessons to generate: ${lessonsList.length}. Offset: ${lessonOffset}.`);
 
   let completedLessons = lessonOffset;
@@ -1448,8 +1510,10 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     const usedDatabaseWidgetIds = new Set<string>();
 
     // 2. For each lesson, generate rich MDX content with concurrency limit
-    await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item, index) => {
-      if (index < lessonOffset) {
+    await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item: any, index) => {
+      const realIndex = item.originalIndex !== undefined ? item.originalIndex : index;
+
+      if (realIndex < lessonOffset) {
         console.log(`[INCREMENTAL] Skipping lesson "${item.title}" because it is below the resume offset ${lessonOffset}.`);
         return;
       }
@@ -1470,6 +1534,30 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         console.warn(`[AI GENERATOR] Incremental check failed for "${item.title}", proceeding to generate:`, err);
       }
 
+      const lessonStats = {
+        courseName: correctedCourseName,
+        lessonTitle: item.title,
+        lessonSlug: item.slug,
+        level: level,
+        language: targetLang,
+        startTime: Date.now(),
+        endTime: 0,
+        durationSeconds: 0,
+        syllabusAttempts: 1,
+        narrativeAttempts: 0,
+        narrativeRejections: 0,
+        widgetsAttempts: 0,
+        widgetsRejections: 0,
+        selfHealingAttempts: 0,
+        status: 'pending',
+        error: '',
+        tokenMetrics: {
+          promptTokens: 0,
+          candidatesTokens: 0
+        }
+      };
+
+      try {
       // Helper to call Vertex AI or fallback Gemini 2.5 Flash
       const callAIEngine = async (
         promptText: string,
@@ -1497,6 +1585,10 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const resJson = await res.json();
               resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
               success = true;
+
+              const usage = resJson.usageMetadata || {};
+              lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+              lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
             } else {
               lastError = res ? `HTTP ${res.status} ${res.statusText}` : 'Null Response';
             }
@@ -1525,6 +1617,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 
               const durationMs = Date.now() - startTime;
               const usage = resJson.usageMetadata || {};
+              lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+              lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
               await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, promptText);
             } else {
               lastError = `HTTP ${res.status} ${res.statusText}`;
@@ -1696,10 +1790,16 @@ ${formattedCatalogList}
 - Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
 `;
 
+      // Export Scribe Prompt
+      saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
+
       let narrativeText = await callAIEngine(narrativePrompt, null, 0.3);
 
       // Pre-verifier 1: MDX Text Preprocessor & Cleaner
       let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+
+      lessonStats.narrativeAttempts++;
+      saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_1.md`, cleanedNarrative);
 
       // ───────────────────────────────────────────────────────────────
       // [STAGE 4A] NARRATIVE CRITIC (AGENT 4A)
@@ -1778,6 +1878,8 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
         const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, verificationSchema, 0.1);
+        saveDraftRevision(`critique_stage4a_narrative_${item.slug}_attempt_${narrativeIteration}.json`, critiqueJsonStr);
+
         const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const audit = safeJsonParse(critiqueClean, 'Narrative Critic Audit');
 
@@ -1787,6 +1889,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
         } else {
           const critiqueText = audit?.critique || 'Invalid response from critic.';
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text REJECTED. Critique: ${critiqueText}`);
+          lessonStats.narrativeRejections++;
 
           if (narrativeIteration >= maxNarrativeIterations) {
             await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Max narrative critique loops reached. Moving forward.`);
@@ -1814,8 +1917,12 @@ ${cleanedNarrative}
 Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
 Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
 
+          saveDraftRevision(`prompt_stage1_refiner_${item.slug}_attempt_${narrativeIteration + 1}.md`, narrativeRefinerPrompt);
+
           const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
           cleanedNarrative = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          lessonStats.narrativeAttempts++;
+          saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
         }
       }
 
@@ -1914,19 +2021,26 @@ Your generated JSON must contain the following top-level keys:
 - Ensure all string values are fully written in "${targetLang.toUpperCase()}".
 `;
 
+      // Export Architect Prompt & Schema
+      saveDraftRevision(`prompt_stage2_architect_${item.slug}.md`, widgetsPrompt);
+      saveDraftRevision(`agent3_widgets_schema.json`, JSON.stringify(lessonWidgetsSchema, null, 2));
+
       let parsedWidgets: any = {};
       let widgetsApproved = false;
       let widgetsIteration = 0;
       const maxWidgetsIterations = 3;
 
+      const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.2);
+      lessonStats.widgetsAttempts++;
+      saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
+
+      const cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+      parsedWidgets = safeJsonParse(cleanWidgetsJson, 'WFTA Stage 2 Widgets Parsing');
+      parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+
       while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
         widgetsIteration++;
-        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Designing and validating widgets JSON (Attempt ${widgetsIteration}/${maxWidgetsIterations})...`);
-
-        const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.2);
-        const cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        parsedWidgets = safeJsonParse(cleanWidgetsJson, 'WFTA Stage 2 Widgets Parsing');
-        parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Reviewing widgets JSON (Attempt ${widgetsIteration}/${maxWidgetsIterations})...`);
 
         // --- Programmatic Pre-verifier 2: Curation-First budget & normalization ---
         const dbCatalogKeys = Object.keys(prunedCatalog);
@@ -2046,6 +2160,8 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
         } else {
           const critiqueText = widgetsAudit?.critique || 'Invalid response from widgets critic.';
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON REJECTED. Critique: ${critiqueText}`);
+          lessonStats.widgetsRejections++;
+          saveDraftRevision(`critique_stage4b_widgets_${item.slug}_attempt_${widgetsIteration}.json`, widgetsAuditStr);
 
           if (widgetsIteration >= maxWidgetsIterations) {
             await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Max widgets critique loops reached. Moving forward with current widgets.`);
@@ -2075,7 +2191,12 @@ ${approvedNarrativeText}
 
 Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.`;
 
+          saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
+
           const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.2);
+          lessonStats.widgetsAttempts++;
+          saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
+
           const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
           parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
           parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
@@ -2086,7 +2207,7 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
       // [STAGE 3] DETERMINISTIC STITCHING ENGINE
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 3] Stitching narrative and widgets programmatically...`);
-      const isLastLesson = index === lessonsList.length - 1;
+      const isLastLesson = realIndex === originalSyllabusLessonsLength - 1;
       let currentMdx = stitchLessonContent(approvedNarrativeText, parsedWidgets);
 
       // De-hallucinate bibliography links against Crossref / Google Books
@@ -2098,7 +2219,7 @@ title: "${item.title}"
 subject: "${correctedCourseName}"
 level: "${level}"
 module: "${item.title}"
-order: ${index + 1}${isLastLesson ? '\nsummative: true' : ''}
+order: ${realIndex + 1}${isLastLesson ? '\nsummative: true' : ''}
 ---
 
 ${validatedMdx}`;
@@ -2125,6 +2246,7 @@ ${validatedMdx}`;
         const maxHealAttempts = 3;
         while (!mdxCheck.success && healAttempt < maxHealAttempts) {
           healAttempt++;
+          lessonStats.selfHealingAttempts++;
           console.log(`[SELF-HEALING] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
           healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
           mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
@@ -2169,10 +2291,35 @@ ${validatedMdx}`;
         lang: targetLang.toLowerCase(),
         title: item.title,
         content: resolvedMdx,
-        order: index + 1
+        order: realIndex + 1
       });
       await updateTaskProgress(item.title);
-    });
+
+      // Record success status & final saves
+      lessonStats.status = 'success';
+      lessonStats.endTime = Date.now();
+      lessonStats.durationSeconds = Math.round((lessonStats.endTime - lessonStats.startTime) / 1000);
+
+      saveDraftRevision(`final_stage1_narrative_${item.slug}.md`, approvedNarrativeText);
+      saveDraftRevision(`final_stage2_widgets_${item.slug}.json`, JSON.stringify(parsedWidgets, null, 2));
+      saveDraftRevision(`final_stage3_stitched_${item.slug}.mdx`, resolvedMdx);
+
+      saveDraftRevision(`stats_${item.slug}.json`, JSON.stringify(lessonStats, null, 2));
+      saveDraftRevision(`stats_${item.slug}.md`, generateStatsMarkdown(lessonStats));
+
+    } catch (err: any) {
+      lessonStats.status = 'failed';
+      lessonStats.error = err instanceof Error ? err.message : String(err);
+      lessonStats.endTime = Date.now();
+      lessonStats.durationSeconds = Math.round((lessonStats.endTime - lessonStats.startTime) / 1000);
+
+      // Save stats on failure
+      saveDraftRevision(`stats_${item.slug}.json`, JSON.stringify(lessonStats, null, 2));
+      saveDraftRevision(`stats_${item.slug}.md`, generateStatsMarkdown(lessonStats));
+
+      throw err;
+    }
+  });
 
     // Save/Update the Course card in the database
     try {

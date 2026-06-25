@@ -339,7 +339,7 @@ export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?
       <ul className="space-y-4">
         {healedItems.map((item, i) => (
           <li key={i} className="flex items-start gap-4 text-slate-400 group">
-            <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-600 group-hover:scale-150 transition-transform" />
+            <div className="mt-2 w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0 group-hover:scale-150 transition-transform" />
             <span className="leading-relaxed">{item}</span>
           </li>
         ))}
