@@ -37,11 +37,11 @@ Before claiming any task from the queue, the SQL function now checks how many ta
 
 ### Configuration
 
-Set the `maxConcurrentWorkers` key in the `system_parameters` table:
+Set the `maxParallelTasks` key in the `system_parameters` table:
 
 ```sql
 INSERT INTO public.system_parameters (key, value)
-VALUES ('maxConcurrentWorkers', '2')
+VALUES ('maxParallelTasks', '2')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 ```
 
@@ -156,7 +156,7 @@ INTER_LESSON_DELAY_MS=2000
 ```
 And in DB:
 ```sql
-UPDATE public.system_parameters SET value = '3' WHERE key = 'maxConcurrentWorkers';
+UPDATE public.system_parameters SET value = '3' WHERE key = 'maxParallelTasks';
 ```
 
 ---
@@ -167,7 +167,7 @@ UPDATE public.system_parameters SET value = '3' WHERE key = 'maxConcurrentWorker
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer                 │ Parameter              │ Default   │
 ├─────────────────────────────────────────────────────────────┤
-│  1. SQL concurrency    │ maxConcurrentWorkers   │ 2         │
+│  1. SQL concurrency    │ maxParallelTasks       │ 2         │
 │  2. Token bucket RPM  │ VERTEX_RATE_LIMIT_RPM  │ 8         │
 │  3. Inter-lesson wait  │ INTER_LESSON_DELAY_MS  │ 5000 ms   │
 │  4. Backoff (auto)     │ (not configurable)     │ 2→5→12.5s │
