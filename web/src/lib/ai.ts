@@ -1372,6 +1372,11 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         : (parsedSyllabus.lessons || []);
       courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
 
+      if (process.env.ONLY_FIRST_LESSON === 'true') {
+        lessonsList = lessonsList.slice(0, 1);
+        console.log(`[ONLY_FIRST_LESSON] Sliced lessons list to only generate the first lesson: "${lessonsList[0]?.title}"`);
+      }
+
       if (!lessonsList || lessonsList.length === 0) {
         throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model generated an empty or invalid syllabus for course "${correctedCourseName}". Lessons list is empty.`);
       }
@@ -1559,6 +1564,29 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 
       const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
+
+=============================================================================
+⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE) ⚠️
+To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
+
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
+   - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, or <FillInBlanks>) in your prose.
+   - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <Artwork>, <Location>, and <EventLink>.
+
+2. NO RAW HTML FOR LISTS:
+   - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
+   - Exclusively use standard Markdown bullet points (- or *) or numbered lists (1.). Mixing HTML tags with markdown text inside lists crashes the parser.
+
+3. NO LITERAL CURLY BRACES IN PLAIN TEXT:
+   - Literal { and } characters in normal text are parsed as JSX expressions.
+   - For math equations, always wrap curly braces inside LaTeX delimiters: $ \\{x \\in \\mathbb{R}\\} $ or $$ \\{a, b\\} $$.
+   - For normal text, wrap curly braces in inline code backticks: \`{x}\` or use HTML entities &#123; and &#125;.
+
+4. NO STRAY import/export STATEMENTS:
+   - Never write "import " or "export " at the beginning of a line in normal text.
+   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`\`).
+=============================================================================
 
 ---
 
@@ -1769,6 +1797,12 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 The narrative critic (Agent 4A) has rejected your previously generated academic narrative text.
 You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
 
+⚠️ CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
+- Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].
+- Do NOT use raw HTML tags (<ul>, <ol>, <li>) for lists; use standard Markdown instead.
+- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $$ \\{...\\} $$.
+- Never write "import " or "export " at the start of a line in plain prose.
+
 CRITIQUE FROM AGENT 4A:
 "${critiqueText}"
 
@@ -1794,6 +1828,15 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
 
       const widgetsPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to parse the approved academic narrative draft of the lesson, extract all custom and standard bracketed widget anchors (\`[[WIDGET:id]]\`), and generate a valid JSON object conforming strictly to the requested \`lessonWidgetsSchema\` to fully define each anchor.
+
+=============================================================================
+⚠️ CRITICAL DATA INTEGRITY & MDX SAFETY RULES ⚠️
+To ensure that the generated JSON translates to correct MDX attributes:
+
+1. NO RAW CODE IN ANCHORS OR PROPS:
+   - Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
+   - Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+=============================================================================
 
 ---
 
@@ -2012,6 +2055,10 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
           const widgetsRefinerPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 The widgets critic (Agent 4B) has rejected your previously generated widgets JSON.
 You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
+
+⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
+- Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
+- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
 
 CRITIQUE FROM AGENT 4B:
 "${critiqueText}"

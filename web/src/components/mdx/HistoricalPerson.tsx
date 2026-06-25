@@ -16,6 +16,58 @@ export interface EntityLinkProps {
   href?: string;
 }
 
+const getLocalizedName = (name: string, lang: string): string => {
+  const clean = (name || '').trim().replace(/_/g, ' ');
+  const langCode = (lang || 'en').toLowerCase().trim();
+  if (langCode === 'fr') {
+    const frMap: Record<string, string> = {
+      'Plato': 'Platon',
+      'Aristotle': 'Aristote',
+      'Socrates': 'Socrate',
+      'Alexander the Great': 'Alexandre_le_Grand',
+      'Julius Caesar': 'Jules_César',
+      'Augustus': 'Auguste',
+      'Charlemagne': 'Charlemagne',
+      'Joan of Arc': 'Jeanne_d\'Arc',
+      'Christopher Columbus': 'Christophe_Colomb',
+      'Galileo Galilei': 'Galilée_(savant)',
+      'Galileo': 'Galilée_(savant)',
+      'Copernicus': 'Nicolas_Copernic',
+      'Nicolaus Copernicus': 'Nicolas_Copernic',
+      'Thomas Aquinas': 'Thomas_d\'Aquin',
+      'Augustin Cournot': 'Antoine-Augustin_Cournot',
+      'Antoine-Augustin Cournot': 'Antoine-Augustin_Cournot',
+      'Augustin_Cournot': 'Antoine-Augustin_Cournot',
+      'Cournot': 'Antoine-Augustin_Cournot',
+      'John Nash': 'John_Nash_(mathématicien)',
+      'John_Nash': 'John_Nash_(mathématicien)',
+      'Nash': 'John_Nash_(mathématicien)',
+      'John von Neumann': 'John_von_Neumann',
+      'von Neumann': 'John_von_Neumann',
+      'Oskar Morgenstern': 'Oskar_Morgenstern',
+      'Émile Borel': 'Émile_Borel',
+      'Borel': 'Émile_Borel',
+      'Ernst Zermelo': 'Ernst_Zermelo',
+      'Zermelo': 'Ernst_Zermelo',
+      'Reinhard Selten': 'Reinhard_Selten',
+      'John Harsanyi': 'John_Harsanyi',
+      'John Maynard Smith': 'John_Maynard_Smith',
+      'Maynard Smith': 'John_Maynard_Smith',
+      'Richard Dawkins': 'Richard_Dawkins',
+      'Herbert A. Simon': 'Herbert_Simon',
+      'Herbert Simon': 'Herbert_Simon',
+      'Adam Smith': 'Adam_Smith',
+      'Thomas Hobbes': 'Thomas_Hobbes',
+      'John Locke': 'John_Locke',
+      'Jean-Jacques Rousseau': 'Jean-Jacques_Rousseau',
+      'Gottfried Wilhelm Leibniz': 'Gottfried_Wilhelm_Leibniz',
+      'Leibniz': 'Gottfried_Wilhelm_Leibniz'
+    };
+    if (frMap[clean]) return frMap[clean];
+  }
+  return name;
+};
+
 export const EntityLink = ({ 
   name, 
   lang, 
@@ -46,7 +98,8 @@ export const EntityLink = ({
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  const cleanName = (name || '').trim();
+  const localizedName = getLocalizedName(name, activeLang);
+  const cleanName = (localizedName || '').trim();
   const langCode = (activeLang || 'en').toLowerCase().trim();
   const fallbackUrl = exists === false
     ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanName)}`
@@ -57,7 +110,7 @@ export const EntityLink = ({
   const resolvedSummary = summary || staticBio;
 
   useEffect(() => {
-    if (!name || !activeLang) {
+    if (!cleanName || !activeLang) {
       return;
     }
 
@@ -65,7 +118,7 @@ export const EntityLink = ({
     const fetchWiki = async () => {
       try {
         const langCode = activeLang.toLowerCase().trim();
-        const formattedName = name.trim().replace(/ /g, '_');
+        const formattedName = cleanName.replace(/ /g, '_');
         const wikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
         
         const res = await fetch(wikiUrl);
@@ -80,7 +133,7 @@ export const EntityLink = ({
           if (isMounted) setExists(false);
         }
       } catch (e) {
-        console.warn(`[WIKIPEDIA] Failed to fetch summary for ${name}:`, e);
+        console.warn(`[WIKIPEDIA] Failed to fetch summary for ${cleanName}:`, e);
         if (isMounted) setExists(false);
       }
     };
@@ -89,7 +142,7 @@ export const EntityLink = ({
     return () => {
       isMounted = false;
     };
-  }, [name, activeLang]);
+  }, [cleanName, activeLang]);
 
   const showOverlay = !!name;
   if (!showOverlay) {

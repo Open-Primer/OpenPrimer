@@ -411,16 +411,39 @@ const Attitudes = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+Knowledge.displayName = 'Knowledge';
+(Knowledge as any).isKnowledge = true;
+
+Skills.displayName = 'Skills';
+(Skills as any).isSkills = true;
+
+Attitudes.displayName = 'Attitudes';
+(Attitudes as any).isAttitudes = true;
+
 const Objectives = ({ children }: { children: React.ReactNode }) => {
   if (isChildrenEmpty(children)) return null;
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase() as keyof typeof STATIC_UI_STRINGS;
   const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
 
+  const isStructuredBox = (child: any): boolean => {
+    if (!React.isValidElement(child)) return false;
+    const type = child.type;
+    if (!type) return false;
+    if (type === Knowledge || type === Skills || type === Attitudes) return true;
+    if (type === 'Knowledge' || type === 'Skills' || type === 'Attitudes') return true;
+    if ((type as any).mdxType === 'Knowledge' || (type as any).mdxType === 'Skills' || (type as any).mdxType === 'Attitudes') return true;
+    if ((child.props as any)?.mdxType === 'Knowledge' || (child.props as any)?.mdxType === 'Skills' || (child.props as any)?.mdxType === 'Attitudes') return true;
+    if (typeof type === 'function') {
+      if (type.name === 'Knowledge' || type.name === 'Skills' || type.name === 'Attitudes') return true;
+      if ((type as any).isKnowledge || (type as any).isSkills || (type as any).isAttitudes) return true;
+      if ((type as any).displayName === 'Knowledge' || (type as any).displayName === 'Skills' || (type as any).displayName === 'Attitudes') return true;
+    }
+    return false;
+  };
+
   const childrenArray = React.Children.toArray(children);
-  const hasStructuredBoxes = childrenArray.some(
-    child => React.isValidElement(child) && (child.type === Knowledge || child.type === Skills || child.type === Attitudes)
-  );
+  const hasStructuredBoxes = childrenArray.some(isStructuredBox);
 
   let renderedContent: React.ReactNode;
 
@@ -428,7 +451,7 @@ const Objectives = ({ children }: { children: React.ReactNode }) => {
     // Ensure at least one structured box has visible, non-empty children
     const hasAnyContent = childrenArray.some(child => {
       if (React.isValidElement(child)) {
-        if (child.type === Knowledge || child.type === Skills || child.type === Attitudes) {
+        if (isStructuredBox(child)) {
           return !isChildrenEmpty((child.props as any)?.children);
         }
         return !isChildrenEmpty(child);
