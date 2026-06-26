@@ -635,7 +635,7 @@ export const OralEvaluation = ({
         </div>
         <div className="space-y-2">
           <h3 className="text-xl font-bold text-white">{t.title}</h3>
-          <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
+          <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
         {/* Dynamic Aids/Rules Card if Final */}
@@ -678,12 +678,18 @@ export const OralEvaluation = ({
         )}
 
         {/* Pre-flight Checklist */}
-        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
-          <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">💡 Checklist de préparation</p>
-          <ul className="list-disc list-inside space-y-2 leading-relaxed text-xs text-slate-300">
+        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-1.5">
+          <p className="font-black text-slate-400 uppercase tracking-widest text-xs">💡 Checklist de préparation</p>
+          <ul className="list-disc list-inside space-y-1 leading-relaxed text-sm text-slate-300">
             <li>Trouvez un endroit calme sans bruits parasites.</li>
             <li>Testez votre microphone et parlez distinctement.</li>
-            <li>{actualDurationLimit ? t.time_focus.replace('{time}', formatDurationText(actualDurationLimit)) : t.time_focus_default}</li>
+            <li>
+              {language === 'FR' ? "Assurez-vous d'avoir un peu plus de temps que nécessaire pour répondre aux questions."
+                : language === 'ES' ? "Asegúrese de tener un poco más de temps de lo nécessaire para responder a las preguntas."
+                : language === 'DE' ? "Stellen Sie sicher, dass Sie etwas mehr Zeit als nötig haben, um die Fragen zu beantworten."
+                : language === 'ZH' ? "请确保您有比回答问题所需稍微多一点的时间。"
+                : "Ensure you have a bit more time than necessary to answer the questions."}
+            </li>
             {isFinal && (
               <li className="text-red-400 font-bold border-t border-rose-500/10 pt-2 mt-2 list-none flex items-center gap-1.5">
                 <span>{t.summative_single_attempt_warning}</span>
@@ -693,9 +699,9 @@ export const OralEvaluation = ({
         </div>
 
         {/* Evaluation Format */}
-        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-2.5 text-xs text-slate-300">
-          <p className="font-black text-violet-400 uppercase tracking-widest text-[10px]">🎙️ Modalités de l'oral</p>
-          <div className="space-y-2">
+        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left max-w-md mx-auto space-y-1.5 text-sm text-slate-300">
+          <p className="font-black text-violet-400 uppercase tracking-widest text-xs">🎙️ Modalités de l'oral</p>
+          <div className="space-y-1">
             <div className="flex items-start gap-2">
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>Reconnaissance vocale en temps réel (Speech-to-Text) + Enregistrement audio</span>

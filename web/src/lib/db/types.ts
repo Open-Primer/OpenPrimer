@@ -305,6 +305,7 @@ export interface DatabaseService {
   deleteTranslationEmail(id: string): Promise<{ data: null; error: any }>;
   cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: any }>;
   getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: any }>;
+  getFirstLessonSlug(courseSlug: string, lang: string): Promise<{ data: string | null; error: any }>;
   saveLesson(lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }): Promise<{ data: any; error: any }>;
   getSyllabus(id: string): Promise<{ data: MockCourse | null; error: any }>;
   getAllCourses(): Promise<{ data: MockCourse[] | null; error: any }>;

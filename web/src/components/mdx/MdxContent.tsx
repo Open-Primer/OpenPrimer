@@ -15,6 +15,7 @@ import { Prerequisites } from './Prerequisites';
 import { Epistemology } from './Epistemology';
 import { DiagnosticQuiz } from './DiagnosticQuiz';
 import { AudioPlayer } from './AudioPlayer';
+import { PronunciationSandbox } from './PronunciationSandbox';
 import { References } from './References';
 import { BiophysicsSimulator } from './BiophysicsSimulator';
 import { CardSort } from './CardSort';
@@ -59,39 +60,122 @@ import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { dbService } from '@/lib/db';
 import { MdxStatusProvider, useMdxStatus } from './MdxStatusContext';
-
 const DEGRADED_STRINGS = {
   EN: {
     bannerTitle: "Degraded Mode Active",
     bannerDesc: "Some multimedia elements or interactive widgets could not be loaded or were restricted for pedagogical integrity. The lesson remains fully readable.",
+    unavailableElementsLabel: "Unavailable elements:",
     assets: {
       image: "illustrations / figures",
       video: "videos",
       audio: "audio tracks",
       quiz: "interactive quizzes",
       widget: "interactive tools",
+      entity: "encyclopedic links / overlays",
     }
   },
   FR: {
     bannerTitle: "Mode Dégradé Actif",
     bannerDesc: "Certains éléments multimédias ou widgets interactifs n'ont pas pu être chargés ou ont été restreints par intégrité pédagogique. La leçon reste entièrement lisible.",
+    unavailableElementsLabel: "Éléments absents :",
     assets: {
       image: "illustrations / schémas",
       video: "vidéos",
       audio: "pistes audio",
       quiz: "quiz interactifs",
       widget: "outils interactifs",
+      entity: "liens encyclopédiques",
     }
   },
   ES: {
     bannerTitle: "Modo Degradado Activo",
     bannerDesc: "Algunos elementos multimedia o widgets interactivos no se pudieron cargar o fueron restringidos por integridad pedagógica. La lección sigue siendo completamente legible.",
+    unavailableElementsLabel: "Elementos omitidos :",
     assets: {
       image: "ilustraciones / figuras",
       video: "videos",
       audio: "pistas de audio",
       quiz: "cuestionarios interactivos",
       widget: "herramientas interactivas",
+      entity: "enlaces enciclopédicos",
+    }
+  },
+  DE: {
+    bannerTitle: "Eingeschränkter Modus aktiv",
+    bannerDesc: "Einige Multimedia-Elemente oder interaktive Widgets konnten nicht geladen werden oder wurden aus Gründen der pädagogischen Integrität eingeschränkt. Die Lektion bleibt vollständig lesbar.",
+    unavailableElementsLabel: "Fehlende Elemente:",
+    assets: {
+      image: "Illustrationen / Grafiken",
+      video: "Videos",
+      audio: "Audiotracks",
+      quiz: "Interaktive Quizzes",
+      widget: "Interaktive Tools",
+      entity: "Enzyklopädische Links / Overlays",
+    }
+  },
+  ZH: {
+    bannerTitle: "服务降级模式已激活",
+    bannerDesc: "某些多媒体元素或交互式小部件无法加载，或因保证教学完整性而被限制。本课程仍可完全正常阅读。",
+    unavailableElementsLabel: "缺失元素：",
+    assets: {
+      image: "插图 / 图表",
+      video: "视频",
+      audio: "音频轨道",
+      quiz: "交互式测验",
+      widget: "交互式工具",
+      entity: "百科链接 / 悬浮窗",
+    }
+  },
+  PT: {
+    bannerTitle: "Modo Degradado Ativo",
+    bannerDesc: "Alguns elementos multimédia ou widgets interativos não puderam ser carregados ou foram restringidos por integridade pedagógica. A lição permanece completamente legível.",
+    unavailableElementsLabel: "Elementos em falta:",
+    assets: {
+      image: "ilustrações / figuras",
+      video: "vídeos",
+      audio: "faixas de áudio",
+      quiz: "questionários interativos",
+      widget: "ferramentas interativas",
+      entity: "ligações enciclopédicas / popups",
+    }
+  },
+  AR: {
+    bannerTitle: "وضع التشغيل المتراجع نشط",
+    bannerDesc: "تعذر تحميل بعض العناصر متعددة الوسائط أو الأدوات التفاعلية أو تم تقييدها حفاظًا على السلامة التعليمية. تظل الحصة قابلة للقراءة بالكامل.",
+    unavailableElementsLabel: "العناصر غير المتوفرة:",
+    assets: {
+      image: "الرسوم التوضيحية / الأشكال",
+      video: "الفيديوهات",
+      audio: "المقاطع الصوتية",
+      quiz: "الاختبارات التفاعلية",
+      widget: "الأدوات التفاعلية",
+      entity: "روابط موسوعية / نوافذ منبثقة",
+    }
+  },
+  HI: {
+    bannerTitle: "सीमित मोड सक्रिय",
+    bannerDesc: "कुछ मल्टीमीडिया तत्व या इंटरैक्टिव विजेट लोड नहीं किए जा सके या शैक्षणिक अखंडता के लिए प्रतिबंधित कर दिए गए। पाठ पूरी तरह से पढ़ने योग्य है।",
+    unavailableElementsLabel: "अनुपलब्ध तत्व:",
+    assets: {
+      image: "चित्र / रेखांकन",
+      video: "वीडियो",
+      audio: "ऑडियो ट्रैक",
+      quiz: "इंटरैक्टिव प्रश्नोत्तरी",
+      widget: "इंटरैक्टिव उपकरण",
+      entity: "ज्ञानकोश लिंक / ओवरले",
+    }
+  },
+  UR: {
+    bannerTitle: "محدود موڈ فعال ہے",
+    bannerDesc: "کچھ ملٹی میڈیا عناصر یا انٹرایکٹو ویجٹ لوڈ نہیں کیے جا سکے یا تدریسی سالمیت کی وجہ سے محدود کر دیے گئے۔ سبق مکمل طور پر پڑھنے کے قابل ہے۔",
+    unavailableElementsLabel: "غیر دستیاب عناصر:",
+    assets: {
+      image: "تصاویر / خاکے",
+      video: "ویڈیوز",
+      audio: "آڈیو ٹریکس",
+      quiz: "انٹرایکٹو کوئز",
+      widget: "انٹرایکٹو ٹولز",
+      entity: "انسائیکلوپیڈیا لنکس",
     }
   }
 };
@@ -102,8 +186,8 @@ function DegradedModeBanner() {
   
   if (!isDegraded) return null;
   
-  const langKey = (language?.toUpperCase() === 'FR' || language?.toUpperCase() === 'ES') ? language.toUpperCase() : 'EN';
-  const strings = DEGRADED_STRINGS[langKey as 'EN' | 'FR' | 'ES'] || DEGRADED_STRINGS.EN;
+  const langKey = language?.toUpperCase() || 'EN';
+  const strings = DEGRADED_STRINGS[langKey as keyof typeof DEGRADED_STRINGS] || DEGRADED_STRINGS.EN;
   
   const formattedReasons = Array.from(degradedReasons)
     .map(r => strings.assets[r as keyof typeof strings.assets] || r)
@@ -123,7 +207,7 @@ function DegradedModeBanner() {
           {formattedReasons && (
             <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-slate-400">
-                {langKey === 'FR' ? 'Éléments absents :' : langKey === 'ES' ? 'Elementos omitidos :' : 'Unavailable elements:'}
+                {strings.unavailableElementsLabel}
               </span>
               {Array.from(degradedReasons).map(reason => {
                 const label = strings.assets[reason as keyof typeof strings.assets] || reason;
@@ -316,9 +400,24 @@ const isExistingArtwork = (src: string, label: string): boolean => {
   return keywords.some(kw => decoded.includes(kw));
 };
 
-const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string }) => {
+const FIGURE_STRINGS: Record<string, string> = {
+  EN: "Figure",
+  FR: "Figure",
+  ES: "Figura",
+  DE: "Abbildung",
+  ZH: "图"
+};
+
+const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean }) => {
   const [failed, setFailed] = React.useState(false);
-  const { markDegraded } = useMdxStatus();
+  const { markDegraded, registerFigure, unregisterFigure, registeredFigures } = useMdxStatus();
+  const { language } = useLanguage();
+
+  const idRef = React.useRef<string | null>(null);
+  if (!idRef.current) {
+    idRef.current = Math.random().toString(36).substr(2, 9);
+  }
+  const id = idRef.current;
   
   const isBlocked = src && src.includes('pollinations.ai') && isExistingArtwork(src, alt || caption || '');
 
@@ -326,15 +425,37 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: s
     setFailed(false);
   }, [src]);
 
+  const isVisible = !unresolved && !isBlocked && !failed && !!src;
+
   React.useEffect(() => {
-    if (isBlocked || failed) {
+    if (isVisible) {
+      registerFigure(id);
+    } else {
+      unregisterFigure(id);
+    }
+    return () => {
+      unregisterFigure(id);
+    };
+  }, [id, isVisible, registerFigure, unregisterFigure]);
+
+  React.useEffect(() => {
+    if (unresolved || isBlocked || failed) {
       markDegraded('image');
     }
-  }, [isBlocked, failed, markDegraded]);
+  }, [unresolved, isBlocked, failed, markDegraded]);
 
-  if (isBlocked || failed) {
+  if (unresolved || isBlocked || failed) {
     return null;
   }
+
+  const langKey = (language || 'EN').toUpperCase();
+  const figureLabel = FIGURE_STRINGS[langKey] || FIGURE_STRINGS.EN;
+
+  const figureIndex = registeredFigures.indexOf(id);
+  const figureNumber = figureIndex !== -1 ? figureIndex + 1 : null;
+
+  const cleanCaption = caption ? caption.replace(/^Figure\s*\d+\s*[:\-]\s*/i, '') : '';
+  const finalCaption = figureNumber !== null ? `${figureLabel} ${figureNumber}: ${cleanCaption}` : caption;
 
   return (
     <div className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300">
@@ -344,7 +465,7 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl }: { src: s
         className="rounded-2xl max-w-full h-auto max-h-[450px] object-contain shadow-md border border-slate-900/10 dark:border-slate-800/50" 
         onError={() => setFailed(true)} 
       />
-      {caption && <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4 select-none">{caption}</p>}
+      {finalCaption && <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4 select-none">{finalCaption}</p>}
       {fallbackText && fallbackUrl && (
         <p className="text-center text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors select-none">
           <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">{fallbackText}</a>
@@ -1510,6 +1631,8 @@ const components = {
   Video,
   AudioPlayer,
   Audio: AudioPlayer,
+  PronunciationSandbox,
+  SandboxPrononciation: PronunciationSandbox,
   Explanation,
   Solution,
   KeyConcept,
@@ -1647,16 +1770,27 @@ const components = {
   a: (props: any) => {
     const href = props.href;
     const isExternal = href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//'));
+    
+    let children = props.children;
+    if (typeof children === 'string') {
+      const trimmed = children.trim();
+      if (trimmed.toLowerCase() === 'read more on wikipedia') {
+        children = 'Wikipedia';
+      }
+    }
+
     if (isExternal) {
       return (
         <a
           {...props}
           target="_blank"
           rel="noopener noreferrer"
-        />
+        >
+          {children}
+        </a>
       );
     }
-    return <a {...props} />;
+    return <a {...props}>{children}</a>;
   },
 
   img: MdxImage,

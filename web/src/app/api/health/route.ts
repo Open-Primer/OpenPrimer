@@ -346,5 +346,8 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json([db, email, ai, images]);
+  const response = NextResponse.json([db, email, ai, images]);
+  const country = request.headers.get('x-vercel-ip-country') || request.headers.get('cf-ipcountry') || 'FR';
+  response.headers.set('x-user-country', country);
+  return response;
 }

@@ -137,6 +137,13 @@ This lesson covers:
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
   },
 
+  getFirstLessonSlug: async (courseSlug: string, lang: string) => {
+    if (courseSlug === 'Classical_Mechanics') {
+      return { data: 'newtons_laws_of_motion', error: null };
+    }
+    return { data: 'introduction', error: null };
+  },
+
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database saving") };
   },

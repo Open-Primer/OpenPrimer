@@ -127,6 +127,59 @@ export default function CurriculumPage() {
   };
 
 
+  const navigateToCourseDirect = async (c: any) => {
+    const slug = c.slug;
+    if (!slug) {
+      window.location.href = '/catalog';
+      return;
+    }
+    
+    // Check supported languages
+    if (c.languages && c.languages.length > 0) {
+      const currentLangLower = lang.toLowerCase();
+      const supportsCurrentLang = c.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+      if (!supportsCurrentLang) {
+        const newLang = c.languages[0].toUpperCase();
+        setLang(newLang);
+      }
+    }
+
+    let resolvedSlug = 'introduction';
+    try {
+      const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(c.slug, lang);
+      if (firstLessonSlug) {
+        resolvedSlug = firstLessonSlug;
+      }
+    } catch (err) {
+      console.error("Error fetching first lesson slug:", err);
+    }
+
+    let level = c.level || 'L1';
+    let subject = c.subject || 'General';
+    let targetSlug = c.slug;
+
+    if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
+      level = 'L1'; subject = 'Physics'; targetSlug = 'Classical_Mechanics';
+    } else if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
+      level = 'L2'; subject = 'Physics'; targetSlug = 'Physique_Test_L2';
+    } else if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
+      level = 'L1'; subject = 'Biology'; targetSlug = 'Cell_Biology';
+    } else if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
+      level = 'L1'; subject = 'Biology'; targetSlug = 'Biologie_Test_L1';
+    } else if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
+      level = 'L1'; subject = 'Law'; targetSlug = 'Droit_Test';
+    } else if (slug === 'Maths_Test' || c.id === 7) {
+      level = 'L1'; subject = 'Mathematics'; targetSlug = 'Maths_Test';
+    } else if (slug === 'Maths_Test_L1' || c.id === 8) {
+      level = 'L1'; subject = 'Mathematics'; targetSlug = 'Maths_Test_L1';
+    } else if (slug === 'Statistics' || c.id === 11) {
+      level = 'L1'; subject = 'Mathematics'; targetSlug = 'Statistics';
+    }
+
+    window.location.href = `/${cleanPathSegment(level)}/${cleanPathSegment(subject)}/${targetSlug}/${resolvedSlug}`;
+  };
+
+
   const getCoursePath = (c: any) => {
     const slug = c.slug;
     if (!slug) return '/catalog';
@@ -1054,9 +1107,9 @@ export default function CurriculumPage() {
                        return (
                           <div 
                             key={course.id} 
-                            onClick={() => { 
+                            onClick={async () => { 
                               handleCourseClick(courseDetails || course); 
-                              window.location.href = getCoursePath(courseDetails || course); 
+                              await navigateToCourseDirect(courseDetails || course); 
                             }} 
                             className="group cursor-pointer" 
                           >
@@ -1306,9 +1359,9 @@ export default function CurriculumPage() {
                         return (
                           <div 
                             key={course.id} 
-                            onClick={() => { 
+                            onClick={async () => { 
                               handleCourseClick(courseDetails || course); 
-                              window.location.href = getCoursePath(courseDetails || course); 
+                              await navigateToCourseDirect(courseDetails || course); 
                             }} 
                             className="group cursor-pointer" 
                           >
@@ -1500,10 +1553,10 @@ export default function CurriculumPage() {
                             <div className="flex items-center gap-2 pt-6 border-t border-slate-800/50 mt-auto w-full">
                               {/* 1. Main Action Button: Poursuivre / Continuer / Commencer */}
                               <button 
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  window.location.href = `/${recCourse.level}/${recCourse.subject}/${recCourse.slug}/introduction`;
+                                  await navigateToCourseDirect(recCourse);
                                 }}
                                 className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2 cursor-pointer"
                               >
@@ -1886,7 +1939,7 @@ export default function CurriculumPage() {
                                     }
                                     handleCourseClick(cc);
                                     setSelectedCurriculumForDrillDown(null);
-                                    window.location.href = getCoursePath(cc);
+                                    await navigateToCourseDirect(cc);
                                   }}
                                   className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:scale-105 cursor-pointer"
                                 >
@@ -2119,9 +2172,20 @@ export default function CurriculumPage() {
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               
+              let resolvedSlug = 'introduction';
+              try {
+                const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(courseToOpen.slug, lang);
+                if (firstLessonSlug) {
+                  resolvedSlug = firstLessonSlug;
+                }
+              } catch (err) {
+                console.error("Error fetching first lesson slug:", err);
+              }
+              const targetPath = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/${resolvedSlug}`;
+
               setTimeout(() => {
                 setEnrollmentSuccess(false);
-                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+                window.location.href = targetPath;
               }, 2000);
             }}
           />

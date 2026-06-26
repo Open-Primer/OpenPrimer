@@ -1732,8 +1732,45 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1] Drafting academic narrative text for lesson "${item.title}"...`);
 
+      let pronunciationMandate = "";
+      const isLanguageOrLinguistics = (courseContext.discipline || '').toLowerCase().includes('lang') || 
+                                      (courseContext.discipline || '').toLowerCase().includes('linguistic') ||
+                                      correctedCourseName.toLowerCase().includes('espagnol') ||
+                                      correctedCourseName.toLowerCase().includes('semantique') ||
+                                      correctedCourseName.toLowerCase().includes('sémantique') ||
+                                      item.title.toLowerCase().includes('son') ||
+                                      item.title.toLowerCase().includes('prononciation') ||
+                                      item.title.toLowerCase().includes('phonet') ||
+                                      item.title.toLowerCase().includes('phonét');
+
+      if (isLanguageOrLinguistics) {
+        if (targetLang.toLowerCase() === 'fr') {
+          pronunciationMandate = `
+=============================================================================
+🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
+Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
+<SandboxPrononciation />
+at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
+Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <SandboxPrononciation />.
+=============================================================================
+`;
+        } else {
+          pronunciationMandate = `
+=============================================================================
+🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
+Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
+<PronunciationSandbox />
+at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
+Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <PronunciationSandbox />.
+=============================================================================
+`;
+        }
+      }
+
       const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
+
+${pronunciationMandate}
 
 =============================================================================
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE) ⚠️
@@ -1742,7 +1779,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
    - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, or <FillInBlanks>) in your prose.
    - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. Note: <SandboxPrononciation /> (for French lessons) and <PronunciationSandbox /> (for English lessons) are explicitly allowed and highly recommended to be written as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
 
 2. NO RAW HTML FOR LISTS:
    - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
@@ -1936,7 +1973,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
      - \`[[WIDGET:whatsNext]]\` (at the very end of conclusion)
      - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
    - Verify that there are **at least 1 to 2** custom interactive anchors (e.g. \`[[WIDGET:my_plot]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
-   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, or \`<Mermaid>\`). They must exclusively use bracketed anchors.
+   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, or \`<Mermaid>\`). They must exclusively use bracketed anchors. Note: <SandboxPrononciation /> and <PronunciationSandbox /> are explicitly allowed as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
 4. **Author Quotes & In-text Citations**:
    - Verify that the text integrates high-impact quotes formatted exactly as:
      > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
@@ -1988,6 +2025,8 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
           const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 The narrative critic (Agent 4A) has rejected your previously generated academic narrative text.
 You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
+
+${pronunciationMandate}
 
 ⚠️ CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
 - Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].

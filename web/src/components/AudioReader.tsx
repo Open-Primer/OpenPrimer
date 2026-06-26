@@ -1544,6 +1544,11 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         }
       }
 
+      if (category === 'illustration') {
+        setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev);
+        return;
+      }
+
       setTooltip({
         visible: true,
         text,

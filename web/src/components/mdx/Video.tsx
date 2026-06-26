@@ -32,18 +32,26 @@ interface VideoProps {
   provider?: string;
   url?: string;
   duration?: string; // e.g. "3 min" or "2:30"
+  unresolved?: boolean;
 }
 
-export const Video = ({ id, title, provider: propProvider, url, duration }: VideoProps) => {
-  const [status, setStatus] = useState<VideoStatus>('checking');
-  const [lang, setLang] = useState('en');
+export const Video = ({ id, title, provider: propProvider, url, duration, unresolved }: VideoProps) => {
   const { markDegraded } = useMdxStatus();
 
   useEffect(() => {
-    if (status === 'unavailable') {
+    if (unresolved) {
       markDegraded('video');
     }
-  }, [status, markDegraded]);
+  }, [unresolved, markDegraded]);
+
+  const [status, setStatus] = useState<VideoStatus>('checking');
+  const [lang, setLang] = useState('en');
+
+  useEffect(() => {
+    if (!unresolved && status === 'unavailable') {
+      markDegraded('video');
+    }
+  }, [unresolved, status, markDegraded]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -51,6 +59,10 @@ export const Video = ({ id, title, provider: propProvider, url, duration }: Vide
       setLang(stored.toLowerCase());
     }
   }, []);
+
+  if (unresolved) {
+    return null;
+  }
 
   const isFr = lang === 'fr';
   const t = {

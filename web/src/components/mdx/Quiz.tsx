@@ -513,7 +513,7 @@ export const Quiz = ({
         </div>
         <div className="space-y-2">
           <h3 className="text-xl font-bold text-white">{t.title}</h3>
-          <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">{t.desc}</p>
+          <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">{t.desc}</p>
         </div>
 
         {/* Dynamic Aids/Rules Card if Final */}
@@ -590,9 +590,9 @@ export const Quiz = ({
         )}
 
         {/* Evaluation Mode Info Card */}
-        <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
+        <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-1.5">
           <p className="font-black text-blue-400 uppercase tracking-widest text-xs">📋 {t.eval_mode_label}</p>
-          <div className="grid grid-cols-1 gap-2.5 text-sm text-slate-300">
+          <div className="grid grid-cols-1 gap-1.5 text-sm text-slate-300">
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>
               <span>{questionsLabel}</span>
@@ -629,14 +629,16 @@ export const Quiz = ({
         </div>
 
         {/* Pre-flight Checklist Card */}
-        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-sm max-w-md mx-auto space-y-2">
+        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-sm max-w-md mx-auto space-y-1.5">
           <p className="font-black text-slate-400 uppercase tracking-widest text-xs">💡 Checklist</p>
-          <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-slate-300">
+          <ul className="list-disc list-inside space-y-1 leading-relaxed text-slate-300">
             <li>{t.prep_advice}</li>
             <li>
-              {actualDurationLimit 
-                ? t.time_focus.replace('{time}', formatDurationText(actualDurationLimit)) 
-                : t.time_focus.replace('{time}', formatDurationText(estimatedSeconds))}
+              {language === 'FR' ? "Assurez-vous d'avoir un peu plus de temps que nécessaire pour répondre aux questions."
+                : language === 'ES' ? "Asegúrese de tener un poco más de tiempo del necesario para responder a las preguntas."
+                : language === 'DE' ? "Stellen Sie sicher, dass Sie etwas mehr Zeit als nötig haben, um die Fragen zu beantworten."
+                : language === 'ZH' ? "请确保您有比回答问题所需稍微多一点的时间。"
+                : "Ensure you have a bit more time than necessary to answer the questions."}
             </li>
             {isFinal && (
               <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">

@@ -8,6 +8,7 @@ interface ReferenceItem {
   text: string;
   scholarUrl: string;
   scholarText: string;
+  isUnused?: boolean;
 }
 
 interface ReferencesProps {
@@ -109,14 +110,29 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
     }
   }
 
-  const displayedItems = [...uniqueItems];
-  if (sortOrder === 'alphabetical') {
-    displayedItems.sort((a, b) => {
+  // Separate into active and unused reference items
+  const activeItems = uniqueItems.filter(item => !item.isUnused);
+  const unusedItems = uniqueItems.filter(item => item.isUnused);
+
+  // Sort active items based on selected sortOrder
+  if (sortOrder === 'appearance') {
+    activeItems.sort((a, b) => Math.min(...a.allNums) - Math.min(...b.allNums));
+  } else {
+    activeItems.sort((a, b) => {
       const cleanA = a.text.replace(/<[^>]*>/g, '').trim();
       const cleanB = b.text.replace(/<[^>]*>/g, '').trim();
       return cleanA.localeCompare(cleanB, undefined, { sensitivity: 'base' });
     });
   }
+
+  // Unused items are always sorted alphabetically and placed at the very end
+  unusedItems.sort((a, b) => {
+    const cleanA = a.text.replace(/<[^>]*>/g, '').trim();
+    const cleanB = b.text.replace(/<[^>]*>/g, '').trim();
+    return cleanA.localeCompare(cleanB, undefined, { sensitivity: 'base' });
+  });
+
+  const displayedItems = [...activeItems, ...unusedItems];
 
   return (
     <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl select-none">
@@ -162,25 +178,31 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
       <div className="space-y-4">
         {displayedItems.map((item) => (
           <div key={item.num} className="text-sm leading-relaxed text-slate-300 flex items-start gap-3 select-text group">
-            {/* Scroll target anchors for all merged numbers */}
-            {item.allNums.map(num => (
+            {/* Scroll target anchors for all merged numbers (only for active references) */}
+            {!item.isUnused && item.allNums.map(num => (
               <span key={num} id={`ref-${num}`} className="scroll-mt-24"></span>
             ))}
             
-            <span className="flex items-center gap-1 whitespace-nowrap pt-0.5 select-none font-bold text-indigo-400">
-              {item.allNums.map((num, idx) => (
-                <React.Fragment key={num}>
-                  {idx > 0 && <span className="text-slate-600">,</span>}
-                  <a 
-                    href={`#cite-${num}`} 
-                    className="no-underline hover:text-indigo-300 transition-colors"
-                    title={`Scroll back to citation [${num}]`}
-                  >
-                    [{num}]
-                  </a>
-                </React.Fragment>
-              ))}
-            </span>
+            {!item.isUnused ? (
+              <span className="flex items-center gap-1 whitespace-nowrap pt-0.5 select-none font-bold text-indigo-400">
+                {item.allNums.map((num, idx) => (
+                  <React.Fragment key={num}>
+                    {idx > 0 && <span className="text-slate-600">,</span>}
+                    <a 
+                      href={`#cite-${num}`} 
+                      className="no-underline hover:text-indigo-300 transition-colors"
+                      title={`Scroll back to citation [${num}]`}
+                    >
+                      [{num}]
+                    </a>
+                  </React.Fragment>
+                ))}
+              </span>
+            ) : (
+              <span className="flex items-center pt-0.5 select-none font-bold text-indigo-400/40 pl-1">
+                •
+              </span>
+            )}
             
             <div className="flex-1">
               <span 

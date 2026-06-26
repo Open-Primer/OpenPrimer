@@ -11,11 +11,20 @@ interface AudioPlayerProps {
   title: string;
   duration?: string; // e.g. "2 min" or "1:45"
   aiGenerated?: boolean; // true if the audio was synthesized by AI
+  unresolved?: boolean;
 }
 
 type AudioStatus = 'checking' | 'ok' | 'unavailable';
 
-export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerProps) => {
+export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved }: AudioPlayerProps) => {
+  const { markDegraded } = useMdxStatus();
+
+  useEffect(() => {
+    if (unresolved) {
+      markDegraded('audio');
+    }
+  }, [unresolved, markDegraded]);
+
   const { language } = useLanguage();
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const [status, setStatus] = useState<AudioStatus>('checking');
@@ -23,13 +32,12 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const { markDegraded } = useMdxStatus();
 
   useEffect(() => {
-    if (status === 'unavailable') {
+    if (!unresolved && status === 'unavailable') {
       markDegraded('audio');
     }
-  }, [status, markDegraded]);
+  }, [unresolved, status, markDegraded]);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -48,6 +56,7 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
   // Test URL reachability — in no-cors mode the response is always opaque (ok=true),
   // so we rely on whether the URL is a known valid CDN prefix or Supabase storage URL.
   useEffect(() => {
+    if (unresolved) return;
     if (!url) {
       setStatus('unavailable');
       return;
@@ -84,11 +93,11 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
 
     checkUrl();
     return () => { active = false; };
-  }, [url]);
+  }, [unresolved, url]);
 
   // Sync state with HTML5 audio
   useEffect(() => {
-    if (status !== 'ok') return;
+    if (unresolved || status !== 'ok') return;
 
     const audio = new Audio(url);
     audioRef.current = audio;
@@ -123,7 +132,11 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated }: AudioPlayerPr
       audio.removeEventListener('error', handleError);
       audioRef.current = null;
     };
-  }, [status, url]);
+  }, [unresolved, status, url]);
+
+  if (unresolved) {
+    return null;
+  }
 
   const togglePlay = () => {
     if (!audioRef.current) return;

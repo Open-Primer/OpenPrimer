@@ -1093,7 +1093,9 @@ export const DISCIPLINES = [
   { value: 'environmental_sci',  EN: 'Environmental Science', FR: "Sciences de l'Environnement", ES: 'Ciencias Ambientales', DE: 'Umweltwissenschaften', ZH: '\u7269\u7406\u73af\u5883\u5b66' },
   { value: 'management',         EN: 'Business Management', FR: 'Gestion des Affaires', ES: 'Administración de Empresas', DE: 'Betriebswirtschaftslehre', ZH: '\u5de5\u5546\u7ba1\u7406' },
   { value: 'finance',            EN: 'Finance & Accounting', FR: 'Finance & Comptabilité', ES: 'Finanzas y Contabilidad', DE: 'Finanzwesen', ZH: '\u91d1\u878d\u4e0e\u4f1a\u8ba1' },
-  { value: 'education',          EN: 'Pedagogy & Education', FR: 'Pédagogie & Éducation', ES: 'Pedagogía y Educación', DE: 'Pädagogik', ZH: '\u6559\u80b2\u5b66' }
+  { value: 'education',          EN: 'Pedagogy & Education', FR: 'Pédagogie & Éducation', ES: 'Pedagogía y Educación', DE: 'Pädagogik', ZH: '\u6559\u80b2\u5b66' },
+  { value: 'social_sciences',    EN: 'Social Sciences', FR: 'Sciences Sociales', ES: 'Ciencias Sociales', DE: 'Sozialwissenschaften', ZH: '社会科学' },
+  { value: 'humanities_letters', EN: 'Humanities / Letters', FR: 'Humanités / Lettres', ES: 'Humanidades y Letras', DE: 'Geisteswissenschaften / Geisteswissenschaften', ZH: '人文与文学' }
 ] as const;
 
 export const normalizeLevel = (level: string | undefined | null): string => {

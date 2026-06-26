@@ -8,7 +8,8 @@ import {
   Copy, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DISCIPLINES, getDisciplineLabel } from '../strings';
+import { DISCIPLINES, getDisciplineLabel, ACADEMIC_LEVELS } from '../strings';
+import { Mermaid } from '../../../../components/mdx/Mermaid';
 
 // Statically import the 14 rich pedagogical widgets for safe live-rendering
 import { StructureViewer3D } from '../../../../components/mdx/StructureViewer3D';
@@ -63,6 +64,35 @@ const SANDBOX_PRESETS: Record<string, { label: string; props: Record<string, any
     { label: "2s Spherical w/ Node", props: { initialPresetId: "2s" } },
     { label: "2p_z Bilobed", props: { initialPresetId: "2pz" } },
     { label: "3d_xy Quadrupolar", props: { initialPresetId: "3d" } }
+  ],
+  Mermaid: [
+    {
+      label: "Photosynthesis Flowchart",
+      props: {
+        chart: `graph TD
+    A[Light + H2O] -->|Light Reactions| B[ATP + NADPH + O2]
+    C[CO2 + ATP + NADPH] -->|Calvin Cycle| D[G3P / Glucose]
+    B --> C
+    style A fill:#0f172a,stroke:#0d9488,stroke-width:2px,color:#f8fafc
+    style B fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc
+    style C fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#f8fafc
+    style D fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc`
+      }
+    },
+    {
+      label: "Nervous System Mindmap",
+      props: {
+        chart: `graph LR
+    CNS[Central Nervous System] --> Brain[Brain]
+    CNS --> SC[Spinal Cord]
+    PNS[Peripheral Nervous System] --> ANS[Autonomic]
+    PNS --> SNS[Somatic]
+    ANS --> Sym[Sympathetic]
+    ANS --> Para[Parasympathetic]
+    style CNS fill:#0f172a,stroke:#0d9488,stroke-width:2px,color:#f8fafc
+    style PNS fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#f8fafc`
+      }
+    }
   ]
 };
 
@@ -160,6 +190,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'alphabetical' | 'level' | 'discipline'>('alphabetical');
   const [selectedWidget, setSelectedWidget] = useState<Widget | null>(null);
   const [workshopTab, setWorkshopTab] = useState<'preview' | 'code' | 'props'>('preview');
   
@@ -408,33 +439,27 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const [isCopied, setIsCopied] = useState(false);
 
   // Toggle Academic Level utility keeping FR and EN perfectly synchronized
-  const toggleAcademicLevel = (levelId: string, state: 'edit' | 'new') => {
+  const toggleAcademicLevel = (levelVal: string, state: 'edit' | 'new') => {
     const currentFR = state === 'edit' ? editLevelFR : newWidgetLevelFR;
+    const currentEN = state === 'edit' ? editLevelEN : newWidgetLevelEN;
 
-    const presets = [
-      { id: 'college', FR: 'Collège', EN: 'Middle School' },
-      { id: 'lycee', FR: 'Lycée', EN: 'High School' },
-      { id: 'universite', FR: 'Université', EN: 'University' }
-    ];
+    const selectedFRList = currentFR ? currentFR.split(' / ').map(s => s.trim()).filter(Boolean) : [];
+    const selectedENList = currentEN ? currentEN.split(' / ').map(s => s.trim()).filter(Boolean) : [];
 
-    const selectedFRList = presets
-      .filter(p => currentFR.toLowerCase().includes(p.FR.toLowerCase()))
-      .map(p => p.FR);
+    const targetLevel = ACADEMIC_LEVELS.find(lvl => lvl.value === levelVal);
+    if (!targetLevel) return;
 
-    const selectedENList = presets
-      .filter(p => currentFR.toLowerCase().includes(p.FR.toLowerCase()))
-      .map(p => p.EN);
-
-    const targetPreset = presets.find(p => p.id === levelId)!;
     let newFRList: string[];
     let newENList: string[];
 
-    if (selectedFRList.includes(targetPreset.FR)) {
-      newFRList = selectedFRList.filter(x => x !== targetPreset.FR);
-      newENList = selectedENList.filter(x => x !== targetPreset.EN);
+    const alreadySelectedIdx = selectedENList.findIndex(x => x.toLowerCase() === targetLevel.EN.toLowerCase());
+
+    if (alreadySelectedIdx !== -1) {
+      newFRList = selectedFRList.filter((_, idx) => idx !== alreadySelectedIdx);
+      newENList = selectedENList.filter((_, idx) => idx !== alreadySelectedIdx);
     } else {
-      newFRList = [...selectedFRList, targetPreset.FR];
-      newENList = [...selectedENList, targetPreset.EN];
+      newFRList = [...selectedFRList, targetLevel.FR];
+      newENList = [...selectedENList, targetLevel.EN];
     }
 
     const finalFR = newFRList.join(' / ');
@@ -556,10 +581,77 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
   useEffect(() => {
     setActivePresetIndex(0);
-    setRandomProps(null);
     setErrorDetails(null);
     setPrompt('');
+
+    if (selectedWidget) {
+      const presets = SANDBOX_PRESETS[selectedWidget.id] || [];
+      if (presets.length === 0) {
+        // Automatically generate randomized properties to populate sandbox on select
+        const initialProps = generateRandomProps(selectedWidget.id);
+        setRandomProps(initialProps);
+      } else {
+        setRandomProps(null);
+      }
+    } else {
+      setRandomProps(null);
+    }
   }, [selectedWidget]);
+
+  // Automatically focus on the first matching widget during searches or handle empty search state
+  useEffect(() => {
+    const term = searchQuery.toLowerCase();
+    const filtered = widgets.filter(w => {
+      const idMatches = w.id.toLowerCase().includes(term);
+      const nameMatches = getWidgetName(w).toLowerCase().includes(term);
+      const descMatches = getWidgetDesc(w).toLowerCase().includes(term);
+      const disciplineMatches = w.disciplines.some(d => d.toLowerCase().includes(term));
+      return idMatches || nameMatches || descMatches || disciplineMatches;
+    });
+
+    if (filtered.length > 0) {
+      // If the currently selected widget is not in the filtered list, focus on the first match
+      if (!selectedWidget || !filtered.some(w => w.id === selectedWidget.id)) {
+        const sorted = [...filtered].sort((a, b) => {
+          if (sortBy === 'level') {
+            const getLevelRank = (levelStr: string): number => {
+              const cleanStr = levelStr.toLowerCase();
+              let minRank = 999;
+              ACADEMIC_LEVELS.forEach((lvl, idx) => {
+                const val = lvl.value.toLowerCase();
+                const en = lvl.EN.toLowerCase();
+                const fr = lvl.FR.toLowerCase();
+                if (
+                  cleanStr.includes(val) ||
+                  cleanStr.includes(en.split(' (')[0].toLowerCase()) ||
+                  cleanStr.includes(fr.split(' (')[0].toLowerCase()) ||
+                  (val === 'secondary_1' && cleanStr.includes('collège')) ||
+                  (val === 'preuni_1' && cleanStr.includes('lycée')) ||
+                  (val.startsWith('L') && cleanStr.includes('université'))
+                ) {
+                  if (idx < minRank) minRank = idx;
+                }
+              });
+              return minRank === 999 ? 100 : minRank;
+            };
+            const rankA = getLevelRank(lang === 'FR' ? a.levelFR : a.levelEN);
+            const rankB = getLevelRank(lang === 'FR' ? b.levelFR : b.levelEN);
+            if (rankA !== rankB) return rankA - rankB;
+          } else if (sortBy === 'discipline') {
+            const discA = a.disciplines[0] || '';
+            const discB = b.disciplines[0] || '';
+            if (discA !== discB) return discA.localeCompare(discB);
+          }
+          const nameA = getWidgetName(a);
+          const nameB = getWidgetName(b);
+          return nameA.localeCompare(nameB);
+        });
+        setSelectedWidget(sorted[0]);
+      }
+    } else if (widgets.length > 0) {
+      setSelectedWidget(null);
+    }
+  }, [searchQuery, widgets, sortBy]);
 
   // LOCK MANAGEMENT LIFECYCLE
   const acquireLock = async (widgetIdToLock: string): Promise<boolean> => {
@@ -1000,6 +1092,39 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     const descMatches = getWidgetDesc(w).toLowerCase().includes(term);
     const disciplineMatches = w.disciplines.some(d => d.toLowerCase().includes(term));
     return idMatches || nameMatches || descMatches || disciplineMatches;
+  }).sort((a, b) => {
+    if (sortBy === 'level') {
+      const getLevelRank = (levelStr: string): number => {
+        const cleanStr = levelStr.toLowerCase();
+        let minRank = 999;
+        ACADEMIC_LEVELS.forEach((lvl, idx) => {
+          const val = lvl.value.toLowerCase();
+          const en = lvl.EN.toLowerCase();
+          const fr = lvl.FR.toLowerCase();
+          if (
+            cleanStr.includes(val) ||
+            cleanStr.includes(en.split(' (')[0].toLowerCase()) ||
+            cleanStr.includes(fr.split(' (')[0].toLowerCase()) ||
+            (val === 'secondary_1' && cleanStr.includes('collège')) ||
+            (val === 'preuni_1' && cleanStr.includes('lycée')) ||
+            (val.startsWith('L') && cleanStr.includes('université'))
+          ) {
+            if (idx < minRank) minRank = idx;
+          }
+        });
+        return minRank === 999 ? 100 : minRank;
+      };
+      const rankA = getLevelRank(lang === 'FR' ? a.levelFR : a.levelEN);
+      const rankB = getLevelRank(lang === 'FR' ? b.levelFR : b.levelEN);
+      if (rankA !== rankB) return rankA - rankB;
+    } else if (sortBy === 'discipline') {
+      const discA = a.disciplines[0] || '';
+      const discB = b.disciplines[0] || '';
+      if (discA !== discB) return discA.localeCompare(discB);
+    }
+    const nameA = getWidgetName(a);
+    const nameB = getWidgetName(b);
+    return nameA.localeCompare(nameB);
   });
 
   const renderLiveWidget = () => {
@@ -1020,6 +1145,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       EquationManipulator,
       Geometry2D,
       GestaltInteractive,
+      Mermaid,
     };
 
     const WidgetComponent = componentMap[selectedWidget.id];
@@ -1195,16 +1321,31 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
       {/* TOP SECTION: FULL WIDTH SEARCH AND CATALOG GRID */}
       <div className="bg-slate-900/40 border border-slate-850 rounded-[35px] p-6 space-y-6 shadow-xl backdrop-blur-xl">
-        <div className="flex justify-between items-center gap-4">
-          <div className="relative flex-grow max-w-md">
-            <Search className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={tr("Filter components, subjects...")}
-              className="w-full bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 rounded-2xl py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors"
-            />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3 w-full sm:max-w-2xl flex-grow">
+            <div className="relative flex-grow max-w-md">
+              <Search className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={tr("Filter components, subjects...")}
+                className="w-full bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 rounded-2xl py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors"
+              />
+            </div>
+            {/* Sort Selector Dropdown */}
+            <div className="relative shrink-0">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="appearance-none bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 text-slate-300 hover:text-white rounded-2xl py-2.5 pl-4 pr-10 text-xs focus:outline-none focus:border-teal-555 transition-colors cursor-pointer"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%252394a3b8'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3e%3c/svg%3e")`, backgroundPosition: 'right 12px center', backgroundSize: '16px', backgroundRepeat: 'no-repeat' }}
+              >
+                <option value="alphabetical" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Alphabetical")}</option>
+                <option value="level" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Academic Level")}</option>
+                <option value="discipline" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Subject Area")}</option>
+              </select>
+            </div>
           </div>
           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider shrink-0">
             {filteredWidgets.length} {tr("catalog widgets")}
@@ -1684,39 +1825,40 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden cursor-default"
+              className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden cursor-default"
             >
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-6">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    <Edit className="w-5 h-5 text-teal-400" />
-                    {tr("Edit parameters: {id}").replace(/[:：]\s*\{id\}/, "").trim()}
-                  </h3>
-                  <p className="text-[10px] text-slate-400">
-                    {tr("Modify pedagogical metrics displayed to content authors within curriculum schedules.")}
-                  </p>
-                </div>
+              <div className="space-y-1 shrink-0 border-b border-slate-850 pb-4 pr-12">
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <Edit className="w-5 h-5 text-teal-400" />
+                  {tr("Edit parameters: {id}").replace(/[:：]\s*\{id\}/, "").trim()}
+                </h3>
+                <p className="text-[10px] text-slate-450">
+                  {tr("Modify pedagogical metrics displayed to content authors within curriculum schedules.")}
+                </p>
+              </div>
 
+              <div className="flex-grow overflow-y-auto py-6 pr-2 pb-24 scrollbar-thin space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {lang === 'FR' ? (
                     <>
                       {/* Name FR */}
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Name (French)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Name")}
                         </label>
                         <input
                           type="text"
                           value={editNameFR}
                           onChange={(e) => setEditNameFR(e.target.value)}
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${editNameFR.trim().length < 3 || editNameFR.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameFR.trim().length < 3 || editNameFR.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
                         />
                         {/* Display Name Tip Warning */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
@@ -1729,7 +1871,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       {/* Academic Level FR (Interactive selector dropdown) */}
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Academic Level (French)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Academic Level")}
                         </label>
                         <div className="relative">
                           <button
@@ -1738,7 +1880,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               setIsEditLevelDropdownOpen(!isEditLevelDropdownOpen);
                               setIsEditSubjectDropdownOpen(false);
                             }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 flex items-center justify-between cursor-pointer"
+                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!editLevelFR ? "text-slate-600" : ""}>
                               {editLevelFR || "Sélectionnez les niveaux..."}
@@ -1752,19 +1894,15 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
-                                {[
-                                  { id: 'college', FR: 'Collège', EN: 'Middle School' },
-                                  { id: 'lycee', FR: 'Lycée', EN: 'High School' },
-                                  { id: 'universite', FR: 'Université', EN: 'University' }
-                                ].map(lvl => {
-                                  const isChecked = editLevelFR.toLowerCase().includes(lvl.FR.toLowerCase());
+                                {ACADEMIC_LEVELS.map(lvl => {
+                                  const isChecked = editLevelFR.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.FR.toLowerCase());
                                   return (
                                     <button
-                                      key={lvl.id}
+                                      key={lvl.value}
                                       type="button"
-                                      onClick={() => toggleAcademicLevel(lvl.id, 'edit')}
+                                      onClick={() => toggleAcademicLevel(lvl.value, 'edit')}
                                       className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
                                     >
                                       <span>{lvl.FR}</span>
@@ -1780,14 +1918,14 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       {/* Description FR */}
                       <div className="col-span-1 md:col-span-2 space-y-1.5">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Description (French)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Description")}
                         </label>
                         <textarea
                           rows={2}
                           value={editDescFR}
                           onChange={(e) => setEditDescFR(e.target.value)}
-                          style={{ backgroundColor: '#020617' }}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none !bg-slate-950"
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -1796,26 +1934,27 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       {/* Name EN */}
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Name (English)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Name")}
                         </label>
                         <input
                           type="text"
                           value={editNameEN}
                           onChange={(e) => setEditNameEN(e.target.value)}
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${editNameEN.trim().length < 3 || editNameEN.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameEN.trim().length < 3 || editNameEN.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
                         />
                         {/* Display Name Tip Warning */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                            Note: Modifying the display name does not alter the technical component ID ({selectedWidget?.id}), which remains fixed for system stability. Saisissez entre 3 et 50 caractères.
+                            Note: Modifying the display name does not alter the technical component ID ({selectedWidget?.id}), which remains fixed for system stability. Enter between 3 and 50 characters.
                           </p>
                         </div>
                       </div>
                       {/* Academic Level EN */}
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Academic Level (English)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Academic Level")}
                         </label>
                         <div className="relative">
                           <button
@@ -1838,19 +1977,15 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
-                                {[
-                                  { id: 'college', FR: 'Collège', EN: 'Middle School' },
-                                  { id: 'lycee', FR: 'Lycée', EN: 'High School' },
-                                  { id: 'universite', FR: 'Université', EN: 'University' }
-                                ].map(lvl => {
-                                  const isChecked = editLevelEN.toLowerCase().includes(lvl.EN.toLowerCase());
+                                {ACADEMIC_LEVELS.map(lvl => {
+                                  const isChecked = editLevelEN.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.EN.toLowerCase());
                                   return (
                                     <button
-                                      key={lvl.id}
+                                      key={lvl.value}
                                       type="button"
-                                      onClick={() => toggleAcademicLevel(lvl.id, 'edit')}
+                                      onClick={() => toggleAcademicLevel(lvl.value, 'edit')}
                                       className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
                                     >
                                       <span>{lvl.EN}</span>
@@ -1866,14 +2001,14 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       {/* Description EN */}
                       <div className="col-span-1 md:col-span-2 space-y-1.5">
                         <label className="text-[10px] font-black uppercase text-slate-500">
-                          {tr("Description (English)").replace(/\s*\([^)]+\)/g, "")}
+                          {tr("Description")}
                         </label>
                         <textarea
                           rows={2}
                           value={editDescEN}
                           onChange={(e) => setEditDescEN(e.target.value)}
-                          style={{ backgroundColor: '#020617' }}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none !bg-slate-950"
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -1889,7 +2024,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           setIsEditSubjectDropdownOpen(!isEditSubjectDropdownOpen);
                           setIsEditLevelDropdownOpen(false);
                         }}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 flex items-center justify-between cursor-pointer"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                       >
                         <span className={editDisciplines.length === 0 ? "text-slate-600" : ""}>
                           {getDisciplinesSummary(editDisciplines)}
@@ -1926,38 +2061,40 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       </AnimatePresence>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {tr("Cancel")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveParameters}
-                    disabled={isSavingMetadata || isEditFormInvalid}
-                    className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-40 disabled:scale-100"
-                  >
-                    {isSavingMetadata ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                    ) : (
-                      <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />
-                    )}
-                    {tr("Save Changes")}
-                  </button>
-                </div>
+                </div> {/* Closes <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+              </div> {/* Closes <div className="flex-grow overflow-y-auto..."> */}
 
+              {/* Edit Modal Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {tr("Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveParameters}
+                  disabled={isSavingMetadata || isEditFormInvalid}
+                  className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-40 disabled:scale-100"
+                >
+                  {isSavingMetadata ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />
+                  )}
+                  {tr("Save Changes")}
+                </button>
               </div>
+
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* CREATE NEW WIDGET MODAL DIALOG */}
+       {/* CREATE NEW WIDGET MODAL DIALOG */}
       <AnimatePresence>
         {isCreateModalOpen && (
           <div 
@@ -1969,289 +2106,282 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden cursor-default"
+              className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-[35px] max-w-2xl w-full p-8 shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden cursor-default"
             >
               <button 
                 onClick={() => setIsCreateModalOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-6">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-teal-400" />
-                    {tr("Create Brand New Interactive Widget")}
-                  </h3>
-                  <p className="text-[10px] text-slate-400">
-                    {tr("The AI agent will generate, run a static check verify, and deploy a self-contained simulator block.")}
-                  </p>
-                </div>
+              <div className="space-y-1 shrink-0 border-b border-slate-850 pb-4 pr-12">
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-teal-400" />
+                  {tr("Create Brand New Interactive Widget")}
+                </h3>
+                <p className="text-[10px] text-slate-400">
+                  {tr("The AI agent will generate, run a static check verify, and deploy a self-contained simulator block.")}
+                </p>
+              </div>
 
-                <div className="space-y-4">
-                  
-                  {/* Active-Language Only Inputs Grid */}
-                  <div className="grid grid-cols-1 gap-4">
-                    {lang === 'FR' ? (
-                      <>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (French)")}</label>
-                          <input
-                            type="text"
-                            value={newWidgetNameFR}
-                            onChange={(e) => setNewWidgetNameFR(e.target.value)}
-                            placeholder="Ex: Laboratoire Optique Lumineuse"
-                            className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
-                          />
-                          {/* Naming Collision and Length Indicators */}
-                          <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
-                            <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                              Le nom d'affichage doit contenir entre 3 et 50 caractères. Il sera utilisé pour déduire l'ID PascalCase technique du composant.
-                            </p>
-                          </div>
-                          {namingCollisionError && (
-                            <p className="text-[9px] font-semibold text-rose-400 mt-1 flex items-center gap-1">
-                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                              {namingCollisionError}
-                            </p>
-                          )}
+              <div className="flex-grow overflow-y-auto py-6 pr-2 pb-24 scrollbar-thin space-y-4">
+                
+                {/* Active-Language Only Inputs Grid */}
+                <div className="grid grid-cols-1 gap-4">
+                  {lang === 'FR' ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name")}</label>
+                        <input
+                          type="text"
+                          value={newWidgetNameFR}
+                          onChange={(e) => setNewWidgetNameFR(e.target.value)}
+                          placeholder="Ex: Laboratoire Optique Lumineuse"
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                        />
+                        {/* Naming Collision and Length Indicators */}
+                        <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
+                          <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                          <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
+                            Le nom d'affichage doit contenir entre 3 et 50 caractères. Il sera utilisé pour déduire l'ID PascalCase technique du composant.
+                          </p>
                         </div>
+                        {namingCollisionError && (
+                          <p className="text-[9px] font-semibold text-rose-400 mt-1 flex items-center gap-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            {namingCollisionError}
+                          </p>
+                        )}
+                      </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Level (French)")}</label>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
-                                setIsCreateSubjectDropdownOpen(false);
-                              }}
-                              className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 flex items-center justify-between cursor-pointer"
-                            >
-                              <span className={!newWidgetLevelFR ? "text-slate-600" : ""}>
-                                {newWidgetLevelFR || "Sélectionnez les niveaux..."}
-                              </span>
-                              <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            
-                            <AnimatePresence>
-                              {isCreateLevelDropdownOpen && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -5 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -5 }}
-                                  className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5"
-                                >
-                                  {[
-                                    { id: 'college', FR: 'Collège', EN: 'Middle School' },
-                                    { id: 'lycee', FR: 'Lycée', EN: 'High School' },
-                                    { id: 'universite', FR: 'Université', EN: 'University' }
-                                  ].map(lvl => {
-                                    const isChecked = newWidgetLevelFR.toLowerCase().includes(lvl.FR.toLowerCase());
-                                    return (
-                                      <button
-                                        key={lvl.id}
-                                        type="button"
-                                        onClick={() => toggleAcademicLevel(lvl.id, 'new')}
-                                        className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
-                                      >
-                                        <span>{lvl.FR}</span>
-                                        {isChecked && <Check className="w-3.5 h-3.5 text-teal-400" />}
-                                      </button>
-                                    );
-                                  })}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (French)")}</label>
-                          <textarea
-                            rows={2}
-                            value={newWidgetDescFR}
-                            onChange={(e) => setNewWidgetDescFR(e.target.value)}
-                            placeholder="Ex: Simulation physique de la réfraction de la lumière à travers des prismes."
-                            style={{ backgroundColor: '#020617' }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 resize-none !bg-slate-950"
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name (English)")}</label>
-                          <input
-                            type="text"
-                            value={newWidgetNameEN}
-                            onChange={(e) => setNewWidgetNameEN(e.target.value)}
-                            placeholder="Ex: Light Optics Simulator"
-                            className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-555' : 'border-slate-850'}`}
-                          />
-                          {/* Naming Collision and Length Indicators */}
-                          <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
-                            <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                              Display name must be between 3 and 50 characters. It will automatically compile the technical component PascalCase ID.
-                            </p>
-                          </div>
-                          {namingCollisionError && (
-                            <p className="text-[9px] font-semibold text-rose-400 mt-1 flex items-center gap-1">
-                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                              {namingCollisionError}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Level (English)")}</label>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
-                                setIsCreateSubjectDropdownOpen(false);
-                              }}
-                              className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
-                            >
-                              <span className={!newWidgetLevelEN ? "text-slate-600" : ""}>
-                                {newWidgetLevelEN || "Select academic levels..."}
-                              </span>
-                              <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            
-                            <AnimatePresence>
-                              {isCreateLevelDropdownOpen && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -5 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -5 }}
-                                  className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5"
-                                >
-                                  {[
-                                    { id: 'college', FR: 'Collège', EN: 'Middle School' },
-                                    { id: 'lycee', FR: 'Lycée', EN: 'High School' },
-                                    { id: 'universite', FR: 'Université', EN: 'University' }
-                                  ].map(lvl => {
-                                    const isChecked = newWidgetLevelEN.toLowerCase().includes(lvl.EN.toLowerCase());
-                                    return (
-                                      <button
-                                        key={lvl.id}
-                                        type="button"
-                                        onClick={() => toggleAcademicLevel(lvl.id, 'new')}
-                                        className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
-                                      >
-                                        <span>{lvl.EN}</span>
-                                        {isChecked && <Check className="w-3.5 h-3.5 text-teal-400" />}
-                                      </button>
-                                    );
-                                  })}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description (English)")}</label>
-                          <textarea
-                            rows={2}
-                            value={newWidgetDescEN}
-                            onChange={(e) => setNewWidgetDescEN(e.target.value)}
-                            placeholder="Ex: Physics simulation of light refraction through interactive glass prisms."
-                            style={{ backgroundColor: '#020617' }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none !bg-slate-950"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {/* Compact Disciplines Selector Dropdown */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-500">{tr("Target Subject Fields")}</label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCreateSubjectDropdownOpen(!isCreateSubjectDropdownOpen);
-                            setIsCreateLevelDropdownOpen(false);
-                          }}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 flex items-center justify-between cursor-pointer"
-                        >
-                          <span className={newWidgetDisciplines.length === 0 ? "text-slate-600" : ""}>
-                            {getDisciplinesSummary(newWidgetDisciplines)}
-                          </span>
-                          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateSubjectDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        
-                        <AnimatePresence>
-                          {isCreateSubjectDropdownOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-850"
-                            >
-                              <div className="grid grid-cols-2 gap-1.5">
-                                {DISCIPLINES_LIST.map((disc) => {
-                                  const isChecked = newWidgetDisciplines.includes(disc);
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level")}</label>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
+                              setIsCreateSubjectDropdownOpen(false);
+                            }}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                          >
+                            <span className={!newWidgetLevelFR ? "text-slate-600" : ""}>
+                              {newWidgetLevelFR || "Sélectionnez les niveaux..."}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isCreateLevelDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                              >
+                                {ACADEMIC_LEVELS.map(lvl => {
+                                  const isChecked = newWidgetLevelFR.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.FR.toLowerCase());
                                   return (
                                     <button
-                                      key={disc}
+                                      key={lvl.value}
                                       type="button"
-                                      onClick={() => toggleDiscipline(disc, 'new')}
-                                      className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
+                                      onClick={() => toggleAcademicLevel(lvl.value, 'new')}
+                                      className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
                                     >
-                                      <span className="truncate mr-1">{getDisciplineLabel(disc, lang)}</span>
-                                      {isChecked && <Check className="w-3 h-3 text-slate-950 shrink-0" />}
+                                      <span>{lvl.FR}</span>
+                                      {isChecked && <Check className="w-3.5 h-3.5 text-teal-400" />}
                                     </button>
                                   );
                                 })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description")}</label>
+                        <textarea
+                          rows={2}
+                          value={newWidgetDescFR}
+                          onChange={(e) => setNewWidgetDescFR(e.target.value)}
+                          placeholder="Ex: Simulation physique de la réfraction de la lumière à travers des prismes."
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name")}</label>
+                        <input
+                          type="text"
+                          value={newWidgetNameEN}
+                          onChange={(e) => setNewWidgetNameEN(e.target.value)}
+                          placeholder="Ex: Light Optics Simulator"
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-555' : 'border-slate-850'}`}
+                        />
+                        {/* Naming Collision and Length Indicators */}
+                        <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
+                          <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                          <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
+                            Display name must be between 3 and 50 characters. It will automatically compile the technical component PascalCase ID.
+                          </p>
+                        </div>
+                        {namingCollisionError && (
+                          <p className="text-[9px] font-semibold text-rose-400 mt-1 flex items-center gap-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            {namingCollisionError}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Academic Level")}</label>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
+                              setIsCreateSubjectDropdownOpen(false);
+                            }}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                          >
+                            <span className={!newWidgetLevelEN ? "text-slate-600" : ""}>
+                              {newWidgetLevelEN || "Select academic levels..."}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isCreateLevelDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                              >
+                                {ACADEMIC_LEVELS.map(lvl => {
+                                  const isChecked = newWidgetLevelEN.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.EN.toLowerCase());
+                                  return (
+                                    <button
+                                      key={lvl.value}
+                                      type="button"
+                                      onClick={() => toggleAcademicLevel(lvl.value, 'new')}
+                                      className={`w-full px-3 py-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500/10 text-teal-400 font-bold' : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'}`}
+                                    >
+                                      <span>{lvl.EN}</span>
+                                      {isChecked && <Check className="w-3.5 h-3.5 text-teal-400" />}
+                                    </button>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500">{tr("Description")}</label>
+                        <textarea
+                          rows={2}
+                          value={newWidgetDescEN}
+                          onChange={(e) => setNewWidgetDescEN(e.target.value)}
+                          placeholder="Ex: Physics simulation of light refraction through interactive glass prisms."
+                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Compact Disciplines Selector Dropdown */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Target Subject Fields")}</label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreateSubjectDropdownOpen(!isCreateSubjectDropdownOpen);
+                          setIsCreateLevelDropdownOpen(false);
+                        }}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                      >
+                        <span className={newWidgetDisciplines.length === 0 ? "text-slate-600" : ""}>
+                          {getDisciplinesSummary(newWidgetDisciplines)}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateSubjectDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {isCreateSubjectDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-850"
+                          >
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {DISCIPLINES_LIST.map((disc) => {
+                                const isChecked = newWidgetDisciplines.includes(disc);
+                                return (
+                                  <button
+                                    key={disc}
+                                    type="button"
+                                    onClick={() => toggleDiscipline(disc, 'new')}
+                                    className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
+                                  >
+                                    <span className="truncate mr-1">{getDisciplineLabel(disc, lang)}</span>
+                                    {isChecked && <Check className="w-3 h-3 text-slate-950 shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
-
-                  {/* AI Prompt */}
-                  <div className="space-y-1.5 pt-2">
-                    <label className="text-[10px] font-black uppercase text-slate-500">{tr("Instructions for AI Generation (Prompt)")}</label>
-                    <textarea
-                      rows={4}
-                      value={newWidgetPrompt}
-                      onChange={(e) => setNewWidgetPrompt(e.target.value)}
-                      placeholder="Ex: Crée un simulateur physique interactif de réfraction de la lumière. L'utilisateur peut déplacer un rayon lumineux sur un canevas 2D, ajouter des prismes de verre de différentes formes (triangle, rectangle) et ajuster l'indice de réfraction du verre avec un slider. Calcule les angles réels de réfraction."
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-650 resize-none scrollbar-thin font-medium leading-relaxed"
-                    />
-                  </div>
-
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {tr("Cancel")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateWidget}
-                    disabled={isCreateFormInvalid}
-                    className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-40 disabled:scale-100"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
-                    {tr("Generate & Deploy")}
-                  </button>
+                {/* AI Prompt */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[10px] font-black uppercase text-slate-500">{tr("Instructions for AI Generation (Prompt)")}</label>
+                  <textarea
+                    rows={4}
+                    value={newWidgetPrompt}
+                    onChange={(e) => setNewWidgetPrompt(e.target.value)}
+                    placeholder="Ex: Crée un simulateur physique interactif de réfraction de la lumière. L'utilisateur peut déplacer un rayon lumineux sur un canevas 2D, ajouter des prismes de verre de différentes formes (triangle, rectangle) et ajuster l'indice de réfraction du verre avec un slider. Calcule les angles réels de réfraction."
+                    style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
+                    className="w-full bg-slate-950 border border-slate-850 rounded-xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-650 resize-none scrollbar-thin font-medium leading-relaxed"
+                  />
                 </div>
 
               </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {tr("Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateWidget}
+                  disabled={isCreateFormInvalid}
+                  className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10 disabled:opacity-40 disabled:scale-100"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
+                  {tr("Generate & Deploy")}
+                </button>
+              </div>
+
             </motion.div>
           </div>
         )}
@@ -2310,10 +2440,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
               <div className="space-y-2">
                 <h4 className="text-sm font-black text-white uppercase tracking-wider">
-                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).title}
+                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).title}
                 </h4>
                 <p className="text-[10px] text-slate-300 leading-relaxed font-medium">
-                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).desc}
+                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).desc}
                 </p>
               </div>
 
@@ -2323,7 +2453,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   onClick={() => setWidgetToValidate(null)}
                   className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).cancel}
+                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).cancel}
                 </button>
                 <button
                   type="button"
@@ -2334,7 +2464,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   }}
                   className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-teal-500/10"
                 >
-                  {(VALIDATION_LOCALES[lang] || VALIDATION_LOCALES['EN']).confirm}
+                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).confirm}
                 </button>
               </div>
             </motion.div>

@@ -427,6 +427,38 @@ export const CatalogPage = () => {
   const [userProgress, setUserProgress] = useState<any>(null);
   const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
 
+  const navigateToCourse = async (course: any, redirectToSignup: boolean = false) => {
+    if (course.isCurriculum) {
+      setSelectedEnrollCourse(course);
+      return;
+    }
+
+    if (course.languages && course.languages.length > 0) {
+      const currentLangLower = lang.toLowerCase();
+      const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
+      if (!supportsCurrentLang) {
+        setActiveLang(course.languages[0].toUpperCase());
+      }
+    }
+
+    let resolvedSlug = 'introduction';
+    try {
+      const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(course.slug, lang);
+      if (firstLessonSlug) {
+        resolvedSlug = firstLessonSlug;
+      }
+    } catch (err) {
+      console.error("Error fetching first lesson slug:", err);
+    }
+
+    const targetUrl = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/${resolvedSlug}`;
+    if (redirectToSignup) {
+      window.location.href = `/signup?redirect=${encodeURIComponent(targetUrl)}`;
+    } else {
+      window.location.href = targetUrl;
+    }
+  };
+
   // enrolled IDs: loaded exclusively from Supabase in production;
   // only falls back to localStorage when explicitly in sandbox mode.
   useEffect(() => {
@@ -464,8 +496,10 @@ export const CatalogPage = () => {
       setIsLoading(true);
       try {
         const { data } = await dbService.getAllCourses();
+        let validDbIds = new Set<number>();
         if (data && data.length > 0) {
           setCourses(data);
+          validDbIds = new Set(data.map((c: any) => c.id));
         } else if (data) {
           // Empty array returned — still set it so filter can run
           setCourses(data);
@@ -495,9 +529,23 @@ export const CatalogPage = () => {
           if (progressData) {
             setUserProgress(progressData);
             if (progressData.activeModules) {
-              // Supabase is authoritative — overwrite any sandbox enrolled IDs
-              setEnrolledIds(progressData.activeModules.map((m: any) => m.id));
+              // Supabase is authoritative — overwrite any sandbox enrolled IDs and filter by valid DB courses
+              const loadedIds = progressData.activeModules.map((m: any) => m.id);
+              const cleanIds = loadedIds.filter((id: number) => validDbIds.has(id));
+              setEnrolledIds(cleanIds);
             }
+          }
+        } else if (isSandbox) {
+          // Filter sandbox enrolled IDs as well
+          const saved = localStorage.getItem('op_enrolled_courses');
+          if (saved) {
+            try {
+              const loadedIds = JSON.parse(saved) as number[];
+              const cleanIds = loadedIds.filter((id: number) => validDbIds.has(id));
+              setEnrolledIds(cleanIds);
+              localStorage.setItem('op_enrolled_courses', JSON.stringify(cleanIds));
+              document.cookie = `op_enrolled_courses=${JSON.stringify(cleanIds)}; path=/; max-age=31536000; SameSite=Lax`;
+            } catch {}
           }
         }
       } catch (err) {
@@ -919,18 +967,7 @@ export const CatalogPage = () => {
               <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
                 <div 
                   onClick={() => {
-                    if (course.isCurriculum) {
-                      setSelectedEnrollCourse(course);
-                    } else {
-                      if (course.languages && course.languages.length > 0) {
-                        const currentLangLower = lang.toLowerCase();
-                        const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
-                        if (!supportsCurrentLang) {
-                          setActiveLang(course.languages[0].toUpperCase());
-                        }
-                      }
-                      window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
-                    }
+                    navigateToCourse(course);
                   }}
                   className="group block h-full cursor-pointer"
                 >
@@ -1072,18 +1109,7 @@ export const CatalogPage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (course.isCurriculum) {
-                            setSelectedEnrollCourse(course);
-                          } else {
-                            if (course.languages && course.languages.length > 0) {
-                              const currentLangLower = lang.toLowerCase();
-                              const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
-                              if (!supportsCurrentLang) {
-                                setActiveLang(course.languages[0].toUpperCase());
-                              }
-                            }
-                            window.location.href = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
-                          }
+                          navigateToCourse(course);
                         }}
                         className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2"
                       >
@@ -1128,17 +1154,10 @@ export const CatalogPage = () => {
 
                               setTimeout(() => {
                                 setEnrollmentSuccess(false);
-                                window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;
+                                navigateToCourse(courseToOpen);
                               }, 2000);
                             } else {
-                              if (course.languages && course.languages.length > 0) {
-                                const currentLangLower = lang.toLowerCase();
-                                const supportsCurrentLang = course.languages.some((l: string) => l.toLowerCase() === currentLangLower);
-                                if (!supportsCurrentLang) {
-                                  setActiveLang(course.languages[0].toUpperCase());
-                                }
-                              }
-                              window.location.href = `/signup?redirect=/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
+                              navigateToCourse(course, true);
                             }
                           }}
                           className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
@@ -1224,14 +1243,7 @@ export const CatalogPage = () => {
             onEnroll={async (activeC) => {
               const targetCourse = activeC || selectedEnrollCourse;
               if (!isLoggedIn) {
-                if (targetCourse.languages && targetCourse.languages.length > 0) {
-                  const currentLangLower = lang.toLowerCase();
-                  const supportsCurrentLang = targetCourse.languages.some((l: string) => l.toLowerCase() === currentLangLower);
-                  if (!supportsCurrentLang) {
-                    setActiveLang(targetCourse.languages[0].toUpperCase());
-                  }
-                }
-                window.location.href = `/signup?redirect=/${cleanPathSegment(targetCourse.level)}/${cleanPathSegment(targetCourse.subject)}/${targetCourse.slug}/introduction`;
+                navigateToCourse(targetCourse, true);
                 return;
               }
               let userId = 'u1';
@@ -1260,7 +1272,7 @@ export const CatalogPage = () => {
 
               setTimeout(() => {
                 setEnrollmentSuccess(false);
-                window.location.href = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/introduction`;
+                navigateToCourse(courseToOpen);
               }, 2000);
             }}
           />

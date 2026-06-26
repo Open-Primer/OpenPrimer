@@ -451,9 +451,24 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                   }
 
                   return (
-                    <Link href={linkPath} key={item.id} className="block w-full h-full">
+                    <div
+                      key={item.id}
+                      onClick={async () => {
+                        let resolvedSlug = 'introduction';
+                        try {
+                          const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(item.slug, lang);
+                          if (firstLessonSlug) {
+                            resolvedSlug = firstLessonSlug;
+                          }
+                        } catch (err) {
+                          console.error("Error fetching first lesson slug:", err);
+                        }
+                        window.location.href = `/${cleanPathSegment(item.level)}/${cleanPathSegment(item.subject)}/${item.slug}/${resolvedSlug}`;
+                      }}
+                      className="block w-full h-full cursor-pointer"
+                    >
                       {cardContent}
-                    </Link>
+                    </div>
                   );
                 } else {
                   // Disciplines mode

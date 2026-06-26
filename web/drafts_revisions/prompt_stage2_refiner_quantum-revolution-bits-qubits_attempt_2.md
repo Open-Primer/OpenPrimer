@@ -1,0 +1,258 @@
+You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+The widgets critic (Agent 4B) has rejected your previously generated widgets JSON.
+You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
+
+⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
+- Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (`), or complex unescaped double quotes.
+- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+
+CRITIQUE FROM AGENT 4B:
+"The provided widgets JSON has several critical violations:
+
+1.  **Perfect Semantic & Anchor Alignment Violation**: The narrative draft includes an anchor `[[WIDGET:basicMathExplorer]]` in section "2.2. Superposition: The Power of Being in Multiple States", but there is no corresponding `basicMathExplorer` widget defined in the `interactiveComponents` array or as a top-level key in the JSON. All anchors in the narrative must have a matching widget in the JSON.
+
+2.  **MCQ and Diagnostic Correctness & Flat-Prop Format Violations**:
+    *   **Language Mismatch**: The `finalEvaluation` widget's question (`q`), explanation, and options (`text`) are all in French ("Question d'examen finale ?", "Explication générale.", "Option Correcte", "Option Incorrecte"), but the `Target Language` for this lesson is specified as "EN". All content must be in English.
+    *   **Incorrect Format for Final Evaluation**: The `finalEvaluation` widget's `props.questions` array does not conform to the specified "Flat-Prop Quiz Format". It uses `q` instead of `question`, and its `options` are objects with `text` and `correct` properties, instead of an array of strings with a separate `correctIndex` at the question level. Please adjust the structure to match `{"question": "...", "options": ["option1", "option2"], "correctIndex": 0, "explanation": "..."}`.
+
+3.  **Academic Bibliography & Citation Style Violation**: The book titles in the `references` array (e.g., "A History of Computing Technology", "Quantum Computation and Quantum Information", "Speakable and Unspeakable in Quantum Mechanics") are enclosed in double quotes. According to Chicago Manual of Style, 17th edition (Author–Date system), book titles should be italicized, not enclosed in quotes. While asterisks for italics are forbidden in JSON, the titles should appear without quotes in the JSON string, and the rendering system is expected to apply italics based on the context of a book title. The current use of quotes incorrectly formats them as article titles."
+
+PREVIOUS WIDGETS JSON:
+---
+{
+  "prerequisites": {
+    "items": [
+      {
+        "title": "Introduction to Classical Computing Architectures",
+        "slug": "introduction-to-classical-computing-architectures",
+        "level": "M1",
+        "subject": "Computer Science"
+      },
+      {
+        "title": "Fundamentals of Linear Algebra",
+        "slug": "fundamentals-of-linear-algebra",
+        "level": "M1",
+        "subject": "Mathematics"
+      }
+    ]
+  },
+  "diagnosticQuiz": {
+    "question": "Which of the following quantum mechanical phenomena allows a qubit to exist in a combination of 0 and 1 states simultaneously?",
+    "options": [
+      "Classical determinism",
+      "Boolean logic",
+      "Quantum superposition",
+      "Wave-particle duality"
+    ],
+    "correctIndex": 2,
+    "targetSectionId": "2-the-quantum-leap-introducing-the-qubit",
+    "sectionTitle": "The Quantum Leap: Introducing the Qubit"
+  },
+  "learningObjectives": {
+    "knowledge": [
+      "Define the fundamental differences between classical bits and quantum qubits.",
+      "Explain the concepts of superposition and entanglement in the context of quantum information.",
+      "Identify the historical milestones that led to the development of classical and quantum computing."
+    ],
+    "skills": [
+      "Analyze the limitations of classical computing for specific problem types.",
+      "Compare and contrast the information encoding capabilities of classical bits versus qubits.",
+      "Apply basic principles of quantum mechanics to understand qubit behavior."
+    ],
+    "attitudes": [
+      "Appreciate the paradigm shift introduced by quantum computing.",
+      "Recognize the potential societal impact of quantum technologies.",
+      "Cultivate curiosity towards emerging computational models."
+    ]
+  },
+  "interactiveComponents": [],
+  "whatsNext": {
+    "steps": [
+      {
+        "title": "Quantum Algorithms: Shor's and Grover's",
+        "description": "Explore the foundational quantum algorithms that demonstrate exponential speedups over classical counterparts.",
+        "slug": "quantum-algorithms-shors-and-grovers"
+      },
+      {
+        "title": "Physical Realizations of Qubits",
+        "description": "Delve into the various physical systems used to build qubits, such as superconducting circuits and trapped ions.",
+        "slug": "physical-realizations-of-qubits"
+      },
+      {
+        "title": "Quantum Cryptography and Security",
+        "description": "Understand how quantum mechanics can be used to create unbreakable encryption and the threats quantum computers pose to current cryptographic standards.",
+        "slug": "quantum-cryptography-and-security"
+      }
+    ]
+  },
+  "conclusionSummary": {
+    "items": [
+      "Classical computing, built upon binary bits, has revolutionized information processing but faces inherent limitations with exponentially complex problems.",
+      "Quantum computing introduces the qubit, leveraging quantum phenomena like superposition and entanglement to process information in fundamentally new ways.",
+      "Superposition allows qubits to exist in multiple states simultaneously, while entanglement creates strong correlations between qubits, enabling massive parallelism.",
+      "This paradigm shift promises to unlock solutions to currently intractable problems across various scientific and technological domains, marking a new era in computation."
+    ]
+  },
+  "finalEvaluation": {
+    "type": "Quiz",
+    "props": {
+      "durationLimit": 1800,
+      "questions": [
+        {
+          "q": "Question d'examen finale ?",
+          "explanation": "Explication générale.",
+          "options": [
+            {
+              "text": "Option Correcte",
+              "correct": true
+            },
+            {
+              "text": "Option Incorrecte",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "glossary": [
+    {
+      "term": "Bit",
+      "definition": "The fundamental unit of information in classical computing, representing one of two distinct, mutually exclusive states, typically 0 or 1."
+    },
+    {
+      "term": "Qubit",
+      "definition": "The fundamental unit of quantum information, which, unlike a classical bit, can exist in a superposition of 0 and 1 states simultaneously, and can be entangled with other qubits."
+    },
+    {
+      "term": "Superposition",
+      "definition": "A fundamental principle of quantum mechanics that states that a quantum system can exist in multiple states simultaneously until measured."
+    },
+    {
+      "term": "Entanglement",
+      "definition": "A quantum mechanical phenomenon in which two or more particles become linked in such a way that the measurement of one particle's state instantaneously influences the state of the other(s), regardless of spatial separation."
+    },
+    {
+      "term": "Bloch Sphere",
+      "definition": "A geometrical representation of the pure state space of a two-level quantum mechanical system (qubit)."
+    }
+  ],
+  "references": [
+    "Williams, Michael R. 1997. \"A History of Computing Technology.\" 2nd ed. Los Alamitos, CA: IEEE Computer Society Press.",
+    "Nielsen, Michael A., and Isaac L. Chuang. 2010. \"Quantum Computation and Quantum Information.\" 10th anniversary ed. Cambridge: Cambridge University Press.",
+    "Bell, John S. 2004. \"Speakable and Unspeakable in Quantum Mechanics: Collected Papers on Quantum Philosophy.\" 2nd ed. Cambridge: Cambridge University Press."
+  ]
+}
+---
+
+INPUT APPROVED NARRATIVE DRAFT:
+---
+[[WIDGET:prerequisites]]
+
+[[WIDGET:diagnosticQuiz]]
+
+# The Quantum Revolution: From Bits to Qubits – A Paradigm Shift in Information Processing
+
+## Introduction: The Dawn of a New Computational Era
+
+The 20th century bore witness to an unprecedented technological metamorphosis, fundamentally reshaped by the relentless march of classical computing. From the visionary mechanical designs of <RealPerson name="Charles_Babbage" lang="en" bio="Often considered the 'father of the computer' for his conceptual design of the Analytical Engine, laying theoretical groundwork for modern digital programmable computers.">Charles Babbage</RealPerson> and <RealPerson name="Ada_Lovelace" lang="en" bio="Widely recognized as the first computer programmer for her work on Charles Babbage's Analytical Engine.">Ada Lovelace</RealPerson> in the 19th century, through the colossal electronic machines that deciphered wartime enigmas, to the ubiquitous, pocket-sized supercomputers we carry today, computation has profoundly re-engineered the fabric of human civilization [1](#ref-1). This monumental revolution was predicated upon the elegant yet powerful principle of encoding and manipulating information using binary digits, universally known as <ConceptLink name="Bit" lang="en" description="The fundamental unit of information in classical computing, representing one of two distinct, mutually exclusive states, typically 0 or 1.">bits</ConceptLink>. Each bit, a discrete unit, unequivocally represents one of two states, typically `0` or `1`, forming the bedrock of all classical digital logic.
+
+However, as humanity's scientific and technological ambitions expand, we increasingly encounter problems that push the boundaries of even the most formidable classical supercomputers. Simulating complex molecular dynamics for drug discovery, optimizing global logistics networks, or breaking modern cryptographic codes present computational challenges that scale exponentially with input size, rendering them intractable for classical architectures within realistic timescales. This burgeoning realization underscores the inherent limitations of the classical paradigm, particularly when confronted with problems rooted in the quantum nature of reality itself.
+
+The early 21st century now stands at the precipice of another, arguably even more profound, computational revolution: quantum computing. This emerging paradigm transcends the classical bit, harnessing the counter-intuitive yet powerful principles of quantum mechanics to process information in fundamentally novel ways. It promises to unlock solutions to problems currently beyond our grasp, potentially transforming fields from medicine and materials science to artificial intelligence and finance. This comprehensive lesson will meticulously analyze the historical trajectory from classical to quantum information theory, critically evaluate the core distinctions and advantages offered by qubits over classical bits, and establish a robust foundational understanding of the motivations, theoretical underpinnings, and formidable challenges driving this transformative field.
+
+[[WIDGET:learningObjectives]]
+
+## 1. The Classical Computing Paradigm: Foundations of the Bit
+
+Classical computation, at its most fundamental level, relies on the manipulation of physical systems engineered to exist in one of two distinct, mutually exclusive states. These binary states are conventionally assigned numerical values, `0` and `1`, thereby forming the basis of the binary digit, or bit. This deterministic framework underpins all digital electronics and information processing as we know it.
+
+### 1.1. Definition and Physical Realization: The Classical Bit
+
+A classical bit is the irreducible unit of information in classical computing. It is a physical system that, at any given instant, must be in precisely one of two well-defined states. These states are often conceptualized as `0` and `1`, representing, for instance, the presence or absence of an electrical charge, a high or low voltage, a magnetic orientation (north or south), or the direction of current flow.
+
+Mathematically, we can represent these discrete states as:
+$$
+\text{State } 0 \quad \text{or} \quad \text{State } 1
+$$
+The crucial characteristic is the absolute certainty and mutual exclusivity of these states; a classical bit is either `0` or `1`, never both simultaneously, and never an intermediate value. This determinism ensures predictable and reproducible computational outcomes.
+
+The physical embodiment of bits has evolved dramatically. Early mechanical computers used gears and levers to represent binary states. Electronic computers, starting with vacuum tubes and later transistors, utilized voltage levels or current flows. In modern computers, bits are stored in various forms: as electrical charges in capacitors (DRAM), magnetic orientations on hard drives, or optical states on CDs/DVDs. The underlying physical mechanism may vary, but the logical abstraction of a two-state system remains constant.
+
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Transistor_logic_gate.svg/640px-Transistor_logic_gate.svg.png" alt="Transistor" caption="*Figure 1: Transistor Logic Gate - A simplified diagram of a classical logic gate (e.g., an inverter) built using transistors. Transistors act as switches, controlling current flow to represent binary states (0 or 1). Source: Wikimedia Commons*" fallbackText="Transistor logic gate diagram" fallbackUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Transistor_logic_gate.svg/640px-Transistor_logic_gate.svg.png" />
+
+### 1.2. Classical Logic Gates and Boolean Algebra
+
+Information processing in classical computers is achieved through <ConceptLink name="Logic_gate" lang="en" description="An elementary building block of a digital circuit that implements a Boolean function, operating on binary inputs to produce a binary output.">logic gates</ConceptLink>. These are fundamental electronic circuits that implement Boolean functions, performing logical operations on one or more binary inputs to produce a single binary output. The entire edifice of classical computation, from simple arithmetic operations to complex artificial intelligence algorithms, is constructed by combining these elementary gates into intricate circuits.
+
+Key examples of classical logic gates include:
+*   **NOT gate (Inverter):** Transforms a `0` into a `1` and a `1` into a `0`.
+*   **AND gate:** Outputs `1` only if all its inputs are `1`.
+*   **OR gate:** Outputs `1` if at least one of its inputs is `1`.
+*   **XOR gate (Exclusive OR):** Outputs `1` if its inputs are different.
+*   **NAND gate (NOT AND):** Outputs `0` only if all its inputs are `1`.
+*   **NOR gate (NOT OR):** Outputs `1` only if all its inputs are `0`.
+
+These gates are the physical manifestations of Boolean algebra, a mathematical system developed by <RealPerson name="George_Boole" lang="en" bio="An English mathematician and logician, best known as the inventor of Boolean algebra, the basis of all modern computer arithmetic.">George Boole</RealPerson>. Boolean algebra provides the formal framework for designing and analyzing digital circuits. Complex computations are broken down into sequences of these simple, deterministic operations. The power of classical computing lies in its ability to perform billions of such operations per second, enabling the processing of vast amounts of data.
+
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Boolean_logic_gates.svg/640px-Boolean_logic_gates.svg.png" alt="Logic gate" caption="*Figure 2: Common Boolean Logic Gates - Standard symbols for common Boolean logic gates (AND, OR, NOT, XOR, NAND, NOR). These gates are the building blocks of all classical digital circuits. Source: Wikimedia Commons*" fallbackText="Common Boolean Logic Gates" fallbackUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Boolean_logic_gates.svg/640px-Boolean_logic_gates.svg.png" />
+
+The evolution of these physical realizations has been a cornerstone of technological progress. From mechanical relays to vacuum tubes, and then to the ubiquitous transistor, the underlying principle of binary state representation has remained constant. The miniaturization and increased efficiency of these components, particularly the transistor, have driven Moore's Law, leading to the exponential growth in classical computing power.
+
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Vacuum_Tube_Triode.jpg/640px-Vacuum_Tube_Triode.jpg" alt="Vacuum tube" caption="*Figure 3: Vacuum Tube Triode - A triode vacuum tube, a fundamental component in early electronic computers, acting as an amplifier or switch. Such tubes were critical in the first generation of electronic digital computers. Source: Wikimedia Commons*" fallbackText="Vacuum Tube Triode" fallbackUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Vacuum_Tube_Triode.jpg/640px-Vacuum_Tube_Triode.jpg" />
+
+## 2. The Quantum Leap: Introducing the Qubit
+
+The limitations of classical computing become acutely apparent when confronted with problems that exhibit exponential complexity, such as simulating the precise behavior of molecules, factoring large prime numbers (a cornerstone of modern cryptography), or optimizing vast logistical networks with numerous variables. The path forward, in these cases, does not lie in merely building faster classical machines, but in fundamentally reimagining how information is encoded, processed, and manipulated, drawing profound inspiration from the principles of quantum mechanics.
+
+### 2.1. Definition: The Quantum Bit (Qubit)
+
+A <ConceptLink name="Qubit" lang="en" description="The fundamental unit of quantum information, which, unlike a classical bit, can exist in a superposition of 0 and 1 states simultaneously, and can be entangled with other qubits.">quantum bit</ConceptLink>, or qubit, is the fundamental unit of information in quantum computing. In stark contrast to a classical bit, which is constrained to be in either state `0` or state `1` at any given moment, a qubit possesses the remarkable ability to exist in a <ConceptLink name="Quantum_superposition" lang="en" description="A fundamental principle of quantum mechanics that states that a quantum system can exist in multiple states simultaneously until measured.">superposition</ConceptLink> of both states simultaneously. This property is one of the cornerstones of quantum computational power.
+
+Mathematically, a qubit's state can be precisely described as a linear combination of two orthogonal basis states, conventionally denoted as $|0\rangle$ and $|1\rangle$ (utilizing <ConceptLink name="Bra-ket_notation" lang="en" description="A standard notation for describing quantum states, introduced by Paul Dirac, widely used in quantum mechanics.">Dirac notation</ConceptLink>):
+$$
+|\psi\rangle = \alpha|0\rangle + \beta|1\rangle
+$$
+Here, $\alpha$ and $\beta$ are complex probability amplitudes. The squares of their magnitudes, $|\alpha|^2$ and $|\beta|^2$, represent the probabilities of measuring the qubit in state $|0\rangle$ or $|1\rangle$, respectively. A fundamental postulate of quantum mechanics dictates that these probabilities must sum to 1, reflecting the certainty of obtaining one of the two outcomes upon measurement:
+$$
+|\alpha|^2 + |\beta|^2 = 1
+$$
+This implies that prior to measurement, the qubit is not definitively `0` or `1`, but rather a probabilistic blend of both. The act of measurement forces the qubit's superposition to "collapse" into one of the classical states, `0` or `1`, with probabilities determined by $|\alpha|^2$ and $|\beta|^2$. This probabilistic nature is a key departure from classical determinism.
+
+The state of a single qubit can be visualized geometrically on a <ConceptLink name="Bloch_sphere" lang="en" description="A geometrical representation of the pure state space of a two-level quantum mechanical system (qubit).">Bloch sphere</ConceptLink>, where the north pole represents $|0\rangle$, the south pole represents $|1\rangle$, and any point on the surface of the sphere represents a valid superposition state.
+
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Bloch_sphere.svg/640px-Bloch_sphere.svg.png" alt="Bloch sphere" caption="*Figure 4: Bloch Sphere - A geometrical representation of the pure state space of a single qubit, where any point on the surface represents a possible quantum state. The poles represent the classical states $|0\rangle$ and $|1\rangle$, while points on the surface represent superpositions. Source: Wikimedia Commons*" fallbackText="Bloch Sphere" fallbackUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Bloch_sphere.svg/640px-Bloch_sphere.svg.png" />
+
+### 2.2. Superposition: The Power of Being in Multiple States
+
+The principle of superposition is not merely an abstract mathematical construct; it is a physical reality that imbues qubits with their extraordinary potential. To draw an analogy, imagine a classical bit as a light switch that is either unequivocally ON or unequivocally OFF. A qubit, existing in superposition, is akin to a dimmer switch that can be partially ON and partially OFF at the same time, with varying degrees of each. This allows a single qubit to encode significantly more information than a classical bit.
+
+The true power of superposition becomes evident when considering multiple qubits. For a system of $n$ qubits, the system can exist in a superposition of $2^n$ classical states simultaneously. This exponential scaling is a profound advantage. For example, 10 qubits can represent a superposition of $2^{10} = 1024$ states, while 300 qubits could theoretically represent more states than there are atoms in the observable universe ($2^{300}$ is an astronomically large number). This inherent parallelism, where a quantum computer can effectively explore many possibilities concurrently, is what enables quantum algorithms to potentially outperform classical algorithms for specific problem classes.
+
+[[WIDGET:basicMathExplorer]]
+
+### 2.3. Entanglement: The Spooky Connection
+
+Beyond superposition, <ConceptLink name="Quantum_entanglement" lang="en" description="A quantum mechanical phenomenon in which two or more particles become linked in such a way that the measurement of one particle's state instantaneously influences the state of the other(s), regardless of spatial separation.">entanglement</ConceptLink> is another profoundly non-classical phenomenon that provides quantum computers with their extraordinary capabilities. When two or more qubits become entangled, their quantum states become inextricably linked, regardless of the physical distance separating them. The measurement of one entangled qubit instantaneously influences the state of the others, even if they are light-years apart. This correlation is stronger than any classical correlation and cannot be explained by local hidden variables.
+
+Consider two entangled qubits. If one is measured to be in state $|0\rangle$, the other is instantaneously known to be in a correlated state (e.g., $|1\rangle$ if they are anti-correlated, or $|0\rangle$ if they are correlated), without needing to measure it directly. This "spooky action at a distance," as <RealPerson name="Albert_Einstein" lang="en" bio="A theoretical physicist who developed the theory of relativity, one of the two pillars of modern physics, and made significant contributions to quantum theory.">Albert Einstein</RealPerson> famously termed it, deeply troubled him, as it seemed to violate the principle of locality. However, numerous experiments, notably those by <RealPerson name="John_Stewart_Bell" lang="en" bio="A physicist who formulated Bell's theorem, which is central to the foundations of quantum mechanics and the study of quantum entanglement.">John Stewart Bell</RealPerson> and later <RealPerson name="Alain_Aspect" lang="en" bio="A French physicist known for his experimental work on quantum entanglement, confirming Bell's inequalities.">Alain Aspect</RealPerson>, have unequivocally confirmed the reality of entanglement.
+
+Entanglement allows for correlations that are impossible to replicate with classical systems and is a crucial resource for many quantum algorithms, including quantum teleportation, quantum cryptography, and certain computational speedups. It enables qubits to share information in a way that exponentially increases the computational space that can be explored.
+
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Quantum_entanglement_illustration.svg/640px-Quantum_entanglement_illustration.svg.png" alt="Quantum entanglement" caption="*Figure 5: Quantum Entanglement Illustration - A conceptual diagram illustrating two entangled particles, where the measurement of one instantaneously determines the state of the other, regardless of distance. This non-local correlation is a key resource for quantum computing. Source: Wikimedia Commons*" fallbackText="Quantum Entanglement Illustration" fallbackUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Quantum_entanglement_illustration.svg/640px-Quantum_entanglement_illustration.svg.png" />
+
+[!NOTE] **Mini-Biographie : Richard Feynman (1918-1988)**
+<RealPerson name="Richard_Feynman" lang="en" bio="An American theoretical physicist, known for his work in quantum electrodynamics, path integral formulation of quantum mechanics, and for pioneering the field of quantum computing.">Richard Feynman</RealPerson> was a Nobel Prize-winning American theoretical physicist renowned for his groundbreaking contributions to the path integral formulation of quantum mechanics, the theory of quantum electrodynamics, and the physics of superfluidity. Beyond his profound scientific work, Feynman was an exceptional educator and communicator, celebrated for his charismatic lectures and unconventional personality. Crucially, in 1981, during a conference at MIT, he proposed the radical idea of using quantum mechanical effects for computation. He argued that a classical computer could not efficiently simulate quantum phenomena, suggesting that "nature isn't classical, dammit, and if you want to make a simulation of nature, you'd better make it quantum mechanical." This seminal insight laid the conceptual groundwork for the entire field of quantum computing, highlighting the necessity of building machines that operate on quantum principles to truly understand and manipulate the quantum world. [Wikipedia](https://en.wikipedia.org/wiki/Richard_Feynman)
+
+## 3. The Paradigm Shift: Classical vs. Quantum Information Processing
+
+The transition from bits to qubits represents not merely an incremental technological advancement but a fundamental paradigm shift in how we conceive of, encode, and manipulate information. This shift is qualitative, introducing capabilities that are inherently impossible within the classical framework, leading to a new era of computational possibilities.
+
+### 3.1. Key Distinctions and Their Implications
+
+The differences between classical bits and quantum qubits are profound and underpin the distinct computational power of each paradigm. Understanding these distinctions is crucial for appreciating the potential and limitations of quantum computing.
+
+| Feature             | Classical Bit                                     | Quantum Qubit
+---
+
+Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.

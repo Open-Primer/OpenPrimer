@@ -2,18 +2,22 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
-export type DegradedReason = 'image' | 'video' | 'audio' | 'quiz' | 'widget';
+export type DegradedReason = 'image' | 'video' | 'audio' | 'quiz' | 'widget' | 'entity';
 
 interface MdxStatusContextType {
   isDegraded: boolean;
   degradedReasons: Set<DegradedReason>;
   markDegraded: (reason: DegradedReason) => void;
+  registerFigure: (id: string) => void;
+  unregisterFigure: (id: string) => void;
+  registeredFigures: string[];
 }
 
 const MdxStatusContext = createContext<MdxStatusContextType | undefined>(undefined);
 
 export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
   const [reasons, setReasons] = useState<Set<DegradedReason>>(new Set());
+  const [registeredFigures, setRegisteredFigures] = useState<string[]>([]);
 
   const markDegraded = useCallback((reason: DegradedReason) => {
     setReasons((prev) => {
@@ -24,13 +28,30 @@ export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const registerFigure = useCallback((id: string) => {
+    setRegisteredFigures((prev) => {
+      if (prev.includes(id)) return prev;
+      return [...prev, id];
+    });
+  }, []);
+
+  const unregisterFigure = useCallback((id: string) => {
+    setRegisteredFigures((prev) => {
+      if (!prev.includes(id)) return prev;
+      return prev.filter((f) => f !== id);
+    });
+  }, []);
+
   const isDegraded = reasons.size > 0;
 
   const value = useMemo(() => ({
     isDegraded,
     degradedReasons: reasons,
     markDegraded,
-  }), [isDegraded, reasons, markDegraded]);
+    registerFigure,
+    unregisterFigure,
+    registeredFigures
+  }), [isDegraded, reasons, markDegraded, registerFigure, unregisterFigure, registeredFigures]);
 
   return (
     <MdxStatusContext.Provider value={value}>
@@ -47,6 +68,9 @@ export function useMdxStatus() {
       isDegraded: false,
       degradedReasons: new Set<DegradedReason>(),
       markDegraded: () => {},
+      registerFigure: () => {},
+      unregisterFigure: () => {},
+      registeredFigures: []
     };
   }
   return context;

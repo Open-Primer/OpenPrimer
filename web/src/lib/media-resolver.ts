@@ -610,6 +610,93 @@ export function isExistingArtwork(src: string, label: string): boolean {
 }
 
 
+
+async function validateWikipediaPage(term: string, lang: string): Promise<boolean> {
+  const cleanTerm = term.trim();
+  if (!cleanTerm) return false;
+  
+  const lookupTerm = cleanTerm.replace(/_/g, ' ');
+  
+  // 1. Try target language first
+  try {
+    const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
+    const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0' } }, 3000);
+    if (res.ok) {
+      const data = await safeResponseJson(res, 'Wikipedia validation');
+      const pages = data.query?.pages;
+      if (pages) {
+        const pageId = Object.keys(pages)[0];
+        if (pageId && pageId !== '-1') {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`[MEDIA-RESOLVER] Wikipedia validation failed for "${lookupTerm}" in ${lang}:`, e);
+  }
+  
+  // 2. Try English fallback if target lang is not English
+  if (lang.toLowerCase() !== 'en') {
+    try {
+      const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
+      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0' } }, 3000);
+      if (res.ok) {
+        const data = await safeResponseJson(res, 'Wikipedia validation fallback');
+        const pages = data.query?.pages;
+        if (pages) {
+          const pageId = Object.keys(pages)[0];
+          if (pageId && pageId !== '-1') {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[MEDIA-RESOLVER] Wikipedia fallback validation failed for "${lookupTerm}":`, e);
+    }
+  }
+  
+  return false;
+}
+
+function getFigurePrefix(lang: string): string {
+  const l = lang.toLowerCase().split('-')[0];
+  if (l === 'fr') return 'Figure';
+  if (l === 'es') return 'Figura';
+  if (l === 'de') return 'Abbildung';
+  if (l === 'zh') return '图';
+  return 'Figure';
+}
+
+export function renumberFigures(mdx: string, lang: string = 'en'): string {
+  const prefix = getFigurePrefix(lang);
+  let figureCount = 1;
+  
+  // Find all <CustomFigure ... /> components
+  const customFigureRegex = /<CustomFigure\s+([^>]*?)\/>/g;
+  
+  return mdx.replace(customFigureRegex, (match, attrsStr) => {
+    if (/\bunresolved(?:={true})?\b/.test(attrsStr)) {
+      return match;
+    }
+    const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/);
+    if (!captionMatch) {
+      const newCaption = `${prefix} ${figureCount}`;
+      figureCount++;
+      const updatedAttrs = attrsStr.trim() + ` caption="${newCaption}"`;
+      return `<CustomFigure ${updatedAttrs}/>`;
+    }
+    
+    const fullCaption = captionMatch[2];
+    const prefixesPattern = /^(?:Figure|Figura|Abbildung|\u56fe)\s*\d+\s*[:\-\u2013]?\s*/gi;
+    const cleanCaption = fullCaption.replace(prefixesPattern, '');
+    const newCaption = `${prefix} ${figureCount}: ${cleanCaption}`;
+    figureCount++;
+    
+    const updatedAttrs = attrsStr.replace(/caption=(["'])([\s\S]*?)\1/, `caption=$1${newCaption}$1`);
+    return `<CustomFigure ${updatedAttrs}/>`;
+  });
+}
+
 /**
  * Parses and replaces media links in MDX Content:
  * - Resolves Pollinations/placeholder images with official Wikipedia/Wikimedia Commons images when applicable.
@@ -668,6 +755,13 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
         }
         
         updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
+      } else {
+        console.log(`[MEDIA-RESOLVER] Could not resolve video ID for "${title}". Setting unresolved={true}.`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
       }
     }
   }
@@ -724,8 +818,6 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       }
 
       // Step B: Lyria music generation — the AI audio equivalent of Imagen/Pollinations.
-      // Triggered when no real CC file was found on Wikimedia Commons.
-      // Best suited for: musical clips, nature sounds, atmospheric audio, instrument notes.
       const durationHint = attrsStr.match(/duration="([^"]+)"/)?.[1] || '30s';
       if (!audioBuffer) {
         const lyriaPrompt = buildLyriaPrompt(title);
@@ -734,15 +826,13 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       }
 
       // Step C: Fallback to Text-to-Speech synthesis (always available via GCP SA).
-      // Best suited for: spoken language phrases, pronunciation examples, lecture narration.
       if (!audioBuffer && (customText || title)) {
         const textToSynthesize = customText || title;
         audioBuffer = await synthesizeSpeech(textToSynthesize, targetLang);
         mimeType = 'audio/mpeg';
       }
 
-
-      // Step D: Upload whichever buffer we have to Supabase Storage and replace URL
+      // Step D: Upload buffer to Supabase Storage and replace URL
       if (audioBuffer) {
         const hash = crypto.createHash('md5').update(customText || title).digest('hex');
         const ext = getSafeExtension(mimeType, 'mp3');
@@ -758,6 +848,13 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           }
           updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}/>`);
         }
+      } else {
+        console.log(`[MEDIA-RESOLVER] Audio resolving failed for "${title}". Setting unresolved={true}.`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}/>`);
       }
     }
   }
@@ -774,15 +871,15 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
     if (originalUrl) {
       console.log(`[MEDIA-RESOLVER] Processing Markdown image: ${altText} (${originalUrl})`);
       let sourceUrl = originalUrl;
+      let resolvedSuccess = false;
 
       // Check if we should find a real Wikipedia image instead of Pollinations/placeholder
-      // We look if altText represents a concrete artwork or historical person
       const queryName = altText.trim().replace(/_/g, ' ');
       const wikiImage = await fetchWikipediaImage(queryName, targetLang);
       if (wikiImage) {
         console.log(`[MEDIA-RESOLVER] Found real historical image on Wikipedia for "${queryName}": ${wikiImage}`);
-        // Bypass storage/upload for direct Wikipedia images as requested by user
         updatedContent = updatedContent.replace(fullMatch, `![${altText}](${wikiImage})`);
+        resolvedSuccess = true;
         continue;
       }
 
@@ -790,6 +887,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText) || isFactualMedia(altText))) {
         console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset: "${altText}"`);
         updatedContent = updatedContent.replace(fullMatch, "");
+        resolvedSuccess = true;
         continue;
       }
 
@@ -831,16 +929,22 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
           if (publicUrl) {
             updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
+            resolvedSuccess = true;
           }
         }
       } catch (err) {
         console.warn(`[MEDIA-RESOLVER] Failed to download or upload image ${sourceUrl}:`, err);
       }
+
+      if (!resolvedSuccess) {
+        console.log(`[MEDIA-RESOLVER] Stripping unresolvable Markdown image: "${altText}"`);
+        updatedContent = updatedContent.replace(fullMatch, "");
+      }
     }
   }
 
   // Process JSX Figures: <CustomFigure src="..." />
-  const figRegex = /<CustomFigure\s+([^>]*)\/>/g;
+  const figRegex = /<CustomFigure\s+([^>]*?)\/>/g;
   let figMatch;
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
     const fullTag = figMatch[0];
@@ -857,15 +961,16 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
     if (originalSrc) {
       console.log(`[MEDIA-RESOLVER] Processing JSX Figure: ${altText} (${originalSrc})`);
       let sourceUrl = originalSrc;
+      let resolvedSuccess = false;
 
       const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
       if (queryName) {
         const wikiImage = await fetchWikipediaImage(queryName, targetLang);
         if (wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
-          // Bypass storage/upload for direct Wikipedia images as requested by user
           const updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${wikiImage}"`);
           updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+          resolvedSuccess = true;
           continue;
         }
       }
@@ -874,6 +979,7 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText || caption) || isFactualMedia(altText || caption))) {
         console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption}"`);
         updatedContent = updatedContent.replace(fullTag, "");
+        resolvedSuccess = true;
         continue;
       }
 
@@ -916,13 +1022,60 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
           if (publicUrl) {
             const updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${publicUrl}"`);
             updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+            resolvedSuccess = true;
           }
         }
       } catch (err) {
         console.warn(`[MEDIA-RESOLVER] Failed to download or upload JSX image ${sourceUrl}:`, err);
       }
+
+      if (!resolvedSuccess) {
+        console.log(`[MEDIA-RESOLVER] Setting unresolved={true} on unresolvable Figure: "${altText || caption}"`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+      }
     }
   }
+
+  // 4. Validate and strip custom highlight tags if unresolvable
+  const highlightTags = [
+    'RealPerson', 'HistoricalPerson', 'FictionalCharacter', 'Location', 'EntityLink', 'EventLink', 
+    'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Artwork', 'WebsiteLink', 'ProjectLink', 
+    'ConceptLink', 'TheoremLink', 'InstitutionLink', 'SpeciesLink', 'SpeciesLien', 'EspeceLien', 
+    'EspèceLien', 'OrganismeLien', 'ChemicalLink', 'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 
+    'ChimieLien', 'CelestialLink', 'CelestialLien', 'CorpsCeleste', 'CorpsCéleste', 'AstroLien'
+  ];
+
+  const tagPattern = new RegExp(`<(${highlightTags.join('|')})\\s+([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'g');
+  let tagMatch;
+  const contentForTags = updatedContent;
+  while ((tagMatch = tagPattern.exec(contentForTags)) !== null) {
+    const fullTag = tagMatch[0];
+    const tagName = tagMatch[1];
+    const attrsStr = tagMatch[2];
+    const innerText = tagMatch[3];
+
+    const termMatch = attrsStr.match(/(?:name|term)="([^"]+)"/);
+    const lookupName = termMatch ? termMatch[1] : innerText.trim();
+
+    if (lookupName) {
+      const isValid = await validateWikipediaPage(lookupName, targetLang);
+      if (!isValid) {
+        console.log(`[MEDIA-RESOLVER] Flagging unresolved highlight tag <${tagName}> for "${lookupName}"`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}>${innerText}</${tagName}>`);
+      }
+    }
+  }
+
+  // 5. Renumber figures sequentially to guarantee continuous numbering after deletions
+  updatedContent = renumberFigures(updatedContent, targetLang);
 
   return updatedContent;
 }
@@ -1049,8 +1202,12 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
         updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
         console.log(`[RESTITUTION-REPAIR] Successfully repaired video "${title}" to ID: ${realId}`);
       } else {
-        console.log(`[RESTITUTION-REPAIR] Could not resolve alternative video for "${title}". Removing broken <Video> tag.`);
-        updatedContent = updatedContent.replace(fullTag, '');
+        console.log(`[RESTITUTION-REPAIR] Could not resolve alternative video for "${title}". Setting unresolved={true}.`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
       }
     }
   }
@@ -1281,12 +1438,18 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       }
 
       if (!success) {
-        // If repair failed, remove the CustomFigure tag completely as per "Strict No AI Fallbacks for Factual Assets" / "Omit broken images"
-        updatedContent = updatedContent.replace(fullTag, '');
-        console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved CustomFigure: "${altText || caption}"`);
+        console.log(`[RESTITUTION-REPAIR] Setting unresolved={true} on broken/unresolved CustomFigure: "${altText || caption}"`);
+        let updatedAttrs = attrsStr;
+        if (!attrsStr.includes('unresolved=')) {
+          updatedAttrs += ' unresolved={true}';
+        }
+        updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
       }
     }
   }
+
+  // 5. Renumber figures sequentially to guarantee continuous numbering after client-side deletions/repairs
+  updatedContent = renumberFigures(updatedContent, targetLangLower);
 
   return updatedContent;
 }

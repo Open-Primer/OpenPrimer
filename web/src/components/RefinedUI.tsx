@@ -14,9 +14,10 @@ import { EnrollmentModal } from './modals/EnrollmentModal';
 import { SettingsModal } from './modals/SettingsModal';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
+import { decryptApiKey } from '@/lib/crypto';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
-import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
 
 // Clear legacy local storage translation caches to prevent stale overrides
 if (typeof window !== 'undefined') {
@@ -350,6 +351,18 @@ const TutorMessageContent = ({ content }: TutorMessageContentProps) => {
   }
   
   return <div className="space-y-1">{blocks}</div>;
+};
+
+const AI_ACT_DISCLAIMERS = {
+  EN: "AI Act Notice: You are interacting with an autonomous AI tutor. Responses are educational-only and do not replace certified educators. Verify key scientific facts.",
+  FR: "Avis AI Act : Vous interagissez avec un tuteur autonome propulsé par IA. Les réponses sont fournies à titre indicatif et ne remplacent pas un enseignant certifié. Vérifiez les faits.",
+  ES: "Aviso AI Act: Interactúa con un tutor autónomo de IA. Las respuestas son didácticas y no sustituyen a educadores certificados. Verifique los datos científicos clave.",
+  DE: "KI-Gesetz-Hinweis: Sie interagieren mit einem autonomen KI-Tutor. Antworten dienen nur zu Lernzwecken und ersetzen keine zertifizierten Lehrkräfte. Überprüfen Sie wichtige Fakten.",
+  ZH: "AI Act 提示：您正与自主人工智能导师互动。所有回答仅供学习参考，不能替代认证教师。请核实关键科学事实。",
+  PT: "Aviso do AI Act: Você está interagindo com um tutor de IA autônomo. As respostas são apenas educativas e não substituem educadores certificados. Verifique fatos científicos.",
+  AR: "إشعار قانون الذكاء الاصطناعي: أنت تتفاعل مع معلم ذكاء اصطناعي مستقل. الإجابات تعليمية فقط ولا تغني عن المعلمين المعتمدين. يرجى التحقق من الحقائق العلمية.",
+  HI: "AI Act नोटिस: आप एक स्वायत्त AI ट्यूटर के साथ बातचीत कर रहे हैं। उत्तर केवल शैक्षिक हैं और प्रमाणित शिक्षकों का स्थान नहीं लेते हैं। कृपया महत्वपूर्ण वैज्ञानिक तथ्यों की पुष्टि करें।",
+  UR: "AI Act نوٹس: آپ ایک خود مختار AI ٹیوٹر کے ساتھ بات چیت کر رہے ہیں۔ جوابات صرف تعلیمی ہیں اور تصدیق شدہ اساتذہ کا متبادل نہیں ہیں۔ براہ کرم اہم سائنسی حقائق کی تصدیق کریں۔"
 };
 
 interface AITutorOverlayProps {
@@ -820,7 +833,7 @@ export const AITutorOverlay = ({
             personalTutorParam = {
               enabled: true,
               provider: p.personalTutorProvider || 'openai',
-              apiKey: p.personalTutorApiKey,
+              apiKey: decryptApiKey(p.personalTutorApiKey),
               model: p.personalTutorModel || 'gpt-4o-mini'
             };
           }
@@ -1289,6 +1302,9 @@ export const AITutorOverlay = ({
                             <Send className="w-4 h-4" />
                           </button>
                         )}
+                      </div>
+                      <div className="mt-3 text-[9px] text-slate-500/80 leading-normal text-center font-medium max-w-full">
+                        {AI_ACT_DISCLAIMERS[lang.toUpperCase() as keyof typeof AI_ACT_DISCLAIMERS] || AI_ACT_DISCLAIMERS.EN}
                       </div>
                     </div>
                   </>
@@ -1890,48 +1906,66 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
   }, []);
 
   useEffect(() => {
-    const loadEnrollments = async () => {
-      const isSandbox = isDatabaseConfigured ? isSandboxFallbackAllowed() : true;
-      if (!isDatabaseConfigured || isSandbox) {
-        const saved = localStorage.getItem('op_enrolled_courses');
-        if (saved) {
-          try {
-            setEnrolledIds(JSON.parse(saved));
-          } catch (e) {}
-        }
-      } else {
-        const savedProfile = localStorage.getItem('op_user_profile');
-        if (savedProfile) {
-          try {
-            const p = JSON.parse(savedProfile);
-            if (p.id) {
-              const { data: progressData } = await dbService.getUserProgress(p.id);
-              if (progressData && progressData.activeModules) {
-                setEnrolledIds(progressData.activeModules.map((m: any) => m.id));
-              }
+    const loadEnrollmentsAndCourses = async () => {
+      try {
+        const { data: allCourses } = await dbService.getAllCourses();
+        if (allCourses) {
+          setCourses(allCourses);
+          
+          const validDbIds = new Set(allCourses.map((c: any) => c.id));
+          let tempEnrolledIds: number[] = [];
+          
+          const isSandbox = isDatabaseConfigured ? isSandboxFallbackAllowed() : true;
+          if (!isDatabaseConfigured || isSandbox) {
+            const saved = localStorage.getItem('op_enrolled_courses');
+            if (saved) {
+              try {
+                tempEnrolledIds = JSON.parse(saved);
+              } catch (e) {}
             }
-          } catch (e) {}
-        }
-      }
-    };
-
-    loadEnrollments();
-
-    dbService.getAllCourses().then(({ data }) => {
-      if (data) {
-        setCourses(data);
-        if (typeof window !== 'undefined' && isCoursePage) {
-          const parts = window.location.pathname.split('/').filter(Boolean);
-          const slug = parts[2];
-          if (slug) {
-            const matched = data.find((c: any) => c.slug === slug || c.slug?.toLowerCase() === slug.toLowerCase());
-            if (matched) {
-              setActiveCourseData(matched);
+          } else {
+            const savedProfile = localStorage.getItem('op_user_profile');
+            if (savedProfile) {
+              try {
+                const p = JSON.parse(savedProfile);
+                if (p.id) {
+                  const { data: progressData } = await dbService.getUserProgress(p.id);
+                  if (progressData && progressData.activeModules) {
+                    tempEnrolledIds = progressData.activeModules.map((m: any) => m.id);
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+          
+          // Filter enrolled IDs to only those that exist in the courses table
+          const cleanEnrolledIds = tempEnrolledIds.filter(id => validDbIds.has(id));
+          setEnrolledIds(cleanEnrolledIds);
+          
+          // Sync back to localStorage and cookie if changed
+          if (typeof window !== 'undefined' && cleanEnrolledIds.length !== tempEnrolledIds.length) {
+            console.log(`[Client Enrollment Cleanup] Pruned ${tempEnrolledIds.length - cleanEnrolledIds.length} obsolete enrollment IDs.`);
+            localStorage.setItem('op_enrolled_courses', JSON.stringify(cleanEnrolledIds));
+            document.cookie = `op_enrolled_courses=${JSON.stringify(cleanEnrolledIds)}; path=/; max-age=31536000; SameSite=Lax`;
+          }
+          
+          if (typeof window !== 'undefined' && isCoursePage) {
+            const parts = window.location.pathname.split('/').filter(Boolean);
+            const slug = parts[2];
+            if (slug) {
+              const matched = allCourses.find((c: any) => c.slug === slug || c.slug?.toLowerCase() === slug.toLowerCase());
+              if (matched) {
+                setActiveCourseData(matched);
+              }
             }
           }
         }
+      } catch (err) {
+        console.error("Error loading courses and enrollments in RefinedUI:", err);
       }
-    });
+    };
+
+    loadEnrollmentsAndCourses();
   }, [isCoursePage]);
 
   useEffect(() => {
@@ -2466,8 +2500,20 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             onSelectCourse={(c) => setSelectedEnrollCourse(c)}
             onEnroll={async (activeC) => {
               const targetCourse = activeC || selectedEnrollCourse;
+              
+              let resolvedSlug = 'introduction';
+              try {
+                const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(targetCourse.slug, lang);
+                if (firstLessonSlug) {
+                  resolvedSlug = firstLessonSlug;
+                }
+              } catch (err) {
+                console.error("Error fetching first lesson slug:", err);
+              }
+              const targetPath = `/${cleanPathSegment(targetCourse.level)}/${cleanPathSegment(targetCourse.subject)}/${targetCourse.slug}/${resolvedSlug}`;
+
               if (!isLoggedIn) {
-                window.location.href = `/signup?redirect=/${targetCourse.level}/${targetCourse.subject}/${targetCourse.slug}/introduction`;
+                window.location.href = `/signup?redirect=${encodeURIComponent(targetPath)}`;
                 return;
               }
               let userId = 'u1';
@@ -2482,13 +2528,12 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               setEnrolledIds(prev => [...prev, targetCourse.id]);
               
               setEnrollmentSuccess(true);
-              const courseToOpen = targetCourse;
               setSelectedEnrollCourse(null);
               window.dispatchEvent(new Event('op_progress_updated'));
               
               setTimeout(() => {
                 setEnrollmentSuccess(false);
-                window.location.href = `/${courseToOpen.level}/${courseToOpen.subject}/${courseToOpen.slug}/introduction`;
+                window.location.href = targetPath;
               }, 2000);
             }}
           />
@@ -2615,6 +2660,25 @@ export const Footer = () => {
               <li><Link href="/privacy" className={`text-sm ${textLinkClass} transition-colors`}>{t.privacy}</Link></li>
             </ul>
           </div>
+        </div>
+
+        <div className={`mb-12 p-6 rounded-2xl border ${isPaper ? 'bg-[#f4f0db]/50 border-[#dfd4bd] text-[#5c4f42]' : isFocus ? 'bg-[#0a0a0a] border-[#111111] text-[#444444]' : 'bg-slate-950/40 border-slate-900/60 text-slate-500'} text-xs leading-relaxed max-w-5xl`}>
+          <p className={`font-extrabold uppercase tracking-widest text-[9px] mb-2 ${isPaper ? 'text-[#8a7664]' : isFocus ? 'text-[#555555]' : 'text-slate-400'}`}>
+            {lang === 'FR' ? "Avis Légal & Limitation de Responsabilité (EU AI Act)" : "Legal Notice & Limitation of Liability (EU AI Act)"}
+          </p>
+          <p className={textDescClass}>
+            {lang === 'FR' ? (
+              "Les cours, explications académiques et réponses de tutorat d'OpenPrimer sont générés de manière autonome par des modèles d'Intelligence Artificielle. Ils sont fournis exclusivement à des fins d'auto-apprentissage et d'accompagnement pédagogique général. Ils ne constituent pas des vérités scientifiques certifiées et ne sauraient en aucun cas remplacer les programmes officiels, enseignants, professeurs ou avis de professionnels agréés. L'éditeur décline toute responsabilité quant aux éventuelles erreurs, omissions ou conséquences découlant de l'utilisation des contenus synthétiques de cette plateforme."
+            ) : lang === 'ES' ? (
+              "Todos los cursos, explicaciones y respuestas de tutoría se generan de forma autónoma mediante modelos de Inteligencia Artificial. Se proporcionan únicamente para el autoestudio y apoyo pedagógico general. No constituyen hechos científicos certificados ni sustituyen a docentes, profesores o asesores profesionales oficiales. El editor declina toda responsabilidad por errores facticós u omisiones que puedan derivarse del uso de materiales sintéticos generados en esta plataforma."
+            ) : lang === 'DE' ? (
+              "Alle Kurse, akademischen Erklärungen und Tutor-Antworten werden autonom von KI-Modellen generiert. Sie dienen ausschließlich dem Selbststudium und der allgemeinen pädagogischen Unterstützung. Sie stellen keine zertifizierten wissenschaftlichen Wahrheiten dar und ersetzen keine offiziellen Lehrpläne, Lehrer, Professoren oder Fachberatungen. Der Herausgeber übernimmt keine Haftung für sachliche Fehler oder Folgen aus der Nutzung dieser synthetischen Inhalte."
+            ) : lang === 'ZH' ? (
+              "本平台的所有课程、学术解释和辅导回答均由人工智能模型自主生成。这些内容仅用于自学和一般性教学辅助，不构成经认证的科学或学术事实，也不能替代官方课程、教师、教授或专业意见。对于因使用本平台生成的合成材料而产生的任何事实错误、遗漏或后果，出版方不承担任何责任。"
+            ) : (
+              "All courses, academic explanations, and tutoring responses are generated autonomously by Artificial Intelligence models. They are provided solely for self-study and general educational assistance. They do not constitute certified scientific or academic facts, nor do they replace official curricula, teachers, professors, or professional advice. The publisher assumes no liability for any factual errors, omissions, or consequences arising from the use of synthetic materials generated on this platform."
+            )}
+          </p>
         </div>
 
         <div className={`pt-12 border-t ${borderBottomClass} flex flex-col md:flex-row justify-between items-center gap-8`}>

@@ -1,0 +1,369 @@
+You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+The widgets critic (Agent 4B) has rejected your previously generated widgets JSON.
+You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
+
+⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
+- Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (`), or complex unescaped double quotes.
+- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+
+CRITIQUE FROM AGENT 4B:
+"The widgets JSON contains several violations:
+1.  **Perfect Semantic & Anchor Alignment**: The `interactiveComponents` array is missing an entry for the `Timeline` widget with `id: 'astronomy_timeline'`, which is explicitly placed in the narrative draft as `[[WIDGET:Timeline:astronomy_timeline]]`. All interactive anchors in the narrative must have a corresponding entry in the `interactiveComponents` array.
+2.  **MCQ and Diagnostic Correctness & Flat-Prop Format**: The `finalEvaluation` quiz does not conform to the specified 'Flat-Prop Quiz Format'. For `finalEvaluation` quizzes, the `questions` array should contain objects with `question` (string), `options` (array of strings), `correctIndex` (number), and `explanation` (string). The current format uses an array of objects for `options` with `text` and `correct` keys, which is incorrect for `finalEvaluation`.
+3.  **Academic Bibliography & Citation Style**: The `references` array does not strictly adhere to the specified 'Chicago Manual of Style, 17th edition — Author–Date system' and the JSON formatting instructions. Book titles (e.g., 'Astronomy in Prehistoric Britain and Ireland') are not enclosed in quotes or French guillemets, as required by the instruction 'titles must use quotes or French guillemets' when italics are forbidden. Additionally, the year of publication is enclosed in parentheses (e.g., '(1999)'), which is not standard for Chicago 17th Author-Date reference list format; it should typically follow the author's name directly or the title, without parentheses in the reference list entry itself."
+
+PREVIOUS WIDGETS JSON:
+---
+{
+  "prerequisites": {
+    "items": [
+      {
+        "title": "Introduction à la Physique",
+        "slug": "introduction-physique",
+        "level": "L1",
+        "subject": "Général"
+      },
+      {
+        "title": "Bases de la Mécanique Classique",
+        "slug": "mecanique-classique-bases",
+        "level": "L1",
+        "subject": "Physique"
+      }
+    ]
+  },
+  "diagnosticQuiz": {
+    "question": "Quel modèle cosmologique a été le premier à placer le Soleil au centre de l'Univers, remettant en question le modèle géocentrique dominant ?",
+    "options": [
+      "Le modèle ptoléméen",
+      "Le modèle aristotélicien",
+      "Le modèle copernicien",
+      "Le modèle newtonien"
+    ],
+    "correctIndex": 2,
+    "targetSectionId": "2-la-revolution-copernicienne-et-lemergence-de-la-methode-scientifique",
+    "sectionTitle": "La Révolution Copernicienne et l'Émergence de la Méthode Scientifique"
+  },
+  "learningObjectives": {
+    "knowledge": [
+      "Décrire les principales étapes de l'histoire de l'astronomie, des observations antiques aux découvertes modernes.",
+      "Identifier les figures clés et leurs contributions majeures à l'astronomie et à l'astrophysique.",
+      "Expliquer l'évolution des modèles cosmologiques, du géocentrisme à l'héliocentrisme et au modèle du Big Bang.",
+      "Définir les concepts fondamentaux de l'astrophysique, tels que la spectroscopie, la relativité, la matière noire et l'énergie noire."
+    ],
+    "skills": [
+      "Analyser l'impact des avancées technologiques (télescopes, spectroscopie, détecteurs d'ondes gravitationnelles) sur la compréhension de l'Univers.",
+      "Évaluer la validité des théories scientifiques à travers l'histoire de l'astronomie, en se basant sur les preuves observationnelles.",
+      "Relier les découvertes astronomiques aux principes physiques sous-jacents (lois de Kepler, gravitation newtonienne, relativité einsteinienne)."
+    ],
+    "attitudes": [
+      "Apprécier la démarche scientifique comme un processus dynamique de remise en question et d'exploration.",
+      "Développer une curiosité intellectuelle pour les mystères non résolus de l'Univers.",
+      "Reconnaître l'interconnexion entre l'astronomie, la physique et d'autres disciplines scientifiques."
+    ]
+  },
+  "interactiveComponents": [
+    {
+      "id": "histoire_quiz_1",
+      "componentType": "Quiz",
+      "sectionAnchor": "2. La Révolution Copernicienne et l'Émergence de la Méthode Scientifique",
+      "props": {
+        "questions": [
+          {
+            "q": "Question d'auto-évaluation ?",
+            "explanation": "Explication de la réponse correcte.",
+            "options": [
+              {
+                "text": "Option Correcte",
+                "correct": true
+              },
+              {
+                "text": "Option Incorrecte",
+                "correct": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "concepts_cles",
+      "componentType": "FillInBlanks",
+      "sectionAnchor": "5. L'Astrophysique Contemporaine : Défis et Perspectives",
+      "props": {
+        "sentence": "La Terre est une _____.",
+        "answer": "planète"
+      }
+    }
+  ],
+  "whatsNext": {
+    "steps": [
+      {
+        "title": "Les Fondamentaux de la Mécanique Céleste",
+        "description": "Approfondissez les lois du mouvement et de la gravitation qui régissent les corps célestes.",
+        "slug": "mecanique-celeste-fondamentaux"
+      },
+      {
+        "title": "Introduction à la Cosmologie Physique",
+        "description": "Explorez les modèles de l'Univers, de ses origines à son évolution future.",
+        "slug": "cosmologie-physique-intro"
+      },
+      {
+        "title": "Astrophysique Stellaire: Naissance, Vie et Mort des Étoiles",
+        "description": "Découvrez les processus physiques qui animent les étoiles et leur cycle de vie.",
+        "slug": "astrophysique-stellaire"
+      }
+    ]
+  },
+  "conclusionSummary": {
+    "items": [
+      "L'histoire de l'astronomie est un voyage fascinant, des observations mythologiques antiques aux théories complexes de l'astrophysique moderne.",
+      "Des figures emblématiques comme Ptolémée, Copernic, Galilée, Kepler et Newton ont progressivement affiné notre compréhension du cosmos, passant d'un modèle géocentrique à un modèle héliocentrique, puis à une physique universelle.",
+      "L'avènement de la spectroscopie, de la relativité et de la mécanique quantique a transformé l'astronomie en astrophysique, permettant d'étudier la nature physique des objets célestes et l'évolution de l'Univers.",
+      "Les découvertes récentes sur l'expansion accélérée de l'Univers, la matière noire, l'énergie noire, les exoplanètes et l'astronomie multi-messager continuent de repousser les frontières de notre connaissance et posent de nouveaux défis passionnants pour les générations futures."
+    ]
+  },
+  "finalEvaluation": {
+    "type": "Quiz",
+    "props": {
+      "durationLimit": 1800,
+      "questions": [
+        {
+          "q": "Question d'examen finale ?",
+          "explanation": "Explication générale.",
+          "options": [
+            {
+              "text": "Option Correcte",
+              "correct": true
+            },
+            {
+              "text": "Option Incorrecte",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "glossary": [
+    {
+      "term": "Astrophysique",
+      "definition": "Branche de l'astronomie qui applique les principes de la physique pour comprendre la nature physique des corps célestes et des phénomènes cosmiques."
+    },
+    {
+      "term": "Modèle Géocentrique",
+      "definition": "Modèle cosmologique ancien qui plaçait la Terre au centre de l'Univers, avec tous les autres corps célestes tournant autour d'elle."
+    },
+    {
+      "term": "Spectroscopie",
+      "definition": "Technique d'analyse de la lumière qui permet de déterminer la composition chimique, la température, la vitesse et d'autres propriétés physiques des objets célestes en étudiant leur spectre lumineux."
+    },
+    {
+      "term": "Épicycle",
+      "definition": "Petit cercle sur lequel une planète était censée se déplacer dans le modèle géocentrique de Ptolémée pour expliquer les mouvements rétrogrades apparents."
+    },
+    {
+      "term": "Matière Noire",
+      "definition": "Forme hypothétique de matière qui n'interagit pas avec la lumière et qui est invoquée pour expliquer la dynamique gravitationnelle observée dans les galaxies et les amas de galaxies."
+    },
+    {
+      "term": "Énergie Noire",
+      "definition": "Forme hypothétique d'énergie responsable de l'accélération de l'expansion de l'Univers."
+    }
+  ],
+  "references": [
+    "Ruggles, C. (1999). Astronomy in Prehistoric Britain and Ireland. Yale University Press.",
+    "Rochberg, F. (2016). In the Path of the Stars: Babylonian Celestial Divination. Brill.",
+    "Gingerich, O. (2004). The Book Nobody Read: Chasing the Revolutions of Nicolaus Copernicus. Walker & Company."
+  ]
+}
+---
+
+INPUT APPROVED NARRATIVE DRAFT:
+---
+[[WIDGET:prerequisites]]
+
+[[WIDGET:diagnosticQuiz]]
+
+## Introduction
+
+L'astronomie, l'une des plus anciennes sciences humaines, est l'étude des objets et des phénomènes célestes. Depuis l'aube de l'humanité, le ciel nocturne a fasciné, inspiré et interrogé. Des premières observations rudimentaires aux télescopes spatiaux sophistiqués, l'histoire de l'astronomie est un récit captivant de la quête incessante de l'humanité pour comprendre sa place dans l'Univers. Cette leçon se propose de retracer les grandes étapes de cette épopée intellectuelle, des cosmologies antiques aux fondements de l'astrophysique moderne, en soulignant comment chaque avancée a remodelé notre perception du cosmos et a conduit à une compréhension de plus en plus sophistiquée des lois physiques qui régissent l'Univers.
+
+Nous explorerons comment l'observation empirique, l'ingéniosité technologique et la rigueur mathématique ont progressivement transformé une discipline d'abord descriptive et mythologique en une science prédictive et explicative : l'astrophysique. L'astrophysique, en tant que branche de l'astronomie, applique les principes de la physique – mécanique, thermodynamique, électromagnétisme, relativité et mécanique quantique – pour comprendre la nature physique des corps célestes et des phénomènes cosmiques. Elle cherche à analyser les mécanismes qui régissent la naissance, la vie et la mort des étoiles, des galaxies et de l'Univers lui-même, depuis ses origines jusqu'à son évolution future.
+
+Ce voyage historique nous permettra de comprendre les paradigmes successifs qui ont jalonné cette discipline, d'identifier les figures emblématiques qui ont osé remettre en question les dogmes établis, et d'évaluer l'impact de ces découvertes sur notre vision du monde. En fin de compte, nous serons mieux équipés pour créer une compréhension solide des méthodes et des questions fondamentales qui animent l'astrophysique contemporaine, notamment les défis posés par la matière noire, l'énergie noire et la recherche de vie extraterrestre.
+
+[[WIDGET:learningObjectives]]
+
+## 1. Les Premiers Regards vers le Ciel : L'Astronomie Antique et Pré-scientifique
+
+L'histoire de l'astronomie commence bien avant l'écriture, avec les premières civilisations qui ont levé les yeux vers le ciel. Pour ces sociétés, le ciel n'était pas seulement une source de lumière et d'obscurité, mais un calendrier, une horloge et un livre d'histoires divines. Les cycles du Soleil, de la Lune et des étoiles régissaient les saisons, les récoltes et les rituels, jouant un rôle central dans l'organisation sociale et religieuse.
+
+### 1.1. Les Observations Primitives et les Cosmologies Mythologiques
+
+Les vestiges archéologiques témoignent d'une compréhension précoce des mouvements célestes. Des sites comme <Location name="Stonehenge" lang="fr" description="Monument mégalithique préhistorique situé en Angleterre, aligné avec les solstices.">Stonehenge</Location> en Angleterre ou les pyramides égyptiennes révèlent des alignements astronomiques sophistiqués, suggérant une observation précise des solstices et des équinoxes, ainsi que d'autres phénomènes célestes importants pour l'agriculture et les rituels [1](#ref-1). Ces observations étaient souvent intégrées dans des cosmologies mythologiques complexes, où les corps célestes étaient perçus comme des divinités, des manifestations de forces surnaturelles, ou des indicateurs de la volonté divine.
+
+En <Location name="Mésopotamie" lang="fr" description="Région historique du Moyen-Orient, berceau de nombreuses civilisations antiques.">Mésopotamie</Location>, notamment chez les <RealPerson name="Babylonians" lang="fr" bio="Civilisation antique de Mésopotamie, réputée pour ses avancées en astronomie et mathématiques.">Babyloniens</RealPerson>, l'astronomie était étroitement liée à l'astrologie. Leurs tablettes d'argile, datant de plusieurs millénaires avant notre ère, contiennent des catalogues d'étoiles, des prédictions d'éclipses lunaires et solaires, et des descriptions détaillées des mouvements planétaires. Ils ont développé des systèmes de numération sexagésimale (base 60) qui sont encore utilisés aujourd'hui pour mesurer le temps (heures, minutes, secondes) et les angles (degrés, minutes, secondes d'arc). Ces observations, bien que motivées par des croyances divinatoires et la recherche de présages, ont jeté les bases d'une approche systématique et quantitative de l'enregistrement des phénomènes célestes, essentielle pour le développement ultérieur de l'astronomie scientifique [2](#ref-2).
+
+### 1.2. L'Héritage Grec : De l'Observation à la Modélisation Géocentrique
+
+C'est avec les <RealPerson name="Ancient_Greece" lang="fr" bio="Civilisation antique qui a jeté les bases de la philosophie, de la science et de la démocratie occidentales.">Grecs</RealPerson> que l'astronomie a commencé à se détacher de la mythologie pour embrasser une approche plus rationnelle, géométrique et philosophique. Des penseurs comme <RealPerson name="Thales_of_Miletus" lang="fr" bio="Philosophe présocratique, considéré comme le premier philosophe et scientifique grec.">Thalès de Milet</RealPerson> (vers 624-546 av. J.-C.) sont crédités d'avoir prédit une éclipse solaire, démontrant une capacité à anticiper les événements célestes basée sur la régularité des cycles.
+
+<RealPerson name="Aristotle" lang="fr" bio="Philosophe grec, élève de Platon, dont les écrits ont influencé la pensée occidentale pendant des siècles.">Aristote</RealPerson> (384-322 av. J.-C.) a proposé un modèle cosmologique géocentrique, où la Terre immobile était au centre de l'Univers, entourée de sphères concentriques parfaites portant les planètes et les étoiles. Ce modèle, bien que physiquement incorrect, était logiquement cohérent avec les observations de l'époque (l'absence de parallaxe stellaire observable, par exemple) et s'inscrivait dans sa vision philosophique d'un cosmos ordonné, hiérarchisé et immuable, où les corps célestes étaient d'une nature différente des corps terrestres.
+
+<Alert type="biography">
+**<RealPerson name="Claude_Ptolémée" lang="fr" bio="Astronome, géographe et mathématicien gréco-égyptien qui vécut à Alexandrie. Son œuvre majeure, l'« Almageste » (initialement *Mathematikè Syntaxis*), est une encyclopédie astronomique en treize volumes qui systématise le modèle géocentrique de l'Univers. Il y décrit les mouvements des planètes à l'aide d'épicycles et de déférents, permettant des prédictions relativement précises des positions planétaires. Son modèle est resté la référence en astronomie pendant près de 14 siècles.">Claude Ptolémée</RealPerson> (vers 100-170 ap. J.-C.)** fut un astronome, géographe et mathématicien gréco-égyptien qui vécut à Alexandrie. Son œuvre majeure, l'« <Artwork name="Almagest" lang="fr" description="Traité astronomique de Ptolémée, qui a systématisé le modèle géocentrique.">Almageste</Artwork> » (initialement *Mathematikè Syntaxis*), est une encyclopédie astronomique en treize volumes qui systématise le modèle géocentrique de l'Univers. Il y décrit les mouvements des planètes à l'aide d'épicycles et de déférents, permettant des prédictions relativement précises des positions planétaires. Son modèle est resté la référence en astronomie pendant près de 14 siècles.
+[Read more on Wikipedia](https://fr.wikipedia.org/wiki/Claude_Ptol%C3%A9m%C3%A9e)
+</Alert>
+
+Le modèle géocentrique a atteint son apogée avec Ptolémée au IIe siècle de notre ère. Dans son œuvre monumentale, l'« Almageste », il a perfectionné le modèle aristotélicien en introduisant des concepts géométriques complexes tels que les épicycles (petits cercles sur lesquels les planètes se déplaçaient), les déférents (grands cercles autour de la Terre sur lesquels les centres des épicycles se déplaçaient) et les équant (points excentrés par rapport auxquels la vitesse angulaire des planètes était constante). Ces ajustements permettaient de rendre compte des mouvements rétrogrades apparents des planètes et d'améliorer la précision des prédictions de leurs positions, malgré la fausseté de l'hypothèse centrale. Le modèle ptoléméen, soutenu par l'Église chrétienne et la philosophie scolastique, dominera la pensée astronomique occidentale pendant près de 14 siècles.
+
+[[WIDGET:Quiz:histoire_quiz_1]]
+
+## 2. La Révolution Copernicienne et l'Émergence de la Méthode Scientifique
+
+Le XVIe siècle marque un tournant majeur dans l'histoire de l'astronomie, avec la remise en question du modèle géocentrique et l'émergence d'une nouvelle approche basée sur l'observation systématique, l'expérimentation et le raisonnement mathématique, qui allait devenir la méthode scientifique moderne.
+
+### 2.1. Le Défi Héliocentrique : Copernic et Galilée
+
+C'est <RealPerson name="Nicolaus_Copernicus" lang="fr" bio="Astronome polonais, auteur de la théorie héliocentrique.">Nicolas Copernic</RealPerson> (1473-1543) qui, dans son ouvrage posthume <Artwork name="De_revolutionibus_orbium_coelestium" lang="fr" description="Livre de Copernic présentant le modèle héliocentrique.">De revolutionibus orbium coelestium</Artwork> (1543), a proposé un modèle héliocentrique où le Soleil, et non la Terre, était au centre de l'Univers. Ce modèle simplifiait considérablement les explications des mouvements planétaires, éliminant le besoin de nombreux épicycles pour expliquer les rétrogradations. Cependant, il rencontra une forte résistance, notamment de la part de l'Église, car il contredisait l'interprétation littérale des Écritures et la vision anthropocentrique de l'Univers.
+
+La véritable validation empirique du modèle héliocentrique viendra avec <RealPerson name="Galileo_Galilei" lang="fr" bio="Physicien, mathématicien et astronome italien, souvent considéré comme le père de la science moderne.">Galilée</RealPerson> (1564-1642). Utilisant une lunette astronomique qu'il avait perfectionnée, il fit des découvertes révolutionnaires qui sapèrent les fondements du modèle ptoléméen :
+*   Les phases de Vénus, qui ne pouvaient s'expliquer que si Vénus tournait autour du Soleil, et non autour de la Terre.
+*   Les quatre plus grands satellites de Jupiter (<CelestialLink name="Galilean_moons" lang="fr" bio="Les quatre plus grands satellites de Jupiter, découverts par Galilée.">Lunes Galiléennes</CelestialLink>), démontrant que tous les corps célestes ne tournaient pas autour de la Terre, remettant en question l'idée d'un centre unique de mouvement.
+*   Les cratères et montagnes de la Lune, montrant que les corps célestes n'étaient pas des sphères parfaites et immuables, mais des mondes imparfaits, similaires à la Terre.
+*   Les taches solaires, indiquant que le Soleil n'était pas non plus parfait et qu'il tournait sur lui-même, contredisant l'idée de la perfection céleste.
+
+Ces observations, publiées dans son <Artwork name="Sidereus_Nuncius" lang="fr" description="Livre de Galilée décrivant ses observations télescopiques.">Sidereus Nuncius</Artwork> (1610), ont fourni des preuves irréfutables en faveur du modèle héliocentrique et ont marqué le début de l'astronomie observationnelle moderne. La condamnation de Galilée par l'Inquisition en 1633 illustre la tension entre la science émergente, basée sur l'observation et la raison, et les dogmes établis.
+
+### 2.2. Les Lois du Mouvement Planétaire et la Gravitation Universelle
+
+Parallèlement, <RealPerson name="Tycho_Brahe" lang="fr" bio="Astronome danois, célèbre pour ses observations précises des corps célestes.">Tycho Brahe</RealPerson> (1546-1601), un astronome danois, a effectué les observations les plus précises de son temps sans télescope, accumulant une quantité colossale de données sur les positions des planètes. Son assistant, <RealPerson name="Johannes_Kepler" lang="fr" bio="Astronome et mathématicien allemand, célèbre pour ses lois du mouvement planétaire.">Johannes Kepler</RealPerson> (1571-1630), a hérité de ces données et, après des années de calculs acharnés, a formulé ses trois <TheoremLink name="Kepler's_laws_of_planetary_motion" lang="fr" description="Trois lois décrivant le mouvement des planètes autour du Soleil.">lois du mouvement planétaire</TheoremLink> :
+1.  Les planètes décrivent des orbites elliptiques, avec le Soleil à l'un des foyers.
+2.  Le rayon vecteur reliant le Soleil à une planète balaie des aires égales en des temps égaux.
+3.  Le carré de la période orbitale d'une planète est proportionnel au cube du demi-grand axe de son orbite.
+
+Ces lois, publiées entre 1609 et 1619, ont non seulement décrit avec précision le mouvement des planètes, mais ont aussi brisé le dogme des orbites circulaires parfaites, introduisant l'ellipse comme forme fondamentale des trajectoires célestes.
+
+Le couronnement de cette période est l'œuvre d'<RealPerson name="Isaac_Newton" lang="fr" bio="Physicien, mathématicien et astronome anglais, auteur de la loi de la gravitation universelle.">Isaac Newton</RealPerson> (1642-1727). Dans ses <Artwork name="Philosophiæ_Naturalis_Principia_Mathematica" lang="fr" description="Œuvre majeure de Newton, présentant les lois du mouvement et la gravitation universelle.">Principia Mathematica</Artwork> (1687), Newton a unifié les lois de Kepler et la physique terrestre en une seule <TheoremLink name="Newton's_law_of_universal_gravitation" lang="fr" description="Loi décrivant l'attraction gravitationnelle entre deux corps massifs.">loi de la gravitation universelle</TheoremLink>. Cette loi expliquait non seulement pourquoi les planètes orbitaient le Soleil selon les lois de Kepler, mais aussi la chute des corps sur Terre, les marées et les orbites des comètes. C'était une démonstration éclatante de la puissance de la méthode scientifique, combinant observation, modélisation mathématique et prédiction, et établissant une physique universelle applicable aussi bien sur Terre que dans les cieux.
+
+<Epistemology title="La controverse sur la nature de la lumière et ses implications astronomiques">
+Au XVIIe siècle, une controverse majeure a opposé Isaac Newton et <RealPerson name="Christiaan_Huygens" lang="fr" bio="Mathématicien, physicien et astronome néerlandais, théoricien de la lumière ondulatoire.">Christiaan Huygens</RealPerson> sur la nature de la lumière. Newton défendait une théorie corpusculaire, où la lumière était composée de particules, tandis que Huygens proposait une théorie ondulatoire. Bien que la théorie de Newton ait dominé pendant un temps, les expériences ultérieures de <RealPerson name="Thomas_Young" lang="fr" bio="Médecin, physicien et égyptologue anglais, célèbre pour son expérience sur l'interférence lumineuse.">Thomas Young</RealPerson> au début du XIXe siècle et les travaux de <RealPerson name="Augustin-Jean_Fresnel" lang="fr" bio="Physicien français, pionnier de l'optique ondulatoire.">Augustin Fresnel</RealPerson> ont finalement validé la nature ondulatoire de la lumière.
+
+Cette controverse n'était pas anodine pour l'astronomie. La compréhension de la lumière est fondamentale pour l'astrophysique, car c'est par l'analyse de la lumière que nous obtenons presque toutes les informations sur les objets célestes. La reconnaissance de la nature ondulatoire a ouvert la voie à la spectroscopie, permettant d'étudier la composition chimique, la température, la vitesse et même la pression des atmosphères stellaires et planétaires. Plus tard, la physique quantique a réconcilié ces deux visions avec la dualité onde-corpuscule, montrant que la lumière possède à la fois des propriétés ondulatoires et particulaires, une pierre angulaire de la physique moderne et de l'astrophysique.
+</Epistemology>
+
+## 3. L'Âge des Lumières et les Fondements de l'Astrophysique Classique
+
+Le XVIIIe et le XIXe siècle ont vu l'astronomie s'éloigner de la seule mécanique céleste pour commencer à explorer la nature physique des objets célestes, jetant les bases de ce que nous appelons aujourd'hui l'astrophysique. Cette période est caractérisée par une amélioration constante des instruments d'observation et l'application de nouvelles techniques d'analyse physique.
+
+### 3.1. Catalogues Stellaires et Découverte de Nouveaux Mondes
+
+L'amélioration des télescopes, notamment grâce aux avancées en optique, a permis des observations plus détaillées et la découverte de nouveaux objets. <RealPerson name="William_Herschel" lang="fr" bio="Astronome germano-britannique, découvreur d'Uranus et pionnier de l'astronomie stellaire.">William Herschel</RealPerson> (1738-1822), avec sa sœur <RealPerson name="Caroline_Herschel" lang="fr" bio="Astronome germano-britannique, pionnière de l'astronomie féminine.">Caroline Herschel</RealPerson>, a systématiquement cartographié le ciel, découvrant la planète <CelestialLink name="Uranus" lang="fr" bio="Septième planète du système solaire.">Uranus</CelestialLink> en 1781 et des milliers de nébuleuses et d'amas d'étoiles. Il a été le premier à tenter de déterminer la forme de notre galaxie, la <CelestialLink name="Milky_Way" lang="fr" bio="Notre galaxie, une galaxie spirale barrée.">Voie Lactée</CelestialLink>, en comptant les étoiles dans différentes directions, posant les premières bases de la cartographie galactique.
+
+<RealPerson name="Charles_Messier" lang="fr" bio="Astronome français, célèbre pour son catalogue d'objets non cométaires.">Charles Messier</RealPerson> (1730-1817) a compilé un célèbre catalogue de nébuleuses et d'amas d'étoiles (le <Artwork name="Messier_catalogue" lang="fr" description="Catalogue d'objets célestes non cométaires compilé par Charles Messier.">Catalogue Messier</Artwork>), initialement pour éviter de les confondre avec des comètes lors de ses recherches. Ce catalogue est encore utilisé aujourd'hui par les astronomes amateurs et professionnels comme une référence pour les objets du ciel profond.
+
+### 3.2. La Naissance de la Spectroscopie et l'Analyse de la Lumière
+
+Le véritable avènement de l'astrophysique est intrinsèquement lié à la compréhension de la lumière et à son analyse. Au début du XIXe siècle, <RealPerson name="Joseph_von_Fraunhofer" lang="fr" bio="Opticien et physicien allemand, découvreur des raies sombres dans le spectre solaire.">Joseph von Fraunhofer</RealPerson> (1787-1826) a découvert des milliers de raies sombres dans le spectre du Soleil, connues sous le nom de <ConceptLink name="Fraunhofer_lines" lang="fr" description="Raies d'absorption sombres dans le spectre solaire.">raies de Fraunhofer</ConceptLink>. Plus tard, <RealPerson name="Gustav_Kirchhoff" lang="fr" bio="Physicien allemand, pionnier de la spectroscopie.">Gustav Kirchhoff</RealPerson> (1824-1887) et <RealPerson name="Robert_Bunsen" lang="fr" bio="Chimiste allemand, inventeur du bec Bunsen et pionnier de la spectroscopie.">Robert Bunsen</RealPerson> (1811-1899) ont démontré que chaque élément chimique produisait un spectre unique de raies d'émission ou d'absorption lorsqu'il était chauffé ou traversé par de la lumière.
+
+Cette découverte a été révolutionnaire : elle a permis aux astronomes d'analyser la composition chimique des étoiles et des nébuleuses à des millions d'années-lumière de distance, sans jamais avoir à les visiter. La spectroscopie est devenue l'outil fondamental de l'astrophysique, permettant de déterminer la température, la densité, la vitesse radiale (par l'effet Doppler) et même les champs magnétiques des objets célestes. C'est grâce à elle que l'astronomie a pu passer d'une science de la position à une science de la physique des astres.
+
+> « L'astronomie est la science qui nous enseigne que l'Univers est beaucoup plus grand que nous ne l'aurions jamais imaginé dans nos rêves les plus fous. » — <RealPerson name="Camille_Flammarion" lang="fr" bio="Astronome et écrivain français, vulgarisateur scientifique.">Camille Flammarion</RealPerson>, *L'Astronomie Populaire*, G. Marpon et Flammarion, Paris, 1880, p. 1.
+>
+> Cette citation de Camille Flammarion, un ardent vulgarisateur de l'astronomie, souligne l'impact profond des découvertes de cette période. L'extension de notre compréhension de l'Univers, non seulement en taille mais aussi en complexité physique, a été une constante depuis l'Antiquité. La spectroscopie a été un catalyseur majeur de cette expansion, révélant que les lois de la physique que nous connaissons sur Terre s'appliquent également aux confins de l'Univers, et que les étoiles sont composées des mêmes éléments chimiques que notre propre planète. C'est une étape cruciale vers l'unification de la physique terrestre et céleste.
+
+*Figure 1: <Artwork name="Fraunhofer_lines" lang="fr" description="Spectre solaire montant les raies d'absorption de Fraunhofer.">Spectre solaire avec les raies de Fraunhofer</Artwork> - Les lignes sombres indiquent l'absorption de la lumière par des éléments chimiques spécifiques dans l'atmosphère du Soleil. Source: Wikimedia Commons*
+![Fraunhofer_lines](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Solar_spectrum_with_Fraunhofer_lines.jpg/1280px-Solar_spectrum_with_Fraunhofer_lines.jpg)
+
+## 4. Le XXe Siècle : L'Ère de l'Astrophysique Moderne et de la Cosmologie
+
+Le XXe siècle a été le théâtre d'une explosion de découvertes qui ont transformé l'astrophysique en une science mature et dynamique, capable de sonder les origines et l'évolution de l'Univers à des échelles inimaginables auparavant.
+
+### 4.1. La Révolution de la Relativité et la Structure Stellaire
+
+Les travaux d'<RealPerson name="Albert_Einstein" lang="fr" bio="Physicien théoricien, auteur des théories de la relativité restreinte et générale.">Albert Einstein</RealPerson> (1879-1955) ont profondément modifié notre compréhension de l'espace, du temps et de la gravité. Sa <TheoremLink name="Theory_of_relativity" lang="fr" description="Théorie physique développée par Albert Einstein, incluant la relativité restreinte et générale.">théorie de la relativité générale</TheoremLink> (1915) a remplacé la gravitation newtonienne par une description où la gravité est une manifestation de la courbure de l'espace-temps causée par la masse et l'énergie. Cette théorie a ouvert la voie à la compréhension des <ConceptLink name="Black_hole" lang="fr" description="Région de l'espace-temps d'où rien ne peut s'échapper.">trous noirs</ConceptLink>, des <ConceptLink name="Gravitational_wave" lang="fr" description="Ondulations de l'espace-temps prédites par la relativité générale.">ondes gravitationnelles</ConceptLink> et de la cosmologie moderne, en fournissant un cadre théorique pour l'Univers à grande échelle.
+
+Parallèlement, la physique quantique a permis de comprendre la structure interne des étoiles. Des scientifiques comme <RealPerson name="Arthur_Eddington" lang="fr" bio="Astrophysicien britannique, pionnier de l'étude de la structure stellaire.">Arthur Eddington</RealPerson> (1882-1944) ont développé les premiers modèles de structure stellaire, expliquant comment les étoiles maintiennent leur équilibre entre la pression de radiation et la gravité. <RealPerson name="Cecilia_Payne-Gaposchkin" lang="fr" bio="Astronome anglo-américaine, a démontré que les étoiles sont principalement composées d'hydrogène et d'hélium.">Cecilia Payne-Gaposchkin</RealPerson> (1900-1979) a démontré que les étoiles sont principalement composées d'hydrogène et d'hélium, une découverte fondamentale qui a révolutionné notre compréhension de la composition cosmique. La compréhension des réactions de fusion nucléaire au cœur des étoiles, notamment par <RealPerson name="Hans_Bethe" lang="fr" bio="Physicien nucléaire germano-américain, lauréat du prix Nobel pour ses travaux sur la nucléosynthèse stellaire.">Hans Bethe</RealPerson> (1906-2005), a révélé la source de leur énergie et le mécanisme de la <ConceptLink name="Stellar_nucleosynthesis" lang="fr" description="Processus de création de nouveaux éléments chimiques dans les étoiles.">nucléosynthèse stellaire</ConceptLink>, expliquant l'origine de tous les éléments chimiques plus lourds que l'hélium.
+
+### 4.2. L'Univers en Expansion et le Big Bang
+
+Une autre révolution est venue de l'observation des galaxies. <RealPerson name="Henrietta_Swan_Leavitt" lang="fr" bio="Astronome américaine, découvreuse de la relation période-luminosité des céphéides.">Henrietta Swan Leavitt</RealPerson> (1868-1921) a découvert la relation période-luminosité des <CelestialLink name="Cepheid_variable" lang="fr" bio="Étoiles variables dont la période de pulsation est liée à leur luminosité intrinsèque.">Céphéides</CelestialLink>, des étoiles variables dont la période de pulsation est directement liée à leur luminosité intrinsèque. Cette relation a fourni une « chandelle standard » cruciale pour mesurer les distances cosmiques à des échelles intergalactiques.
+
+<RealPerson name="Edwin_Hubble" lang="fr" bio="Astronome américain, célèbre pour la découverte de l'expansion de l'Univers.">Edwin Hubble</RealPerson> (1889-1953), utilisant le télescope de <InstitutionLink name="Mount_Wilson_Observatory" lang="fr" description="Observatoire astronomique en Californie, célèbre pour les découvertes de Hubble.">Mount Wilson</InstitutionLink>, a appliqué la méthode de Leavitt pour montrer que les « nébuleuses » spirales étaient en fait des galaxies distinctes, situées bien au-delà de la Voie Lactée. En 1929, il a découvert que ces galaxies s'éloignaient de nous, et que leur vitesse de récession était proportionnelle à leur distance (<TheoremLink name="Hubble's_law" lang="fr" description="Loi décrivant l'expansion de l'Univers.">Loi de Hubble</TheoremLink>). C'était la preuve observationnelle fondamentale de l'expansion de l'Univers.
+
+Cette découverte a conduit au développement de la <ConceptLink name="Big_Bang" lang="fr" description="Modèle cosmologique décrivant l'origine et l'évolution de l'Univers.">théorie du Big Bang</ConceptLink>, proposée initialement par <RealPerson name="Georges_Lemaître" lang="fr" bio="Prêtre catholique et physicien belge, père de la théorie du Big Bang.">Georges Lemaître</RealPerson> (1894-1966). La découverte du <ConceptLink name="Cosmic_microwave_background" lang="fr" description="Rayonnement fossile de l'Univers, preuve du Big Bang.">fond diffus cosmologique</ConceptLink> (CMB) en 1964 par <RealPerson name="Arno_Penzias" lang="fr" bio="Physicien américain, lauréat du prix Nobel pour la découverte du CMB.">Arno Penzias</RealPerson> et <RealPerson name="Robert_Woodrow_Wilson" lang="fr" bio="Astronome américain, lauréat du prix Nobel pour la découverte du CMB.">Robert Woodrow Wilson</RealPerson> a fourni une preuve observationnelle cruciale pour le Big Bang, confirmant que l'Univers a eu un début chaud et dense.
+
+*Figure 2: Edwin Hubble au télescope de Mount Wilson - Ses observations ont révolutionné notre compréhension de l'Univers. Source: Wikimedia Commons*
+<CustomFigure src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Edwin_Hubble_at_Mount_Wilson_Observatory.jpg/800px-Edwin_Hubble_at_Mount_Wilson_Observatory.jpg" alt="Edwin_Hubble" caption="Figure 6: Carte du Fond Diffus Cosmologique - Une image de l'Univers primordial, montrant les infimes fluctuations de température du CMB, qui sont les graines des futures structures cosmiques. Source: ESA/Planck Collaboration" fallbackText="" fallbackUrl="" />
+![Cosmic_microwave_background](https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Planck_CMB_%282013%29.png/1280px-Planck_CMB_%282013%29.png)
+
+### 4.3. Matière Noire et Énergie Noire
+
+Les observations des années 1930 par <RealPerson name="Fritz_Zwicky" lang="fr" bio="Astronome suisse, pionnier de l'étude de la matière noire.">Fritz Zwicky</RealPerson> (1898-1974) sur les amas de galaxies, puis dans les années 1970 par <RealPerson name="Vera_Rubin" lang="fr" bio="Astronome américaine, a fourni des preuves solides de l'existence de la matière noire.">Vera Rubin</RealPerson> (1928-2016) sur les courbes de rotation des galaxies spirales, ont révélé que la matière visible ne suffisait pas à expliquer la dynamique gravitationnelle observée. Cela a conduit à l'hypothèse de la <ConceptLink name="Dark_matter" lang="fr" description="Forme hypothétique de matière qui n'interagit pas avec la lumière.">matière noire</ConceptLink>, une forme de matière invisible qui n'interagit pas avec la lumière et qui représente environ 27% de la densité d'énergie de l'Univers.
+
+Plus récemment, à la fin des années 1990, des observations de <CelestialLink name="Type_Ia_supernova" lang="fr" bio="Type de supernova utilisé comme chandelle standard pour mesurer les distances cosmiques.">supernovae de type Ia</CelestialLink> lointaines ont montré que l'expansion de l'Univers n'est pas seulement en cours, mais qu'elle s'accélère. Cette accélération est attribuée à une force mystérieuse appelée <ConceptLink name="Dark_energy" lang="fr" description="Forme hypothétique d'énergie responsable de l'accélération de l'expansion de l'Univers.">énergie noire</ConceptLink>, qui constituerait environ 68% de la densité d'énergie de l'Univers. La nature de la matière noire et de l'énergie noire reste l'un des plus grands défis de l'astrophysique contemporaine, représentant une lacune majeure dans notre modèle cosmologique standard.
+
+Pour mieux visualiser l'évolution des concepts et des découvertes clés, nous vous proposons d'explorer la frise chronologique interactive ci-dessous. Elle met en évidence les moments charnières et les figures emblématiques qui ont façonné notre compréhension du cosmos, de l'Antiquité à nos jours.
+
+[[WIDGET:Timeline:astronomy_timeline]]
+
+*Figure 3: <CelestialLink name="Andromeda_Galaxy" lang="fr" bio="La galaxie spirale la plus proche de la Voie Lactée.">Galaxie d'Andromède</CelestialLink> - Un exemple de galaxie spirale, dont l'étude a permis de comprendre l'expansion de l'Univers et la dynamique galactique. Source: Wikimedia Commons*
+![Andromeda_Galaxy](https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/1280px-Andromeda_Galaxy_%28with_h-alpha%29.jpg)
+
+## 5. L'Astrophysique Contemporaine : Défis et Perspectives
+
+L'astrophysique du XXIe siècle est une discipline en pleine effervescence, repoussant sans cesse les limites de notre connaissance grâce à de nouvelles technologies, des instruments d'observation de pointe et des approches interdisciplinaires.
+
+### 5.1. La Quête des Exoplanètes et la Vie Ailleurs
+
+L'une des avancées les plus spectaculaires de ces dernières décennies est la découverte et l'étude des <ConceptLink name="Exoplanet" lang="fr" description="Planète située en dehors de notre système solaire.">exoplanètes</ConceptLink> – des planètes orbitant d'autres étoiles. Depuis la première détection confirmée en 1995, des milliers d'exoplanètes ont été identifiées, révélant une diversité étonnante de systèmes planétaires. Des missions comme le <CelestialLink name="Kepler_space_telescope" lang="fr" bio="Télescope spatial de la NASA dédié à la recherche d'exoplanètes.">télescope spatial Kepler</CelestialLink> et le <CelestialLink name="Transiting_Exoplanet_Survey_Satellite" lang="fr" bio="Télescope spatial de la NASA pour la recherche d'exoplanètes par la méthode des transits.">TESS</CelestialLink> ont permis de caractériser ces mondes lointains, certains d'entre eux se trouvant dans la zone habitable de leur étoile, où l'eau liquide pourrait exister, condition essentielle à la vie telle que nous la connaissons.
+
+L'étude des exoplanètes est au cœur de la recherche de vie extraterrestre. Les astrophysiciens développent des méthodes pour analyser les atmosphères exoplanétaires à la recherche de <ConceptLink name="Biosignature" lang="fr" description="Indicateur scientifique de la présence de vie.">biosignatures</ConceptLink> (molécules comme l'oxygène, le méthane ou l'ozone en déséquilibre chimique). C'est une quête qui transcende les frontières de l'astronomie et de la biologie, posant des questions fondamentales sur l'unicité de la vie sur Terre et notre place dans l'Univers.
+
+*Figure 4: <CelestialLink name="TRAPPIST-1" lang="fr" bio="Système planétaire avec sept exoplanètes de taille terrestre.">Système TRAPPIST-1</CelestialLink> - Un système d'exoplanètes fascinant, dont plusieurs se trouvent dans la zone habitable de leur étoile naine rouge, offrant des cibles prometteuses pour la recherche de biosignatures. Source: AI-generated*
+![Exoplanet_system_TRAPPIST-1](https://image.pollinations.ai/prompt/Exoplanet_system_TRAPPIST_1_with_seven_rocky_planets_orbiting_a_red_dwarf_star_some_in_the_habitable_zone_realistic_art_scientific_illustration?width=640&amp;amp%3Bamp%3Bheight=480&amp;amp%3Bamp%3Bnologo=true&amp;amp%3Bamp%3Bprivate=true&amp;amp%3Bheight=480&amp;amp%3Bnologo=true&amp;amp%3Bprivate=true&amp;height=480&amp;nologo=true&amp;private=true)
+
+### 5.2. L'Astronomie Multi-Messager et les Nouveaux Horizons
+
+L'astrophysique moderne ne se limite plus à l'étude de la lumière visible ou même du spectre électromagnétique. L'avènement de l'<ConceptLink name="Multi-messenger_astronomy" lang="fr" description="Étude de l'Univers en utilisant différentes formes de 'messagers' cosmiques.">astronomie multi-messager</ConceptLink> a ouvert de nouvelles fenêtrès sur l'Univers, permettant d'observer des phénomènes cosmiques par des moyens complémentaires.
+*   **Ondes gravitationnelles** : La détection directe des ondes gravitationnelles par l'observatoire <InstitutionLink name="LIGO" lang="fr" description="Observatoire d'ondes gravitationnelles.">LIGO</InstitutionLink> en 2015 a confirmé une prédiction d'Einstein et a inauguré une nouvelle ère. Ces ondes, produites par des événements cataclysmiques comme la fusion de trous noirs ou d'<ConceptLink name="Neutron_star" lang="fr" description="Noyau effondré d'une étoile massive.">étoiles à neutrons</ConceptLink>, nous permettent d'observer l'Univers d'une manière totalement inédite, révélant des phénomènes invisibles à la lumière et fournissant des informations sur la nature de l'espace-temps lui-même.
+*   **Neutrinos** : Les <ChemicalLink name="Neutrino" lang="fr" bio="Particule élémentaire de masse très faible, interagissant faiblement avec la matière.">neutrinos</ChemicalLink>, des particules élémentaires de masse très faible interagissant très faiblement avec la matière, nous parviennent directement du cœur des étoiles (comme le Soleil) ou d'événements violents (supernovae), offrant un aperçu unique de processus inaccessibles à l'observation électromagnétique.
+*   **Rayons cosmiques** : Ces particules de haute énergie (protons, noyaux atomiques), provenant de sources galactiques et extragalactiques, sont étudiées pour comprendre les accélérateurs cosmiques les plus puissants de l'Univers, tels que les restes de supernovae ou les noyaux actifs de galaxies.
+
+Ces « messagers » cosmiques, combinés aux observations dans tout le spectre électromagnétique (radio, infrarouge, visible, ultraviolet, rayons X, rayons gamma), permettent de créer une image beaucoup plus complète et dynamique de l'Univers, ouvrant la voie à une compréhension holistique des phénomènes astrophysiques.
+
+### 5.3. Les Grands Observatoires et les Défis Futurs
+
+Les projets d'observatoires géants, qu'ils soient terrestres (comme l'<InstitutionLink name="Extremely_Large_Telescope" lang="fr" description="Télescope optique terrestre en construction, le plus grand du monde.">ELT</InstitutionLink> ou le <InstitutionLink name="Square_Kilometre_Array" lang="fr" description="Futur radiotélescope géant.">SKA</InstitutionLink>) ou spatiaux (comme le <CelestialLink name="James_Webb_Space_Telescope" lang="fr" bio="Télescope spatial infrarouge, successeur de Hubble.">James Webb Space Telescope</CelestialLink>), continuent de repousser les limites de l'observation. Ils permettront d'étudier les premières étoiles et galaxies formées après le Big Bang, de sonder les atmosphères d'exoplanètes avec une précision inégalée à la recherche de biosignatures, et de tester les modèles cosmologiques avec une rigueur accrue.
+
+Les défis futurs de l'astrophysique incluent la compréhension de la nature de la matière noire et de l'énergie noire, l'origine de la vie dans l'Univers, la formation des premières structures cosmiques, et l'unification de la relativité générale avec la mécanique quantique pour une théorie complète de la gravité. C'est une science en constante évolution, où chaque réponse soulève de nouvelles questions, invitant les générations futures à poursuivre cette exploration sans fin des mystères du cosmos.
+
+Pour consolider votre compréhension des concepts clés abordés dans cette section et dans l'ensemble de la leçon, veuillez compléter l'exercice de remplissage des blancs ci-dessous. Il vous permettra de réviser les termes et les idées fondamentales.
+
+[[WIDGET:FillInBlanks:concepts_cles]]
+
+*Figure 5: Télescope Spatial James Webb - Un instrument révolutionnaire qui explore l'Univers dans l'infrarouge, permettant d'observer des galaxies lointaines et les atmosphères d'exoplanètes. Source: Wikimedia Commons*
+![James_Webb_Space_Telescope](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/James_Webb_Space_Telescope_in_space.jpg/1280px-James_Webb_Space_Telescope_in_space.jpg)
+
+## Conclusion
+
+[[WIDGET:conclusionSummary]]
+
+Nous avons parcouru un chemin immense, des premières observations empiriques des civilisations antiques aux théories complexes de l'astrophysique moderne. L'histoire de l'astronomie est celle d'une progression constante, marquée par des révolutions conceptuelles, des avancées technologiques et le courage intellectuel de figures emblématiques. Du modèle géocentrique de Ptolémée au modèle héliocentrique de Copernic et Galilée, en passant par les lois de Kepler et la gravitation universelle de Newton, chaque étape a affiné notre compréhension de l'Univers et de notre place en son sein.
+
+L'émergence de l'astrophysique, grâce à la spectroscopie et aux théories de la relativité et de la mécanique quantique, a transformé l'astronomie d'une science de la position en une science de la physique des corps célestes. Nous avons vu comment les découvertes de l'expansion de l'Univers, du fond diffus cosmologique, de la matière noire et de l'énergie noire ont remodelé notre cosmologie, nous confrontant à l'immensité et à la complexité de l'Univers. Aujourd'hui, l'astrophysique continue d'être à l'avant-garde de la découverte, avec la quête des exoplanètes et l'avènement de l'astronomie multi-messager, qui nous permettent d'analyser l'Univers sous des angles inédits, en utilisant non seulement la lumière mais aussi les ondes gravitationnelles et les particules subatomiques.
+
+Ce parcours historique nous a montré que la science n'est pas une collection statique de faits, mais un processus dynamique de remise en question, d'observation, d'expérimentation et de modélisation. En tant que futurs astrophysiciens, vous serez appelés à évaluer les théories existantes, à créer de nouvelles hypothèses et à analyser des données toujours plus complexes pour percer les mystères restants de l'Univers, contribuant ainsi à la prochaine grande révolution de notre compréhension cosmique.
+
+[[WIDGET:whatsNext]]
+
+[[WIDGET:finalEvaluation]]
+
+
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiUnVnZ2xlcywgQy4gKDE5OTkpLiDCqyBBc3Ryb25vbXkgaW4gUHJlaGlzdG9yaWMgQnJpdGFpbiBhbmQgSXJlbGFuZCDCuy4gWWFsZSBVbml2ZXJzaXR5IFByZXNzLiAoQ2V0IG91dnJhZ2UgZXhwbG9yZSBsZXMgYWxpZ25lbWVudHMgYXN0cm9ub21pcXVlcyBkZXMgc2l0ZXMgbcOpZ2FsaXRoaXF1ZXMsIHkgY29tcHJpcyBTdG9uZWhlbmdlLCBldCBsZXVyIHNpZ25pZmljYXRpb24gcG91ciBsZXMgc29jacOpdMOpcyBwcsOpaGlzdG9yaXF1ZXMuKSA8YSBuYW1lPVwicmVmLTJcIj48L2E+LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SdWdnbGVzJTIwJTIyQXN0cm9ub215JTIwaW4lMjBQcmVoaXN0b3JpYyUyMEJyaXRhaW4lMjBhbmQlMjBJcmVsYW5kJTIyJTIwMTk5OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIn0seyJudW0iOjIsInRleHQiOiJSb2NoYmVyZywgRi4gKDIwMTYpLiDCqyBJbiB0aGUgUGF0aCBvZiB0aGUgU3RhcnM6IEJhYnlsb25pYW4gQ2VsZXN0aWFsIERpdmluYXRpb24gwrsuIEJyaWxsLiAoQ2UgbGl2cmUgZMOpdGFpbGxlIGwnYXN0cm9ub21pZSBldCBsJ2FzdHJvbG9naWUgYmFieWxvbmllbm5lcywgbGV1cnMgbcOpdGhvZGVzIGQnb2JzZXJ2YXRpb24gZXQgbGV1ciBpbXBhY3Qgc3VyIGxhIGNvbXByw6loZW5zaW9uIGRlcyBwaMOpbm9tw6huZXMgY8OpbGVzdGVzLikuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJvY2hiZXJnJTIwJTIySW4lMjB0aGUlMjBQYXRoJTIwb2YlMjB0aGUlMjBTdGFycyUyMiUyMDIwMTYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyJ9XQ==" />
+
+
+---
+
+Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.

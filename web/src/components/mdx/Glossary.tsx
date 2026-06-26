@@ -147,7 +147,7 @@ export const Glossary = ({
       <Popover.Portal>
         <Popover.Content 
           sideOffset={5} 
-          className="z-50"
+          className="z-50 outline-none"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

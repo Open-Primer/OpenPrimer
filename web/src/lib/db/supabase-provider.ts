@@ -311,10 +311,28 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
+  getFirstLessonSlug: async (courseSlug: string, lang: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('lesson_slug')
+        .eq('course_slug', courseSlug)
+        .eq('lang', lang.toLowerCase())
+        .order('order', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return { data: data ? data.lesson_slug : null, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
+  },
+
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     try {
       let cleanedContent = (lesson.content || '').trim();
-      if (cleanedContent.startsWith('```')) {
+      if (cleanedContent.startsWith('```') && cleanedContent.endsWith('```')) {
         cleanedContent = cleanedContent.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');
         cleanedContent = cleanedContent.replace(/\r?\n```$/, '');
         cleanedContent = cleanedContent.trim();
@@ -517,7 +535,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
           return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
 
-        const extra = {
+         const extra = {
           level: t.level || 'L1',
           targetLang: t.targetLang || '',
           subject: t.subject || 'General',
@@ -525,7 +543,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
           courseType: t.courseType || '',
           volume: t.volume || '',
           description: t.description || '',
-          completedAt: t.completedAt || ''
+          completedAt: t.completedAt || '',
+          userCountry: t.userCountry || (typeof window !== 'undefined' ? window.sessionStorage.getItem('op_user_country') : null) || ''
         };
 
         const dbRow = dbMap.get(rowId);

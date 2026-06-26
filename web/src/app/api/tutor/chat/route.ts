@@ -337,7 +337,8 @@ export async function POST(request: Request) {
         contents,
         systemInstruction,
         generationConfig: { temperature: 0.7 },
-        stream: true
+        stream: true,
+        userCountry: request.headers.get('x-vercel-ip-country') || undefined
       });
 
       if (res && res.ok) {

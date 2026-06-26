@@ -9,7 +9,7 @@ import { repairMediaOnRestitution } from './media-resolver';
 export function stripOuterCodeFences(content: string): string {
   if (!content) return '';
   let cleaned = content.trim();
-  if (cleaned.startsWith('```')) {
+  if (cleaned.startsWith('```') && cleaned.endsWith('```')) {
     cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');
     cleaned = cleaned.replace(/\r?\n```$/, '');
     cleaned = cleaned.trim();
@@ -1598,7 +1598,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'iframe',
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique',
-    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
+    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
     'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
@@ -2155,7 +2155,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique',
     'WebsiteLink', 'ProjectLink', 'SiteWeb',
-    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'Mermaid', 'ComparisonSlider',
+    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
     'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
@@ -2833,6 +2833,71 @@ function healFrenchAccents(text: string): string {
   return processed;
 }
 
+function deduplicateOriginalQuotes(mdx: string): string {
+  const lines = mdx.split('\n');
+  const result: string[] = [];
+  let lastQuoteNormalized = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    const quoteRegex = /"([^"]{15,})"[^)]|“([^”]{15,})”|«([^»]{15,})»|'([^']{15,})'/g;
+    let match;
+    while ((match = quoteRegex.exec(line)) !== null) {
+      const q = (match[1] || match[2] || match[3] || match[4] || '').trim();
+      if (q) {
+        lastQuoteNormalized = q.toLowerCase().replace(/[^\w]/g, '');
+      }
+    }
+    
+    const bracketRegex = /\[(["'“‘«]?\s*([^\]]{15,})\s*["'”’»]?)\](?!\()/g;
+    const bracketMatch = bracketRegex.exec(line);
+    
+    if (bracketMatch && lastQuoteNormalized) {
+      const bracketContent = bracketMatch[2].trim();
+      const bracketNormalized = bracketContent.toLowerCase().replace(/[^\w]/g, '');
+      
+      const len1 = lastQuoteNormalized.length;
+      const len2 = bracketNormalized.length;
+      
+      let isDuplicate = false;
+      if (len1 > 0 && len2 > 0) {
+        if (lastQuoteNormalized.includes(bracketNormalized) || bracketNormalized.includes(lastQuoteNormalized)) {
+          isDuplicate = true;
+        } else {
+          const words1 = new Set(lastQuoteNormalized.split(''));
+          const words2 = new Set(bracketNormalized.split(''));
+          let common = 0;
+          for (const char of words2) {
+            if (words1.has(char)) common++;
+          }
+          const overlap = common / Math.max(words1.size, words2.size);
+          if (overlap > 0.90) {
+            isDuplicate = true;
+          }
+        }
+      }
+      
+      if (isDuplicate) {
+        const lineWithoutBracket = line.replace(bracketRegex, '').trim();
+        if (lineWithoutBracket === '>' || lineWithoutBracket === '' || lineWithoutBracket === '> >' || lineWithoutBracket === '>  >') {
+          if (result.length > 0 && result[result.length - 1].trim() === '>') {
+            result.pop();
+          }
+          continue;
+        } else {
+          result.push(lineWithoutBracket);
+          continue;
+        }
+      }
+    }
+    
+    result.push(line);
+  }
+  
+  return result.join('\n');
+}
+
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string): string {
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
@@ -2880,6 +2945,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   // Clean citation translations based on original quote language and course language
   processed = cleanCitationTranslations(processed, lang);
+  processed = deduplicateOriginalQuotes(processed);
 
   // Fix AI-generated syntax errors in code attributes/blocks where `>=` or `<=` was mistyped with a slash (e.g. `/>=` or `/<=`)
   processed = processed.replace(/\/>=/g, '>=');
@@ -3076,6 +3142,30 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/<FillInBlanks[\s\S]*?<\/FillInBlanks>/gi, '');
   processed = processed.replace(/<FillInBlanks[^>]*?blanks=\{[\s\S]*?\}[^>]*?\/>/gi, '');
 
+  // 1b. Clean up empty/placeholder Quiz or Question elements containing generic placeholders
+  processed = processed.replace(/<(Quiz|Question)\b([^>]*?)>([\s\S]*?)<\/\1>/gi, (match, tag, attrs, content) => {
+    const contentLower = content.toLowerCase();
+    const attrsLower = attrs.toLowerCase();
+    if (
+      contentLower.includes("option correcte") ||
+      contentLower.includes("option incorrecte") ||
+      contentLower.includes("question d'examen finale") ||
+      contentLower.includes("question dexamen finale") ||
+      contentLower.includes("option_correcte") ||
+      contentLower.includes("option_incorrecte") ||
+      attrsLower.includes("option correcte") ||
+      attrsLower.includes("option incorrecte") ||
+      attrsLower.includes("question d'examen finale") ||
+      attrsLower.includes("question dexamen finale") ||
+      attrsLower.includes("option_correcte") ||
+      attrsLower.includes("option_incorrecte")
+    ) {
+      console.log(`[PREPROCESSOR] Removing placeholder <${tag}>: ${match}`);
+      return '';
+    }
+    return match;
+  });
+
   // Safety checks: remove empty or invalid assessments/quizzes/questions to prevent rendering gaps or compilation crashes
   processed = processed.replace(/<Question\b[^>]*>(?:(?!<Option\b)[\s\S])*?<\/Question>/gi, '');
   processed = processed.replace(/<Question\b[^>]*?\/>/gi, '');
@@ -3158,8 +3248,53 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       const cleanedDef = cleanGlossaryDefinition(def);
       return `\n- **${displayName}** : ${cleanedDef}\n`;
     });
+
+    // Alphabetical Sorting and Wikipedia link formatting for Glossary Items
+    const lines = glossaryContent.split(/\r?\n/);
+    const nonItemLines: string[] = [];
+    const glossaryItems: { term: string; line: string }[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      // Match typical glossary item format: "- **Term** : Definition"
+      const itemMatch = trimmed.match(/^[-*]\s+\*\*([^*]+)\*\*\s*:\s*([\s\S]*)$/);
+      if (itemMatch) {
+        const term = itemMatch[1].trim();
+        let definition = itemMatch[2].trim();
+
+        // Format Wikipedia links in the definition to blue underlined links without outer bracket styling
+        definition = definition.replace(/\[?\[?(Wikip[eé]dia)\]?\]?\((https?:\/\/[^\s)]+)\)/gi, (m, label, url) => {
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">Wikipédia</a>`;
+        });
+        
+        // Also remove any wrapping brackets around the Wikipedia link if they exist, e.g. " [Wikipédia]" or " (Wikipédia)"
+        definition = definition.replace(/\[\s*(<a\b[^>]*>Wikip[eé]dia<\/a>)\s*\]/gi, '$1');
+
+        glossaryItems.push({
+          term,
+          line: `- **${term}** : ${definition}`
+        });
+      } else {
+        nonItemLines.push(line);
+      }
+    }
+
+    // Sort glossary items alphabetically
+    glossaryItems.sort((a, b) => a.term.localeCompare(b.term, 'fr', { sensitivity: 'base' }));
+
+    // Reconstruct the glossary section with sorted items
+    const headingLine = nonItemLines[0] || '### Glossaire';
+    const otherNonItemLines = nonItemLines.slice(1).filter(l => l.trim() !== '');
     
-    processed = preGlossary + glossaryContent;
+    let reconstructedGlossary = headingLine + '\n';
+    if (otherNonItemLines.length > 0) {
+      reconstructedGlossary += otherNonItemLines.join('\n') + '\n\n';
+    } else {
+      reconstructedGlossary += '\n';
+    }
+    reconstructedGlossary += glossaryItems.map(item => item.line).join('\n') + '\n';
+
+    processed = preGlossary + reconstructedGlossary;
   }
 
   // 5b. Parse Citation / InteractiveQuote / QuoteBlock tags to auto-generate references
@@ -3597,6 +3732,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     }
 
     if (deduplicatedItems.length > 0) {
+      // Tag each item as isUnused or active based on its usage in updatedPreRef
+      for (const item of deduplicatedItems) {
+        item.isUnused = !isReferenceUsed(item.num, updatedPreRef);
+      }
+
       const base64 = Buffer.from(JSON.stringify(deduplicatedItems)).toString('base64');
       processed = updatedPreRef + `\n\n<References itemsBase64="${base64}" />\n\n`;
     } else {
@@ -3780,6 +3920,42 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
     const attrs = parseAttributes(attrsStr);
     const placeholderId = currentId++;
 
+    const TRANSLATABLE_ATTRS: Record<string, string[]> = {
+      CustomFigure: ['caption', 'alt'],
+      Image: ['caption', 'alt'],
+      HistoricalPerson: ['name', 'bio', 'description'],
+      RealPerson: ['name', 'bio', 'description'],
+      FictionalCharacter: ['name', 'bio', 'description'],
+      Location: ['name', 'bio', 'description'],
+      EventLink: ['name', 'bio', 'description'],
+      HistoricalEventLink: ['name', 'bio', 'description'],
+      EvenementHistorique: ['name', 'bio', 'description'],
+      Artwork: ['name', 'bio', 'description'],
+      ConceptLink: ['name', 'bio', 'description'],
+      TheoremLink: ['name', 'bio', 'description'],
+      InstitutionLink: ['name', 'bio', 'description'],
+      WebsiteLink: ['name', 'bio', 'description'],
+      ProjectLink: ['name', 'bio', 'description'],
+      SpeciesLink: ['name', 'bio', 'description'],
+      ChemicalLink: ['name', 'bio', 'description'],
+      CelestialLink: ['name', 'bio', 'description'],
+    };
+
+    const attrsToTranslate = TRANSLATABLE_ATTRS[tagName]?.filter(attr => attrs[attr]);
+    if (attrsToTranslate && attrsToTranslate.length > 0) {
+      const placeholder = `__JSX_ATTR_GENERIC_${tagName}_${placeholderId}__`;
+      registry[placeholder] = { 
+        type: 'attr_generic', 
+        tagName, 
+        attrs, 
+        attrsToTranslate, 
+        isSelfClosing, 
+        original: match 
+      };
+      const valuesStr = attrsToTranslate.map(attr => attrs[attr]).join(' ||| ');
+      return `${placeholder} ${valuesStr} __JSX_END_${placeholderId}__`;
+    }
+
     // Category A: Completely isolated components (no translation needed)
     const selfClosingIsolated = [
       'Prerequisites', 'InteractiveDiagram', 'DataChart', 'CodeSandbox', 'Video', 'Audio',
@@ -3878,6 +4054,29 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
     } else if (entry.type === 'open') {
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+    } else if (entry.type === 'attr_generic') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const translatedContent = match[1].trim();
+        const translatedValues = translatedContent.split('|||').map(v => v.trim());
+        const updatedAttrs = { ...entry.attrs };
+        entry.attrsToTranslate.forEach((attrName: string, idx: number) => {
+          if (translatedValues[idx] !== undefined) {
+            updatedAttrs[attrName] = translatedValues[idx];
+          }
+        });
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(updatedAttrs)) {
+          attrsStr += formatAttribute(k, v);
+        }
+        const restoredTag = entry.isSelfClosing 
+          ? `<${entry.tagName}${attrsStr} />` 
+          : `<${entry.tagName}${attrsStr}>`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
     } else if (entry.type === 'attr_fib') {
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
@@ -4084,6 +4283,15 @@ function isDuplicateReference(t1: string, t2: string): boolean {
   const similarity = intersectionSize / unionSize;
 
   return similarity >= 0.65;
+}
+
+function isReferenceUsed(num: number, preRefText: string): boolean {
+  // Check for various ways a reference might be cited/used in the main body text:
+  const citeIdRegex = new RegExp(`\\bcite-${num}\\b`, 'i');
+  const refIdRegex = new RegExp(`\\bref-${num}\\b`, 'i');
+  const refNumRegex = new RegExp(`\\brefNum=\\{${num}\\}`, 'i');
+  
+  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText);
 }
 
 function simplifyCitationQuery(citationText: string): string {

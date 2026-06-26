@@ -201,7 +201,12 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                 if (nextChildCourse) {
                   const prog = progressMap[nextChildCourse.slug] ?? progressMap[nextChildId] ?? 0;
                   if (prog < 100) {
-                    setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+                    dbService.getFirstLessonSlug(nextChildCourse.slug, lang).then(({ data: slug }) => {
+                      const lessonSlug = slug || 'introduction';
+                      setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/${lessonSlug}`);
+                    }).catch(() => {
+                      setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+                    });
                     setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
                     return;
                   }
@@ -216,7 +221,12 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           const nextChildId = childIds[currentIndex + 1];
           const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
           if (nextChildCourse) {
-            setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+            dbService.getFirstLessonSlug(nextChildCourse.slug, lang).then(({ data: slug }) => {
+              const lessonSlug = slug || 'introduction';
+              setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/${lessonSlug}`);
+            }).catch(() => {
+              setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+            });
             setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
             return;
           }

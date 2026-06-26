@@ -96,6 +96,10 @@ export function useServiceStatus(intervalMs = 30_000) {
         cache: 'no-store' 
       });
       if (res.ok) {
+        const country = res.headers.get('x-user-country') || 'FR';
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem('op_user_country', country);
+        }
         const results: ServiceHealth[] = await res.json();
         const map: any = {};
         results.forEach(r => { map[r.id] = r; });

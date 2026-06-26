@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
 import { UI_STRINGS } from '@/components/RefinedUI';
+import { encryptApiKey, decryptApiKey } from '@/lib/crypto';
 
 const ACCESSIBILITY_GUIDE = {
   EN: {
@@ -852,7 +853,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         setExtendAssessmentTime(!!p.extendAssessmentTime);
         setTutorType(p.tutorType || 'internal');
         setPersonalTutorProvider(p.personalTutorProvider || 'openai');
-        setPersonalTutorApiKey(p.personalTutorApiKey || '');
+        setPersonalTutorApiKey(decryptApiKey(p.personalTutorApiKey || ''));
         setPersonalTutorModel(p.personalTutorModel || 'gpt-4o-mini');
       } catch (err) {}
     }
@@ -926,8 +927,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           p.personalTutorProvider = personalTutorProvider;
           changed = true;
         }
-        if (p.personalTutorApiKey !== personalTutorApiKey) {
-          p.personalTutorApiKey = personalTutorApiKey;
+        if (decryptApiKey(p.personalTutorApiKey || '') !== personalTutorApiKey) {
+          p.personalTutorApiKey = encryptApiKey(personalTutorApiKey);
           changed = true;
         }
         if (p.personalTutorModel !== personalTutorModel) {
@@ -983,7 +984,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       extendAssessmentTime: extendAssessmentTime,
       tutorType: tutorType,
       personalTutorProvider: personalTutorProvider,
-      personalTutorApiKey: personalTutorApiKey,
+      personalTutorApiKey: encryptApiKey(personalTutorApiKey),
       personalTutorModel: personalTutorModel,
       isVerified: true
     };

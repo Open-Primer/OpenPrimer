@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+import { useMdxStatus } from './MdxStatusContext';
 import { 
   User, 
   Sparkles, 
@@ -35,6 +37,7 @@ export interface EntityLinkProps {
   dates?: string;
   creation?: string;
   era?: string;
+  unresolved?: boolean;
 }
 
 const getLocalizedName = (name: string, lang: string): string => {
@@ -405,21 +408,19 @@ export const EntityLink = ({
   lifespan,
   dates,
   creation,
-  era
+  era,
+  unresolved
 }: EntityLinkProps) => {
-  const [prevLang, setPrevLang] = useState(lang);
-  const [activeLang, setActiveLang] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return lang || window.localStorage.getItem('openprimer_lang') || 'en';
-    }
-    return lang || 'en';
-  });
+  const { markDegraded } = useMdxStatus();
 
-  // Render-phase prop synchronization (React recommended pattern)
-  if (lang !== prevLang) {
-    setPrevLang(lang);
-    setActiveLang(lang);
-  }
+  useEffect(() => {
+    if (unresolved) {
+      markDegraded('entity');
+    }
+  }, [unresolved, markDegraded]);
+
+  const { language } = useLanguage();
+  const activeLang = (language || lang || 'en').toLowerCase().trim();
 
   const [summary, setSummary] = useState<string | null>(null);
   const [apiDescription, setApiDescription] = useState<string | null>(null);
@@ -440,9 +441,14 @@ export const EntityLink = ({
   const resolvedSummary = summary || staticBio;
 
   useEffect(() => {
-    if (!cleanName || !activeLang) {
+    if (unresolved || !cleanName || !activeLang) {
       return;
     }
+
+    setSummary(null);
+    setWikiUrl(null);
+    setApiDescription(null);
+    setExists(null);
 
     let isMounted = true;
     const fetchWiki = async () => {
@@ -451,13 +457,67 @@ export const EntityLink = ({
         const formattedName = cleanName.replace(/ /g, '_');
         const wikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
         
-        const res = await fetch(wikiUrl);
+        let res = await fetch(wikiUrl);
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
             setSummary(data.extract || null);
-            setWikiUrl(data.content_urls?.desktop?.page || null);
+            setWikiUrl(data.content_urls?.desktop?.page || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(formattedName)}`);
             setApiDescription(data.description || null);
+            setExists(true);
+          }
+          return;
+        }
+
+        // Fetch failed. Let's try our automated interlanguage translation fallback mechanism!
+        const originalLang = (lang || 'fr').toLowerCase().trim();
+        if (originalLang !== langCode) {
+          const langlinksUrl = `https://${originalLang}.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=${langCode}&titles=${encodeURIComponent(formattedName)}&format=json&redirects=1&origin=*`;
+          
+          try {
+            const llRes = await fetch(langlinksUrl);
+            if (llRes.ok) {
+              const llData = await llRes.json();
+              const pages = llData?.query?.pages;
+              if (pages) {
+                const pageId = Object.keys(pages)[0];
+                const langlinks = pages[pageId]?.langlinks;
+                if (Array.isArray(langlinks) && langlinks.length > 0) {
+                  const translatedTitleObj = langlinks.find((l: any) => l.lang === langCode);
+                  const translatedTitle = translatedTitleObj?.['*'];
+                  if (translatedTitle) {
+                    const formattedTranslatedName = translatedTitle.replace(/ /g, '_');
+                    const translatedWikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedTranslatedName)}`;
+                    
+                    const transRes = await fetch(translatedWikiUrl);
+                    if (transRes.ok) {
+                      const transData = await transRes.json();
+                      if (isMounted) {
+                        setSummary(transData.extract || null);
+                        setWikiUrl(transData.content_urls?.desktop?.page || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(formattedTranslatedName)}`);
+                        setApiDescription(transData.description || null);
+                        setExists(true);
+                      }
+                      return;
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.warn(`[WIKIPEDIA FALLBACK] Failed to resolve langlinks for ${cleanName} from ${originalLang} to ${langCode}:`, err);
+          }
+        }
+
+        // If interlanguage link resolution failed or wasn't applicable, fallback to original language summary
+        const fallbackWikiUrl = `https://${originalLang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
+        const fallbackRes = await fetch(fallbackWikiUrl);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          if (isMounted) {
+            setSummary(fallbackData.extract || null);
+            setWikiUrl(fallbackData.content_urls?.desktop?.page || `https://${originalLang}.wikipedia.org/wiki/${encodeURIComponent(formattedName)}`);
+            setApiDescription(fallbackData.description || null);
             setExists(true);
           }
         } else {
@@ -473,7 +533,11 @@ export const EntityLink = ({
     return () => {
       isMounted = false;
     };
-  }, [cleanName, activeLang]);
+  }, [unresolved, cleanName, activeLang]);
+
+  if (unresolved) {
+    return null;
+  }
 
   const showOverlay = !!name;
   if (!showOverlay) {
@@ -600,7 +664,7 @@ export const EntityLink = ({
       <Popover.Portal>
         <Popover.Content 
           sideOffset={5} 
-          className="z-50"
+          className="z-50 outline-none"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

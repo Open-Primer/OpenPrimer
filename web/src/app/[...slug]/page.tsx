@@ -128,7 +128,16 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           const firstChildId = courseData.childCourses[0];
           const firstChild = allCourses?.find(c => c.id === firstChildId);
           if (firstChild) {
-            redirectUrl = `/${cleanPathSegment(firstChild.level)}/${cleanPathSegment(firstChild.subject)}/${firstChild.slug}/introduction`;
+            let resolvedSlug = 'introduction';
+            try {
+              const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(firstChild.slug, lang);
+              if (firstLessonSlug) {
+                resolvedSlug = firstLessonSlug;
+              }
+            } catch (err) {
+              console.error("Error fetching first lesson slug for curriculum child:", err);
+            }
+            redirectUrl = `/${cleanPathSegment(firstChild.level)}/${cleanPathSegment(firstChild.subject)}/${firstChild.slug}/${resolvedSlug}`;
           }
         }
 

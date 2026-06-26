@@ -592,15 +592,27 @@ export const EnrollmentModal = ({
             {enrolledIds.includes(activeCourse.id) ? (
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  let targetLang = lang;
                   if (activeCourse.languages && activeCourse.languages.length > 0) {
                     const currentLangLower = lang.toLowerCase();
                     const supportsCurrentLang = activeCourse.languages.some((l: string) => l.toLowerCase() === currentLangLower);
                     if (!supportsCurrentLang) {
-                      setLanguage(activeCourse.languages[0].toUpperCase());
+                      const firstSupported = activeCourse.languages[0].toUpperCase();
+                      setLanguage(firstSupported);
+                      targetLang = firstSupported.toLowerCase();
                     }
                   }
-                  window.location.href = `/${cleanPathSegment(activeCourse.level)}/${cleanPathSegment(activeCourse.subject)}/${activeCourse.slug}/introduction`;
+                  let resolvedSlug = 'introduction';
+                  try {
+                    const { data: firstLessonSlug } = await dbService.getFirstLessonSlug(activeCourse.slug, targetLang);
+                    if (firstLessonSlug) {
+                      resolvedSlug = firstLessonSlug;
+                    }
+                  } catch (err) {
+                    console.error("Error fetching first lesson slug:", err);
+                  }
+                  window.location.href = `/${cleanPathSegment(activeCourse.level)}/${cleanPathSegment(activeCourse.subject)}/${activeCourse.slug}/${resolvedSlug}`;
                 }}
                 className="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
               >
