@@ -178,6 +178,82 @@ const verificationSchema = {
   required: ["approved", "critique"]
 };
 
+const revisionAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    isGlobalRevision: { type: "boolean" },
+    globalCritique: { type: "string" },
+    sections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          heading: { type: "string" },
+          approved: { type: "boolean" },
+          critique: { type: "string" }
+        },
+        required: ["heading", "approved", "critique"]
+      }
+    }
+  },
+  required: ["approved", "isGlobalRevision", "globalCritique", "sections"]
+};
+
+interface MarkdownSection {
+  heading: string;
+  content: string;
+}
+
+function parseMarkdownSections(mdx: string): MarkdownSection[] {
+  const lines = mdx.split('\n');
+  const sections: MarkdownSection[] = [];
+  let currentHeading = '';
+  let currentContent: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      sections.push({
+        heading: currentHeading,
+        content: currentContent.join('\n')
+      });
+      currentHeading = line.trim();
+      currentContent = [];
+    } else {
+      currentContent.push(line);
+    }
+  }
+
+  sections.push({
+    heading: currentHeading,
+    content: currentContent.join('\n')
+  });
+
+  return sections;
+}
+
+function reconstructMarkdown(sections: MarkdownSection[]): string {
+  return sections.map(sec => {
+    if (sec.heading) {
+      return `${sec.heading}\n${sec.content}`;
+    } else {
+      return sec.content;
+    }
+  }).join('\n');
+}
+
+function parseJointRepairOutput(output: string): Map<string, string> {
+  const result = new Map<string, string>();
+  const regex = /<revised_section\s+heading="([^"]+)">([\s\S]*?)<\/revised_section>/gi;
+  let match;
+  while ((match = regex.exec(output)) !== null) {
+    const heading = match[1].trim();
+    const content = match[2].trim();
+    result.set(heading.toLowerCase(), content);
+  }
+  return result;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // WIDGETS-FIRST (WFTA) SCHEMAS & HELPERS
 // ─────────────────────────────────────────────────────────────────
@@ -3289,9 +3365,9 @@ Your validation checklist:
 2. Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) completely present with all their JSX tags and properties intact? Did you ensure they weren't accidentally lost?
 3. Zero placeholders and empty tags: Are there any placeholders, skeletal sentences, or unfinished sections? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. If a component is present, it must contain full text/children.
 4. No nested wrappers: Ensure you do NOT nest wrapper tags inside each other (e.g. self-nesting is strictly forbidden).
-4. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
-5. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
-6. Mandated Sections & Structural Integrity: Verify that the revised MDX content still contains:
+5. Academic Integrity: Is the scientific/academic depth, tone, and accuracy fully preserved or improved?
+6. Assessment Integrity: Ensure all revised interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) remain structurally intact, fully written, and correct (e.g. every <Question> has <Option>s, correct answers are specified, no empty blocks exist).
+7. Mandated Sections & Structural Integrity: Verify that the revised MDX content still contains:
    - Prerequisites block ('<Prerequisites items={[...]} />') at the very beginning.
    - Diagnostic quiz ('<DiagnosticQuiz ... />') before the introduction.
    - Introduction heading (titled '## Introduction' or localized equivalent).
@@ -3301,18 +3377,30 @@ Your validation checklist:
    - Glossary section (titled '### Glossary' or localized equivalent).
    - Bibliography/references section (titled '### References' or localized equivalent), unless the original course is a primary school level course.
    If any of these required structural sections/components are missing, you MUST reject the revision (set "approved": false).
-7. Multimedia, Illustrations, & Non-Text Media Integrity (DISCIPLINE-AWARE):
+8. Multimedia, Illustrations, & Non-Text Media Integrity (DISCIPLINE-AWARE):
    - For VISUAL/SPATIAL/HISTORICAL/EMPIRICAL disciplines (visual arts, anatomy, architecture, history of art, cinema, geography, biology, etc.): Verify that the revision has not accidentally removed illustration elements. '<CustomFigure />' / '<Image />', '<Mermaid />', or '<InteractiveDiagram />' components that were present in the original MUST remain intact. Their removal constitutes a regression and must be rejected.
    - For QUANTITATIVE/EXPERIMENTAL disciplines (mathematics, physics, chemistry, economics): Verify that interactive visual components ('<Mermaid />', '<FunctionPlotter />', '<EquationManipulator />', '<DataChart />', '<BasicMathExplorer />', '<ChemicalStoichiometry />', etc.) are preserved.
-   - For TEXTUAL/PHILOSOPHICAL/LITERARY disciplines (philosophy, literature, law, ethics): Do not reject if illustration components are absent, but flag in the critique if they have been removed without reason — reducing visual enrichment unnecessarily is undesirable even in text-heavy disciplines.
+   - For TEXTUAL/PHILOSOPHICAL/LITERARY disciplines (philosophy, literature, law, ethics): Do not reject if illustration components are absent, but flag in the critique if they have been removed without reason.
    - Regardless of discipline: Ensure any audio players ('<AudioPlayer />' or '<Audio />') or video players ('<Video />') from the original are preserved and not lost during revision.
-8. Section Interactivity and Interactive Sandboxes:
+9. Section Interactivity and Interactive Sandboxes:
    - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />').
 
-You must output ONLY a valid JSON object matching this structure:
+Your audit can be in dual-mode:
+- If there are widespread, structural, length, course-outline, or numerous missing tag issues that require a total lesson re-write, you MUST set "isGlobalRevision": true and provide a comprehensive "globalCritique".
+- If the issues are localized to specific sections, you can set "isGlobalRevision": false, approve/reject section-by-section, and specify the exact "critique" for the rejected sections in the "sections" array.
+
+You must output ONLY a valid JSON object matching the revisionAuditSchema:
 {
   "approved": true or false,
-  "critique": "If not approved, explain exactly what is wrong/missing/broken so the writer can correct it. If approved, keep this empty."
+  "isGlobalRevision": true or false,
+  "globalCritique": "Explain exactly what is wrong/missing/broken globally if isGlobalRevision is true. Otherwise keep empty.",
+  "sections": [
+    {
+      "heading": "Heading of the section, e.g., '## Introduction' (or '' for the header/frontmatter block)",
+      "approved": true or false,
+      "critique": "If not approved, explain exactly what is wrong/missing in this section."
+    }
+  ]
 }
 Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
 
@@ -3327,7 +3415,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
             generationConfig: {
               temperature: 0.1,
               responseMimeType: "application/json",
-              responseSchema: verificationSchema
+              responseSchema: revisionAuditSchema
             }
           });
           if (res && res.ok) {
@@ -3349,7 +3437,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
               contents: [{ parts: [{ text: promptCritic }] }],
               generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: verificationSchema
+                responseSchema: revisionAuditSchema
               }
             })
           });
@@ -3363,12 +3451,18 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
         }
       }
 
+      let isGlobalRevision = false;
+      let globalCritique = '';
+      let criticSections: { heading: string; approved: boolean; critique: string; }[] = [];
+
       if (criticSuccess && criticResText) {
         try {
           const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
           const criticObj = safeJsonParse(cleanedCritic, 'translateCourseContent (Agent 4 Verification)');
           approved = !!criticObj.approved;
-          critique = criticObj.critique || '';
+          isGlobalRevision = !!criticObj.isGlobalRevision;
+          globalCritique = criticObj.globalCritique || '';
+          criticSections = criticObj.sections || [];
         } catch (e) {
           console.error("[REVISION AGENT - AGENT 4] Failed to parse critic JSON response:", e);
           approved = true; // Avoid blocking loop on parse failure
@@ -3381,12 +3475,14 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
         console.log(`[REVISION AGENT - AGENT 4] Revision approved for "${lesson.title}"!`);
         revisedMdx = currentMdx;
       } else {
-        console.warn(`[REVISION AGENT - AGENT 4] Revision REJECTED for "${lesson.title}". Critique: ${critique}`);
-        // Refine revision
-        const promptRefine = `You are a professional academic writer. The Revision Critic Agent has rejected your previous revised MDX with the following critique:
+        console.warn(`[REVISION AGENT - AGENT 4] Revision REJECTED for "${lesson.title}". Global: ${isGlobalRevision}.`);
 
-CRITIQUE FROM REVISION CRITIC:
-${critique}
+        if (isGlobalRevision) {
+          console.log(`[REVISION AGENT] Initiating Scribe full-text global rewrite based on critique: "${globalCritique}"`);
+          const promptRefineGlobal = `You are Scribe (Agent 3), a professional academic writer. The Revision Critic Agent (Agent 4) has rejected your previous revised MDX in its entirety with a global critique:
+
+GLOBAL CRITIQUE:
+${globalCritique}
 
 Original MDX Content:
 ${lesson.content}
@@ -3397,50 +3493,194 @@ ${currentMdx}
 Revision Instructions:
 ${feedbackText}
 
-Please re-generate the revised MDX content for "${lesson.title}", fully addressing the critic's critique and incorporating all original revision instructions.
-Return ONLY the revised MDX content. Do not include markdown code block wrappers.`;
+Please re-generate the ENTIRE revised MDX content for "${lesson.title}", fully addressing the critic's global critique, ensuring high academic density, proper structure, and full compliance.
+Return ONLY the revised MDX content. Do NOT include markdown code block wrappers (such as \`\`\`md or \`\`\`mdx) or conversational intro/outro text.`;
 
-        let refineSuccess = false;
-        if (isVertexConfigured()) {
-          try {
-            const resRefine = await callVertexAI({
-              task: 'course_generation',
-              contents: [{ role: 'user', parts: [{ text: promptRefine }] }],
-              generationConfig: { temperature: 0.3 }
-            });
-            if (resRefine && resRefine.ok) {
-              const resJson = await resRefine.json();
-              currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              refineSuccess = true;
+          let refineSuccess = false;
+          if (isVertexConfigured()) {
+            try {
+              const resRefine = await callVertexAI({
+                task: 'course_generation',
+                contents: [{ role: 'user', parts: [{ text: promptRefineGlobal }] }],
+                generationConfig: { temperature: 0.3 }
+              });
+              if (resRefine && resRefine.ok) {
+                const resJson = await resRefine.json();
+                currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                refineSuccess = true;
+              }
+            } catch (err) {
+              console.warn("[REVISION AGENT - AGENT 4] Vertex global refinement call failed:", err);
             }
-          } catch (err) {
-            console.warn("[REVISION AGENT - AGENT 4] Vertex refinement call failed:", err);
           }
-        }
 
-        if (!refineSuccess && apiKey) {
-          try {
-            const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptRefine }] }]
-              })
-            });
-            if (resRefine.ok) {
-              const resJson = await resRefine.json();
-              currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              refineSuccess = true;
+          if (!refineSuccess && apiKey) {
+            try {
+              const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: promptRefineGlobal }] }]
+                })
+              });
+              if (resRefine.ok) {
+                const resJson = await resRefine.json();
+                currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                refineSuccess = true;
+              }
+            } catch (err) {
+              console.error("[REVISION AGENT - AGENT 4] AI Studio fallback global refinement call failed:", err);
             }
-          } catch (err) {
-            console.error("[REVISION AGENT - AGENT 4] AI Studio fallback refinement call failed:", err);
           }
-        }
 
-        if (!refineSuccess) {
-          console.warn("[REVISION AGENT - AGENT 4] Refinement failed, continuing with current content.");
-          revisedMdx = currentMdx;
-          break;
+          if (!refineSuccess) {
+            console.warn("[REVISION AGENT - AGENT 4] Global refinement failed, continuing with current content.");
+            revisedMdx = currentMdx;
+            break;
+          }
+        } else {
+          // Section-by-section localized repair
+          console.log(`[REVISION AGENT] Initiating localized section-by-section repair for "${lesson.title}"...`);
+          const parsedSections = parseMarkdownSections(currentMdx);
+
+          // Find which sections are rejected
+          const rejectedSectionsData: {
+            heading: string;
+            content: string;
+            critique: string;
+            precedingHeading: string | null;
+            succeedingHeading: string | null;
+          }[] = [];
+
+          for (let i = 0; i < parsedSections.length; i++) {
+            const sec = parsedSections[i];
+            const secHeadingNorm = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+            const criticMatch = criticSections.find(cs => {
+              const csHeadingNorm = (cs.heading || 'Header / Introduction Block').trim().toLowerCase();
+              return csHeadingNorm === secHeadingNorm || 
+                     csHeadingNorm.replace(/^##\s+/, '') === secHeadingNorm.replace(/^##\s+/, '');
+            });
+
+            const isSecApproved = criticMatch ? criticMatch.approved : true;
+            if (!isSecApproved) {
+              // Find neighborhood contexts
+              const precedingHeading = i > 0 ? parsedSections[i - 1].heading : null;
+              const succeedingHeading = i < parsedSections.length - 1 ? parsedSections[i + 1].heading : null;
+
+              rejectedSectionsData.push({
+                heading: sec.heading || 'Header / Introduction Block',
+                content: sec.content,
+                critique: criticMatch ? criticMatch.critique : "Section needs improvement.",
+                precedingHeading,
+                succeedingHeading
+              });
+            }
+          }
+
+          if (rejectedSectionsData.length > 0) {
+            console.log(`[REVISION AGENT] Localized repair required for ${rejectedSectionsData.length} sections: ${rejectedSectionsData.map(s => `"${s.heading}"`).join(', ')}`);
+
+            const promptJointRepair = `You are Scribe (Agent 3), a professional academic writer.
+We need to repair multiple specific sections of the lesson "${lesson.title}" that were rejected by the Revision Critic (Agent 4).
+
+CONTEXT OF THE LESSON:
+Course: ${courseSlug}
+Lesson Title: "${lesson.title}"
+Language: "${targetLang.toUpperCase()}"
+
+Here are the sections that need repair. For each section, we provide its heading, its current content, its critique, and its surrounding neighborhood context (preceding and succeeding section headings) to help you preserve perfect narrative flow and continuity.
+
+${rejectedSectionsData.map((rj, idx) => `
+--- REJECTED SECTION ${idx + 1} ---
+Heading: "${rj.heading || 'Header / Introduction Block'}"
+Neighborhood Context:
+  - Preceding Section: ${rj.precedingHeading || 'None'}
+  - Succeeding Section: ${rj.succeedingHeading || 'None'}
+Critique from Agent 4:
+  "${rj.critique}"
+Current Content of this section:
+${rj.content}
+----------------------------------
+`).join('\n')}
+
+INSTRUCTIONS:
+1. Repair each of the rejected sections listed above to fully resolve its respective critique.
+2. For each repaired section, wrap your output in a \`<revised_section heading="HEADING_TEXT_EXACTLY_AS_SHOWN_ABOVE">\` tag.
+   Example output format:
+   <revised_section heading="${rejectedSectionsData[0]?.heading || 'Header / Introduction Block'}">
+   [Your revised content here, preserving academic rigor and MDX elements]
+   </revised_section>
+3. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your entire output.
+4. Return ONLY the wrapped revised sections. Do not include any other conversational text or metadata outside the tags.`;
+
+            let scribeRepairOutput = '';
+            let repairSuccess = false;
+
+            if (isVertexConfigured()) {
+              try {
+                const resRepair = await callVertexAI({
+                  task: 'course_generation',
+                  contents: [{ role: 'user', parts: [{ text: promptJointRepair }] }],
+                  generationConfig: { temperature: 0.3 }
+                });
+                if (resRepair && resRepair.ok) {
+                  const resJson = await resRepair.json();
+                  scribeRepairOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  repairSuccess = true;
+                }
+              } catch (err) {
+                console.warn("[REVISION AGENT - AGENT 4] Vertex joint repair call failed:", err);
+              }
+            }
+
+            if (!repairSuccess && apiKey) {
+              try {
+                const resRepair = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptJointRepair }] }]
+                  })
+                });
+                if (resRepair.ok) {
+                  const resJson = await resRepair.json();
+                  scribeRepairOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  repairSuccess = true;
+                }
+              } catch (err) {
+                console.error("[REVISION AGENT - AGENT 4] AI Studio fallback joint repair call failed:", err);
+              }
+            }
+
+            if (repairSuccess && scribeRepairOutput) {
+              const repairs = parseJointRepairOutput(scribeRepairOutput);
+              // Fallback if regex parsing failed but we only have 1 section to repair
+              if (repairs.size === 0 && rejectedSectionsData.length === 1) {
+                const singleSec = rejectedSectionsData[0];
+                const key = (singleSec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                repairs.set(key, scribeRepairOutput.trim());
+              }
+
+              // Apply repairs
+              for (const sec of parsedSections) {
+                const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                if (repairs.has(key)) {
+                  console.log(`[REVISION] Applying repaired content for section: "${sec.heading || 'Header / Introduction Block'}"`);
+                  sec.content = repairs.get(key)!;
+                }
+              }
+
+              currentMdx = reconstructMarkdown(parsedSections);
+            } else {
+              console.warn("[REVISION AGENT - AGENT 4] Localized repair failed, continuing with current content.");
+              revisedMdx = currentMdx;
+              break;
+            }
+          } else {
+            console.log("[REVISION AGENT] No localized sections rejected (but lesson was rejected globally or as a whole).");
+            revisedMdx = currentMdx;
+            break;
+          }
         }
       }
     }
