@@ -17,19 +17,19 @@ Before generating any chapters, classify the target discipline according to its 
 
 1. **Deductive / Formal Sciences (Mathematics, Logic, Theoretical Physics):**
    * Focus: Absolute rigor, seamless causal chain.
-   * Obligatory components: Lemma Ô×ö Theorem Ô×ö Proof Ô×ö Corollary. Every block must flow logically from the previous one.
+   * Obligatory components: Lemma ➔ Theorem ➔ Proof ➔ Corollary. Every block must flow logically from the previous one.
 
 2. **Empirical / Experimental Sciences (Biology, Experimental Physics, Chemistry):**
    * Focus: Real-world observation, visual dual-coding.
-   * Obligatory components: Hypothesis Ô×ö Experimental Protocol Ô×ö Observation/Data Ô×ö Interpretation/Modeling. Pervasive use of labeled diagrams, structural schemas, or anatomical atlases.
+   * Obligatory components: Hypothesis ➔ Experimental Protocol ➔ Observation/Data ➔ Interpretation/Modeling. Pervasive use of labeled diagrams, structural schemas, or anatomical atlases.
 
 3. **Humanities and Discursive Sciences (Philosophy, History, Literature):**
    * Focus: Rhetoric, problematization, dialectic.
-   * Obligatory components: Thesis Ô×ö Antithesis Ô×ö Synthesis (or genealogical/conceptual approach). Fine text analysis, socio-historical contextualization, doctrinal controversies.
+   * Obligatory components: Thesis ➔ Antithesis ➔ Synthesis (or genealogical/conceptual approach). Fine text analysis, socio-historical contextualization, doctrinal controversies.
 
 4. **Applied Sciences / Engineering (Computer Science, Systems Architecture, Electronics):**
    * Focus: Problem-solving, design patterns, constructivism.
-   * Obligatory components: Requirements gathering Ô×ö Technical constraints Ô×ö Architecture specifications Ô×ö Implementation/Code Ô×ö Validation tests.
+   * Obligatory components: Requirements gathering ➔ Technical constraints ➔ Architecture specifications ➔ Implementation/Code ➔ Validation tests.
 
 ---
 
@@ -62,7 +62,7 @@ You must follow these strict structural guidelines:
    * The penultimate item in the 'lessons' array (the last core teaching lesson) must be a core content lesson, but its technical depth/description must specify that it also integrates a complete **general conclusion** for the entire course, synthesizing all main lessons and concepts.
 
 3. **Terminal Evaluation (Detached Evaluation Chapter):**
-   * The ultimate item in the 'lessons' array must be the Terminal Evaluation (title: "├ëvaluation Terminale" or "Final Evaluation" or equivalent in the target language "fr", slug: "evaluation-finale" or "final-evaluation").
+   * The ultimate item in the 'lessons' array must be the Terminal Evaluation (title: "Évaluation Terminale" or "Final Evaluation" or equivalent in the target language "fr", slug: "evaluation-finale" or "final-evaluation").
    * This chapter is **not** a standard lesson. It must contain **only** the assessment/questions/summative validation itself (with no new lesson content, no narrative text, and no core textbook content).
 
 ---
