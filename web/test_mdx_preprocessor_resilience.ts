@@ -114,6 +114,13 @@ And a duplicate citation to test consolidation:
 
 [1] Dubois, J. (2002). Dictionnaire de linguistique.
 [2] Chomsky, N. (1957). Syntactic Structures.`
+    },
+    {
+      name: "17. New strict name attribute anchors in References list",
+      input: `### Références
+
+<a name="ref-1"></a> [1] Dubois, J. (2002). Dictionnaire de linguistique.
+<a name="ref-2"></a> [2] Chomsky, N. (1957). Syntactic Structures.`
     }
   ];
 

@@ -481,8 +481,14 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
 
           let linkSuffix = '';
           if (item.scholarUrl) {
-            if (item.scholarUrl.includes('wikipedia.org') || item.scholarUrl.includes('wikipédia')) {
+            const urlLower = item.scholarUrl.toLowerCase();
+            const labelLower = (item.scholarText || '').toLowerCase();
+            if (urlLower.includes('wikipedia.org') || labelLower.includes('wikipedia') || labelLower.includes('wikipédia')) {
               linkSuffix = lang.toUpperCase() === 'FR' ? " [Source Wikipédia]" : " [Wikipedia source]";
+            } else if (urlLower.includes('scholar.google') || labelLower.includes('scholar')) {
+              linkSuffix = lang.toUpperCase() === 'FR' ? " [Source Google Scholar]" : " [Google Scholar source]";
+            } else if (urlLower.includes('books.google') || labelLower.includes('books')) {
+              linkSuffix = lang.toUpperCase() === 'FR' ? " [Source Google Books]" : " [Google Books source]";
             } else {
               linkSuffix = lang.toUpperCase() === 'FR' ? " [Lien externe]" : " [External link]";
             }

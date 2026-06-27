@@ -3552,10 +3552,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     
     // Clean up pre-existing complex/corrupted anchor structures to a simple standard [X] format for reliable parsing
     refContent = refContent.replace(/<sup>\s*<a[^>]*id="ref-src-\d+"[^>]*>.*?<\/a>\s*<\/sup>\s*/gi, '');
-    refContent = refContent.replace(/<span\s+id="ref-\d+"><\/span>\s*/gi, '');
+    refContent = refContent.replace(/<span\s+(?:id|name)="ref-\d+"><\/span>\s*/gi, '');
     refContent = refContent.replace(/<a\s+href="#cite-(\d+)"[^>]*>(?:\*\*|)?\[\1\](?:\*\*|)?<\/a>\s*/gi, '[$1] ');
-    refContent = refContent.replace(/<a[^>]*id="ref-(\d+)"[^>]*>(?:\*\*|)?(?:\s|)*\[\1\](?:\s|)*(?:\*\*|)?<\/a>\s*/gi, '[$1] ');
-    refContent = refContent.replace(/<a[^>]*id="ref-(\d+)"[^>]*>[\s\S]*?\[\1\][\s\S]*?<\/a>\s*/gi, '[$1] ');
+    refContent = refContent.replace(/<a[^>]*(?:id|name)="ref-(\d+)"[^>]*>(?:\*\*|)?(?:\s|)*\[\1\](?:\s|)*(?:\*\*|)?<\/a>\s*/gi, '[$1] ');
+    refContent = refContent.replace(/<a[^>]*(?:id|name)="ref-(\d+)"[^>]*>(?:(?!<\/a>)[\s\S])*?\[\1\](?:(?!<\/a>)[\s\S])*?<\/a>\s*/gi, '[$1] ');
     refContent = refContent.replace(/\s*<span\s+class="text-xs\s+text-slate-400\s+font-normal">\s*\|\s*<a\s+href="https:\/\/scholar\.google\.com\/scholar[^"]*"\s+target="_blank"\s+rel="noopener\s+noreferrer"\s+class="[^"]*">\s*Google\s+Scholar\s*<\/a>\s*<\/span>/gi, '');
     refContent = refContent.replace(/\*\*\[(\d+)\]\*\*/g, '[$1]');
     
@@ -3641,7 +3641,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     // Structure references as clean separate blocks with proper IDs and back-links
     const parsedItems: any[] = [];
-    const itemRegex = /(?:<a\s+id="ref-(\d+)">\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+">|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
+    const itemRegex = /(?:<a\s+(?:id|name)="ref-(\d+)"[^>]*?>\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+(?:id|name)="ref-\d+"[^>]*?>|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
     
     let match;
     while ((match = itemRegex.exec(refContent)) !== null) {
@@ -4050,8 +4050,15 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   return { content: processed, registry };
 }
 
-export function restoreJsxAfterTranslation(translatedMdx: string, registry: Record<string, any>): string {
+export function restoreJsxAfterTranslation(translatedMdx: string, registry: Record<string, any>, targetLang?: string): string {
   let processed = translatedMdx;
+
+  const LOCALIZED_COMPONENTS = new Set([
+    'HistoricalPerson', 'RealPerson', 'FictionalCharacter', 'Location',
+    'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'Artwork',
+    'ConceptLink', 'TheoremLink', 'InstitutionLink', 'WebsiteLink',
+    'ProjectLink', 'SpeciesLink', 'ChemicalLink', 'CelestialLink'
+  ]);
 
   function formatAttribute(k: string, v: any): string {
     const cleanV = String(v || '').trim();
@@ -4158,7 +4165,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       if (match) {
         const name = match[1].trim() || entry.attrs.name || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        const updatedAttrs = { ...entry.attrs };
+        for (const [k, v] of Object.entries(updatedAttrs)) {
           if (k !== 'name') {
             attrsStr += formatAttribute(k, v);
           }

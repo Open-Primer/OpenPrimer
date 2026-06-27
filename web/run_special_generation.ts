@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Load env variables from .env.local
+// Load env variables from .env.local to ensure they are available immediately
 const envPath = path.join(__dirname, '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf-8');
@@ -15,16 +15,18 @@ if (fs.existsSync(envPath)) {
       process.env[key] = val;
     }
   });
+  console.log(`✅ Loaded env variables. NEXT_PUBLIC_SUPABASE_URL is: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'DEFINED' : 'UNDEFINED'}`);
 }
 
-process.env.ONLY_FIRST_LESSON = 'true';
+process.env.ONLY_FIRST_LESSON = 'false';
 process.env.CLI_WORKER = 'true';
 
-import { generateCourseContent, translateCourseContent } from './src/lib/ai';
-
 async function main() {
+  // Dynamically import ai.ts AFTER env variables are loaded to prevent connection failure
+  console.log("📥 Dynamically importing ai module...");
+  const { generateCourseContent, translateCourseContent } = await import('./src/lib/ai');
+
   const coursesToGenerate = [
-    { name: "Espagnol fondamental : Syntaxe et expression", level: "L1" },
     { name: "Introduction à la sémantique et à la phonétique", level: "L1" }
   ];
   

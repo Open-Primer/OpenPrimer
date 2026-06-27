@@ -424,14 +424,23 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       try {
         console.log(`[VERTEX] Attempting call with model "${model}" in region "${currentLocation}" (attempt ${attempt}/${maxRetries})...`);
         const startTime = Date.now();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.warn(`[VERTEX] ⚠️ Request timed out in region "${currentLocation}" after 180s. Aborting...`);
+          controller.abort();
+        }, 180000);
+
         response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           console.log(`[VERTEX] ✅ Call succeeded with model "${model}" in region "${currentLocation}".`);

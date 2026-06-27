@@ -11,6 +11,7 @@ interface CitationProps {
   original?: string;
   refNum?: number;
   quote?: string;
+  commentary?: string;
   children?: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export const Citation = ({
   original,
   refNum,
   quote,
+  commentary,
   children
 }: CitationProps) => {
   const { language } = useLanguage();
@@ -131,6 +133,13 @@ export const Citation = ({
           <div className="text-[13px] italic text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
             {original}
           </div>
+        </div>
+      )}
+
+      {/* Commentary */}
+      {commentary && (
+        <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/80 text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 select-text">
+          {commentary}
         </div>
       )}
     </div>

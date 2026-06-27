@@ -23,6 +23,7 @@ import { BiophysicsSimulator } from './BiophysicsSimulator';
 import { CardSort } from './CardSort';
 import { SocraticInput } from './SocraticInput';
 import { Timeline } from './Timeline';
+import { Biography } from './Biography';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -631,6 +632,47 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
   const sourcePrefix = parts[parts.length - 2];
   const sourceName = parts[parts.length - 1].trim();
   
+  if (sourceName.includes('[') && sourceName.includes('](')) {
+    const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let match;
+    let lastIndex = 0;
+    const elements: React.ReactNode[] = [];
+    
+    while ((match = regex.exec(sourceName)) !== null) {
+      const plainText = sourceName.slice(lastIndex, match.index);
+      if (plainText) {
+        elements.push(plainText);
+      }
+      const linkText = match[1];
+      const linkUrl = match[2];
+      elements.push(
+        <a
+          key={linkUrl + '-' + lastIndex}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors cursor-pointer"
+        >
+          {linkText}
+        </a>
+      );
+      lastIndex = regex.lastIndex;
+    }
+    
+    const remainingText = sourceName.slice(lastIndex);
+    if (remainingText) {
+      elements.push(remainingText);
+    }
+    
+    return (
+      <span className="select-text">
+        {mainText}
+        {sourcePrefix}
+        {elements}
+      </span>
+    );
+  }
+
   let url = fallbackUrl || '';
   if (!url) {
     if (/wikimedia/i.test(sourceName)) {
@@ -1876,6 +1918,7 @@ const MdxImage = (props: any) => {
 
 const components = {
   Alert,
+  Biography,
   CustomFigure,
   Quiz,
   Question,

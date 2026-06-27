@@ -164,9 +164,13 @@ const syllabusSchema = {
         },
         required: ["title", "slug", "cognitiveArtifact", "technicalDepth"]
       }
+    },
+    references: {
+      type: "array",
+      items: { type: "string" }
     }
   },
-  required: ["courseContext", "lessons"]
+  required: ["courseContext", "lessons", "references"]
 };
 
 const verificationSchema = {
@@ -1364,13 +1368,17 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     "pedagogicalStrategy": "[Explanation of the strategy adopted for this specific audience, discipline, and hourly volume of ${volume}, in ${targetLang.toUpperCase()}]"
   },
   "lessons": [
-    {
-      "title": "[Explicit, engaging title of the lesson/chapter, in ${targetLang.toUpperCase()}]",
-      "slug": "[URL-friendly ASCII slug]",
-      "cognitiveArtifact": "[Specify: Lemma Proof / Labeled Anatomical Schema / Text Analysis / Sandbox Code Block, translated to ${targetLang.toUpperCase()}]",
-      "technicalDepth": "[Expected level of detail to guide the writing agent Agent 3, in ${targetLang.toUpperCase()}]"
-    }
-  ]
+{
+"title": "[Explicit, engaging title of the lesson/chapter, in ${targetLang.toUpperCase()}]",
+"slug": "[URL-friendly ASCII slug]",
+"cognitiveArtifact": "[Specify: Lemma Proof / Labeled Anatomical Schema / Text Analysis / Sandbox Code Block, translated to ${targetLang.toUpperCase()}]",
+"technicalDepth": "[Expected level of detail to guide the writing agent Agent 3, in ${targetLang.toUpperCase()}]"
+}
+],
+"references": [
+"[Authoritative reference 1: Books, landmark papers, or journal articles in standard citation format (Dalloz, APA, MLA, Chicago, etc. depending on discipline), with no asterisks for italics (use quotes or guillemets)]",
+"[Authoritative reference 2...]"
+]
 }
 
 ---
@@ -1378,7 +1386,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 # QUALITY CONTROL & STRICT PROHIBITIONS
 * **No Generic Outlines or Fillers:** A syllabus outline that uses generic academic blocks (e.g., I. Introduction, II. History, III. Conclusion) is strictly prohibited. The syllabus must be **complete, specific, and highly authentic**, matching a real-world curriculum you would find in actual academic or professional training, without being overly eccentric.
 * **Exhaustiveness of Chapters:** You must specify the exact number of distinct lessons appropriate for the level and volume (maximum of 3 for Primary level, 4 to 6 for Middle/High school, 6 to 10 for University). The writing agent (Agent 3) must have clear, actionable guidelines with zero need for outline extrapolation.
-* **Detached Evaluation Content:** Under no circumstances should the Terminal Evaluation contain instructional content. It must focus purely on testing.`;
+* **Detached Evaluation Content:** Under no circumstances should the Terminal Evaluation contain instructional content. It must focus purely on testing.
+* **Mandatory Reference Registry:** You MUST generate a list of EXACTLY 5 to 8 authoritative academic references in the \`references\` array. These must represent the absolute canon of the course's discipline. Do NOT use placeholder references or list generic URLs. They must be formatted strictly according to the citation style of the discipline, but without markdown bold/italics symbols (no asterisks).`;
 
   try {
     let parsedSyllabus: any = null;
@@ -1767,7 +1776,12 @@ Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw J
         }
       }
 
-      const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+      const courseReferences = parsedSyllabus?.references || [];
+  const referencesMetadata = courseReferences.length > 0
+    ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
+    : 'None provided. Please construct academic references for the discipline.';
+
+  const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
 ${pronunciationMandate}
@@ -1870,8 +1884,12 @@ ${formattedCatalogList}
    - Weave at least one high-impact, authentic quotation from a notable expert/scientist, formatted exactly as:
      > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
    - Every foreign-language quote must be followed by its bracketed translation in the course's target language, plus a paragraph detailing its conceptual implications.
-3. **In-text Bibliography Citations**:
-   - You must cite academic resources inside your text using standard Markdown links referencing standard citation numbers, e.g., \`[1](#ref-1)\`, \`[2](#ref-2)\`. (Agent 3B will generate the corresponding bibliography entries in Stage 2).
+3. **In-text Bibliography Citations (CRITICAL)**:
+   - Ground the lesson in these specific, canonical course-level references:
+${referencesMetadata}
+   - When making claims or citing definitions, you must cite these references inline using the strict format: [refN] (where N is the 1-based number of the reference, e.g. [ref1], [ref2]).
+   - Do NOT use other citation formats (like superscript HTML links, raw URLs, or bracketed numbers like [1]).
+   - Only cite references that are relevant to this lesson, but make sure to cite at least 1 or 2 canonical references from the list.
 4. **Controlled Digressions (Encadrés Épistémologiques)**:
    - Include at least one historical controversy or limit-of-concept discussion box:
      <Epistemology title="Title of Controversy">Deep academic controversy or critical discussion...</Epistemology>
@@ -2138,7 +2156,7 @@ Your generated JSON must contain the following top-level keys:
    - A single premium multiple-choice question designed to allow advanced students to bypass this lesson. Include \`question\`, \`options\` array, \`correctIndex\`, \`targetSectionId\` (anchor of the bypass section), and \`sectionTitle\`.
 3. **\`learningObjectives\`**:
    - Provide learning objectives broken down into \`knowledge\` (concepts), \`skills\` (capabilities), and \`attitudes\` (metacognition) arrays.
-   - **Bloom's Taxonomy Rule**: For University levels, use Revised Bloom's Taxonomy verbs (Analyze, Evaluate, Create / Analyser, Évaluer, Créer depending on target language "${targetLang.toUpperCase()}").
+   - **Bloom's Taxonomy Rule**: For all pedagogical objectives (under \`knowledge\`, \`skills\`, and \`attitudes\`), you must EXCLUSIVELY use Revised Bloom's Taxonomy verbs from the highest cognitive levels (Analyze/Analyser, Evaluate/Évaluer, Create/Créer depending on target language "\${targetLang.toUpperCase()}"). Lower-level passive verbs (such as understand, know, list, comprendre, connaître) are STRICTLY FORBIDDEN.
 4. **\`conclusionSummary\`**:
    - Provide exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each item in the \`items\` array must end with a period).
 5. **\`whatsNext\`**:
@@ -2151,11 +2169,15 @@ Your generated JSON must contain the following top-level keys:
      - This ensures there are enough extra questions in the pool so that the platform randomly shuffles and selects ${finalQuizDisplayLimit} questions at runtime, preventing repetition.
 7. **\`glossary\`**:
    - An array of at least 3 key academic terms with clear definitions.
-8. **\`references\`**:
-   - An array of 3 to 5 complete, real, authoritative scholarly references (exclude for primary school).
-   - Ensure book/article titles are in standard quotes (or French guillemets « ... »), not asterisks.
-   - The references MUST match the designated style: **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}**.
-   - Make sure any inline citations used in the narrative draft (e.g. \`[1](#ref-1)\`) map perfectly to their respective index in this array (e.g., \`references[0]\` is index 1).
+8. **\`references\` (CRITICAL REFERENCE MAPPING RULE)**:
+   - You MUST populate this array.
+   - Start the array with the exact canonical course references provided in:
+${referencesMetadata}
+   - In the lesson narrative, the citations are marked as [ref1], [ref2], etc.
+   - You must map [ref1] to references[0], [ref2] to references[1], and so on, keeping their exact content.
+   - Ensure the citations in the narrative and their order in this array align perfectly.
+   - Book/article titles must be in standard quotes (or French guillemets « ... »), not asterisks.
+   - Exclude this references array only for primary school levels.
 9. **\`interactiveComponents\`**:
    - An array of all custom interactive components. Every custom \`[[WIDGET:id]]\` anchor in the narrative draft MUST have a corresponding object here where \`id\` matches the anchor suffix exactly, \`componentType\` matches the selected widget ID, \`sectionAnchor\` is the heading title of the parent section, and \`props\` specifies its data properties.
    - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:

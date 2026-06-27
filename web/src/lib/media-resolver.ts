@@ -347,6 +347,243 @@ export function isFactualMedia(alt: string, caption: string = ''): boolean {
   return factualTerms.some(term => text.includes(term)) || text.length < 3;
 }
 
+// ─── Wikidata P18 — canonical image for a named entity ─────────────────────
+// Queries Wikidata for the P18 (image) property of an entity matching the title.
+// Returns a direct Wikimedia Commons file URL (Special:FilePath redirect).
+async function fetchWikidataImage(title: string): Promise<string | null> {
+  try {
+    const clean = title.trim().replace(/_/g, ' ');
+    // 1. Search Wikidata entities by label
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(clean)}&language=en&limit=3&format=json&origin=*`;
+    const searchRes = await fetchWithTimeout(searchUrl, {}, 4000);
+    if (!searchRes.ok) return null;
+    const searchJson = await safeResponseJson(searchRes, 'Wikidata entity search');
+    const entities: any[] = searchJson?.search ?? [];
+    if (entities.length === 0) return null;
+
+    // 2. For top 3 candidates, try to get P18 (image)
+    for (const entity of entities.slice(0, 3)) {
+      const entityId = entity.id;
+      const claimsUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims&format=json&origin=*`;
+      const claimsRes = await fetchWithTimeout(claimsUrl, {}, 4000);
+      if (!claimsRes.ok) continue;
+      const claimsJson = await safeResponseJson(claimsRes, 'Wikidata claims fetch');
+      const p18 = claimsJson?.entities?.[entityId]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+      if (p18) {
+        // Construct Commons direct URL via Special:FilePath
+        const encodedFilename = encodeURIComponent(p18.replace(/ /g, '_'));
+        const fileUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedFilename}`;
+        console.log(`[WIKIDATA] Found P18 image for "${clean}" (${entityId}): ${fileUrl}`);
+        return fileUrl;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[WIKIDATA] fetchWikidataImage failed for "${title}":`, err);
+    return null;
+  }
+}
+
+// ─── NASA Images and Video Library ─────────────────────────────────────────
+// Free, no API key required. Great for space, astronomy, physics, engineering.
+async function fetchNASAImage(query: string): Promise<string | null> {
+  try {
+    const url = `https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image&page_size=5`;
+    const res = await fetchWithTimeout(url, {}, 5000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'NASA Images search');
+    const items: any[] = json?.collection?.items ?? [];
+    for (const item of items) {
+      const links: any[] = item.links ?? [];
+      const imgLink = links.find((l: any) => l.rel === 'preview' && l.href?.match(/\.(jpg|jpeg|png|webp)$/i));
+      if (imgLink?.href) {
+        console.log(`[NASA] Found image for "${query}": ${imgLink.href}`);
+        return imgLink.href;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[NASA] fetchNASAImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── The Metropolitan Museum of Art Open Access API ────────────────────────
+// Free, no API key. Excellent for art history, archaeology, classical cultures.
+async function fetchMetMuseumImage(query: string): Promise<string | null> {
+  try {
+    const searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?q=${encodeURIComponent(query)}&hasImages=true&isPublicDomain=true`;
+    const searchRes = await fetchWithTimeout(searchUrl, {}, 5000);
+    if (!searchRes.ok) return null;
+    const searchJson = await safeResponseJson(searchRes, 'Met Museum search');
+    const objectIds: number[] = searchJson?.objectIDs ?? [];
+    if (objectIds.length === 0) return null;
+
+    // Fetch first result's image
+    const objRes = await fetchWithTimeout(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectIds[0]}`, {}, 4000);
+    if (!objRes.ok) return null;
+    const objJson = await safeResponseJson(objRes, 'Met Museum object fetch');
+    const imgUrl = objJson?.primaryImage || objJson?.primaryImageSmall;
+    if (imgUrl) {
+      console.log(`[MET] Found image for "${query}": ${imgUrl}`);
+      return imgUrl;
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[MET] fetchMetMuseumImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── Smithsonian Open Access ────────────────────────────────────────────────
+// Free API key (env var SMITHSONIAN_API_KEY). Covers natural history, science, culture.
+
+async function getSystemParameter(key: string): Promise<string | null> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('system_parameters')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+    if (data?.value) return data.value;
+  } catch (err) {
+    console.warn(`[getSystemParameter] Failed to load key "${key}" from database:`, err);
+  }
+  const envKey = key === 'smithsonianApiKey' ? 'SMITHSONIAN_API_KEY' : 
+                 key === 'unsplashApiKey' ? 'UNSPLASH_API_KEY' : key;
+  return process.env[envKey] || null;
+}
+
+async function fetchUnsplashImage(query: string): Promise<{ url: string; sourceLabel: string } | null> {
+  const apiKey = await getSystemParameter('unsplashApiKey');
+  if (!apiKey) return null;
+  try {
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=3`;
+    const res = await fetchWithTimeout(url, {
+      headers: {
+        'Authorization': `Client-ID ${apiKey}`
+      }
+    }, 5000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'Unsplash search');
+    const results = json?.results ?? [];
+    if (results.length > 0 && results[0]?.urls?.regular) {
+      const imgUrl = results[0].urls.regular;
+      const photo = results[0];
+      
+      // Trigger download tracking as required by Unsplash API Guidelines
+      const downloadLocation = photo.links?.download_location;
+      if (downloadLocation) {
+        const downloadUrl = downloadLocation.includes('?') 
+          ? `${downloadLocation}&client_id=${apiKey}`
+          : `${downloadLocation}?client_id=${apiKey}`;
+        
+        fetchWithTimeout(downloadUrl, {
+          headers: {
+            'Authorization': `Client-ID ${apiKey}`
+          }
+        }, 3000).catch(e => console.warn('[UNSPLASH] Failed to trigger download endpoint:', e));
+      }
+
+      // Build proper photographer attribution and links as required by Unsplash guidelines:
+      // "Photo by Annie Spratt on Unsplash" with referral UTM parameters
+      const photographerName = photo.user?.name || photo.user?.username || 'Unknown Photographer';
+      const photographerUsername = photo.user?.username;
+      const photographerProfileUrl = photographerUsername 
+        ? `https://unsplash.com/@${photographerUsername}?utm_source=OpenPrimer&utm_medium=referral`
+        : `https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral`;
+      const unsplashHomeUrl = `https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral`;
+
+      const sourceLabel = `Photo by [${photographerName}](${photographerProfileUrl}) on [Unsplash](${unsplashHomeUrl})`;
+
+      console.log(`[UNSPLASH] Found image for "${query}": ${imgUrl} | Attribution: ${sourceLabel}`);
+      return { url: imgUrl, sourceLabel };
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[UNSPLASH] fetchUnsplashImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+async function fetchSmithsonianImage(query: string): Promise<string | null> {
+  const apiKey = await getSystemParameter('smithsonianApiKey');
+  if (!apiKey) return null; // Skip silently if key not configured
+  try {
+    const url = `https://api.si.edu/openaccess/api/v1.0/search?q=${encodeURIComponent(query)}&api_key=${apiKey}&rows=3&media_type=Images`;
+    const res = await fetchWithTimeout(url, {}, 5000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'Smithsonian search');
+    const rows: any[] = json?.response?.rows ?? [];
+    for (const row of rows) {
+      const media: any[] = row?.content?.descriptiveNonRepeating?.online_media?.media ?? [];
+      const img = media.find((m: any) => m.type === 'Images' && m.content);
+      if (img?.content) {
+        console.log(`[SMITHSONIAN] Found image for "${query}": ${img.content}`);
+        return img.content;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[SMITHSONIAN] fetchSmithsonianImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── Unified multi-source image resolver ────────────────────────────────────
+// Cascade: Wikidata P18 → Wikipedia/Wikimedia → NASA → Met Museum → Smithsonian → null
+// Returns { url, sourceLabel } so callers can inject proper attribution into captions.
+export async function resolveImageFromSources(
+  title: string,
+  lang: string = 'en',
+  discipline?: string
+): Promise<{ url: string; sourceLabel: string } | null> {
+  const query = title.trim().replace(/_/g, ' ');
+
+  // 1. Wikidata P18 — canonical, most reliable for named entities
+  const wdImage = await fetchWikidataImage(query);
+  if (wdImage) return { url: wdImage, sourceLabel: 'Wikimedia Commons' };
+
+  // 2. Wikipedia/Wikimedia Commons search
+  const wikiImage = await fetchWikipediaImage(query, lang);
+  if (wikiImage) return { url: wikiImage, sourceLabel: 'Wikimedia Commons' };
+
+  // 3. NASA — prioritise for science/space disciplines
+  const disc = (discipline || '').toLowerCase();
+  const isScience = disc.includes('astro') || disc.includes('physi') || disc.includes('spac') ||
+    disc.includes('cosmo') || disc.includes('bio') || disc.includes('chem') || disc.includes('geo');
+  if (isScience) {
+    const nasaImage = await fetchNASAImage(query);
+    if (nasaImage) return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
+  }
+
+  // 4. Met Museum — for art, history, archaeology, classical studies
+  const isArtHistory = disc.includes('art') || disc.includes('hist') || disc.includes('archae') ||
+    disc.includes('class') || disc.includes('liter') || disc.includes('philosoph');
+  if (isArtHistory) {
+    const metImage = await fetchMetMuseumImage(query);
+    if (metImage) return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
+  }
+
+  // 5. Smithsonian — broad fallback for natural history, science, culture
+  const smithsonianImage = await fetchSmithsonianImage(query);
+  if (smithsonianImage) return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
+
+  // 6. NASA as universal last resort (very broad image library)
+  if (!isScience) {
+    const nasaFallback = await fetchNASAImage(query);
+    if (nasaFallback) return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
+  }
+
+  // 7. Unsplash fallback
+  const unsplashResult = await fetchUnsplashImage(query);
+  if (unsplashResult) {
+    return unsplashResult;
+  }
+
+  return null;
+}
+
 // Media-specific search prioritising Wikimedia Commons search first, and Wikipedia Search API second with English fallback
 async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<string | null> {
   try {
@@ -687,7 +924,7 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
     }
     
     const fullCaption = captionMatch[2];
-    const prefixesPattern = /^(?:Figure|Figura|Abbildung|\u56fe)\s*\d+\s*[:\-\u2013]?\s*/gi;
+    const prefixesPattern = /^(?:Figure|Figura|Abbildung|\u56fe)\s*\d*\s*[:\-\u2013]?\s*/gi;
     const cleanCaption = fullCaption.replace(prefixesPattern, '');
     const newCaption = `${prefix} ${figureCount}: ${cleanCaption}`;
     figureCount++;
@@ -704,7 +941,11 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
  * - Resolves missing/dummy YouTube video links with actual search results.
  * - Generates actual audio voiceovers using Google Cloud TTS and uploads them.
  */
-export async function resolveAndPersistMedia(mdxContent: string, targetLang: string = 'fr'): Promise<string> {
+export async function resolveAndPersistMedia(
+  mdxContent: string,
+  targetLang: string = 'fr',
+  discipline?: string
+): Promise<string> {
   let updatedContent = mdxContent;
 
   // 1. Process Video players: find dummy URLs/IDs and search YouTube
@@ -873,20 +1114,35 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
       let sourceUrl = originalUrl;
       let resolvedSuccess = false;
 
-      // Check if we should find a real Wikipedia image instead of Pollinations/placeholder
+      // Resolve via multi-source cascade: Wikidata P18 → Wikipedia → NASA → Met → Smithsonian
       const queryName = altText.trim().replace(/_/g, ' ');
-      const wikiImage = await fetchWikipediaImage(queryName, targetLang);
-      if (wikiImage) {
-        console.log(`[MEDIA-RESOLVER] Found real historical image on Wikipedia for "${queryName}": ${wikiImage}`);
-        updatedContent = updatedContent.replace(fullMatch, `![${altText}](${wikiImage})`);
+      const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
+      if (resolved) {
+        console.log(`[MEDIA-RESOLVER] Resolved image for "${queryName}" via ${resolved.sourceLabel}: ${resolved.url}`);
+        // Replace image URL
+        updatedContent = updatedContent.replace(fullMatch, `![${altText}](${resolved.url})`);
+        // Inject source attribution into the *Figure: ...* caption that follows (within ~400 chars)
+        const afterImg = updatedContent.indexOf(`![${altText}](${resolved.url})`);
+        if (afterImg !== -1) {
+          const snippet = updatedContent.slice(afterImg, afterImg + 400);
+          const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
+          if (captionMatch) {
+            const originalCaption = captionMatch[0];
+            if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
+              const updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${resolved.sourceLabel}*`);
+              updatedContent = updatedContent.slice(0, afterImg) +
+                updatedContent.slice(afterImg).replace(originalCaption, updatedCaption);
+            }
+          }
+        }
         resolvedSuccess = true;
         continue;
       }
 
-      // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
-      if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText) || isFactualMedia(altText))) {
-        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset: "${altText}"`);
-        updatedContent = updatedContent.replace(fullMatch, "");
+      // If no source found and URL is Pollinations/placeholder — strip the image entirely
+      if (sourceUrl.includes('pollinations.ai') || sourceUrl === '' || sourceUrl === 'placeholder') {
+        console.warn(`[MEDIA-RESOLVER] No source found and URL is placeholder — stripping image: "${altText}"`);
+        updatedContent = updatedContent.replace(fullMatch, '');
         resolvedSuccess = true;
         continue;
       }
@@ -965,10 +1221,15 @@ export async function resolveAndPersistMedia(mdxContent: string, targetLang: str
 
       const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
       if (queryName) {
-        const wikiImage = await fetchWikipediaImage(queryName, targetLang);
+        const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
+        const wikiImage = resolved ? resolved.url : null;
         if (wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
-          const updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${wikiImage}"`);
+          let updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${wikiImage}"`);
+          if (resolved && caption && !caption.includes('Source:')) {
+            const newCaption = `${caption} — Source: ${resolved.sourceLabel}`;
+            updatedAttrs = updatedAttrs.replace(/caption="[^"]*"/, `caption="${newCaption}"`);
+          }
           updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
           resolvedSuccess = true;
           continue;

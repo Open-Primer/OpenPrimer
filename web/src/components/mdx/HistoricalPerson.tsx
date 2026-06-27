@@ -25,10 +25,9 @@ import {
 
 export interface EntityLinkProps {
   name: string;
-  lang: string;
+  lang?: string;
   children: React.ReactNode;
   type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork' | 'website' | 'project' | 'concept' | 'theorem' | 'institution' | 'species' | 'chemical' | 'celestial';
-  bio?: string;
   description?: string;
   url?: string;
   href?: string;
@@ -400,7 +399,6 @@ export const EntityLink = ({
   lang, 
   children, 
   type = 'entity',
-  bio,
   description,
   url: propUrl,
   href: propHref,
@@ -420,7 +418,8 @@ export const EntityLink = ({
   }, [unresolved, markDegraded]);
 
   const { language } = useLanguage();
-  const activeLang = (language || lang || 'en').toLowerCase().trim();
+  // Resolution: UI context lang → course lang prop (fallback) → 'en'
+  const activeLang = ((language || lang || 'en')).toLowerCase().trim();
 
   const [summary, setSummary] = useState<string | null>(null);
   const [apiDescription, setApiDescription] = useState<string | null>(null);
@@ -437,8 +436,7 @@ export const EntityLink = ({
     : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(cleanName.replace(/ /g, '_'))}`;
   const resolvedWikiUrl = wikiUrl || fallbackUrl;
   const resolvedExternalUrl = propUrl || propHref;
-  const staticBio = bio || description;
-  const resolvedSummary = summary || staticBio;
+  const resolvedSummary = summary || description;
 
   useEffect(() => {
     if (unresolved || !cleanName || !activeLang) {
