@@ -105,7 +105,15 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
   if (glossaryIndex === -1) return content;
 
   const preGlossary = content.slice(0, glossaryIndex);
-  const glossarySection = content.slice(glossaryIndex);
+  let glossarySection = content.slice(glossaryIndex);
+  let postGlossary = '';
+
+  const nextHeadingIndex = glossarySection.slice(1).search(/\r?\n\s*#{2,3}\s+/);
+  if (nextHeadingIndex !== -1) {
+    const actIndex = nextHeadingIndex + 1;
+    postGlossary = glossarySection.slice(actIndex);
+    glossarySection = glossarySection.slice(0, actIndex);
+  }
 
   const lines = glossarySection.split(/\r?\n/);
   
@@ -175,7 +183,7 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
     processedLines[item.lineIndex] = `- **${item.term}** : ${definition}`;
   }
 
-  return preGlossary + processedLines.join('\n');
+  return preGlossary + processedLines.join('\n') + postGlossary;
 }
 
 export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
@@ -865,7 +873,11 @@ function stripJsxComments(mdx: string): string {
 }
 
 function parseJsonLikeArray(arrStr: string): any[] {
-  let jsonValid = arrStr.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":'); // Quote keys
+  const trimmed = arrStr ? arrStr.trim() : '';
+  if (!trimmed || trimmed === '{}' || trimmed === '[]') {
+    return [];
+  }
+  let jsonValid = trimmed.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":'); // Quote keys
   // Replace opening single quotes
   jsonValid = jsonValid.replace(/(:\s*|,\s*|\[\s*|\{\s*)'/g, '$1"');
   // Replace closing single quotes
@@ -2998,6 +3010,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/&amp;apos;/g, '&apos;');
   processed = processed.replace(/&amp;amp;/g, '&amp;');
 
+  // Ensure raw HTML tags that must be self-closed in MDX are properly formatted (like <br> or <hr>)
+  processed = processed.replace(/<br\b([^>]*?)(?!\s*\/)>/gi, '<br$1 />');
+  processed = processed.replace(/<hr\b([^>]*?)(?!\s*\/)>/gi, '<hr$1 />');
+
   // Unified normalizations of components to heal any block forms or broken attributes before general self-closing processing
   processed = healFillInBlanksAttributes(processed);
   processed = normalizeQuestionAndQuizTags(processed);
@@ -3237,6 +3253,14 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   if (glossaryIndex !== -1) {
     const preGlossary = processed.slice(0, glossaryIndex);
     let glossaryContent = processed.slice(glossaryIndex);
+    let postGlossary = '';
+
+    const nextHeadingIndex = glossaryContent.slice(1).search(/\r?\n\s*#{2,3}\s+/);
+    if (nextHeadingIndex !== -1) {
+      const actIndex = nextHeadingIndex + 1;
+      postGlossary = glossaryContent.slice(actIndex);
+      glossaryContent = glossaryContent.slice(0, actIndex);
+    }
     
     // Robust replacement of <Glossary> tags supporting self-closing, attributes in any order, and single/double quotes
     glossaryContent = glossaryContent.replace(/<Glossary\b([^>]*?)(?:>([\s\S]*?)<\/Glossary>|\/>)/gi, (match, attrs, content) => {
@@ -3294,7 +3318,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     }
     reconstructedGlossary += glossaryItems.map(item => item.line).join('\n') + '\n';
 
-    processed = preGlossary + reconstructedGlossary;
+    processed = preGlossary + reconstructedGlossary + postGlossary;
   }
 
   // 5b. Parse Citation / InteractiveQuote / QuoteBlock tags to auto-generate references

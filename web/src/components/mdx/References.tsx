@@ -135,7 +135,11 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
   const displayedItems = [...activeItems, ...unusedItems];
 
   return (
-    <div className="my-10 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl select-none">
+    <div 
+      className="my-10 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl select-none"
+      title="References"
+      aria-label="References"
+    >
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-600/5 rounded-full blur-[40px] pointer-events-none" />
       
       {/* Header and Toggle Controls */}

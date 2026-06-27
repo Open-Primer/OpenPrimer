@@ -12,7 +12,7 @@ interface AudioReaderProps {
 
 interface SentenceMeta {
   text: string;
-  type: 'text' | 'quiz_checklist' | 'quiz_question' | 'quiz_option' | 'quiz_explanation' | 'solved_problem_desc' | 'solved_problem_solution' | 'fill_in_blanks' | 'graphic';
+  type: 'text' | 'quiz_checklist' | 'quiz_question' | 'quiz_option' | 'quiz_explanation' | 'solved_problem_desc' | 'solved_problem_solution' | 'fill_in_blanks' | 'graphic' | 'table' | 'reference';
   content?: string;
   altText?: string;
 }
@@ -29,7 +29,9 @@ const normalizeMatchingText = (str: string) => {
   return normalizeText(str)
     .replace(/^illustration\s*[:]\s*/, '')
     .replace(/^simulation\s*[:]\s*/, '')
-    .replace(/^video\s*[:]\s*/, '');
+    .replace(/^video\s*[:]\s*/, '')
+    .replace(/^tableau\s*[:]\s*/, '')
+    .replace(/^table\s*[:]\s*/, '');
 };
 
 const cleanMdxText = (text: string) => {
@@ -190,7 +192,7 @@ const getElementReadableText = (el: HTMLElement): string => {
 const extractAndCleanMdxContent = (content: string, lang: string): { sentences: string[]; metadata: SentenceMeta[] } => {
   // Ensure headings, list items and paragraph breaks end with punctuation so they split cleanly
   let preprocessed = content;
-  
+
   // 1. If a line starts with '#' (heading) and doesn't end with punctuation, append a period
   preprocessed = preprocessed.replace(/^(#+\s+.*?[^.!?])\s*$/gm, '$1.');
   
@@ -207,7 +209,7 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
   interface MatchBlock {
     start: number;
     end: number;
-    type: 'quiz' | 'solved_problem' | 'fill_in_blanks' | 'graphic';
+    type: 'quiz' | 'solved_problem' | 'fill_in_blanks' | 'graphic' | 'table' | 'references';
     raw: string;
   }
 
@@ -247,6 +249,39 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
     });
   }
 
+  // Match JSX DynamicTableChart blocks
+  const dynamicTableRegex = /<DynamicTableChart[^>]*?>([\s\S]*?)<\/DynamicTableChart>/gi;
+  while ((m = dynamicTableRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: dynamicTableRegex.lastIndex,
+      type: 'table',
+      raw: m[0]
+    });
+  }
+
+  // Match Markdown table blocks
+  const markdownTableRegex = /^(?:[ \t]*\|.*\|[ \t]*\r?\n?)+/gm;
+  while ((m = markdownTableRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: markdownTableRegex.lastIndex,
+      type: 'table',
+      raw: m[0]
+    });
+  }
+
+  // Match References blocks
+  const referencesRegex = /<References[^>]*?\/>/gi;
+  while ((m = referencesRegex.exec(preprocessed)) !== null) {
+    matches.push({
+      start: m.index,
+      end: referencesRegex.lastIndex,
+      type: 'references',
+      raw: m[0]
+    });
+  }
+
   // Match Graphics: Markdown Image, HTML Image, Video
   const markdownImgRegex = /!\[([^\]]*)\]\([^\)]+\)/g;
   while ((m = markdownImgRegex.exec(preprocessed)) !== null) {
@@ -281,6 +316,16 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
   // Sort matched blocks by start index
   matches.sort((a, b) => a.start - b.start);
 
+  // Filter out overlapping matches
+  const nonOverlappingMatches: MatchBlock[] = [];
+  let currentEnd = 0;
+  for (const match of matches) {
+    if (match.start >= currentEnd) {
+      nonOverlappingMatches.push(match);
+      currentEnd = match.end;
+    }
+  }
+
   const sentences: string[] = [];
   const metadata: SentenceMeta[] = [];
 
@@ -293,7 +338,7 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
   };
 
   let lastIndex = 0;
-  for (const block of matches) {
+  for (const block of nonOverlappingMatches) {
     // Process preceding text gap
     if (block.start > lastIndex) {
       const gapText = preprocessed.substring(lastIndex, block.start);
@@ -361,6 +406,92 @@ const extractAndCleanMdxContent = (content: string, lang: string): { sentences: 
         : `Fill in the blank: ${sentenceAttr.replace('____', `[blank: ${answerAttr}]`)}`;
 
       addSentence(textToRead, 'fill_in_blanks', block.raw);
+    } else if (block.type === 'table') {
+      const alt = getAttribute(block.raw, 'alt') || getAttribute(block.raw, 'description') || getAttribute(block.raw, 'caption');
+      if (alt) {
+        const voicePrefix = lang.toUpperCase() === 'FR' ? "Tableau : " : "Table: ";
+        addSentence(`${voicePrefix}${alt}`, 'table', block.raw, alt);
+      }
+    } else if (block.type === 'references') {
+      let items: any[] = [];
+      const base64 = getAttribute(block.raw, 'itemsBase64');
+      if (base64) {
+        try {
+          const binary = typeof window !== 'undefined'
+            ? window.atob(base64)
+            : Buffer.from(base64, 'base64').toString('binary');
+          const percentEncoded = binary.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+          const decoded = decodeURIComponent(percentEncoded);
+          items = JSON.parse(decoded);
+        } catch (e) {
+          console.error("Failed to decode references in AudioReader:", e);
+        }
+      }
+
+      if (items.length > 0) {
+        const uniqueItems: any[] = [];
+        const textToItem = new Map<string, any>();
+        for (const item of items) {
+          const cleanTextKey = item.text.replace(/<[^>]*>/g, '').trim().toLowerCase();
+          let existing = textToItem.get(cleanTextKey);
+          if (existing) {
+            if (!existing.allNums.includes(item.num)) {
+              existing.allNums.push(item.num);
+              existing.allNums.sort((a: number, b: number) => a - b);
+            }
+          } else {
+            const newItem = {
+              text: item.text,
+              num: item.num,
+              allNums: [item.num],
+              scholarUrl: item.scholarUrl,
+              isUnused: item.isUnused
+            };
+            uniqueItems.push(newItem);
+            textToItem.set(cleanTextKey, newItem);
+          }
+        }
+        const activeItems = uniqueItems.filter(item => !item.isUnused);
+        activeItems.sort((a, b) => Math.min(...a.allNums) - Math.min(...b.allNums));
+
+        const unusedItems = uniqueItems.filter(item => item.isUnused);
+        unusedItems.sort((a, b) => {
+          const cleanA = a.text.replace(/<[^>]*>/g, '').trim();
+          const cleanB = b.text.replace(/<[^>]*>/g, '').trim();
+          return cleanA.localeCompare(cleanB, undefined, { sensitivity: 'base' });
+        });
+
+        const displayedItems = [...activeItems, ...unusedItems];
+
+        for (const item of displayedItems) {
+          let cleanText = item.text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+          cleanText = cleanText.replace(/https?:\/\/\S+/gi, '');
+
+          let citationPrefix = '';
+          if (!item.isUnused) {
+            const numsStr = item.allNums.join(', ');
+            citationPrefix = lang.toUpperCase() === 'FR'
+              ? `Référence ${numsStr} : `
+              : `Reference ${numsStr}: `;
+          } else {
+            citationPrefix = lang.toUpperCase() === 'FR'
+              ? `Référence additionnelle : `
+              : `Additional reference: `;
+          }
+
+          let linkSuffix = '';
+          if (item.scholarUrl) {
+            if (item.scholarUrl.includes('wikipedia.org') || item.scholarUrl.includes('wikipédia')) {
+              linkSuffix = lang.toUpperCase() === 'FR' ? " [Source Wikipédia]" : " [Wikipedia source]";
+            } else {
+              linkSuffix = lang.toUpperCase() === 'FR' ? " [Lien externe]" : " [External link]";
+            }
+          }
+
+          const sentenceText = `${citationPrefix}${cleanText}${linkSuffix}`;
+          addSentence(sentenceText, 'reference', block.raw);
+        }
+      }
     } else if (block.type === 'graphic') {
       let alt = '';
       let type: 'illustration' | 'video' | 'simulation' = 'illustration';
@@ -507,6 +638,27 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
         return !isElementVisible(matched);
       }
       return true;
+    }
+
+    if (meta.type === 'table') {
+      const candidates = Array.from(article.querySelectorAll('table, div[class*="DynamicTableChart"], div[class*="table"]')) as HTMLElement[];
+      const matched = candidates.find(c => {
+        const elText = getElementReadableText(c);
+        if (meta.altText && elText.toLowerCase().includes(meta.altText.toLowerCase())) return true;
+        if (meta.text && elText.toLowerCase().includes(meta.text.toLowerCase())) return true;
+        return false;
+      });
+      if (matched) {
+        return !isElementVisible(matched);
+      }
+      const isAnyVisible = candidates.some(isElementVisible);
+      return !isAnyVisible;
+    }
+
+    if (meta.type === 'reference') {
+      const candidates = Array.from(article.querySelectorAll('div[class*="my-10"], div[title="References"], div[aria-label="References"]')) as HTMLElement[];
+      const isAnyVisible = candidates.some(isElementVisible);
+      return !isAnyVisible;
     }
 
     return false;
@@ -1031,7 +1183,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
 
     const isGraphicNode = (el: HTMLElement) => {
       const tag = el.tagName.toUpperCase();
-      return tag === 'IMG' || tag === 'IFRAME' || tag === 'VIDEO' || el.classList.contains('video-container') || el.classList.contains('iframe-container') || el.getAttribute('role') === 'img';
+      return tag === 'IMG' || tag === 'IFRAME' || tag === 'VIDEO' || el.classList.contains('video-container') || el.classList.contains('iframe-container') || el.getAttribute('role') === 'img' || tag === 'TABLE' || el.classList.contains('DynamicTableChart') || el.getAttribute('class')?.includes('DynamicTableChart');
     };
 
     const getElText = (el: HTMLElement) => {
@@ -1042,7 +1194,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     };
 
     const candidates = Array.from(
-      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6, img, iframe, video, .video-container, .iframe-container, [role="img"]')
+      article.querySelectorAll('p, li, blockquote, h1, h2, h3, h4, h5, h6, img, iframe, video, .video-container, .iframe-container, [role="img"], table, div[class*="DynamicTableChart"], div[title="References"] div[class*="flex-1"], div[aria-label="References"] div[class*="flex-1"]')
     ) as HTMLElement[];
 
     let bestMatch: HTMLElement | null = null;

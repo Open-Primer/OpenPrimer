@@ -12,11 +12,13 @@ interface AudioPlayerProps {
   duration?: string; // e.g. "2 min" or "1:45"
   aiGenerated?: boolean; // true if the audio was synthesized by AI
   unresolved?: boolean;
+  alt?: string;
+  description?: string;
 }
 
 type AudioStatus = 'checking' | 'ok' | 'unavailable';
 
-export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved }: AudioPlayerProps) => {
+export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved, alt, description }: AudioPlayerProps) => {
   const { markDegraded } = useMdxStatus();
 
   useEffect(() => {
@@ -182,7 +184,14 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved }: A
   }
 
   return (
-    <div className="my-8 p-6 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-[28px] shadow-xl flex flex-col md:flex-row md:items-center gap-5">
+    <div 
+      className="my-8 p-6 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-[28px] shadow-xl flex flex-col md:flex-row md:items-center gap-5"
+      role="region"
+      aria-label={alt || description || title || "Lecteur audio"}
+    >
+      <span className="sr-only">
+        {alt || description || title || "Ressource audio"}
+      </span>
       {/* Visual Indicator */}
       <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 shadow-inner">
         <Music4 className={`w-5 h-5 ${isPlaying ? 'animate-pulse' : ''}`} />

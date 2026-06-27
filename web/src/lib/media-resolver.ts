@@ -1105,6 +1105,179 @@ export async function validateMediaUrl(url: string): Promise<boolean> {
   }
 }
 
+export async function searchWikidataImage(query: string, lang: string = 'fr'): Promise<{ url: string | null; fallbackUrl: string | null }> {
+  try {
+    const cleanQuery = query.trim();
+    if (!cleanQuery) return { url: null, fallbackUrl: null };
+
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(cleanQuery)}&language=${lang}&format=json&origin=*`;
+    const searchRes = await fetchWithTimeout(searchUrl, {}, 4000);
+    if (!searchRes.ok) return { url: null, fallbackUrl: null };
+    const searchJson = await safeResponseJson(searchRes, 'Wikidata search');
+    const results = searchJson.search;
+    if (!results || results.length === 0) {
+      if (lang !== 'en') {
+        return searchWikidataImage(query, 'en');
+      }
+      return { url: null, fallbackUrl: null };
+    }
+
+    const entityId = results[0].id;
+
+    const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims|sitelinks&format=json&origin=*`;
+    const entityRes = await fetchWithTimeout(entityUrl, {}, 4000);
+    if (!entityRes.ok) return { url: null, fallbackUrl: null };
+    const entityJson = await safeResponseJson(entityRes, 'Wikidata entity details');
+    const entity = entityJson.entities?.[entityId];
+    if (!entity) return { url: null, fallbackUrl: null };
+
+    const imageClaim = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    
+    let wikiTitle = entity.sitelinks?.[`${lang}wiki`]?.title || entity.sitelinks?.enwiki?.title;
+    let fallbackUrl: string | null = null;
+    if (wikiTitle) {
+      const siteLang = entity.sitelinks?.[`${lang}wiki`] ? lang : 'en';
+      fallbackUrl = `https://${siteLang}.wikipedia.org/wiki/${encodeURIComponent(wikiTitle.replace(/\s/g, '_'))}`;
+    }
+
+    if (!imageClaim) {
+      return { url: null, fallbackUrl };
+    }
+
+    const fileTitle = `File:${imageClaim}`;
+    const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    const commonsRes = await fetchWithTimeout(commonsUrl, {}, 4000);
+    if (!commonsRes.ok) return { url: null, fallbackUrl };
+    const commonsJson = await safeResponseJson(commonsRes, 'Wikimedia file details');
+    const pages = commonsJson.query?.pages;
+    if (pages) {
+      const pageKey = Object.keys(pages)[0];
+      const fileUrl = pages[pageKey]?.imageinfo?.[0]?.url;
+      if (fileUrl) {
+        console.log(`[WIKIDATA-SEARCH] Found Wikidata verified image for "${cleanQuery}" (QID: ${entityId}): ${fileUrl}`);
+        return { url: fileUrl, fallbackUrl };
+      }
+    }
+
+    return { url: null, fallbackUrl };
+  } catch (err) {
+    console.warn(`[WIKIDATA-SEARCH] Failed for query "${query}":`, err);
+    return { url: null, fallbackUrl: null };
+  }
+}
+
+async function validateImageWithGemini(imageUrl: string, description: string): Promise<boolean> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      console.warn('[MEDIA-RESOLVER] No GEMINI_API_KEY configured for visual validation. Skipping validation and assuming true.');
+      return true;
+    }
+
+    const resImg = await fetchWithTimeout(imageUrl, {}, 8000);
+    if (!resImg.ok) {
+      console.warn(`[MEDIA-RESOLVER] Failed to download image for validation: ${imageUrl}`);
+      return false;
+    }
+    const contentType = resImg.headers.get('content-type') || 'image/jpeg';
+    const arrayBuffer = await resImg.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+    const promptText = `Considère la description suivante : "${description}".
+Analyse l'image fournie en pièce jointe.
+Cette image correspond-elle fidèlement, logiquement ou historiquement à cette description ?
+Par exemple, s'il s'agit d'une statue d'un personnage historique, l'image doit montrer cette statue ou ce personnage, et non un paysage, de la nourriture ou un groupe de personnes sans rapport.
+Réponds uniquement par OUI ou NON.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: contentType.split(';')[0],
+                data: base64Data
+              }
+            },
+            {
+              text: promptText
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 10,
+        temperature: 0.1
+      }
+    };
+
+    const res = await fetchWithTimeout(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }, 15000);
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn(`[MEDIA-RESOLVER] Gemini validation API error (${res.status}): ${err.substring(0, 200)}`);
+      return true;
+    }
+
+    const json = await safeResponseJson(res, 'Gemini image validation');
+    const answer = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.toUpperCase() || '';
+    
+    console.log(`[MEDIA-RESOLVER] Gemini validation answer for "${description}" against image: "${answer}"`);
+    
+    if (answer.includes('NON')) {
+      console.warn(`[MEDIA-RESOLVER] Gemini REJECTED image for description "${description}": ${imageUrl}`);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.warn('[MEDIA-RESOLVER] Error validating image with Gemini:', err);
+    return true;
+  }
+}
+
+export async function resolveMediaImage(queryName: string, lang: string): Promise<{ url: string | null; fallbackUrl: string | null }> {
+  const wikidataResult = await searchWikidataImage(queryName, lang);
+  if (wikidataResult.url) {
+    const isValid = await validateImageWithGemini(wikidataResult.url, queryName);
+    if (isValid) {
+      return wikidataResult;
+    } else {
+      console.log(`[MEDIA-RESOLVER] Wikidata image rejected by Gemini for query "${queryName}". Trying fallback...`);
+    }
+  }
+
+  const wikiUrl = await fetchWikipediaImage(queryName, lang);
+  if (wikiUrl) {
+    const isValid = await validateImageWithGemini(wikiUrl, queryName);
+    if (isValid) {
+      const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(queryName.replace(/\s/g, '_'))}`;
+      return { url: wikiUrl, fallbackUrl };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Wikipedia page image rejected by Gemini for query "${queryName}". Trying fallback...`);
+    }
+  }
+
+  const commonsUrl = await searchWikimediaCommonsImage(queryName);
+  if (commonsUrl) {
+    const isValid = await validateImageWithGemini(commonsUrl, queryName);
+    if (isValid) {
+      return { url: commonsUrl, fallbackUrl: wikidataResult.fallbackUrl || null };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Wikimedia Commons image rejected by Gemini for query "${queryName}".`);
+    }
+  }
+
+  return { url: null, fallbackUrl: wikidataResult.fallbackUrl || null };
+}
+
 export async function searchWikimediaCommonsImage(query: string): Promise<string | null> {
   try {
     const cleanQuery = query.trim();
@@ -1327,10 +1500,8 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       console.log(`[RESTITUTION-REPAIR] Repairing markdown image: "${altText}"`);
       const queryName = altText.trim().replace(/_/g, ' ');
       
-      let sourceUrl = await fetchWikipediaImage(queryName, targetLangLower);
-      if (!sourceUrl && queryName) {
-        sourceUrl = await searchWikimediaCommonsImage(queryName);
-      }
+      const resolution = await resolveMediaImage(queryName, targetLangLower);
+      let sourceUrl = resolution.url;
 
       let success = false;
       if (sourceUrl) {
@@ -1401,10 +1572,9 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${altText || caption}"`);
       const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
       
-      let sourceUrl = await fetchWikipediaImage(queryName, targetLangLower);
-      if (!sourceUrl && queryName) {
-        sourceUrl = await searchWikimediaCommonsImage(queryName);
-      }
+      const resolution = await resolveMediaImage(queryName, targetLangLower);
+      let sourceUrl = resolution.url;
+      const wikidataFallbackUrl = resolution.fallbackUrl;
 
       let success = false;
       if (sourceUrl) {
@@ -1426,6 +1596,15 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                 } else {
                   updatedAttrs += ` src="${publicUrl}"`;
                 }
+                
+                if (wikidataFallbackUrl) {
+                  if (updatedAttrs.includes('fallbackUrl=')) {
+                    updatedAttrs = updatedAttrs.replace(/fallbackUrl="[^"]*"/, `fallbackUrl="${wikidataFallbackUrl}"`);
+                  } else {
+                    updatedAttrs += ` fallbackUrl="${wikidataFallbackUrl}"`;
+                  }
+                }
+                
                 updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
                 success = true;

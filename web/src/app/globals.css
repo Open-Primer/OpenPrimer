@@ -1348,3 +1348,73 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-focus .objectives-container .text-slate-300 {
   font-size: 0.85rem !important;
 }
+
+/* Container-specific CSS reset to protect PronunciationSandbox from global overrides in paper/focus mode */
+.pronunciation-sandbox-reset {
+  background: linear-gradient(135deg, #0f172a 0%, rgba(15, 23, 42, 0.9) 50%, #020617 100%) !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset h2,
+.theme-paper .pronunciation-sandbox-reset h3 {
+  color: #ffffff !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset p {
+  color: #cbd5e1 !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .bg-slate-950\/40,
+.theme-paper .pronunciation-sandbox-reset .bg-slate-950\/20,
+.theme-paper .pronunciation-sandbox-reset .bg-slate-950\/60 {
+  background-color: rgba(2, 6, 23, 0.4) !important;
+  border-color: rgba(30, 41, 59, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .bg-slate-900,
+.theme-paper .pronunciation-sandbox-reset .bg-slate-900\/50,
+.theme-paper .pronunciation-sandbox-reset .bg-slate-900\/60,
+.theme-paper .pronunciation-sandbox-reset .bg-slate-900\/80 {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .bg-slate-800 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .text-slate-500 {
+  color: #64748b !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .border-slate-800,
+.theme-paper .pronunciation-sandbox-reset .border-slate-850,
+.theme-paper .pronunciation-sandbox-reset .border-slate-850\/70,
+.theme-paper .pronunciation-sandbox-reset .border-slate-850\/60 {
+  border-color: #1e293b !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600) {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #1e293b !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600):hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}

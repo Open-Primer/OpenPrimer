@@ -28,7 +28,7 @@ async function run() {
   const { data: lesson, error } = await supabase
     .from('lessons')
     .select('*')
-    .eq('course_slug', 'Espagnol_fondamental_syntaxe_et_expression')
+    .eq('course_slug', 'Espagnol_fondamental_Syntaxe_et_expression')
     .eq('lesson_slug', 'sons-espagnol-monde-hispanophone')
     .maybeSingle();
 

@@ -104,15 +104,16 @@ And a duplicate citation to test consolidation:
 </GoingFurther>`
     },
     {
-      name: "15. Objectives block conversion from plain paragraphs",
-      input: `### Objectifs d'apprentissage
-Analyser les mécanismes biophysiques qui établissent et maintiennent le potentiel de repos membranaire.
+      name: "16. Glossary and References section separation",
+      input: `### Glossaire
 
-Expliquer le rôle des gradients ioniques, de la perméabilité membranaire et des pompes ioniques dans la genèse du potentiel de repos.
+- **Langage** : Faculté humaine universelle et innée de communiquer.
+- **Langue** : Système de signes.
 
-Distinguer les différentes phases du potentiel d'action et les canaux ioniques voltage-dépendants impliqués dans chacune d'elles.
+### Références
 
-Évaluer l'importance des équations de Nernst et de Goldman-Hodgkin-Katz pour prédire les potentiels d'équilibre et de membrane.`
+[1] Dubois, J. (2002). Dictionnaire de linguistique.
+[2] Chomsky, N. (1957). Syntactic Structures.`
     }
   ];
 

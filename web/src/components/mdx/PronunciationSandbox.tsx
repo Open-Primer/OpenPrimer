@@ -47,26 +47,70 @@ export const PronunciationSandbox = ({
 
   // Set up Speech Synthesis to play the word/phrase
   const playReference = () => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel(); // stop current audio
-
-    const utterance = new SpeechSynthesisUtterance(word);
+    if (!synthRef.current) {
+      setError(
+        language === 'FR' 
+          ? "La synthèse vocale n'est pas disponible dans ce navigateur." 
+          : "Speech synthesis is not available in this browser."
+      );
+      return;
+    }
     
-    // Map lang property to complete BCP 47 code
-    const langCode = lang.toLowerCase() === 'fr' ? 'fr-FR' : 
-                     lang.toLowerCase() === 'es' ? 'es-ES' : 
-                     lang.toLowerCase() === 'de' ? 'de-DE' : 
-                     lang.toLowerCase() === 'zh' ? 'zh-CN' : 
-                     lang.toLowerCase() === 'en' ? 'en-US' : lang;
-                     
-    utterance.lang = langCode;
-    utterance.rate = 0.85; // Slightly slower for pedagogical clarity
+    try {
+      synthRef.current.cancel(); // stop current audio
 
-    utterance.onstart = () => setIsPlayingRef(true);
-    utterance.onend = () => setIsPlayingRef(false);
-    utterance.onerror = () => setIsPlayingRef(false);
+      // Chromium bug workaround: resume if synthesis was paused
+      if (synthRef.current.paused) {
+        synthRef.current.resume();
+      }
 
-    synthRef.current.speak(utterance);
+      const utterance = new SpeechSynthesisUtterance(word);
+      
+      // Map lang property to complete BCP 47 code
+      const langCode = lang.toLowerCase() === 'fr' ? 'fr-FR' : 
+                       lang.toLowerCase() === 'es' ? 'es-ES' : 
+                       lang.toLowerCase() === 'de' ? 'de-DE' : 
+                       lang.toLowerCase() === 'zh' ? 'zh-CN' : 
+                       lang.toLowerCase() === 'en' ? 'en-US' : lang;
+                       
+      utterance.lang = langCode;
+      utterance.rate = 0.85; // Slightly slower for pedagogical clarity
+
+      utterance.onstart = () => {
+        setIsPlayingRef(true);
+        setError(null);
+      };
+      utterance.onend = () => setIsPlayingRef(false);
+      utterance.onerror = (e: any) => {
+        console.error("Speech synthesis error:", e);
+        setIsPlayingRef(false);
+        if (e.error === 'network') {
+          setError(
+            language === 'FR' 
+              ? "Erreur réseau. Impossible de charger la voix de synthèse." 
+              : "Network error loading synthesis voice."
+          );
+        } else if (e.error === 'not-allowed') {
+          setError(
+            language === 'FR' 
+              ? "Lecture automatique bloquée. Veuillez interagir d'abord avec la page." 
+              : "Autoplay blocked. Please interact with the page first."
+          );
+        } else {
+          setError(
+            language === 'FR' 
+              ? `Impossible de lire le son (${e.error || 'erreur audio'}).` 
+              : `Could not play audio (${e.error || 'audio error'}).`
+          );
+        }
+      };
+
+      synthRef.current.speak(utterance);
+    } catch (err: any) {
+      console.error("Speech synthesis exception:", err);
+      setIsPlayingRef(false);
+      setError(err.message || "Failed to start speech synthesis.");
+    }
   };
 
   // Set up Speech Recognition
@@ -264,7 +308,7 @@ export const PronunciationSandbox = ({
   };
 
   return (
-    <div className="my-8 p-6 md:p-8 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-[32px] shadow-2xl relative overflow-hidden select-none">
+    <div className="pronunciation-sandbox-reset my-8 p-6 md:p-8 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-[32px] shadow-2xl relative overflow-hidden select-none">
       {/* Background radial glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10" />
 

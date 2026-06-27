@@ -826,8 +826,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     content = content + `\n\n${finalEvalStr}`;
   }
 
-  const glossaryStr = `\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
-  content = content + glossaryStr;
+  const glossaryStr = `\n\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
+  content = content.trim() + glossaryStr;
 
   // Extract all cited reference numbers from the narrative text
   const citedRefs = getCitedReferenceNumbers(content);
@@ -853,17 +853,17 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
 
   let referencesStr = '';
   if (citedList.length > 0) {
-    referencesStr += `\n\n${refHeading}\n\n${citedList.join('\n')}`;
+    referencesStr += `\n\n\n${refHeading}\n\n${citedList.join('\n')}`;
   } else {
     // Fallback if none are cited: render them all under primary heading as plain bullets
-    referencesStr += `\n\n${refHeading}\n\n${uncitedList.join('\n')}`;
+    referencesStr += `\n\n\n${refHeading}\n\n${uncitedList.join('\n')}`;
   }
 
   if (citedList.length > 0 && uncitedList.length > 0) {
-    referencesStr += `\n\n${readingHeading}\n\n${uncitedList.join('\n')}`;
+    referencesStr += `\n\n\n${readingHeading}\n\n${uncitedList.join('\n')}`;
   }
 
-  content = content + referencesStr;
+  content = content.trim() + referencesStr;
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
   content = content.replace(/\[\[WIDGET:[^\]]+\]\]/gi, '');

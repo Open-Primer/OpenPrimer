@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Maximize2, ZoomIn, ZoomOut, X, RotateCcw } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { Quiz, Question, Option } from './Quiz';
@@ -408,6 +410,258 @@ const FIGURE_STRINGS: Record<string, string> = {
   ZH: "图"
 };
 
+const ZoomableImage = ({ 
+  src, 
+  alt, 
+  className, 
+  onError, 
+  ...props 
+}: { 
+  src: string; 
+  alt: string; 
+  className?: string; 
+  onError?: () => void;
+  [key: string]: any;
+}) => {
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [scale, setScale] = React.useState(1);
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const { language } = useLanguage();
+
+  const dragStart = React.useRef({ x: 0, y: 0 });
+  const dragMoveAmount = React.useRef(0);
+
+  React.useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsFullscreen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isFullscreen]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    dragMoveAmount.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    if (isDragging) {
+      const dx = (e.clientX - offset.x) - dragStart.current.x;
+      const dy = (e.clientY - offset.y) - dragStart.current.y;
+      dragMoveAmount.current += Math.sqrt(dx * dx + dy * dy);
+      setOffset({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!isFullscreen) return;
+    e.preventDefault();
+    
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    const zoomFactor = 1.15;
+    const nextScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
+    const boundedScale = Math.max(0.1, Math.min(10, nextScale));
+    
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    
+    const nextOffsetX = offset.x + (clientX - cx - offset.x) * (1 - boundedScale / scale);
+    const nextOffsetY = offset.y + (clientY - cy - offset.y) * (1 - boundedScale / scale);
+    
+    setScale(boundedScale);
+    setOffset({ x: nextOffsetX, y: nextOffsetY });
+  };
+
+  const resetPanZoom = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    if (dragMoveAmount.current >= 5) return;
+    
+    const target = e.target as HTMLElement;
+    const isCanvasBg = target.classList.contains('canvas-bg') || target === e.currentTarget;
+    if (isCanvasBg) {
+      setIsFullscreen(false);
+    }
+  };
+
+  const modalPortal = isFullscreen && typeof document !== 'undefined' && createPortal(
+    <div 
+      className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
+      onWheel={handleWheel}
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsFullscreen(false);
+        }}
+        className="absolute top-6 right-6 p-3 rounded-full bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-30 shadow-2xl cursor-pointer"
+        title={language === 'FR' ? "Fermer (Échap)" : "Close (Esc)"}
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-slate-900/90 border border-slate-800/85 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-5 z-20 select-none"
+      >
+        <div className="flex flex-col text-left border-r border-slate-800/80 pr-5">
+          <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-widest">
+            {language === 'FR' ? "Zoom Figure" : "Figure Zoom"}
+          </span>
+          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+            {language === 'FR' ? "Glisser pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setScale(prev => Math.min(10, prev * 1.25));
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Zoomer" : "Zoom In"}
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setScale(prev => Math.max(0.1, prev / 1.25));
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              resetPanZoom();
+            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
+            title={language === 'FR' ? "Réinitialiser" : "Reset View"}
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div 
+        className={`w-full h-full flex items-center justify-center overflow-hidden canvas-bg ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onClick={handleCanvasClick}
+      >
+        <img 
+          src={src} 
+          alt={alt}
+          style={{
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+            willChange: 'transform'
+          }}
+          className="max-w-[95vw] max-h-[90vh] object-contain pointer-events-auto shadow-2xl rounded-xl"
+        />
+      </div>
+    </div>,
+    document.body
+  );
+
+  return (
+    <div className="relative group/zoomable w-full flex items-center justify-center">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsFullscreen(true);
+        }}
+        className="absolute top-3 right-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-10 cursor-pointer shadow-md opacity-0 group-hover/zoomable:opacity-100 focus/zoomable:opacity-100 duration-200"
+        title={language === 'FR' ? "Agrandir l'image" : "Maximize image"}
+      >
+        <Maximize2 className="w-4 h-4" />
+      </button>
+
+      <img 
+        src={src} 
+        alt={alt} 
+        className={className}
+        onError={onError}
+        onClick={() => setIsFullscreen(true)}
+        style={{ cursor: 'zoom-in' }}
+        {...props}
+      />
+      {modalPortal}
+    </div>
+  );
+};
+
+const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
+  const parts = captionText.split(/(Source\s*:\s*)/i);
+  if (parts.length < 3) {
+    return <span className="select-text">{captionText}</span>;
+  }
+  const mainText = parts.slice(0, parts.length - 2).join('');
+  const sourcePrefix = parts[parts.length - 2];
+  const sourceName = parts[parts.length - 1].trim();
+  
+  let url = fallbackUrl || '';
+  if (!url) {
+    if (/wikimedia/i.test(sourceName)) {
+      url = 'https://commons.wikimedia.org';
+    } else if (/wikipedia/i.test(sourceName)) {
+      url = 'https://www.wikipedia.org';
+    }
+  }
+
+  const isLinkable = url && !/ai-generated|generated|pollinations|tuteur/i.test(sourceName);
+  
+  return (
+    <span className="select-text">
+      {mainText}
+      {sourcePrefix}
+      {isLinkable ? (
+        <a 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors cursor-pointer"
+        >
+          {sourceName}
+        </a>
+      ) : (
+        sourceName
+      )}
+    </span>
+  );
+};
+
 const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean }) => {
   const [failed, setFailed] = React.useState(false);
   const { markDegraded, registerFigure, unregisterFigure, registeredFigures } = useMdxStatus();
@@ -459,16 +713,15 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
 
   return (
     <div className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300">
-      <img 
+      <ZoomableImage 
         src={src} 
         alt={alt} 
         className="rounded-2xl max-w-full h-auto max-h-[450px] object-contain shadow-md border border-slate-900/10 dark:border-slate-800/50" 
         onError={() => setFailed(true)} 
       />
-      {finalCaption && <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4 select-none">{finalCaption}</p>}
-      {fallbackText && fallbackUrl && (
-        <p className="text-center text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors select-none">
-          <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">{fallbackText}</a>
+      {finalCaption && (
+        <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-2 max-w-2xl px-4">
+          {renderCaptionWithLinks(finalCaption, fallbackUrl)}
         </p>
       )}
     </div>
@@ -1613,7 +1866,7 @@ const MdxImage = (props: any) => {
   }
 
   return (
-    <img 
+    <ZoomableImage 
       className="rounded-2xl max-w-full h-auto shadow-md border border-slate-900/10 dark:border-slate-800/50 my-8" 
       onError={() => setFailed(true)}
       {...props} 

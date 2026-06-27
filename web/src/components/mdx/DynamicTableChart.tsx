@@ -5,11 +5,16 @@ import { Table, BarChart3, LineChart, ToggleLeft } from 'lucide-react';
 
 interface DynamicTableChartProps {
   children: React.ReactNode;
+  alt?: string;
+  description?: string;
+  caption?: string;
 }
 
-export const DynamicTableChart = ({ children }: DynamicTableChartProps) => {
+export const DynamicTableChart = ({ children, alt, description, caption }: DynamicTableChartProps) => {
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
+
+  const finalDescription = description || alt || caption;
 
   // Parses headers and rows from children (thead, tbody, tr, td, th)
   const parsedData = React.useMemo(() => {
@@ -129,7 +134,11 @@ export const DynamicTableChart = ({ children }: DynamicTableChartProps) => {
   };
 
   return (
-    <div className="my-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-900/10 p-5 shadow-lg relative">
+    <div 
+      className="my-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-900/10 p-5 shadow-lg relative"
+      title={finalDescription}
+      aria-label={finalDescription}
+    >
       <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4 select-none">
         <div className="flex items-center gap-2">
           <Table className="w-4 h-4 text-indigo-400" />
@@ -173,6 +182,12 @@ export const DynamicTableChart = ({ children }: DynamicTableChartProps) => {
           </div>
         )}
       </div>
+
+      {finalDescription && (
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400 italic mt-4 max-w-2xl mx-auto px-4 select-text">
+          {finalDescription}
+        </p>
+      )}
     </div>
   );
 };
