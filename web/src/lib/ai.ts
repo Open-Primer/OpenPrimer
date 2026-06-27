@@ -833,40 +833,34 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   const glossaryStr = `\n\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
   content = content.trim() + glossaryStr;
 
-  // Extract all cited reference numbers from the narrative text
-  const citedRefs = getCitedReferenceNumbers(content);
+  // Convert [refN] citations in the narrative text to standard superscript links with back-links
+  const citedSet = new Set<number>();
+  content = content.replace(/\[ref[-_]?\s*(\d+)\]/gi, (match, numStr) => {
+    const num = parseInt(numStr, 10);
+    if (num > 0 && num <= widgets.references.length) {
+      if (!citedSet.has(num)) {
+        citedSet.add(num);
+        return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
+      } else {
+        return `<sup><a href="#ref-${num}">[${num}]</a></sup>`;
+      }
+    }
+    return match;
+  });
 
-  // Group references into cited and uncited
-  const citedList: string[] = [];
-  const uncitedList: string[] = [];
-
+  // Map all references from widgets.references into a clean structured list
+  const referencesList: string[] = [];
   widgets.references.forEach((ref: string, idx: number) => {
     const refNum = idx + 1;
     const cleanRef = ref.replace(/^\[\d+\]\s*/, '');
-    if (citedRefs.has(refNum)) {
-      citedList.push(`* [${refNum}] ${cleanRef}`);
-    } else {
-      uncitedList.push(`* ${cleanRef}`);
-    }
+    referencesList.push(`[${refNum}] ${cleanRef}`);
   });
 
   // Build references section based on target language keywords in content
   const isFr = content.toLowerCase().includes('présentation') || content.toLowerCase().includes('introduction') || content.toLowerCase().includes('références') || content.toLowerCase().includes('glossaire');
   const refHeading = isFr ? '### Références' : '### References';
-  const readingHeading = isFr ? '#### Lectures complémentaires' : '#### Further Reading';
 
-  let referencesStr = '';
-  if (citedList.length > 0) {
-    referencesStr += `\n\n\n${refHeading}\n\n${citedList.join('\n')}`;
-  } else {
-    // Fallback if none are cited: render them all under primary heading as plain bullets
-    referencesStr += `\n\n\n${refHeading}\n\n${uncitedList.join('\n')}`;
-  }
-
-  if (citedList.length > 0 && uncitedList.length > 0) {
-    referencesStr += `\n\n\n${readingHeading}\n\n${uncitedList.join('\n')}`;
-  }
-
+  const referencesStr = `\n\n\n${refHeading}\n\n${referencesList.join('\n')}`;
   content = content.trim() + referencesStr;
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
@@ -1915,11 +1909,11 @@ ${referencesMetadata}
    - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
 7. **Factual Images & Captions**:
    - Include 5 to 6 factual/sourced images and 1 to 2 decorative AI illustrations for Licence level.
-   - Factual images (historical figures, maps, diagrams) MUST use standard Markdown image tags where the Alt Text is the **EXACT, search-friendly English Wikipedia title** of the subject, and the source URL points to the Pollinations API:
-     \`![Adam_Smith](https://image.pollinations.ai/..._prompt_description...)\`
-   - Decorative/Conceptual images MUST use general, non-factual alt text to bypass factual checks.
+   - Factual images (historical figures, maps, diagrams) MUST use standard Markdown image tags where the Alt Text is the **EXACT, search-friendly English Wikipedia title** of the subject, and the URL is empty/blank:
+     \`![Adam_Smith]()\`
+   - Decorative/Conceptual images MUST use a descriptive query as the Alt Text and have a blank/empty URL, e.g. \`![A colorful diagram showing photosynthesis]()\`.
    - Every image must have an italicized figure caption directly below:
-     *Figure X: [Title] - [Description]. Source: [Wikimedia Commons / AI-generated]*
+     *Figure X: [Title] - [Description].*
    - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
 
 ---
@@ -2007,7 +2001,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - Check for and reject any nested or duplicated Hover-Cards.
 7. **Visual Assets Density, Sourcing & Captions**:
    - For higher education, verify that the lesson contains at least **5 to 6 distinct factual images/figures** and **1 to 2 decorative AI illustrations**.
-   - Factual images must use English Wikipedia page titles as their Alt Text, e.g. \`![Adam_Smith](https://image.pollinations.ai/..._prompt...)\`. Obscure or bloated alt texts are unacceptable.
+   - Factual images must use English Wikipedia page titles as their Alt Text and have a blank/empty URL, e.g. \`![Adam_Smith]()\`. Obscure or bloated alt texts are unacceptable.
    - Every image must have an italicized figure caption directly below:
      *Figure X: [Title] - [Description]. Source: ...*
 

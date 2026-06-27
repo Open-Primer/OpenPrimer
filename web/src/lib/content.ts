@@ -3096,7 +3096,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = cleanBiographyAlerts(processed);
   
   // Group images, captions, and fallback links into a single <CustomFigure> component
-  const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/).*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
+  const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureRegex, (match, alt, imgUrl, caption, fallbackText, fallbackUrl) => {
     const cleanAlt = (alt || '').replace(/"/g, '&quot;');
     let cleanCaption = (caption || '');

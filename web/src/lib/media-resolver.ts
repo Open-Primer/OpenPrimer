@@ -915,6 +915,10 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
     if (/\bunresolved(?:={true})?\b/.test(attrsStr)) {
       return match;
     }
+    // Skip decorative illustrations — never numbered
+    if (/\bisIllustration(={true})?\b/.test(attrsStr)) {
+      return match;
+    }
     const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/);
     if (!captionMatch) {
       const newCaption = `${prefix} ${figureCount}`;
@@ -1109,7 +1113,7 @@ export async function resolveAndPersistMedia(
     const altText = mdMatch[1];
     const originalUrl = mdMatch[2];
 
-    if (originalUrl) {
+    if (originalUrl !== undefined && (originalUrl || altText)) {
       console.log(`[MEDIA-RESOLVER] Processing Markdown image: ${altText} (${originalUrl})`);
       let sourceUrl = originalUrl;
       let resolvedSuccess = false;
@@ -1214,7 +1218,7 @@ export async function resolveAndPersistMedia(
     const altText = altMatch ? altMatch[1] : '';
     const caption = captionMatch ? captionMatch[1] : '';
 
-    if (originalSrc) {
+    if (originalSrc !== undefined || altText || caption) {
       console.log(`[MEDIA-RESOLVER] Processing JSX Figure: ${altText} (${originalSrc})`);
       let sourceUrl = originalSrc;
       let resolvedSuccess = false;
@@ -1225,10 +1229,26 @@ export async function resolveAndPersistMedia(
         const wikiImage = resolved ? resolved.url : null;
         if (wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
-          let updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${wikiImage}"`);
+          let updatedAttrs = attrsStr;
+          if (attrsStr.includes('src=')) {
+            updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${wikiImage}"`);
+          } else {
+            updatedAttrs += ` src="${wikiImage}"`;
+          }
           if (resolved && caption && !caption.includes('Source:')) {
             const newCaption = `${caption} — Source: ${resolved.sourceLabel}`;
-            updatedAttrs = updatedAttrs.replace(/caption="[^"]*"/, `caption="${newCaption}"`);
+            if (updatedAttrs.includes('caption=')) {
+              updatedAttrs = updatedAttrs.replace(/caption="[^"]*"/, `caption="${newCaption}"`);
+            } else {
+              updatedAttrs += ` caption="${newCaption}"`;
+            }
+          }
+          // Unsplash images are decorative illustrations — tag them so the renderer
+          // skips "Figure N:" numbering and TTS reader ignores them entirely.
+          if (resolved && resolved.sourceLabel && resolved.sourceLabel.includes('Unsplash')) {
+            if (!updatedAttrs.includes('isIllustration=')) {
+              updatedAttrs += ' isIllustration={true}';
+            }
           }
           updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
           resolvedSuccess = true;
@@ -1245,6 +1265,7 @@ export async function resolveAndPersistMedia(
       }
 
       // Download and upload to Supabase Storage (Only for generated or other custom external images)
+      if (sourceUrl) {
       try {
         let buffer: Buffer | null = null;
         let contentType = 'image/jpeg';
@@ -1281,13 +1302,19 @@ export async function resolveAndPersistMedia(
           
           const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
           if (publicUrl) {
-            const updatedAttrs = attrsStr.replace(/src="[^"]*"/, `src="${publicUrl}"`);
+            let updatedAttrs = attrsStr;
+            if (updatedAttrs.includes('src=')) {
+              updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
+            } else {
+              updatedAttrs += ` src="${publicUrl}"`;
+            }
             updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
             resolvedSuccess = true;
           }
         }
       } catch (err) {
         console.warn(`[MEDIA-RESOLVER] Failed to download or upload JSX image ${sourceUrl}:`, err);
+      }
       }
 
       if (!resolvedSuccess) {

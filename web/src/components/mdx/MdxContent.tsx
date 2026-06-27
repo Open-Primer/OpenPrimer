@@ -704,7 +704,7 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
   );
 };
 
-const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean }) => {
+const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved, isIllustration }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean; isIllustration?: boolean }) => {
   const [failed, setFailed] = React.useState(false);
   const { markDegraded, registerFigure, unregisterFigure, registeredFigures } = useMdxStatus();
   const { language } = useLanguage();
@@ -724,7 +724,8 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
   const isVisible = !unresolved && !isBlocked && !failed && !!src;
 
   React.useEffect(() => {
-    if (isVisible) {
+    // Illustrations are decorative — never register for figure numbering
+    if (isVisible && !isIllustration) {
       registerFigure(id);
     } else {
       unregisterFigure(id);
@@ -732,7 +733,7 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
     return () => {
       unregisterFigure(id);
     };
-  }, [id, isVisible, registerFigure, unregisterFigure]);
+  }, [id, isVisible, isIllustration, registerFigure, unregisterFigure]);
 
   React.useEffect(() => {
     if (unresolved || isBlocked || failed) {
@@ -744,6 +745,32 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
     return null;
   }
 
+  // ── Illustration mode (Unsplash/decorative) ─────────────────────────────
+  // No "Figure N:" label, no numbering, aria-hidden so TTS skips it entirely.
+  // Only a minimal attribution line is shown beneath the image.
+  if (isIllustration) {
+    return (
+      <div
+        className="my-6 flex flex-col items-center justify-center gap-1.5 custom-illustration transition-opacity duration-300"
+        aria-hidden="true"
+        role="presentation"
+      >
+        <img
+          src={src}
+          alt=""
+          className="rounded-2xl max-w-full h-auto max-h-[360px] object-contain opacity-90"
+          onError={() => setFailed(true)}
+        />
+        {caption && (
+          <p className="text-center text-[10px] text-slate-600 dark:text-slate-500 mt-1 max-w-xl px-4 leading-relaxed">
+            {renderCaptionWithLinks(caption, fallbackUrl)}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // ── Standard figure mode (factual, numbered) ─────────────────────────────
   const langKey = (language || 'EN').toUpperCase();
   const figureLabel = FIGURE_STRINGS[langKey] || FIGURE_STRINGS.EN;
 
