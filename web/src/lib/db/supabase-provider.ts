@@ -21,19 +21,19 @@ import {
 import {
   getMockCourses,
   setMockCourses,
-  getAvailableLanguagesList
+  getAvailableLanguagesList,
+  purgePipelineAndRequestsForCourseOrCurriculum,
+  addCourseTombstone,
+  removeCourseTombstone
 } from './state-store';
 import {
   handleDatabaseError,
   getLocalizedCourseTitleInternal,
   generatePedagogicalSummary,
   getCanonicalCourseId,
-  purgePipelineAndRequestsForCourseOrCurriculum,
-  addCourseTombstone,
-  removeCourseTombstone,
-  mockDatabaseProviderHash,
-  progressService
-} from '../db';
+  mockDatabaseProviderHash
+} from './helpers';
+import { progressService } from './progress-service';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
 export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ data: any; error: any }> {

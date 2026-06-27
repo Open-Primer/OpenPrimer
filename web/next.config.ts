@@ -37,22 +37,17 @@ const securityHeaders = [
     key: 'Cross-Origin-Resource-Policy',
     value: 'same-origin'
   }
-  // COEP require-corp is commented out to allow embedding external videos via iframe (YouTube/Vimeo)
-  // {
-  //   key: 'Cross-Origin-Embedder-Policy',
-  //   value: 'require-corp'
-  // }
 ];
 
 const nextConfig: NextConfig = {
-  // Supprime le header "X-Powered-By: Next.js" qui fingerprinte le stack aux attaquants
   poweredByHeader: false,
   output: "standalone",
   outputFileTracingIncludes: {
     '/**': ['content/**/*']
   },
   async headers() {
-    return [
+    const isDev = process.env.NODE_ENV === 'development';
+    const headersList = [
       {
         source: '/:path*',
         headers: securityHeaders,
@@ -66,9 +61,12 @@ const nextConfig: NextConfig = {
             value: 'no-store, max-age=0'
           }
         ]
-      },
-      // Cache immuable long pour les assets statiques hachés
-      {
+      }
+    ];
+
+    if (!isDev) {
+      // Cache immuable long pour les assets statiques hachés en production uniquement
+      headersList.push({
         source: '/_next/static/:path*',
         headers: [
           {
@@ -76,8 +74,10 @@ const nextConfig: NextConfig = {
             value: 'public, max-age=31536000, immutable'
           }
         ]
-      }
-    ];
+      });
+    }
+
+    return headersList;
   }
 };
 

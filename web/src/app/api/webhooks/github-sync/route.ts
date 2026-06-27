@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import matter from 'gray-matter';
+import matter from '../../../../lib/matter';
 import { pushToGitHub, deleteFromGitHub } from '../../../../lib/github';
 
 // Initialize Supabase admin client (with safe mock fallbacks for build time compilation)

@@ -1,7 +1,7 @@
 // import 'server-only';
 import fs from 'fs';
 import path from 'path';
-import matter from 'gray-matter';
+import matter from './matter';
 import { cleanPathSegment } from './translations';
 import { repairMediaOnRestitution } from './media-resolver';
 

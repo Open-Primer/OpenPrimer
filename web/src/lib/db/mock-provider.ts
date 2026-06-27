@@ -52,18 +52,18 @@ import {
   setTranslationEmailsList,
   getSystemParametersList,
   setSystemParametersList,
-  setLocalStorageItem
+  setLocalStorageItem,
+  purgePipelineAndRequestsForCourseOrCurriculum,
+  addCourseTombstone,
+  removeCourseTombstone
 } from './state-store';
 import {
   getLocalizedCourseTitleInternal,
   generatePedagogicalSummary,
-  progressService,
   mockDatabaseProviderHash,
-  getCanonicalCourseId,
-  purgePipelineAndRequestsForCourseOrCurriculum,
-  addCourseTombstone,
-  removeCourseTombstone
-} from '../db';
+  getCanonicalCourseId
+} from './helpers';
+import { progressService } from './progress-service';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
 
 export const mockDatabaseProvider: DatabaseService = {
@@ -134,6 +134,22 @@ This lesson covers:
         error: null
       };
     }
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lessons');
+      if (stored) {
+        try {
+          const lessons = JSON.parse(stored);
+          const found = lessons.find((l: any) => 
+            l.course_slug === courseSlug && 
+            l.lesson_slug === lessonSlug && 
+            l.lang.toLowerCase() === lang.toLowerCase()
+          );
+          if (found) {
+            return { data: found, error: null };
+          }
+        } catch (e) {}
+      }
+    }
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
   },
 
@@ -141,10 +157,39 @@ This lesson covers:
     if (courseSlug === 'Classical_Mechanics') {
       return { data: 'newtons_laws_of_motion', error: null };
     }
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lessons');
+      if (stored) {
+        try {
+          const lessons = JSON.parse(stored);
+          const courseLessons = lessons.filter((l: any) => 
+            l.course_slug === courseSlug && 
+            l.lang.toLowerCase() === lang.toLowerCase()
+          );
+          if (courseLessons.length > 0) {
+            courseLessons.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+            return { data: courseLessons[0].lesson_slug, error: null };
+          }
+        } catch (e) {}
+      }
+    }
     return { data: 'introduction', error: null };
   },
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_lessons');
+      const lessons = stored ? JSON.parse(stored) : [];
+      const updated = [
+        ...lessons.filter((l: any) => !(l.course_slug === lesson.course_slug && l.lesson_slug === lesson.lesson_slug && l.lang.toLowerCase() === lesson.lang.toLowerCase())),
+        {
+          ...lesson,
+          lang: lesson.lang.toLowerCase()
+        }
+      ];
+      window.localStorage.setItem('openprimer_lessons', JSON.stringify(updated));
+      return { data: lesson, error: null };
+    }
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database saving") };
   },
 
