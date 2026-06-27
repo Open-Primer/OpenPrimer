@@ -16,7 +16,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
 
   // 1. Unit testing of crypto utility directly
   test('crypto utility should encrypt and decrypt values correctly', () => {
-    const rawKey = 'sk-proj-1234567890abcdef';
+    const rawKey = 'mock-api-key-for-encryption-testing';
     
     // Encrypting should prefix with "__encrypted__:" and not match the raw key
     const encrypted = encryptApiKey(rawKey);
@@ -33,7 +33,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
   });
 
   test('crypto utility should transparently return legacy plain-text keys on decryption', () => {
-    const legacyKey = 'sk-legacy-plain-text-api-key';
+    const legacyKey = 'legacy-plain-text-key-for-testing';
     const decrypted = decryptApiKey(legacyKey);
     // Should be returned unmodified
     expect(decrypted).toBe(legacyKey);
@@ -55,7 +55,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
         lastName: 'OpenPrimer',
         tutorType: 'personal', // This displays the custom/personal key configuration inputs
         personalTutorProvider: 'openai',
-        personalTutorApiKey: 'sk-legacy-plain-text-key-123', // Legacy PLAIN-TEXT key
+        personalTutorApiKey: 'legacy-plain-text-key-example-123', // Legacy PLAIN-TEXT key
         personalTutorModel: 'gpt-4o-mini'
       }));
     });
@@ -78,10 +78,10 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
     await expect(apiKeyInput).toBeVisible();
     
     const inputValue = await apiKeyInput.inputValue();
-    expect(inputValue).toBe('sk-legacy-plain-text-key-123');
+    expect(inputValue).toBe('legacy-plain-text-key-example-123');
 
     // Enter a new API key to verify that it gets stored as encrypted via the automatic autosave hook
-    await apiKeyInput.fill('sk-newly-entered-key-abc');
+    await apiKeyInput.fill('newly-entered-key-example-abc');
 
     // Give it a moment to let the autosave useEffect run and update localStorage
     await page.waitForTimeout(1500);
@@ -92,10 +92,10 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
     
     const storedProfile = JSON.parse(storedProfileStr!);
     expect(storedProfile.personalTutorApiKey.startsWith('__encrypted__:')).toBe(true);
-    expect(storedProfile.personalTutorApiKey).not.toContain('sk-newly-entered-key-abc');
+    expect(storedProfile.personalTutorApiKey).not.toContain('newly-entered-key-example-abc');
 
     // Verify decryption of the newly saved key returns the raw value
     const decryptedKey = decryptApiKey(storedProfile.personalTutorApiKey);
-    expect(decryptedKey).toBe('sk-newly-entered-key-abc');
+    expect(decryptedKey).toBe('newly-entered-key-example-abc');
   });
 });
