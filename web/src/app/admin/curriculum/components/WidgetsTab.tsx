@@ -119,67 +119,7 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   ]
 };
 
-const VALIDATION_LOCALES: Record<string, {
-  title: string;
-  desc: string;
-  confirm: string;
-  cancel: string;
-}> = {
-  FR: {
-    title: "Confirmer la validation ?",
-    desc: "Êtes-vous sûr de vouloir valider cette version ? Les modifications seront appliquées instantanément sur l'ensemble du site. Une fois validé, il ne sera plus possible d'annuler ou de revenir en arrière.",
-    confirm: "Confirmer la validation",
-    cancel: "Annuler"
-  },
-  EN: {
-    title: "Confirm Promotion & Validation?",
-    desc: "Are you sure you want to validate this version? These changes will be applied instantly across the entire site. Once validated, there is no possibility of rollback or undo.",
-    confirm: "Confirm Validation",
-    cancel: "Cancel"
-  },
-  ES: {
-    title: "¿Confirmar la validación?",
-    desc: "¿Está seguro de que desea validar esta versión? Los cambios se aplicarán instantáneamente en todo el sitio. Una vez validada, no habrá posibilidad de deshacer o revertir.",
-    confirm: "Confirmar validación",
-    cancel: "Cancelar"
-  },
-  DE: {
-    title: "Validierung bestätigen?",
-    desc: "Sind Sie sicher, dass Sie diese Version validieren möchten? Die Änderungen werden sofort auf der gesamten Website wirksam. Nach der Validierung gibt es keine Möglichkeit eines Rollbacks oder Rückgängigmachens.",
-    confirm: "Validierung bestätigen",
-    cancel: "Abbrechen"
-  },
-  ZH: {
-    title: "确认验证？",
-    desc: "您确定要验证此版本吗？更改将立即应用到整个网站。一旦验证，将无法撤销或恢复。",
-    confirm: "确认验证",
-    cancel: "取消"
-  },
-  PT: {
-    title: "Confirmar validação?",
-    desc: "Tem certeza de que deseja validar esta versão? As alterações serão aplicadas instantaneamente em todo o site. Uma vez validada, não haverá possibilidade de desfazer ou reverter.",
-    confirm: "Confirmar validação",
-    cancel: "Cancelar"
-  },
-  AR: {
-    title: "تأكيد التحقق من الصحة؟",
-    desc: "هل أنت متأكد من أنك تريد التحقق من صحة هذا الإصدار؟ سيتم تطبيق التغييرات فورًا على الموقع بأكمله. بمجرد التحقق من صحتها، لن يكون هناك أي احتمال للتراجع أو الإلغاء.",
-    confirm: "تأكيد التحقق من الصحة",
-    cancel: "إلغاء"
-  },
-  HI: {
-    title: "सत्यापन की पुष्टि करें?",
-    desc: "क्या आप वाकई इस संस्करण को सत्यापित करना चाहते हैं? ये परिवर्तन तुरंत पूरी साइट पर लागू हो जाएंगे। एक बार सत्यापित होने के बाद, वापस लौटने या पूर्ववत करने की कोई संभावना नहीं होगी।",
-    confirm: "सत्यापन की पुष्टि करें",
-    cancel: "रद्द करें"
-  },
-  UR: {
-    title: "توثیق کی تصدیق کریں؟",
-    desc: "کیا آپ واقعی اس ورژن کی توثیق کرنا چاہتے ہیں؟ یہ تبدیلیاں فوری طور پر پوری سائٹ پر لاگو ہو جائیں گی۔ ایک بار توثیق ہو جانے کے بعد، واپس جانے یا کالعدم کرنے کا کوئی امکان نہیں ہو گا۔",
-    confirm: "توثیق کی تصدیق کریں",
-    cancel: "منسوخ کریں"
-  }
-};
+
 
 export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   lang,
@@ -1179,7 +1119,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               {presets.length > 0 ? (
                 <>
                   <span className="text-[8px] font-black uppercase text-slate-500 flex items-center gap-1.5 self-center mr-2">
-                    <Layers className="w-3 h-3" /> PRESET:
+                    <Layers className="w-3 h-3" /> {tr("Preset:")}
                   </span>
                   {presets.map((p, idx) => (
                     <button
@@ -1275,9 +1215,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     if (selected.length <= 2) {
       return selected.map(d => getDisciplineLabel(d, lang)).join(', ');
     }
-    return lang === 'FR' 
-      ? `${selected.length} disciplines sélectionnées`
-      : `${selected.length} subjects selected`;
+    return tr("{count} subjects selected").replace("{count}", selected.length.toString());
   };
 
   return (
@@ -1480,13 +1418,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   <Globe className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <p className="text-[11px] font-black text-amber-400 uppercase tracking-wider">
-                      {lang === 'FR' ? "Brouillon non validé" : "Unvalidated Draft"}
+                      {tr("Unvalidated Draft")}
                     </p>
                     <p className="text-[10px] text-slate-300 leading-relaxed">
-                      {lang === 'FR' 
-                        ? "Cette version du widget est actuellement un brouillon. Pour valider et propager (nom, description et clés visuelles), cliquez sur « Valider la version ». Pour annuler, cliquez sur « Restaurer l'original »."
-                        : "This version is currently a draft. To validate and propagate (name, description, and visual keys), click 'Validate Version'. To discard, click 'Restore Original'."
-                      }
+                      {tr("This version is currently a draft. To validate and propagate (name, description, and visual keys), click 'Validate Version'. To discard, click 'Restore Original'.")}
                     </p>
                   </div>
                 </div>
@@ -1495,13 +1430,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     onClick={() => handleRollbackWidget(selectedWidget.id)}
                     className="px-3 py-1.5 border border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-400 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer"
                   >
-                    {tr("Restaurer l'original")}
+                    {tr("Restore Original")}
                   </button>
                   <button
                     onClick={() => setWidgetToValidate(selectedWidget.id)}
                     className="px-3.5 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 font-black rounded-lg text-[9px] font-black uppercase tracking-wider hover:scale-[1.02] transition-all cursor-pointer shadow-lg shadow-teal-500/10"
                   >
-                    {tr("Valider la version")}
+                    {tr("Validate Version")}
                   </button>
                 </div>
               </div>
@@ -1713,13 +1648,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
-                    {lang === 'FR' ? "Attention : Aperçu brouillon éphémère" : "Warning: Ephemeral Draft Preview"}
+                    {tr("Warning: Ephemeral Draft Preview")}
                   </p>
                   <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
-                    {lang === 'FR'
-                      ? "Soumettre une consigne générera une nouvelle version du widget, qui devra être approuvée ou rejetée. Une fois approuvée, la version précédente est écrasée et les modifications sont immédiatement propagées à l'ensemble du site. À manipuler avec précaution."
-                      : "Submitting a prompt will generate a new version of the widget, which must then be approved or rejected. Once approved, the previous version is overwritten and modifications are immediately propagated to the entire site. Handle with care."
-                    }
+                    {tr("Submitting a prompt will generate a new version of the widget, which must then be approved or rejected. Once approved, the previous version is overwritten and modifications are immediately propagated to the entire site. Handle with care.")}
                   </p>
                 </div>
               </div>
@@ -1864,7 +1796,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                            Note : Modifier le nom d'affichage n'altère pas l'identifiant technique du composant ({selectedWidget?.id}), qui reste fixe pour la stabilité du système. Saisissez entre 3 et 50 caractères.
+                            {tr("Modifying the display name does not alter the technical component ID ({id}), which remains fixed for system stability. Enter between 3 and 50 characters.").replace("{id}", selectedWidget?.id || '')}
                           </p>
                         </div>
                       </div>
@@ -1883,7 +1815,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!editLevelFR ? "text-slate-600" : ""}>
-                              {editLevelFR || "Sélectionnez les niveaux..."}
+                              {editLevelFR || tr("Select academic levels...")}
                             </span>
                             <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isEditLevelDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
@@ -1947,7 +1879,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                            Note: Modifying the display name does not alter the technical component ID ({selectedWidget?.id}), which remains fixed for system stability. Enter between 3 and 50 characters.
+                            {tr("Modifying the display name does not alter the technical component ID ({id}), which remains fixed for system stability. Enter between 3 and 50 characters.").replace("{id}", selectedWidget?.id || '')}
                           </p>
                         </div>
                       </div>
@@ -2168,7 +2100,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!newWidgetLevelFR ? "text-slate-600" : ""}>
-                              {newWidgetLevelFR || "Sélectionnez les niveaux..."}
+                              {newWidgetLevelFR || tr("Select academic levels...")}
                             </span>
                             <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
@@ -2229,7 +2161,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                            Display name must be between 3 and 50 characters. It will automatically compile the technical component PascalCase ID.
+                            {tr("Display name must be between 3 and 50 characters. It will automatically compile the technical component PascalCase ID.")}
                           </p>
                         </div>
                         {namingCollisionError && (
@@ -2252,7 +2184,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!newWidgetLevelEN ? "text-slate-600" : ""}>
-                              {newWidgetLevelEN || "Select academic levels..."}
+                              {newWidgetLevelEN || tr("Select academic levels...")}
                             </span>
                             <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isCreateLevelDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
@@ -2440,10 +2372,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
               <div className="space-y-2">
                 <h4 className="text-sm font-black text-white uppercase tracking-wider">
-                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).title}
+                  {tr("Confirm Promotion & Validation?")}
                 </h4>
                 <p className="text-[10px] text-slate-300 leading-relaxed font-medium">
-                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).desc}
+                  {tr("Are you sure you want to validate this version? These changes will be applied instantly across the entire site. Once validated, there is no possibility of rollback or undo.")}
                 </p>
               </div>
 
@@ -2453,7 +2385,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   onClick={() => setWidgetToValidate(null)}
                   className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).cancel}
+                  {tr("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -2464,7 +2396,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   }}
                   className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-teal-500/10"
                 >
-                  {(VALIDATION_LOCALES[lang || 'EN'] || VALIDATION_LOCALES['EN']).confirm}
+                  {tr("Confirm Validation")}
                 </button>
               </div>
             </motion.div>

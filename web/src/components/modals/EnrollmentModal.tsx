@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket, Bookmark } from 'lucide-react';
-import { getLocalizedLabel, formatCourseLevel, UI_STRINGS } from '../RefinedUI';
+import { getLocalizedLabel, formatCourseLevel, UI_STRINGS, cleanPathSegment } from '@/lib/translations';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import { cleanPathSegment } from '@/lib/translations';
+
 import { useLanguage } from '@/context/LanguageContext';
 
 const LOCAL_DICTS: Record<string, Record<string, string>> = {

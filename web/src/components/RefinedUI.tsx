@@ -17,31 +17,8 @@ import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAll
 import { decryptApiKey } from '@/lib/crypto';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
-import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, UI_STRINGS, getLocalizedLabel } from '@/lib/translations';
 
-// Clear legacy local storage translation caches to prevent stale overrides
-if (typeof window !== 'undefined') {
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i);
-      if (key && key.startsWith('openprimer_ui_strings_')) {
-        window.localStorage.removeItem(key);
-      }
-    }
-  } catch (e) {}
-}
-
-export const UI_STRINGS = new Proxy(STATIC_UI_STRINGS, {
-  get(target, prop) {
-    if (typeof prop === 'string') {
-      const upper = prop.toUpperCase();
-      if (upper in target) {
-        return target[upper as keyof typeof target];
-      }
-    }
-    return Reflect.get(target, prop);
-  }
-}) as any;
 
 
 import { usePathname } from 'next/navigation';
@@ -1683,92 +1660,8 @@ export const AITutorOverlay = ({
     </div>
   );
 };
-export { STATIC_ACADEMIC_LEVELS, formatCourseLevel } from '@/lib/translations';
+export { STATIC_ACADEMIC_LEVELS, formatCourseLevel, UI_STRINGS, getLocalizedLabel } from '@/lib/translations';
 
-
-export const getLocalizedLabel = (key: string, lang: string) => {
-  const l = lang.toUpperCase();
-  const labels: Record<string, Record<string, string>> = {
-    mastery_weight: {
-      EN: "Mastery Weight",
-      FR: "Poids de maîtrise",
-      ES: "Peso de maestría",
-      DE: "Meisterungsgewicht",
-      ZH: "掌握权重"
-    },
-    duration: {
-      EN: "Duration",
-      FR: "Durée",
-      ES: "Duración",
-      DE: "Dauer",
-      ZH: "时长"
-    },
-    level: {
-      EN: "Level",
-      FR: "Niveau",
-      ES: "Nivel",
-      DE: "Stufe",
-      ZH: "级别"
-    },
-    credits: {
-      EN: "credits",
-      FR: "crédits",
-      ES: "créditos",
-      DE: "Credits",
-      ZH: "学分"
-    },
-    hours_unit: {
-      EN: "hrs",
-      FR: "h",
-      ES: "hrs",
-      DE: "Std.",
-      ZH: "小时"
-    },
-    why_create_account: {
-      EN: "Why create an account?",
-      FR: "Pourquoi créer un compte ?",
-      ES: "¿Por qué créer una cuenta?",
-      DE: "Warum ein Konto erstellen?",
-      ZH: "为什么要创建账户？"
-    },
-    account_benefits: {
-      EN: "A free account allows you to save your progress permanently, accumulate your study credits, unlock certifications, and interact with your personal AI Tutor.",
-      FR: "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'accumuler vos crédits de formation, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes.",
-      ES: "Una cuenta gratuita le permite guardar su progreso permanentemente, acumular sus créditos de estudio, desbloquear certificaciones e interactuar con su tutor de IA personal.",
-      DE: "Mit einem kostenlosen Konto können Sie Ihren Fortschritt dauerhaft speichern, Ihre Studienleistungen sammeln, Zertifikate freischalten und mit Ihrem persönlichen KI-Tutor interagieren.",
-      ZH: "免费账户可以永久保存您的进度、累积您的学习学分、解锁认证并与您的个人 AI 导师互动。"
-    },
-    create_account: {
-      EN: "Create an Account",
-      FR: "Créer un Compte",
-      ES: "Crear una Cuenta",
-      DE: "Konto Erstellen",
-      ZH: "创建账户"
-    },
-    log_in: {
-      EN: "Log In",
-      FR: "Se Connecter",
-      ES: "Iniciar Sesión",
-      DE: "Einloggen",
-      ZH: "登录"
-    },
-    start_limited: {
-      EN: "Start learning with limited features",
-      FR: "Démarrer avec des fonctions limitées",
-      ES: "Comenzar a aprender con functions limitadas",
-      DE: "Mit eingeschränkten Funktionen lernen",
-      ZH: "以有限的功能开始学习"
-    },
-    completed_modules: {
-      EN: "Curriculum and Completed Courses",
-      FR: "Cursus et modules complétés",
-      ES: "Currículo y cursos completados",
-      DE: "Lehrplan und abgeschlossene Kurse",
-      ZH: "课程与已完成模块"
-    }
-  };
-  return labels[key]?.[l] || labels[key]?.EN || '';
-};
 
 // Helper to detect current visible section and element for diagnostic feedback
 const getProbableLocationOnPage = (): string => {

@@ -1050,7 +1050,7 @@ export const progressService = {
     return new Date(Math.max(...courseDates)).toISOString();
   },
 
-  getSlaHistory: (): { date: string; db: number; email: number; ai: number; images: number; }[] => {
+  getSlaHistory: (): { date: string; db: number; email: number; ai: number; images: number; smithsonian: number; unsplash: number; }[] => {
     return [];
   }
 };

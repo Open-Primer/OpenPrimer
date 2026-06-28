@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { verifySession } from '@/lib/authHelper';
 
 export const dynamic = 'force-dynamic';
@@ -301,13 +301,121 @@ async function checkPollinations(): Promise<ServiceResult> {
   }
 }
 
+async function checkSmithsonian(customKey?: string): Promise<ServiceResult> {
+  const checkedAt = new Date().toISOString();
+  const start = Date.now();
+  let key = customKey;
+  if (!key) {
+    try {
+      const { data } = await supabaseAdmin
+        .from('system_parameters')
+        .select('value')
+        .eq('key', 'smithsonianApiKey')
+        .maybeSingle();
+      if (data?.value) key = data.value;
+    } catch (err) {
+      console.warn('[HEALTH] Failed to fetch Smithsonian key from DB:', err);
+    }
+  }
+  if (!key) {
+    key = process.env.SMITHSONIAN_API_KEY;
+  }
+
+  const url = 'https://api.si.edu/openaccess/api/v1.0/search';
+
+  if (!key || key.includes('your-')) {
+    return { id: 'smithsonian', nameKey: 'health_smithsonian', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'SMITHSONIAN_API_KEY not configured' };
+  }
+
+  try {
+    const res = await fetch(`${url}?q=science&api_key=${key}&rows=1`, {
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store'
+    });
+    const latencyMs = Date.now() - start;
+    if (res.ok) {
+      return { id: 'smithsonian', nameKey: 'health_smithsonian', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403 || res.status === 400) {
+      return {
+        id: 'smithsonian',
+        nameKey: 'health_smithsonian',
+        url,
+        status: 'unauthorized',
+        latencyMs,
+        checkedAt,
+        errorMessage: `Unauthorized / Invalid API Key (${res.status})`
+      };
+    }
+    return { id: 'smithsonian', nameKey: 'health_smithsonian', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
+  } catch (e: any) {
+    return { id: 'smithsonian', nameKey: 'health_smithsonian', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
+  }
+}
+
+async function checkUnsplash(customKey?: string): Promise<ServiceResult> {
+  const checkedAt = new Date().toISOString();
+  const start = Date.now();
+  let key = customKey;
+  if (!key) {
+    try {
+      const { data } = await supabaseAdmin
+        .from('system_parameters')
+        .select('value')
+        .eq('key', 'unsplashApiKey')
+        .maybeSingle();
+      if (data?.value) key = data.value;
+    } catch (err) {
+      console.warn('[HEALTH] Failed to fetch Unsplash key from DB:', err);
+    }
+  }
+  if (!key) {
+    key = process.env.UNSPLASH_API_KEY;
+  }
+
+  const url = 'https://api.unsplash.com/search/photos';
+
+  if (!key || key.includes('your-')) {
+    return { id: 'unsplash', nameKey: 'health_unsplash', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'UNSPLASH_API_KEY not configured' };
+  }
+
+  try {
+    const res = await fetch(`${url}?query=test&per_page=1`, {
+      headers: { Authorization: `Client-ID ${key}` },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store'
+    });
+    const latencyMs = Date.now() - start;
+    if (res.ok) {
+      return { id: 'unsplash', nameKey: 'health_unsplash', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403 || res.status === 400) {
+      return {
+        id: 'unsplash',
+        nameKey: 'health_unsplash',
+        url,
+        status: 'unauthorized',
+        latencyMs,
+        checkedAt,
+        errorMessage: `Unauthorized / Invalid API Key (${res.status})`
+      };
+    }
+    return { id: 'unsplash', nameKey: 'health_unsplash', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
+  } catch (e: any) {
+    return { id: 'unsplash', nameKey: 'health_unsplash', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
+  }
+}
+
+
 export async function GET(request: Request) {
   const customSupabaseUrl = request.headers.get('x-supabase-url') || undefined;
   const customSupabaseKey = request.headers.get('x-supabase-anon-key') || undefined;
   const customResendKey = request.headers.get('x-resend-api-key') || undefined;
   const customGeminiKey = request.headers.get('x-gemini-api-key') || undefined;
+  const customSmithsonianKey = request.headers.get('x-smithsonian-api-key') || undefined;
+  const customUnsplashKey = request.headers.get('x-unsplash-api-key') || undefined;
 
-  const hasCustomKeys = !!(customSupabaseUrl || customSupabaseKey || customResendKey || customGeminiKey);
+  const hasCustomKeys = !!(customSupabaseUrl || customSupabaseKey || customResendKey || customGeminiKey || customSmithsonianKey || customUnsplashKey);
 
   if (hasCustomKeys) {
     const adminSession = request.headers.get('x-admin-session');
@@ -322,14 +430,16 @@ export async function GET(request: Request) {
     }
   }
 
-  const [db, email, ai, images] = await Promise.all([
+  const [db, email, ai, images, smithsonian, unsplash] = await Promise.all([
     checkSupabase(customSupabaseUrl, customSupabaseKey),
     checkResend(customResendKey),
     checkGemini(customGeminiKey),
-    checkPollinations()
+    checkPollinations(),
+    checkSmithsonian(customSmithsonianKey),
+    checkUnsplash(customUnsplashKey)
   ]);
 
-  if (!customSupabaseUrl && !customSupabaseKey && !customResendKey && !customGeminiKey) {
+  if (!customSupabaseUrl && !customSupabaseKey && !customResendKey && !customGeminiKey && !customSmithsonianKey && !customUnsplashKey) {
     try {
       const todayStr = new Date().toISOString().split('T')[0];
       await supabase
@@ -346,7 +456,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const response = NextResponse.json([db, email, ai, images]);
+  const response = NextResponse.json([db, email, ai, images, smithsonian, unsplash]);
   const country = request.headers.get('x-vercel-ip-country') || request.headers.get('cf-ipcountry') || 'FR';
   response.headers.set('x-user-country', country);
   return response;

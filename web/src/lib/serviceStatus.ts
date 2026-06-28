@@ -42,6 +42,18 @@ export const SERVICES_CONFIG = [
     nameKey: 'health_images',
     url: 'https://image.pollinations.ai',
     probeKey: 'images'
+  },
+  {
+    id: 'smithsonian',
+    nameKey: 'health_smithsonian',
+    url: 'https://api.si.edu/openaccess/api/v1.0/search',
+    probeKey: 'smithsonian'
+  },
+  {
+    id: 'unsplash',
+    nameKey: 'health_unsplash',
+    url: 'https://api.unsplash.com/search/photos',
+    probeKey: 'unsplash'
   }
 ];
 
@@ -50,6 +62,8 @@ export interface ServiceHealthMap {
   email: ServiceHealth;
   ai: ServiceHealth;
   images: ServiceHealth;
+  smithsonian: ServiceHealth;
+  unsplash: ServiceHealth;
   [key: string]: ServiceHealth;
 }
 
@@ -81,6 +95,8 @@ export function useServiceStatus(intervalMs = 30_000) {
       const customSupabaseKey = typeof window !== 'undefined' ? localStorage.getItem('op_supabase_anon_key') || '' : '';
       const customResendKey = typeof window !== 'undefined' ? localStorage.getItem('op_resend_api_key') || '' : '';
       const customGeminiKey = typeof window !== 'undefined' ? localStorage.getItem('op_gemini_api_key') || '' : '';
+      const customSmithsonianKey = typeof window !== 'undefined' ? localStorage.getItem('op_smithsonian_api_key') || '' : '';
+      const customUnsplashKey = typeof window !== 'undefined' ? localStorage.getItem('op_unsplash_api_key') || '' : '';
       const adminSession = typeof window !== 'undefined' ? localStorage.getItem('op_session') || '' : '';
 
       const headers: Record<string, string> = {};
@@ -88,6 +104,8 @@ export function useServiceStatus(intervalMs = 30_000) {
       if (customSupabaseKey) headers['x-supabase-anon-key'] = customSupabaseKey;
       if (customResendKey) headers['x-resend-api-key'] = customResendKey;
       if (customGeminiKey) headers['x-gemini-api-key'] = customGeminiKey;
+      if (customSmithsonianKey) headers['x-smithsonian-api-key'] = customSmithsonianKey;
+      if (customUnsplashKey) headers['x-unsplash-api-key'] = customUnsplashKey;
       if (adminSession === 'true') headers['x-admin-session'] = 'true';
 
       const res = await fetch('/api/health', { 

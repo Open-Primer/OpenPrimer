@@ -29,10 +29,14 @@ const HEALTH_STRINGS = {
     health_email: 'Resend Email API',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (Image Generator)',
+    health_smithsonian: 'Smithsonian Open Access API',
+    health_unsplash: 'Unsplash Photography API',
     db_desc: 'Primary PostgreSQL database — authentication, courses, achievements, search logs.',
     email_desc: 'Transactional email delivery — account verification, notifications.',
     ai_desc: 'Generative AI backbone — badge prompts, translations, analytics reports, tutor chat.',
     images_desc: 'AI image generation for academic achievement badges.',
+    smithsonian_desc: 'Smithsonian Museum API — resolves educational resources and public domain historical images.',
+    unsplash_desc: 'Unsplash Image API — resolves high-quality photography and modern educational assets.',
     auto_refresh: 'Auto-refreshes every 10 seconds',
     ms: 'ms',
     not_configured: 'Not configured',
@@ -62,6 +66,8 @@ const HEALTH_STRINGS = {
     lbl_email: "Email Relay",
     lbl_ai: "AI LLM Backend",
     lbl_images: "Image Engine",
+    lbl_smithsonian: "Smithsonian API",
+    lbl_unsplash: "Unsplash API",
     no_data: "No data",
     db_conn_req: "Database connection required",
     no_downtime: "No downtime",
@@ -104,10 +110,14 @@ const HEALTH_STRINGS = {
     health_email: 'API Email Resend',
     health_ai: 'Gemini IA (Google)',
     health_images: 'Pollinations.ai (Génération d\'Images)',
+    health_smithsonian: 'API Smithsonian Open Access',
+    health_unsplash: 'API Unsplash Photographie',
     db_desc: 'Base de données PostgreSQL principale — authentification, cours, badges, journaux de recherche.',
     email_desc: 'Envoi d\'emails transactionnels — vérification de compte, notifications.',
     ai_desc: 'Moteur IA génératif — prompts de badges, traductions, rapports analytiques, chat tuteur.',
     images_desc: 'Génération d\'images IA pour les badges d\'accomplissement académique.',
+    smithsonian_desc: 'API Musée Smithsonian — résout les ressources éducatives et images historiques du domaine public.',
+    unsplash_desc: 'API Images Unsplash — résout les photographies de haute qualité et les images éducatives modernes.',
     auto_refresh: 'Actualisation automatique toutes les 10 secondes',
     ms: 'ms',
     not_configured: 'Non configuré',
@@ -137,6 +147,8 @@ const HEALTH_STRINGS = {
     lbl_email: "Relais Email",
     lbl_ai: "Backend IA (LLM)",
     lbl_images: "Moteur d'Images",
+    lbl_smithsonian: "API Smithsonian",
+    lbl_unsplash: "API Unsplash",
     no_data: "Aucune donnée",
     db_conn_req: "Connexion base de données requise",
     no_downtime: "Aucune interruption",
@@ -179,10 +191,14 @@ const HEALTH_STRINGS = {
     health_email: 'API de Email Resend',
     health_ai: 'Gemini IA (Google)',
     health_images: 'Pollinations.ai (Generador de Imágenes)',
+    health_smithsonian: 'API de Acceso Abierto Smithsonian',
+    health_unsplash: 'API de Fotografía Unsplash',
     db_desc: 'Base de datos PostgreSQL principal — autenticación, cursos, logros, registros de búsqueda.',
     email_desc: 'Entrega de correos transaccionales — verificación de cuenta, notificaciones.',
     ai_desc: 'Motor de IA generativa — prompts de insignias, traducciones, informes analíticos, chat de tutor.',
     images_desc: 'Generación de imágenes IA para insignias de logros académicos.',
+    smithsonian_desc: 'API del Museo Smithsonian — resuelve recursos educativos e imágenes históricas de dominio público.',
+    unsplash_desc: 'API de Imágenes Unsplash — resuelve fotografías de alta calidad e imágenes educativas modernas.',
     auto_refresh: 'Actualización automática cada 10 segundos',
     ms: 'ms',
     not_configured: 'No configurado',
@@ -212,6 +228,8 @@ const HEALTH_STRINGS = {
     lbl_email: "Relé de Correo",
     lbl_ai: "Backend de IA (LLM)",
     lbl_images: "Motor de Imágenes",
+    lbl_smithsonian: "API Smithsonian",
+    lbl_unsplash: "API Unsplash",
     no_data: "Sin datos",
     db_conn_req: "Se requiere conexión a la base de datos",
     no_downtime: "Sin tiempo de inactividad",
@@ -254,10 +272,14 @@ const HEALTH_STRINGS = {
     health_email: 'Resend E-Mail API',
     health_ai: 'Gemini KI (Google)',
     health_images: 'Pollinations.ai (Bildgenerator)',
+    health_smithsonian: 'Smithsonian Open Access API',
+    health_unsplash: 'Unsplash Fotografie API',
     db_desc: 'Primäre PostgreSQL-Datenbank — Authentifizierung, Kurse, Abzeichen, Suchprotokolle.',
     email_desc: 'Transaktionale E-Mail-Zustellung — Kontobestätigung, Benachrichtigungen.',
     ai_desc: 'Generative KI-Engine — Abzeichen-Prompts, Übersetzungen, Analyseberichte, Tutor-Chat.',
     images_desc: 'KI-Bildgenerierung für akademische Leistungsabzeichen.',
+    smithsonian_desc: 'Smithsonian Museum API — löst Bildungsressourcen und historische Bilder im gemeinfreien Bereich auf.',
+    unsplash_desc: 'Unsplash-Bild-API — löst hochwertige Fotografien und moderne Bildungsressourcen auf.',
     auto_refresh: 'Automatische Aktualisierung alle 10 Sekunden',
     ms: 'ms',
     not_configured: 'Nicht konfiguriert',
@@ -287,6 +309,8 @@ const HEALTH_STRINGS = {
     lbl_email: "E-Mail-Relay",
     lbl_ai: "KI-LLM-Backend",
     lbl_images: "Bild-Engine",
+    lbl_smithsonian: "Smithsonian API",
+    lbl_unsplash: "Unsplash API",
     no_data: "Keine Daten",
     db_conn_req: "Datenbankverbindung erforderlich",
     no_downtime: "Keine Ausfallzeit",
@@ -329,10 +353,14 @@ const HEALTH_STRINGS = {
     health_email: 'Resend 邮件 API',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (图像生成器)',
+    health_smithsonian: 'Smithsonian 开放获取 API',
+    health_unsplash: 'Unsplash 摄影图库 API',
     db_desc: '主要 PostgreSQL 数据库 — 身份验证、课程、成就、搜索日志。',
     email_desc: '事务性邮件发送 — 账户验证、通知。',
     ai_desc: '生成式 AI 引擎 — 徽章提示、翻译、分析报告、导师聊天。',
     images_desc: 'AI 图像生成，用于学术成就徽章。',
+    smithsonian_desc: 'Smithsonian 博物馆 API — 解析公共领域的历史图像与教育资源。',
+    unsplash_desc: 'Unsplash 图像 API — 解析高品质的摄影作品与现代教育插图。',
     auto_refresh: '每 10 秒自动刷新',
     ms: 'ms',
     not_configured: '未配置',
@@ -362,6 +390,8 @@ const HEALTH_STRINGS = {
     lbl_email: "邮件中继",
     lbl_ai: "AI 大语言模型后台",
     lbl_images: "图像生成引擎",
+    lbl_smithsonian: "Smithsonian API",
+    lbl_unsplash: "Unsplash API",
     no_data: "暂无数据",
     db_conn_req: "需要活跃数据库连接",
     no_downtime: "未发生停机",
@@ -404,10 +434,14 @@ const HEALTH_STRINGS = {
     health_email: 'API de E-mail Resend',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (Gerador de Imagens)',
+    health_smithsonian: 'API Smithsonian Open Access',
+    health_unsplash: 'API de Fotografia Unsplash',
     db_desc: 'Base de dados PostgreSQL principal — autenticação, cursos, conquistas, registos de pesquisa.',
     email_desc: 'Envio de e-mails transacionais — verificação de conta, notificações.',
     ai_desc: 'Espinha dorsal de IA generativa — prompts de medalhas, traduções, relatórios analíticos, chat do tutor.',
     images_desc: 'Geração de imagens por IA para medalhas de conquistas académicas.',
+    smithsonian_desc: 'API do Museu Smithsonian — resolve recursos educacionais e imagens históricas de domínio público.',
+    unsplash_desc: 'API de Imagens Unsplash — resolve fotografias de alta qualidade e imagens educativas modernas.',
     auto_refresh: 'Atualização automática a cada 10 segundos',
     ms: 'ms',
     not_configured: 'Não configurado',
@@ -437,6 +471,8 @@ const HEALTH_STRINGS = {
     lbl_email: "Relé de E-mail",
     lbl_ai: "Backend AI LLM",
     lbl_images: "Motor de Imagem",
+    lbl_smithsonian: "API Smithsonian",
+    lbl_unsplash: "API Unsplash",
     no_data: "Sem dados",
     db_conn_req: "Ligação à base de dados necessária",
     no_downtime: "Sem tempo de inatividade",
@@ -479,10 +515,14 @@ const HEALTH_STRINGS = {
     health_email: 'واجهة بريد Resend',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (مولد الصور)',
+    health_smithsonian: 'واجهة Smithsonian Open Access',
+    health_unsplash: 'واجهة Unsplash للصور الفوتوغرافية',
     db_desc: 'قاعدة البيانات الأساسية PostgreSQL — المصادقة، الدورات، الإنجازات، سجلات البحث.',
     email_desc: 'إرسال البريد الإلكتروني الإجرائي — تفعيل الحساب، الإشعارات.',
     ai_desc: 'العمود الفقري للذكاء الاصطناعي التوليدي — مطالبات الأوسمة، الترجمات، التقارير التحليلية، محادثة المعلم.',
     images_desc: 'توليد الصور بالذكاء الاصطناعي لأوسمة الإنجاز الأكاديمي.',
+    smithsonian_desc: 'واجهة متحف Smithsonian — توفر موارد تعليمية وصوراً تاريخية من الملكية العامة.',
+    unsplash_desc: 'واجهة صور Unsplash — توفر صوراً فوتوغرافية عالية الجودة وأصولاً تعليمية حديثة.',
     auto_refresh: 'تحديث تلقائي كل 10 ثوانٍ',
     ms: 'ملي ثانية',
     not_configured: 'غير مهيأ',
@@ -512,6 +552,8 @@ const HEALTH_STRINGS = {
     lbl_email: "مرحل البريد",
     lbl_ai: "واجهة الذكاء الاصطناعي LLM",
     lbl_images: "محرك الصور",
+    lbl_smithsonian: "واجهة Smithsonian",
+    lbl_unsplash: "واجهة Unsplash",
     no_data: "لا توجد بيانات",
     db_conn_req: "اتصال قاعدة البيانات مطلوب",
     no_downtime: "لا يوجد وقت توقف",
@@ -554,10 +596,14 @@ const HEALTH_STRINGS = {
     health_email: 'Resend ईमेल API',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (छवि जनरेटर)',
+    health_smithsonian: 'Smithsonian Open Access API',
+    health_unsplash: 'Unsplash फोटोग्राफी API',
     db_desc: 'प्राथमिक PostgreSQL डेटाबेस — प्रमाणीकरण, पाठ्यक्रम, उपलब्धियां, खोज लॉग।',
     email_desc: 'लेनदेन संबंधी ईमेल वितरण — खाता सत्यापन, सूचनाएं।',
     ai_desc: 'जेनरेटिव एआई रीढ़ — बैज संकेत, अनुवाद, विश्लेषणात्मक रिपोर्ट, ट्यूटर चैट।',
     images_desc: 'अकादमिक उपलब्धि बैज के लिए एआई छवि निर्माण।',
+    smithsonian_desc: 'स्मिथसोनियन संग्रहालय API — सार्वजनिक डोमेन की ऐतिहासिक छवियों और शैक्षिक संसाधनों को हल करता है।',
+    unsplash_desc: 'Unsplash छवि API — उच्च-गुणवत्ता वाली फोटोग्राफी और आधुनिक शैक्षिक संपत्तियों को हल करता है।',
     auto_refresh: 'हर 10 सेकंड में स्वतः रीफ्रेश होता है',
     ms: 'ms',
     not_configured: 'कॉन्फ़िगर नहीं किया गया',
@@ -568,7 +614,7 @@ const HEALTH_STRINGS = {
     col_schedule: 'क्रॉन शेड्यूल',
     col_timing: 'समय ऑफ़सेट',
     col_load: 'कंप्यूट लोड',
-    agent_gen: 'पाठ्यक्रम निर्माण इंजन',
+    agent_gen: 'पाठъем निर्माण इंजन',
     agent_trans: 'JIT अनुवाद इंजन',
     agent_rev: 'शैक्षणिक संशोधन इंजन',
     offset_gen: 'प्रतिदिन 02:00 AM UTC पर (गैर-पीक समय)',
@@ -587,6 +633,8 @@ const HEALTH_STRINGS = {
     lbl_email: 'ईमेल रिले',
     lbl_ai: 'AI LLM बैकएंड',
     lbl_images: 'छवि इंजन',
+    lbl_smithsonian: 'Smithsonian API',
+    lbl_unsplash: 'Unsplash API',
     no_data: 'कोई डेटा नहीं',
     db_conn_req: 'डेटाबेस कनेक्शन आवश्यक',
     no_downtime: 'कोई डाउनटाइम नहीं',
@@ -629,10 +677,14 @@ const HEALTH_STRINGS = {
     health_email: 'Resend ای میل API',
     health_ai: 'Gemini AI (Google)',
     health_images: 'Pollinations.ai (امیج جنریٹر)',
+    health_smithsonian: 'Smithsonian Open Access API',
+    health_unsplash: 'Unsplash Photography API',
     db_desc: 'بنیادی PostgreSQL ڈیٹا بیس — تصدیق، کورسز، کامیابیاں، تلاش کے لاگز۔',
     email_desc: 'ای میل کی ترسیل — اکاؤنٹ کی تصدیق، اطلاعات۔',
     ai_desc: 'جنریٹو اے آئی فریم ورک — بیج پرامپٹس، ترجمے، رپورٹیں، ٹیوٹر چیٹ۔',
-    images_desc: 'بیجز کے لیے تصویر بنانا۔',
+    images_desc: 'بیجز کے لیے تصویر بنانا।',
+    smithsonian_desc: 'Smithsonian Museum API — resolves educational resources and public domain historical images.',
+    unsplash_desc: 'Unsplash Image API — resolves high-quality photography and modern educational assets.',
     auto_refresh: 'ہر 10 سیکنڈ میں خود بخود ریفریش ہوتا ہے',
     ms: 'ملی سیکنڈ',
     not_configured: 'کنفیگر نہیں کیا گیا',
@@ -662,6 +714,8 @@ const HEALTH_STRINGS = {
     lbl_email: 'ای میل ریلے',
     lbl_ai: 'AI LLM بیک اینڈ',
     lbl_images: 'امیج انجن',
+    lbl_smithsonian: "Smithsonian API",
+    lbl_unsplash: "Unsplash API",
     no_data: 'کوئی ڈیٹا دستیاب نہیں',
     db_conn_req: 'ڈیٹا بیس کنکشن درکار ہے',
     no_downtime: 'کوئی ڈاؤن ٹائم نہیں',
@@ -695,6 +749,8 @@ const SERVICE_META: Record<string, { icon: any; descKey: keyof typeof HEALTH_STR
   email:  { icon: Mail,     descKey: 'email_desc',  color: 'blue' },
   ai:     { icon: Cpu,      descKey: 'ai_desc',     color: 'violet' },
   images: { icon: Image,    descKey: 'images_desc', color: 'orange' },
+  smithsonian: { icon: Image, descKey: 'smithsonian_desc', color: 'blue' },
+  unsplash: { icon: Image, descKey: 'unsplash_desc', color: 'orange' },
 };
 
 const COLOR_MAP: Record<string, Record<string, string>> = {
@@ -811,15 +867,15 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
 export default function ServerHealthPage() {
   const { language } = useLanguage();
   const lang = (language || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
-  const t = HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN;
+  const t = (HEALTH_STRINGS[lang] || HEALTH_STRINGS.EN) as typeof HEALTH_STRINGS.EN;
   const { health, isChecking, refresh } = useServiceStatus(10_000);
 
   const [slaHistory, setSlaHistory] = useState<any[]>(() => []);
   const [slaSource, setSlaSource] = useState<'prng' | 'database'>('database');
-  const [hoveredDay, setHoveredDay] = useState<{ date: string; db: number; email: number; ai: number; images: number; status: string } | null>(null);
+  const [hoveredDay, setHoveredDay] = useState<{ date: string; db: number; email: number; ai: number; images: number; smithsonian: number; unsplash: number; status: string } | null>(null);
 
 
-  const getServiceStats = (id: 'db' | 'email' | 'ai' | 'images') => {
+  const getServiceStats = (id: 'db' | 'email' | 'ai' | 'images' | 'smithsonian' | 'unsplash') => {
     if (!slaHistory || slaHistory.length === 0) {
       return {
         avg: '0.00%',
@@ -827,10 +883,10 @@ export default function ServerHealthPage() {
         incident: t.db_conn_req || 'Database connection required'
       };
     }
-    const sum = slaHistory.reduce((acc, entry) => acc + entry[id], 0);
+    const sum = slaHistory.reduce((acc, entry) => acc + (entry[id] ?? 100), 0);
     const avg = sum / slaHistory.length;
 
-    const downtimeHours = slaHistory.reduce((acc, entry) => acc + (100 - entry[id]) / 100 * 24, 0);
+    const downtimeHours = slaHistory.reduce((acc, entry) => acc + (100 - (entry[id] ?? 100)) / 100 * 24, 0);
 
     let downtimeStr = '';
     if (downtimeHours === 0) {
@@ -849,6 +905,8 @@ export default function ServerHealthPage() {
       if (id === 'email') incident = t.inc_rate_limit || 'Incident: Rate-limit tuning';
       if (id === 'ai') incident = t.inc_quota_scaling || 'Incident: LLM quota scaling';
       if (id === 'images') incident = t.inc_oom || 'Incident: Batch out-of-memory';
+      if (id === 'smithsonian') incident = (t as any).inc_smithsonian || 'Incident: Smithsonian rate-limiting';
+      if (id === 'unsplash') incident = (t as any).inc_unsplash || 'Incident: Unsplash credit exhaustion';
     }
 
     return {
@@ -862,13 +920,13 @@ export default function ServerHealthPage() {
     if (!slaHistory || slaHistory.length === 0) return 0;
     let total = 0;
     slaHistory.forEach(day => {
-      total += (day.db + day.email + day.ai + day.images) / 4;
+      total += (day.db + day.email + day.ai + day.images + (day.smithsonian ?? 100) + (day.unsplash ?? 100)) / 6;
     });
     return total / slaHistory.length;
   })();
 
   const getDayStatus = (dayData: typeof slaHistory[0]) => {
-    const vals = [dayData.db, dayData.email, dayData.ai, dayData.images];
+    const vals = [dayData.db, dayData.email, dayData.ai, dayData.images, dayData.smithsonian ?? 100, dayData.unsplash ?? 100];
     const maxVal = Math.max(...vals);
     if (maxVal === 0) return 'no_data';
     
@@ -882,9 +940,13 @@ export default function ServerHealthPage() {
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
   const [resendApiKey, setResendApiKey] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [smithsonianApiKey, setSmithsonianApiKey] = useState('');
+  const [unsplashApiKey, setUnsplashApiKey] = useState('');
   const [showSbKey, setShowSbKey] = useState(false);
   const [showResendKey, setShowResendKey] = useState(false);
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showSmithsonianKey, setShowSmithsonianKey] = useState(false);
+  const [showUnsplashKey, setShowUnsplashKey] = useState(false);
   const [notif, setNotif] = useState<string | null>(null);
 
   // Load hot-swap keys and SLA history on mount
@@ -894,6 +956,8 @@ export default function ServerHealthPage() {
       setSupabaseAnonKey(localStorage.getItem('op_supabase_anon_key') || '');
       setResendApiKey(localStorage.getItem('op_resend_api_key') || '');
       setGeminiApiKey(localStorage.getItem('op_gemini_api_key') || '');
+      setSmithsonianApiKey(localStorage.getItem('op_smithsonian_api_key') || '');
+      setUnsplashApiKey(localStorage.getItem('op_unsplash_api_key') || '');
 
       // Fetch dynamic database SLA History
       const fetchSla = async () => {
@@ -934,6 +998,12 @@ export default function ServerHealthPage() {
     if (geminiApiKey) localStorage.setItem('op_gemini_api_key', geminiApiKey);
     else localStorage.removeItem('op_gemini_api_key');
 
+    if (smithsonianApiKey) localStorage.setItem('op_smithsonian_api_key', smithsonianApiKey);
+    else localStorage.removeItem('op_smithsonian_api_key');
+
+    if (unsplashApiKey) localStorage.setItem('op_unsplash_api_key', unsplashApiKey);
+    else localStorage.removeItem('op_unsplash_api_key');
+
     setNotif(t.keys_applied || 'API Keys successfully hot-swapped!');
     setTimeout(() => setNotif(null), 4000);
     refresh();
@@ -944,10 +1014,14 @@ export default function ServerHealthPage() {
     localStorage.removeItem('op_supabase_anon_key');
     localStorage.removeItem('op_resend_api_key');
     localStorage.removeItem('op_gemini_api_key');
+    localStorage.removeItem('op_smithsonian_api_key');
+    localStorage.removeItem('op_unsplash_api_key');
     setSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.io');
     setSupabaseAnonKey('');
     setResendApiKey('');
     setGeminiApiKey('');
+    setSmithsonianApiKey('');
+    setUnsplashApiKey('');
     setNotif(t.keys_reset || 'Returned to default server keys.');
     setTimeout(() => setNotif(null), 4000);
     refresh();
@@ -965,6 +1039,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API Key',
       lbl_gemini: 'Gemini API Key or Service Account JSON',
+      lbl_smithsonian: 'Smithsonian API Key',
+      lbl_unsplash: 'Unsplash Access Key',
       btn_apply: 'Apply Hot-Swap Keys',
       btn_reset: 'Reset to Defaults'
     },
@@ -975,6 +1051,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Clé Publique Anon Supabase',
       lbl_resend: 'Clé API Resend',
       lbl_gemini: 'Clé API Gemini ou Compte de Service JSON',
+      lbl_smithsonian: 'Clé API Smithsonian',
+      lbl_unsplash: "Clé d'Accès Unsplash",
       btn_apply: 'Appliquer les Clés',
       btn_reset: 'Réinitialiser aux Défauts'
     },
@@ -985,6 +1063,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Clave Pública Anon Supabase',
       lbl_resend: 'Clave API Resend',
       lbl_gemini: 'Clave API Gemini o Cuenta de Servicio JSON',
+      lbl_smithsonian: 'Clave API Smithsonian',
+      lbl_unsplash: 'Clave de Acceso Unsplash',
       btn_apply: 'Aplicar Cambios',
       btn_reset: 'Restablecer Valores'
     },
@@ -995,6 +1075,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API-Schlüssel',
       lbl_gemini: 'Gemini API-Schlüssel oder Service-Account-JSON',
+      lbl_smithsonian: 'Smithsonian API-Schlüssel',
+      lbl_unsplash: 'Unsplash-Zugriffsschlüssel',
       btn_apply: 'Schlüssel anwenden',
       btn_reset: 'Auf Standard zurücksetzen'
     },
@@ -1005,6 +1087,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon 公钥',
       lbl_resend: 'Resend 邮件 API 密钥',
       lbl_gemini: 'Gemini API 密钥或服务账号 JSON',
+      lbl_smithsonian: 'Smithsonian API 密钥',
+      lbl_unsplash: 'Unsplash 访问密钥',
       btn_apply: '应用热插拔密钥',
       btn_reset: '重置为默认值'
     },
@@ -1015,6 +1099,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Chave Pública Anon do Supabase',
       lbl_resend: 'Chave API Resend',
       lbl_gemini: 'Chave API Gemini ou JSON da Conta de Serviço',
+      lbl_smithsonian: 'Chave API Smithsonian',
+      lbl_unsplash: 'Chave de Acesso Unsplash',
       btn_apply: 'Aplicar Chaves Hot-Swap',
       btn_reset: 'Repor Padrões'
     },
@@ -1025,6 +1111,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'المفتاح العام المجهول لـ Supabase',
       lbl_resend: 'مفتاح واجهة برمجة تطبيقات Resend',
       lbl_gemini: 'مفتاح واجهة Gemini أو ملف JSON لحساب الخدمة',
+      lbl_smithsonian: 'مفتاح واجهة Smithsonian',
+      lbl_unsplash: 'مفتاح وصول Unsplash',
       btn_apply: 'تطبيق مفاتيح الاستبدال الساخن',
       btn_reset: 'إعادة تعيين إلى الافتراضيات'
     },
@@ -1035,6 +1123,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase अनाम सार्वजनिक कुंजी',
       lbl_resend: 'Resend API कुंजी',
       lbl_gemini: 'Gemini API कुंजी या सेवा खाता JSON',
+      lbl_smithsonian: 'Smithsonian API कुंजी',
+      lbl_unsplash: 'Unsplash एक्सेस कुंजी',
       btn_apply: 'हॉट-स्वैप कुंजियाँ लागू करें',
       btn_reset: 'डिफ़ॉल्ट पर रीसेट करें'
     },
@@ -1045,6 +1135,8 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon پبلک کی',
       lbl_resend: 'Resend API کی',
       lbl_gemini: 'Gemini API کی یا سروس اکاؤنٹ JSON',
+      lbl_smithsonian: 'Smithsonian API کی',
+      lbl_unsplash: 'Unsplash ایکسیس کی',
       btn_apply: 'ہاٹ-سوپ کیز لاگو کریں',
       btn_reset: 'ڈیفالٹ پر ری سیٹ کریں'
     }
@@ -1109,12 +1201,14 @@ export default function ServerHealthPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
           {[
             { id: 'db' as const, name: 'Supabase DB', label: t.lbl_database, color: 'text-emerald-400' },
             { id: 'email' as const, name: 'Resend API', label: t.lbl_email, color: 'text-blue-400' },
             { id: 'ai' as const, name: 'Gemini AI', label: t.lbl_ai, color: 'text-violet-400' },
             { id: 'images' as const, name: 'Pollinations.ai', label: t.lbl_images, color: 'text-orange-400' },
+            { id: 'smithsonian' as const, name: 'Smithsonian API', label: (t as any).lbl_smithsonian || 'Smithsonian', color: 'text-sky-400' },
+            { id: 'unsplash' as const, name: 'Unsplash API', label: (t as any).lbl_unsplash || 'Unsplash', color: 'text-amber-400' },
           ].map(s => {
             const stats = getServiceStats(s.id);
             return (
@@ -1178,6 +1272,18 @@ export default function ServerHealthPage() {
                       <span className="text-slate-500 font-bold">{t.lbl_images || 'Images'}:</span> 
                       <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
                         {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.images}%`}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">{(t as any).lbl_smithsonian || 'Smithsonian'}:</span> 
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.smithsonian ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.smithsonian ?? 100}%`}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-500 font-bold">{(t as any).lbl_unsplash || 'Unsplash'}:</span> 
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.unsplash ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                        {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.unsplash ?? 100}%`}
                       </span>
                     </span>
                   </div>
@@ -1361,6 +1467,48 @@ export default function ServerHealthPage() {
                     JSON Key Loaded
                   </span>
                 )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_smithsonian || 'Smithsonian API Key'}</label>
+              <div className="relative">
+                <input
+                  type={showSmithsonianKey ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={smithsonianApiKey}
+                  onChange={e => setSmithsonianApiKey(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSmithsonianKey(!showSmithsonianKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-fade-in"
+                >
+                  {showSmithsonianKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_unsplash || 'Unsplash Access Key'}</label>
+              <div className="relative">
+                <input
+                  type={showUnsplashKey ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={unsplashApiKey}
+                  onChange={e => setUnsplashApiKey(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowUnsplashKey(!showUnsplashKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer animate-fade-in"
+                >
+                  {showUnsplashKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

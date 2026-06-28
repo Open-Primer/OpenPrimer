@@ -107,12 +107,28 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           .eq('course_slug', courseSlug)
           .eq('lang', lang.toLowerCase());
         
-        if (count === 0) {
-          const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
-          console.log(`[CoursePage] No lessons found for language '${lang}'. Redirecting to: ${redirectTarget}`);
-          redirect(redirectTarget);
+        if (!count || count === 0) {
+          // Fallback check: find the first available language for this course
+          const { data: otherLangs } = await supabase
+            .from('lessons')
+            .select('lang')
+            .eq('course_slug', courseSlug)
+            .limit(1);
+          
+          if (otherLangs && otherLangs.length > 0) {
+            const firstAvailableLang = otherLangs[0].lang;
+            console.log(`[CoursePage Guard] Language '${lang}' has no lessons for course '${courseSlug}'. Server-fallback to: '${firstAvailableLang}'`);
+            lang = firstAvailableLang.toLowerCase();
+          } else {
+            const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
+            console.log(`[CoursePage] No lessons found in any language for course '${courseSlug}'. Redirecting to: ${redirectTarget}`);
+            redirect(redirectTarget);
+          }
         }
       } catch (err) {
+        if (err && (err as any).digest && (err as any).digest.startsWith('NEXT_REDIRECT')) {
+          throw err;
+        }
         console.error("[CoursePage] Error checking available languages:", err);
       }
     }

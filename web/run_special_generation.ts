@@ -18,7 +18,7 @@ if (fs.existsSync(envPath)) {
   console.log(`✅ Loaded env variables. NEXT_PUBLIC_SUPABASE_URL is: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'DEFINED' : 'UNDEFINED'}`);
 }
 
-process.env.ONLY_FIRST_LESSON = 'false';
+process.env.ONLY_FIRST_LESSON = 'true';
 process.env.CLI_WORKER = 'true';
 
 async function main() {
@@ -27,7 +27,7 @@ async function main() {
   const { generateCourseContent, translateCourseContent } = await import('./src/lib/ai');
 
   const coursesToGenerate = [
-    { name: "Introduction à la sémantique et à la phonétique", level: "L1" }
+    { name: "Introduction à l'astrophysique et à la cosmologie", level: "L1" }
   ];
   
   const targetLang = "en"; // Translate to English
@@ -41,9 +41,9 @@ async function main() {
       const result = await generateCourseContent(c.name, c.level, "fr");
       console.log(`✅ Course "${result.title}" generated successfully! Slug: "${result.slug}"`);
       
-      console.log(`\n🌍 Translating course "${result.slug}" into [${targetLang}]...`);
-      await translateCourseContent(result.slug, targetLang);
-      console.log(`✅ Course translation to [${targetLang}] complete!`);
+      // console.log(`\n🌍 Translating course "${result.slug}" into [${targetLang}]...`);
+      // await translateCourseContent(result.slug, targetLang);
+      // console.log(`✅ Course translation to [${targetLang}] complete!`);
     } catch (error) {
       console.error(`❌ Failed for course "${c.name}":`, error);
     }
