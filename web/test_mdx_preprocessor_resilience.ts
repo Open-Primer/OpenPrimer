@@ -1,5 +1,6 @@
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './src/lib/content';
 
+
 function testPreprocessor() {
   console.log("=== STARTING PREPROCESSOR RESILIENCE TEST ===");
 
@@ -97,9 +98,9 @@ And a duplicate citation to test consolidation:
     },
     {
       name: "14. GoingFurtherItem with rich properties and types (books, movies, websites)",
-      input: `<GoingFurther title="Pour aller plus loin...">
-  <GoingFurtherItem title="The Structure of Scientific Revolutions" type="book" author="Thomas S. Kuhn" year="1962" publisher="University of Chicago Press" wikipedia="https://en.wikipedia.org/wiki/The_Structure_of_Scientific_Revolutions" description="A landmark work on scientific paradigm shifts." />
-  <GoingFurtherItem title="Copenhagen" type="movie" director="Howard Davies" year="2002" imdb="https://www.imdb.com/title/tt0340057/" description="A film adaptation of the 1941 Bohr-Heisenberg meeting." />
+      input: `<GoingFurther title={"Pour aller plus loin..."}>
+  <GoingFurtherItem title={"The Structure of Scientific Revolutions"} type={'book'} author="Thomas S. Kuhn" year={1962} publisher="University of Chicago Press" wikipedia="https://en.wikipedia.org/wiki/The_Structure_of_Scientific_Revolutions" description="A landmark work on scientific paradigm shifts." />
+  <GoingFurtherItem title="Copenhagen" type=movie director={"Howard Davies"} year="2002" imdb="https://www.imdb.com/title/tt0340057/" description="A film adaptation of the 1941 Bohr-Heisenberg meeting." />
   <GoingFurtherItem title="CERN Website" type="website" url="https://home.cern/" description="The official portal of the European Organization for Nuclear Research." />
 </GoingFurther>`
     },
@@ -116,11 +117,12 @@ And a duplicate citation to test consolidation:
 [2] Chomsky, N. (1957). Syntactic Structures.`
     },
     {
-      name: "17. New strict name attribute anchors in References list",
-      input: `### Références
-
-<a name="ref-1"></a> [1] Dubois, J. (2002). Dictionnaire de linguistique.
-<a name="ref-2"></a> [2] Chomsky, N. (1957). Syntactic Structures.`
+      name: "18. Empty attributes and stripped JSX comment healing",
+      input: `<Question q="Quelle est la nature du langage ?" explanation={/* comment to be stripped */}>
+  <Option text="Option 1" correct={}></Option>
+  <Option text="Option 2" correct={   }></Option>
+  <Option text="Option 3" correct={false}></Option>
+</Question>`
     }
   ];
 

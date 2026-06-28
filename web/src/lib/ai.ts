@@ -335,6 +335,25 @@ const lessonWidgetsSchema = {
       },
       required: ["steps"]
     },
+    goingFurther: {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              type: { type: "string", enum: ["book", "article", "video", "website", "research", "movie", "film"] },
+              url: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["title", "type", "description"]
+          }
+        }
+      },
+      required: ["items"]
+    },
     conclusionSummary: {
       type: "object",
       properties: {
@@ -372,6 +391,7 @@ const lessonWidgetsSchema = {
     "learningObjectives",
     "interactiveComponents",
     "whatsNext",
+    "goingFurther",
     "conclusionSummary",
     "finalEvaluation",
     "glossary",
@@ -576,6 +596,28 @@ export function validateAndFixWidgets(widgets: any, discipline?: string): any {
         { title: "Sujet suivant", description: "Découvrez le chapitre suivant pour approfondir.", slug: "next-chapter" }
       ]
     };
+  }
+
+  // 5b. Going further validation
+  if (!widgets.goingFurther || !Array.isArray(widgets.goingFurther.items) || widgets.goingFurther.items.length === 0) {
+    widgets.goingFurther = {
+      items: [
+        {
+          title: "Introduction aux concepts clés",
+          type: "website",
+          url: "https://wikipedia.org",
+          description: "Explorez les notions fondamentales et historiques liées à cette leçon sur Wikipédia."
+        }
+      ]
+    };
+  } else {
+    widgets.goingFurther.items = widgets.goingFurther.items.map((it: any) => {
+      const title = (it.title || "Ressource complémentaire").trim();
+      const type = ["book", "article", "video", "website", "research", "movie", "film"].includes(it.type) ? it.type : "website";
+      const url = (it.url || "").trim();
+      const description = (it.description || "Pour approfondir vos connaissances sur le sujet.").trim();
+      return { title, type, url, description };
+    });
   }
 
   // 6. Summary points validation (must be complete sentences ending with periods)
@@ -783,6 +825,30 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
       }
     }
   });
+
+  // Render GoingFurther suggested readings widget
+  let goingFurtherItemsStr = '';
+  if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items) && widgets.goingFurther.items.length > 0) {
+    goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : ''} description="${it.description.replace(/"/g, '&quot;')}" />`).join('\n  ')}\n</GoingFurther>`;
+  }
+
+  if (content.includes('[[WIDGET:goingFurther]]')) {
+    content = content.replace('[[WIDGET:goingFurther]]', goingFurtherItemsStr);
+  } else {
+    const conclusionIdx = content.indexOf('## Conclusion');
+    const conclusionIdxFr = content.indexOf('## Synthèse');
+    const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
+
+    if (targetConclusionIdx !== -1) {
+      content = content.slice(0, targetConclusionIdx).trim() + `\n\n${goingFurtherItemsStr}\n\n` + content.slice(targetConclusionIdx);
+    } else {
+      if (content.includes('[[WIDGET:conclusionSummary]]')) {
+        content = content.replace('[[WIDGET:conclusionSummary]]', `${goingFurtherItemsStr}\n\n[[WIDGET:conclusionSummary]]`);
+      } else {
+        content = content + `\n\n${goingFurtherItemsStr}`;
+      }
+    }
+  }
 
   const parsedSteps = (widgets.whatsNext.steps || []).map((s: any) => ({
     title: s.title || '',
@@ -1855,6 +1921,7 @@ Instead, you must decide where these elements belong and insert standard or cust
 - \`[[WIDGET:diagnosticQuiz]]\`: Place immediately after the prerequisites block, before the introduction. This provides a diagnostic skip-pass for students.
 - \`[[WIDGET:learningObjectives]]\`: Place immediately after the \`## Introduction\` section.
 - \`[[WIDGET:conclusionSummary]]\`: Place at the very beginning of the \`## Conclusion\` section.
+- \`[[WIDGET:goingFurther]]\`: Place immediately before the \`## Conclusion\` section. This renders suggested readings as interactive widgets.
 - \`[[WIDGET:whatsNext]]\`: Place at the very end of the \`## Conclusion\` section.
 - \`[[WIDGET:finalEvaluation]]\`: Place at the very end of the document, after the conclusion, as the ultimate summative validation.
 
@@ -1982,6 +2049,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
      - \`[[WIDGET:diagnosticQuiz]]\` (before introduction)
      - \`[[WIDGET:learningObjectives]]\` (after introduction)
      - \`[[WIDGET:conclusionSummary]]\` (at the beginning of ## Conclusion)
+     - \`[[WIDGET:goingFurther]]\` (immediately before the ## Conclusion section)
      - \`[[WIDGET:whatsNext]]\` (at the very end of conclusion)
      - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
    - Verify that there are **at least 1 to 2** custom interactive anchors (e.g. \`[[WIDGET:my_plot]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
@@ -2155,6 +2223,12 @@ Your generated JSON must contain the following top-level keys:
    - Provide exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each item in the \`items\` array must end with a period).
 5. **\`whatsNext\`**:
    - Provide 2 to 3 engaging next steps or follow-up courses, each with \`title\`, \`description\`, and \`slug\`.
+5b. **\`goingFurther\`**:
+   - Provide 2 to 3 suggested readings or external resources (books, articles, videos, websites) to explore the topic deeper. Each item must have:
+     - \`title\`: Title of the resource.
+     - \`type\`: One of "book", "article", "video", "website", "research", "movie", "film".
+     - \`url\`: A valid external URL if available (optional).
+     - \`description\`: A brief explanation of what the resource contains and why it is valuable.
 6. **\`finalEvaluation\`**:
    - A comprehensive final test. This must be a structured JSON object representing either an \`EssayEvaluation\` with a detailed prompt, or a high-fidelity MCQ \`Quiz\`.
    - **MCQ Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:

@@ -872,6 +872,21 @@ function stripJsxComments(mdx: string): string {
   });
 }
 
+function healEmptyExpressionAttributes(mdx: string): string {
+  // Matches any custom or HTML tag (e.g. <TagName ...>) and replaces any empty attribute={...}
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
+    let fixed = attributesPart;
+    // 1. Boolean attributes: correct, isCorrect, isFinal, isSummative
+    fixed = fixed.replace(/\b(correct|isCorrect|isFinal|isSummative)=\{\s*\}/gi, '$1={false}');
+    // 2. Numeric attributes: correctIndex, duration, x, y
+    fixed = fixed.replace(/\b(correctIndex|duration|x|y)=\{\s*\}/gi, '$1={0}');
+    // 3. Any other braced attributes that are empty (e.g. explanation={})
+    fixed = fixed.replace(/\b([\w:-]+)=\{\s*\}/g, '$1=""');
+    return `${tagStart}${fixed}>`;
+  });
+}
+
+
 function parseJsonLikeArray(arrStr: string): any[] {
   const trimmed = arrStr ? arrStr.trim() : '';
   if (!trimmed || trimmed === '{}' || trimmed === '[]') {
@@ -3080,6 +3095,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = sanitizeAmpersandInJsxAttributes(processed);
   processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
+  processed = healEmptyExpressionAttributes(processed);
   processed = healGlossaryTags(processed);
   processed = healWrapperTagNesting(processed);
   processed = healWhatsNextNesting(processed);
@@ -3392,27 +3408,26 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   const goingFurtherItemRegex = /<GoingFurtherItem\b([^>]*?)(?:\/>|>([\s\S]*?)<\/GoingFurtherItem>)/gi;
   
   processed = processed.replace(goingFurtherItemRegex, (match, attrs, children) => {
-    const titleMatch = attrs.match(/title=["']([^"']*)["']/i);
-    const typeMatch = attrs.match(/type=["']([^"']*)["']/i);
-    const urlMatch = attrs.match(/url=["']([^"']*)["']/i);
-    const descMatch = attrs.match(/description=["']([^"']*)["']/i) || attrs.match(/desc=["']([^"']*)["']/i);
-    const authorMatch = attrs.match(/author=["']([^"']*)["']/i) || attrs.match(/auteur=["']([^"']*)["']/i);
-    const yearMatch = attrs.match(/year=["']([^"']*)["']/i) || attrs.match(/annee=["']([^"']*)["']/i);
-    const publisherMatch = attrs.match(/publisher=["']([^"']*)["']/i) || attrs.match(/editeur=["']([^"']*)["']/i);
-    const wikipediaMatch = attrs.match(/wikipedia=["']([^"']*)["']/i) || attrs.match(/wiki=["']([^"']*)["']/i) || attrs.match(/wikipediaUrl=["']([^"']*)["']/i);
-    const imdbMatch = attrs.match(/imdb=["']([^"']*)["']/i) || attrs.match(/imdbUrl=["']([^"']*)["']/i);
-    const directorMatch = attrs.match(/director=["']([^"']*)["']/i) || attrs.match(/realisateur=["']([^"']*)["']/i);
+    const getAttr = (name: string) => {
+      const curlyMatch = attrs.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
+      if (curlyMatch) return curlyMatch[1].trim();
+      const quoteMatch = attrs.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+      if (quoteMatch) return quoteMatch[1].trim();
+      const unquotedMatch = attrs.match(new RegExp(`${name}\\s*=\\s*([^\\s/>]+)`, 'i'));
+      if (unquotedMatch) return unquotedMatch[1].trim();
+      return '';
+    };
 
-    const title = titleMatch ? titleMatch[1].trim() : '';
-    const type = typeMatch ? typeMatch[1].trim().toLowerCase() : 'book';
-    const url = urlMatch ? urlMatch[1].trim() : '';
-    const description = descMatch ? descMatch[1].trim() : '';
-    const author = authorMatch ? authorMatch[1].trim() : '';
-    const year = yearMatch ? yearMatch[1].trim() : '';
-    const publisher = publisherMatch ? publisherMatch[1].trim() : '';
-    const wikipedia = wikipediaMatch ? wikipediaMatch[1].trim() : '';
-    const imdb = imdbMatch ? imdbMatch[1].trim() : '';
-    const director = directorMatch ? directorMatch[1].trim() : '';
+    const title = getAttr('title');
+    const type = getAttr('type').toLowerCase() || 'book';
+    const url = getAttr('url');
+    const description = getAttr('description') || getAttr('desc');
+    const author = getAttr('author') || getAttr('auteur');
+    const year = getAttr('year') || getAttr('annee');
+    const publisher = getAttr('publisher') || getAttr('editeur');
+    const wikipedia = getAttr('wikipedia') || getAttr('wiki') || getAttr('wikipediaUrl');
+    const imdb = getAttr('imdb') || getAttr('imdbUrl');
+    const director = getAttr('director') || getAttr('realisateur');
 
     const refNum = currentRefNum++;
 
