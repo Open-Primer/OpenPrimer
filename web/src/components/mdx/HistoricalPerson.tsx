@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useWikiCascade } from '@/hooks/useWikiCascade';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
@@ -421,117 +422,28 @@ export const EntityLink = ({
   // Resolution: UI context lang → course lang prop (fallback) → 'en'
   const activeLang = ((language || lang || 'en')).toLowerCase().trim();
 
-  const [summary, setSummary] = useState<string | null>(null);
-  const [apiDescription, setApiDescription] = useState<string | null>(null);
-  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
-  const [exists, setExists] = useState<boolean | null>(name && activeLang ? null : false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
   const localizedName = getLocalizedName(name, activeLang);
   const cleanName = (localizedName || '').trim();
   const langCode = (activeLang || 'en').toLowerCase().trim();
-  const fallbackUrl = exists === false
+  const originalLang = (lang || 'fr').toLowerCase().trim();
+
+  // 5-stage Wikipedia cascade (shared hook)
+  const wiki = useWikiCascade(
+    cleanName,
+    activeLang,
+    originalLang,
+    !!(unresolved || !cleanName || !activeLang)
+  );
+
+  const fallbackUrl = wiki.exists === false
     ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanName)}`
     : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(cleanName.replace(/ /g, '_'))}`;
-  const resolvedWikiUrl = wikiUrl || fallbackUrl;
+  const resolvedWikiUrl = wiki.url || fallbackUrl;
   const resolvedExternalUrl = propUrl || propHref;
-  const resolvedSummary = summary || description;
+  const resolvedSummary = wiki.summary || description;
 
-  useEffect(() => {
-    if (unresolved || !cleanName || !activeLang) {
-      return;
-    }
-
-    setSummary(null);
-    setWikiUrl(null);
-    setApiDescription(null);
-    setExists(null);
-
-    let isMounted = true;
-    const fetchWiki = async () => {
-      try {
-        const langCode = activeLang.toLowerCase().trim();
-        const formattedName = cleanName.replace(/ /g, '_');
-        const wikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
-        
-        let res = await fetch(wikiUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) {
-            setSummary(data.extract || null);
-            setWikiUrl(data.content_urls?.desktop?.page || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(formattedName)}`);
-            setApiDescription(data.description || null);
-            setExists(true);
-          }
-          return;
-        }
-
-        // Fetch failed. Let's try our automated interlanguage translation fallback mechanism!
-        const originalLang = (lang || 'fr').toLowerCase().trim();
-        if (originalLang !== langCode) {
-          const langlinksUrl = `https://${originalLang}.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=${langCode}&titles=${encodeURIComponent(formattedName)}&format=json&redirects=1&origin=*`;
-          
-          try {
-            const llRes = await fetch(langlinksUrl);
-            if (llRes.ok) {
-              const llData = await llRes.json();
-              const pages = llData?.query?.pages;
-              if (pages) {
-                const pageId = Object.keys(pages)[0];
-                const langlinks = pages[pageId]?.langlinks;
-                if (Array.isArray(langlinks) && langlinks.length > 0) {
-                  const translatedTitleObj = langlinks.find((l: any) => l.lang === langCode);
-                  const translatedTitle = translatedTitleObj?.['*'];
-                  if (translatedTitle) {
-                    const formattedTranslatedName = translatedTitle.replace(/ /g, '_');
-                    const translatedWikiUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedTranslatedName)}`;
-                    
-                    const transRes = await fetch(translatedWikiUrl);
-                    if (transRes.ok) {
-                      const transData = await transRes.json();
-                      if (isMounted) {
-                        setSummary(transData.extract || null);
-                        setWikiUrl(transData.content_urls?.desktop?.page || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(formattedTranslatedName)}`);
-                        setApiDescription(transData.description || null);
-                        setExists(true);
-                      }
-                      return;
-                    }
-                  }
-                }
-              }
-            }
-          } catch (err) {
-            console.warn(`[WIKIPEDIA FALLBACK] Failed to resolve langlinks for ${cleanName} from ${originalLang} to ${langCode}:`, err);
-          }
-        }
-
-        // If interlanguage link resolution failed or wasn't applicable, fallback to original language summary
-        const fallbackWikiUrl = `https://${originalLang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName)}`;
-        const fallbackRes = await fetch(fallbackWikiUrl);
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          if (isMounted) {
-            setSummary(fallbackData.extract || null);
-            setWikiUrl(fallbackData.content_urls?.desktop?.page || `https://${originalLang}.wikipedia.org/wiki/${encodeURIComponent(formattedName)}`);
-            setApiDescription(fallbackData.description || null);
-            setExists(true);
-          }
-        } else {
-          if (isMounted) setExists(false);
-        }
-      } catch (e) {
-        console.warn(`[WIKIPEDIA] Failed to fetch summary for ${cleanName}:`, e);
-        if (isMounted) setExists(false);
-      }
-    };
-
-    fetchWiki();
-    return () => {
-      isMounted = false;
-    };
-  }, [unresolved, cleanName, activeLang]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   if (unresolved) {
     return null;
@@ -557,7 +469,7 @@ export const EntityLink = ({
   const resolvedType = type || 'entity';
   const isFr = activeLang.toLowerCase().trim() === 'fr';
 
-  const metaInfo = extractEntityMetadata(resolvedType, apiDescription, summary, isFr);
+  const metaInfo = extractEntityMetadata(resolvedType, wiki.description, wiki.summary, isFr);
   const resolvedDates = dates || lifespan || century || (creation ? (isFr ? `Création : ${creation}` : `Created: ${creation}`) : era) || metaInfo.label;
 
   let Icon = metaInfo.icon || Globe;
@@ -689,8 +601,8 @@ export const EntityLink = ({
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
                 &ldquo;{resolvedSummary}&rdquo;
               </p>
-            ) : exists === false ? (
-              <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-600">
+            ) : wiki.exists === false ? (
+              <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-650">
                 {t.error}
               </p>
             ) : (

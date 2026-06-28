@@ -142,6 +142,10 @@ const getNoAttemptsMessage = (correctAnswer: string | number, language: string) 
   if (l === 'ES') return `Incorrecto. No quedan intentos. La respuesta correcta era: ${correctAnswer}`;
   if (l === 'DE') return `Falsch. Keine Versuche mehr. Die richtige Antwort war: ${correctAnswer}`;
   if (l === 'ZH') return `不正确。没有剩余尝试机会。正确答案是：${correctAnswer}`;
+  if (l === 'PT') return `Incorreto. Sem tentativas restantes. A resposta correta era: ${correctAnswer}`;
+  if (l === 'AR') return `خطأ. لا توجد محاولات متبقية. كانت الإجابة الصحيحة: ${correctAnswer}`;
+  if (l === 'HI') return `गलत। कोई प्रयास शेष नहीं। सही उत्तर था: ${correctAnswer}`;
+  if (l === 'UR') return `غلط۔ کوئی کوشش باقی نہیں۔ صحیح جواب تھا: ${correctAnswer}`;
   return `Incorrect. No attempts left. The correct answer was: ${correctAnswer}`;
 };
 
@@ -283,7 +287,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
                   : finalSolution
               ) : (
                 <p className="text-slate-400 italic">
-                  {language === 'FR' ? 'Solution détaillée non disponible.' : 'Detailed solution not available.'}
+                  {language === 'FR' ? 'Solution détaillée non disponible.' : language === 'ES' ? 'Solución detallada no disponible.' : language === 'DE' ? 'Detaillierte Lösung nicht verfügbar.' : language === 'ZH' ? '详细解答不可用。' : language === 'PT' ? 'Solução detalhada não disponível.' : language === 'AR' ? 'الحل التفصيلي غير متاح.' : language === 'HI' ? 'विस्तृत समाधान उपलब्ध नहीं है.' : language === 'UR' ? 'تفصیلی حل دستیاب نہیں ہے.' : 'Detailed solution not available.'}
                 </p>
               )}
             </div>
@@ -366,7 +370,11 @@ export const UnsolvedExercise = ({
     FR: "Saisissez votre réflexion ici...",
     ES: "Escribe tu reflexión aquí...",
     DE: "Schreiben Sie Ihre Überlegungen hier...",
-    ZH: "在此输入您的思考..."
+    ZH: "在此输入您的思考...",
+    PT: "Escreva sua reflexão aqui...",
+    AR: "أدخل تفكيرك هنا...",
+    HI: "अपने विचार यहाँ दर्ज करें...",
+    UR: "اپنی سوچ یہاں لکھیں..."
   };
 
   const reflectionSuccessMessages: Record<string, string> = {
@@ -374,7 +382,11 @@ export const UnsolvedExercise = ({
     FR: "Réflexion enregistrée. Comparez votre réponse avec la solution modèle ci-dessous.",
     ES: "Reflexión registrada. Compare su respuesta con la solución modelo a continuación.",
     DE: "Überlegung gespeichert. Vergleichen Sie Ihre Antwort mit der unten stehenden Musterlösung.",
-    ZH: "思考已记录。请对比下方给出的参考答案。"
+    ZH: "思考已记录。请对比下方给出的参考答案。",
+    PT: "Reflexão salva. Compare sua resposta com a solução sugerida abaixo.",
+    AR: "تم حفظ التفكير. قارن إجابتك مع الحل المقترح أدناه.",
+    HI: "विचार सहेजा गया। नीचे दिए गए सुझाव से अपने उत्तर की तुलना करें।",
+    UR: "سوچ محفوظ ہو گئی۔ نیچے دیے گئے تجویزی حل سے اپنا جواب موازنہ کریں۔"
   };
 
   const reflectionButtonLabels: Record<string, string> = {
@@ -382,7 +394,11 @@ export const UnsolvedExercise = ({
     FR: "Valider",
     ES: "Validar",
     DE: "Bestätigen",
-    ZH: "提交"
+    ZH: "提交",
+    PT: "Enviar",
+    AR: "إرسال",
+    HI: "जमा करें",
+    UR: "جمع کرائیں"
   };
 
   const defaultPlaceholder = isReflection 

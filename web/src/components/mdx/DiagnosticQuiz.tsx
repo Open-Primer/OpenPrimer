@@ -58,6 +58,42 @@ const STRINGS = {
     skip_btn: "直接跳过至",
     submit: "检查答案",
     reset: "重试"
+  },
+  PT: {
+    badge: "Teste Diagnóstico Adaptativo",
+    prompt: "Teste seus conhecimentos para pular esta seção:",
+    success: "🏆 Tópico validado! Você domina os pré-requisitos desta seção. Pode continuar lendo ou avançar diretamente para a próxima seção.",
+    fail: "❌ Recomendado: Aconselhamos a leitura desta seção para construir uma base sólida.",
+    skip_btn: "Pular diretamente para",
+    submit: "Verificar",
+    reset: "Tentar novamente"
+  },
+  AR: {
+    badge: "اختبار تشخيصي تكيفي",
+    prompt: "اختبر معرفتك لتخطي هذا القسم:",
+    success: "🏆 تمت المصادقة على الموضوع! أنت تتقن متطلبات هذا القسم. يمكنك مواصلة القراءة أو الانتقال مباشرة إلى القسم التالي.",
+    fail: "❌ موصى به: ننصحك بقراءة هذا القسم لبناء أساس متين.",
+    skip_btn: "انتقل مباشرة إلى",
+    submit: "تحقق من الإجابة",
+    reset: "إعادة المحاولة"
+  },
+  HI: {
+    badge: "अनुकूलनीय निदानात्मक जांच",
+    prompt: "इस अनुभाग को छोड़ने के लिए अपने ज्ञान का परीक्षण करें:",
+    success: "🏆 विषय सत्यापित! आप इस अनुभाग की पूर्वआवश्यकताओं में महारत हैं। आप पढ़ना जारी रख सकते हैं या सीधे अगले अनुभाग पर जा सकते हैं।",
+    fail: "❌ अनुशंसा: हम आपको इस अनुभाग को पढ़ने की सलाह देते हैं।",
+    skip_btn: "सीधे जाएं",
+    submit: "उत्तर जांचें",
+    reset: "पुनः प्रयास करें"
+  },
+  UR: {
+    badge: "انڈیتی تشخیصی جائزہ",
+    prompt: "اس حصے کو چھوڑنے کے لیے اپنی معلومات کی جانچ کریں:",
+    success: "🏆 موضوع تصدیق ہو گیا! آپ اس حصے کی شرائط پر عبور کرتے ہیں۔ آپ پڑھنا جاری رکھ سکتے ہیں یا سیدھے اگلے حصے پر جا سکتے ہیں۔",
+    fail: "❌ تجویز کردہ: ہم آپ کو اس حصے کو پڑھنے کی سفارش کرتے ہیں۔",
+    skip_btn: "سیدھے جائیں",
+    submit: "جواب جانچیں",
+    reset: "دوبارہ کوشش کریں"
   }
 };
 
@@ -179,7 +215,7 @@ export const DiagnosticQuiz = ({
           selectedAnswer: resolvedOptions[selectedIdx],
           correctAnswer: resolvedOptions[resolvedCorrectIndex],
           explanation: sectionTitle 
-            ? (language === 'FR' ? `Permet de valider et sauter la section "${sectionTitle}"` : `Allows validating and skipping the section "${sectionTitle}"`)
+            ? `${t.skip_btn} "${sectionTitle}"`
             : undefined
         }
       });

@@ -325,11 +325,16 @@ select {
 .theme-paper input[type="date"],
 .theme-paper select,
 .theme-paper textarea,
-.theme-paper input {
+.theme-paper input,
+.theme-paper textarea[class*="bg-slate-"],
+.theme-paper input[class*="bg-slate-"],
+.theme-paper button[class*="bg-slate-"].w-full.cursor-pointer,
+.theme-paper select[class*="bg-slate-"] {
   background-color: #faf8f0 !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
 }
+
 
 .theme-paper input::placeholder,
 .theme-paper textarea::placeholder,

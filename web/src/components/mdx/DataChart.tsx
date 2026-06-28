@@ -43,23 +43,156 @@ export const DataChart = ({
   gradeLevel
 }: DataChartProps) => {
   const { language } = useLanguage();
-  const isFr = (language || 'FR').toLowerCase() === 'fr';
+  const langKey = (language?.toUpperCase() || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
 
-  const labels = {
-    bar: isFr ? "Barres" : "Bar",
-    donut: isFr ? "Beignet" : "Donut",
-    line: isFr ? "Courbe" : "Line",
-    table: isFr ? "Tableau" : "Table",
-    total: isFr ? "Total" : "Total",
-    series: isFr ? "Série" : "Series",
-    value: isFr ? "Valeur" : "Value",
-    percentage: isFr ? "Pourcentage" : "Percentage",
-    category: isFr ? "Catégorie" : "Category",
-    xAxis: isFr ? "Axe X" : "X-Axis",
-    segments: isFr ? "segments" : "segments",
-    percentOfTotal: isFr ? "du total" : "of total",
-    selectSeries: isFr ? "Choisir la série" : "Select series",
+  const CHART_STRINGS = {
+    EN: {
+      bar: "Bar",
+      donut: "Donut",
+      line: "Line",
+      table: "Table",
+      total: "Total",
+      series: "Series",
+      value: "Value",
+      percentage: "Percentage",
+      category: "Category",
+      xAxis: "X-Axis",
+      segments: "segments",
+      percentOfTotal: "of total",
+      selectSeries: "Select series",
+      values: "Values"
+    },
+    FR: {
+      bar: "Barres",
+      donut: "Beignet",
+      line: "Courbe",
+      table: "Tableau",
+      total: "Total",
+      series: "Série",
+      value: "Valeur",
+      percentage: "Pourcentage",
+      category: "Catégorie",
+      xAxis: "Axe X",
+      segments: "segments",
+      percentOfTotal: "du total",
+      selectSeries: "Choisir la série",
+      values: "Valeurs"
+    },
+    ES: {
+      bar: "Barras",
+      donut: "Rosca",
+      line: "Línea",
+      table: "Tabla",
+      total: "Total",
+      series: "Serie",
+      value: "Valor",
+      percentage: "Porcentaje",
+      category: "Categoría",
+      xAxis: "Eje X",
+      segments: "segmentos",
+      percentOfTotal: "del total",
+      selectSeries: "Seleccionar serie",
+      values: "Valores"
+    },
+    DE: {
+      bar: "Balken",
+      donut: "Donut",
+      line: "Linie",
+      table: "Tabelle",
+      total: "Gesamt",
+      series: "Serie",
+      value: "Wert",
+      percentage: "Prozentsatz",
+      category: "Kategorie",
+      xAxis: "X-Achse",
+      segments: "Segmente",
+      percentOfTotal: "vom Ganzen",
+      selectSeries: "Serie auswählen",
+      values: "Werte"
+    },
+    ZH: {
+      bar: "条形图",
+      donut: "环形图",
+      line: "折线图",
+      table: "表格",
+      total: "总计",
+      series: "系列",
+      value: "数值",
+      percentage: "百分比",
+      category: "类别",
+      xAxis: "X轴",
+      segments: "分段",
+      percentOfTotal: "占总计",
+      selectSeries: "选择系列",
+      values: "数值"
+    },
+    PT: {
+      bar: "Barras",
+      donut: "Rosca",
+      line: "Linha",
+      table: "Tabela",
+      total: "Total",
+      series: "Série",
+      value: "Valor",
+      percentage: "Porcentagem",
+      category: "Categoria",
+      xAxis: "Eixo X",
+      segments: "segmentos",
+      percentOfTotal: "do total",
+      selectSeries: "Selecionar série",
+      values: "Valores"
+    },
+    AR: {
+      bar: "شريط",
+      donut: "دونات",
+      line: "خط",
+      table: "جدول",
+      total: "الإجمالي",
+      series: "السلسلة",
+      value: "القيمة",
+      percentage: "النسبة المئوية",
+      category: "الفئة",
+      xAxis: "محور X",
+      segments: "أقسام",
+      percentOfTotal: "من الإجمالي",
+      selectSeries: "تحديد السلسلة",
+      values: "القيم"
+    },
+    HI: {
+      bar: "बार",
+      donut: "डोनट",
+      line: "रेखा",
+      table: "तालिका",
+      total: "कुल",
+      series: "श्रृंखला",
+      value: "मान",
+      percentage: "प्रतिशत",
+      category: "श्रेणी",
+      xAxis: "एक्स-अक्ष",
+      segments: "खंड",
+      percentOfTotal: "कुल का",
+      selectSeries: "श्रृंखला चुनें",
+      values: "मान"
+    },
+    UR: {
+      bar: "بار",
+      donut: "ڈونٹ",
+      line: "لائن",
+      table: "ٹیبل",
+      total: "کل",
+      series: "سلسلہ",
+      value: "قیمت",
+      percentage: "فیصد",
+      category: "زمرہ",
+      xAxis: "ایکس محور",
+      segments: "حصے",
+      percentOfTotal: "کل کا",
+      selectSeries: "سلسلہ منتخب کریں",
+      values: "قیمتیں"
+    }
   };
+
+  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
 
   // Switch representation state
   const [activeRep, setActiveRep] = useState<'bar' | 'donut' | 'line' | 'table'>(
@@ -125,7 +258,7 @@ export const DataChart = ({
       const simpleData = parsedData as { label: string; value: number; color?: string }[];
       const seriesData = [
         {
-          label: title || (isFr ? "Valeurs" : "Values"),
+          label: title || labels.values,
           values: simpleData.map((d, idx) => ({ x: idx, y: d.value }))
         }
       ];
@@ -136,7 +269,7 @@ export const DataChart = ({
         xValues: simpleData.map(d => d.label)
       };
     }
-  }, [parsedData, title, isFr]);
+  }, [parsedData, title, labels.values]);
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [hoveredXIdx, setHoveredXIdx] = useState<number | null>(null);

@@ -67,11 +67,9 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
       window.localStorage.setItem('op_enrolled_courses', JSON.stringify([9]));
       window.localStorage.setItem('openprimer_lang', 'FR');
     });
-    console.log("TEST LOG: localStorage keys after evaluate:", await page.evaluate(() => Object.keys(window.localStorage)));
     
     // Navigate to curriculum page
     await page.goto('http://localhost:3000/profile/curriculum');
-    console.log("TEST LOG: localStorage keys after goto profile/curriculum:", await page.evaluate(() => Object.keys(window.localStorage)));
     await page.waitForLoadState('networkidle');
 
     // Verify curriculum page is in French

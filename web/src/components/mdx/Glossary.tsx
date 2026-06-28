@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
 import { BookOpen, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { useWikiCascade } from '@/hooks/useWikiCascade';
 
 const GLOSSARY_DATA: Record<string, string> = {
   "cell theory": "The fundamental scientific theory that all living organisms are made of cells, and that cells are the basic unit of structure and function in living things.",
@@ -47,7 +48,6 @@ export const Glossary = ({
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
 
   const finalTerm = (term || word || (typeof children === 'string' ? children : '')).trim();
   const glossaryKey = finalTerm.toLowerCase().trim();
@@ -70,12 +70,23 @@ export const Glossary = ({
 
   const customWikiUrl = wikipedia || wikipediaUrl || extractedWikiUrl;
   const langCode = (language || 'en').toLowerCase().trim();
-  const fallbackWikiUrl = language ? `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTerm.replace(/ /g, '_'))}` : null;
-  const resolvedWikiUrl = customWikiUrl || wikiUrl || fallbackWikiUrl;
+
+  // Use the 5-stage cascade when no hardcoded URL is available
+  const cascade = useWikiCascade(
+    finalTerm,
+    language,
+    language, // Glossary terms are always in the course language
+    !!customWikiUrl || !finalTerm // skip if we already have a URL
+  );
+
+  const resolvedWikiUrl = customWikiUrl || cascade.url || (language ? `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTerm.replace(/ /g, '_'))}` : null);
+  const isGoogleTranslateUrl = resolvedWikiUrl?.includes('translate.google.com');
 
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const glossaryHeader = t.glossary_definition || "Glossary Definition";
-  const readWikiLabel = language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia';
+  const readWikiLabel = isGoogleTranslateUrl
+    ? (language.toLowerCase() === 'fr' ? 'Approfondir (traduit)' : `Read on Wikipedia (${language.toUpperCase()}, translated)`)
+    : (language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia');
 
   // Clean definition formatting for popover content
   let displayDefinition = finalDefinition || '';
@@ -90,34 +101,7 @@ export const Glossary = ({
     displayDefinition = displayDefinition.trim().replace(/\s*([.,;:])\s*$/, '$1');
   }
 
-  useEffect(() => {
-    if (customWikiUrl || !finalTerm || !language) return;
 
-    let isMounted = true;
-    const fetchWiki = async () => {
-      try {
-        const langCode = language.toLowerCase().trim();
-        // Replace spaces with underscores and capitalize first letter for standard Wikipedia titles
-        const formattedTerm = finalTerm.trim().replace(/ /g, '_');
-        const url = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedTerm)}`;
-        
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) {
-            setWikiUrl(data.content_urls?.desktop?.page || null);
-          }
-        }
-      } catch (e) {
-        console.warn(`[GLOSSARY WIKIPEDIA] Failed to fetch Wikipedia page for ${finalTerm}:`, e);
-      }
-    };
-
-    fetchWiki();
-    return () => {
-      isMounted = false;
-    };
-  }, [finalTerm, language, customWikiUrl]);
 
   if (!finalDefinition) return <>{children}</>;
 

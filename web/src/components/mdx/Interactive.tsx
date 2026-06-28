@@ -27,7 +27,17 @@ const INTERACTIVE_STRINGS = {
     exercise_completed: "Exercise completed successfully during this session.",
     feynman_validated: "Feynman Technique: validated.",
     tutor_recommended: "AI Tutor Recommended",
-    signup_free: "Sign up for free"
+    signup_free: "Sign up for free",
+    exercise_completed_label: "Exercise completed",
+    retry_exercise: "Retry Exercise",
+    correction: "Correction:",
+    completed: "Completed",
+    empty: "(empty)",
+    fill_blanks_group: "Fill in the blanks (group)",
+    blanks_correct: "All blanks have been correctly filled.",
+    blanks_wrong: "Some blanks have the wrong answer.",
+    words_correct: "All words entered are correct!",
+    words_incorrect: "Some words entered are incorrect."
   },
   FR: {
     placeholder_answer: "votre réponse...",
@@ -50,7 +60,17 @@ const INTERACTIVE_STRINGS = {
     exercise_completed: "Exercice complété avec succès lors de la session.",
     feynman_validated: "Technique de Feynman : validée.",
     tutor_recommended: "Tuteur IA Recommandé",
-    signup_free: "S'inscrire gratuitement"
+    signup_free: "S'inscrire gratuitement",
+    exercise_completed_label: "Exercice complété",
+    retry_exercise: "Retenter l'exercice",
+    correction: "Correction :",
+    completed: "Complété",
+    empty: "(vide)",
+    fill_blanks_group: "Texte à trous (groupe)",
+    blanks_correct: "Tous les espaces ont été correctement complétés.",
+    blanks_wrong: "Certains espaces n'ont pas la bonne réponse.",
+    words_correct: "Tous les mots saisis sont corrects !",
+    words_incorrect: "Certains mots saisis sont incorrects."
   },
   ES: {
     placeholder_answer: "tu respuesta...",
@@ -65,7 +85,7 @@ const INTERACTIVE_STRINGS = {
     predict_title: "Desafío de Predicción",
     predict_reveal: "Revelar Respuesta Teórica",
     predict_explanation: "Explicación",
-    predict_exp_desc: "La respuesta depende de los principios físicos que exploraremos en la siguiente sección...",
+    predict_exp_desc: "La resposta depende de los principios físicos que exploraremos en la siguiente sección...",
     listen: "Escuchar",
     unlock_ai: "Desbloquear Análisis de IA",
     validated: "Validado",
@@ -73,7 +93,17 @@ const INTERACTIVE_STRINGS = {
     exercise_completed: "Ejercicio completado con éxito durante esta sesión.",
     feynman_validated: "Técnica de Feynman: validada.",
     tutor_recommended: "Tutor de IA Recomendado",
-    signup_free: "Registrarse gratis"
+    signup_free: "Registrarse gratis",
+    exercise_completed_label: "Ejercicio completado",
+    retry_exercise: "Reintentar el ejercicio",
+    correction: "Corrección:",
+    completed: "Completado",
+    empty: "(vacío)",
+    fill_blanks_group: "Completar espacios en blanco (grupo)",
+    blanks_correct: "Todos los espacios en blanco se han completado correctamente.",
+    blanks_wrong: "Algunos espacios en blanco tienen la respuesta incorrecta.",
+    words_correct: "¡Todos los textos introducidos son correctos!",
+    words_incorrect: "Algunos textos introducidos son incorrectos."
   },
   DE: {
     placeholder_answer: "Ihre Antwort...",
@@ -96,7 +126,17 @@ const INTERACTIVE_STRINGS = {
     exercise_completed: "Übung in dieser Sitzung erfolgreich abgeschlossen.",
     feynman_validated: "Feynman-Methode: validiert.",
     tutor_recommended: "KI-Tutor empfohlen",
-    signup_free: "Kostenlos registrieren"
+    signup_free: "Kostenlos registrieren",
+    exercise_completed_label: "Übung abgeschlossen",
+    retry_exercise: "Übung wiederholen",
+    correction: "Korrektur:",
+    completed: "Abgeschlossen",
+    empty: "(leer)",
+    fill_blanks_group: "Lückentext (Gruppe)",
+    blanks_correct: "Alle Lücken wurden korrekt ausgefüllt.",
+    blanks_wrong: "Einige Lücken enthalten falsche Antworten.",
+    words_correct: "Alle eingegebenen Wörter sind korrekt!",
+    words_incorrect: "Einige eingegebene Wörter sind falsch."
   },
   ZH: {
     placeholder_answer: "你的回答...",
@@ -119,7 +159,149 @@ const INTERACTIVE_STRINGS = {
     exercise_completed: "此章节练习已成功完成。",
     feynman_validated: "费曼学习法：已验证。",
     tutor_recommended: "推荐 AI 导师",
-    signup_free: "免费注册"
+    signup_free: "免费注册",
+    exercise_completed_label: "练习已完成",
+    retry_exercise: "重新尝试练习",
+    correction: "纠错/更正：",
+    completed: "已完成",
+    empty: "（空）",
+    fill_blanks_group: "完形填空（组）",
+    blanks_correct: "所有空格均已正确填写。",
+    blanks_wrong: "部分空格填写错误。",
+    words_correct: "所有输入的单词都正确！",
+    words_incorrect: "部分输入的单词不正确。"
+  },
+  PT: {
+    placeholder_answer: "sua resposta...",
+    validate: "Validar",
+    feynman_title: "Técnica de Feynman:",
+    feynman_desc: "Explique este conceito como se estivesse conversando com uma criança de 10 anos.",
+    feynman_placeholder: "Escreva sua explicação aqui...",
+    feynman_submitting: "Analisando a explicação...",
+    feynman_submit: "Enviar minha explicação",
+    feynman_feedback: "Análise do conceito",
+    feynman_feedback_text: "Sua explicação está conceitualmente correta, mas tente usar menos jargão técnico.",
+    predict_title: "Desafio de Previsão",
+    predict_reveal: "Revelar Resposta Teórica",
+    predict_explanation: "Explicação",
+    predict_exp_desc: "A resposta depende de princípios físicos que exploraremos na próxima seção...",
+    listen: "Ouvir",
+    unlock_ai: "Desbloquear Análise de IA",
+    validated: "Validado",
+    tutor_validated: "Validação concluída pelo Tutor de IA",
+    exercise_completed: "Exercício concluído com sucesso durante esta sessão.",
+    feynman_validated: "Técnica de Feynman: validada.",
+    tutor_recommended: "Tutor de IA Recomendado",
+    signup_free: "Cadastre-se gratuitamente",
+    exercise_completed_label: "Exercício concluído",
+    retry_exercise: "Repetir Exercício",
+    correction: "Correção:",
+    completed: "Concluído",
+    empty: "(vazio)",
+    fill_blanks_group: "Preenchimento de lacunas (grupo)",
+    blanks_correct: "Todas as lacunas foram preenchidas corretamente.",
+    blanks_wrong: "Algumas lacunas têm respostas incorretas.",
+    words_correct: "Todas as palavras inseridas estão corretas!",
+    words_incorrect: "Algumas palavras inseridas estão incorretas."
+  },
+  AR: {
+    placeholder_answer: "إجابتك...",
+    validate: "تحقق",
+    feynman_title: "تقنية فاينمان:",
+    feynman_desc: "اشرح هذا المفهوم كما لو كنت تتحدث إلى طفل يبلغ من العمر 10 سنوات.",
+    feynman_placeholder: "اكتب شرحك هنا...",
+    feynman_submitting: "جاري تحليل الشرح...",
+    feynman_submit: "إرسال الشرح الخاص بي",
+    feynman_feedback: "تحليل المفهوم",
+    feynman_feedback_text: "شرحك صحيح من الناحية المفاهيمية، ولكن حاول استخدام مصطلحات تقنية أقل.",
+    predict_title: "تحدي التوقع",
+    predict_reveal: "كشف الإجابة النظرية",
+    predict_explanation: "الشرح",
+    predict_exp_desc: "تعتمد الإجابة على المبادئ الفيزيائية التي سنستكشفها في القسم التالي...",
+    listen: "استمع",
+    unlock_ai: "فتح تحليل الذكاء الاصطناعي",
+    validated: "تم التحقق",
+    tutor_validated: "تم التحقق بواسطة معلم الذكاء الاصطناعي",
+    exercise_completed: "تم إكمال التمرين بنجاح خلال هذه الجلسة.",
+    feynman_validated: "تقنية فاينمان: تم التحقق منها.",
+    tutor_recommended: "معلم الذكاء الاصطناعي الموصى به",
+    signup_free: "سجل مجاناً",
+    exercise_completed_label: "تم إكمال التمرين",
+    retry_exercise: "إعادة المحاولة",
+    correction: "التصحيح:",
+    completed: "مكتمل",
+    empty: "(فارغ)",
+    fill_blanks_group: "ملء الفراغات (مجموعة)",
+    blanks_correct: "تم ملء جميع الفراغات بشكل صحيح.",
+    blanks_wrong: "بعض الفراغات تحتوي على إجابات خاطئة.",
+    words_correct: "كل الكلمات المدخلة صحيحة!",
+    words_incorrect: "بعض الكلمات المدخلة غير صحيحة."
+  },
+  HI: {
+    placeholder_answer: "आपका उत्तर...",
+    validate: "सत्यापित करें",
+    feynman_title: "फ़ैनमैन तकनीक:",
+    feynman_desc: "इस अवधारणा को ऐसे समझाएं जैसे आप 10 साल के बच्चे से बात कर रहे हों।",
+    feynman_placeholder: "अपना स्पष्टीकरण यहाँ लिखें...",
+    feynman_submitting: "स्पष्टीकरण का विश्लेषण किया जा रहा है...",
+    feynman_submit: "मेरा स्पष्टीकरण सबमिट करें",
+    feynman_feedback: "अवधारणा विश्लेषण",
+    feynman_feedback_text: "आपका स्पष्टीकरण वैचारिक रूप से सही है, लेकिन तकनीकी शब्दजाल का कम उपयोग करने का प्रयास करें।",
+    predict_title: "भविष्यवाणी चुनौती",
+    predict_reveal: "सैद्धांतिक उत्तर प्रकट करें",
+    predict_explanation: "स्पष्टीकरण",
+    predict_exp_desc: "उत्तर उन भौतिक सिद्धांतों पर निर्भर करता है जिन्हें हम अगले अनुभाग में तलाशेंगे...",
+    listen: "सुनें",
+    unlock_ai: "एआई विश्लेषण अनलॉक करें",
+    validated: "सत्यापित",
+    tutor_validated: "एआई ट्यूटर द्वारा सत्यापन पूरा किया गया",
+    exercise_completed: "इस सत्र के दौरान अभ्यास सफलतापूर्वक पूरा किया गया।",
+    feynman_validated: "फ़ैनमैन तकनीक: सत्यापित।",
+    tutor_recommended: "अनुशंसित एआई ट्यूटर",
+    signup_free: "मुफ्त में साइन अप करें",
+    exercise_completed_label: "अभ्यास पूरा हुआ",
+    retry_exercise: "अभ्यास पुनः प्रयास करें",
+    correction: "सुधार:",
+    completed: "पूरा हुआ",
+    empty: "(खाली)",
+    fill_blanks_group: "रिक्त स्थान भरें (समूह)",
+    blanks_correct: "सभी रिक्त स्थान सही ढंग से भर दिए गए हैं।",
+    blanks_wrong: "कुछ रिक्त स्थानों में गलत उत्तर हैं।",
+    words_correct: "दर्ज किए गए सभी शब्द सही हैं!",
+    words_incorrect: "दर्ज किए गए कुछ शब्द गलत हैं।"
+  },
+  UR: {
+    placeholder_answer: "آپ کا جواب...",
+    validate: "تصدیق کریں",
+    feynman_title: "فین مین تکنیک:",
+    feynman_desc: "اس تصور کی وضاحت ایسے کریں جیسے آپ 10 سال کے بچے سے بات کر رہے ہوں۔",
+    feynman_placeholder: "اپنی وضاحت یہاں لکھیں...",
+    feynman_submitting: "وضاحت کا تجزیہ کیا جا رہا ہے...",
+    feynman_submit: "میری وضاحت جمع کریں",
+    feynman_feedback: "تصوراتی تجزیہ",
+    feynman_feedback_text: "آپ کی وضاحت تصوراتی طور پر درست ہے، لیکن تکنیکی الفاظ کا کم استعمال کرنے کی کوشش کریں۔",
+    predict_title: "پیش گوئی کا چیلنج",
+    predict_reveal: "نظریاتی جواب ظاہر کریں",
+    predict_explanation: "وضاحت",
+    predict_exp_desc: "جواب ان طبیعیاتی اصولوں پر منحصر ہے جنہیں ہم اگلے حصے میں تلاش کریں گے...",
+    listen: "سنیں",
+    unlock_ai: "اے آئی تجزیہ انلاک کریں",
+    validated: "تصدیق شدہ",
+    tutor_validated: "اے آئی ٹیوٹر کے ذریعہ تصدیق مکمل ہوئی",
+    exercise_completed: "اس سیشن کے دوران مشق کامیابی سے مکمل ہوئی۔",
+    feynman_validated: "فین مین تکنیک: تصدیق شدہ۔",
+    tutor_recommended: "تجویز کردہ اے آئی ٹیوٹر",
+    signup_free: "مفت سائن اپ کریں",
+    exercise_completed_label: "مشق مکمل ہو گئی",
+    retry_exercise: "مشق دوبارہ کریں",
+    correction: "تصحیح:",
+    completed: "مکمل",
+    empty: "(خالی)",
+    fill_blanks_group: "خالی جگہ پر کریں (گروپ)",
+    blanks_correct: "تمام خالی جگہیں درست طریقے سے بھر دی گئی ہیں۔",
+    blanks_wrong: "کچھ خالی جگہوں میں غلط جوابات ہیں۔",
+    words_correct: "درج کردہ تمام الفاظ درست ہیں!",
+    words_incorrect: "درج کردہ کچھ الفاظ غلط ہیں۔"
   }
 };
 
@@ -201,6 +383,58 @@ const GuestFootnote = () => {
           登录账户
         </button>{" "}
         以永久保存进度并解锁专属个人AI导师！
+      </>
+    ),
+    PT: (
+      <>
+        💡 No modo visitante, seu progresso é temporário.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          Inscreva-se gratuitamente
+        </button>{" "}
+        ou{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          entrar
+        </button>{" "}
+        para salvá-lo permanentemente e desbloquear seu tutor pessoal de IA!
+      </>
+    ),
+    AR: (
+      <>
+        💡 في وضع الضيف، يكون تقدمك مؤقتًا.{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          سجل مجاناً
+        </button>{" "}
+        أو{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          تسجيل الدخول
+        </button>{" "}
+        لحفظه بشكل دائم وفتح معلم الذكاء الاصطناعي الشخصي الخاص بك!
+      </>
+    ),
+    HI: (
+      <>
+        💡 अतिथि मोड में, आपकी प्रगति अस्थायी है।{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          मुफ्त में साइन अप करें
+        </button>{" "}
+        या{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          लॉग इन करें
+        </button>{" "}
+        इसे स्थायी रूप से सहेजने और अपने व्यक्तिगत एआई ट्यूटर को अनलॉक करने के लिए!
+      </>
+    ),
+    UR: (
+      <>
+        💡 گیسٹ موڈ میں، آپ کی پیش رفت عارضی ہے۔{" "}
+        <button onClick={() => handleAuthClick('signup')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          مفت سائن اپ کریں
+        </button>{" "}
+        یا{" "}
+        <button onClick={() => handleAuthClick('login')} className="text-blue-400 hover:text-blue-300 underline font-bold cursor-pointer bg-transparent border-none p-0 inline">
+          لاگ ان کریں
+        </button>{" "}
+        اسے مستقل طور پر محفوظ کرنے اور اپنے ذاتی اے آئی ٹیوٹر کو غیر مقفل کرنے کے لیے!
       </>
     )
   };
@@ -418,12 +652,10 @@ export const FillInBlanks = ({
         detail: {
           type: 'fill_in_blanks',
           success: allCorrect,
-          question: language === 'FR' ? 'Texte à trous (groupe)' : 'Fill in the blanks (group)',
+          question: t.fill_blanks_group,
           selectedAnswer: selectedStr,
           correctAnswer: correctStr,
-          explanation: allCorrect 
-            ? (language === 'FR' ? "Tous les espaces ont été correctement complétés." : "All blanks have been correctly filled.")
-            : (language === 'FR' ? "Certains espaces n'ont pas la bonne réponse." : "Some blanks have the wrong answer.")
+          explanation: allCorrect ? t.blanks_correct : t.blanks_wrong
         }
       });
       window.dispatchEvent(event);
@@ -572,9 +804,7 @@ export const FillInBlanks = ({
           question: exerciseText,
           selectedAnswer: userInputs.join(', '),
           correctAnswer: answersList.join(', '),
-          explanation: isSuccess 
-            ? (language === 'FR' ? "Tous les mots saisis sont corrects !" : "All words entered are correct!")
-            : (language === 'FR' ? "Certains mots saisis sont incorrects." : "Some words entered are incorrect.")
+          explanation: isSuccess ? t.words_correct : t.words_incorrect
         }
       });
       window.dispatchEvent(event);
@@ -627,7 +857,7 @@ export const FillInBlanks = ({
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/60 pt-3">
               <div className="flex items-center gap-3">
                 <span className="text-slate-400 text-xs font-semibold">
-                  {language === 'FR' ? 'Exercice complété' : 'Exercise completed'}
+                  {t.exercise_completed_label}
                 </span>
               </div>
               
@@ -637,7 +867,7 @@ export const FillInBlanks = ({
                   className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+                  {t.retry_exercise}
                 </button>
               )}
             </div>
@@ -710,9 +940,7 @@ export const FillInBlanks = ({
               Score: {score} / {total} ({percentage}%)
             </div>
             <span className="text-slate-400 text-xs font-semibold">
-              {score === total 
-                ? (language === 'FR' ? 'Validé' : 'Validated')
-                : (language === 'FR' ? 'Complété' : 'Completed')}
+              {score === total ? t.validated : t.completed}
             </span>
           </div>
           
@@ -722,7 +950,7 @@ export const FillInBlanks = ({
               className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+              {t.retry_exercise}
             </button>
           )}
         </div>
@@ -731,7 +959,7 @@ export const FillInBlanks = ({
       {isReadOnly && score < total && (
         <div className="mt-3 space-y-1.5 border-t border-slate-800/40 pt-2 text-xs">
           <p className="text-slate-400 font-medium">
-            {language === 'FR' ? 'Correction :' : 'Correction:'}
+            {t.correction}
           </p>
           {answersList.map((ans, idx) => {
             if (!inputCorrectness[idx]) {
@@ -739,7 +967,7 @@ export const FillInBlanks = ({
                 <div key={idx} className="flex items-center gap-2">
                   <span className="text-slate-500 font-mono">#{idx + 1}:</span>
                   <span className="text-red-400 line-through">
-                    {userInputs[idx] || (language === 'FR' ? '(vide)' : '(empty)')}
+                    {userInputs[idx] || t.empty}
                   </span>
                   <span className="text-slate-400">→</span>
                   <span className="text-emerald-400 font-bold">{ans}</span>
@@ -825,7 +1053,7 @@ FillInBlanks.Input = ({ answer = '' }: { answer?: string }) => {
       />
       {showIncorrectCorrection && (
         <span className="text-[10px] text-emerald-400 font-bold mt-0.5 pl-1">
-          {language === 'FR' ? '→' : '→'} {answer}
+          → {answer}
         </span>
       )}
     </span>
@@ -973,7 +1201,7 @@ export const FeynmanBox = ({ concept, isFinal = false }: { concept: string; isFi
               className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+              {t.retry_exercise}
             </button>
           )}
         </div>
@@ -1137,7 +1365,7 @@ export const PredictOutcome = ({ scenario, options, isFinal = false }: { scenari
                 className="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+                {t.retry_exercise}
               </button>
             </div>
           )}
@@ -1335,14 +1563,19 @@ export const ExternalSandbox = ({ url, title, type = 'generic' }: ExternalSandbo
     return null;
   }
 
-  const typeLabels = {
-    phet: language === 'FR' ? 'Simulation Scientifique (PhET)' : 'Scientific Simulation (PhET)',
-    codesandbox: language === 'FR' ? 'Bac à Sable (Sandbox de Code)' : 'Code Sandbox',
-    timeline: language === 'FR' ? 'Frise Chronologique Interactive' : 'Interactive Timeline',
-    generic: language === 'FR' ? 'Environnement Interactif' : 'Interactive Sandbox'
+  const IFRAME_STRINGS: Record<string, { phet: string; codesandbox: string; timeline: string; generic: string; fullscreen: string; loading: string; }> = {
+    EN: { phet: 'Scientific Simulation (PhET)', codesandbox: 'Code Sandbox', timeline: 'Interactive Timeline', generic: 'Interactive Sandbox', fullscreen: 'Fullscreen', loading: 'Loading simulation...' },
+    FR: { phet: 'Simulation Scientifique (PhET)', codesandbox: 'Bac à Sable (Sandbox de Code)', timeline: 'Frise Chronologique Interactive', generic: 'Environnement Interactif', fullscreen: 'Plein écran', loading: 'Chargement de la simulation...' },
+    ES: { phet: 'Simulación Científica (PhET)', codesandbox: 'Sandbox de Código', timeline: 'Línea de Tiempo Interactiva', generic: 'Entorno Interactivo', fullscreen: 'Pantalla completa', loading: 'Cargando simulación...' },
+    DE: { phet: 'Wissenschaftliche Simulation (PhET)', codesandbox: 'Code-Sandbox', timeline: 'Interaktive Zeitachse', generic: 'Interaktive Sandbox', fullscreen: 'Vollbild', loading: 'Simulation wird geladen...' },
+    ZH: { phet: '科学模拟 (PhET)', codesandbox: '代码沙盒', timeline: '互动时间轴', generic: '互动沙盒', fullscreen: '全屏', loading: '正在加载模拟...' },
+    PT: { phet: 'Simulação Científica (PhET)', codesandbox: 'Sandbox de Código', timeline: 'Linha do Tempo Interativa', generic: 'Ambiente Interativo', fullscreen: 'Tela cheia', loading: 'Carregando simulação...' },
+    AR: { phet: 'محاكاة علمية (PhET)', codesandbox: 'صندوق الكود', timeline: 'مخطط زمني تفاعلي', generic: 'بيئة تفاعلية', fullscreen: 'شاشة كاملة', loading: 'جاري تحميل المحاكاة...' },
+    HI: { phet: 'वैज्ञानिक सिमुलेशन (PhET)', codesandbox: 'कोड सैंडबॉक्स', timeline: 'इंटरैक्टिव समयरेखा', generic: 'इंटरैक्टिव सैंडबॉक्स', fullscreen: 'पूर्ण स्क्रीन', loading: 'सिमुलेशन लोड हो रहा है...' },
+    UR: { phet: 'سائنسی تخروپن (PhET)', codesandbox: 'کوڈ سینڈ باکس', timeline: 'انٹرایکٹو ٹائم لائن', generic: 'انٹرایکٹو سینڈ باکس', fullscreen: 'فل اسکرین', loading: 'تخروپن لوڈ ہو رہا ہے...' }
   };
-
-  const currentLabel = typeLabels[type] || typeLabels.generic;
+  const ti = IFRAME_STRINGS[language.toUpperCase()] || IFRAME_STRINGS.EN;
+  const currentLabel = (ti as Record<string, string>)[type] || ti.generic;
 
   return (
     <div className="my-10 p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] overflow-hidden space-y-4 shadow-xl">
@@ -1365,7 +1598,7 @@ export const ExternalSandbox = ({ url, title, type = 'generic' }: ExternalSandbo
           className="p-2 bg-slate-950 border border-slate-800 rounded-lg hover:border-slate-700 hover:text-white transition-all text-slate-400 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
         >
           <Maximize2 className="w-3.5 h-3.5" />
-          {language === 'FR' ? 'Plein écran' : 'Fullscreen'}
+          {ti.fullscreen}
         </a>
       </div>
 
@@ -1374,7 +1607,7 @@ export const ExternalSandbox = ({ url, title, type = 'generic' }: ExternalSandbo
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-10 space-y-2">
             <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
             <span className="text-xs text-slate-400 font-medium">
-              {language === 'FR' ? 'Chargement de la simulation...' : 'Loading simulation...'}
+              {ti.loading}
             </span>
           </div>
         )}
@@ -1518,7 +1751,7 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [], isFinal = false }
       <div className="flex items-center gap-2 text-blue-400 mb-3 select-none">
         <Sparkles className="w-4 h-4 text-blue-400" />
         <span className="text-xs font-black uppercase tracking-wider">
-          {language === 'FR' ? 'Complétez les espaces vides' : 'Fill in the blanks'}
+          {t.fill_blanks_group}
         </span>
       </div>
       
@@ -1583,9 +1816,7 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [], isFinal = false }
               Score: {computedCorrectCount} / {solutions.length} ({scorePercent}%)
             </div>
             <span className="text-slate-400 text-xs font-semibold">
-              {isCorrect 
-                ? (language === 'FR' ? 'Validé' : 'Validated')
-                : (language === 'FR' ? 'Complété' : 'Completed')}
+              {isCorrect ? t.validated : t.completed}
             </span>
           </div>
           
@@ -1595,7 +1826,7 @@ export const FillInBlanksQuestion = ({ q = '', solutions = [], isFinal = false }
               className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {language === 'FR' ? 'Retenter l\'exercice' : 'Retry Exercise'}
+              {t.retry_exercise}
             </button>
           )}
         </div>

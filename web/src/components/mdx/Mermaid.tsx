@@ -193,7 +193,11 @@ const STATUS_STRINGS: Record<string, { initial: string; transition: string; targ
   FR: { initial: "État Initial", transition: "Étape de Transition", target: "Objectif Final" },
   ES: { initial: "Estado Inicial", transition: "Paso de Transición", target: "Meta Final" },
   DE: { initial: "Ausgangszustand", transition: "Übergangsschritt", target: "Endziel" },
-  ZH: { initial: "初始状态", transition: "过渡阶段", target: "最终目标" }
+  ZH: { initial: "初始状态", transition: "过渡阶段", target: "最终目标" },
+  PT: { initial: "Estado Inicial", transition: "Etapa de Transição", target: "Meta Final" },
+  AR: { initial: "الحالة الأولية", transition: "خطوة انتقالية", target: "الهدف النهائي" },
+  HI: { initial: "प्रारंभिक अवस्था", transition: "पारगमन चरण", target: "अंतिम मील का पत्थर" },
+  UR: { initial: "ابتدائی حالت", transition: "عبوری مرحلہ", target: "آخری سنگ میل" }
 };
 
 const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) => {
@@ -361,7 +365,21 @@ const parseMermaidTimeline = (chartText: string): { title?: string; items: Timel
 
 const CustomTimeline = ({ chartText }: { chartText: string }) => {
   const { language } = useLanguage();
-  const isFr = language.toLowerCase() === 'fr';
+  const langKey = (language?.toUpperCase() || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
+
+  const TIMELINE_STRINGS = {
+    EN: { title: "Timeline", subtitle: "Historical Sequence" },
+    FR: { title: "Frise Chronologique", subtitle: "Déroulement Historique" },
+    ES: { title: "Línea de Tiempo", subtitle: "Secuencia Histórica" },
+    DE: { title: "Zeitleiste", subtitle: "Historischer Ablauf" },
+    ZH: { title: "时间线", subtitle: "历史顺序" },
+    PT: { title: "Linha do Tempo", subtitle: "Sequência Histórica" },
+    AR: { title: "الجدول الزمني", subtitle: "التسلسل التاريخي" },
+    HI: { title: "समयरेखा", subtitle: "ऐतिहासिक अनुक्रम" },
+    UR: { title: "ٹائم لائن", subtitle: "تاریخی ترتیب" }
+  };
+
+  const tStrings = TIMELINE_STRINGS[langKey] || TIMELINE_STRINGS.EN;
   const { title, items } = parseMermaidTimeline(chartText);
 
   if (items.length === 0) {
@@ -380,10 +398,10 @@ const CustomTimeline = ({ chartText }: { chartText: string }) => {
         </div>
         <div>
           <h4 className="text-slate-200 text-xs font-black uppercase tracking-[0.2em]">
-            {title || (isFr ? "Frise Chronologique" : "Timeline")}
+            {title || tStrings.title}
           </h4>
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-            {isFr ? "Déroulement Historique" : "Historical Sequence"}
+            {tStrings.subtitle}
           </p>
         </div>
       </div>
@@ -835,10 +853,10 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
       >
         <div className="flex flex-col text-left border-r border-slate-800/80 pr-5">
           <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest">
-            {language === 'FR' ? "Carte Cognitive" : "Cognitive Map"}
+            {language === 'FR' ? "Carte Cognitive" : language === 'ES' ? "Mapa Cognitivo" : language === 'DE' ? "Kognitive Karte" : language === 'ZH' ? "认知地图" : language === 'PT' ? "Mapa Cognitivo" : language === 'AR' ? "خريطة معرفية" : language === 'HI' ? "संज्ञानात्मक मानचित्र" : language === 'UR' ? "معرفاتی نقشہ" : "Cognitive Map"}
           </span>
           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-            {language === 'FR' ? "Glisser pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
+            {language === 'FR' ? "Glisser pour déplacer • Molette pour zoomer" : language === 'ES' ? "Arrastrar para mover • Rueda para zoom" : language === 'DE' ? "Ziehen zum Verschieben • Scrollen zum Zoomen" : language === 'ZH' ? "拖动平移 • 滚动缩放" : language === 'PT' ? "Arraste para mover • Role para ampliar" : language === 'AR' ? "اسحب للتحريك • عجلة للتكبير" : language === 'HI' ? "खिंचें • स्क्रॉल करें" : language === 'UR' ? "ھیچیں ہلائیں • اسکرول کریں" : "Drag to Pan • Scroll to Zoom"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -848,7 +866,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
               setScale(prev => Math.min(10, prev * 1.25));
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Zoomer" : "Zoom In"}
+            title={language === 'FR' ? "Zoomer" : language === 'ES' ? "Acercar" : language === 'DE' ? "Vergrößern" : language === 'ZH' ? "放大" : language === 'PT' ? "Ampliar" : language === 'AR' ? "تكبير" : language === 'HI' ? "ज़ूम इन" : language === 'UR' ? "زوم ان" : "Zoom In"}
           >
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -858,7 +876,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
               setScale(prev => Math.max(0.1, prev / 1.25));
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
+            title={language === 'FR' ? "Dézoomer" : language === 'ES' ? "Alejar" : language === 'DE' ? "Verkleinern" : language === 'ZH' ? "缩小" : language === 'PT' ? "Reduzir" : language === 'AR' ? "تصغير" : language === 'HI' ? "ज़ूम आउट" : language === 'UR' ? "زوم آؤٹ" : "Zoom Out"}
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -868,7 +886,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
               resetPanZoom();
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Réinitialiser" : "Reset View"}
+            title={language === 'FR' ? "Réinitialiser" : language === 'ES' ? "Restablecer" : language === 'DE' ? "Zurücksetzen" : language === 'ZH' ? "重置视图" : language === 'PT' ? "Redefinir" : language === 'AR' ? "إعادة ضبط" : language === 'HI' ? "रीसेट" : language === 'UR' ? "ریسیٹ" : "Reset View"}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -985,7 +1003,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
           resetPanZoom();
         }}
         className="absolute top-3 right-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-30 cursor-pointer shadow-md opacity-100"
-        title={language === 'FR' ? "Plein écran" : "Fullscreen"}
+        title={language === 'FR' ? "Plein écran" : language === 'ES' ? "Pantalla completa" : language === 'DE' ? "Vollbild" : language === 'ZH' ? "全屏" : language === 'PT' ? "Tela cheia" : language === 'AR' ? "شاشة كاملة" : language === 'HI' ? "पूर्ण स्क्रीन" : language === 'UR' ? "فل اسکرین" : "Fullscreen"}
       >
         <Maximize2 className="w-4 h-4" />
       </button>

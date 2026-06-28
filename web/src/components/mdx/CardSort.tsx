@@ -16,6 +16,8 @@ interface CardSortStrings {
   reset: string;
   score: string;
   completed: string;
+  conceptsLabel: string;
+  definitionsLabel: string;
 }
 
 const UI_STRINGS: Record<string, CardSortStrings> = {
@@ -29,7 +31,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "Incorrect match, try again!",
     reset: "Reset Exercise",
     score: "Score",
-    completed: "Challenge Completed!"
+    completed: "Challenge Completed!",
+    conceptsLabel: "Concepts",
+    definitionsLabel: "Definitions / Definers"
   },
   FR: {
     title: "Association de Concepts (Card Sort)",
@@ -41,7 +45,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "Mauvaise association, réessayez !",
     reset: "Réinitialiser l'exercice",
     score: "Score",
-    completed: "Défi terminé !"
+    completed: "Défi terminé !",
+    conceptsLabel: "Concepts",
+    definitionsLabel: "Définitions / Définiteurs"
   },
   ES: {
     title: "Asociación de Conceptos",
@@ -53,7 +59,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "Asociación incorrecta, ¡inténtalo de nuevo!",
     reset: "Reiniciar ejercicio",
     score: "Puntuación",
-    completed: "¡Desafío completado!"
+    completed: "¡Desafío completado!",
+    conceptsLabel: "Conceptos",
+    definitionsLabel: "Definiciones / Definidores"
   },
   DE: {
     title: "Konzept-Zuordnung (Card Sort)",
@@ -65,7 +73,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "Falsche Zuordnung, versuchen Sie es erneut!",
     reset: "Übung zurücksetzen",
     score: "Punktestand",
-    completed: "Herausforderung abgeschlossen!"
+    completed: "Herausforderung abgeschlossen!",
+    conceptsLabel: "Konzepte",
+    definitionsLabel: "Definitionen / Bestimmungen"
   },
   ZH: {
     title: "概念卡片分类",
@@ -77,7 +87,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "配对错误，请重试！",
     reset: "重置练习",
     score: "得分",
-    completed: "挑战完成！"
+    completed: "挑战完成！",
+    conceptsLabel: "概念",
+    definitionsLabel: "定义 / 解释"
   },
   AR: {
     title: "ربط المفاهيم (فرز البطاقات)",
@@ -89,7 +101,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "ربط غير صحيح، حاول مرة أخرى!",
     reset: "إعادة تعيين التمرين",
     score: "النتيجة",
-    completed: "اكتمل التحدي!"
+    completed: "اكتمل التحدي!",
+    conceptsLabel: "المفاهيم",
+    definitionsLabel: "التعريفات / المحددات"
   },
   HI: {
     title: "अवधारणाओं का मिलान",
@@ -101,7 +115,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "गलत मिलान, पुनः प्रयास करें!",
     reset: "अभ्यास रीसेट करें",
     score: "स्कोर",
-    completed: "चुनौती पूरी हुई!"
+    completed: "चुनौती पूरी हुई!",
+    conceptsLabel: "अवधारणाएं",
+    definitionsLabel: "परिभाषाएं / व्याख्याएं"
   },
   PT: {
     title: "Associação de Conceitos",
@@ -113,7 +129,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "Associação incorreta, tente novamente!",
     reset: "Reiniciar exercício",
     score: "Pontuação",
-    completed: "Desafio concluído!"
+    completed: "Desafio concluído!",
+    conceptsLabel: "Conceitos",
+    definitionsLabel: "Definições / Definidores"
   },
   UR: {
     title: "تصوراتی ربط کار",
@@ -125,7 +143,9 @@ const UI_STRINGS: Record<string, CardSortStrings> = {
     tryAgain: "غلط جوڑا، دوبارہ کوشش کریں!",
     reset: "مشق دوبارہ شروع کریں",
     score: "اسکور",
-    completed: "چیلنج مکمل ہو گیا!"
+    completed: "چیلنج مکمل ہو گیا!",
+    conceptsLabel: "تصورات",
+    definitionsLabel: "تعریفیں / وضاحتی الفاظ"
   }
 };
 
@@ -368,7 +388,7 @@ export const CardSort: React.FC<CardSortProps> = ({ pairs, pairsString }) => {
         {/* Left Column: Concepts */}
         <div className="flex flex-col gap-3.5">
           <span className="text-xs uppercase font-extrabold tracking-widest text-indigo-500 dark:text-indigo-400 pl-1">
-            {langKey === 'FR' ? "Concepts" : "Concepts"}
+            {t.conceptsLabel}
           </span>
           <AnimatePresence>
             {concepts.map((item) => {
@@ -433,7 +453,7 @@ export const CardSort: React.FC<CardSortProps> = ({ pairs, pairsString }) => {
         {/* Right Column: Definitions */}
         <div className="flex flex-col gap-3.5">
           <span className="text-xs uppercase font-extrabold tracking-widest text-indigo-500 dark:text-indigo-400 pl-1">
-            {langKey === 'FR' ? "Définitions / Définiteurs" : "Definitions / Definers"}
+            {t.definitionsLabel}
           </span>
           <AnimatePresence>
             {definitions.map((item) => {

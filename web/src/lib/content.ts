@@ -17,13 +17,27 @@ export function stripOuterCodeFences(content: string): string {
   return cleaned;
 }
 
-let wikipediaCache: Record<string, string | null> = {};
+let wikipediaCache: Record<string, { url: string | null; fetchedAt: number }> = {};
 const cachePath = path.join(process.cwd(), 'src/lib/wikipedia-cache.json');
 
 function loadCache() {
   try {
     if (fs.existsSync(cachePath)) {
-      wikipediaCache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      const rawData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      const parsed: Record<string, { url: string | null; fetchedAt: number }> = {};
+      const now = Date.now();
+      for (const [key, value] of Object.entries(rawData)) {
+        if (value && typeof value === 'object' && 'url' in value && 'fetchedAt' in value) {
+          parsed[key] = value as { url: string | null; fetchedAt: number };
+        } else {
+          // Backward compatibility for old string | null format
+          parsed[key] = {
+            url: value as string | null,
+            fetchedAt: now
+          };
+        }
+      }
+      wikipediaCache = parsed;
     }
   } catch (e) {
     // If not found or error, default to empty object
@@ -45,16 +59,9 @@ function saveCache() {
 // Initialize cache
 loadCache();
 
-export async function checkWikipediaPage(term: string, lang: string): Promise<string | null> {
-  const cleanTerm = term.trim();
-  if (!cleanTerm) return null;
-  const cacheKey = `${lang.toLowerCase()}:${cleanTerm.toLowerCase()}`;
-  if (cacheKey in wikipediaCache) {
-    return wikipediaCache[cacheKey];
-  }
-
+async function fetchWikiUrl(term: string, lang: string): Promise<string | null> {
   try {
-    const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(cleanTerm)}`;
+    const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(term)}`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' }
     });
@@ -65,20 +72,53 @@ export async function checkWikipediaPage(term: string, lang: string): Promise<st
         const pageId = Object.keys(pages)[0];
         if (pageId && pageId !== '-1') {
           const canonicalTitle = pages[pageId].title;
-          const wikiUrl = `https://${lang.toLowerCase()}.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/ /g, '_'))}`;
-          wikipediaCache[cacheKey] = wikiUrl;
-          saveCache();
-          return wikiUrl;
+          return `https://${lang.toLowerCase()}.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/ /g, '_'))}`;
         }
       }
     }
   } catch (e) {
-    console.error("Wikipedia API error:", e);
+    console.error(`Wikipedia API error for term "${term}" (${lang}):`, e);
+  }
+  return null;
+}
+
+export async function checkWikipediaPage(term: string, lang: string): Promise<string | null> {
+  const cleanTerm = term.trim();
+  if (!cleanTerm) return null;
+  const cacheKey = `${lang.toLowerCase()}:${cleanTerm.toLowerCase()}`;
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+  if (cacheKey in wikipediaCache) {
+    const entry = wikipediaCache[cacheKey];
+    if (now - entry.fetchedAt < thirtyDaysMs) {
+      return entry.url;
+    }
   }
 
-  wikipediaCache[cacheKey] = null;
+  let resolvedUrl = await fetchWikiUrl(cleanTerm, lang);
+
+  // Fallback for terms with extra details: strip parentheses/slashes/dashes
+  if (!resolvedUrl) {
+    // 1. Strip parentheses: "amorçage (priming)" -> "amorçage"
+    let alternative = cleanTerm.replace(/\s*\([^)]*\)/g, '').trim();
+
+    // 2. Split on slash or dash: "amphipathique / amphiphile" -> "amphipathique"
+    if (alternative.includes('/') || alternative.includes(' - ')) {
+      alternative = alternative.split(/\s*[\/-]\s*/)[0].trim();
+    }
+
+    if (alternative && alternative.toLowerCase() !== cleanTerm.toLowerCase()) {
+      resolvedUrl = await fetchWikiUrl(alternative, lang);
+    }
+  }
+
+  wikipediaCache[cacheKey] = {
+    url: resolvedUrl,
+    fetchedAt: now
+  };
   saveCache();
-  return null;
+  return resolvedUrl;
 }
 
 function getWikipediaLabel(lang: string): string {
@@ -3319,12 +3359,42 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       }
     }
 
+    // Scan preGlossary for inline entity links that define a concept and have a description
+    const inlineEntityRegex = /<((?:Concept|Theorem|Species|Chemical|Celestial)Link|ConceptLien|TheoremeLien|ThéorèmeLien|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)\b([^>]*?)>([\s\S]*?)<\/\1>/gi;
+    let inlineMatch;
+    while ((inlineMatch = inlineEntityRegex.exec(preGlossary)) !== null) {
+      const attrs = inlineMatch[2];
+      const innerText = inlineMatch[3].trim();
+      const descMatch = attrs.match(/description=["']([\s\S]*?)["']/i);
+      if (descMatch && innerText) {
+        // Normalize term name: capitalize first letter
+        const term = innerText.charAt(0).toUpperCase() + innerText.slice(1);
+        let definition = cleanGlossaryDefinition(descMatch[1]);
+
+        // Format Wikipedia links in the definition
+        definition = definition.replace(/\[?\[?(Wikip[eé]dia)\]?\]?\((https?:\/\/[^\s)]+)\)/gi, (m, label, url) => {
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">Wikipédia</a>`;
+        });
+        definition = definition.replace(/\[\s*(<a\b[^>]*>Wikip[eé]dia<\/a>)\s*\]/gi, '$1');
+
+        // Check if term already exists in glossaryItems
+        const exists = glossaryItems.some(item => item.term.toLowerCase() === term.toLowerCase());
+        if (!exists && term && definition) {
+          glossaryItems.push({
+            term,
+            line: `- **${term}** : ${definition}`
+          });
+        }
+      }
+    }
+
     // Sort glossary items alphabetically
     glossaryItems.sort((a, b) => a.term.localeCompare(b.term, 'fr', { sensitivity: 'base' }));
 
-    // Reconstruct the glossary section with sorted items
+    // Reconstruct the glossary section with sorted items, ensuring any <References /> tag is appended at the very end
     const headingLine = nonItemLines[0] || '### Glossaire';
-    const otherNonItemLines = nonItemLines.slice(1).filter(l => l.trim() !== '');
+    const referencesLines = nonItemLines.slice(1).filter(l => l.trim().startsWith('<References'));
+    const otherNonItemLines = nonItemLines.slice(1).filter(l => l.trim() !== '' && !l.trim().startsWith('<References'));
     
     let reconstructedGlossary = headingLine + '\n';
     if (otherNonItemLines.length > 0) {
@@ -3333,6 +3403,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       reconstructedGlossary += '\n';
     }
     reconstructedGlossary += glossaryItems.map(item => item.line).join('\n') + '\n';
+    
+    if (referencesLines.length > 0) {
+      reconstructedGlossary += '\n' + referencesLines.join('\n') + '\n';
+    }
 
     processed = preGlossary + reconstructedGlossary + postGlossary;
   }

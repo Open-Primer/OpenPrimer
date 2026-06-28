@@ -437,10 +437,23 @@ const GuestFootnote = () => {
   );
 };
 
+const SELF_ASSESSMENT_STRINGS: Record<string, {badge: string; calibrate: string}> = {
+  EN: { badge: "Self-Assessment", calibrate: "💡 Your rating instantly calibrates the explanation level and pedagogy of your personal AI Tutor." },
+  FR: { badge: "Auto-Évaluation", calibrate: "💡 Votre choix calibre instantanément le niveau d'explication et la pédagogie de votre Tuteur IA personnel." },
+  ES: { badge: "Autoevaluación", calibrate: "💡 Tu elección calibra instantáneamente el nivel de explicación y la pedagogía de tu Tutor IA personal." },
+  DE: { badge: "Selbsteinschätzung", calibrate: "💡 Ihre Bewertung kalibriert sofort das Erklärungsniveau und die Pädagogik Ihres persönlichen KI-Tutors." },
+  ZH: { badge: "自我评估", calibrate: "💡 您的评分将立即校准您的个人AI导师的解释难度与教学风格。" },
+  PT: { badge: "Autoavaliação", calibrate: "💡 Sua avaliação calibra instantaneamente o nível de explicação do seu Tutor de IA pessoal." },
+  AR: { badge: "التقييم الذاتي", calibrate: "💡 تقييمك يضبط على الفور مستوى الشرح وأسلوب التدريس لمعلمك الآلي الشخصي." },
+  HI: { badge: "स्व-मूल्यांकन", calibrate: "💡 आपकी रेटिंग तुरंत आपके व्यक्तिगत AI ट्यूटर के स्पष्टीकरण स्तर को कैलिब्रेट करती है।" },
+  UR: { badge: "ذاتی تشخیص", calibrate: "💡 آپ کی درجہ بندی فوری طور پر آپ کے ذاتی AI ٹیوٹر کی وضاحت کی سطح کو کیلیبریٹ کرتی ہے۔" },
+};
+
 // Auto-Évaluation (Pré/Post)
 export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" | "post" }) => {
   const { language } = useLanguage();
   const t = ADVANCED_STRINGS[language as keyof typeof ADVANCED_STRINGS] || ADVANCED_STRINGS.EN;
+  const sa = SELF_ASSESSMENT_STRINGS[language.toUpperCase() as keyof typeof SELF_ASSESSMENT_STRINGS] || SELF_ASSESSMENT_STRINGS.EN;
   const [selected, setSelected] = React.useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isReadOnly, setIsReadOnly] = React.useState(false);
@@ -535,15 +548,7 @@ export const SelfEval = ({ title, type = "pre" }: { title: string, type?: "pre" 
 
       {type === "pre" && (
         <span className="text-[10px] text-blue-400 font-bold block mt-4 select-none leading-relaxed">
-          {language === 'FR' 
-            ? "💡 Votre choix calibre instantanément le niveau d'explication et la pédagogie de votre Tuteur IA personnel."
-            : language === 'ES'
-              ? "💡 Tu elección calibra instantáneamente el nivel de explicación y la pedagogía de tu Tutor IA personal."
-              : language === 'DE'
-                ? "💡 Ihre Bewertung kalibriert sofort das Erklärungsniveau und die Pädagogik Ihres persönlichen KI-Tutors."
-                : language === 'ZH'
-                  ? "💡 您的评分将立即校准您的个人AI导师的解释难度与教学风格。"
-                  : "💡 Your rating instantly calibrates the explanation level and pedagogy of your personal AI Tutor."}
+          {sa.calibrate}
         </span>
       )}
 
@@ -591,7 +596,8 @@ export const SelfAssessment = ({ question, options, feedback }: SelfAssessmentPr
     }
   };
 
-  const badgeText = language === 'FR' ? 'Auto-Évaluation' : 'Self-Assessment';
+  const sa = SELF_ASSESSMENT_STRINGS[language.toUpperCase() as keyof typeof SELF_ASSESSMENT_STRINGS] || SELF_ASSESSMENT_STRINGS.EN;
+  const badgeText = sa.badge;
 
   return (
     <div className="my-10 p-8 rounded-3xl bg-slate-900/40 border border-blue-500/20 backdrop-blur-xl shadow-xl space-y-6">

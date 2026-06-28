@@ -13,6 +13,7 @@ interface TimelineStrings {
   completedLabel: string;
   next: string;
   prev: string;
+  by: string;
 }
 
 const UI_STRINGS: Record<string, TimelineStrings> = {
@@ -23,7 +24,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "Milestones Explored",
     completedLabel: "Chronological Journey Completed!",
     next: "Next Discovery",
-    prev: "Previous"
+    prev: "Previous",
+    by: "by"
   },
   FR: {
     title: "Frise Chronologique Interactive",
@@ -32,7 +34,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "Étapes explorées",
     completedLabel: "Voyage chronologique accompli !",
     next: "Découverte Suivante",
-    prev: "Précédent"
+    prev: "Précédent",
+    by: "par"
   },
   ES: {
     title: "Línea de Tiempo Científica",
@@ -41,7 +44,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "Hitos Explorados",
     completedLabel: "¡Viaje cronológico completado!",
     next: "Siguiente Descubrimiento",
-    prev: "Anterior"
+    prev: "Anterior",
+    by: "por"
   },
   DE: {
     title: "Wissenschaftliche Zeitreise",
@@ -50,7 +54,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "Meilensteine erforscht",
     completedLabel: "Chronologische Reise abgeschlossen!",
     next: "Nächste Entdeckung",
-    prev: "Zurück"
+    prev: "Zurück",
+    by: "von"
   },
   ZH: {
     title: "科学历史时间轴",
@@ -59,7 +64,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "已探索里程碑",
     completedLabel: "编年史探索之旅完成！",
     next: "下一项发现",
-    prev: "上一项"
+    prev: "上一项",
+    by: "作者："
   },
   AR: {
     title: "الخط الزمني العلمي",
@@ -68,7 +74,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "المحطات المستكشفة",
     completedLabel: "اكتملت الرحلة الزمنية!",
     next: "الاكتشاف التالي",
-    prev: "السابق"
+    prev: "السابق",
+    by: "بواسطة"
   },
   HI: {
     title: "वैज्ञानिक समयरेखा",
@@ -77,7 +84,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "अन्वेषित मील के पत्थर",
     completedLabel: "कालानुक्रमिक यात्रा पूरी हुई!",
     next: "अगली खोज",
-    prev: "पिछला"
+    prev: "पिछला",
+    by: "द्वारा"
   },
   PT: {
     title: "Linha do Tempo Científica",
@@ -86,7 +94,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "Marcos Explorados",
     completedLabel: "Viagem cronológica concluída!",
     next: "Próxima Descoberta",
-    prev: "Anterior"
+    prev: "Anterior",
+    by: "por"
   },
   UR: {
     title: "سائنسی ٹائم لائن",
@@ -95,7 +104,8 @@ const UI_STRINGS: Record<string, TimelineStrings> = {
     progressLabel: "دریافت شدہ مراحل",
     completedLabel: "تاریخی سفر مکمل ہو گیا!",
     next: "اگلی دریافت",
-    prev: "پچھلی"
+    prev: "پچھلی",
+    by: "بذریعہ"
   }
 };
 
@@ -383,7 +393,7 @@ export const Timeline: React.FC<TimelineProps> = ({ milestones, milestonesString
               </span>
 
               <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                {langKey === 'FR' ? "par" : "by"} <strong className="text-slate-700 dark:text-slate-200">{current.author}</strong>
+                {t.by} <strong className="text-slate-700 dark:text-slate-200">{current.author}</strong>
               </span>
             </div>
 

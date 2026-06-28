@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, ExternalLink, Loader2, VideoOff, Search } from 'lucide-react';
 import { useMdxStatus } from './MdxStatusContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 type VideoStatus = 'checking' | 'ok' | 'unavailable';
 
@@ -37,6 +38,7 @@ interface VideoProps {
 
 export const Video = ({ id, title, provider: propProvider, url, duration, unresolved }: VideoProps) => {
   const { markDegraded } = useMdxStatus();
+  const { language } = useLanguage();
 
   useEffect(() => {
     if (unresolved) {
@@ -45,7 +47,6 @@ export const Video = ({ id, title, provider: propProvider, url, duration, unreso
   }, [unresolved, markDegraded]);
 
   const [status, setStatus] = useState<VideoStatus>('checking');
-  const [lang, setLang] = useState('en');
 
   useEffect(() => {
     if (!unresolved && status === 'unavailable') {
@@ -53,28 +54,88 @@ export const Video = ({ id, title, provider: propProvider, url, duration, unreso
     }
   }, [unresolved, status, markDegraded]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem('openprimer_lang') || 'en';
-      setLang(stored.toLowerCase());
-    }
-  }, []);
-
   if (unresolved) {
     return null;
   }
 
-  const isFr = lang === 'fr';
-  const t = {
-    verifying: isFr ? 'Vérification de la ressource...' : 'Verifying resource...',
-    unavailableTitle: isFr ? 'Ressource indisponible' : 'Resource Unavailable / Indisponible',
-    unavailableDesc: isFr 
-      ? `La vidéo "${title}" est hors ligne. Vous pouvez trouver du contenu équivalent sur le web.`
-      : `The video "${title}" is offline. You can find equivalent material on the web.`,
-    searchBtn: isFr ? 'Rechercher sur Google' : 'Search on Google',
-    academicVideo: isFr ? 'Vidéo Académique' : 'Academic Video',
-    focusTip: isFr ? 'Conseil concentration : Prenez une pause de 30s si nécessaire.' : 'Focus Tip: Take a 30s break if needed.'
+  const langKey = (language?.toUpperCase() || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
+
+  const TRANSLATIONS = {
+    EN: {
+      verifying: 'Verifying resource...',
+      unavailableTitle: 'Resource Unavailable',
+      unavailableDesc: `The video "${title}" is offline. You can find equivalent material on the web.`,
+      searchBtn: 'Search on Google',
+      academicVideo: 'Academic Video',
+      focusTip: 'Focus Tip: Take a 30s break if needed.'
+    },
+    FR: {
+      verifying: 'Vérification de la ressource...',
+      unavailableTitle: 'Ressource indisponible',
+      unavailableDesc: `La vidéo "${title}" est hors ligne. Vous pouvez trouver du contenu équivalent sur le web.`,
+      searchBtn: 'Rechercher sur Google',
+      academicVideo: 'Vidéo Académique',
+      focusTip: 'Conseil concentration : Prenez une pause de 30s si nécessaire.'
+    },
+    ES: {
+      verifying: 'Verificando recurso...',
+      unavailableTitle: 'Recurso no disponible',
+      unavailableDesc: `El video "${title}" está fuera de línea. Puede encontrar contenido equivalente en la web.`,
+      searchBtn: 'Buscar en Google',
+      academicVideo: 'Video Académico',
+      focusTip: 'Consejo de enfoque: Tome un descanso de 30 segundos si es necesario.'
+    },
+    DE: {
+      verifying: 'Ressource wird überprüft...',
+      unavailableTitle: 'Ressource nicht verfügbar',
+      unavailableDesc: `Das Video "${title}" ist offline. Sie können gleichwertiges Material im Internet finden.`,
+      searchBtn: 'Auf Google suchen',
+      academicVideo: 'Akademisches Video',
+      focusTip: 'Konzentrationstipp: Machen Sie bei Bedarf eine 30-sekündige Pause.'
+    },
+    ZH: {
+      verifying: '正在验证资源...',
+      unavailableTitle: '资源不可用',
+      unavailableDesc: `视频 "${title}" 已离线。您可以在网上找到同等内容。`,
+      searchBtn: '在谷歌上搜索',
+      academicVideo: '学术视频',
+      focusTip: '专注小贴士：如有需要，请休息30秒。'
+    },
+    PT: {
+      verifying: 'Verificando recurso...',
+      unavailableTitle: 'Recurso Indisponível',
+      unavailableDesc: `O vídeo "${title}" está offline. Você pode encontrar conteúdo equivalente na web.`,
+      searchBtn: 'Pesquisar no Google',
+      academicVideo: 'Vídeo Acadêmico',
+      focusTip: 'Dica de Foco: Faça uma pausa de 30s se necessário.'
+    },
+    AR: {
+      verifying: 'جاري التحقق من المورد...',
+      unavailableTitle: 'المورد غير متوفر',
+      unavailableDesc: `الفيديو "${title}" غير متصل بالإنترنت. يمكنك العثور على محتوى يعادله على الويب.`,
+      searchBtn: 'البحث على Google',
+      academicVideo: 'فيديو أكاديمي',
+      focusTip: 'نصيحة للتركيز: خذ استراحة لمدة 30 ثانية إذا لزم الأمر.'
+    },
+    HI: {
+      verifying: 'संसाधन सत्यापित किया जा रहा है...',
+      unavailableTitle: 'संसाधन अनुपलब्ध',
+      unavailableDesc: `वीडियो "${title}" ऑफ़लाइन है। आप वेब पर समकक्ष सामग्री पा सकते हैं।`,
+      searchBtn: 'गूगल पर खोजें',
+      academicVideo: 'शैक्षणिक वीडियो',
+      focusTip: 'ध्यान देने का सुझाव: यदि आवश्यक हो तो 30 सेकंड का ब्रेक लें।'
+    },
+    UR: {
+      verifying: 'وسائل کی تصدیق کی جا رہی ہے...',
+      unavailableTitle: 'وسائل دستیاب نہیں',
+      unavailableDesc: `ویڈیو "${title}" آف لائن ہے۔ آپ ویب پر اس کے متبادل مواد تلاش کر سکتے ہیں۔`,
+      searchBtn: 'گوگل پر تلاش کریں',
+      academicVideo: 'تعلیمی ویڈیو',
+      focusTip: 'توجہ کا مشورہ: اگر ضرورت ہو تو 30 سیکنڈ کا وقفہ لیں۔'
+    }
   };
+
+  const t = TRANSLATIONS[langKey] || TRANSLATIONS.EN;
 
   // Normalize provider input
   let normalizedPropProvider: 'YouTube' | 'Vimeo' | 'generic' = 'generic';

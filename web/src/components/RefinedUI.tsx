@@ -1832,14 +1832,18 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           }
           
           // Filter enrolled IDs to only those that exist in the courses table
-          const cleanEnrolledIds = tempEnrolledIds.filter(id => validDbIds.has(id));
-          setEnrolledIds(cleanEnrolledIds);
-          
-          // Sync back to localStorage and cookie if changed
-          if (typeof window !== 'undefined' && cleanEnrolledIds.length !== tempEnrolledIds.length) {
-            console.log(`[Client Enrollment Cleanup] Pruned ${tempEnrolledIds.length - cleanEnrolledIds.length} obsolete enrollment IDs.`);
-            localStorage.setItem('op_enrolled_courses', JSON.stringify(cleanEnrolledIds));
-            document.cookie = `op_enrolled_courses=${JSON.stringify(cleanEnrolledIds)}; path=/; max-age=31536000; SameSite=Lax`;
+          if (allCourses.length > 0) {
+            const cleanEnrolledIds = tempEnrolledIds.filter(id => validDbIds.has(id));
+            setEnrolledIds(cleanEnrolledIds);
+            
+            // Sync back to localStorage and cookie if changed
+            if (typeof window !== 'undefined' && cleanEnrolledIds.length !== tempEnrolledIds.length) {
+              console.log(`[Client Enrollment Cleanup] Pruned ${tempEnrolledIds.length - cleanEnrolledIds.length} obsolete enrollment IDs.`);
+              localStorage.setItem('op_enrolled_courses', JSON.stringify(cleanEnrolledIds));
+              document.cookie = `op_enrolled_courses=${JSON.stringify(cleanEnrolledIds)}; path=/; max-age=31536000; SameSite=Lax`;
+            }
+          } else {
+            setEnrolledIds(tempEnrolledIds);
           }
           
           if (typeof window !== 'undefined' && isCoursePage) {

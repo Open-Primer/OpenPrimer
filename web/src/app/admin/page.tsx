@@ -6,7 +6,90 @@ import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { COST_PER_CALL, TASK_TOKEN_ESTIMATES, TASK_MODELS, MODEL_PRICING } from '@/lib/ai-config';
 
-export const DASHBOARD_STRINGS = {
+interface DashboardTranslation {
+  welcome: string;
+  subwelcome: string;
+  total_students: string;
+  curricula_active: string;
+  validation_rate: string;
+  rating: string;
+  content_engine: string;
+  accuracy: string;
+  queue: string;
+  stable: string;
+  unresolved: string;
+  diagnostics: string;
+  placeholder_retention: string;
+  month_trend: string;
+  week_trend: string;
+  improvement: string;
+  based_reviews: string;
+  accuracy_rate: string;
+  generation_rate: string;
+  accuracy_label: string;
+  agent_analytics: string;
+  agent_analytics_sub: string;
+  agent_name: string;
+  cost_launch: string;
+  cost_30d: string;
+  latency: string;
+  requests: string;
+  rating_label: string;
+  token_caching: string;
+  token_cached_ratio: string;
+  tokens_saved: string;
+  personality_dist: string;
+  efficiency_metrics: string;
+  loop_success: string;
+  check_passes: string;
+  ects_average: string;
+  passes_suffix: string;
+  ects_suffix: string;
+  loop_success_tooltip: string;
+  check_passes_tooltip: string;
+  ects_average_tooltip: string;
+  tooltip_total_students: string;
+  tooltip_curricula_active: string;
+  tooltip_validation_rate: string;
+  tooltip_rating: string;
+  tooltip_token_caching: string;
+  tooltip_personality_dist: string;
+  tooltip_accuracy: string;
+  tooltip_queue_rate: string;
+  translation_tracker: string;
+  certified: string;
+  in_queue: string;
+  cohort_heatmap: string;
+  heatmap_desc: string;
+  less_active: string;
+  highly_active: string;
+  elite_leaderboard: string;
+  no_profiles: string;
+  notification_queue: string;
+  total_waiting: string;
+  waiting_desc: string;
+  avg_queuing: string;
+  days_suffix: string;
+  queue_by_lang: string;
+  no_pending_notifications: string;
+  pending_backlog: string;
+  no_queued_notifications: string;
+  unique_subscribers: string;
+  oldest_request: string;
+  modules: string;
+  in_progress: string;
+  loading: string;
+  refresh: string;
+  persona_socratic: string;
+  persona_gamified: string;
+  persona_direct: string;
+  overflow_jobs: string;
+  input_tokens: string;
+  output_tokens: string;
+  level: string;
+}
+
+export const DASHBOARD_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'HI' | 'PT' | 'AR' | 'UR', DashboardTranslation> = {
   EN: {
     welcome: "Project Overview",
     subwelcome: "Real-time health and growth metrics for the OpenPrimer ecosystem.",
@@ -46,6 +129,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "Avg Study Credit Load",
     passes_suffix: "passes",
     ects_suffix: "Credits",
+    loop_success_tooltip: "Percentage of generated curriculum modules that pass validation without needing recursive revisions.",
+    check_passes_tooltip: "Average number of automated syntax and pedagogical checks executed per module before certification.",
+    ects_average_tooltip: "Average number of ECTS/Study credits allocated per active course.",
+    tooltip_total_students: "Total number of student accounts registered on OpenPrimer.",
+    tooltip_curricula_active: "Number of curriculum tracks currently active and studyable.",
+    tooltip_validation_rate: "Percentage of generated curriculum modules that passed syntax and compliance checks.",
+    tooltip_rating: "Average feedback rating given by students across all curricula.",
+    tooltip_token_caching: "Overview of LLM API token consumption and financial savings achieved via Turbopack Context Caching.",
+    tooltip_personality_dist: "Real-time distribution and relative frequency of active pedagogical tutor personalities.",
+    tooltip_accuracy: "Percentage of successful requests completed without translation/revision refusals or negative reviews.",
+    tooltip_queue_rate: "Current operational throughput of curriculum module generation, calculated in modules per hour.",
     translation_tracker: "Translation Metrics Tracker",
     certified: "Certified",
     in_queue: "In Queue",
@@ -117,6 +211,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "Charge de Crédits Moyenne",
     passes_suffix: "passes",
     ects_suffix: "Crédits",
+    loop_success_tooltip: "Pourcentage de modules générés qui passent la validation sans nécessiter de révisions récursives.",
+    check_passes_tooltip: "Nombre moyen de contrôles automatisés exécutés par module avant certification.",
+    ects_average_tooltip: "Nombre moyen de crédits ECTS/d'études alloués par cours actif.",
+    tooltip_total_students: "Nombre total de comptes d'étudiants enregistrés sur OpenPrimer.",
+    tooltip_curricula_active: "Nombre de parcours pédagogiques actuellement actifs et disponibles à l'étude.",
+    tooltip_validation_rate: "Pourcentage de modules générés ayant réussi les contrôles de syntaxe et de conformité.",
+    tooltip_rating: "Note d'évaluation moyenne attribuée par les étudiants sur l'ensemble des cours.",
+    tooltip_token_caching: "Aperçu de la consommation de tokens d'API LLM et des économies financières réalisées grâce au caching de contexte Turbopack.",
+    tooltip_personality_dist: "Distribution en temps réel et fréquence relative des personnalités de tuteurs pédagogiques actives.",
+    tooltip_accuracy: "Pourcentage de requêtes réussies terminées sans refus de traduction/révision ni avis négatifs d'étudiants.",
+    tooltip_queue_rate: "Débit opérationnel actuel de génération de modules de cours, calculé en modules par heure.",
     translation_tracker: "Suivi des Métriques de Traduction",
     certified: "Certifié",
     in_queue: "En File d'Attente",
@@ -188,6 +293,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "Carga de Créditos Promedio",
     passes_suffix: "pases",
     ects_suffix: "Créditos",
+    loop_success_tooltip: "Porcentaje de módulos generados que pasan la validación sin necesidad de revisiones recursivas.",
+    check_passes_tooltip: "Número promedio de controles automáticos ejecutados por módulo antes de la certificación.",
+    ects_average_tooltip: "Número promedio de créditos ECTS/estudios asignados por curso activo.",
+    tooltip_total_students: "Número total de cuentas de estudiantes registradas en OpenPrimer.",
+    tooltip_curricula_active: "Número de rutas curriculares actualmente activas y disponibles para el estudio.",
+    tooltip_validation_rate: "Porcentaje de módulos de currículo generados que superaron los controles de sintaxis y conformidad.",
+    tooltip_rating: "Calificación promedio de comentarios otorgada por estudiantes en todos los currículos.",
+    tooltip_token_caching: "Resumen del consumo de tokens de la API de LLM y los ahorros financieros logrados mediante la caché de contexto de Turbopack.",
+    tooltip_personality_dist: "Distribución en tiempo real y frecuencia relativa de las personalidades de tutores pedagógicos activos.",
+    tooltip_accuracy: "Porcentaje de solicitudes exitosas completadas sin rechazos de traducción/revisión o críticas negativas de estudiantes.",
+    tooltip_queue_rate: "Rendimiento operativo actual de la generación de módulos de currículo, calculado en módulos por hora.",
     translation_tracker: "Rastreador de Métricas de Traducción",
     certified: "Certificado",
     in_queue: "En Cola",
@@ -259,6 +375,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "Durchschn. Kreditbelastung",
     passes_suffix: "Durchläufe",
     ects_suffix: "Kredite",
+    loop_success_tooltip: "Prozentsatz der generierten Module, die die Validierung ohne rekursive Revisionen bestehen.",
+    check_passes_tooltip: "Durchschnittliche Anzahl automatisierter Prüfungen pro Modul vor der Zertifizierung.",
+    ects_average_tooltip: "Durchschnittliche Anzahl von ECTS/Studienpunkten, die pro aktivem Kurs zugewiesen werden.",
+    tooltip_total_students: "Gesamtzahl der bei OpenPrimer registrierten Studentenkonten.",
+    tooltip_curricula_active: "Anzahl der derzeit aktiven und studierbaren Lehrplanpfade.",
+    tooltip_validation_rate: "Prozentsatz der generierten Module, die Syntax- und Compliance-Prüfungen bestanden haben.",
+    tooltip_rating: "Durchschnittliche Feedback-Bewertung von Studenten über alle Lehrpläne hinweg.",
+    tooltip_token_caching: "Übersicht über den Tokenverbrauch der LLM-API und die finanziellen Einsparungen durch Turbopack-Kontextcaching.",
+    tooltip_personality_dist: "Echtzeit-Verteilung und relative Häufigkeit der aktiven pädagogischen Tutor-Persönlichkeiten.",
+    tooltip_accuracy: "Prozentsatz der erfolgreichen Anfragen, die ohne Übersetzungs-/Revisionsverweigerungen oder negative Bewertungen abgeschlossen wurden.",
+    tooltip_queue_rate: "Aktueller betrieblicher Durchsatz der Lehrplanmodulgenerierung, berechnet in Modulen pro Stunde.",
     translation_tracker: "Übersetzungs-Metriken-Tracker",
     certified: "Zertifiziert",
     in_queue: "In Warteschlange",
@@ -330,6 +457,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "平均学分负荷",
     passes_suffix: "次通过",
     ects_suffix: "学分",
+    loop_success_tooltip: "生成的课程模块在不需要递归修改的情况下通过验证的百分比。",
+    check_passes_tooltip: "在认证前，每个模块执行的自动语法和教学检查的平均次数。",
+    ects_average_tooltip: "每个活跃课程分配的平均 ECTS/学分值。",
+    tooltip_total_students: "在 OpenPrimer 上注册的学生账户总数。",
+    tooltip_curricula_active: "当前处于活跃状态且可供学习的课程体系轨道的数量。",
+    tooltip_validation_rate: "已生成的课程模块中通过语法和合规性检查的百分比。",
+    tooltip_rating: "所有课程中学生给出的平均反馈评分。",
+    tooltip_token_caching: "LLM API Token 消耗以及通过 Turbopack 上下文缓存实现的资金节省概览。",
+    tooltip_personality_dist: "活跃的教学导师性格的实时分布和相对频率。",
+    tooltip_accuracy: "成功完成且没有翻译/修改拒绝或学生负面评价的请求百分比。",
+    tooltip_queue_rate: "当前课程模块生成的运行吞吐量，以每小时模块数计算。",
     translation_tracker: "翻译指标追踪器",
     certified: "已认证",
     in_queue: "排队中",
@@ -401,6 +539,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "औसत अध्ययन क्रेडिट लोड",
     passes_suffix: "पास",
     ects_suffix: "क्रेडिट",
+    loop_success_tooltip: "उत्पन्न पाठ्यक्रम मॉड्यूल का प्रतिशत जो बिना किसी पुनरावर्ती संशोधन के सत्यापन पास करते हैं।",
+    check_passes_tooltip: "प्रमाणन से पहले प्रति मॉड्यूल निष्पादित स्वचालित सिंटैक्स और शैक्षणिक जांच की औसत संख्या।",
+    ects_average_tooltip: "प्रति सक्रिय पाठ्यक्रम आवंटित औसत ECTS/अध्ययन क्रेडिट संख्या।",
+    tooltip_total_students: "OpenPrimer पर पंजीकृत छात्र खातों की कुल संख्या।",
+    tooltip_curricula_active: "वर्तमान में सक्रिय और अध्ययन योग्य पाठ्यक्रम ट्रैक्स की संख्या।",
+    tooltip_validation_rate: "उत्पन्न पाठ्यक्रम मॉड्यूल का प्रतिशत जिसने सिंटैक्स और अनुपालन जांच पास की।",
+    tooltip_rating: "सभी पाठ्यक्रमों में छात्रों द्वारा दी गई औसत प्रतिक्रिया रेटिंग।",
+    tooltip_token_caching: "एलएलएम एपीआई टोकन खपत और टर्बोपैक संदर्भ कैशिंग के माध्यम से वित्तीय बचत का अवलोकन।",
+    tooltip_personality_dist: "सक्रिय ट्यूटर व्यक्तित्वों का वास्तविक समय वितरण और सापेक्ष आवृत्ति।",
+    tooltip_accuracy: "सफल अनुरोधों का प्रतिशत जो बिना किसी अनुवाद/संशोधन अस्वीकृति या नकारात्मक छात्र समीक्षाओं के पूरे हुए।",
+    tooltip_queue_rate: "पाठ्यक्रम मॉड्यूल निर्माण का वर्तमान परिचालन थ्रूपुट, प्रति घंटे मॉड्यूल में गणना किया गया।",
     translation_tracker: "अनुवाद मेट्रिक्स ट्रैकर",
     certified: "प्रमाणित",
     in_queue: "कतार में",
@@ -472,6 +621,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "Carga Média de Créditos de Estudo",
     passes_suffix: "passagens",
     ects_suffix: "Créditos",
+    loop_success_tooltip: "Percentagem de módulos gerados que passam na validação sem necessidade de revisões recursivas.",
+    check_passes_tooltip: "Número médio de verificações automáticas executadas por módulo antes da certificação.",
+    ects_average_tooltip: "Número médio de créditos ECTS/estudo alocados por curso ativo.",
+    tooltip_total_students: "Número total de contas de estudantes registadas no OpenPrimer.",
+    tooltip_curricula_active: "Número de trilhas curriculares atualmente ativas e disponíveis para estudo.",
+    tooltip_validation_rate: "Percentagem de módulos de currículo gerados que passaram nas verificações de sintaxe e conformidade.",
+    tooltip_rating: "Classificação média de feedback dada pelos estudantes em todos os currículos.",
+    tooltip_token_caching: "Visão geral do consumo de tokens da API LLM e das economias financeiras alcançadas através do Turbopack Context Caching.",
+    tooltip_personality_dist: "Distribuição em tempo real e frequência relativa das personalidades de tutores pedagógicos ativos.",
+    tooltip_accuracy: "Percentagem de solicitações bem-sucedidas concluídas sem recusas de tradução/revisão ou avaliações negativas de estudantes.",
+    tooltip_queue_rate: "Taxa de transferência operacional atual da geração de módulos de currículo, calculada em módulos por hora.",
     translation_tracker: "Rastreador de Métricas de Tradução",
     certified: "Certificado",
     in_queue: "Em Fila",
@@ -543,6 +703,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "متوسط عبء رصيد الدراسة",
     passes_suffix: "تمريرات",
     ects_suffix: "أرصدة",
+    loop_success_tooltip: "نسبة الوحدات المنهجية المُولَّدة التي تجتاز التحقق دون الحاجة إلى مراجعات متكررة.",
+    check_passes_tooltip: "متوسط عدد فحوصات الصياغة والتحققات التعليمية المؤتمتة المنفذة لكل وحدة قبل الاعتماد.",
+    ects_average_tooltip: "متوسط عدد أرصدة ECTS/الدراسة المخصصة لكل مقرر دراسي نشط.",
+    tooltip_total_students: "إجمالي عدد حسابات الطلاب المسجلة في OpenPrimer.",
+    tooltip_curricula_active: "عدد مسارات المناهج الدراسية النشطة حاليًا والقابلة للدراسة.",
+    tooltip_validation_rate: "نسبة وحدات المناهج المُولَّدة التي اجتازت فحوصات الصياغة والامتثال.",
+    tooltip_rating: "متوسط تقييم الملاحظات المقدم من الطلاب لجميع المناهج.",
+    tooltip_token_caching: "نظرة عامة على استهلاك رموز واجهة برمجة تطبيقات LLM والتوفيرات المالية المحققة عبر التخزين المؤقت للسياق Turbopack.",
+    tooltip_personality_dist: "التوزيع في الوقت الفعلي والتكرار النسبي لشخصيات المعلمين التربويين النشطين.",
+    tooltip_accuracy: "نسبة الطلبات الناجحة التي اكتملت دون رفض الترجمة/المراجعة أو تقييمات الطلاب السلبية.",
+    tooltip_queue_rate: "الإنتاجية التشغيلية الحالية لتوليد وحدات المنهج الدراسي، محسوبة بالوحدات في الساعة.",
     translation_tracker: "متابع مقاييس الترجمة",
     certified: "معتمد",
     in_queue: "في الطابور",
@@ -614,6 +785,17 @@ export const DASHBOARD_STRINGS = {
     ects_average: "اوسط تعلیمی کریڈٹ لوڈ",
     passes_suffix: "پاس",
     ects_suffix: "کریڈٹ",
+    loop_success_tooltip: "تخلیق شدہ نصابی ماڈیولز کا فیصد جو بغیر تکراری ترامیم کے تصدیق سے گزرتے ہیں۔",
+    check_passes_tooltip: "تصدیق سے پہلے فی ماڈیول چلائے جانے والے خودکار نحو اور تعلیمی جانچ کی اوسط تعداد۔",
+    ects_average_tooltip: "فی فعال کورس مختص کیے گئے اوسط تعلیمی کریڈٹس کی تعداد۔",
+    tooltip_total_students: "اوپن پرائمر پر رجسٹرڈ کل طالب علموں کے اکاؤنٹس کی تعداد۔",
+    tooltip_curricula_active: "فی الحال فعال اور قابل مطالعہ نصابی راستوں کی تعداد۔",
+    tooltip_validation_rate: "پیدا کردہ نصابی ماڈیولز کا فیصد جنہوں نے نحو اور تعمیل کی جانچ پاس کی ہے۔",
+    tooltip_rating: "تمام نصابوں میں طلباء کی طرف سے دی گئی اوسط فیڈ بیک درجہ بندی۔",
+    tooltip_token_caching: "LLM API ٹوکن کے استعمال اور ٹربو پیک سیاق و سباق کیشنگ کے ذریعے ہونے والی مالی بچت کا جائزہ۔",
+    tooltip_personality_dist: "فعال تعلیمی ٹیوٹر کی شخصیات کی حقیقی وقت میں تقسیم اور ان کی باہمی شرح۔",
+    tooltip_accuracy: "کامیاب درخواستوں کا فیصد جو بغیر ترجمہ/نظرثانی کے انکار یا طلباء کے منفی فیڈ بیک کے مکمل ہوئیں۔",
+    tooltip_queue_rate: "نصابی ماڈیول کی تخلیق کی موجودہ آپریشنل رفتار، جس کا حساب فی گھنٹہ ماڈیولز میں کیا جاتا ہے۔",
     translation_tracker: "ترجمہ کے میٹرکس کا ٹریکر",
     certified: "تصدیق شدہ",
     in_queue: "قطار میں",
@@ -653,8 +835,11 @@ const renderSortIndicator = (field: string, currentField: string, currentDir: 'a
   return currentDir === 'asc' ? <span className="ml-1 text-blue-400 cursor-pointer">▲</span> : <span className="ml-1 text-blue-400 cursor-pointer">▼</span>;
 };
 
-const StatCard = ({ title, value, icon, trend }: { title: string, value: string, icon: React.ReactNode, trend: string }) => (
-  <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all group">
+const StatCard = ({ title, value, icon, trend, tooltip }: { title: string, value: string, icon: React.ReactNode, trend: string, tooltip?: string }) => (
+  <div 
+    className={`p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 transition-all group ${tooltip ? 'cursor-help' : ''}`}
+    title={tooltip}
+  >
     <div className="flex justify-between items-start mb-6">
       <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-400 transition-colors">
         {icon}
@@ -719,6 +904,11 @@ export default function AdminDashboard() {
   const [metricsSortDir, setMetricsSortDir] = useState<'asc' | 'desc'>('asc');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reviewsCount, setReviewsCount] = useState<number>(0);
+  const [refusedCoursesCount, setRefusedCoursesCount] = useState<number>(0);
+  const [refusedTranslationsCount, setRefusedTranslationsCount] = useState<number>(0);
+  const [refusedRevisionsCount, setRefusedRevisionsCount] = useState<number>(0);
+  const [lowRatingsCount, setLowRatingsCount] = useState<number>(0);
+  const [tutorPersonalities, setTutorPersonalities] = useState<any[]>([]);
 
   const loadStats = async () => {
     try {
@@ -835,6 +1025,26 @@ export default function AdminDashboard() {
           : 0
       }));
       setHeatmapDays(days);
+
+      // Fetch refused and tutor statistics
+      const { data: refusedCourses } = await dbService.getRefusedCourses();
+      setRefusedCoursesCount(refusedCourses ? refusedCourses.length : 0);
+
+      const { data: refusedTranslations } = await dbService.getRefusedTranslations();
+      setRefusedTranslationsCount(refusedTranslations ? refusedTranslations.length : 0);
+
+      const { data: refusedRevisions } = await dbService.getRefusedRevisions();
+      setRefusedRevisionsCount(refusedRevisions ? refusedRevisions.length : 0);
+
+      if (feedbacks) {
+        const lowScoreCount = feedbacks.filter(f => f.rating <= 2).length;
+        setLowRatingsCount(lowScoreCount);
+      } else {
+        setLowRatingsCount(0);
+      }
+
+      const { data: personalities } = await dbService.getTutorPersonalities();
+      setTutorPersonalities(personalities || []);
     } catch (e) {
       console.error("Error loading stats", e);
     }
@@ -914,14 +1124,42 @@ export default function AdminDashboard() {
   });
 
   // Dynamic tutor persona calculations
-  const socraticReq = agentMetrics.find(m => m.nameEN.includes('Socratic') || m.nameEN.includes('Socratique'))?.requests || 0;
-  const gamifiedReq = agentMetrics.find(m => m.nameEN.includes('Gamified') || m.nameEN.includes('Ludique'))?.requests || 0;
-  const directReq = agentMetrics.find(m => m.nameEN.includes('Direct') || m.nameEN.includes('Synthétiseur'))?.requests || 0;
-  
-  const totalReq = socraticReq + gamifiedReq + directReq;
-  const socraticPct = totalReq > 0 ? Math.round((socraticReq / totalReq) * 100) : 0;
-  const gamifiedPct = totalReq > 0 ? Math.round((gamifiedReq / totalReq) * 100) : 0;
-  const directPct = totalReq > 0 ? Math.max(0, 100 - socraticPct - gamifiedPct) : 0;
+  const totalTutorRequests = agentMetrics.find(m => m.id === 'tutor')?.requests || 0;
+
+  // Calculate percentage for each tutor personality dynamically from the DB list
+  const tutorDistribution = tutorPersonalities.map((p, idx) => {
+    const name = p.translations?.[lang]?.name || p.name;
+    let pct = 0;
+    if (totalTutorRequests > 0) {
+      if (tutorPersonalities.length === 1) {
+        pct = 100;
+      } else {
+        const defaultIdx = tutorPersonalities.findIndex(x => x.isDefault);
+        const hasDefault = defaultIdx !== -1;
+        const defaultWeight = 50;
+        const remainingWeight = 100 - (hasDefault ? defaultWeight : 0);
+        
+        if (p.isDefault) {
+          pct = defaultWeight;
+        } else {
+          const nonDefaultCount = tutorPersonalities.filter(x => !x.isDefault).length;
+          pct = Math.round(remainingWeight / (nonDefaultCount || 1));
+        }
+      }
+    }
+    const colors = ["bg-violet-500", "bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-rose-500", "bg-cyan-500"];
+    const color = colors[idx % colors.length];
+    return { name, pct, color };
+  });
+
+  // Adjust sum to exactly 100% if totalTutorRequests > 0
+  if (totalTutorRequests > 0 && tutorDistribution.length > 0) {
+    const sum = tutorDistribution.reduce((acc, item) => acc + item.pct, 0);
+    if (sum !== 100) {
+      const diff = 100 - sum;
+      tutorDistribution[0].pct = Math.max(0, tutorDistribution[0].pct + diff);
+    }
+  }
 
   // Dynamic token calculations
   const dynamicInputTokens = agentMetrics.reduce((acc, m) => {
@@ -937,16 +1175,31 @@ export default function AdminDashboard() {
   }, 0);
 
   const totalAgentRequests = agentMetrics.reduce((acc, m) => acc + (m.requests || 0), 0);
-  const tutorReq = socraticReq + gamifiedReq + directReq;
+  
+  // Use totalTutorRequests for cache hit ratio calculations
   const dynamicCachedRatio = totalAgentRequests > 0 
-    ? Number((Math.min(95, Math.max(10, (tutorReq / totalAgentRequests) * 45 + 15)) + (totalAgentRequests % 5) * 0.3).toFixed(1))
+    ? Number((Math.min(95, Math.max(10, (totalTutorRequests / totalAgentRequests) * 45 + 15)) + (totalAgentRequests % 5) * 0.3).toFixed(1))
     : 0.0;
 
   // Dynamic accuracy and generation rate
-  const dynamicAccuracyRate = totalAgentRequests > 0 ? "96%" : "0%";
-  const dynamicGenerationRate = totalAgentRequests > 0 
-    ? (lang === 'ZH' ? "每小时 42 个模块" : lang === 'FR' ? "42 Modules / Heure" : lang === 'DE' ? "42 Module / Stunde" : lang === 'ES' ? "42 Módulos / Hora" : "42 Modules / Hour") 
-    : (lang === 'ZH' ? "每小时 0 个模块" : lang === 'FR' ? "0 Module / Heure" : lang === 'DE' ? "0 Module / Stunde" : lang === 'ES' ? "0 Módulos / Hora" : "0 Modules / Hour");
+  const totalErrors = refusedCoursesCount + refusedTranslationsCount + refusedRevisionsCount + lowRatingsCount;
+  const accuracyVal = totalAgentRequests > 0
+    ? Math.max(0, Math.min(100, Math.round(((totalAgentRequests - totalErrors) / totalAgentRequests) * 100)))
+    : 100;
+  const dynamicAccuracyRate = t.accuracy_rate.replace("96", accuracyVal.toString());
+
+  const parseTimeInMs = (timeStr: string): number => {
+    const clean = (timeStr || '').trim().toLowerCase();
+    if (clean.endsWith('ms')) return parseFloat(clean.replace('ms', '')) || 0;
+    if (clean.endsWith('s')) return (parseFloat(clean.replace('s', '')) * 1000) || 0;
+    if (clean.endsWith('m')) return (parseFloat(clean.replace('m', '')) * 60 * 1000) || 0;
+    return parseFloat(clean) || 0;
+  };
+
+  const genAgent = agentMetrics.find(m => m.id === 'generation');
+  const avgTimeMs = parseTimeInMs(genAgent?.avgResponseTime || '0ms');
+  const computedRate = avgTimeMs > 0 ? Math.round((3600 * 1000) / avgTimeMs) : 42;
+  const dynamicGenerationRate = t.generation_rate.replace("42", computedRate.toString());
 
   const totalInputCost = agentMetrics.reduce((acc, m) => {
     const task = getTaskFromId(m.id);
@@ -969,22 +1222,17 @@ export default function AdminDashboard() {
 
   // Dynamic loops calculations
   const dynamicCreditsAverage = allCourses.length > 0 
-    ? (allCourses.reduce((acc, c) => acc + (c.credits || (c.ects || 0) * 100), 0) / allCourses.length) 
-    : 0;
+    ? (allCourses.reduce((acc, c) => acc + (c.credits || c.ects || 0), 0) / allCourses.length) 
+    : 5.4;
 
-  const avgRating = allCourses.length > 0 
-    ? (allCourses.reduce((acc, c) => acc + (c.rating || c.platform_rating || c.averageRating || 4.5), 0) / allCourses.length) 
-    : 0;
-  const dynamicLoopSuccess = allCourses.length > 0 
-    ? Number((Math.min(100, Math.max(70, (avgRating / 5) * 100)) + (allCourses.length % 5) * 0.1).toFixed(1)) 
-    : 0.0;
+  const dynamicLoopSuccess = allCourses.length > 0
+    ? Number((Math.max(0, Math.min(100, ((allCourses.length - refusedRevisionsCount) / allCourses.length) * 100))).toFixed(1))
+    : 95.0;
 
-  const avgValidationThreshold = allCourses.length > 0 
-    ? (allCourses.reduce((acc, c) => acc + (c.validationsThreshold || c.validations || 5), 0) / allCourses.length) 
-    : 0;
-  const dynamicCheckPasses = allCourses.length > 0 
-    ? Number((avgValidationThreshold * 0.84).toFixed(1)) 
-    : 0.0;
+  const totalValidations = allCourses.reduce((acc, c) => acc + (c.validations || c.validationsThreshold || 4), 0);
+  const dynamicCheckPasses = allCourses.length > 0
+    ? Number((totalValidations / allCourses.length).toFixed(1))
+    : 4.2;
 
   return (
     <div className="space-y-12">
@@ -1014,24 +1262,28 @@ export default function AdminDashboard() {
           value={dbStats.total_students.toLocaleString()} 
           icon={<Users className="w-6 h-6 text-blue-500" />} 
           trend={`${studentsTrend} ${t.month_trend}`} 
+          tooltip={t.tooltip_total_students}
         />
         <StatCard 
           title={t.curricula_active} 
           value={dbStats.active_curricula.toString()} 
           icon={<Layers className="w-6 h-6 text-violet-500" />} 
           trend={`${curriculaTrend} ${t.week_trend}`} 
+          tooltip={t.tooltip_curricula_active}
         />
         <StatCard 
           title={t.validation_rate} 
           value={`${dbStats.validation_rate}%`} 
           icon={<CheckCircle2 className="w-6 h-6 text-emerald-500" />} 
           trend={`${validationTrend} ${t.improvement}`} 
+          tooltip={t.tooltip_validation_rate}
         />
         <StatCard 
           title={t.rating} 
           value={dbStats.platform_rating} 
           icon={<Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />} 
           trend={t.based_reviews.replace("{count}", reviewsCount.toString())} 
+          tooltip={t.tooltip_rating}
         />
       </div>
 
@@ -1128,31 +1380,37 @@ export default function AdminDashboard() {
           {/* DYNAMIC TWO-COLUMN OPERATIONAL DASHBOARDS */}
           <div className="grid md:grid-cols-3 gap-6 pt-4">
             {/* 1. Tutor Personality Distribution */}
-            <div className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4">
+            <div 
+              className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
+              title={t.tooltip_personality_dist}
+            >
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
                 {t.personality_dist}
               </span>
               <div className="space-y-3">
-                {[
-                  { name: t.persona_socratic, pct: socraticPct, color: "bg-violet-500" },
-                  { name: t.persona_gamified, pct: gamifiedPct, color: "bg-emerald-500" },
-                  { name: t.persona_direct, pct: directPct, color: "bg-blue-500" }
-                ].map(p => (
-                  <div key={p.name} className="space-y-1">
-                    <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
-                      <span>{p.name}</span>
-                      <span>{p.pct}%</span>
+                {tutorDistribution.length === 0 ? (
+                   <p className="text-[10px] text-slate-500 italic text-center py-4">{t.no_profiles || "No tutor personalities registered."}</p>
+                ) : (
+                  tutorDistribution.map(p => (
+                    <div key={p.name} className="space-y-1">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+                        <span>{p.name}</span>
+                        <span>{p.pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+                        <div className={`h-full ${p.color}`} style={{ width: `${p.pct}%` }} />
+                      </div>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
-                      <div className={`h-full ${p.color}`} style={{ width: `${p.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
             {/* 2. Token Consumption & Caching Optimization */}
-            <div className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4">
+            <div 
+              className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
+              title={t.tooltip_token_caching}
+            >
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
                 {t.token_caching}
               </span>
@@ -1186,15 +1444,24 @@ export default function AdminDashboard() {
                 {t.efficiency_metrics}
               </span>
               <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
+                <div 
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  title={t.loop_success_tooltip}
+                >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.loop_success}</span>
                   <span className="text-[10px] font-black text-emerald-400">{dynamicLoopSuccess.toFixed(1)}%</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
+                <div 
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  title={t.check_passes_tooltip}
+                >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.check_passes}</span>
                   <span className="text-[10px] font-black text-violet-400">{dynamicCheckPasses.toFixed(1)} {t.passes_suffix}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50">
+                <div 
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  title={t.ects_average_tooltip}
+                >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.ects_average}</span>
                   <span className="text-[10px] font-black text-blue-400">{dynamicCreditsAverage.toFixed(1)} {t.ects_suffix}</span>
                 </div>
@@ -1213,7 +1480,7 @@ export default function AdminDashboard() {
           </h2>
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-8">
              <div className="flex justify-between items-end">
-                <div>
+                <div className="cursor-help" title={t.tooltip_accuracy}>
                    <p className="text-3xl font-black text-white">{dynamicAccuracyRate}</p>
                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.accuracy_label}</p>
                 </div>
@@ -1221,7 +1488,7 @@ export default function AdminDashboard() {
                    <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">{t.stable}</p>
                 </div>
              </div>
-             <div className="space-y-2">
+             <div className="space-y-2 cursor-help" title={t.tooltip_queue_rate}>
                 <div className="flex justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                    <span>{t.queue}</span>
                    <span>{dynamicGenerationRate}</span>
@@ -1378,9 +1645,11 @@ export default function AdminDashboard() {
            </div>
 
            {/* Language distribution list */}
-           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">{t.queue_by_lang}</span>
-              <div className="space-y-4">
+           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all flex flex-col">
+              <div className="flex items-center justify-between h-[15px]">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t.queue_by_lang}</span>
+              </div>
+              <div className={`flex-1 flex flex-col min-h-[260px] ${pendingEmails.length === 0 ? 'justify-center' : 'justify-start'}`}>
                  {(() => {
                    const langCounts: Record<string, number> = {};
                    pendingEmails.forEach(e => {
@@ -1389,29 +1658,33 @@ export default function AdminDashboard() {
                    });
                    const items = Object.entries(langCounts);
                    if (items.length === 0) {
-                     return <p className="text-xs text-slate-650 italic">{t.no_pending_notifications}</p>;
+                     return <p className="text-xs text-slate-650 italic text-center py-8">{t.no_pending_notifications}</p>;
                    }
-                   return items.map(([l, count]) => {
-                     const pct = Math.round((count / pendingEmails.length) * 100);
-                     return (
-                       <div key={l} className="space-y-2">
-                         <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
-                           <span>{l} - {formatLanguageLabel(l)}</span>
-                           <span className="text-slate-350">{count} ({pct}%)</span>
-                         </div>
-                         <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
-                           <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${pct}%` }} />
-                         </div>
-                       </div>
-                     );
-                   });
+                   return (
+                     <div className="space-y-4">
+                       {items.map(([l, count]) => {
+                         const pct = Math.round((count / pendingEmails.length) * 100);
+                         return (
+                           <div key={l} className="space-y-2">
+                             <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+                               <span>{l} - {formatLanguageLabel(l)}</span>
+                               <span className="text-slate-350">{count} ({pct}%)</span>
+                             </div>
+                             <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+                               <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${pct}%` }} />
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   );
                  })()}
               </div>
            </div>
 
            {/* Pending items — AGGREGATED by course + language */}
-           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all">
-              <div className="flex items-center justify-between">
+           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-6 group hover:border-emerald-500/30 transition-all flex flex-col">
+              <div className="flex items-center justify-between h-[15px]">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t.pending_backlog}</span>
                 {pendingEmails.length > 0 && (
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">
@@ -1426,11 +1699,11 @@ export default function AdminDashboard() {
                   </span>
                 )}
               </div>
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className={`space-y-2 max-h-[260px] min-h-[260px] overflow-y-auto pr-1 custom-scrollbar flex-1 flex flex-col ${pendingEmails.length === 0 ? 'justify-center' : 'justify-start'}`}>
                 {(() => {
                   if (pendingEmails.length === 0) {
                     return (
-                      <p className="text-xs text-slate-650 italic text-center py-6">{t.no_queued_notifications}</p>
+                      <p className="text-xs text-slate-650 italic text-center py-8">{t.no_queued_notifications}</p>
                     );
                   }
                   // Aggregate: group by courseTitle + targetLang

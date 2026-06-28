@@ -530,8 +530,91 @@ async function fetchSmithsonianImage(query: string): Promise<string | null> {
   }
 }
 
+// ─── Bibliothèque nationale de France (Gallica SRU API) ───────────────────
+// Queries Gallica for public domain manuscripts and old books.
+async function fetchGallicaImage(query: string): Promise<string | null> {
+  try {
+    const cleanQuery = query.trim();
+    // Query Gallica SRU, filtering for public domain
+    const sruUrl = `https://gallica.bnf.fr/SRU?operation=searchRetrieve&version=1.2&query=text%20all%20"${encodeURIComponent(cleanQuery)}"%20and%20(dc.rights%20all%20"domaine%20public"%20or%20dc.rights%20all%20"libre%20de%20droits")&maximumRecords=3`;
+    
+    const res = await fetchWithTimeout(sruUrl, {}, 5000);
+    if (!res.ok) return null;
+    const xmlText = await res.text();
+
+    const identifierMatch = xmlText.match(/<dc:identifier>([^<]+ark:[^<]+)<\/dc:identifier>/i);
+    if (identifierMatch && identifierMatch[1]) {
+      const arkUrl = identifierMatch[1].trim();
+      const arkPathMatch = arkUrl.match(/(ark:\/\d+\/\w+)/);
+      if (arkPathMatch) {
+        const directUrl = `https://gallica.bnf.fr/${arkPathMatch[1]}/f1.highres`;
+        console.log(`[GALLICA] Found public domain document for "${cleanQuery}": ${directUrl}`);
+        return directUrl;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[GALLICA] fetchGallicaImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── Internet Archive (Archive.org API) ───────────────────────────────────
+// Resolves royalty-free media (images, audio, or videos) from Archive.org.
+async function fetchArchiveOrgMedia(
+  query: string,
+  mediaType: 'image' | 'audio' | 'video'
+): Promise<{ url: string; sourceLabel: string } | null> {
+  try {
+    const cleanQuery = query.trim().replace(/"/g, '');
+    const typeFilter = mediaType === 'image' ? 'image' : mediaType === 'audio' ? 'audio' : 'movies';
+    
+    // Construct search query with strict royalty-free license checking
+    const searchUrl = `https://archive.org/advancedsearch.php?q=(${encodeURIComponent(
+      `title:(${cleanQuery}) OR description:(${cleanQuery})`
+    )}) AND mediatype:${typeFilter} AND (licenseurl:*creative* OR licenseurl:*publicdomain* OR usage_terms:*public* OR usage_terms:*domain*) AND -mediatype:collection&fl[]=identifier&fl[]=title&fl[]=licenseurl&rows=3&output=json`;
+
+    const res = await fetchWithTimeout(searchUrl, {}, 5000);
+    if (!res.ok) return null;
+    const searchJson = await safeResponseJson(res, 'Archive.org search');
+    const docs = searchJson?.response?.docs ?? [];
+    if (docs.length === 0) return null;
+
+    const identifier = docs[0].identifier;
+    const itemTitle = docs[0].title || cleanQuery;
+    const license = docs[0].licenseurl || 'Public Domain / CC';
+
+    const metaUrl = `https://archive.org/metadata/${identifier}`;
+    const metaRes = await fetchWithTimeout(metaUrl, {}, 4000);
+    if (!metaRes.ok) return null;
+    const metaJson = await safeResponseJson(metaRes, 'Archive.org metadata');
+    const files: any[] = metaJson?.files ?? [];
+
+    let targetFile = null;
+    if (mediaType === 'image') {
+      targetFile = files.find(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && !f.name.includes('_thumb'));
+    } else if (mediaType === 'audio') {
+      targetFile = files.find(f => f.name.match(/\.(mp3|wav|ogg|oga)$/i));
+    } else if (mediaType === 'video') {
+      targetFile = files.find(f => f.name.match(/\.(mp4|webm|ogv)$/i));
+    }
+
+    if (targetFile?.name) {
+      const directUrl = `https://archive.org/download/${identifier}/${encodeURIComponent(targetFile.name)}`;
+      const sourceLabel = `Internet Archive: "${itemTitle}" (${license.includes('creativecommons.org') ? 'CC License' : 'Public Domain'})`;
+      console.log(`[ARCHIVE.ORG] Resolved ${mediaType} for "${cleanQuery}": ${directUrl}`);
+      return { url: directUrl, sourceLabel };
+    }
+
+    return null;
+  } catch (err) {
+    console.warn(`[ARCHIVE.ORG] fetchArchiveOrgMedia failed for "${query}":`, err);
+    return null;
+  }
+}
+
 // ─── Unified multi-source image resolver ────────────────────────────────────
-// Cascade: Wikidata P18 → Wikipedia/Wikimedia → NASA → Met Museum → Smithsonian → null
+// Cascade: Wikidata P18 → Wikipedia/Wikimedia → Gallica → NASA → Met Museum → Archive.org → Smithsonian → null
 // Returns { url, sourceLabel } so callers can inject proper attribution into captions.
 export async function resolveImageFromSources(
   title: string,
@@ -548,8 +631,15 @@ export async function resolveImageFromSources(
   const wikiImage = await fetchWikipediaImage(query, lang);
   if (wikiImage) return { url: wikiImage, sourceLabel: 'Wikimedia Commons' };
 
-  // 3. NASA — prioritise for science/space disciplines
+  // 3. Gallica BNF — for old books, French manuscripts, historical texts
   const disc = (discipline || '').toLowerCase();
+  const isHistoryOrLit = disc.includes('hist') || disc.includes('liter') || disc.includes('class') || lang === 'fr';
+  if (isHistoryOrLit) {
+    const gallicaImage = await fetchGallicaImage(query);
+    if (gallicaImage) return { url: gallicaImage, sourceLabel: 'Gallica / Bibliothèque nationale de France (Domaine Public)' };
+  }
+
+  // 4. NASA — prioritise for science/space disciplines
   const isScience = disc.includes('astro') || disc.includes('physi') || disc.includes('spac') ||
     disc.includes('cosmo') || disc.includes('bio') || disc.includes('chem') || disc.includes('geo');
   if (isScience) {
@@ -557,25 +647,28 @@ export async function resolveImageFromSources(
     if (nasaImage) return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
   }
 
-  // 4. Met Museum — for art, history, archaeology, classical studies
-  const isArtHistory = disc.includes('art') || disc.includes('hist') || disc.includes('archae') ||
-    disc.includes('class') || disc.includes('liter') || disc.includes('philosoph');
+  // 5. Met Museum — for art, history, archaeology, classical studies
+  const isArtHistory = disc.includes('art') || disc.includes('archae') || disc.includes('philosoph');
   if (isArtHistory) {
     const metImage = await fetchMetMuseumImage(query);
     if (metImage) return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
   }
 
-  // 5. Smithsonian — broad fallback for natural history, science, culture
+  // 6. Archive.org Fallback for Images
+  const archiveImage = await fetchArchiveOrgMedia(query, 'image');
+  if (archiveImage) return archiveImage;
+
+  // 7. Smithsonian — broad fallback for natural history, science, culture
   const smithsonianImage = await fetchSmithsonianImage(query);
   if (smithsonianImage) return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
 
-  // 6. NASA as universal last resort (very broad image library)
+  // 8. NASA as universal last resort (very broad image library)
   if (!isScience) {
     const nasaFallback = await fetchNASAImage(query);
     if (nasaFallback) return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
   }
 
-  // 7. Unsplash fallback
+  // 9. Unsplash fallback
   const unsplashResult = await fetchUnsplashImage(query);
   if (unsplashResult) {
     return unsplashResult;
@@ -1059,6 +1152,26 @@ export async function resolveAndPersistMedia(
           }
         } catch (err) {
           console.warn(`[MEDIA-RESOLVER] Failed to download real audio file from ${resolvedUrl}:`, err);
+        }
+      }
+
+      // Step A2: Search for real audio file on Archive.org
+      if (!audioBuffer) {
+        const archiveAudio = await fetchArchiveOrgMedia(title, 'audio');
+        if (archiveAudio?.url) {
+          resolvedUrl = archiveAudio.url;
+          try {
+            const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
+            if (dlRes.ok) {
+              audioBuffer = Buffer.from(await dlRes.arrayBuffer());
+              const contentType = dlRes.headers.get('content-type') || '';
+              if (contentType.includes('ogg') || resolvedUrl.endsWith('.ogg')) mimeType = 'audio/ogg';
+              else if (contentType.includes('wav') || resolvedUrl.endsWith('.wav')) mimeType = 'audio/wav';
+              else if (contentType.includes('audio/ogg') || resolvedUrl.endsWith('.oga')) mimeType = 'audio/ogg';
+            }
+          } catch (err) {
+            console.warn(`[MEDIA-RESOLVER] Failed to download audio file from archive.org (${resolvedUrl}):`, err);
+          }
         }
       }
 
@@ -1553,6 +1666,16 @@ export async function resolveMediaImage(queryName: string, lang: string): Promis
     }
   }
 
+  const gallicaUrl = await fetchGallicaImage(queryName);
+  if (gallicaUrl) {
+    const isValid = await validateImageWithGemini(gallicaUrl, queryName);
+    if (isValid) {
+      return { url: gallicaUrl, fallbackUrl: wikidataResult.fallbackUrl || null };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Gallica image rejected by Gemini for query "${queryName}". Trying fallback...`);
+    }
+  }
+
   const commonsUrl = await searchWikimediaCommonsImage(queryName);
   if (commonsUrl) {
     const isValid = await validateImageWithGemini(commonsUrl, queryName);
@@ -1560,6 +1683,16 @@ export async function resolveMediaImage(queryName: string, lang: string): Promis
       return { url: commonsUrl, fallbackUrl: wikidataResult.fallbackUrl || null };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikimedia Commons image rejected by Gemini for query "${queryName}".`);
+    }
+  }
+
+  const archiveResult = await fetchArchiveOrgMedia(queryName, 'image');
+  if (archiveResult?.url) {
+    const isValid = await validateImageWithGemini(archiveResult.url, queryName);
+    if (isValid) {
+      return { url: archiveResult.url, fallbackUrl: wikidataResult.fallbackUrl || null };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Archive.org image rejected by Gemini for query "${queryName}".`);
     }
   }
 
@@ -1726,6 +1859,26 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           }
         } catch (err) {
           console.warn(`[RESTITUTION-REPAIR] Failed to download audio from ${resolvedUrl}:`, err);
+        }
+      }
+
+      // Step A2: Search for real audio file on Archive.org
+      if (!audioBuffer) {
+        const archiveAudio = await fetchArchiveOrgMedia(title, 'audio');
+        if (archiveAudio?.url) {
+          resolvedUrl = archiveAudio.url;
+          try {
+            const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
+            if (dlRes.ok) {
+              audioBuffer = Buffer.from(await dlRes.arrayBuffer());
+              const contentType = dlRes.headers.get('content-type') || '';
+              if (contentType.includes('ogg') || resolvedUrl.endsWith('.ogg')) mimeType = 'audio/ogg';
+              else if (contentType.includes('wav') || resolvedUrl.endsWith('.wav')) mimeType = 'audio/wav';
+              else if (contentType.includes('audio/ogg') || resolvedUrl.endsWith('.oga')) mimeType = 'audio/ogg';
+            }
+          } catch (err) {
+            console.warn(`[RESTITUTION-REPAIR] Failed to download audio file from archive.org (${resolvedUrl}):`, err);
+          }
         }
       }
 

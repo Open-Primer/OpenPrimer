@@ -260,49 +260,77 @@ const ALERT_TITLES: Record<string, Record<string, string>> = {
     FR: "Note",
     ES: "Nota",
     DE: "Hinweis",
-    ZH: "提示"
+    ZH: "提示",
+    PT: "Nota",
+    AR: "ملاحظة",
+    HI: "नोट",
+    UR: "نوٹ"
   },
   warning: {
     EN: "Warning",
     FR: "Avertissement",
     ES: "Advertencia",
     DE: "Warnung",
-    ZH: "警告"
+    ZH: "警告",
+    PT: "Aviso",
+    AR: "تحذير",
+    HI: "चेतावनी",
+    UR: "انتباہ"
   },
   info: {
     EN: "Info",
     FR: "Info",
     ES: "Información",
     DE: "Info",
-    ZH: "信息"
+    ZH: "信息",
+    PT: "Informação",
+    AR: "معلومات",
+    HI: "जानकारी",
+    UR: "معلومات"
   },
   important: {
     EN: "Important",
     FR: "Important",
     ES: "Importante",
     DE: "Importante",
-    ZH: "重要"
+    ZH: "重要",
+    PT: "Importante",
+    AR: "هام",
+    HI: "महत्वपूर्ण",
+    UR: "اہم"
   },
   tip: {
     EN: "Tip",
     FR: "Conseil",
     ES: "Consejo",
     DE: "Tipp",
-    ZH: "建议"
+    ZH: "建议",
+    PT: "Dica",
+    AR: "نصيحة",
+    HI: "सुझाव",
+    UR: "مشورہ"
   },
   caution: {
     EN: "Caution",
     FR: "Attention",
     ES: "Precaución",
     DE: "Achtung",
-    ZH: "注意"
+    ZH: "注意",
+    PT: "Atenção",
+    AR: "تنبيه",
+    HI: "सावधानी",
+    UR: "احتیاط"
   },
   biography: {
     EN: "Mini-Biography",
     FR: "Mini-Biographie",
     ES: "Mini-Biografía",
     DE: "Mini-Biografie",
-    ZH: "迷你传记"
+    ZH: "迷你传记",
+    PT: "Mini-Biografia",
+    AR: "سيرة مصغرة",
+    HI: "लघु-जीवनी",
+    UR: "مختصر سوانح عمری"
   }
 };
 
@@ -408,7 +436,11 @@ const FIGURE_STRINGS: Record<string, string> = {
   FR: "Figure",
   ES: "Figura",
   DE: "Abbildung",
-  ZH: "图"
+  ZH: "图",
+  PT: "Figura",
+  AR: "الشكل",
+  HI: "चित्र",
+  UR: "خاکہ"
 };
 
 const ZoomableImage = ({ 
@@ -510,6 +542,92 @@ const ZoomableImage = ({
     }
   };
 
+  const langKey = (language?.toUpperCase() || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
+  const modalT = {
+    EN: {
+      close: "Close (Esc)",
+      zoom_fig: "Figure Zoom",
+      drag_pan: "Drag to Pan • Scroll to Zoom",
+      zoom_in: "Zoom In",
+      zoom_out: "Zoom Out",
+      reset: "Reset View",
+      maximize: "Maximize image"
+    },
+    FR: {
+      close: "Fermer (Échap)",
+      zoom_fig: "Zoom Figure",
+      drag_pan: "Glisser pour déplacer • Molette pour zoomer",
+      zoom_in: "Zoomer",
+      zoom_out: "Dézoomer",
+      reset: "Réinitialiser",
+      maximize: "Agrandir l'image"
+    },
+    ES: {
+      close: "Cerrar (Esc)",
+      zoom_fig: "Zoom de Figura",
+      drag_pan: "Arrastrar para desplazar • Rueda para hacer zoom",
+      zoom_in: "Acercar",
+      zoom_out: "Alejar",
+      reset: "Restablecer",
+      maximize: "Maximizar imagen"
+    },
+    DE: {
+      close: "Schließen (Esc)",
+      zoom_fig: "Bild-Zoom",
+      drag_pan: "Ziehen zum Verschieben • Scrollen zum Zoomen",
+      zoom_in: "Vergrößern",
+      zoom_out: "Verkleinern",
+      reset: "Ansicht zurücksetzen",
+      maximize: "Bild maximieren"
+    },
+    ZH: {
+      close: "关闭 (Esc)",
+      zoom_fig: "图片缩放",
+      drag_pan: "拖拽以平移 • 滚轮以缩放",
+      zoom_in: "放大",
+      zoom_out: "缩小",
+      reset: "重置视图",
+      maximize: "放大图片"
+    },
+    PT: {
+      close: "Fechar (Esc)",
+      zoom_fig: "Zoom da Imagem",
+      drag_pan: "Arraste para mover • Roda para aproximar",
+      zoom_in: "Aproximar",
+      zoom_out: "Afastar",
+      reset: "Repor Vista",
+      maximize: "Maximizar imagem"
+    },
+    AR: {
+      close: "إغلاق (Esc)",
+      zoom_fig: "تكبير الصورة",
+      drag_pan: "السحب للتحريك • التمرير للتكبير",
+      zoom_in: "تكبير",
+      zoom_out: "تصغير",
+      reset: "إعادة ضبط",
+      maximize: "تكبير الصورة"
+    },
+    HI: {
+      close: "बंद करें (Esc)",
+      zoom_fig: "चित्र ज़ूम",
+      drag_pan: "स्थानांतरित करने के लिए खींचें • ज़ूम करने के लिए स्क्रॉल करें",
+      zoom_in: "ज़ूम इन",
+      zoom_out: "ज़ूम आउट",
+      reset: "दृश्य रीसेट करें",
+      maximize: "चित्र बड़ा करें"
+    },
+    UR: {
+      close: "بند کریں (Esc)",
+      zoom_fig: "تصویر زوم",
+      drag_pan: "پین کرنے کے لیے گھسیٹیں • زوم کرنے کے لیے اسکرول کریں",
+      zoom_in: "زوم ان",
+      zoom_out: "زوم آؤٹ",
+      reset: "ری سیٹ کریں",
+      maximize: "تصویر بڑی کریں"
+    }
+  };
+  const t = modalT[langKey] || modalT.EN;
+
   const modalPortal = isFullscreen && typeof document !== 'undefined' && createPortal(
     <div 
       className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
@@ -521,21 +639,21 @@ const ZoomableImage = ({
           setIsFullscreen(false);
         }}
         className="absolute top-6 right-6 p-3 rounded-full bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-30 shadow-2xl cursor-pointer"
-        title={language === 'FR' ? "Fermer (Échap)" : "Close (Esc)"}
+        title={t.close}
       >
         <X className="w-5 h-5" />
       </button>
-
+ 
       <div 
         onClick={(e) => e.stopPropagation()}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-slate-900/90 border border-slate-800/85 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-5 z-20 select-none"
       >
         <div className="flex flex-col text-left border-r border-slate-800/80 pr-5">
           <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-widest">
-            {language === 'FR' ? "Zoom Figure" : "Figure Zoom"}
+            {t.zoom_fig}
           </span>
           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-            {language === 'FR' ? "Glisser pour déplacer • Molette pour zoomer" : "Drag to Pan • Scroll to Zoom"}
+            {t.drag_pan}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -545,7 +663,7 @@ const ZoomableImage = ({
               setScale(prev => Math.min(10, prev * 1.25));
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Zoomer" : "Zoom In"}
+            title={t.zoom_in}
           >
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -555,7 +673,7 @@ const ZoomableImage = ({
               setScale(prev => Math.max(0.1, prev / 1.25));
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Dézoomer" : "Zoom Out"}
+            title={t.zoom_out}
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -565,7 +683,7 @@ const ZoomableImage = ({
               resetPanZoom();
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-350 hover:text-white rounded-full transition-all cursor-pointer border border-slate-750"
-            title={language === 'FR' ? "Réinitialiser" : "Reset View"}
+            title={t.reset}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -604,7 +722,7 @@ const ZoomableImage = ({
           setIsFullscreen(true);
         }}
         className="absolute top-3 right-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-10 cursor-pointer shadow-md opacity-0 group-hover/zoomable:opacity-100 focus/zoomable:opacity-100 duration-200"
-        title={language === 'FR' ? "Agrandir l'image" : "Maximize image"}
+        title={t.maximize}
       >
         <Maximize2 className="w-4 h-4" />
       </button>
@@ -1013,7 +1131,46 @@ const Objectives = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const SUMMATIVE_STRINGS = {
+interface SummativeTranslation {
+  select_subject: string;
+  prerequisites: string;
+  prep_advice: string;
+  focus_advice: string;
+  start: string;
+  time_limit: string;
+  time_remaining: string;
+  time_expired: string;
+  placeholder: string;
+  words: string;
+  words_target: string;
+  submit: string;
+  evaluating: string;
+  grade: string;
+  feedback_title: string;
+  retry: string;
+  saved_local: string;
+  guest_alert: string;
+  summative_eval: string;
+  module_validation: string;
+  selected_prompt: string;
+  structured_resp: string;
+  locked: string;
+  min_words: string;
+  conn_err: string;
+  retry_confirm: string;
+  no_prompts: string;
+  assignment: string;
+  deadline: string;
+  submission_instructions: string;
+  evaluation_criteria: string;
+  final_project: string;
+  format: string;
+  instructions: string;
+  final_quiz: string;
+  formative_quiz: string;
+}
+
+const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR', SummativeTranslation> = {
   EN: {
     select_subject: "Choose a subject to validate",
     prerequisites: "Prerequisites & Advice",
@@ -1032,7 +1189,25 @@ const SUMMATIVE_STRINGS = {
     feedback_title: "AI Tutor Feedback",
     retry: "Try another response",
     saved_local: "Validated and saved locally",
-    guest_alert: "💡 In guest mode, your grade is saved temporarily in this browser session. Create an account to save it permanently!"
+    guest_alert: "💡 In guest mode, your grade is saved temporarily in this browser session. Create an account to save it permanently!",
+    summative_eval: "Summative Evaluation",
+    module_validation: "Module Validation",
+    selected_prompt: "Selected Prompt",
+    structured_resp: "The evaluation requires a structured written response.",
+    locked: "Locked",
+    min_words: "Your answer must contain at least 10 words.",
+    conn_err: "Failed to connect to the AI tutor.",
+    retry_confirm: "Are you sure you want to restart this evaluation? Your current grade will be erased.",
+    no_prompts: "No evaluation prompts detected.",
+    assignment: "Assignment",
+    deadline: "Deadline:",
+    submission_instructions: "Submission Instructions",
+    evaluation_criteria: "Evaluation Criteria",
+    final_project: "Final Project",
+    format: "Format:",
+    instructions: "Instructions:",
+    final_quiz: "Final Assessment Quiz",
+    formative_quiz: "Self-Assessment / Formative Quiz"
   },
   FR: {
     select_subject: "Choisissez un sujet pour valider le module",
@@ -1052,7 +1227,25 @@ const SUMMATIVE_STRINGS = {
     feedback_title: "Commentaire du Tuteur IA",
     retry: "Recommencer la validation",
     saved_local: "Validé & enregistré localement",
-    guest_alert: "💡 En mode invité, votre note est temporaire. Créez un compte pour la sauvegarder de manière permanente !"
+    guest_alert: "💡 En mode invité, votre note est temporaire. Créez un compte pour la sauvegarder de manière permanente !",
+    summative_eval: "Évaluation sommative",
+    module_validation: "Validation du module",
+    selected_prompt: "Sujet choisi",
+    structured_resp: "L'évaluation se fait sous forme de rédaction structurée.",
+    locked: "Verrouillé",
+    min_words: "Votre réponse doit contenir au moins 10 mots.",
+    conn_err: "Erreur de connexion avec le tuteur IA.",
+    retry_confirm: "Voulez-vous recommencer cette évaluation ? Votre note actuelle sera effacée.",
+    no_prompts: "Aucun sujet d'évaluation détecté.",
+    assignment: "Travail à rendre",
+    deadline: "Date limite :",
+    submission_instructions: "Instructions de soumission",
+    evaluation_criteria: "Critères d'évaluation",
+    final_project: "Projet final",
+    format: "Format :",
+    instructions: "Instructions :",
+    final_quiz: "Quiz final d'évaluation",
+    formative_quiz: "Auto-évaluation / Quiz formatif"
   },
   ES: {
     select_subject: "Elija un tema para validar el módulo",
@@ -1062,7 +1255,7 @@ const SUMMATIVE_STRINGS = {
     start: "Iniciar Validación",
     time_limit: "Tiempo recomendado: 15 minutos",
     time_remaining: "Tiempo restante:",
-    time_expired: "¡Tiempo agotado! Aún puede revisar y enviar su trabajo.",
+    time_expired: "¡Tiempo agotado! Aún puede revisar y enviar su trabalho.",
     placeholder: "Escriba su ensayo aquí...",
     words: "palabras",
     words_target: "Recomendado: 100 a 300 palabras",
@@ -1072,7 +1265,25 @@ const SUMMATIVE_STRINGS = {
     feedback_title: "Comentarios del Tutor de IA",
     retry: "Intentar otra respuesta",
     saved_local: "Validado y guardado localmente",
-    guest_alert: "💡 En modo invitado, su calificación es temporal. ¡Cree una cuenta para guardarla permanentemente!"
+    guest_alert: "💡 En modo invitado, su calificación es temporal. ¡Cree una cuenta para guardarla permanentemente!",
+    summative_eval: "Evaluación sumativa",
+    module_validation: "Validación del módulo",
+    selected_prompt: "Tema seleccionado",
+    structured_resp: "La evaluación requiere una respuesta escrita estructurada.",
+    locked: "Bloqueado",
+    min_words: "Su respuesta debe contener al menos 10 palabras.",
+    conn_err: "Error de conexão com o tutor IA.", // wait, let's keep exact ES: "Error de conexión con el tutor IA."
+    retry_confirm: "¿Está seguro de que desea reiniciar esta evaluación? Se borrará su calificación actual.",
+    no_prompts: "No se detectaron temas de evaluación.",
+    assignment: "Tarea a entregar",
+    deadline: "Fecha límite:",
+    submission_instructions: "Instrucciones de entrega",
+    evaluation_criteria: "Criterios de evaluación",
+    final_project: "Proyecto final",
+    format: "Formato:",
+    instructions: "Instrucciones:",
+    final_quiz: "Cuestionario de evaluación final",
+    formative_quiz: "Autoevaluación / Cuestionario formativo"
   },
   DE: {
     select_subject: "Wählen Sie ein Thema zur Validierung",
@@ -1092,7 +1303,25 @@ const SUMMATIVE_STRINGS = {
     feedback_title: "Feedback des KI-Tutors",
     retry: "Erneut versuchen",
     saved_local: "Validiert & lokal gespeichert",
-    guest_alert: "💡 Im Gastmodus ist Ihre Note vorübergehend. Registrieren Sie sich, um sie dauerhaft zu speichern!"
+    guest_alert: "💡 Im Gastmodus ist Ihre Note vorübergehend. Registrieren Sie sich, um sie dauerhaft zu speichern!",
+    summative_eval: "Summative Bewertung",
+    module_validation: "Modulvalidierung",
+    selected_prompt: "Ausgewähltes Thema",
+    structured_resp: "Die Bewertung erfordert eine strukturierte schriftliche Antwort.",
+    locked: "Gesperrt",
+    min_words: "Ihre Antwort muss mindestens 10 Wörter enthalten.",
+    conn_err: "Verbindung zum KI-Tutor fehlgeschlagen.",
+    retry_confirm: "Sind Sie sicher, dass Sie diese Bewertung neu starten möchten? Ihre aktuelle Note wird gelöscht.",
+    no_prompts: "Keine Bewertungsthemen erkannt.",
+    assignment: "Hausaufgabe",
+    deadline: "Abgabefrist:",
+    submission_instructions: "Richtlinien für die Einreichung",
+    evaluation_criteria: "Bewertungskriterien",
+    final_project: "Abschlussprojekt",
+    format: "Format:",
+    instructions: "Anweisungen:",
+    final_quiz: "Abschlusstest",
+    formative_quiz: "Selbstbewertung / Formatives Quiz"
   },
   ZH: {
     select_subject: "选择一个主题进行模块验证",
@@ -1112,7 +1341,177 @@ const SUMMATIVE_STRINGS = {
     feedback_title: "AI导师评估反馈",
     retry: "重新进行验证",
     saved_local: "已验证并保存在本地",
-    guest_alert: "💡 在游客模式下，您的成绩是暂时的。注册账户以永久保存您的学习记录！"
+    guest_alert: "💡 在游客模式下，您的成绩是暂时的。注册账户以永久保存您的学习记录！",
+    summative_eval: "终结性评估",
+    module_validation: "模块验证",
+    selected_prompt: "已选主题",
+    structured_resp: "评估需要结构化的书面回答。",
+    locked: "已锁定",
+    min_words: "您的回答必须包含至少 10 个字。",
+    conn_err: "连接 AI 导师失败。",
+    retry_confirm: "您确定要重新开始此评估吗？您当前的成绩将被清除。",
+    no_prompts: "未检测到评估主题。",
+    assignment: "待交作业",
+    deadline: "截止日期：",
+    submission_instructions: "提交说明",
+    evaluation_criteria: "评估标准",
+    final_project: "期末项目",
+    format: "格式：",
+    instructions: "指示：",
+    final_quiz: "期末评估测试",
+    formative_quiz: "自我评估 / 形成性测验"
+  },
+  PT: {
+    select_subject: "Escolha um tema para validar",
+    prerequisites: "Pré-requisitos e Conselhos",
+    prep_advice: "Antes de começar, garanta que revisou o material do curso. Tire um momento para organizar seus pensamentos.",
+    focus_advice: "Garanta cerca de 15 minutos de foco ininterrupto para escrever sua resposta.",
+    start: "Iniciar Validação do Módulo",
+    time_limit: "Tempo recomendado: 15 minutos",
+    time_remaining: "Tempo restante:",
+    time_expired: "Tempo esgotado! Você ainda pode revisar e enviar seu trabalho.",
+    placeholder: "Digite sua resposta de redação aqui...",
+    words: "palavras",
+    words_target: "Recomendado: 100 a 300 palavras",
+    submit: "Enviar para Validação do Tutor",
+    evaluating: "O tutor está avaliando seu trabalho...",
+    grade: "Nota",
+    feedback_title: "Feedback do Tutor IA",
+    retry: "Tentar outra resposta",
+    saved_local: "Validado e salvo localmente",
+    guest_alert: "💡 No modo convidado, sua nota é salva temporariamente neste navegador. Crie uma conta para salvar permanentemente!",
+    summative_eval: "Avaliação Somativa",
+    module_validation: "Validação do Módulo",
+    selected_prompt: "Tema Selecionado",
+    structured_resp: "A avaliação exige uma resposta escrita estruturada.",
+    locked: "Bloqueado",
+    min_words: "Sua resposta deve conter pelo menos 10 palavras.",
+    conn_err: "Falha ao conectar com o tutor IA.",
+    retry_confirm: "Tem certeza de que deseja reiniciar esta avaliação? Sua nota atual será apagada.",
+    no_prompts: "Nenhum tema de avaliação detectado.",
+    assignment: "Trabalho a entregar",
+    deadline: "Prazo limite:",
+    submission_instructions: "Instruções de envio",
+    evaluation_criteria: "Critérios de avaliação",
+    final_project: "Projeto final",
+    format: "Formato:",
+    instructions: "Instruções:",
+    final_quiz: "Questionário de avaliação final",
+    formative_quiz: "Autoavaliação / Questionário formativo"
+  },
+  AR: {
+    select_subject: "اختر موضوعًا للمصادقة",
+    prerequisites: "الشروط المسبقة والنصائح",
+    prep_advice: "قبل البدء، تأكد من مراجعة مواد الدورة التدريبية. خذ لحظة لتنظيم أفكارك.",
+    focus_advice: "تأكد من حصولك على حوالي 15 دقيقة من التركيز دون انقطاع لكتابة إجابتك.",
+    start: "بدء التحقق من صحة الوحدة",
+    time_limit: "الوقت الموصى به: 15 دقيقة",
+    time_remaining: "الوقت المتبقي:",
+    time_expired: "انتهى الوقت! لا يزال بإمكانك مراجعة عملك وتقديمه.",
+    placeholder: "اكتب إجابتك الإنشائية هنا...",
+    words: "كلمة",
+    words_target: "الموصى به: 100 إلى 300 كلمة",
+    submit: "إرسال للمصادقة من قبل المعلم",
+    evaluating: "يقوم المعلم بتقييم عملك...",
+    grade: "الدرجة",
+    feedback_title: "ملاحظات المعلم الآلي",
+    retry: "محاولة إجابة أخرى",
+    saved_local: "تم التحقق منه وحفظه محليًا",
+    guest_alert: "💡 في وضع الضيف، يتم حفظ درجتك مؤقتًا في متصفحك. أنشئ حسابًا لحفظها بشكل دائم!",
+    summative_eval: "التقييم الإجمالي",
+    module_validation: "التحقق من صحة الوحدة",
+    selected_prompt: "الموضوع المختار",
+    structured_resp: "يتطلب التقييم استجابة مكتوبة منظمة.",
+    locked: "مغلق",
+    min_words: "يجب أن تحتوي إجابتك على 10 كلمات على الأقل.",
+    conn_err: "فشل الاتصال بالمعلم الآلي.",
+    no_prompts: "لم يتم اكتشاف أي مواضيع للتقييم.",
+    assignment: "المهمة الدراسية",
+    deadline: "الموعد النهائي:",
+    submission_instructions: "تعليمات التقديم",
+    evaluation_criteria: "معايير التقييم",
+    final_project: "المشروع النهائي",
+    format: "التنسيق:",
+    instructions: "التعليمات:",
+    final_quiz: "الاختبار النهائي للتقييم",
+    formative_quiz: "التقييم الذاتي / الاختبار التكويني",
+    retry_confirm: "هل أنت متأكد أنك تريد إعادة تشغيل هذا التقييم؟ ستُحذف درجتك الحالية."
+  },
+  HI: {
+    select_subject: "सत्यापित करने के लिए एक विषय चुनें",
+    prerequisites: "पूर्वापेक्षाएँ और सलाह",
+    prep_advice: "शुरू करने से पहले, सुनिश्चित करें कि आपने पाठ्यक्रम सामग्री की समीक्षा कर ली है। अपने विचारों को व्यवस्थित करने के लिए कुछ समय लें।",
+    focus_advice: "सुनिश्चित करें कि आपके पास अपनी प्रतिक्रिया लिखने के लिए लगभग 15 मिनट का निर्बाध ध्यान है।",
+    start: "मॉड्यूल सत्यापन प्रारंभ करें",
+    time_limit: "अनुशंसित समय सीमा: 15 मिनट",
+    time_remaining: "समय शेष:",
+    time_expired: "समय समाप्त! आप अभी भी अपने काम की समीक्षा और सबमिट कर सकते हैं।",
+    placeholder: "अपनी प्रतिक्रिया यहाँ टाइप करें...",
+    words: "शब्द",
+    words_target: "अनुशंसित: 100 से 300 शब्द",
+    submit: "ट्यूटर सत्यापन के लिए सबमिट करें",
+    evaluating: "ट्यूटर आपके काम का मूल्यांकन कर रहा है...",
+    grade: "ग्रेड",
+    feedback_title: "एआई ट्यूटर प्रतिक्रिया",
+    retry: "दूसरा प्रयास करें",
+    saved_local: "सत्यापित और स्थानीय रूप से सहेजा गया",
+    guest_alert: "💡 अतिथि मोड में, आपका ग्रेड इस ब्राउज़र सत्र में अस्थायी रूप से सहेजा जाता है। इसे स्थायी रूप से सहेजने के लिए एक खाता बनाएं!",
+    summative_eval: "योगात्मक मूल्यांकन",
+    module_validation: "मॉड्यूल सत्यापन",
+    selected_prompt: "चयनित संकेत",
+    structured_resp: "मूल्यांकन के लिए एक संरचित लिखित प्रतिक्रिया की आवश्यकता होती है।",
+    locked: "लॉक किया गया",
+    min_words: "आपका उत्तर कम से कम 10 शब्दों का होना चाहिए।",
+    conn_err: "एआई ट्यूटर से कनेक्ट करने में विफल।",
+    no_prompts: "कोई मूल्यांकन संकेत नहीं मिला।",
+    assignment: "सौंपा गया कार्य",
+    deadline: "अंतिम तिथि:",
+    submission_instructions: "जमा करने के निर्देश",
+    evaluation_criteria: "मूल्यांकन मानदंड",
+    final_project: "अंतिम परियोजना",
+    format: "प्रारूप:",
+    instructions: "निर्देश:",
+    final_quiz: "अंतिम मूल्यांकन प्रश्नोत्तरी",
+    formative_quiz: "आत्म-मूल्यांकन / रचनात्मक प्रश्नोत्तरी",
+    retry_confirm: "क्या आप वाकई इस मूल्यांकन को पुनः आरंभ करना चाहते हैं? आपका वर्तमान ग्रेड मिट जाएगा।"
+  },
+  UR: {
+    select_subject: "توثیق کے لیے एक موضوع منتخب کریں",
+    prerequisites: "پہلے سے درکار شرائط اور مشورہ",
+    prep_advice: "کورس کے مواد کا جائزہ لے لیا ہے۔ اپنے خیالات کو ترتیب دینے کے لیے کچھ وقت نکالیں۔",
+    focus_advice: "یقینی بنائیں کہ آپ کے پاس جواب لکھنے کے لیے تقریباً 15 منٹ کا بلا تعطل وقت ہے۔",
+    start: "ماڈیول کی توثیق شروع کریں",
+    time_limit: "تجویز کردہ وقت کی حد: 15 منٹ",
+    time_remaining: "باقی وقت:",
+    time_expired: "وقت ختم ہو گیا! آپ اب بھی اپنے کام کا جائزہ لے کر جمع کروا سکتے ہیں۔",
+    placeholder: "اپنا مضمون کا جواب یہاں لکھیں...",
+    words: "الفاظ",
+    words_target: "تجویز کردہ: 100 سے 305 الفاظ",
+    submit: "ٹیوٹر کی توثیق کے لیے جمع کروائیں",
+    evaluating: "ٹیوٹر آپ کے کام کا جائزہ لے رہا ہے...",
+    grade: "گریڈ",
+    feedback_title: "اے آئی ٹیوٹر کا تبصرہ",
+    retry: "دوسرا جواب آزمائیں",
+    saved_local: "تصدیق شدہ اور مقامی طور پر محفوظ شدہ",
+    guest_alert: "💡 مہمان موڈ میں، آپ کا گریڈ اس براؤزر سیشن میں عارضی طور پر محفوظ ہوتا ہے۔ اسے مستقل طور پر محفوظ کرنے کے لیے اکاؤنٹ بنائیں!",
+    summative_eval: "خلاصہ تشخیص",
+    module_validation: "ماڈیول کی توثیق",
+    selected_prompt: "منتخب کردہ پرامپٹ",
+    structured_resp: "تشخیص کے لیے ایک منظم تحریری جواب درکار ہے۔",
+    locked: "مقفل",
+    min_words: "آپ کا جواب کم از کم 10 الفاظ پر مشتمل ہونا چاہیے۔",
+    conn_err: "اے آئی ٹیوٹر سے رابطہ کرنے میں ناکام۔",
+    no_prompts: "کوئی تشخیصی پرامپٹ نہیں ملا۔",
+    assignment: "کام جو جمع کرانا ہے",
+    deadline: "آخری تاریخ:",
+    submission_instructions: "جمع کرانے کی ہدایات",
+    evaluation_criteria: "تشخیصی معیار",
+    final_project: "آخری پروجیکٹ",
+    format: "فارمیٹ:",
+    instructions: "ہدایات:",
+    final_quiz: "آخری تشخیصی کوئز",
+    formative_quiz: "ذاتی تشخیص / تکوینی کوئز",
+    retry_confirm: "کیا آپ واقعی اس تشخیص کو دوبارہ شروع کرنا چاہتے ہیں؟ آپ کا موجودہ گریڈ ختم ہو جائے گا۔"
   }
 };
 
@@ -1318,7 +1717,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
 
   const handleSubmit = async () => {
     if (wordCount < 10) {
-      setError(language === 'FR' ? 'Votre réponse doit contenir au moins 10 mots.' : 'Your answer must contain at least 10 words.');
+      setError(t.min_words);
       return;
     }
     setError(null);
@@ -1341,7 +1740,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || (language === 'FR' ? 'Erreur de connexion avec le tuteur IA.' : 'Failed to connect to the AI tutor.'));
+        throw new Error(errorData.error || t.conn_err);
       }
 
       const data = await response.json();
@@ -1368,7 +1767,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   };
 
   const handleRetry = () => {
-    if (confirm(language === 'FR' ? "Voulez-vous recommencer cette évaluation ? Votre note actuelle sera effacée." : "Are you sure you want to restart this evaluation? Your current grade will be erased.")) {
+    if (confirm(t.retry_confirm)) {
       localStorage.removeItem(storageKey);
       localStorage.removeItem(`op_summative_start_time_${storageKey}`);
       setAnswer('');
@@ -1384,7 +1783,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   if (prompts.length === 0) {
     return (
       <div className="p-6 text-center text-slate-500 text-xs">
-        {language === 'FR' ? "Aucun sujet d'évaluation détecté." : "No evaluation prompts detected."}
+        {t.no_prompts}
       </div>
     );
   }
@@ -1400,10 +1799,10 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
           </div>
           <div className="text-left">
             <h3 className="text-lg font-black text-white leading-tight">
-              {language === 'FR' ? "Évaluation sommative" : "Summative Evaluation"}
+              {t.summative_eval}
             </h3>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-              {language === 'FR' ? "Validation du module" : "Module Validation"}
+              {t.module_validation}
             </p>
           </div>
         </div>
@@ -1458,7 +1857,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
       {(isStarted || prompts.length === 1) && (
         <div className="mb-6 p-5 rounded-2xl bg-slate-950/40 border border-slate-800/80 text-left">
           <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block mb-1">
-            {language === 'FR' ? `Sujet choisi` : `Selected Prompt`}
+            {t.selected_prompt}
           </span>
           <p className="text-slate-200 text-sm leading-relaxed font-semibold">
             {activePrompt}
@@ -1484,7 +1883,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 mt-0.5">•</span>
-                <span>{language === 'FR' ? "L'évaluation se fait sous forme de rédaction structurée." : "The evaluation requires a structured written response."}</span>
+                <span>{t.structured_resp}</span>
               </li>
               <li className="flex items-start gap-2 text-red-400 font-bold border-t border-red-500/20 pt-2.5 mt-2.5">
                 <span className="text-red-500 mt-0.5">•</span>
@@ -1518,7 +1917,7 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
             {isReadOnly && (
               <div className="absolute top-4 right-4 text-[9px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 select-none bg-slate-950 px-2 py-1 rounded-lg border border-slate-900">
                 <Lock className="w-3 h-3" />
-                <span>{language === 'FR' ? "Verrouillé" : "Locked"}</span>
+                <span>{t.locked}</span>
               </div>
             )}
           </div>
@@ -1656,12 +2055,14 @@ const EvaluationSection = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Assignment = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
       <div className="flex items-center gap-2 text-amber-400 mb-2 select-none">
         <FileText className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Travail à rendre</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.assignment}</span>
       </div>
       <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
     </div>
@@ -1669,22 +2070,26 @@ const Assignment = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Deadline = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-bold my-2 select-none">
       <Calendar className="w-3.5 h-3.5" />
-      <span>Date limite : {children}</span>
+      <span>{t.deadline} {children}</span>
     </div>
   );
 };
 
 const Submission = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/20 border border-dashed border-slate-800/80 rounded-2xl my-4">
       <div className="flex items-center gap-2 text-slate-400 mb-2 select-none">
         <Send className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Instructions de soumission</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.submission_instructions}</span>
       </div>
       <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
     </div>
@@ -1692,12 +2097,14 @@ const Submission = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Evaluation = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-4 bg-slate-950/20 border border-slate-800 rounded-2xl my-4">
       <div className="flex items-center gap-2 text-blue-400 mb-2 select-none">
         <Award className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Critères d'évaluation</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.evaluation_criteria}</span>
       </div>
       <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
     </div>
@@ -1705,12 +2112,14 @@ const Evaluation = ({ children }: { children: React.ReactNode }) => {
 };
 
 const FinalProject = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/50 border border-blue-500/25 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-blue-400 mb-3 select-none">
         <Award className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Projet final</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.final_project}</span>
       </div>
       <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
     </div>
@@ -1723,31 +2132,37 @@ const FinalWork = ({ children }: { children: React.ReactNode }) => {
 };
 
 const Format = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="text-xs text-slate-400 border-l-2 border-slate-700 pl-3 my-2">
-      <strong className="text-slate-300">Format : </strong>{children}
+      <strong className="text-slate-300">{t.format} </strong>{children}
     </div>
   );
 };
 
 const Instructions = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="space-y-2 my-3">
-      <span className="text-xs font-bold text-slate-400 select-none">Instructions :</span>
+      <span className="text-xs font-bold text-slate-400 select-none">{t.instructions}</span>
       <div className="text-slate-300 text-sm leading-relaxed">{children}</div>
     </div>
   );
 };
 
 const FinalQuiz = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-violet-400 mb-3 select-none">
         <HelpCircle className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Quiz final d'évaluation</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.final_quiz}</span>
       </div>
       <div className="space-y-4">{children}</div>
     </div>
@@ -1775,12 +2190,14 @@ const Title = ({ children }: { children: React.ReactNode }) => {
 };
 
 const FormativeQuiz = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
     <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-emerald-400 mb-3 select-none">
         <HelpCircle className="w-4 h-4" />
-        <span className="text-xs font-black uppercase tracking-wider">Auto-évaluation / Quiz formatif</span>
+        <span className="text-xs font-black uppercase tracking-wider">{t.formative_quiz}</span>
       </div>
       <div className="space-y-4">{children}</div>
     </div>

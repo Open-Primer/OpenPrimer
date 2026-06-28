@@ -190,10 +190,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         const layouts = ['clip', 'split'];
         const levels = ["middle_school", "high_school", "university"];
         return {
-          beforeLabel: "State A (Randomized)",
-          afterLabel: "State B (Randomized)",
-          beforeContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-blue-950/40 text-blue-400 p-8 border border-blue-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📊"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, "Spectroscopy Phase A")),
-          afterContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-emerald-950/40 text-emerald-400 p-8 border border-emerald-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📈"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, "Spectroscopy Phase B")),
+          beforeLabel: tr("State A (Randomized)"),
+          afterLabel: tr("State B (Randomized)"),
+          beforeContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-blue-950/40 text-blue-400 p-8 border border-blue-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📊"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, tr("Spectroscopy Phase A"))),
+          afterContent: React.createElement('div', { className: "w-full h-full flex flex-col items-center justify-center bg-emerald-950/40 text-emerald-400 p-8 border border-emerald-900/20 rounded-2xl gap-2 min-h-[200px]" }, React.createElement('span', { className: "text-xl" }, "📈"), React.createElement('span', { className: "font-bold text-xs uppercase tracking-wide" }, tr("Spectroscopy Phase B"))),
           layout: layouts[Math.floor(Math.random() * layouts.length)],
           gradeLevel: levels[Math.floor(Math.random() * levels.length)]
         };
@@ -202,14 +202,14 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         const languages = ['html', 'javascript', 'css'];
         const randLang = languages[Math.floor(Math.random() * languages.length)];
         const templates = {
-          html: `<h1>Randomized Canvas</h1>\n<p style="color: coral;">Generated seed: ${Math.random().toFixed(4)}</p>`,
-          javascript: `console.log("Random parameters initialized!");\nconst seed = ${Math.random().toFixed(4)};\nalert("Randomizer Seed: " + seed);`,
+          html: `<h1>${tr("Randomized Canvas")}</h1>\n<p style="color: coral;">${tr("Generated seed:")} ${Math.random().toFixed(4)}</p>`,
+          javascript: `console.log("${tr("Random parameters initialized!")}");\nconst seed = ${Math.random().toFixed(4)};\nalert("${tr("Randomizer Seed:")} " + seed);`,
           css: `body {\n  background: linear-gradient(135deg, #1e1b4b, #111827);\n  color: #10b981;\n  font-family: system-ui;\n}`
         };
         return {
           language: randLang,
           initialCode: templates[randLang as keyof typeof templates],
-          title: "Randomized Code Experiment"
+          title: tr("Randomized Code Experiment")
         };
       }
       case 'DataChart': {
@@ -219,12 +219,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         const randVal2 = Math.floor(Math.random() * 50) + 10;
         const randVal3 = Math.floor(Math.random() * 50) + 10;
         const randData = [
-          { label: "Alpha", value: randVal1 },
-          { label: "Beta", value: randVal2 },
-          { label: "Gamma", value: randVal3 }
+          { label: tr("Alpha"), value: randVal1 },
+          { label: tr("Beta"), value: randVal2 },
+          { label: tr("Gamma"), value: randVal3 }
         ];
         return {
-          title: "Randomized Metric Series",
+          title: tr("Randomized Metric Series"),
           type: types[Math.floor(Math.random() * types.length)],
           data: randData,
           gradeLevel: levels[Math.floor(Math.random() * levels.length)]

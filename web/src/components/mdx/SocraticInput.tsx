@@ -19,6 +19,7 @@ interface SocraticStrings {
   level2: string;
   level3: string;
   diagnosticScore: string;
+  characters: string;
 }
 
 const UI_STRINGS: Record<string, SocraticStrings> = {
@@ -35,7 +36,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "Initial formulation started! You identified one key biophysical pillar, but a complete explanation requires connecting both the chemical ligand and the post-synaptic voltage conditions.",
     level2: "Superb analytical progress! You successfully linked two critical physiological concepts. To achieve total mastery, make sure to explicitly include how the magnesium ion block is expelled.",
     level3: "Exceptional mastery! Your explanation brilliantly synthesizes the dual gating criteria: both chemical ligand binding (glutamate) and post-synaptic depolarization are required to displace the Mg²⁺ block, establishing the receptor as a physical detector of pre- and post-synaptic coincidence.",
-    diagnosticScore: "Conceptual Sync Score"
+    diagnosticScore: "Conceptual Sync Score",
+    characters: "characters"
   },
   FR: {
     title: "Analyse Socratique",
@@ -50,7 +52,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "Début de formulation ! Vous avez identifié un pilier biophysique clé, mais une explication complète nécessite de lier à la fois le ligand chimique et l'état électrique post-synaptique.",
     level2: "Superbe progression analytique ! Vous avez lié deux concepts physiologiques cruciaux. Pour atteindre une maîtrise totale, veillez à inclure explicitement comment le bouchon de magnésium est expulsé.",
     level3: "Maîtrise exceptionnelle ! Votre explication synthétise brillamment le double filtre de gating : la liaison du ligand chimique (glutamate) et la dépolarisation post-synaptique sont toutes deux requises pour déloger l'ion Mg²⁺, qualifiant ce récepteur de détecteur physique de coïncidence pré- et post-synaptique.",
-    diagnosticScore: "Indice de Synchronisation Conceptuelle"
+    diagnosticScore: "Indice de Synchronisation Conceptuelle",
+    characters: "caractères"
   },
   ES: {
     title: "Reflexión Socrática",
@@ -65,7 +68,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "¡Comienzo de formulación! Identificaste un pilar biofísico clave, pero una explicación completa requiere conectar tanto el ligando químico como las condiciones de voltaje postsinápticas.",
     level2: "¡Excelente progreso analítico! Has vinculado dos conceptos fisiológicos cruciales. Para lograr el dominio total, asegúrate de incluir explícitamente cómo se expulsa el bloqueo de magnesio.",
     level3: "¡Dominio excepcional! Tu explicación sintetiza de manera brillante el doble criterio de apertura: tanto la unión del ligando químico (glutamato) como la despolarización postsináptica son necesarias para desplazar el bloqueo de Mg²⁺, lo que establece al receptor como un detector físico de coincidencia pre y postsináptica.",
-    diagnosticScore: "Índice de Sincronización Conceptual"
+    diagnosticScore: "Índice de Sincronización Conceptual",
+    characters: "caracteres"
   },
   DE: {
     title: "Sokratische Reflexion",
@@ -80,7 +84,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "Erster Erklärungsansatz! Sie haben eine biophysikalische Säule identifiziert. Eine vollständige Erklärung erfordert jedoch die Verknüpfung des chemischen Liganden mit dem postsynaptischen Spannungszustand.",
     level2: "Hervorragender analytischer Fortschritt! Sie haben zwei entscheidende physiologische Konzepte verknüpft. Für die vollständige Beherrschung sollten Sie explizit erwähnen, wie die Magnesiumblockade gelöst wird.",
     level3: "Außergewöhnliche Beherrschung! Ihre Erklärung synthetisiert hervorragend die doppelten Aktivierungskriterien: Sowohl die Bindung des chemischen Liganden (Glutamat) als auch die postsynaptische Depolarisation sind erforderlich, um die Mg²⁺-Blockade zu verdrängen. Dies macht den Rezeptor zu einem physischen Koinzidenzdetektor.",
-    diagnosticScore: "Konzeptueller Synchronisationswert"
+    diagnosticScore: "Konzeptueller Synchronisationswert",
+    characters: "Zeichen"
   },
   ZH: {
     title: "苏格拉底式思辨",
@@ -95,7 +100,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "初步构建！您找到了一个核心物理要素，但完整的解释需要将化学配体与突触后膜电压条件有机结合。",
     level2: "出色的分析进展！您成功联系了两个关键生理概念。若要达到完美掌握，请务必明确阐述镁离子阻断是如何被解除的。",
     level3: "杰出的掌握！您的解释完美合成了双重门控标准：化学配体结合（谷氨酸）和突触后膜去极化共同作用，排除了 Mg²⁺ 的阻挡。这使该受体成为突触前和突触后协同发生的物理“巧合检测器”。",
-    diagnosticScore: "概念同步得分"
+    diagnosticScore: "概念同步得分",
+    characters: "字符"
   },
   AR: {
     title: "التأمل السقراطي",
@@ -110,7 +116,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "بدأت الصياغة! لقد حددت ركيزة بيوفيزيائية رئيسية واحدة، لكن الشرح الكامل يتطلب الربط بين الناقل الكيميائي وحالة الجهد الكهربائي بعد المشبكي.",
     level2: "تقدم تحليلي رائع! لقد ربطت بين مفهومين فسيولوجيين بالغي الأهمية. لتحقيق الإتقان الكامل، تأكد من تضمين كيفية طرد أيونات المغنيسيوم بوضوح.",
     level3: "إتقان استثنائي! يدمج شرحك ببراعة معايير البوابة المزدوجة: يلزم ارتباط الناقل الكيميائي (الغلوتامات) وإزالة الاستقطاب بعد المشبكي معًا لإزاحة سدادة المغنيسيوم Mg²⁺، مما يجعل هذا المستقبل كاشفًا فيزيائيًا للتزامن بين الخلايا قبل وبعد المشبكية.",
-    diagnosticScore: "مؤشر التزامن المفاهيمي"
+    diagnosticScore: "مؤشر التزامن المفاهيمي",
+    characters: "حرفًا"
   },
   HI: {
     title: "सॉक्रेटीस चिंतन",
@@ -125,7 +132,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "प्रारंभिक निर्माण शुरू! आपने एक प्रमुख बायोफिजिकल स्तंभ की पहचान की है, लेकिन पूरी व्याख्या के लिए रासायनिक लिगैंड और पोस्ट-सिनेप्टिक वोल्टेज दोनों को जोड़ना आवश्यक है।",
     level2: "उत्कृष्ट विश्लेषणात्मक प्रगति! आपने दो महत्वपूर्ण शारीरिक अवधारणाओं को सफलतापूर्वक जोड़ा है। पूर्ण महारत हासिल करने के लिए, स्पष्ट रूप से उल्लेख करें कि मैग्नीशियम आयन अवरोध कैसे बाहर निकाला जाता है।",
     level3: "असाधारण महारत! आपका स्पष्टीकरण शानदार ढंग से दोहरे द्वार मापदंडों का संश्लेषण करता है: Mg²⁺ अवरोध को विस्थापित करने के लिए रासायनिक लिगैंड बाइंडिंग (ग्लूटामाइन) और पोस्ट-सिनेप्टिक विध्रुवण (डेपोलराइजेशन) दोनों की आवश्यकता होती है, जो रिसेप्टर को पूर्व और पोस्ट-सिनेप्टिक संयोग के भौतिक डिटेक्टर के रूप में स्थापित करता है।",
-    diagnosticScore: "वैचारिक मिलान स्कोर"
+    diagnosticScore: "वैचारिक मिलान स्कोर",
+    characters: "अक्षर"
   },
   PT: {
     title: "Reflexão Socrática",
@@ -140,7 +148,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "Formulação inicial iniciada! Você identificou um pilar biofísico chave, mas uma explicação completa exige conectar tanto o ligante químico quanto as condições de voltagem pós-sinápticas.",
     level2: "Excelente progresso analítico! Você associou dois conceitos fisiológicos cruciais. Para obter domínio total, certifique-se de incluir explicitamente como o bloqueio de magnésio é expelido.",
     level3: "Domínio excepcional! Sua explicação sintetiza brilhantemente o duplo critério de ativação: a ligação do ligante químico (glutamato) e a despolarização pós-sináptica são necessárias para deslocar o bloqueio de Mg²⁺, estabelecendo o receptor como um detector físico de coincidência pré e pós-sináptica.",
-    diagnosticScore: "Índice de Sincronização Conceitual"
+    diagnosticScore: "Índice de Sincronização Conceitual",
+    characters: "caracteres"
   },
   UR: {
     title: "سقراطی غورو فکر",
@@ -155,7 +164,8 @@ const UI_STRINGS: Record<string, SocraticStrings> = {
     level1: "ابتدائی خاکہ شروع! آپ نے ایک اہم ستون کی نشاندہی کی ہے، لیکن مکمل وضاحت کے لیے کیمیائی مادے اور جھلی کے وولٹیج دونوں کو جوڑنا ضروری ہے۔",
     level2: "بہترین تجزیاتی پیش رفت! آپ نے دو اہم جسمانی تصورات کو کامیابی سے جوڑ دیا ہے۔ مکمل مہارت حاصل کرنے کے لیے، واضح طور پر شامل کریں کہ میگنیشیم بلاک کو کیسے نکالا جاتا ہے۔",
     level3: "غیر معمولی مہارت! آپ کی وضاحت شاندار طریقے سے دوہرے فلٹر کو یکجا کرتی ہے: کیمیائی مادے (گلوٹامیٹ) کا جڑنا اور جھلی کا ڈیپولرائزیشن دونوں میگنیشیم (Mg²⁺) کو ہٹانے کے لیے ضروری ہیں، جس سے یہ ریسیپٹر ایک مادی اتفاقی ڈیٹیکٹر بن جاتا ہے۔",
-    diagnosticScore: "تصوراتی ملاپ کا اسکور"
+    diagnosticScore: "تصوراتی ملاپ کا اسکور",
+    characters: "حروف"
   }
 };
 
@@ -393,7 +403,7 @@ export const SocraticInput: React.FC<SocraticInputProps> = ({ question, idealAns
 
         <div className="flex items-center justify-between flex-wrap gap-4">
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-            {userInput.length} {langKey === 'FR' ? "caractères" : "characters"} (min 20)
+            {userInput.length} {t.characters} (min 20)
           </span>
 
           {!isSubmitted ? (
