@@ -439,7 +439,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </button>
                 <AnimatePresence>
                   {activeDropdown === 'lang' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 rtl:left-0 rtl:right-auto mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
                       {sortedLanguages.map(l => (
                         <button key={l.code} onClick={() => setLang(l.code as any)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang === l.code ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                           <span>{l.flag} {l.label}</span>
@@ -480,7 +480,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </button>
                 <AnimatePresence>
                   {activeDropdown === 'user' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 rtl:left-0 rtl:right-auto mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2">
                       <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_as}</p>
                         <p className="text-xs font-bold text-white truncate">{dynamicEmail}</p>

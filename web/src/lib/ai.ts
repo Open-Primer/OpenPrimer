@@ -516,7 +516,26 @@ export function validateAndFixWidgets(widgets: any, discipline?: string): any {
         if (!comp.props.chart) comp.props.chart = "graph TD\n  A[Début] --> B[Fin]";
       } else if (comp.componentType === "FunctionPlotter") {
         if (!comp.props.fn) comp.props.fn = "x^2";
+      } else if (comp.componentType === "PronunciationSandbox" || comp.componentType === "SandboxPrononciation") {
+        if (!comp.props.word) comp.props.word = "concept";
+        if (!comp.props.ipa) comp.props.ipa = "";
+        if (!comp.props.lang) comp.props.lang = "en";
+      } else if (comp.componentType === "Video") {
+        if (!comp.props.title) comp.props.title = "Vidéo académique";
+        if (!comp.props.url && !comp.props.id) {
+          comp.props.url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+          comp.props.provider = "YouTube";
+        }
+      } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
+        if (!comp.props.title) comp.props.title = "Audio explicatif";
+        if (!comp.props.url) {
+          comp.props.url = "https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg";
+        }
+      } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
+        if (!comp.props.prompt) comp.props.prompt = "Expliquez le concept clé de cette leçon de vive voix.";
+        if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
       }
+
       return comp;
     });
 
@@ -783,26 +802,63 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   widgets.interactiveComponents.forEach((comp: any) => {
     const anchor = `[[WIDGET:${comp.id}]]`;
     let compStr = '';
+    const props = comp.props || {};
 
     if (comp.componentType === "Quiz") {
-      compStr = `<Quiz durationLimit={${comp.props.durationLimit || 300}}${comp.props.limit ? ` limit={${comp.props.limit}}` : ''}>\n  ${comp.props.questions.map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${q.options.map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+      compStr = `<Quiz durationLimit={${props.durationLimit || 300}}${props.limit ? ` limit={${props.limit}}` : ''}>\n  ${(props.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
     } else if (comp.componentType === "FillInBlanks") {
-      compStr = `<FillInBlanks sentence="${comp.props.sentence.replace(/"/g, '&quot;')}" answer="${comp.props.answer.replace(/"/g, '&quot;')}" />`;
+      compStr = `<FillInBlanks sentence="${(props.sentence || '').replace(/"/g, '&quot;')}" answer="${(props.answer || '').replace(/"/g, '&quot;')}" />`;
     } else if (comp.componentType === "SolvedExercise") {
-      compStr = `<SolvedExercise title="${comp.props.title.replace(/"/g, '&quot;')}" solution="${comp.props.solution.replace(/"/g, '&quot;')}">\n  ${comp.props.problem}\n</SolvedExercise>`;
+      compStr = `<SolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" solution="${(props.solution || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</SolvedExercise>`;
     } else if (comp.componentType === "UnsolvedExercise") {
-      compStr = `<UnsolvedExercise title="${comp.props.title.replace(/"/g, '&quot;')}" correctAnswer="${comp.props.correctAnswer.replace(/"/g, '&quot;')}" explanation="${(comp.props.explanation || '').replace(/"/g, '&quot;')}">\n  ${comp.props.problem}\n</UnsolvedExercise>`;
+      compStr = `<UnsolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" correctAnswer="${(props.correctAnswer || '').replace(/"/g, '&quot;')}" explanation="${(props.explanation || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</UnsolvedExercise>`;
     } else if (comp.componentType === "Mermaid") {
-      compStr = `<Mermaid chart={\`${comp.props.chart}\`} />`;
+      compStr = `<Mermaid chart={\`${props.chart || ''}\`} />`;
     } else if (comp.componentType === "FunctionPlotter") {
-      compStr = `<FunctionPlotter fn="${comp.props.fn}" domain={${JSON.stringify(comp.props.domain || [-10, 10])}} />`;
+      compStr = `<FunctionPlotter fn="${props.fn || 'x^2'}" domain={${JSON.stringify(props.domain || [-10, 10])}} />`;
     } else if (comp.componentType === "CodeSandbox") {
-      compStr = `<CodeSandbox initialCode={\`${comp.props.initialCode || ''}\`} language="${comp.props.language || 'javascript'}" />`;
+      compStr = `<CodeSandbox initialCode={\`${props.initialCode || ''}\`} language="${props.language || 'javascript'}" />`;
     } else if (comp.componentType === "DataChart") {
-      compStr = `<DataChart title="${(comp.props.title || '').replace(/"/g, '&quot;')}" data={${JSON.stringify(comp.props.data || [])}} xKey="${comp.props.xKey || 'label'}" yKey="${comp.props.yKey || 'value'}" />`;
+      compStr = `<DataChart title="${(props.title || '').replace(/"/g, '&quot;')}" data={${JSON.stringify(props.data || [])}} xKey="${props.xKey || 'label'}" yKey="${props.yKey || 'value'}" />`;
+    } else if (comp.componentType === "PronunciationSandbox" || comp.componentType === "SandboxPrononciation") {
+      const pWord = (props.word || '').replace(/"/g, '&quot;');
+      const pIpa = props.ipa ? ` ipa="${props.ipa.replace(/"/g, '&quot;')}"` : '';
+      const pLang = props.lang ? ` lang="${props.lang.replace(/"/g, '&quot;')}"` : '';
+      const pDef = props.definition ? ` definition="${props.definition.replace(/"/g, '&quot;')}"` : '';
+      const pExp = props.explanation ? ` explanation="${props.explanation.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<PronunciationSandbox word="${pWord}"${pIpa}${pLang}${pDef}${pExp} />`;
+    } else if (comp.componentType === "Video") {
+      const vTitle = (props.title || '').replace(/"/g, '&quot;');
+      const vIdAttr = props.id ? ` id="${props.id.replace(/"/g, '&quot;')}"` : '';
+      const vProvider = props.provider ? ` provider="${props.provider.replace(/"/g, '&quot;')}"` : '';
+      const vUrl = props.url ? ` url="${props.url.replace(/"/g, '&quot;')}"` : '';
+      const vDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
+      const vUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
+      compStr = `<Video title="${vTitle}"${vIdAttr}${vProvider}${vUrl}${vDur}${vUnres} />`;
+    } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
+      const aTitle = (props.title || '').replace(/"/g, '&quot;');
+      const aUrl = (props.url || '').replace(/"/g, '&quot;');
+      const aDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
+      const aAi = props.aiGenerated !== undefined ? ` aiGenerated={${props.aiGenerated}}` : '';
+      const aUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
+      const aAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
+      const aDesc = props.description ? ` description="${props.description.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<AudioPlayer title="${aTitle}" url="${aUrl}"${aDur}${aAi}${aUnres}${aAlt}${aDesc} />`;
+    } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
+      const oPrompt = (props.prompt || '').replace(/"/g, '&quot;');
+      const oSubject = props.subject ? ` subject="${props.subject.replace(/"/g, '&quot;')}"` : '';
+      const oGrading = props.gradingSystem ? ` gradingSystem="${props.gradingSystem.replace(/"/g, '&quot;')}"` : '';
+      const oDur = props.durationLimit ? ` durationLimit={${props.durationLimit}}` : '';
+      const oFinal = props.isFinal !== undefined ? ` isFinal={${props.isFinal}}` : '';
+      const oCalc = props.calculatorAllowed !== undefined ? ` calculatorAllowed={${props.calculatorAllowed}}` : '';
+      const oDocs = props.externalDocumentsAllowed !== undefined ? ` externalDocumentsAllowed={${props.externalDocumentsAllowed}}` : '';
+      const oWeb = props.webBrowsingAllowed !== undefined ? ` webBrowsingAllowed={${props.webBrowsingAllowed}}` : '';
+      const oAi = props.aiTutorAssistanceAllowed !== undefined ? ` aiTutorAssistanceAllowed={${props.aiTutorAssistanceAllowed}}` : '';
+      compStr = `<OralEvaluation prompt="${oPrompt}"${oSubject}${oGrading}${oDur}${oFinal}${oCalc}${oDocs}${oWeb}${oAi} />`;
     } else {
       compStr = `<${comp.componentType} id="${comp.id}" />`;
     }
+
 
     if (content.includes(anchor)) {
       content = content.replace(anchor, compStr);
@@ -2734,6 +2790,10 @@ Rules:
 MDX CONTENT TO TRANSLATE:
 ${isolatedContent}`;
 
+            if (process.env.DEBUG === 'true') {
+              saveDraftRevision(`prompt_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}.md`, promptTranslate);
+            }
+
             let translatedMdx = '';
             let transSuccess = false;
 
@@ -2785,6 +2845,10 @@ ${isolatedContent}`;
               }
             }
 
+            if (transSuccess && translatedMdx && process.env.DEBUG === 'true') {
+              saveDraftRevision(`draft_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_1.md`, translatedMdx);
+            }
+
             if (!translatedMdx) {
               console.warn(`[AI GENERATOR] Failed to translate lesson "${lesson.title}". Using fallback translator.`);
               translatedMdx = lesson.content.replace('lang: "en"', `lang: "${targetLang}"`);
@@ -2829,6 +2893,10 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
 
               let criticResText = '';
               let criticSuccess = false;
+
+              if (process.env.DEBUG === 'true') {
+                saveDraftRevision(`prompt_translation_critic_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration}.md`, promptCritic);
+              }
 
               if (isVertexConfigured()) {
                 try {
@@ -2875,6 +2943,9 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
               }
 
               if (criticSuccess && criticResText) {
+                if (process.env.DEBUG === 'true') {
+                  saveDraftRevision(`critique_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration}.json`, criticResText);
+                }
                 try {
                   const cleanedCritic = criticResText.replace(/```json/g, '').replace(/```/g, '').trim();
                   const criticObj = safeJsonParse(cleanedCritic, 'reviseCourseContent (Agent 4 Verification)');
@@ -2915,6 +2986,10 @@ Follow all initial translation rules:
 3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
 
+                if (process.env.DEBUG === 'true') {
+                  saveDraftRevision(`prompt_translation_refiner_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration + 1}.md`, promptRefine);
+                }
+
                 let refineSuccess = false;
                 if (isVertexConfigured()) {
                   try {
@@ -2952,6 +3027,10 @@ Follow all initial translation rules:
                   } catch (err) {
                     console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
                   }
+                }
+
+                if (refineSuccess && currentTranslation && process.env.DEBUG === 'true') {
+                  saveDraftRevision(`draft_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration + 1}.md`, currentTranslation);
                 }
 
                 if (!refineSuccess) {
@@ -3054,6 +3133,10 @@ Follow all initial translation rules:
             // Preprocess and heal translated MDX before writing to DB
             const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
             const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
+
+            if (process.env.DEBUG === 'true') {
+              saveDraftRevision(`final_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}.mdx`, resolvedMdx);
+            }
 
             // Save translated lesson to Supabase
             await dbService.saveLesson({

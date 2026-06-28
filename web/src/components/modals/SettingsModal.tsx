@@ -726,6 +726,63 @@ const DANGER_ZONE_TRANSLATIONS = {
   }
 };
 
+const TAB_LABELS = {
+  EN: {
+    profile: "Profile",
+    accessibility: "Accessibility",
+    tutor: "AI Tutor",
+    danger: "Danger Zone"
+  },
+  FR: {
+    profile: "Profil",
+    accessibility: "Accessibilité",
+    tutor: "Tuteur IA",
+    danger: "Zone Danger"
+  },
+  ES: {
+    profile: "Perfil",
+    accessibility: "Accesibilidad",
+    tutor: "Tutor IA",
+    danger: "Zona de Peligro"
+  },
+  DE: {
+    profile: "Profil",
+    accessibility: "Barrierefreiheit",
+    tutor: "KI-Tutor",
+    danger: "Gefahrenzone"
+  },
+  ZH: {
+    profile: "个人资料",
+    accessibility: "无障碍",
+    tutor: "AI 导师",
+    danger: "危险区域"
+  },
+  PT: {
+    profile: "Perfil",
+    accessibility: "Acessibilidade",
+    tutor: "Tutor de IA",
+    danger: "Zona de Perigo"
+  },
+  AR: {
+    profile: "الملف الشخصي",
+    accessibility: "إمكانية الوصول",
+    tutor: "معلم الذكاء الاصطناعي",
+    danger: "منطقة الخطر"
+  },
+  HI: {
+    profile: "प्रोफ़ाइल",
+    accessibility: "सुगमता",
+    tutor: "एआई ट्यूटर",
+    danger: "खतरनाक क्षेत्र"
+  },
+  UR: {
+    profile: "پروفائل",
+    accessibility: "رسائی",
+    tutor: "اے آئی ٹیوٹر",
+    danger: "خطرناک زون"
+  }
+};
+
 const OPTIONAL_LABEL: Record<string, string> = {
   EN: "optional", FR: "optionnel", ES: "opcional", DE: "optional", ZH: "可选",
   PT: "opcional", AR: "اختياري", HI: "वैकल्पिक", UR: "اختیاری"
@@ -1074,11 +1131,13 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     }
   };
 
+  const labels = TAB_LABELS[lang.toUpperCase() as keyof typeof TAB_LABELS] || TAB_LABELS.EN;
+
   const tabs = [
-    { id: 'profile', label: t.personal_info || 'Profil', icon: User },
-    { id: 'accessibility', label: ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.section_title || 'Accessibilité', icon: Eye },
-    { id: 'tutor', label: PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.title || 'Tuteur IA', icon: BrainIcon },
-    { id: 'danger', label: t.danger_zone || 'Zone de Danger', icon: ShieldAlert }
+    { id: 'profile', label: labels.profile, icon: User },
+    { id: 'accessibility', label: labels.accessibility, icon: Eye },
+    { id: 'tutor', label: labels.tutor, icon: BrainIcon },
+    { id: 'danger', label: labels.danger, icon: ShieldAlert }
   ] as const;
 
   return (
@@ -1117,7 +1176,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
 
             {/* Tab selector bar */}
-            <div className="h-[60px] min-h-[60px] flex-shrink-0 px-6 md:px-8 py-3 border-b border-slate-800/60 bg-slate-950/25 flex gap-2 items-center overflow-x-auto overflow-y-hidden scrollbar-none">
+            <div className="min-h-[60px] flex-shrink-0 px-6 md:px-8 py-3 border-b border-slate-800/60 bg-slate-950/25 flex flex-wrap gap-2 items-center">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -1125,7 +1184,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border text-center justify-center ${
                       active
                         ? 'bg-blue-600/10 border-blue-500/30 text-blue-400'
                         : 'bg-transparent border-transparent text-slate-400 hover:text-white hover:bg-slate-800/40'

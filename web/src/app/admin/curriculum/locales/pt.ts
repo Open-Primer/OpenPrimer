@@ -497,6 +497,7 @@ export const locale: Record<string, string> = {
   "Description (French)": "Descrição (Francês)",
   "Description (English)": "Descrição (Inglês)",
   "Target Subject Fields": "Campos de Disciplinas de Destino",
+  "Select subject fields...": "Selecionar campos de disciplinas...",
   "Create Brand New Interactive Widget": "Criar um Novo Widget Interativo",
   "The AI agent will generate, run a static check verify, and deploy a self-contained simulator block.": "O agente de IA gerará, executará uma verificação estática e implantará um bloco de simulador autônomo.",
   "Unique Component ID (PascalCase)": "ID de Componente Único (PascalCase)",

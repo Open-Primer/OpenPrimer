@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, Sliders, Play, Info, Award, CircleDot } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { RotateCw, ZoomIn, ZoomOut, Eye, Sliders, CircleDot } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 
@@ -22,9 +22,23 @@ interface OrbitalPreset {
   lobes: Lobe[];
 }
 
-interface QuantumOrbitalExplorerProps {
-  initialPresetId?: string;
-  gradeLevel?: 'middle_school' | 'high_school' | 'university';
+interface Point3D {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface Face {
+  indices: number[];
+  phase: '+' | '-';
+  avgZ: number;
+  normal: Point3D;
+  color: string;
+}
+
+interface Mesh {
+  vertices: Point3D[];
+  faces: Face[];
 }
 
 const ORBITALS: OrbitalPreset[] = [
@@ -33,100 +47,70 @@ const ORBITALS: OrbitalPreset[] = [
     name: "1s Orbital",
     description: "The lowest energy orbital, showing perfect spherical symmetry. Electron probability density peaks at the nucleus.",
     geometry: "Spherical (l = 0, m = 0)",
-    lobes: [
-      { x: 0, y: 0, z: 0, radius: 26, color: '#3b82f6', phase: '+' }
-    ]
+    lobes: []
   },
   {
     id: "2s",
     name: "2s Orbital",
     description: "Spherical orbital with a radial node (a spherical shell where electron probability drops to zero).",
     geometry: "Spherical with Node (l = 0, m = 0)",
-    lobes: [
-      { x: 0, y: 0, z: 0, radius: 28, color: '#3b82f6', phase: '+' },
-      { x: 0, y: 0, z: 0, radius: 13, color: '#ef4444', phase: '-' } // Inner node lobe
-    ]
-  },
-  {
-    id: "2pz",
-    name: "2p_z Orbital",
-    description: "Features two opposing lobes separated by a nodal plane (the xy-plane). Wave phases of positive (blue) and negative (red) represent wave sign.",
-    geometry: "Dumbbell / Bilobed (l = 1, m = 0)",
-    lobes: [
-      { x: 0, y: 0.7, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
-      { x: 0, y: -0.7, z: 0, radius: 22, color: '#ef4444', phase: '-' }
-    ]
+    lobes: []
   },
   {
     id: "2px",
     name: "2p_x Orbital",
     description: "Bilobed orbital oriented along the x-axis. The yz-plane acts as a nodal plane.",
     geometry: "Dumbbell / Bilobed (l = 1, m = ±1)",
-    lobes: [
-      { x: 0.7, y: 0, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
-      { x: -0.7, y: 0, z: 0, radius: 22, color: '#ef4444', phase: '-' }
-    ]
+    lobes: []
   },
   {
-    id: "3d",
+    id: "2py",
+    name: "2p_y Orbital",
+    description: "Bilobed orbital oriented along the y-axis (depth). The xz-plane acts as a nodal plane.",
+    geometry: "Dumbbell / Bilobed (l = 1, m = ±1)",
+    lobes: []
+  },
+  {
+    id: "2pz",
+    name: "2p_z Orbital",
+    description: "Features two opposing lobes oriented vertically along the z-axis. Wave phases of positive (blue) and negative (red) represent wave sign.",
+    geometry: "Dumbbell / Bilobed (l = 1, m = 0)",
+    lobes: []
+  },
+  {
+    id: "3d", // id kept as "3d" for backward compatibility, renders 3d_xy
     name: "3d_xy Orbital",
-    description: "Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants.",
+    description: "Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants of the screen plane.",
     geometry: "Clover / Quadrupolar (l = 2, m = ±2)",
-    lobes: [
-      { x: 0.55, y: 0.55, z: 0, radius: 17, color: '#3b82f6', phase: '+' },
-      { x: -0.55, y: -0.55, z: 0, radius: 17, color: '#3b82f6', phase: '+' },
-      { x: -0.55, y: 0.55, z: 0, radius: 17, color: '#ef4444', phase: '-' },
-      { x: 0.55, y: -0.55, z: 0, radius: 17, color: '#ef4444', phase: '-' }
-    ]
+    lobes: []
+  },
+  {
+    id: "3d_z2",
+    name: "3d_z² Orbital",
+    description: "Features a prominent dumbbell along the vertical axis with a surrounding donut ring in the horizontal plane.",
+    geometry: "Dumbbell & Torus (l = 2, m = 0)",
+    lobes: []
   },
   {
     id: "sp",
     name: "sp Hybrid",
     description: "Linear combination of one s and one p orbital. Creates two hybrid orbitals pointing at 180° (linear geometry).",
     geometry: "Linear (180° angle)",
-    lobes: [
-      { x: 0.6, y: 0, z: 0, radius: 22, color: '#3b82f6', phase: '+' },
-      { x: -0.2, y: 0, z: 0, radius: 10, color: '#ef4444', phase: '-' },
-      { x: -0.6, y: 0, z: 0, radius: 22, color: '#ef4444', phase: '-' },
-      { x: 0.2, y: 0, z: 0, radius: 10, color: '#3b82f6', phase: '+' }
-    ]
+    lobes: []
   },
   {
     id: "sp2",
     name: "sp² Hybrid",
     description: "Linear combination of one s and two p orbitals. Shapes three hybrid orbitals coplanar at 120°.",
     geometry: "Trigonal Planar (120° angle)",
-    lobes: [
-      // Lobe 1
-      { x: 0.6, y: 0, z: 0, radius: 21, color: '#3b82f6', phase: '+' },
-      { x: -0.2, y: 0, z: 0, radius: 9, color: '#ef4444', phase: '-' },
-      // Lobe 2
-      { x: -0.3, y: 0.52, z: 0, radius: 21, color: '#3b82f6', phase: '+' },
-      { x: 0.1, y: -0.17, z: 0, radius: 9, color: '#ef4444', phase: '-' },
-      // Lobe 3
-      { x: -0.3, y: -0.52, z: 0, radius: 21, color: '#3b82f6', phase: '+' },
-      { x: 0.1, y: 0.17, z: 0, radius: 9, color: '#ef4444', phase: '-' }
-    ]
+    lobes: []
   },
   {
     id: "sp3",
     name: "sp³ Hybrid",
     description: "Combination of one s and three p orbitals. Yields four hybrid orbitals oriented toward the vertices of a regular tetrahedron.",
     geometry: "Tetrahedral (109.5° angle)",
-    lobes: [
-      // Lobe 1 (Top)
-      { x: 0, y: 0.65, z: 0, radius: 19, color: '#3b82f6', phase: '+' },
-      { x: 0, y: -0.2, z: 0, radius: 8, color: '#ef4444', phase: '-' },
-      // Lobe 2
-      { x: 0.61, y: -0.21, z: 0, radius: 19, color: '#3b82f6', phase: '+' },
-      { x: -0.2, y: 0.07, z: 0, radius: 8, color: '#ef4444', phase: '-' },
-      // Lobe 3
-      { x: -0.31, y: -0.21, z: 0.53, radius: 19, color: '#3b82f6', phase: '+' },
-      { x: 0.1, y: 0.07, z: -0.18, radius: 8, color: '#ef4444', phase: '-' },
-      // Lobe 4
-      { x: -0.31, y: -0.21, z: -0.53, radius: 19, color: '#3b82f6', phase: '+' },
-      { x: 0.1, y: 0.07, z: 0.18, radius: 8, color: '#ef4444', phase: '-' }
-    ]
+    lobes: []
   }
 ];
 
@@ -138,14 +122,19 @@ const _dummy_translations = (t: any) => [
   t("Spherical orbital with a radial node (a spherical shell where electron probability drops to zero)."),
   t("Spherical with Node (l = 0, m = 0)"),
   t("2p_z Orbital"),
-  t("Features two opposing lobes separated by a nodal plane (the xy-plane). Wave phases of positive (blue) and negative (red) represent wave sign."),
+  t("Features two opposing lobes oriented vertically along the z-axis. Wave phases of positive (blue) and negative (red) represent wave sign."),
   t("Dumbbell / Bilobed (l = 1, m = 0)"),
   t("2p_x Orbital"),
   t("Bilobed orbital oriented along the x-axis. The yz-plane acts as a nodal plane."),
   t("Dumbbell / Bilobed (l = 1, m = ±1)"),
+  t("2p_y Orbital"),
+  t("Bilobed orbital oriented along the y-axis (depth). The xz-plane acts as a nodal plane."),
   t("3d_xy Orbital"),
-  t("Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants."),
+  t("Four-lobed (quadrupolar) d-orbital. Lobes of alternating wave signs populate the four quadrants of the screen plane."),
   t("Clover / Quadrupolar (l = 2, m = ±2)"),
+  t("3d_z² Orbital"),
+  t("Features a prominent dumbbell along the vertical axis with a surrounding donut ring in the horizontal plane."),
+  t("Dumbbell & Torus (l = 2, m = 0)"),
   t("sp Hybrid"),
   t("Linear combination of one s and one p orbital. Creates two hybrid orbitals pointing at 180° (linear geometry)."),
   t("Linear (180° angle)"),
@@ -171,11 +160,281 @@ const _dummy_translations = (t: any) => [
   t("Toggle Wave Sign Phases (+ / -)")
 ];
 
+// Helper to generate a 3D sphere mesh modulated by spherical harmonics
+const generateOrbitalMesh = (
+  radiusFn: (theta: number, phi: number) => number,
+  signFn: (theta: number, phi: number) => '+' | '-',
+  scale: number,
+  latBands: number,
+  lonBands: number
+): Mesh => {
+  const vertices: Point3D[] = [];
+
+  for (let lat = 0; lat <= latBands; lat++) {
+    const theta = (lat * Math.PI) / latBands;
+    const sinTheta = Math.sin(theta);
+    const cosTheta = Math.cos(theta);
+
+    for (let lon = 0; lon <= lonBands; lon++) {
+      const phi = (lon * 2 * Math.PI) / lonBands;
+      const sinPhi = Math.sin(phi);
+      const cosPhi = Math.cos(phi);
+
+      const r = radiusFn(theta, phi) * scale;
+
+      // Map spherical to Cartesian where:
+      // Y is vertical, X is horizontal, Z is depth.
+      const x = r * sinTheta * cosPhi;
+      const y = r * cosTheta;
+      const z = r * sinTheta * sinPhi;
+
+      vertices.push({ x, y, z });
+    }
+  }
+
+  const faces: Face[] = [];
+  for (let lat = 0; lat < latBands; lat++) {
+    for (let lon = 0; lon < lonBands; lon++) {
+      const i00 = lat * (lonBands + 1) + lon;
+      const i10 = (lat + 1) * (lonBands + 1) + lon;
+      const i11 = (lat + 1) * (lonBands + 1) + (lon + 1);
+      const i01 = lat * (lonBands + 1) + (lon + 1);
+
+      const midTheta = ((lat + 0.5) * Math.PI) / latBands;
+      const midPhi = ((lon + 0.5) * 2 * Math.PI) / lonBands;
+      const phase = signFn(midTheta, midPhi);
+
+      faces.push({
+        indices: [i00, i10, i11, i01],
+        phase,
+        avgZ: 0,
+        normal: { x: 0, y: 0, z: 1 },
+        color: ''
+      });
+    }
+  }
+
+  return { vertices, faces };
+};
+
+// Generates the meshes for standard and hybrid presets
+const generateMeshForPreset = (presetId: string): Mesh[] => {
+  const meshes: Mesh[] = [];
+
+  switch (presetId) {
+    case '1s': {
+      meshes.push(
+        generateOrbitalMesh(
+          () => 1.0,
+          () => '+',
+          55,
+          18,
+          36
+        )
+      );
+      break;
+    }
+
+    case '2s': {
+      // Outer shell (positive phase, will render transparent)
+      meshes.push(
+        generateOrbitalMesh(
+          () => 1.0,
+          () => '+',
+          60,
+          18,
+          36
+        )
+      );
+      // Inner shell (negative phase, will render solid)
+      meshes.push(
+        generateOrbitalMesh(
+          () => 0.45,
+          () => '-',
+          60,
+          18,
+          36
+        )
+      );
+      break;
+    }
+
+    case '2px': {
+      meshes.push(
+        generateOrbitalMesh(
+          (theta, phi) => Math.abs(Math.sin(theta) * Math.cos(phi)),
+          (theta, phi) => Math.sin(theta) * Math.cos(phi) >= 0 ? '+' : '-',
+          75,
+          18,
+          36
+        )
+      );
+      break;
+    }
+
+    case '2py': {
+      meshes.push(
+        generateOrbitalMesh(
+          (theta, phi) => Math.abs(Math.sin(theta) * Math.sin(phi)),
+          (theta, phi) => Math.sin(theta) * Math.sin(phi) >= 0 ? '+' : '-',
+          75,
+          18,
+          36
+        )
+      );
+      break;
+    }
+
+    case '2pz': {
+      meshes.push(
+        generateOrbitalMesh(
+          (theta, phi) => Math.abs(Math.cos(theta)),
+          (theta, phi) => Math.cos(theta) >= 0 ? '+' : '-',
+          75,
+          18,
+          36
+        )
+      );
+      break;
+    }
+
+    case '3d': // maps to 3d_xy clover
+      meshes.push(
+        generateOrbitalMesh(
+          (theta, phi) => Math.abs(Math.sin(2 * theta) * Math.cos(phi)),
+          (theta, phi) => Math.cos(theta) * Math.cos(phi) >= 0 ? '+' : '-',
+          75,
+          18,
+          36
+        )
+      );
+      break;
+
+    case '3d_z2': {
+      meshes.push(
+        generateOrbitalMesh(
+          (theta, phi) => Math.abs(3 * Math.cos(theta) * Math.cos(theta) - 1),
+          (theta, phi) => 3 * Math.cos(theta) * Math.cos(theta) - 1 >= 0 ? '+' : '-',
+          45,
+          20,
+          40
+        )
+      );
+      break;
+    }
+
+    case 'sp': {
+      const directions = [
+        { x: 1, y: 0, z: 0 },
+        { x: -1, y: 0, z: 0 }
+      ];
+      directions.forEach((dir) => {
+        meshes.push(
+          generateOrbitalMesh(
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return Math.abs(0.38 + 0.62 * dot);
+            },
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+            },
+            75,
+            12,
+            24
+          )
+        );
+      });
+      break;
+    }
+
+    case 'sp2': {
+      const directions = [
+        { x: 1, y: 0, z: 0 },
+        { x: -0.5, y: 0.866, z: 0 },
+        { x: -0.5, y: -0.866, z: 0 }
+      ];
+      directions.forEach((dir) => {
+        meshes.push(
+          generateOrbitalMesh(
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return Math.abs(0.38 + 0.62 * dot);
+            },
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+            },
+            75,
+            12,
+            24
+          )
+        );
+      });
+      break;
+    }
+
+    case 'sp3': {
+      const directions = [
+        { x: 0, y: 1, z: 0 },
+        { x: 0.94, y: -0.33, z: 0 },
+        { x: -0.47, y: -0.33, z: 0.82 },
+        { x: -0.47, y: -0.33, z: -0.82 }
+      ];
+      directions.forEach((dir) => {
+        meshes.push(
+          generateOrbitalMesh(
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return Math.abs(0.38 + 0.62 * dot);
+            },
+            (theta, phi) => {
+              const rx = Math.sin(theta) * Math.cos(phi);
+              const ry = Math.cos(theta);
+              const rz = Math.sin(theta) * Math.sin(phi);
+              const dot = dir.x * rx + dir.y * ry + dir.z * rz;
+              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+            },
+            75,
+            12,
+            24
+          )
+        );
+      });
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return meshes;
+};
+
+interface QuantumOrbitalExplorerProps {
+  initialPresetId?: string;
+  gradeLevel?: 'middle_school' | 'high_school' | 'university';
+}
+
 export const QuantumOrbitalExplorer = ({
   initialPresetId = "1s",
   gradeLevel = "high_school"
 }: QuantumOrbitalExplorerProps) => {
-
   const { language } = useLanguage();
   const t = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
 
@@ -207,6 +466,25 @@ export const QuantumOrbitalExplorer = ({
     }
   }, [initialPresetId]);
 
+  // Generate meshes for current active preset
+  const activeMeshes = useMemo(() => {
+    return generateMeshForPreset(activePreset.id);
+  }, [activePreset.id]);
+
+  // Helper to blend base colors with light intensity and alpha opacity
+  const blendAlphaAndLight = (hex: string, intensity: number, opacity: number) => {
+    const num = parseInt(hex.replace("#", ""), 16);
+    let R = (num >> 16) & 0xff;
+    let G = (num >> 8) & 0xff;
+    let B = num & 0xff;
+
+    R = Math.min(255, Math.max(0, Math.round(R * intensity)));
+    G = Math.min(255, Math.max(0, Math.round(G * intensity)));
+    B = Math.min(255, Math.max(0, Math.round(B * intensity)));
+
+    return `rgba(${R}, ${G}, ${B}, ${opacity})`;
+  };
+
   // 3D canvas rendering loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -232,7 +510,7 @@ export const QuantumOrbitalExplorer = ({
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
       // Background grid lines (blueprint scientific grid)
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.08)';
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.06)';
       ctx.lineWidth = 1;
       for (let i = 0; i < canvasWidth; i += 30) {
         ctx.beginPath();
@@ -252,86 +530,145 @@ export const QuantumOrbitalExplorer = ({
       const cosY = Math.cos(angleY);
       const sinY = Math.sin(angleY);
 
-      const project = (lobe: Lobe, idx: number) => {
-        const x1 = lobe.x * cosY - lobe.z * sinY;
-        const z1 = lobe.z * cosY + lobe.x * sinY;
+      // Projects 3D mesh vertices into 2D canvas coordinates
+      const allProjectedMeshes = activeMeshes.map((mesh, meshIdx) => {
+        const projectedVertices = mesh.vertices.map((v) => {
+          // Rotate around Y-axis (horizontal)
+          const x1 = v.x * cosY - v.z * sinY;
+          const z1 = v.z * cosY + v.x * sinY;
 
-        const y2 = lobe.y * cosX - z1 * sinX;
-        const z2 = z1 * cosX + lobe.y * sinX;
+          // Rotate around X-axis (vertical)
+          const y2 = v.y * cosX - z1 * sinX;
+          const z2 = z1 * cosX + v.y * sinX;
 
-        const scaleFactor = zoom / (3.2 + z2 * 0.3);
-        const sx = canvasWidth / 2 + x1 * scaleFactor;
-        const sy = canvasHeight / 2 + y2 * scaleFactor;
+          // Perspective scaling
+          const scaleFactor = (zoom / 100) / (1.2 + (z2 / 250));
+          const sx = canvasWidth / 2 + x1 * scaleFactor;
+          const sy = canvasHeight / 2 + y2 * scaleFactor;
 
-        return { sx, sy, sz: z2, lobe, idx };
-      };
+          return { sx, sy, sz: z2, rx: x1, ry: y2, rz: z2 };
+        });
 
-      const projectedLobes = activePreset.lobes.map(project);
-      
-      // Sort back-to-front (Painters algorithm)
-      projectedLobes.sort((a, b) => b.sz - a.sz);
+        // Map faces and compute normal vectors + depths
+        return mesh.faces.map((face) => {
+          const p0 = projectedVertices[face.indices[0]];
+          const p1 = projectedVertices[face.indices[1]];
+          const p2 = projectedVertices[face.indices[2]];
+          const p3 = projectedVertices[face.indices[3]];
 
-      // Draw electron clouds / probability orbitals
-      projectedLobes.forEach((item) => {
-        const { sx, sy, sz, lobe } = item;
-        const depthMultiplier = 3.2 / (3.2 + sz * 0.3);
-        const drawRadius = Math.max(lobe.radius * (zoom / 100) * depthMultiplier, 3);
+          const avgZ = (p0.sz + p1.sz + p2.sz + p3.sz) / 4;
 
-        const color = showPhases ? (lobe.phase === '+' ? '#3b82f6' : '#ef4444') : '#10b981';
+          // Normal calculation from rotated vertices
+          const ux = p1.rx - p0.rx;
+          const uy = p1.ry - p0.ry;
+          const uz = p1.rz - p0.rz;
 
-        // Draw radial glow for orbital cloud feeling (using overlapping soft circles)
-        const gradient = ctx.createRadialGradient(
-          sx, sy, drawRadius * 0.1,
-          sx, sy, drawRadius
-        );
+          const vx = p3.rx - p0.rx;
+          const vy = p3.ry - p0.ry;
+          const vz = p3.rz - p0.rz;
 
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-        gradient.addColorStop(0.2, blendAlpha(color, 0.35));
-        gradient.addColorStop(0.65, blendAlpha(color, 0.12));
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          let nx = uy * vz - uz * vy;
+          let ny = uz * vx - ux * vz;
+          let nz = ux * vy - uy * vx;
 
-        ctx.beginPath();
-        ctx.fillStyle = gradient;
-        ctx.arc(sx, sy, drawRadius, 0, Math.PI * 2);
-        ctx.fill();
+          const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+          if (len > 0.0001) {
+            nx /= len;
+            ny /= len;
+            nz /= len;
+          }
 
-        // Draw delicate boundary thin line contour
-        ctx.strokeStyle = blendAlpha(color, 0.25);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(sx, sy, drawRadius * 0.85, 0, Math.PI * 2);
-        ctx.stroke();
+          // Shading: light coming from front (dot product with z-axis)
+          const intensity = 0.35 + 0.65 * Math.abs(nz);
 
-        // Overlay tiny positive or negative phase symbols (+ or -)
-        if (showPhases) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-          ctx.font = 'bold 11px font-mono, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(lobe.phase, sx, sy);
-        }
+          let colorBase = '#10b981'; // Phase off color
+          if (showPhases) {
+            colorBase = face.phase === '+' ? '#3b82f6' : '#ef4444';
+          }
+
+          // 2s outer shell is drawn transparent to reveal the inner shell
+          const opacity = (activePreset.id === '2s' && meshIdx === 0) ? 0.32 : 0.82;
+
+          return { p0, p1, p2, p3, avgZ, intensity, colorBase, opacity };
+        });
       });
 
-      // Axis helper lines in bottom-left watermarked
-      const axisLen = 25;
-      const ox = 40, oy = canvasHeight - 40;
-      
+      const allFaces = allProjectedMeshes.flat();
+      if (allFaces.length > 0) {
+        // Painters Algorithm: sort faces back-to-front
+        allFaces.sort((a, b) => b.avgZ - a.avgZ);
+
+        // Draw solid shaded polygons
+        allFaces.forEach((face) => {
+          const { p0, p1, p2, p3, intensity, colorBase, opacity } = face;
+
+          const color = blendAlphaAndLight(colorBase, intensity, opacity);
+          const strokeColor = blendAlphaAndLight(colorBase, intensity * 1.15, opacity * 0.25);
+
+          ctx.fillStyle = color;
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = 0.5;
+
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.lineTo(p2.sx, p2.sy);
+          ctx.lineTo(p3.sx, p3.sy);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+
+      // Draw 3D axis helper in the bottom-left corner
+      const axisLen = 22;
+      const ox = 40;
+      const oy = canvasHeight - 40;
+
+      const rotateVector = (vx: number, vy: number, vz: number) => {
+        const x1 = vx * cosY - vz * sinY;
+        const z1 = vz * cosY + vx * sinY;
+        const y2 = vy * cosX - z1 * sinX;
+        const z2 = z1 * cosX + vy * sinX;
+        return { x: x1, y: y2, z: z2 };
+      };
+
+      const axisX = rotateVector(axisLen, 0, 0);
+      const axisY = rotateVector(0, axisLen, 0);
+      const axisZ = rotateVector(0, 0, axisLen);
+
       // Draw X axis (Red)
-      const rxX = cosY * axisLen, rxY = sinY * sinX * axisLen;
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(ox, oy);
-      ctx.lineTo(ox + rxX, oy - rxY);
+      ctx.lineTo(ox + axisX.x, oy - axisX.y);
       ctx.stroke();
-      
+
       // Draw Y axis (Green)
-      const ryX = 0, ryY = cosX * axisLen;
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
       ctx.beginPath();
       ctx.moveTo(ox, oy);
-      ctx.lineTo(ox + ryX, oy - ryY);
+      ctx.lineTo(ox + axisY.x, oy - axisY.y);
       ctx.stroke();
+
+      // Draw Z axis (Blue)
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.45)';
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + axisZ.x, oy - axisZ.y);
+      ctx.stroke();
+
+      // Draw Axis labels
+      ctx.font = 'bold 8.5px sans-serif';
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+      ctx.fillText('x', ox + axisX.x + 3.5, oy - axisX.y + 3);
+
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+      ctx.fillText('y', ox + axisY.x + 3.5, oy - axisY.y - 3.5);
+
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+      ctx.fillText('z', ox + axisZ.x + 3.5, oy - axisZ.y + 3);
 
       if (autoRotate && !isDragging.current) {
         setAngleY((prev) => (prev + 0.007) % (Math.PI * 2));
@@ -345,16 +682,7 @@ export const QuantumOrbitalExplorer = ({
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [activePreset, zoom, autoRotate, showPhases, angleX, angleY]);
-
-  // Utility to blend hex and opacity for soft glow
-  const blendAlpha = (hex: string, alpha: number) => {
-    const num = parseInt(hex.replace("#",""), 16),
-          R = num >> 16,
-          G = num >> 8 & 0x00FF,
-          B = num & 0x0000FF;
-    return `rgba(${R}, ${G}, ${B}, ${alpha})`;
-  };
+  }, [activeMeshes, zoom, autoRotate, showPhases, angleX, angleY]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
@@ -370,35 +698,25 @@ export const QuantumOrbitalExplorer = ({
     lastMouseX.current = e.clientX;
     lastMouseY.current = e.clientY;
 
-    setAngleY((prev) => prev + deltaX * 0.01);
-    setAngleX((prev) => Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, prev + deltaY * 0.01)));
+    setAngleY((prev) => prev + deltaX * 0.009);
+    setAngleX((prev) => Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, prev + deltaY * 0.009)));
   };
 
-  // Helper to build the electron arrows on energy levels
-  // Aufbau principle configuration constructor
   const renderShellElectrons = (shell: '1s' | '2s' | '2px' | '2py' | '2pz') => {
-    // Determine number of electrons in this specific subshell based on Hund's rule/Aufbau
     let count = 0;
-    
-    // 1s fills first
+
     if (shell === '1s') {
       count = Math.min(2, electronCount);
-    } 
-    // 2s fills second
-    else if (shell === '2s') {
+    } else if (shell === '2s') {
       count = Math.min(2, Math.max(0, electronCount - 2));
-    } 
-    // 2p fills last. Regenerate degenerates (Hund's rule)
-    else {
+    } else {
       const pCount = Math.max(0, electronCount - 4);
       if (pCount > 0) {
         if (pCount <= 3) {
-          // Fill singly first
           if (shell === '2px') count = 1;
           if (shell === '2py' && pCount >= 2) count = 1;
           if (shell === '2pz' && pCount >= 3) count = 1;
         } else {
-          // Double up
           if (shell === '2px') count = 2;
           if (shell === '2py') count = pCount >= 5 ? 2 : 1;
           if (shell === '2pz') count = pCount >= 6 ? 2 : 1;
@@ -434,7 +752,7 @@ export const QuantumOrbitalExplorer = ({
         </div>
 
         {/* Orbitals selector pills */}
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 max-w-full md:max-w-[60%]">
           {ORBITALS.map((o) => (
             <button
               key={o.id}
@@ -452,7 +770,6 @@ export const QuantumOrbitalExplorer = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
         {/* Render Viewport (7 cols) */}
         <div className="lg:col-span-7 relative h-[320px] lg:h-[360px] rounded-2xl border border-slate-850 bg-slate-950 overflow-hidden select-none">
           <canvas
@@ -508,10 +825,10 @@ export const QuantumOrbitalExplorer = ({
               <span className="text-[9px] font-black uppercase text-cyan-400 tracking-widest bg-cyan-500/5 border border-cyan-500/10 px-2.5 py-1 rounded-lg w-max block">
                 {t["Aufbau Shell Filler"]}
               </span>
-              
+
               {/* Interactive electron counter */}
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={() => setElectronCount(e => Math.max(1, e - 1))}
                   className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
                   title={t["Remove Electron"]}
@@ -521,7 +838,7 @@ export const QuantumOrbitalExplorer = ({
                 <span className="text-xs font-mono font-black text-slate-200 w-12 text-center bg-slate-950/50 py-0.5 border border-slate-900 rounded">
                   {electronCount} e⁻
                 </span>
-                <button 
+                <button
                   onClick={() => setElectronCount(e => Math.min(10, e + 1))}
                   className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
                   title={t["Add Electron"]}
@@ -534,8 +851,8 @@ export const QuantumOrbitalExplorer = ({
             {/* Visual Shell levels graph */}
             <div className="relative border-l border-slate-800/80 pl-4 py-1 space-y-3">
               <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-cyan-500/50 via-indigo-500/30 to-slate-900/10" />
-              
-              {/* 2p Subshell (degenerates) */}
+
+              {/* 2p Subshell */}
               <div className="space-y-1">
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2p"]}</span>
                 <div className="flex gap-2">
@@ -583,17 +900,14 @@ export const QuantumOrbitalExplorer = ({
             <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
               {t[activePreset.description] || activePreset.description}
             </p>
-            
+
             <div className="bg-slate-950/40 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
               <span className="text-slate-500 uppercase">{t["Bond Geometry"]}</span>
               <span className="text-cyan-400 font-black">{t[activePreset.geometry] || activePreset.geometry}</span>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );
 };
-

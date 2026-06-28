@@ -321,6 +321,8 @@ select {
 }
 
 .theme-paper input[type="text"],
+.theme-paper input[type="password"],
+.theme-paper input[type="email"],
 .theme-paper input[type="number"],
 .theme-paper input[type="date"],
 .theme-paper select,
@@ -330,7 +332,7 @@ select {
 .theme-paper input[class*="bg-slate-"],
 .theme-paper button[class*="bg-slate-"].w-full.cursor-pointer,
 .theme-paper select[class*="bg-slate-"] {
-  background-color: #faf8f0 !important;
+  background-color: #ffffff !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
 }

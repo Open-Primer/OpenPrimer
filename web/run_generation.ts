@@ -8,7 +8,11 @@ if (fs.existsSync(envPath)) {
   envContent.split('\n').forEach(line => {
     const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
     if (match) {
-      process.env[match[1]] = match[2].trim();
+      const key = match[1];
+      let val = match[2].trim();
+      if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+      if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+      process.env[key] = val;
     }
   });
 }
@@ -16,15 +20,16 @@ if (fs.existsSync(envPath)) {
 // 2. Set necessary environment variables for quick single-lesson generation
 process.env.ONLY_FIRST_LESSON = 'true';
 process.env.CLI_WORKER = 'true';
-
-// 3. Import functions from ai.ts
-import { generateCourseContent, translateCourseContent } from './src/lib/ai';
+process.env.DEBUG = 'true';
 
 async function main() {
-  const courseName = "Introduction to Quantum Computing";
+  const courseName = "Advanced English Phonology and Pronunciation";
   const level = "M1";
   const sourceLang = "en";
   const targetLang = "fr";
+
+  console.log("📥 Dynamically importing ai module...");
+  const { generateCourseContent, translateCourseContent } = await import('./src/lib/ai');
 
   console.log(`🚀 Starting course generation: "${courseName}" (${level}) in [${sourceLang}]...`);
   

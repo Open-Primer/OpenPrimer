@@ -1279,9 +1279,9 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 className="appearance-none bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 text-slate-300 hover:text-white rounded-2xl py-2.5 pl-4 pr-10 text-xs focus:outline-none focus:border-teal-555 transition-colors cursor-pointer"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%252394a3b8'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3e%3c/svg%3e")`, backgroundPosition: 'right 12px center', backgroundSize: '16px', backgroundRepeat: 'no-repeat' }}
               >
-                <option value="alphabetical" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Alphabetical")}</option>
-                <option value="level" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Academic Level")}</option>
-                <option value="discipline" style={{ backgroundColor: '#090d16', color: '#f8fafc' }}>{tr("Sort: Subject Area")}</option>
+                <option value="alphabetical">{tr("Sort: Alphabetical")}</option>
+                <option value="level">{tr("Sort: Academic Level")}</option>
+                <option value="discipline">{tr("Sort: Subject Area")}</option>
               </select>
             </div>
           </div>
@@ -1789,7 +1789,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           type="text"
                           value={editNameFR}
                           onChange={(e) => setEditNameFR(e.target.value)}
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameFR.trim().length < 3 || editNameFR.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
                         />
                         {/* Display Name Tip Warning */}
@@ -1856,7 +1855,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           rows={2}
                           value={editDescFR}
                           onChange={(e) => setEditDescFR(e.target.value)}
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
@@ -1872,7 +1870,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           type="text"
                           value={editNameEN}
                           onChange={(e) => setEditNameEN(e.target.value)}
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameEN.trim().length < 3 || editNameEN.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
                         />
                         {/* Display Name Tip Warning */}
@@ -1939,7 +1936,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           rows={2}
                           value={editDescEN}
                           onChange={(e) => setEditDescEN(e.target.value)}
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
@@ -2070,7 +2066,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetNameFR}
                           onChange={(e) => setNewWidgetNameFR(e.target.value)}
                           placeholder="Ex: Laboratoire Optique Lumineuse"
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
                         />
                         {/* Naming Collision and Length Indicators */}
@@ -2140,7 +2135,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetDescFR}
                           onChange={(e) => setNewWidgetDescFR(e.target.value)}
                           placeholder="Ex: Simulation physique de la réfraction de la lumière à travers des prismes."
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
@@ -2154,7 +2148,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetNameEN}
                           onChange={(e) => setNewWidgetNameEN(e.target.value)}
                           placeholder="Ex: Light Optics Simulator"
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-555' : 'border-slate-850'}`}
                         />
                         {/* Naming Collision and Length Indicators */}
@@ -2224,7 +2217,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetDescEN}
                           onChange={(e) => setNewWidgetDescEN(e.target.value)}
                           placeholder="Ex: Physics simulation of light refraction through interactive glass prisms."
-                          style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                           className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
@@ -2288,7 +2280,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     value={newWidgetPrompt}
                     onChange={(e) => setNewWidgetPrompt(e.target.value)}
                     placeholder="Ex: Crée un simulateur physique interactif de réfraction de la lumière. L'utilisateur peut déplacer un rayon lumineux sur un canevas 2D, ajouter des prismes de verre de différentes formes (triangle, rectangle) et ajuster l'indice de réfraction du verre avec un slider. Calcule les angles réels de réfraction."
-                    style={{ backgroundColor: '#090d16', color: '#f8fafc' }}
                     className="w-full bg-slate-950 border border-slate-850 rounded-xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-650 resize-none scrollbar-thin font-medium leading-relaxed"
                   />
                 </div>

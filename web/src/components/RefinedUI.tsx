@@ -2156,7 +2156,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           </button>
           <AnimatePresence>
             {activeDropdown === 'lang' && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 rtl:left-0 rtl:right-auto mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[110] overflow-hidden p-1">
                  {sortedLanguages.map(l => (
                    <button key={l.code} onClick={() => handleLanguageSelect(l.code)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${lang.toUpperCase() === l.code.toUpperCase() ? 'bg-blue-600/10 text-blue-400' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                      <span>{l.flag} {l.label}</span>
@@ -2211,7 +2211,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
             </button>
             <AnimatePresence>
               {activeDropdown === 'user' && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2 profile-dropdown-menu">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 rtl:left-0 rtl:right-auto mt-2 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-[110] overflow-hidden p-2 profile-dropdown-menu">
                    <div className="px-4 py-4 border-b border-slate-800/50 mb-1">
                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">{t.logged_in_as}</p>
                      <p className="text-xs font-bold text-white truncate">
@@ -2251,7 +2251,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                         setIsSettingsOpen(true);
                         setActiveDropdown(null);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-left ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-start ${
                         userProfile?.role === 'admin'
                           ? 'border-b border-slate-800/50' 
                           : ''
@@ -2555,27 +2555,9 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li><Link href="/terms" className={`text-sm ${textLinkClass} transition-colors`}>{t.terms}</Link></li>
               <li><Link href="/privacy" className={`text-sm ${textLinkClass} transition-colors`}>{t.privacy}</Link></li>
+              <li><Link href="/legal" className={`text-sm ${textLinkClass} transition-colors`}>{t.legal_notice}</Link></li>
             </ul>
           </div>
-        </div>
-
-        <div className={`mb-12 p-6 rounded-2xl border ${isPaper ? 'bg-[#f4f0db]/50 border-[#dfd4bd] text-[#5c4f42]' : isFocus ? 'bg-[#0a0a0a] border-[#111111] text-[#444444]' : 'bg-slate-950/40 border-slate-900/60 text-slate-500'} text-xs leading-relaxed max-w-5xl`}>
-          <p className={`font-extrabold uppercase tracking-widest text-[9px] mb-2 ${isPaper ? 'text-[#8a7664]' : isFocus ? 'text-[#555555]' : 'text-slate-400'}`}>
-            {lang === 'FR' ? "Avis Légal & Limitation de Responsabilité (EU AI Act)" : "Legal Notice & Limitation of Liability (EU AI Act)"}
-          </p>
-          <p className={textDescClass}>
-            {lang === 'FR' ? (
-              "Les cours, explications académiques et réponses de tutorat d'OpenPrimer sont générés de manière autonome par des modèles d'Intelligence Artificielle. Ils sont fournis exclusivement à des fins d'auto-apprentissage et d'accompagnement pédagogique général. Ils ne constituent pas des vérités scientifiques certifiées et ne sauraient en aucun cas remplacer les programmes officiels, enseignants, professeurs ou avis de professionnels agréés. L'éditeur décline toute responsabilité quant aux éventuelles erreurs, omissions ou conséquences découlant de l'utilisation des contenus synthétiques de cette plateforme."
-            ) : lang === 'ES' ? (
-              "Todos los cursos, explicaciones y respuestas de tutoría se generan de forma autónoma mediante modelos de Inteligencia Artificial. Se proporcionan únicamente para el autoestudio y apoyo pedagógico general. No constituyen hechos científicos certificados ni sustituyen a docentes, profesores o asesores profesionales oficiales. El editor declina toda responsabilidad por errores facticós u omisiones que puedan derivarse del uso de materiales sintéticos generados en esta plataforma."
-            ) : lang === 'DE' ? (
-              "Alle Kurse, akademischen Erklärungen und Tutor-Antworten werden autonom von KI-Modellen generiert. Sie dienen ausschließlich dem Selbststudium und der allgemeinen pädagogischen Unterstützung. Sie stellen keine zertifizierten wissenschaftlichen Wahrheiten dar und ersetzen keine offiziellen Lehrpläne, Lehrer, Professoren oder Fachberatungen. Der Herausgeber übernimmt keine Haftung für sachliche Fehler oder Folgen aus der Nutzung dieser synthetischen Inhalte."
-            ) : lang === 'ZH' ? (
-              "本平台的所有课程、学术解释和辅导回答均由人工智能模型自主生成。这些内容仅用于自学和一般性教学辅助，不构成经认证的科学或学术事实，也不能替代官方课程、教师、教授或专业意见。对于因使用本平台生成的合成材料而产生的任何事实错误、遗漏或后果，出版方不承担任何责任。"
-            ) : (
-              "All courses, academic explanations, and tutoring responses are generated autonomously by Artificial Intelligence models. They are provided solely for self-study and general educational assistance. They do not constitute certified scientific or academic facts, nor do they replace official curricula, teachers, professors, or professional advice. The publisher assumes no liability for any factual errors, omissions, or consequences arising from the use of synthetic materials generated on this platform."
-            )}
-          </p>
         </div>
 
         <div className={`pt-12 border-t ${borderBottomClass} flex flex-col md:flex-row justify-between items-center gap-8`}>

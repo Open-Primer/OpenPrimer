@@ -3405,7 +3405,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     reconstructedGlossary += glossaryItems.map(item => item.line).join('\n') + '\n';
     
     if (referencesLines.length > 0) {
-      reconstructedGlossary += '\n' + referencesLines.join('\n') + '\n';
+      postGlossary = '\n' + referencesLines.join('\n') + '\n' + postGlossary;
     }
 
     processed = preGlossary + reconstructedGlossary + postGlossary;

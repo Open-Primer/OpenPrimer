@@ -492,6 +492,7 @@ export const locale: Record<string, string> = {
   "Description (French)": "描述 (法语)",
   "Description (English)": "描述 (英语)",
   "Target Subject Fields": "目标学科领域",
+  "Select subject fields...": "选择学科领域...",
   "Create Brand New Interactive Widget": "创建全新的交互式小部件",
   "The AI agent will generate, run a static check verify, and deploy a self-contained simulator block.": "AI 代理将生成、运行静态检查验证并部署一个独立的模拟器块。",
   "Unique Component ID (PascalCase)": "唯一组件 ID (PascalCase)",

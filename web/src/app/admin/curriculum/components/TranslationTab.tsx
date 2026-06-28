@@ -323,10 +323,10 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
                   {tr("Target Language:")} <span className="text-emerald-400 font-extrabold">{item.targetLang.toUpperCase()}</span>
                 </p>
                 <div className="flex gap-4 mt-2">
-                  <span className="px-2 py-0.5 bg-slate-955 border border-slate-850 rounded-lg text-[9px] text-slate-400 font-semibold">
+                  <span className="px-2 py-0.5 bg-slate-950 border border-slate-850 rounded-lg text-[9px] text-slate-400 font-semibold">
                     {tr("Score:")} <strong className="text-white">{item.count}</strong>
                   </span>
-                  <span className="px-2 py-0.5 bg-emerald-955/40 border border-emerald-900/30 rounded-lg text-[9px] text-emerald-400 font-semibold uppercase">
+                  <span className="px-2 py-0.5 bg-emerald-950/40 border border-emerald-900/30 rounded-lg text-[9px] text-emerald-400 font-semibold uppercase">
                     {tr("Priority:")} {tr(item.priority || "Medium")}
                   </span>
                 </div>
@@ -346,7 +346,7 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
                 </button>
                 <button 
                   onClick={() => handleRefuseTrans(item.courseTitle, item.targetLang)} 
-                  className="p-3 bg-slate-955 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all"
+                  className="p-3 bg-slate-950/75 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 rounded-xl transition-all"
                   title={tr("Refuse / Archive")}
                 >
                   <X className="w-4 h-4" />
@@ -355,7 +355,7 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
             </div>
           ))}
           {filteredTrans.length === 0 && (
-            <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-955/20 border border-slate-900 rounded-3xl">{t.empty_trans}</p>
+            <p className="col-span-2 text-sm text-slate-600 italic py-6 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_trans}</p>
           )}
         </div>
         {totalTransPages > 1 && (
@@ -402,7 +402,7 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
             );
           })}
           {filteredRefusedTranslations.length === 0 && (
-            <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center bg-slate-955/20 border border-slate-900 rounded-3xl">{t.empty_refused_trans}</p>
+            <p className="col-span-3 text-sm text-slate-600 italic py-4 text-center bg-slate-950/20 border border-slate-900 rounded-3xl">{t.empty_refused_trans}</p>
           )}
         </div>
       </div>
@@ -593,7 +593,7 @@ export const TranslationTab: React.FC<TranslationTabProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddLanguage(false)}
-              className="fixed inset-0 bg-slate-955/80 backdrop-blur-md cursor-pointer"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               <div className="p-8 border-b border-slate-850 flex items-center justify-between">

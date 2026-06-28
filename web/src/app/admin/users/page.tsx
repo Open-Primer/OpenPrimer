@@ -869,8 +869,8 @@ export default function AdminUsers() {
                     onChange={(e) => setNewRole(e.target.value as UserRole)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
                   >
-                    <option value="student" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.student_opt}</option>
-                    <option value="admin" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.admin_opt}</option>
+                    <option value="student">{t.student_opt}</option>
+                    <option value="admin">{t.admin_opt}</option>
                   </select>
                 </div>
  
@@ -881,17 +881,17 @@ export default function AdminUsers() {
                       id="student-lang-select"
                       value={newLang}
                       onChange={(e) => setNewLang(e.target.value)}
-                      className="w-full bg-slate-955 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
                     >
-                      <option value="EN" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇺🇸 English (EN)</option>
-                      <option value="FR" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇫🇷 Français (FR)</option>
-                      <option value="ES" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇪🇸 Español (ES)</option>
-                      <option value="DE" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇩🇪 Deutsch (DE)</option>
-                      <option value="ZH" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇨🇳 中文 (ZH)</option>
-                      <option value="PT" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇧🇷 Português (PT)</option>
-                      <option value="AR" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇸🇦 العربية (AR)</option>
-                      <option value="HI" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇮🇳 हिन्दी (HI)</option>
-                      <option value="UR" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>🇵🇰 اردو (UR)</option>
+                      <option value="EN">🇺🇸 English (EN)</option>
+                      <option value="FR">🇫🇷 Français (FR)</option>
+                      <option value="ES">🇪🇸 Español (ES)</option>
+                      <option value="DE">🇩🇪 Deutsch (DE)</option>
+                      <option value="ZH">🇨🇳 中文 (ZH)</option>
+                      <option value="PT">🇧🇷 Português (PT)</option>
+                      <option value="AR">🇸🇦 العربية (AR)</option>
+                      <option value="HI">🇮🇳 हिन्दी (HI)</option>
+                      <option value="UR">🇵🇰 اردو (UR)</option>
                     </select>
                   </div>
  
@@ -901,11 +901,11 @@ export default function AdminUsers() {
                       id="student-theme-select"
                       value={newReadingMode}
                       onChange={(e) => setNewReadingMode(e.target.value)}
-                      className="w-full bg-slate-955 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none focus:border-blue-500/50 transition-all font-bold cursor-pointer"
                     >
-                      <option value="default" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_default}</option>
-                      <option value="paper" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_paper}</option>
-                      <option value="focus" style={{ backgroundColor: '#090d16', color: '#ffffff' }}>{t.theme_focus}</option>
+                      <option value="default">{t.theme_default}</option>
+                      <option value="paper">{t.theme_paper}</option>
+                      <option value="focus">{t.theme_focus}</option>
                     </select>
                   </div>
                 </div>

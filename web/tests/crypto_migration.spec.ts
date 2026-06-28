@@ -16,7 +16,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
 
   // 1. Unit testing of crypto utility directly
   test('crypto utility should encrypt and decrypt values correctly', () => {
-    const rawKey = 'mock-api-key-for-encryption-testing';
+    const rawKey = 'mock-api-key-for-encryption-testing'; // gitleaks:allow
     
     // Encrypting should prefix with "__encrypted__:" and not match the raw key
     const encrypted = encryptApiKey(rawKey);
@@ -33,7 +33,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
   });
 
   test('crypto utility should transparently return legacy plain-text keys on decryption', () => {
-    const legacyKey = 'legacy-plain-text-key-for-testing';
+    const legacyKey = 'legacy-plain-text-key-for-testing'; // gitleaks:allow
     const decrypted = decryptApiKey(legacyKey);
     // Should be returned unmodified
     expect(decrypted).toBe(legacyKey);
@@ -55,7 +55,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
         lastName: 'OpenPrimer',
         tutorType: 'personal', // This displays the custom/personal key configuration inputs
         personalTutorProvider: 'openai',
-        personalTutorApiKey: 'legacy-plain-text-key-example-123', // Legacy PLAIN-TEXT key
+        personalTutorApiKey: 'legacy-plain-text-key-example-123', // Legacy PLAIN-TEXT key // gitleaks:allow
         personalTutorModel: 'gpt-4o-mini'
       }));
     });
@@ -81,7 +81,7 @@ test.describe('Client-Side Key Encryption & Migration Tests', () => {
     expect(inputValue).toBe('legacy-plain-text-key-example-123');
 
     // Enter a new API key to verify that it gets stored as encrypted via the automatic autosave hook
-    await apiKeyInput.fill('newly-entered-key-example-abc');
+    await apiKeyInput.fill('newly-entered-key-example-abc'); // gitleaks:allow
 
     // Give it a moment to let the autosave useEffect run and update localStorage
     await page.waitForTimeout(1500);

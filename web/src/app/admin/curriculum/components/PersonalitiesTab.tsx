@@ -248,7 +248,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddPersonality(false)}
-              className="fixed inset-0 bg-slate-955/80 backdrop-blur-md cursor-pointer"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               <div className="p-8 border-b border-slate-850 flex items-center justify-between">

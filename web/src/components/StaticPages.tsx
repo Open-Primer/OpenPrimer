@@ -1874,6 +1874,72 @@ export const PrivacyPage = () => {
     </div>
   );
 };
+
+export const LegalPage = () => {
+  const { language: lang } = useLanguage();
+  const t = UI_STRINGS[lang.toUpperCase() as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+
+  const LEGAL_STRINGS = {
+    EN: {
+      title: "Legal Notice & Liability Disclaimer",
+      date: "Effective Date: May 11, 2026",
+      compliance_t: "EU AI Act Compliance & Artificial Intelligence Disclosure",
+      compliance_d: "All courses, academic explanations, and tutoring responses are generated autonomously by Artificial Intelligence models. They are provided solely for self-study and general educational assistance. They do not constitute certified scientific or academic facts, nor do they replace official curricula, teachers, professors, or professional advice. The publisher assumes no liability for any factual errors, omissions, or consequences arising from the use of synthetic materials generated on this platform.",
+      sovereignty_t: "Academic & Data Sovereignty",
+      sovereignty_d: "OpenPrimer is built on the principles of open educational access and localized academic control. In alignment with regional regulations including the European Union's General Data Protection Regulation (GDPR) and the EU AI Act, we ensure that students retain full ownership of their learning history and that all AI-generated curriculum is subject to public scrutiny and open attribution."
+    },
+    FR: {
+      title: "Mentions Légales & Clause de Responsabilité",
+      date: "Date d'effet : 11 mai 2026",
+      compliance_t: "Conformité à l'EU AI Act & Divulgation de l'Intelligence Artificielle",
+      compliance_d: "Les cours, explications académiques et réponses de tutorat d'OpenPrimer sont générés de manière autonome par des modèles d'Intelligence Artificielle. Ils sont fournis exclusivement à des fins d'auto-apprentissage et d'accompagnement pédagogique général. Ils ne constituent pas des vérités scientifiques certifiées et ne sauraient en aucun cas remplacer les programmes officiels, enseignants, professeurs ou avis de professionnels agréés. L'éditeur décline toute responsabilité quant aux éventuelles erreurs, omissions ou conséquences découlant de l'utilisation des contenus synthétiques de cette plateforme.",
+      sovereignty_t: "Souveraineté Académique & des Données",
+      sovereignty_d: "OpenPrimer est fondé sur les principes d'accès libre à l'éducation et de contrôle académique localisé. En conformité avec les réglementations régionales, notamment le Règlement Général sur la Protection des Données (RGPD) de l'Union Européenne et l'EU AI Act, nous garantissons que les étudiants conservent la pleine propriété de leur historique d'apprentissage et que tous les programmes générés par IA sont soumis au contrôle public et à une attribution ouverte."
+    },
+    ES: {
+      title: "Aviso Legal y Limitación de Responsabilidad",
+      date: "Fecha de vigencia: 11 de mayo de 2026",
+      compliance_t: "Cumplimiento de la Ley de IA de la UE y Divulgación de IA",
+      compliance_d: "Todos los cursos, explicaciones y respuestas de tutoría se generan de forma autónoma mediante modelos de Inteligencia Artificial. Se proporcionan únicamente para el autoestudio y apoyo pedagógico general. No constituyen hechos científicos certificados ni sustituyen a docentes, profesores o asesores profesionales oficiales. El editor declina toda responsabilidad por errores fácticos u omisiones que puedan derivarse del uso de materiales sintéticos generados en esta plataforma.",
+      sovereignty_t: "Soberanía Académica y de Datos",
+      sovereignty_d: "OpenPrimer se basa en los principios de acceso abierto a la educación y control académico localizado. De acuerdo con las regulaciones regionales, incluido el Reglamento General de Protección de Datos (RGPD) de la Unión Europea y la Ley de IA de la UE, garantizamos que los estudiantes mantengan la propiedad total de su historial de aprendizaje y que todo el plan de estudios generado por IA esté sujeto al escrutinio público y atribución abierta."
+    },
+    DE: {
+      title: "Rechtliche Hinweise & Haftungsausschluss",
+      date: "Inkrafttreten: 11. Mai 2026",
+      compliance_t: "Konformität mit dem EU-KI-Gesetz & KI-Offenlegung",
+      compliance_d: "Alle Kurse, akademischen Erklärungen und Tutor-Antworten werden autonom von KI-Modellen generiert. Sie dienen ausschließlich dem Selbststudium und der allgemeinen pädagogischen Unterstützung. Sie stellen keine zertifizierten wissenschaftlichen Wahrheiten dar und ersetzen keine offiziellen Lehrpläne, Lehrer, Professoren oder Fachberatungen. Der Herausgeber übernimmt keine Haftung für sachliche Fehler oder Folgen aus der Nutzung dieser synthetischen Inhalte.",
+      sovereignty_t: "Akademische & Datensouveränität",
+      sovereignty_d: "OpenPrimer basiert auf den Prinzipien des freien Bildungszugangs und der lokalisierten akademischen Kontrolle. In Übereinstimmung mit regionalen Vorschriften, einschließlich der Datenschutz-Grundverordnung (DSGVO) der Europäischen Union und des EU-KI-Gesetzes, stellen wir sicher, dass Studierende das volle Eigentum an ihrem Lernverlauf behalten und alle KI-generierten Lehrpläne der öffentlichen Kontrolle und offenen Namensnennung unterliegen."
+    },
+    ZH: {
+      title: "法律声明与免责声明",
+      date: "生效日期：2026年5月11日",
+      compliance_t: "符合欧盟人工智能法案（EU AI Act）与人工智能披露声明",
+      compliance_d: "本平台的所有课程、学术解释和辅导回答均由人工智能模型自主生成。这些内容仅用于自学和一般性教学辅助，不构成经认证的科学或学术事实，也不能替代官方课程、教师、教授或专业意见。对于因使用本平台生成的合成材料而产生的任何事实错误、遗漏或后果，出版方不承担任何责任。",
+      sovereignty_t: "学术与数据自主权",
+      sovereignty_d: "OpenPrimer 建立在开放教育资源获取和本地化学术控制的原则之上。符合包括欧盟《通用数据保护条例》（GDPR）和《欧盟人工智能法案》在内的地区法规，我们确保学生保留其学习历史的完整所有权，并且所有人工智能生成的课程都接受公众监督和开放署名。"
+    }
+  };
+
+  const c = LEGAL_STRINGS[lang.toUpperCase() as keyof typeof LEGAL_STRINGS] || LEGAL_STRINGS.EN;
+
+  return (
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans">
+      <TopNav />
+      <div className="max-w-3xl mx-auto px-8 pt-32 pb-24 prose prose-invert prose-slate">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">{c.title}</h1>
+        <p className="text-slate-400">{c.date}</p>
+        <h2>{c.compliance_t}</h2>
+        <p>{c.compliance_d}</p>
+        <h2>{c.sovereignty_t}</h2>
+        <p>{c.sovereignty_d}</p>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
 export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
   const { language: lang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;

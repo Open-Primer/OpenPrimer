@@ -1389,7 +1389,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setPurgeTarget(null)}
-              className="fixed inset-0 bg-slate-955/90 backdrop-blur-md cursor-pointer"
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
               <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">

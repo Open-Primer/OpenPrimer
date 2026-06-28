@@ -41,10 +41,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  output: "standalone",
-  outputFileTracingIncludes: {
-    '/**': ['content/**/*']
-  },
+  // output: "standalone",
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const headersList = [

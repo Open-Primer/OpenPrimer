@@ -54,6 +54,7 @@ export const RAW_STATIC_UI_STRINGS = {
   "popular_curricula": "Popular Curricula",
   "terms": "Terms of Service",
   "privacy": "Privacy Sovereignty",
+  "legal_notice": "Legal Notice",
   "copyright": "© 2026 OpenPrimer Project • Online University",
   "all": "All",
   "saved": "Saved",
@@ -415,6 +416,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   FR: {
     "change_tutor": "Changer de tuteur",
+    "legal_notice": "Mentions Légales",
     "tutor_tab": "Tuteur",
     "flashcards_tab": "Flashcards",
     "spaced_repetition": "Répétition Espacée",
@@ -467,6 +469,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   HI: {
     "change_tutor": "ट्यूटर बदलें",
+    "legal_notice": "कानूनी नोटिस",
     "tutor_tab": "ट्यूटर",
     "flashcards_tab": "फ्लैशकार्ड",
     "spaced_repetition": "अंतरालीय दोहराव",
@@ -487,6 +490,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   ES: {
     "change_tutor": "Cambiar tutor",
+    "legal_notice": "Aviso Legal",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Tarjetas",
     "spaced_repetition": "Repetición Espaciada",
@@ -507,6 +511,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   DE: {
     "change_tutor": "Tutor wechseln",
+    "legal_notice": "Rechtliche Hinweise",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Karteikarten",
     "spaced_repetition": "Spaced Repetition",
@@ -527,6 +532,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   ZH: {
     "change_tutor": "更换导师",
+    "legal_notice": "法律声明",
     "tutor_tab": "AI导师",
     "flashcards_tab": "记忆卡片",
     "spaced_repetition": "间隔重复",
@@ -547,6 +553,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   PT: {
     "change_tutor": "Alterar tutor",
+    "legal_notice": "Aviso Legal",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Flashcards",
     "spaced_repetition": "Repetição Espaçada",
@@ -567,6 +574,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   AR: {
     "change_tutor": "تغيير المعلم",
+    "legal_notice": "إشعار قانوني",
     "tutor_tab": "المعلم الآلي",
     "flashcards_tab": "البطاقات التعليمية",
     "spaced_repetition": "التكرار المتباعد",
@@ -587,6 +595,7 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   UR: {
     "change_tutor": "ٹیوٹر تبدیل کریں",
+    "legal_notice": "قانونی نوٹس",
     "tutor_tab": "ٹیوٹر",
     "flashcards_tab": "فلیش کارڈز",
     "spaced_repetition": "وقتیہ دہراؤ",
