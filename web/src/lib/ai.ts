@@ -399,7 +399,91 @@ const lessonWidgetsSchema = {
   ]
 };
 
-export function validateAndFixWidgets(widgets: any, discipline?: string): any {
+function getDisciplineFallbackSentence(discipline?: string, lang: string = 'fr'): { sentence: string; answer: string } {
+  const normDisc = (discipline || '').toLowerCase();
+  const normLang = lang.toLowerCase().split('-')[0];
+
+  const sentences: Record<string, Record<string, { sentence: string; answer: string }>> = {
+    linguistics: {
+      fr: { sentence: "Le _____ est l'unité minimale de son dans une langue.", answer: "phonème" },
+      en: { sentence: "The _____ is the smallest unit of sound in a language.", answer: "phoneme" },
+      es: { sentence: "El _____ es la unidad mínima de sonido en una lengua.", answer: "fonema" },
+      de: { sentence: "Das _____ ist die kleinste lautliche Einheit einer Sprache.", answer: "Phonem" },
+      zh: { sentence: "_____ 是语言中最小的声音单位。", answer: "音位" }
+    },
+    physics: {
+      fr: { sentence: "La vitesse de la lumière dans le vide est d'environ 300 000 _____ par seconde.", answer: "kilomètres" },
+      en: { sentence: "The speed of light in a vacuum is approximately 300,000 _____ per second.", answer: "kilometers" },
+      es: { sentence: "La velocidad de la luz en el vacío es de aproximadamente 300.000 _____ por segundo.", answer: "kilómetros" },
+      de: { sentence: "Die Lichtgeschwindigkeit im Vakuum beträgt etwa 300.000 _____ pro Sekunde.", answer: "Kilometer" },
+      zh: { sentence: "真空中光速约为每秒 30 _____ 公里。", answer: "万" }
+    },
+    astronomy: {
+      fr: { sentence: "La Terre tourne autour du _____.", answer: "Soleil" },
+      en: { sentence: "The Earth revolves around the _____.", answer: "Sun" },
+      es: { sentence: "La Tierra gira alrededor del _____.", answer: "Sol" },
+      de: { sentence: "Die Erde dreht sich um die _____.", answer: "Sonne" },
+      zh: { sentence: "地球围绕_____公转。", answer: "太阳" }
+    },
+    chemistry: {
+      fr: { sentence: "L'eau est composée de deux atomes d'hydrogène et d'un atome d'_____.", answer: "oxygène" },
+      en: { sentence: "Water is composed of two hydrogen atoms and one _____ atom.", answer: "oxygen" },
+      es: { sentence: "El agua está compuesta por dos átomos de hidrógeno y uno de _____.", answer: "oxígeno" },
+      de: { sentence: "Wasser besteht aus zwei Wasserstoffatomen und einem _____atom.", answer: "Sauerstoff" },
+      zh: { sentence: "水分子由两个氢原子和一个_____原子组成。", answer: "氧" }
+    },
+    biology: {
+      fr: { sentence: "Le _____ est l'organe central qui pompe le sang dans le corps.", answer: "cœur" },
+      en: { sentence: "The _____ is the central organ that pumps blood throughout the body.", answer: "heart" },
+      es: { sentence: "El _____ es el órgano central que bombea sangre por todo el cuerpo.", answer: "corazón" },
+      de: { sentence: "Das _____ ist das zentrale Organ, das Blut durch den Körper pumpt.", answer: "Herz" },
+      zh: { sentence: "_____是向全身泵送血液的中心器官。", answer: "心脏" }
+    },
+    mathematics: {
+      fr: { sentence: "Un triangle rectangle possède un angle _____.", answer: "droit" },
+      en: { sentence: "A right triangle always has one _____ angle.", answer: "right" },
+      es: { sentence: "Un triángulo rectángulo tiene un ángulo _____.", answer: "recto" },
+      de: { sentence: "Ein rechtwinkliges Dreieck hat einen _____ Winkel.", answer: "rechten" },
+      zh: { sentence: "直角三角形包含一个_____角。", answer: "直" }
+    },
+    history: {
+      fr: { sentence: "La Révolution française a débuté en _____.", answer: "1789" },
+      en: { sentence: "The French Revolution began in the year _____.", answer: "1789" },
+      es: { sentence: "La Revolución Francesa comenzó en el año _____.", answer: "1789" },
+      de: { sentence: "Die Französische Revolution begann im Jahr _____.", answer: "1789" },
+      zh: { sentence: "法国大革命开始于 _____ 年。", answer: "1789" }
+    },
+    computers: {
+      fr: { sentence: "Un algorithme est une suite finie d'_____.", answer: "instructions" },
+      en: { sentence: "An algorithm is a finite sequence of _____.", answer: "instructions" },
+      es: { sentence: "Un algoritmo es una secuencia finita de _____.", answer: "instrucciones" },
+      de: { sentence: "Ein Algorithmus ist eine endliche Abfolge von _____.", answer: "Anweisungen" },
+      zh: { sentence: "算法是有限的_____序列。", answer: "指令" }
+    }
+  };
+
+  let category = 'astronomy';
+  if (normDisc.includes('ling') || normDisc.includes('lang') || normDisc.includes('phon')) {
+    category = 'linguistics';
+  } else if (normDisc.includes('phys')) {
+    category = 'physics';
+  } else if (normDisc.includes('chem') || normDisc.includes('chim')) {
+    category = 'chemistry';
+  } else if (normDisc.includes('bio') || normDisc.includes('anat') || normDisc.includes('med')) {
+    category = 'biology';
+  } else if (normDisc.includes('math') || normDisc.includes('alg') || normDisc.includes('geom')) {
+    category = 'mathematics';
+  } else if (normDisc.includes('hist') || normDisc.includes('polit')) {
+    category = 'history';
+  } else if (normDisc.includes('comp') || normDisc.includes('prog') || normDisc.includes('info') || normDisc.includes('web')) {
+    category = 'computers';
+  }
+
+  const langSentences = sentences[category] || sentences['astronomy'];
+  return langSentences[normLang] || langSentences['en'] || { sentence: "The Earth revolves around the _____.", answer: "Sun" };
+}
+
+export function validateAndFixWidgets(widgets: any, discipline?: string, lang: string = 'fr'): any {
   if (!widgets || typeof widgets !== 'object') {
     throw new Error("Widgets content is empty or malformed.");
   }
@@ -502,8 +586,11 @@ export function validateAndFixWidgets(widgets: any, discipline?: string): any {
           });
         }
       } else if (comp.componentType === "FillInBlanks") {
-        if (!comp.props.sentence) comp.props.sentence = "La Terre est une _____.";
-        if (!comp.props.answer) comp.props.answer = "planète";
+        if (!comp.props.sentence || !comp.props.answer) {
+          const fallback = getDisciplineFallbackSentence(discipline, lang);
+          if (!comp.props.sentence) comp.props.sentence = fallback.sentence;
+          if (!comp.props.answer) comp.props.answer = fallback.answer;
+        }
       } else if (comp.componentType === "SolvedExercise") {
         if (!comp.props.title) comp.props.title = "Exercice résolu";
         if (!comp.props.problem) comp.props.problem = "Formulez l'exercice ici.";
@@ -752,8 +839,86 @@ function replaceWidget(content: string, widgetName: string, widgetStr: string): 
   return { content, replaced: false };
 }
 
-export function stitchLessonContent(narrativeMdx: string, widgets: any): string {
+export function extractAndInjectCitations(content: string, references: string[]): string {
+  let updatedContent = content;
+  const citationTagRegex = /<(Citation|QuoteBlock|InteractiveQuote)\b([^>]*?)>/gi;
+  
+  updatedContent = updatedContent.replace(citationTagRegex, (match, tagName, attrsStr) => {
+    const authorMatch = attrsStr.match(/author=(["'])([\s\S]*?)\1/);
+    const sourceMatch = attrsStr.match(/source=(["'])([\s\S]*?)\1/);
+    const yearMatch = attrsStr.match(/year=(["'])([\s\S]*?)\1/);
+    const refNumMatch = attrsStr.match(/refNum=\{\s*(\d+)\s*\}/);
+    
+    const author = authorMatch ? authorMatch[2].trim() : '';
+    const source = sourceMatch ? sourceMatch[2].trim() : '';
+    const year = yearMatch ? yearMatch[2].trim() : '';
+    let refNum = refNumMatch ? parseInt(refNumMatch[1], 10) : null;
+    
+    if (!author && !source) {
+      return match;
+    }
+    
+    let bibEntry = author;
+    if (source) {
+      bibEntry += bibEntry ? `, *${source}*` : `*${source}*`;
+    }
+    if (year) {
+      bibEntry += bibEntry ? `, ${year}` : year;
+    }
+    
+    if (bibEntry && !bibEntry.endsWith('.')) {
+      bibEntry += '.';
+    }
+    
+    if (bibEntry) {
+      let existingIdx = references.findIndex(r => {
+        const cleanR = r.toLowerCase().replace(/[*_.]/g, '');
+        const cleanBib = bibEntry.toLowerCase().replace(/[*_.]/g, '');
+        return cleanR.includes(cleanBib) || cleanBib.includes(cleanR);
+      });
+      
+      if (existingIdx !== -1) {
+        refNum = existingIdx + 1;
+      } else {
+        references.push(bibEntry);
+        refNum = references.length;
+      }
+    }
+    
+    if (refNum !== null) {
+      let newAttrsStr = attrsStr;
+      if (attrsStr.includes('refNum=')) {
+        newAttrsStr = newAttrsStr.replace(/refNum=\{\s*\d+\s*\}/g, `refNum={${refNum}}`);
+      } else {
+        newAttrsStr = newAttrsStr.trim() + ` refNum={${refNum}}`;
+      }
+      return `<${tagName} ${newAttrsStr}>`;
+    }
+    
+    return match;
+  });
+  
+  return updatedContent;
+}
+
+export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
   let content = narrativeMdx.trim();
+  if (isTerminalEvaluation) {
+    let finalEvalStr = '';
+    if (widgets && widgets.finalEvaluation) {
+      if (widgets.finalEvaluation.type === "Quiz") {
+        const fProps = widgets.finalEvaluation.props || {};
+        finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+      } else {
+        finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
+      }
+    }
+    return finalEvalStr;
+  }
+  if (widgets) {
+    widgets.references = widgets.references || [];
+    content = extractAndInjectCitations(content, widgets.references);
+  }
 
   const prerequisitesStr = `<Prerequisites items={${JSON.stringify(widgets.prerequisites.items)}} />`;
   const diagnosticQuizStr = `<DiagnosticQuiz question="${widgets.diagnosticQuiz.question.replace(/"/g, '&quot;')}" options={${JSON.stringify(widgets.diagnosticQuiz.options)}} correctIndex={${widgets.diagnosticQuiz.correctIndex}} targetSectionId="${widgets.diagnosticQuiz.targetSectionId}" sectionTitle="${widgets.diagnosticQuiz.sectionTitle.replace(/"/g, '&quot;')}" />`;
@@ -1449,12 +1614,19 @@ The quantity, granularity, and depth of the chapters must be strictly proportion
 1. **Primary, Middle, and High School (K-12: from foundation_1 to preuni):**
    * **Real-world Curricular Realism:** In schools, learning does not happen through isolated, hyper-specific courses. If the requested course represents a general annual program, the syllabus must propose a realistic and balanced thematic division covering the main official pillars.
    * **Spiral Learning Progression:** Core concepts are revisited year after year with increasing levels of abstraction. Structure the lessons progressively, explicitly building upon knowledge acquired in previous school years.
+   * **Grade-Level Tailoring Matrix for Interactive Sandboxes:**
+     Interactive simulator/visualizer suggestions and cognitive artifacts must align to the target grade:
+     - Middle School (Primary/Maternelle): Focus on high visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols. Use visual metaphors (e.g., sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
+     - High School: Balanced representation of equations alongside visual models. Interactive variables mapping to standard physics/math formulas. Use presets aligned with official curricula (e.g., cell division phases, basic Cartesian graphs, ideal gas law, Nernst potentials).
+     - University: Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV). Use sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative/integral solvers.
    * **Scope & Length Rules:**
      * *Primary School (foundation_1 & foundation_2):* Proportional to low hourly volume (e.g. 1h-3h). Narrative, metaphorical, and inductive approach. Maximum of 3 short items in total (including the Implicit Introduction and Terminal Evaluation).
      * *Middle & High School (secondary_1 & secondary_2):* Proportional to medium hourly volume (e.g. 5h-10h). Gradual transition to formalization, increasing rigor. 4 to 6 distinct items in total.
 
 2. **Higher Education / University (L1 to M2 / from beginner to expert):**
    * Proportional to high hourly volume (e.g. 15h-30h or more).
+   * **Grade-Level Tailoring Matrix for Interactive Sandboxes:**
+     Propose high-fidelity, research-grade sandbox controls, rigorous mathematical formulas, analytical grids, and multi-variable simulations (e.g., Schrödinger equation laboratory, Hodgkin-Huxley membrane dynamics, multi-function comparison plotters).
    * *First Year (L1 / Bachelor 1st):* Courses must be broad, foundational, and introductory to establish key concepts, universal terminology, and global methodology. 6 to 8 lessons in total.
    * *Second & Third Year (L2-L3):* Transition to formal modeling, proofs, and precise sub-branches with strict academic formalism and critical evaluation of model limits. 6 to 10 lessons in total.
    * *Master's & Expert Levels (M1-M2 / advanced & expert):* Focus entirely on highly specialized, cutting-edge research topics. Do not include general or introductory courses. 6 to 10 lessons in total.
@@ -1823,7 +1995,6 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const resJson = await res.json();
               resultText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
               success = true;
-
               const durationMs = Date.now() - startTime;
               const usage = resJson.usageMetadata || {};
               lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
@@ -1845,6 +2016,9 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         return resultText;
       };
 
+      const isTerminalEvaluation = item.slug === 'evaluation-finale' || item.slug === 'final-evaluation';
+      let approvedNarrativeText = '';
+
       // 1. Discipline-Aware Catalog Pruning
       const prunedCatalog = getFilteredWidgetsCatalog(courseContext.discipline || 'General');
       const remainingBudget = Math.max(0, 2 - usedDatabaseWidgetIds.size);
@@ -1860,25 +2034,28 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
   Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
       }).join('\n\n');
 
-      // ───────────────────────────────────────────────────────────────
-      // [STAGE 1] NARRATIVE SCRIBE (AGENT 3A)
-      // ───────────────────────────────────────────────────────────────
-      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1] Drafting academic narrative text for lesson "${item.title}"...`);
+      if (isTerminalEvaluation) {
+        approvedNarrativeText = '[[WIDGET:finalEvaluation]]';
+      } else {
+        // ───────────────────────────────────────────────────────────────
+        // [STAGE 1] NARRATIVE SCRIBE (AGENT 3A)
+        // ───────────────────────────────────────────────────────────────
+        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1] Drafting academic narrative text for lesson "${item.title}"...`);
 
-      let pronunciationMandate = "";
-      const isLanguageOrLinguistics = (courseContext.discipline || '').toLowerCase().includes('lang') || 
-                                      (courseContext.discipline || '').toLowerCase().includes('linguistic') ||
-                                      correctedCourseName.toLowerCase().includes('espagnol') ||
-                                      correctedCourseName.toLowerCase().includes('semantique') ||
-                                      correctedCourseName.toLowerCase().includes('sémantique') ||
-                                      item.title.toLowerCase().includes('son') ||
-                                      item.title.toLowerCase().includes('prononciation') ||
-                                      item.title.toLowerCase().includes('phonet') ||
-                                      item.title.toLowerCase().includes('phonét');
+        let pronunciationMandate = "";
+        const isLanguageOrLinguistics = (courseContext.discipline || '').toLowerCase().includes('lang') || 
+                                        (courseContext.discipline || '').toLowerCase().includes('linguistic') ||
+                                        correctedCourseName.toLowerCase().includes('espagnol') ||
+                                        correctedCourseName.toLowerCase().includes('semantique') ||
+                                        correctedCourseName.toLowerCase().includes('sémantique') ||
+                                        item.title.toLowerCase().includes('son') ||
+                                        item.title.toLowerCase().includes('prononciation') ||
+                                        item.title.toLowerCase().includes('phonet') ||
+                                        item.title.toLowerCase().includes('phonét');
 
-      if (isLanguageOrLinguistics) {
-        if (targetLang.toLowerCase() === 'fr') {
-          pronunciationMandate = `
+        if (isLanguageOrLinguistics) {
+          if (targetLang.toLowerCase() === 'fr') {
+            pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
 Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
@@ -1887,8 +2064,8 @@ at least once (and ideally multiple times) directly in the pronunciation, phonet
 Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <SandboxPrononciation />.
 =============================================================================
 `;
-        } else {
-          pronunciationMandate = `
+          } else {
+            pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
 Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
@@ -1897,15 +2074,15 @@ at least once (and ideally multiple times) directly in the pronunciation, phonet
 Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <PronunciationSandbox />.
 =============================================================================
 `;
+          }
         }
-      }
 
-      const courseReferences = parsedSyllabus?.references || [];
-  const referencesMetadata = courseReferences.length > 0
-    ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
-    : 'None provided. Please construct academic references for the discipline.';
+        const courseReferences = parsedSyllabus?.references || [];
+        const referencesMetadata = courseReferences.length > 0
+          ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
+          : 'None provided. Please construct academic references for the discipline.';
 
-  const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+        const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
 ${pronunciationMandate}
@@ -1930,7 +2107,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
 4. NO STRAY import/export STATEMENTS:
    - Never write "import " or "export " at the beginning of a line in normal text.
-   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`\`).
+   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`).
 =============================================================================
 
 ---
@@ -1973,6 +2150,11 @@ You must adapt your writing style, formatting, and density strictly to the epist
   - If the target level is University/Higher Education (L1-M2, beginner-expert):
     - If Target Language is **FR** (French): Systematically use Revised Bloom's Taxonomy verbs: **Analyser** (Analyze), **Évaluer** (Evaluate), and **Créer** (Create) when introducing goals and activities.
     - If Target Language is **EN** (English) or any other language: Systematically use their exact localized equivalents: **Analyze**, **Evaluate**, and **Create**.
+- **Grade-Level Tailoring Matrix for Widgets**:
+  When describing, introducing, or placing custom interactive widget anchors in your narrative sections, align the context and instructions with the target grade:
+  - Middle School (Primary/Maternelle): Focus on visual metaphors (e.g., slicing pizza slices, balancing weights on scales), simple interactive sliders, zero complex algebra symbols, and gamified problem-solving challenges.
+  - High School: Use balanced descriptions linking standard mathematical/physics equations to visual preset changes (e.g., mapping cell division stages, ideal gas variables, or membrane potentials).
+  - University: Instruct students on utilizing full scientific controls, manipulating rigorous mathematical/biological/physical variables, utilizing analytical grids, and analyzing multi-variable outcomes or downloading output datasets.
 
 ---
 
@@ -2055,32 +2237,32 @@ ${referencesMetadata}
 - Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
 `;
 
-      // Export Scribe Prompt
-      saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
+        // Export Scribe Prompt
+        saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
 
-      let narrativeText = await callAIEngine(narrativePrompt, null, 0.3);
+        let narrativeText = await callAIEngine(narrativePrompt, null, 0.3);
 
-      // Pre-verifier 1: MDX Text Preprocessor & Cleaner
-      let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+        // Pre-verifier 1: MDX Text Preprocessor & Cleaner
+        let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
 
-      // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees it!
-      cleanedNarrative = preprocessMdx(cleanedNarrative, targetLang.toLowerCase(), false, item.slug);
+        // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees it!
+        cleanedNarrative = preprocessMdx(cleanedNarrative, targetLang.toLowerCase(), false, item.slug);
 
-      lessonStats.narrativeAttempts++;
-      saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_1.md`, cleanedNarrative);
+        lessonStats.narrativeAttempts++;
+        saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_1.md`, cleanedNarrative);
 
-      // ───────────────────────────────────────────────────────────────
-      // [STAGE 4A] NARRATIVE CRITIC (AGENT 4A)
-      // ───────────────────────────────────────────────────────────────
-      let narrativeApproved = false;
-      let narrativeIteration = 0;
-      const maxNarrativeIterations = 3;
+        // ───────────────────────────────────────────────────────────────
+        // [STAGE 4A] NARRATIVE CRITIC (AGENT 4A)
+        // ───────────────────────────────────────────────────────────────
+        let narrativeApproved = false;
+        let narrativeIteration = 0;
+        const maxNarrativeIterations = 3;
 
-      while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
-        narrativeIteration++;
-        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Reviewing narrative text (Attempt ${narrativeIteration}/${maxNarrativeIterations})...`);
+        while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
+          narrativeIteration++;
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Reviewing narrative text (Attempt ${narrativeIteration}/${maxNarrativeIterations})...`);
 
-        const narrativeCriticPrompt = `You are the Narrative Critic Agent (Agent 4A). Your job is to strictly review the generated academic lesson narrative text to ensure it complies with our "Zero-Placeholder", "Academic Density", and "Pedagogical Formatting" policies before widgets are designed.
+          const narrativeCriticPrompt = `You are the Narrative Critic Agent (Agent 4A). Your job is to strictly review the generated academic lesson narrative text to ensure it complies with our "Zero-Placeholder", "Academic Density", and "Pedagogical Formatting" policies before widgets are designed.
 
 ---
 
@@ -2147,26 +2329,26 @@ You must return ONLY a valid JSON object matching the \`verificationSchema\` wit
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
-        const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, verificationSchema, 0.1);
-        saveDraftRevision(`critique_stage4a_narrative_${item.slug}_attempt_${narrativeIteration}.json`, critiqueJsonStr);
+          const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, verificationSchema, 0.1);
+          saveDraftRevision(`critique_stage4a_narrative_${item.slug}_attempt_${narrativeIteration}.json`, critiqueJsonStr);
 
-        const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        const audit = safeJsonParse(critiqueClean, 'Narrative Critic Audit');
+          const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          const audit = safeJsonParse(critiqueClean, 'Narrative Critic Audit');
 
-        if (audit && audit.approved === true) {
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text APPROVED on attempt ${narrativeIteration}!`);
-          narrativeApproved = true;
-        } else {
-          const critiqueText = audit?.critique || 'Invalid response from critic.';
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text REJECTED. Critique: ${critiqueText}`);
-          lessonStats.narrativeRejections++;
+          if (audit && audit.approved === true) {
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text APPROVED on attempt ${narrativeIteration}!`);
+            narrativeApproved = true;
+          } else {
+            const critiqueText = audit?.critique || 'Invalid response from critic.';
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text REJECTED. Critique: ${critiqueText}`);
+            lessonStats.narrativeRejections++;
 
-          if (narrativeIteration >= maxNarrativeIterations) {
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Max narrative critique loops reached. Moving forward.`);
-            break;
-          }
+            if (narrativeIteration >= maxNarrativeIterations) {
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Max narrative critique loops reached. Moving forward.`);
+              break;
+            }
 
-          const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+            const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 The narrative critic (Agent 4A) has rejected your previously generated academic narrative text.
 You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
 
@@ -2188,8 +2370,6 @@ ${cleanedNarrative}
 
 Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
 Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
-
-          saveDraftRevision(`prompt_stage1_refiner_${item.slug}_attempt_${narrativeIteration + 1}.md`, narrativeRefinerPrompt);
 
           const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
           const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
@@ -2229,6 +2409,21 @@ To ensure that the generated JSON translates to correct MDX attributes:
 1. NO RAW CODE IN ANCHORS OR PROPS:
    - Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
    - Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+=============================================================================
+
+=============================================================================
+⚠️ GRADE-LEVEL TAILORING MATRIX ⚠️
+Interactive widgets must adapt to the grade level specified by the course generation context:
+
+1. **Middle School (Collège / level: 1st-9th grade / Primary/Maternelle)**:
+   - Design Theme: High visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols.
+   - Interaction: Visual metaphors (e.g. sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
+2. **High School (Lycée / level: secondary/preuni)**:
+   - Design Theme: Balanced representation of equations alongside visual models. Interactive variables mapping to standard physics/math formulas.
+   - Interaction: Presets aligned with official curricula (e.g., standard cell division phases, basic Cartesian graphs, ideal gas law, Nernst potentials).
+3. **University (L3 / Master / Higher Education / any level above High School)**:
+   - Design Theme: Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV).
+   - Interaction: Sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative and integral solvers.
 =============================================================================
 
 ---
@@ -2340,7 +2535,7 @@ ${referencesMetadata}
 
       const cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
       parsedWidgets = safeJsonParse(cleanWidgetsJson, 'WFTA Stage 2 Widgets Parsing');
-      parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+      parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
 
       while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
         widgetsIteration++;
@@ -2444,6 +2639,12 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
    - Asterisks for italics (like \`*Book Title*\`) are forbidden inside JSON strings—titles must use quotes or French guillemets.
    - Ensure that the inline citations inside the approved narrative (e.g. \`[1](#ref-1)\`) map 1-to-1 to their correct index in this array (i.e. \`references[0]\` is citation \`[1]\`, \`references[1]\` is citation \`[2]\`).
 
+7. **Grade-Level Tailoring Matrix**:
+   - Verify that interactive widgets/sandboxes align strictly with the target academic level "${levelInput}":
+     - Primary / Middle School: High visual focus, simplified sliders, gamified challenges, visual metaphors, zero complex algebra symbols.
+     - High School: Balanced equations and visual models, preset configs matching standard curriculum formulas.
+     - University / Higher Education: Full scientific controls, rigorous mathematical formulas, analytical overlays, data export capability.
+
 ---
 
 ### OUTPUT FORMAT
@@ -2458,8 +2659,8 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
         const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
 
-        if (widgetsAudit && widgetsAudit.approved === true) {
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED on attempt ${widgetsIteration}!`);
+        if (isTerminalEvaluation || (widgetsAudit && widgetsAudit.approved === true)) {
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED ${isTerminalEvaluation ? '(Terminal Evaluation Bypass)' : `on attempt ${widgetsIteration}`}!`);
           widgetsApproved = true;
         } else {
           const critiqueText = widgetsAudit?.critique || 'Invalid response from widgets critic.';
@@ -2479,6 +2680,15 @@ You MUST now rewrite and fully correct the JSON object based on their feedback, 
 ⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
 - Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
 - Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+
+### GRADE-LEVEL TAILORING MATRIX FOR INTERACTIVE SANDBOXES
+You must ensure that interactive widgets/sandboxes align strictly with the target academic level "${levelInput}":
+- **Primary / Middle School (Primary/Maternelle, foundation_1, foundation_2, secondary_1)**:
+  Focus on high visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols. Use visual metaphors (e.g., sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
+- **High School (secondary_2, preuni_1, preuni_2, preuni_3)**:
+  Balanced representation of equations alongside visual models. Interactive variables mapping to standard physics/math formulas. Use presets aligned with official curricula (e.g., cell division phases, basic Cartesian graphs, ideal gas law, Nernst potentials).
+- **University / Higher Education (L1, L2, L3, M1, M2, beginner, intermediate, advanced, expert)**:
+  Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV). Use sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative/integral solvers.
 
 CRITIQUE FROM AGENT 4B:
 "${critiqueText}"
@@ -2503,7 +2713,7 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
 
           const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
           parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
-          parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName);
+          parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
         }
       }
 
@@ -2512,7 +2722,7 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 3] Stitching narrative and widgets programmatically...`);
       const isLastLesson = realIndex === originalSyllabusLessonsLength - 1;
-      let currentMdx = stitchLessonContent(approvedNarrativeText, parsedWidgets);
+      let currentMdx = stitchLessonContent(approvedNarrativeText, parsedWidgets, isTerminalEvaluation);
 
       // De-hallucinate bibliography links against Crossref / Google Books
       let validatedMdx = await validateAndFixBibliography(currentMdx, targetLang.toLowerCase());
@@ -4781,6 +4991,92 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
         } else {
           console.log(`[EXTERNAL RESOURCE VALIDATOR] Replacing dead link with plain text: ${link.url}`);
           updatedMdx = updatedMdx.replace(link.fullMatch, link.text);
+        }
+      }
+    }
+  }
+
+  // Validate and fix GoingFurtherItem tags
+  const goingFurtherRegex = /<GoingFurtherItem\b([^>]*?)(?:\/>|>([\s\S]*?)<\/GoingFurtherItem>)/gi;
+  let goingFurtherMatch;
+  const goingFurtherBlocks: { fullBlock: string; attributes: string }[] = [];
+  while ((goingFurtherMatch = goingFurtherRegex.exec(updatedMdx)) !== null) {
+    goingFurtherBlocks.push({
+      fullBlock: goingFurtherMatch[0],
+      attributes: goingFurtherMatch[1]
+    });
+  }
+
+  if (goingFurtherBlocks.length > 0) {
+    console.log(`[EXTERNAL RESOURCE VALIDATOR] Validating ${goingFurtherBlocks.length} GoingFurtherItem elements...`);
+    for (const block of goingFurtherBlocks) {
+      const getAttr = (name: string) => {
+        const curlyMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
+        if (curlyMatch) return curlyMatch[1].trim();
+        const quoteMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+        if (quoteMatch) return quoteMatch[1].trim();
+        const unquotedMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*([^\\s/>]+)`, 'i'));
+        if (unquotedMatch) return unquotedMatch[1].trim();
+        return '';
+      };
+
+      const url = getAttr('url');
+      const title = getAttr('title');
+      const type = getAttr('type').toLowerCase() || 'website';
+
+      if (url) {
+        // 1. Check if the URL is obviously a placeholder/fake
+        const lowerUrl = url.toLowerCase();
+        const isPlaceholder = 
+          lowerUrl.includes('example.com') || 
+          lowerUrl.includes('your_youtube_id') || 
+          lowerUrl.includes('youtube.com/watch?v=xxxxxx') ||
+          lowerUrl.includes('youtube.com/watch?v=abcdef') ||
+          lowerUrl.includes('youtube.com/watch?v=12345') ||
+          lowerUrl.includes('test.com') ||
+          lowerUrl.includes('placeholder') ||
+          lowerUrl.includes('fakeurl');
+
+        let isValid = !isPlaceholder;
+        
+        // 2. If it's a YouTube url, check via oembed/isVideoReachable
+        if (isValid) {
+          if (/youtube\.com|youtu\.be/i.test(url)) {
+            const videoId = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/i)?.[1] || '';
+            if (!videoId || videoId === 'dQw4w9WgXcQ' || videoId === 'xxxxxxxxx') {
+              isValid = false;
+            } else {
+              const checkUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&format=json`;
+              isValid = await isUrlReachable(checkUrl);
+            }
+          } else {
+            isValid = await isLinkReachable(url);
+          }
+        }
+
+        if (!isValid) {
+          console.log(`[EXTERNAL RESOURCE VALIDATOR] GoingFurtherItem has invalid/dead URL: ${url}`);
+          let alternativeUrl = '';
+
+          // 3. Try to find a real alternative if it is a video/film
+          if ((type === 'video' || type === 'film' || type === 'movie') && title) {
+            const alternative = await findAlternativeVideoWithFallback(title, targetLang);
+            if (alternative && alternative.url) {
+              alternativeUrl = alternative.url;
+              console.log(`[EXTERNAL RESOURCE VALIDATOR] Found alternative video URL for "${title}": ${alternativeUrl}`);
+            }
+          }
+
+          // 4. Update the tag
+          let newTag = block.fullBlock;
+          if (alternativeUrl) {
+            newTag = block.fullBlock.replace(/url="[^"]*"/gi, `url="${alternativeUrl.replace(/"/g, '&quot;')}"`)
+                                    .replace(/url='[^']*'/gi, `url="${alternativeUrl.replace(/"/g, '&quot;')}"`);
+          } else {
+            newTag = block.fullBlock.replace(/\s*url="[^"]*"/gi, '')
+                                    .replace(/\s*url='[^']*'/gi, '');
+          }
+          updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
         }
       }
     }
