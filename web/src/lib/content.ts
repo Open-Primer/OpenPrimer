@@ -3620,15 +3620,35 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   });
 
   // 6. Fix references run-on lists, ensure individual lines, and add backlinks
+  const existingRefs: any[] = [];
+  const referencesTagRegex = /<References\s+itemsBase64="([^"]*?)"\s*\/?>/gi;
+  let refTagMatch;
+  while ((refTagMatch = referencesTagRegex.exec(processed)) !== null) {
+    const base64 = refTagMatch[1];
+    if (base64) {
+      try {
+        const decoded = Buffer.from(base64, 'base64').toString('utf-8');
+        const items = JSON.parse(decoded);
+        if (Array.isArray(items)) {
+          existingRefs.push(...items);
+        }
+      } catch (e) {
+        console.error("[preprocessMdx] Failed to decode existing References base64:", e);
+      }
+    }
+  }
+  processed = processed.replace(referencesTagRegex, '');
+
+  const currentLang = (lang || 'en').toLowerCase();
+  let heading = "### References";
+  if (currentLang === 'fr') heading = "### Références";
+  else if (currentLang === 'es') heading = "### Referencias";
+  else if (currentLang === 'de') heading = "### Referenzen";
+  else if (currentLang === 'zh') heading = "### 参考文献";
+
   let refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
-  if (refIndex === -1 && citationBlocks.length > 0) {
-    const currentLang = (lang || 'en').toLowerCase();
-    let heading = "### References\n\n";
-    if (currentLang === 'fr') heading = "### Références\n\n";
-    else if (currentLang === 'es') heading = "### Referencias\n\n";
-    else if (currentLang === 'de') heading = "### Referenzen\n\n";
-    else if (currentLang === 'zh') heading = "### 参考文献\n\n";
-    processed += `\n\n${heading}`;
+  if (refIndex === -1 && (citationBlocks.length > 0 || existingRefs.length > 0)) {
+    processed += `\n\n${heading}\n\n`;
     refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
   }
 
@@ -3730,6 +3750,18 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     // Structure references as clean separate blocks with proper IDs and back-links
     const parsedItems: any[] = [];
+
+    // Initialize with existingRefs
+    existingRefs.forEach(ref => {
+      parsedItems.push({
+        num: ref.num,
+        text: ref.text,
+        scholarUrl: ref.scholarUrl,
+        scholarText: ref.scholarText,
+        isUnused: ref.isUnused
+      });
+    });
+
     const itemRegex = /(?:<a\s+(?:id|name)="ref-(\d+)"[^>]*?>\s*<\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+(?:id|name)="ref-\d+"[^>]*?>|\[\d+\]|<GoingFurther|<Glossary|<Quiz|<EssayEvaluation|<CustomFigure|<Prerequisites|<DiagnosticQuiz|###|---\s*|$|\s*---|\s*$))/gi;
     
     let match;
@@ -3739,7 +3771,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       if (!num || !rest) continue;
 
       const item = processSingleReferenceItem(num, rest, lang);
-      parsedItems.push(item);
+      if (!parsedItems.some(i => i.num === item.num)) {
+        parsedItems.push(item);
+      }
     }
 
     if (parsedItems.length === 0) {
@@ -3818,40 +3852,68 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       }
     }
 
+    // Renumber deduplicatedItems sequentially from 1 to N to guarantee contiguity
+    const finalItems: any[] = [];
+    const renumberMap: Record<number, number> = {};
+    deduplicatedItems.forEach((item, idx) => {
+      const newNum = idx + 1;
+      renumberMap[item.num] = newNum;
+      finalItems.push({
+        ...item,
+        num: newNum
+      });
+    });
+
+    // Build the final number mapping including deduplication and contiguous renumbering
+    const finalNumberMap: Record<number, number> = {};
+    
+    // Resolve duplicate mappings to their new contiguous numbers
+    for (const [dupNumStr, origNum] of Object.entries(numberMap)) {
+      finalNumberMap[parseInt(dupNumStr, 10)] = renumberMap[origNum] || origNum;
+    }
+    
+    // Map non-duplicate items that got renumbered
+    deduplicatedItems.forEach(item => {
+      const newNum = renumberMap[item.num];
+      if (newNum && newNum !== item.num) {
+        finalNumberMap[item.num] = newNum;
+      }
+    });
+
     // Rewrite citation numbers in preRef text
     let updatedPreRef = preRef;
-    for (const [dupNumStr, origNum] of Object.entries(numberMap)) {
-      const dupNum = parseInt(dupNumStr, 10);
+    for (const [oldNumStr, newNum] of Object.entries(finalNumberMap)) {
+      const oldNum = parseInt(oldNumStr, 10);
       
       // 1. Replace structured HTML inline citations
-      const dupCiteRegex = new RegExp(`<sup id="cite-${dupNum}" class="scroll-mt-24"><a href="#ref-${dupNum}">\\[${dupNum}\\]</a></sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupCiteRegex, `<sup id="cite-${origNum}" class="scroll-mt-24"><a href="#ref-${origNum}">[${origNum}]</a></sup>`);
+      const dupCiteRegex = new RegExp(`<sup id="cite-${oldNum}" class="scroll-mt-24"><a href="#ref-${oldNum}">\\[${oldNum}\\]</a></sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupCiteRegex, `<sup id="cite-${newNum}" class="scroll-mt-24"><a href="#ref-${newNum}">[${newNum}]</a></sup>`);
 
       // 2. Replace simple markdown inline link citations: [X](#ref-X)
-      const dupLinkRegex = new RegExp(`\\[${dupNum}\\]\\(#ref-${dupNum}\\)`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupLinkRegex, `[${origNum}](#ref-${origNum})`);
+      const dupLinkRegex = new RegExp(`\\[${oldNum}\\]\\(#ref-${oldNum}\\)`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupLinkRegex, `[${newNum}](#ref-${newNum})`);
 
       // 3. Replace raw superscript bracketed citations: <sup>[X]</sup>
-      const dupSupBracketRegex = new RegExp(`<sup>\\s*\\[${dupNum}\\]\\s*</sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupSupBracketRegex, `<sup>[${origNum}]</sup>`);
+      const dupSupBracketRegex = new RegExp(`<sup>\\s*\\[${oldNum}\\]\\s*</sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupSupBracketRegex, `<sup>[${newNum}]</sup>`);
 
       // 4. Replace raw superscript numeric citations: <sup>X</sup>
-      const dupSupRawRegex = new RegExp(`<sup>\\s*${dupNum}\\s*</sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupSupRawRegex, `<sup>[${origNum}]</sup>`);
+      const dupSupRawRegex = new RegExp(`<sup>\\s*${oldNum}\\s*</sup>`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupSupRawRegex, `<sup>[${newNum}]</sup>`);
 
       // 5. Replace citation/quote block component references
-      const dupRefNumRegex = new RegExp(`\\brefNum=\\{${dupNum}\\}`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${origNum}}`);
+      const dupRefNumRegex = new RegExp(`\\brefNum=\\{${oldNum}\\}`, 'g');
+      updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${newNum}}`);
     }
 
-    if (deduplicatedItems.length > 0) {
+    if (finalItems.length > 0) {
       // Tag each item as isUnused or active based on its usage in updatedPreRef
-      for (const item of deduplicatedItems) {
+      for (const item of finalItems) {
         item.isUnused = !isReferenceUsed(item.num, updatedPreRef);
       }
 
-      const base64 = Buffer.from(JSON.stringify(deduplicatedItems)).toString('base64');
-      processed = updatedPreRef + `\n\n<References itemsBase64="${base64}" />\n\n`;
+      const base64 = Buffer.from(JSON.stringify(finalItems)).toString('base64');
+      processed = updatedPreRef + `\n\n${heading}\n\n<References itemsBase64="${base64}" />\n\n`;
     } else {
       processed = updatedPreRef + refContent;
     }

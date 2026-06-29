@@ -744,6 +744,14 @@ export function getCitedReferenceNumbers(narrativeText: string): Set<number> {
   return cited;
 }
 
+function replaceWidget(content: string, widgetName: string, widgetStr: string): { content: string, replaced: boolean } {
+  const regex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*${widgetName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*\\]\\]`, 'gi');
+  if (regex.test(content)) {
+    return { content: content.replace(regex, widgetStr), replaced: true };
+  }
+  return { content, replaced: false };
+}
+
 export function stitchLessonContent(narrativeMdx: string, widgets: any): string {
   let content = narrativeMdx.trim();
 
@@ -768,21 +776,21 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   </Attitudes>
 </Objectives>`;
 
-  if (content.includes('[[WIDGET:prerequisites]]')) {
-    content = content.replace('[[WIDGET:prerequisites]]', prerequisitesStr);
-  } else {
+  const { content: content1, replaced: repPrereq } = replaceWidget(content, 'prerequisites', prerequisitesStr);
+  content = content1;
+  if (!repPrereq) {
     content = `${prerequisitesStr}\n\n${content}`;
   }
 
-  if (content.includes('[[WIDGET:diagnosticQuiz]]')) {
-    content = content.replace('[[WIDGET:diagnosticQuiz]]', diagnosticQuizStr);
-  } else {
+  const { content: content2, replaced: repDiag } = replaceWidget(content, 'diagnosticQuiz', diagnosticQuizStr);
+  content = content2;
+  if (!repDiag) {
     content = content.replace(prerequisitesStr, `${prerequisitesStr}\n\n${diagnosticQuizStr}`);
   }
 
-  if (content.includes('[[WIDGET:learningObjectives]]')) {
-    content = content.replace('[[WIDGET:learningObjectives]]', objectivesStr);
-  } else {
+  const { content: content3, replaced: repObj } = replaceWidget(content, 'learningObjectives', objectivesStr);
+  content = content3;
+  if (!repObj) {
     const introIdx = content.indexOf('## Introduction');
     const presIdx = content.indexOf('## Présentation');
     const targetIdx = introIdx !== -1 ? introIdx : (presIdx !== -1 ? presIdx : -1);
@@ -800,7 +808,6 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   }
 
   widgets.interactiveComponents.forEach((comp: any) => {
-    const anchor = `[[WIDGET:${comp.id}]]`;
     let compStr = '';
     const props = comp.props || {};
 
@@ -859,10 +866,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
       compStr = `<${comp.componentType} id="${comp.id}" />`;
     }
 
-
-    if (content.includes(anchor)) {
-      content = content.replace(anchor, compStr);
-    } else {
+    const { content: contentComp, replaced: repComp } = replaceWidget(content, comp.id, compStr);
+    content = contentComp;
+    if (!repComp) {
       const sectionHeader = comp.sectionAnchor || '##';
       const headingIdx = content.indexOf(sectionHeader);
       if (headingIdx !== -1) {
@@ -873,8 +879,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
           content = content + `\n\n${compStr}`;
         }
       } else {
-        if (content.includes('[[WIDGET:conclusionSummary]]')) {
-          content = content.replace('[[WIDGET:conclusionSummary]]', `${compStr}\n\n[[WIDGET:conclusionSummary]]`);
+        const summaryRegex = /\[\[\s*WIDGET\s*:\s*conclusionSummary\s*\]\]/i;
+        if (summaryRegex.test(content)) {
+          content = content.replace(summaryRegex, `${compStr}\n\n[[WIDGET:conclusionSummary]]`);
         } else {
           content = content + `\n\n${compStr}`;
         }
@@ -888,9 +895,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : ''} description="${it.description.replace(/"/g, '&quot;')}" />`).join('\n  ')}\n</GoingFurther>`;
   }
 
-  if (content.includes('[[WIDGET:goingFurther]]')) {
-    content = content.replace('[[WIDGET:goingFurther]]', goingFurtherItemsStr);
-  } else {
+  const { content: contentGf, replaced: repGf } = replaceWidget(content, 'goingFurther', goingFurtherItemsStr);
+  content = contentGf;
+  if (!repGf) {
     const conclusionIdx = content.indexOf('## Conclusion');
     const conclusionIdxFr = content.indexOf('## Synthèse');
     const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
@@ -898,8 +905,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     if (targetConclusionIdx !== -1) {
       content = content.slice(0, targetConclusionIdx).trim() + `\n\n${goingFurtherItemsStr}\n\n` + content.slice(targetConclusionIdx);
     } else {
-      if (content.includes('[[WIDGET:conclusionSummary]]')) {
-        content = content.replace('[[WIDGET:conclusionSummary]]', `${goingFurtherItemsStr}\n\n[[WIDGET:conclusionSummary]]`);
+      const summaryRegex = /\[\[\s*WIDGET\s*:\s*conclusionSummary\s*\]\]/i;
+      if (summaryRegex.test(content)) {
+        content = content.replace(summaryRegex, `${goingFurtherItemsStr}\n\n[[WIDGET:conclusionSummary]]`);
       } else {
         content = content + `\n\n${goingFurtherItemsStr}`;
       }
@@ -916,17 +924,17 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   const stepsEncoded = Buffer.from(JSON.stringify(parsedSteps)).toString('base64');
   const whatsNextStr = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
   
-  if (content.includes('[[WIDGET:whatsNext]]')) {
-    content = content.replace('[[WIDGET:whatsNext]]', whatsNextStr);
-  } else {
+  const { content: contentWn, replaced: repWn } = replaceWidget(content, 'whatsNext', whatsNextStr);
+  content = contentWn;
+  if (!repWn) {
     content = content + `\n\n${whatsNextStr}`;
   }
 
   const summaryStr = `<Summary items={${JSON.stringify(widgets.conclusionSummary.items)}} />`;
   
-  if (content.includes('[[WIDGET:conclusionSummary]]')) {
-    content = content.replace('[[WIDGET:conclusionSummary]]', summaryStr);
-  } else {
+  const { content: contentCs, replaced: repCs } = replaceWidget(content, 'conclusionSummary', summaryStr);
+  content = contentCs;
+  if (!repCs) {
     const conclusionIdx = content.indexOf('## Conclusion');
     const conclusionIdxFr = content.indexOf('## Synthèse');
     const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
@@ -946,9 +954,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
     finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
   }
 
-  if (content.includes('[[WIDGET:finalEvaluation]]')) {
-    content = content.replace('[[WIDGET:finalEvaluation]]', finalEvalStr);
-  } else {
+  const { content: contentFe, replaced: repFe } = replaceWidget(content, 'finalEvaluation', finalEvalStr);
+  content = contentFe;
+  if (!repFe) {
     content = content + `\n\n${finalEvalStr}`;
   }
 
@@ -986,7 +994,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any): string 
   content = content.trim() + referencesStr;
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
-  content = content.replace(/\[\[WIDGET:[^\]]+\]\]/gi, '');
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*[^\]\s]+\s*\]\]/gi, '');
 
   // Clean up empty self-closing InteractiveDiagram components without hotspotsBase64
   content = content.replace(/<InteractiveDiagram(?![\s\S]*?hotspotsBase64)[^>]*?\/>/gi, '');
@@ -2878,11 +2886,12 @@ ${currentTranslation}
 Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
 2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. Do NOT nest wrapper components (e.g. nesting <WhatsNext> inside itself is strictly forbidden).
-3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs) preserved exactly as in the original?
+3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs, itemsBase64 payloads) preserved exactly as in the original?
 4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
 6. Zero placeholders: Are there any placeholders or unfinished sections?
 7. Assessment Integrity: Ensure all translated interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) are complete, fully populated with high-quality, non-empty text matching the target course level, length, and complexity of the subject, and verify that the translation has not broken correct option attributes (e.g. "correct" prop on <Option>, or "correctIndex" on <DiagnosticQuiz>).
+8. Academic References: Do NOT expect or request translation of academic references, book/article titles, author names, or citation texts inside <References> components or itemsBase64 attributes. These must remain exactly as they are in the original to preserve citation integrity.
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -2983,7 +2992,7 @@ Please re-translate the Original MDX Content to "${targetLang.toUpperCase()}", c
 Follow all initial translation rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
 2. Keep all Math equations (wrapped in $ or $$) completely untouched.
-3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators.
+3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators. Absolutely do NOT append any text, properties, or attributes to these placeholders (for example, never append itemsBase64=... next to __JSX_SELF_References_...__).
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
 
                 if (process.env.DEBUG === 'true') {
