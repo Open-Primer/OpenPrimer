@@ -20,6 +20,7 @@ import { AudioPlayer } from './AudioPlayer';
 import { PronunciationSandbox } from './PronunciationSandbox';
 import { References } from './References';
 import { BiophysicsSimulator } from './BiophysicsSimulator';
+import { LogicGateSimulator } from './LogicGateSimulator';
 import { CardSort } from './CardSort';
 import { SocraticInput } from './SocraticInput';
 import { Timeline } from './Timeline';
@@ -43,6 +44,8 @@ import { FunctionManipulator } from './FunctionManipulator';
 import { EquationManipulator } from './EquationManipulator';
 import { ChemicalStoichiometry } from './ChemicalStoichiometry';
 import { BasicMathExplorer } from './BasicMathExplorer';
+import { GeneticsPedigreeLab } from './GeneticsPedigreeLab';
+import { OrbitalMechanicsSim } from './OrbitalMechanicsSim';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, BookOpen, Key, Compass, Award, FileText, Calendar, Send, HelpCircle, PenTool, RefreshCw, Play, Timer, Lock, ClipboardCheck } from 'lucide-react';
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
@@ -742,7 +745,7 @@ const ZoomableImage = ({
 };
 
 const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
-  const parts = captionText.split(/(Source\s*:\s*)/i);
+  const parts = captionText.split(/(\bSource\s*[:：]\s*)/i);
   if (parts.length < 3) {
     return <span className="select-text">{captionText}</span>;
   }
@@ -844,11 +847,14 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
   React.useEffect(() => {
     // Illustrations are decorative — never register for figure numbering
     if (isVisible && !isIllustration) {
+      console.log(`[MDX-FIGURE-REGISTRY] Registering Figure ID: ${id} (Caption: "${caption}")`);
       registerFigure(id);
     } else {
+      console.log(`[MDX-FIGURE-REGISTRY] Unregistering Figure ID: ${id} (isVisible: ${isVisible}, isIllustration: ${isIllustration})`);
       unregisterFigure(id);
     }
     return () => {
+      console.log(`[MDX-FIGURE-REGISTRY] Cleanup: Unregistering Figure ID: ${id}`);
       unregisterFigure(id);
     };
   }, [id, isVisible, isIllustration, registerFigure, unregisterFigure]);
@@ -894,12 +900,16 @@ const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved
 
   const figureIndex = registeredFigures.indexOf(id);
   const figureNumber = figureIndex !== -1 ? figureIndex + 1 : null;
+  console.log(`[MDX-FIGURE-REGISTRY] Figure ID: ${id} has index: ${figureIndex} -> Figure Number: ${figureNumber}`);
 
-  const cleanCaption = caption ? caption.replace(/^Figure\s*\d+\s*[:\-]\s*/i, '') : '';
+  const cleanCaption = caption ? caption.replace(/^(?:Figure|Abbildung|Figura|图|الشكل|चित्र|خاکہ)\s*\d*\s*[:\-\u2013\u2014]?\s*/i, '') : '';
   const finalCaption = figureNumber !== null ? `${figureLabel} ${figureNumber}: ${cleanCaption}` : caption;
 
   return (
-    <div className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300">
+    <div 
+      id={figureNumber !== null ? `figure-${figureNumber}` : undefined}
+      className="my-8 flex flex-col items-center justify-center gap-2 custom-figure transition-opacity duration-300 scroll-mt-24"
+    >
       <ZoomableImage 
         src={src} 
         alt={alt} 
@@ -2465,6 +2475,15 @@ const components = {
   ExplorateurMathsBase: BasicMathExplorer,
   BiophysicsSimulator,
   SimulateurBiophysique: BiophysicsSimulator,
+  LogicGateSimulator,
+  SimulateurPorteLogique: LogicGateSimulator,
+  SimulateurPortesLogiques: LogicGateSimulator,
+  GeneticsPedigreeLab,
+  LabGenetiquePedigree: GeneticsPedigreeLab,
+  CarreePunnett: GeneticsPedigreeLab,
+  OrbitalMechanicsSim,
+  SimulateurOrbiteMecanique: OrbitalMechanicsSim,
+  SimulateurOrbital: OrbitalMechanicsSim,
   CardSort,
   AssociationPaires: CardSort,
   SocraticInput,
@@ -2779,7 +2798,7 @@ function detectComponentsFromError(
   if (/Quiz|Question/i.test(errorText)) {
     detected.push('quiz');
   }
-  if (/CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer/i.test(errorText)) {
+  if (/CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer|LogicGateSimulator/i.test(errorText)) {
     detected.push('simulations');
   }
   if (/InteractiveDiagram|Mermaid|FunctionPlotter|FunctionManipulator|EquationManipulator|Geometry2D|ComparisonSlider|DataChart/i.test(errorText)) {

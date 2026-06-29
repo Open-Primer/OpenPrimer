@@ -11,6 +11,9 @@ interface MdxStatusContextType {
   registerFigure: (id: string) => void;
   unregisterFigure: (id: string) => void;
   registeredFigures: string[];
+  registerDiagram: (id: string) => void;
+  unregisterDiagram: (id: string) => void;
+  registeredDiagrams: string[];
 }
 
 const MdxStatusContext = createContext<MdxStatusContextType | undefined>(undefined);
@@ -18,6 +21,7 @@ const MdxStatusContext = createContext<MdxStatusContextType | undefined>(undefin
 export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
   const [reasons, setReasons] = useState<Set<DegradedReason>>(new Set());
   const [registeredFigures, setRegisteredFigures] = useState<string[]>([]);
+  const [registeredDiagrams, setRegisteredDiagrams] = useState<string[]>([]);
 
   const markDegraded = useCallback((reason: DegradedReason) => {
     setReasons((prev) => {
@@ -42,6 +46,20 @@ export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const registerDiagram = useCallback((id: string) => {
+    setRegisteredDiagrams((prev) => {
+      if (prev.includes(id)) return prev;
+      return [...prev, id];
+    });
+  }, []);
+
+  const unregisterDiagram = useCallback((id: string) => {
+    setRegisteredDiagrams((prev) => {
+      if (!prev.includes(id)) return prev;
+      return prev.filter((d) => d !== id);
+    });
+  }, []);
+
   const isDegraded = reasons.size > 0;
 
   const value = useMemo(() => ({
@@ -50,8 +68,11 @@ export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
     markDegraded,
     registerFigure,
     unregisterFigure,
-    registeredFigures
-  }), [isDegraded, reasons, markDegraded, registerFigure, unregisterFigure, registeredFigures]);
+    registeredFigures,
+    registerDiagram,
+    unregisterDiagram,
+    registeredDiagrams
+  }), [isDegraded, reasons, markDegraded, registerFigure, unregisterFigure, registeredFigures, registerDiagram, unregisterDiagram, registeredDiagrams]);
 
   return (
     <MdxStatusContext.Provider value={value}>
@@ -70,7 +91,10 @@ export function useMdxStatus() {
       markDegraded: () => {},
       registerFigure: () => {},
       unregisterFigure: () => {},
-      registeredFigures: []
+      registeredFigures: [],
+      registerDiagram: () => {},
+      unregisterDiagram: () => {},
+      registeredDiagrams: []
     };
   }
   return context;

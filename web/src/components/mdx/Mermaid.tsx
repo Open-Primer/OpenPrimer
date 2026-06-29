@@ -762,7 +762,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const edg = theme === 'paper' ? '#64748b' : theme === 'focus' ? '#525252' : '#64748b';
   const eTxt= theme === 'paper' ? '#475569' : theme === 'focus' ? '#a3a3a3' : '#94a3b8';
   const eBg = theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000' : '#0f172a';
-  const id  = containerId.current;
+  const cssId = containerId.current;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isFullscreen) return;
@@ -920,24 +920,24 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     <div className={`${getContainerClassName()} relative group/mermaid`}>
       <style dangerouslySetInnerHTML={{ __html: `
         /* ── Root SVG ── */
-        #${id} { font-family: 'Inter', system-ui, sans-serif !important; }
-        #${id} svg { background: transparent !important; }
+        #${cssId} { font-family: 'Inter', system-ui, sans-serif !important; }
+        #${cssId} svg { background: transparent !important; }
  
         /* ── All shape fills — catch every Mermaid v10 node variant ── */
-        #${id} .node rect,
-        #${id} .node circle,
-        #${id} .node ellipse,
-        #${id} .node polygon,
-        #${id} .node path,
-        #${id} .node .label-container,
-        #${id} .label-container,
-        #${id} div.label-container,
-        #${id} .flowchart-label rect,
-        #${id} .flowchart-label polygon,
-        #${id} .flowchart-label ellipse,
-        #${id} .nodeLabel rect,
-        #${id} .cluster rect,
-        #${id} .cluster polygon {
+        #${cssId} .node rect,
+        #${cssId} .node circle,
+        #${cssId} .node ellipse,
+        #${cssId} .node polygon,
+        #${cssId} .node path,
+        #${cssId} .node .label-container,
+        #${cssId} .label-container,
+        #${cssId} div.label-container,
+        #${cssId} .flowchart-label rect,
+        #${cssId} .flowchart-label polygon,
+        #${cssId} .flowchart-label ellipse,
+        #${cssId} .nodeLabel rect,
+        #${cssId} .cluster rect,
+        #${cssId} .cluster polygon {
           fill:   ${nd}  !important;
           stroke: ${str} !important;
           stroke-width: 1.5px !important;
@@ -945,17 +945,17 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         }
  
         /* ── All text / labels ── */
-        #${id} text,
-        #${id} span,
-        #${id} .node .nodeLabel,
-        #${id} .nodeLabel,
-        #${id} .label,
-        #${id} .label span,
-        #${id} .label div,
-        #${id} .flowchart-label,
-        #${id} foreignObject div,
-        #${id} foreignObject p,
-        #${id} foreignObject span {
+        #${cssId} text,
+        #${cssId} span,
+        #${cssId} .node .nodeLabel,
+        #${cssId} .nodeLabel,
+        #${cssId} .label,
+        #${cssId} .label span,
+        #${cssId} .label div,
+        #${cssId} .flowchart-label,
+        #${cssId} foreignObject div,
+        #${cssId} foreignObject p,
+        #${cssId} foreignObject span {
           fill:       ${txt} !important;
           color:      ${txt} !important;
           font-family:'Inter', system-ui, sans-serif !important;
@@ -964,25 +964,25 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         }
  
         /* ── Edges / arrows ── */
-        #${id} .edgePath path,
-        #${id} .flowchart-link,
-        #${id} path.path,
-        #${id} .arrowhead path {
+        #${cssId} .edgePath path,
+        #${cssId} .flowchart-link,
+        #${cssId} path.path,
+        #${cssId} .arrowhead path {
           stroke:       ${edg} !important;
           stroke-width: 1.5px !important;
           fill:         none !important;
         }
-        #${id} marker path,
-        #${id} .arrowheadPath {
+        #${cssId} marker path,
+        #${cssId} .arrowheadPath {
           fill:   ${edg} !important;
           stroke: ${edg} !important;
         }
  
         /* ── Edge labels ── */
-        #${id} .edgeLabel,
-        #${id} .edgeLabel span,
-        #${id} .edgeLabel text,
-        #${id} .edgeLabel rect {
+        #${cssId} .edgeLabel,
+        #${cssId} .edgeLabel span,
+        #${cssId} .edgeLabel text,
+        #${cssId} .edgeLabel rect {
           fill:             ${eBg}  !important;
           color:            ${eTxt} !important;
           background-color: ${eBg}  !important;
@@ -990,8 +990,8 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         }
  
         /* ── Cluster / subgraph ── */
-        #${id} .cluster-label text,
-        #${id} .cluster-label span {
+        #${cssId} .cluster-label text,
+        #${cssId} .cluster-label span {
           fill:  ${txt} !important;
           color: ${txt} !important;
         }

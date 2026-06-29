@@ -426,6 +426,71 @@ const generateMeshForPreset = (presetId: string): Mesh[] => {
   return meshes;
 };
 
+// Custom mesh generator for arbitrary quantum numbers n, l, m
+const generateCustomMesh = (n: number, l: number, m: number): Mesh[] => {
+  const meshes: Mesh[] = [];
+  const numShells = n - l;
+  
+  // Radial nodes correspond to alternating nested shells
+  for (let s = 0; s < numShells; s++) {
+    const scale = 75 * (1.0 - (s * 0.3) / numShells);
+    const shellSignMultiplier = s % 2 === 0 ? 1 : -1;
+
+    meshes.push(
+      generateOrbitalMesh(
+        (theta, phi) => {
+          let val = 0;
+          if (l === 0) {
+            val = 1.0;
+          } else if (l === 1) {
+            if (m === 0) val = Math.cos(theta);
+            else if (m === 1) val = Math.sin(theta) * Math.cos(phi);
+            else if (m === -1) val = Math.sin(theta) * Math.sin(phi);
+          } else if (l === 2) {
+            if (m === 0) val = 0.5 * (3 * Math.cos(theta) * Math.cos(theta) - 1);
+            else if (m === 1 || m === -1) val = Math.sin(theta) * Math.cos(theta) * (m === 1 ? Math.cos(phi) : Math.sin(phi));
+            else if (m === 2 || m === -2) val = Math.sin(theta) * Math.sin(theta) * (m === 2 ? Math.cos(2 * phi) : Math.sin(2 * phi));
+          } else if (l === 3) {
+            if (m === 0) val = 0.5 * Math.cos(theta) * (5 * Math.cos(theta) * Math.cos(theta) - 3);
+            else if (m === 1 || m === -1) val = 0.25 * Math.sin(theta) * (5 * Math.cos(theta) * Math.cos(theta) - 1) * (m === 1 ? Math.cos(phi) : Math.sin(phi));
+            else if (m === 2 || m === -2) val = Math.sin(theta) * Math.sin(theta) * Math.cos(theta) * (m === 2 ? Math.cos(2 * phi) : Math.sin(2 * phi));
+            else if (m === 3 || m === -3) val = Math.sin(theta) * Math.sin(theta) * Math.sin(theta) * (m === 3 ? Math.cos(3 * phi) : Math.sin(3 * phi));
+          }
+          return Math.abs(val);
+        },
+        (theta, phi) => {
+          let val = 0;
+          if (l === 0) {
+            val = 1.0;
+          } else if (l === 1) {
+            if (m === 0) val = Math.cos(theta);
+            else if (m === 1) val = Math.sin(theta) * Math.cos(phi);
+            else if (m === -1) val = Math.sin(theta) * Math.sin(phi);
+          } else if (l === 2) {
+            if (m === 0) val = 3 * Math.cos(theta) * Math.cos(theta) - 1;
+            else if (m === 1 || m === -1) val = Math.cos(theta) * (m === 1 ? Math.cos(phi) : Math.sin(phi));
+            else if (m === 2 || m === -2) val = m === 2 ? Math.cos(2 * phi) : Math.sin(2 * phi);
+          } else if (l === 3) {
+            if (m === 0) val = Math.cos(theta) * (5 * Math.cos(theta) * Math.cos(theta) - 3);
+            else if (m === 1 || m === -1) val = (5 * Math.cos(theta) * Math.cos(theta) - 1) * (m === 1 ? Math.cos(phi) : Math.sin(phi));
+            else if (m === 2 || m === -2) val = Math.cos(theta) * (m === 2 ? Math.cos(2 * phi) : Math.sin(2 * phi));
+            else if (m === 3 || m === -3) val = m === 3 ? Math.cos(3 * phi) : Math.sin(3 * phi);
+          }
+          const sign = val >= 0 ? '+' : '-';
+          if (shellSignMultiplier === -1) {
+            return sign === '+' ? '-' : '+';
+          }
+          return sign;
+        },
+        scale,
+        18,
+        36
+      )
+    );
+  }
+  return meshes;
+};
+
 interface QuantumOrbitalExplorerProps {
   initialPresetId?: string;
   gradeLevel?: 'middle_school' | 'high_school' | 'university';
@@ -441,6 +506,13 @@ export const QuantumOrbitalExplorer = ({
   const [activePreset, setActivePreset] = useState<OrbitalPreset>(() => {
     return ORBITALS.find(o => o.id === initialPresetId) || ORBITALS[0];
   });
+
+  const [mode, setMode] = useState<'preset' | 'schrodinger'>('preset');
+
+  // Custom Schrödinger sandbox states
+  const [customN, setCustomN] = useState(3);
+  const [customL, setCustomL] = useState(1);
+  const [customM, setCustomM] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [zoom, setZoom] = useState(100);
@@ -463,13 +535,17 @@ export const QuantumOrbitalExplorer = ({
     const found = ORBITALS.find(o => o.id === initialPresetId);
     if (found) {
       setActivePreset(found);
+      setMode('preset');
     }
   }, [initialPresetId]);
 
-  // Generate meshes for current active preset
+  // Generate meshes for current state
   const activeMeshes = useMemo(() => {
+    if (mode === 'schrodinger') {
+      return generateCustomMesh(customN, customL, customM);
+    }
     return generateMeshForPreset(activePreset.id);
-  }, [activePreset.id]);
+  }, [mode, activePreset.id, customN, customL, customM]);
 
   // Helper to blend base colors with light intensity and alpha opacity
   const blendAlphaAndLight = (hex: string, intensity: number, opacity: number) => {
@@ -478,6 +554,7 @@ export const QuantumOrbitalExplorer = ({
     let G = (num >> 8) & 0xff;
     let B = num & 0xff;
 
+ 
     R = Math.min(255, Math.max(0, Math.round(R * intensity)));
     G = Math.min(255, Math.max(0, Math.round(G * intensity)));
     B = Math.min(255, Math.max(0, Math.round(B * intensity)));
@@ -586,8 +663,8 @@ export const QuantumOrbitalExplorer = ({
             colorBase = face.phase === '+' ? '#3b82f6' : '#ef4444';
           }
 
-          // 2s outer shell is drawn transparent to reveal the inner shell
-          const opacity = (activePreset.id === '2s' && meshIdx === 0) ? 0.32 : 0.82;
+          // Inner shells or outer shells transparent/solid blending
+          const opacity = (meshIdx === 0 && activeMeshes.length > 1) ? 0.32 : 0.82;
 
           return { p0, p1, p2, p3, avgZ, intensity, colorBase, opacity };
         });
@@ -737,17 +814,60 @@ export const QuantumOrbitalExplorer = ({
     );
   };
 
+  // Convert n, l, m numbers to chemical subshell label (e.g. 3d_z2)
+  const getCustomOrbitalInfo = () => {
+    const lLetters = ['s', 'p', 'd', 'f'];
+    const letter = lLetters[customL] || 's';
+    
+    let sub = '';
+    if (customL === 0) sub = '';
+    else if (customL === 1) {
+      if (customM === 0) sub = '_z';
+      else if (customM === 1) sub = '_x';
+      else if (customM === -1) sub = '_y';
+    } else if (customL === 2) {
+      if (customM === 0) sub = '_z²';
+      else if (customM === 1) sub = '_xz';
+      else if (customM === -1) sub = '_yz';
+      else if (customM === 2) sub = '_x²-y²';
+      else if (customM === -2) sub = '_xy';
+    } else if (customL === 3) {
+      if (customM === 0) sub = '_z³';
+      else if (customM === 1) sub = '_xz²';
+      else if (customM === -1) sub = '_yz²';
+      else if (customM === 2) sub = '_z(x²-y²)';
+      else if (customM === -2) sub = '_xyz';
+      else if (customM === 3) sub = '_x(x²-3y²)';
+      else if (customM === -3) sub = '_y(3x²-y²)';
+    }
+
+    const name = `${customN}${letter}${sub}`;
+    
+    // Simple descriptions for custom states
+    let desc = `Hydrogenic orbital wave function for state |${customN}, ${customL}, ${customM}⟩.`;
+    if (customL === 0) desc = `Spherical symmetric orbital (l=0) with ${customN - 1} radial nodes. Probability density is highest at the nucleus.`;
+    else if (customL === 1) desc = `Dumbbell-shaped orbital with 1 angular nodal plane and ${customN - 2} radial node shells.`;
+    else if (customL === 2) desc = `Four-lobed clover or dumbbell-ring structure (l=2) with 2 angular nodal planes and ${customN - 3} radial node shells.`;
+    else if (customL === 3) desc = `Complex higher-order angular distribution (l=3) with 3 angular nodal planes. Typical of f-block heavy elements.`;
+
+    return { name, desc, geometry: `l = ${customL}, m = ${customM}` };
+  };
+
+  const customInfo = getCustomOrbitalInfo();
+
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/85 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Upper header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>{t["Quantum Orbital & Hybridization Explorer"]}</span>
+            <CircleDot className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>{t["Quantum Orbital & Hybridization Explorer"] || "Quantum Orbital Explorer"}</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            {t["Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."]}
+            {mode === 'schrodinger'
+              ? "Schrödinger Laboratory: Solve wavefunctions by configuring quantum variables n, l, and m."
+              : t["Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."]}
           </p>
         </div>
 
@@ -756,9 +876,12 @@ export const QuantumOrbitalExplorer = ({
           {ORBITALS.map((o) => (
             <button
               key={o.id}
-              onClick={() => setActivePreset(o)}
+              onClick={() => {
+                setActivePreset(o);
+                setMode('preset');
+              }}
               className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-                activePreset.id === o.id
+                mode === 'preset' && activePreset.id === o.id
                   ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]"
                   : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
               }`}
@@ -818,92 +941,201 @@ export const QuantumOrbitalExplorer = ({
           </div>
         </div>
 
-        {/* Quantum Sidebar: Interactive Aufbau Energy Shell Filler (5 cols) */}
+        {/* Quantum Sidebar: Interactive Tabbed Panel (5 cols) */}
         <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900/30 border border-slate-850 rounded-2xl p-5 space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase text-cyan-400 tracking-widest bg-cyan-500/5 border border-cyan-500/10 px-2.5 py-1 rounded-lg w-max block">
-                {t["Aufbau Shell Filler"]}
-              </span>
-
-              {/* Interactive electron counter */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setElectronCount(e => Math.max(1, e - 1))}
-                  className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
-                  title={t["Remove Electron"]}
-                >
-                  -
-                </button>
-                <span className="text-xs font-mono font-black text-slate-200 w-12 text-center bg-slate-950/50 py-0.5 border border-slate-900 rounded">
-                  {electronCount} e⁻
-                </span>
-                <button
-                  onClick={() => setElectronCount(e => Math.min(10, e + 1))}
-                  className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
-                  title={t["Add Electron"]}
-                >
-                  +
-                </button>
-              </div>
+            {/* Tab switch buttons */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950/60 border border-slate-900 rounded-xl">
+              <button
+                onClick={() => setMode('preset')}
+                className={`py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  mode === 'preset'
+                    ? 'bg-slate-900 text-cyan-400 font-extrabold border border-slate-800/50 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {t["Aufbau Shell Filler"] || "Aufbau Filler"}
+              </button>
+              <button
+                onClick={() => setMode('schrodinger')}
+                className={`py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  mode === 'schrodinger'
+                    ? 'bg-slate-900 text-cyan-400 font-extrabold border border-slate-800/50 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                🔬 Schrödinger Lab
+              </button>
             </div>
 
-            {/* Visual Shell levels graph */}
-            <div className="relative border-l border-slate-800/80 pl-4 py-1 space-y-3">
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-cyan-500/50 via-indigo-500/30 to-slate-900/10" />
+            {/* TAB CONTENT: AUFBAU FILLER */}
+            {mode === 'preset' && (
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                    Aufbau Puzzle
+                  </span>
 
-              {/* 2p Subshell */}
-              <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2p"]}</span>
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-mono font-black text-slate-400">2p_x</span>
-                    {renderShellElectrons('2px')}
+                  {/* Interactive electron counter */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setElectronCount(e => Math.max(1, e - 1))}
+                      className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
+                      title={t["Remove Electron"]}
+                    >
+                      -
+                    </button>
+                    <span className="text-xs font-mono font-black text-slate-200 w-12 text-center bg-slate-950/50 py-0.5 border border-slate-900 rounded">
+                      {electronCount} e⁻
+                    </span>
+                    <button
+                      onClick={() => setElectronCount(e => Math.min(10, e + 1))}
+                      className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
+                      title={t["Add Electron"]}
+                    >
+                      +
+                    </button>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-mono font-black text-slate-400">2p_y</span>
-                    {renderShellElectrons('2py')}
+                </div>
+
+                {/* Visual Shell levels graph */}
+                <div className="relative border-l border-slate-800/80 pl-4 py-1 space-y-3">
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-cyan-500/50 via-indigo-500/30 to-slate-900/10" />
+
+                  {/* 2p Subshell */}
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2p"]}</span>
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-mono font-black text-slate-400">2p_x</span>
+                        {renderShellElectrons('2px')}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-mono font-black text-slate-400">2p_y</span>
+                        {renderShellElectrons('2py')}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-mono font-black text-slate-400">2p_z</span>
+                        {renderShellElectrons('2pz')}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-mono font-black text-slate-400">2p_z</span>
-                    {renderShellElectrons('2pz')}
+
+                  {/* 2s Subshell */}
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2s"]}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono font-black text-slate-400">2s</span>
+                      {renderShellElectrons('2s')}
+                    </div>
+                  </div>
+
+                  {/* 1s Subshell */}
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 1s"]}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono font-black text-slate-400">1s</span>
+                      {renderShellElectrons('1s')}
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* 2s Subshell */}
-              <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2s"]}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-black text-slate-400">2s</span>
-                  {renderShellElectrons('2s')}
+            {/* TAB CONTENT: SCHRODINGER SANDBOX */}
+            {mode === 'schrodinger' && (
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">Hydrogenic Quantum Numbers</span>
+                
+                <div className="space-y-3">
+                  {/* n Slider */}
+                  <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                    <label className="text-[9px] font-black uppercase text-cyan-400 tracking-wider flex justify-between">
+                      <span>n (Principal)</span>
+                      <span className="font-mono text-white text-xs">{customN}</span>
+                    </label>
+                    <input
+                      type="range" min={1} max={4} step={1} value={customN}
+                      onChange={(e) => {
+                        const nextN = parseInt(e.target.value, 10);
+                        setCustomN(nextN);
+                        // Restrict l
+                        if (customL >= nextN) {
+                          const nextL = nextN - 1;
+                          setCustomL(nextL);
+                          if (Math.abs(customM) > nextL) setCustomM(0);
+                        }
+                      }}
+                      className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                    <span className="text-[8px] text-slate-550 font-bold block">Determines shell energy and size (1 to 4)</span>
+                  </div>
+
+                  {/* l Slider */}
+                  <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                    <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
+                      <span>l (Azimuthal)</span>
+                      <span className="font-mono text-white text-xs">
+                        {customL} ({['s', 'p', 'd', 'f'][customL] || 's'})
+                      </span>
+                    </label>
+                    <input
+                      type="range" min={0} max={customN - 1} step={1} value={customL}
+                      onChange={(e) => {
+                        const nextL = parseInt(e.target.value, 10);
+                        setCustomL(nextL);
+                        // Restrict m
+                        if (Math.abs(customM) > nextL) {
+                          setCustomM(0);
+                        }
+                      }}
+                      className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                    <span className="text-[8px] text-slate-550 font-bold block">Determines subshell shape (0 to n-1)</span>
+                  </div>
+
+                  {/* m Slider */}
+                  <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                    <label className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex justify-between">
+                      <span>m (Magnetic)</span>
+                      <span className="font-mono text-white text-xs">{customM >= 0 ? `+${customM}` : customM}</span>
+                    </label>
+                    <input
+                      type="range" min={-customL} max={customL} step={1} value={customM}
+                      onChange={(e) => setCustomM(parseInt(e.target.value, 10))}
+                      className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      disabled={customL === 0}
+                    />
+                    <span className="text-[8px] text-slate-550 font-bold block">Determines spatial orientation (-l to +l)</span>
+                  </div>
                 </div>
               </div>
-
-              {/* 1s Subshell */}
-              <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 1s"]}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-black text-slate-400">1s</span>
-                  {renderShellElectrons('1s')}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Active Preset detailed chemical annotation */}
+          {/* Active Preset or Custom detailed chemical annotation */}
           <div className="pt-4 border-t border-slate-850/80 space-y-2">
             <h5 className="text-xs font-black text-white flex items-center gap-1.5">
               <CircleDot className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{t[activePreset.name] || activePreset.name}</span>
+              <span>
+                {mode === 'schrodinger'
+                  ? `Orbital ${customInfo.name}`
+                  : (t[activePreset.name] || activePreset.name)}
+              </span>
             </h5>
             <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-              {t[activePreset.description] || activePreset.description}
+              {mode === 'schrodinger'
+                ? customInfo.desc
+                : (t[activePreset.description] || activePreset.description)}
             </p>
 
             <div className="bg-slate-950/40 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
-              <span className="text-slate-500 uppercase">{t["Bond Geometry"]}</span>
-              <span className="text-cyan-400 font-black">{t[activePreset.geometry] || activePreset.geometry}</span>
+              <span className="text-slate-500 uppercase">{t["Bond Geometry"] || "Geometry"}</span>
+              <span className="text-cyan-400 font-black">
+                {mode === 'schrodinger'
+                  ? customInfo.geometry
+                  : (t[activePreset.geometry] || activePreset.geometry)}
+              </span>
             </div>
           </div>
         </div>
@@ -911,3 +1143,4 @@ export const QuantumOrbitalExplorer = ({
     </div>
   );
 };
+

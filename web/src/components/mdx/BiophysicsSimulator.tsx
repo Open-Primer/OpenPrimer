@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Sparkles, HelpCircle, Activity, Zap, Layers, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -75,6 +75,43 @@ export const BiophysicsSimulator = () => {
   const [clIn, setClIn] = useState(4.0);
   const [pCl, setPCl] = useState(0.45);
 
+  // --- ACTION POTENTIAL ANIMATION STATES ---
+  const [isSimulatingAP, setIsSimulatingAP] = useState(false);
+  const [apStep, setApStep] = useState(0);
+  const [apHistory, setApHistory] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!isSimulatingAP) return;
+    const interval = setInterval(() => {
+      setApStep(prev => {
+        const next = prev + 1;
+        if (next > 80) {
+          setIsSimulatingAP(false);
+          return 0;
+        }
+        return next;
+      });
+    }, 45);
+    return () => clearInterval(interval);
+  }, [isSimulatingAP]);
+
+  // Overrides during simulation
+  const currentPK = useMemo(() => {
+    if (!isSimulatingAP) return pK;
+    if (apStep <= 10) return 1.0;
+    if (apStep <= 20) return 1.0;
+    if (apStep <= 45) return 1.0 + 14.0 * Math.sin((apStep - 20) / 25 * Math.PI / 2);
+    return 1.0 + 14.0 * Math.exp(-(apStep - 45) / 10);
+  }, [isSimulatingAP, apStep, pK]);
+
+  const currentPNa = useMemo(() => {
+    if (!isSimulatingAP) return pNa;
+    if (apStep <= 10) return 0.05;
+    if (apStep <= 20) return 0.05 + 18.0 * Math.sin((apStep - 10) / 10 * Math.PI / 2);
+    if (apStep <= 45) return 18.05 * Math.exp(-(apStep - 20) / 6) + 0.01;
+    return 0.01 + (0.05 - 0.01) * (apStep - 45) / 35;
+  }, [isSimulatingAP, apStep, pNa]);
+
   // 2. Constants & Formula Calculations
   const calculations = useMemo(() => {
     const R = 8.314462618; // Gas constant (J / (mol K))
@@ -92,8 +129,8 @@ export const BiophysicsSimulator = () => {
 
     // GHK membrane potential formula:
     // Vm = RT/F * ln( (PK*[K]out + PNa*[Na]out + PCl*[Cl]in) / (PK*[K]in + PNa*[Na]in + PCl*[Cl]out) )
-    const num = (pK * kOut) + (pNa * naOut) + (pCl * clIn);
-    const den = (pK * kIn) + (pNa * naIn) + (pCl * clOut);
+    const num = (currentPK * kOut) + (currentPNa * naOut) + (pCl * clIn);
+    const den = (currentPK * kIn) + (currentPNa * naIn) + (pCl * clOut);
     const vGhk = nernstFactor * Math.log10(num / den);
 
     return {
@@ -102,10 +139,27 @@ export const BiophysicsSimulator = () => {
       eCl: parseFloat(eCl.toFixed(1)),
       vGhk: parseFloat(vGhk.toFixed(1))
     };
-  }, [temp, kOut, kIn, pK, naOut, naIn, pNa, clOut, clIn, pCl]);
+  }, [temp, kOut, kIn, currentPK, naOut, naIn, currentPNa, clOut, clIn, pCl]);
+
+  // Append history values in real-time
+  useEffect(() => {
+    if (!isSimulatingAP) {
+      setApHistory([]);
+      return;
+    }
+    setApHistory(prev => {
+      const newHistory = [...prev, calculations.vGhk];
+      if (newHistory.length > 80) {
+        newHistory.shift();
+      }
+      return newHistory;
+    });
+  }, [apStep, isSimulatingAP, calculations.vGhk]);
 
   // 3. Preset Appliers
   const applyPreset = (presetType: 'resting' | 'action_potential' | 'hyperpolarization') => {
+    setIsSimulatingAP(false);
+    setApHistory([]);
     if (presetType === 'resting') {
       setTemp(37);
       setKOut(4.0); setKIn(140.0); setPK(1.0);
@@ -139,7 +193,7 @@ export const BiophysicsSimulator = () => {
   };
 
   return (
-    <div className="my-10 p-6 bg-slate-900/60 border border-slate-800 rounded-[40px] shadow-2xl backdrop-blur-xl space-y-8 select-none">
+    <div className="my-10 p-6 bg-slate-900/60 border border-slate-800 rounded-[40px] shadow-2xl backdrop-blur-xl space-y-8 select-none neon-glow-violet">
       {/* Header */}
       <div className="border-b border-slate-800/80 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -151,7 +205,7 @@ export const BiophysicsSimulator = () => {
           <p className="text-slate-400 text-xs font-medium">{t.subtitle}</p>
         </div>
         <div className="text-right">
-          <span className="text-[10px] text-slate-500 italic block">OpenPrimer Biophysics Engine v1.2</span>
+          <span className="text-[10px] text-slate-500 italic block">OpenPrimer Biophysics Engine v1.3</span>
         </div>
       </div>
 
@@ -163,27 +217,39 @@ export const BiophysicsSimulator = () => {
           <Layers className="w-3.5 h-3.5 text-violet-500" />
           {t.presets_title}
         </span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
           <button
             onClick={() => applyPreset('resting')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-blue"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
             {t.preset_resting}
           </button>
           <button
             onClick={() => applyPreset('action_potential')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-emerald"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             {t.preset_ap}
           </button>
           <button
             onClick={() => applyPreset('hyperpolarization')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-violet"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-violet-500" />
             {t.preset_hyper}
+          </button>
+          <button
+            onClick={() => {
+              setIsSimulatingAP(true);
+              setApStep(0);
+              setApHistory([]);
+            }}
+            disabled={isSimulatingAP}
+            className="py-2.5 px-4 bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-90 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 hover:neon-glow-violet"
+          >
+            <Zap className={`w-3.5 h-3.5 ${isSimulatingAP ? 'animate-bounce' : ''}`} />
+            {language === 'FR' ? "Déclencher PA" : "Trigger Pulse"}
           </button>
         </div>
       </div>
@@ -234,12 +300,13 @@ export const BiophysicsSimulator = () => {
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-[10px] font-bold text-slate-400">
                     <span>Perméabilité (P_K)</span>
-                    <span className="text-white">{pK}</span>
+                    <span className="text-white">{currentPK.toFixed(2)}</span>
                   </div>
                   <input
                     type="range" min="0.0" max="20.0" step="0.1"
-                    value={pK} onChange={(e) => setPK(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+                    value={currentPK} onChange={(e) => setPK(parseFloat(e.target.value))}
+                    disabled={isSimulatingAP}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500 disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -282,12 +349,13 @@ export const BiophysicsSimulator = () => {
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-[10px] font-bold text-slate-400">
                     <span>Perméabilité (P_Na)</span>
-                    <span className="text-white">{pNa}</span>
+                    <span className="text-white">{currentPNa.toFixed(2)}</span>
                   </div>
                   <input
                     type="range" min="0.0" max="20.0" step="0.01"
-                    value={pNa} onChange={(e) => setPNa(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    value={currentPNa} onChange={(e) => setPNa(parseFloat(e.target.value))}
+                    disabled={isSimulatingAP}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -358,77 +426,104 @@ export const BiophysicsSimulator = () => {
           </div>
         </div>
 
-        {/* Right Side: Vertical SVG Gauge */}
+        {/* Right Side: Oscilloscope trace & Potential scale */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center p-5 bg-slate-950/40 border border-slate-800/40 rounded-3xl min-h-[400px]">
           <div className="text-center space-y-1 mb-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t.ghk_result}</span>
-            <div className="text-3xl font-black font-mono tracking-tighter text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <div className="text-3xl font-black font-mono tracking-tighter text-blue-400 text-neon-glow-blue">
               {calculations.vGhk} <span className="text-sm font-bold">mV</span>
             </div>
           </div>
 
-          {/* SVG Vertical Potential Scale Indicator */}
-          <svg width="220" height="380" viewBox="0 0 220 380" className="bg-slate-950 rounded-2xl border border-slate-800/60 p-2 shadow-inner">
+          <svg width="280" height="380" viewBox="0 0 280 380" className="bg-slate-950 rounded-2xl border border-slate-850 p-2 shadow-inner">
             {/* Background vertical rule scale ticks */}
             {[-100, -80, -60, -40, -20, 0, 20, 40, 60].map((v, i) => {
               const y = getScaleY(v);
               return (
-                <g key={i} className="opacity-30">
-                  <line x1="20" y1={y} x2="160" y2={y} stroke="#334155" strokeWidth="1" strokeDasharray="2 3" />
-                  <text x="170" y={y + 4} fill="#94a3b8" fontSize="10" fontFamily="monospace" fontWeight="black">
-                    {v > 0 ? `+${v}` : v}
+                <g key={i} className="opacity-25">
+                  {/* Gauge Tick */}
+                  <line x1="15" y1={y} x2="45" y2={y} stroke="#475569" strokeWidth="1" />
+                  {/* Grid Line across Chart */}
+                  <line x1="75" y1={y} x2="270" y2={y} stroke="#334155" strokeWidth="1" strokeDasharray="2 3" />
+                  <text x="52" y={y + 3} fill="#94a3b8" fontSize="8" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+                    {v}
                   </text>
                 </g>
               );
             })}
 
-            {/* Scale main line */}
-            <line x1="40" y1="20" x2="40" y2="360" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
+            {/* Gauge Column */}
+            <line x1="30" y1="20" x2="30" y2="360" stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
 
-            {/* E_K Indicator Line & Label (Violet) */}
+            {/* E_K Indicator (Violet) */}
+            <line x1="15" y1={getScaleY(calculations.eK)} x2="45" y2={getScaleY(calculations.eK)} stroke="#a78bfa" strokeWidth="2" opacity="0.8" />
+            <circle cx="15" cy={getScaleY(calculations.eK)} r="3.5" fill="#a78bfa" />
+            <text x="8" y={getScaleY(calculations.eK) + 3} fill="#c084fc" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="end">
+              K⁺
+            </text>
+
+            {/* E_Na Indicator (Emerald) */}
+            <line x1="15" y1={getScaleY(calculations.eNa)} x2="45" y2={getScaleY(calculations.eNa)} stroke="#34d399" strokeWidth="2" opacity="0.8" />
+            <circle cx="15" cy={getScaleY(calculations.eNa)} r="3.5" fill="#34d399" />
+            <text x="8" y={getScaleY(calculations.eNa) + 3} fill="#34d399" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="end">
+              Na⁺
+            </text>
+
+            {/* E_Cl Indicator (Sky) */}
+            <line x1="15" y1={getScaleY(calculations.eCl)} x2="45" y2={getScaleY(calculations.eCl)} stroke="#38bdf8" strokeWidth="2" opacity="0.8" />
+            <circle cx="15" cy={getScaleY(calculations.eCl)} r="3.5" fill="#38bdf8" />
+            <text x="8" y={getScaleY(calculations.eCl) + 3} fill="#38bdf8" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="end">
+              Cl⁻
+            </text>
+
+            {/* LIVE CHART TRACE */}
+            {apHistory.length > 1 && (
+              <g>
+                <path
+                  d={`M 75 ${getScaleY(-110)} ` + apHistory.map((val, idx) => `L ${75 + idx * 2.4} ${getScaleY(val)}`).join(' ') + ` L ${75 + (apHistory.length - 1) * 2.4} ${getScaleY(-110)} Z`}
+                  fill="url(#apGrad)"
+                  opacity="0.1"
+                />
+                <path
+                  d={apHistory.map((val, idx) => `${idx === 0 ? 'M' : 'L'} ${75 + idx * 2.4} ${getScaleY(val)}`).join(' ')}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                />
+                <circle
+                  cx={75 + (apHistory.length - 1) * 2.4}
+                  cy={getScaleY(apHistory[apHistory.length - 1])}
+                  r="5"
+                  fill="#60a5fa"
+                  className="animate-pulse"
+                />
+              </g>
+            )}
+
+            {apHistory.length === 0 && (
+              <g>
+                <line x1="75" y1={getScaleY(calculations.vGhk)} x2="270" y2={getScaleY(calculations.vGhk)} stroke="#3b82f6" strokeWidth="2" strokeDasharray="3 3" opacity="0.5" />
+                <text x="172" y={getScaleY(calculations.vGhk) - 8} fill="#3b82f6" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="middle" opacity="0.7">
+                  {language === 'FR' ? "Baseline (Repos)" : "Baseline (Resting)"}
+                </text>
+              </g>
+            )}
+
+            {/* Vm pointer */}
             <g className="transition-all duration-300">
-              <line x1="20" y1={getScaleY(calculations.eK)} x2="110" y2={getScaleY(calculations.eK)} stroke="#a78bfa" strokeWidth="2.5" />
-              <circle cx="110" cy={getScaleY(calculations.eK)} r="5.5" fill="#a78bfa" />
-              <rect x="115" y={getScaleY(calculations.eK) - 10} width="40" height="18" rx="5" fill="#8b5cf6" opacity="0.15" />
-              <text x="120" y={getScaleY(calculations.eK) + 3} fill="#c084fc" fontSize="9" fontWeight="black" fontFamily="monospace">
-                E_K
-              </text>
+              <circle cx="30" cy={getScaleY(calculations.vGhk)} r="8" fill="#3b82f6" opacity="0.4" className="animate-ping" />
+              <line x1="30" y1={getScaleY(calculations.vGhk)} x2="70" y2={getScaleY(calculations.vGhk)} stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+              <polygon points={`30,${getScaleY(calculations.vGhk) - 5} 40,${getScaleY(calculations.vGhk)} 30,${getScaleY(calculations.vGhk) + 5}`} fill="#60a5fa" />
             </g>
 
-            {/* E_Na Indicator Line & Label (Emerald) */}
-            <g className="transition-all duration-300">
-              <line x1="20" y1={getScaleY(calculations.eNa)} x2="110" y2={getScaleY(calculations.eNa)} stroke="#34d399" strokeWidth="2.5" />
-              <circle cx="110" cy={getScaleY(calculations.eNa)} r="5.5" fill="#34d399" />
-              <rect x="115" y={getScaleY(calculations.eNa) - 10} width="40" height="18" rx="5" fill="#10b981" opacity="0.15" />
-              <text x="120" y={getScaleY(calculations.eNa) + 3} fill="#34d399" fontSize="9" fontWeight="black" fontFamily="monospace">
-                E_Na
-              </text>
-            </g>
-
-            {/* E_Cl Indicator Line & Label (Sky blue) */}
-            <g className="transition-all duration-300">
-              <line x1="20" y1={getScaleY(calculations.eCl)} x2="110" y2={getScaleY(calculations.eCl)} stroke="#38bdf8" strokeWidth="2.5" />
-              <circle cx="110" cy={getScaleY(calculations.eCl)} r="5.5" fill="#38bdf8" />
-              <rect x="115" y={getScaleY(calculations.eCl) - 10} width="40" height="18" rx="5" fill="#0284c7" opacity="0.15" />
-              <text x="120" y={getScaleY(calculations.eCl) + 3} fill="#38bdf8" fontSize="9" fontWeight="black" fontFamily="monospace">
-                E_Cl
-              </text>
-            </g>
-
-            {/* ACTUAL GHK MEMBRANE POTENTIAL (Vm) POINTER - Dynamic, Glowing */}
-            <g className="transition-all duration-300">
-              {/* Pulsing halo */}
-              <circle cx="40" cy={getScaleY(calculations.vGhk)} r="12" fill="#3b82f6" opacity="0.35" className="animate-ping" />
-              <line x1="15" y1={getScaleY(calculations.vGhk)} x2="160" y2={getScaleY(calculations.vGhk)} stroke="#3b82f6" strokeWidth="4.5" strokeLinecap="round" className="shadow-lg" />
-              
-              <polygon points={`30,${getScaleY(calculations.vGhk) - 7} 45,${getScaleY(calculations.vGhk)} 30,${getScaleY(calculations.vGhk) + 7}`} fill="#60a5fa" />
-              <polygon points={`160,${getScaleY(calculations.vGhk) - 7} 145,${getScaleY(calculations.vGhk)} 160,${getScaleY(calculations.vGhk) + 7}`} fill="#60a5fa" />
-
-              <rect x="52" y={getScaleY(calculations.vGhk) - 11} width="78" height="22" rx="7" fill="#1d4ed8" stroke="#3b82f6" strokeWidth="1.5" />
-              <text x="60" y={getScaleY(calculations.vGhk) + 4} fill="#ffffff" fontSize="10" fontWeight="900" fontFamily="monospace">
-                {calculations.vGhk} mV
-              </text>
-            </g>
+            <defs>
+              <linearGradient id="apGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
           </svg>
         </div>
       </div>
@@ -470,35 +565,35 @@ export const BiophysicsSimulator = () => {
               
               {/* Potassium Canal (Y = 80 to 140, X = 120) */}
               <g>
-                <rect x="120" y="70" width="60" height="80" rx="6" fill="#1e1b4b" stroke="#8b5cf6" strokeWidth={pK > 1.0 ? 3 : 1.5} className="transition-all duration-300" />
-                <path d="M130,70 L150,110 L130,150" fill="none" stroke="#a78bfa" strokeWidth="3" opacity={pK > 0 ? 0.8 : 0.1} />
-                <path d="M170,70 L150,110 L170,150" fill="none" stroke="#a78bfa" strokeWidth="3" opacity={pK > 0 ? 0.8 : 0.1} />
+                <rect x="120" y="70" width="60" height="80" rx="6" fill="#1e1b4b" stroke="#8b5cf6" strokeWidth={currentPK > 1.0 ? 3 : 1.5} filter={currentPK > 1.0 ? "url(#neon-glow-violet-svg)" : undefined} className="transition-all duration-300" />
+                <path d="M130,70 L150,110 L130,150" fill="none" stroke="#a78bfa" strokeWidth="3" opacity={currentPK > 0 ? 0.8 : 0.1} />
+                <path d="M170,70 L150,110 L170,150" fill="none" stroke="#a78bfa" strokeWidth="3" opacity={currentPK > 0 ? 0.8 : 0.1} />
                 <text x="150" y="114" fill="#a78bfa" fontSize="11" fontWeight="black" textAnchor="middle">
                   K⁺
                 </text>
                 {/* Flow particles arrows if permeability > 0 */}
-                {pK > 0 && (
-                  <path d="M150,145 L150,75" fill="none" stroke="#a78bfa" strokeWidth={Math.min(5, pK / 2)} markerEnd="url(#arrow)" strokeDasharray="5 5" className="animate-pulse" />
+                {currentPK > 0 && (
+                  <path d="M150,145 L150,75" fill="none" stroke="#a78bfa" strokeWidth={Math.min(5, currentPK / 2)} markerEnd="url(#arrow)" strokeDasharray="5 5" className="animate-pulse" />
                 )}
               </g>
 
               {/* Sodium Canal (Y = 80 to 140, X = 270) */}
               <g>
-                <rect x="270" y="70" width="60" height="80" rx="6" fill="#022c22" stroke="#10b981" strokeWidth={pNa > 0.5 ? 3 : 1.5} className="transition-all duration-300" />
-                <path d="M280,70 L300,110 L280,150" fill="none" stroke="#34d399" strokeWidth="3" opacity={pNa > 0 ? 0.8 : 0.1} />
-                <path d="M320,70 L300,110 L320,150" fill="none" stroke="#34d399" strokeWidth="3" opacity={pNa > 0 ? 0.8 : 0.1} />
+                <rect x="270" y="70" width="60" height="80" rx="6" fill="#022c22" stroke="#10b981" strokeWidth={currentPNa > 0.5 ? 3 : 1.5} filter={currentPNa > 0.5 ? "url(#neon-glow-emerald-svg)" : undefined} className="transition-all duration-300" />
+                <path d="M280,70 L300,110 L280,150" fill="none" stroke="#34d399" strokeWidth="3" opacity={currentPNa > 0 ? 0.8 : 0.1} />
+                <path d="M320,70 L300,110 L320,150" fill="none" stroke="#34d399" strokeWidth="3" opacity={currentPNa > 0 ? 0.8 : 0.1} />
                 <text x="300" y="114" fill="#34d399" fontSize="11" fontWeight="black" textAnchor="middle">
                   Na⁺
                 </text>
                 {/* Flow particles arrows if permeability > 0 */}
-                {pNa > 0 && (
-                  <path d="M300,75 L300,145" fill="none" stroke="#34d399" strokeWidth={Math.min(5, pNa / 2)} markerEnd="url(#arrow)" strokeDasharray="5 5" className="animate-pulse" />
+                {currentPNa > 0 && (
+                  <path d="M300,75 L300,145" fill="none" stroke="#34d399" strokeWidth={Math.min(5, currentPNa / 2)} markerEnd="url(#arrow)" strokeDasharray="5 5" className="animate-pulse" />
                 )}
               </g>
 
               {/* Chloride Canal (Y = 80 to 140, X = 420) */}
               <g>
-                <rect x="420" y="70" width="60" height="80" rx="6" fill="#0c4a6e" stroke="#0284c7" strokeWidth={pCl > 0.5 ? 3 : 1.5} className="transition-all duration-300" />
+                <rect x="420" y="70" width="60" height="80" rx="6" fill="#0c4a6e" stroke="#0284c7" strokeWidth={pCl > 0.5 ? 3 : 1.5} filter={pCl > 0.5 ? "url(#neon-glow-sky-svg)" : undefined} className="transition-all duration-300" />
                 <path d="M430,70 L450,110 L430,150" fill="none" stroke="#38bdf8" strokeWidth="3" opacity={pCl > 0 ? 0.8 : 0.1} />
                 <path d="M470,70 L450,110 L470,150" fill="none" stroke="#38bdf8" strokeWidth="3" opacity={pCl > 0 ? 0.8 : 0.1} />
                 <text x="450" y="114" fill="#38bdf8" fontSize="11" fontWeight="black" textAnchor="middle">
@@ -510,11 +605,22 @@ export const BiophysicsSimulator = () => {
                 )}
               </g>
 
-              {/* Define marker */}
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill="#e2e8f0" />
                 </marker>
+                <filter id="neon-glow-violet-svg" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <filter id="neon-glow-emerald-svg" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <filter id="neon-glow-sky-svg" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
               </defs>
             </svg>
           </div>
@@ -526,13 +632,13 @@ export const BiophysicsSimulator = () => {
               <div className="flex items-start gap-2.5">
                 <span className="w-3 h-3 rounded-full bg-violet-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Canaux K⁺ :</strong> {pK > 1.0 ? <span className="text-violet-400 font-bold">{t.channel_open}</span> : <span className="text-slate-500">{t.channel_closed}</span>}
+                  <strong>Canaux K⁺ :</strong> {currentPK > 1.0 ? <span className="text-violet-400 font-bold">{t.channel_open}</span> : <span className="text-slate-500">{t.channel_closed}</span>}
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Canaux Na⁺ :</strong> {pNa > 0.5 ? <span className="text-emerald-400 font-bold">{t.channel_open}</span> : <span className="text-slate-500">{t.channel_closed}</span>}
+                  <strong>Canaux Na⁺ :</strong> {currentPNa > 0.5 ? <span className="text-emerald-400 font-bold">{t.channel_open}</span> : <span className="text-slate-500">{t.channel_closed}</span>}
                 </div>
               </div>
               <div className="flex items-start gap-2.5">

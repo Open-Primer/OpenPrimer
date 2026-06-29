@@ -948,6 +948,19 @@ export const FunctionPlotter = ({
   const [yMinVal, setYMinVal] = useState(initialYMin);
   const [yMaxVal, setYMaxVal] = useState(initialYMax);
 
+  // ─── Multi-function overlay state ────────────────────────────────────────
+  const [overlayExpr2, setOverlayExpr2] = useState('');
+  const [overlayExpr3, setOverlayExpr3] = useState('');
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  // ─── Calculus mode state ──────────────────────────────────────────────────
+  type CalculusMode = 'off' | 'tangent' | 'riemann';
+  const [calculusMode, setCalculusMode] = useState<CalculusMode>('off');
+  const [tangentX, setTangentX] = useState(0);  // x-position of sliding tangent
+  const [riemannN, setRiemannN] = useState(8);  // Number of Riemann rectangles
+  const [riemannA, setRiemannA] = useState(-2); // Left bound
+  const [riemannB, setRiemannB] = useState(2);  // Right bound
+
   // Stateful catalog parameters
   const [selectedCategory, setSelectedCategory] = useState<'All' | 'Probability & Stats' | 'Waves & Signal' | 'Analysis & Growth'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1129,6 +1142,62 @@ export const FunctionPlotter = ({
     expressionPoints = ptArray.join(" ");
   }
 
+  // ─── Compute overlay polylines ────────────────────────────────────────────
+  const computeOverlayPoints = (expr: string): string => {
+    if (!expr) return '';
+    const step = (xMaxVal - xMinVal) / 150;
+    const ptArray: string[] = [];
+    for (let i = 0; i <= 150; i++) {
+      const x = xMinVal + i * step;
+      const y = safeEvaluate(expr, x);
+      if (!isNaN(y) && isFinite(y) && y >= yMinVal && y <= yMaxVal) {
+        ptArray.push(`${getSvgX(x, xMaxVal, xMinVal)},${getSvgY(y, yMaxVal, yMinVal)}`);
+      }
+    }
+    return ptArray.join(' ');
+  };
+  const overlay2Points = showOverlay ? computeOverlayPoints(overlayExpr2) : '';
+  const overlay3Points = showOverlay ? computeOverlayPoints(overlayExpr3) : '';
+
+  // ─── Calculus: numerical derivative at tangentX ───────────────────────────
+  const h = 0.0001;
+  const tangentY = isExpressionMode ? safeEvaluate(plottedExpression, tangentX) : 0;
+  const tangentSlope = isExpressionMode
+    ? (safeEvaluate(plottedExpression, tangentX + h) - safeEvaluate(plottedExpression, tangentX - h)) / (2 * h)
+    : 0;
+  const tangentSpan = (xMaxVal - xMinVal) * 0.15;
+  const tx1 = tangentX - tangentSpan;
+  const ty1 = tangentY - tangentSlope * tangentSpan;
+  const tx2 = tangentX + tangentSpan;
+  const ty2 = tangentY + tangentSlope * tangentSpan;
+
+  // ─── Calculus: Riemann sum rectangles ─────────────────────────────────────
+  const riemannRects: { x: number; y: number; w: number; h: number; positive: boolean }[] = [];
+  let riemannArea = 0;
+  if (isExpressionMode && calculusMode === 'riemann') {
+    const rectW = (riemannB - riemannA) / riemannN;
+    for (let i = 0; i < riemannN; i++) {
+      const rx = riemannA + i * rectW;
+      const ry = safeEvaluate(plottedExpression, rx + rectW / 2); // midpoint rule
+      if (!isNaN(ry) && isFinite(ry)) {
+        const svgX1 = getSvgX(rx, xMaxVal, xMinVal);
+        const svgX2 = getSvgX(rx + rectW, xMaxVal, xMinVal);
+        const svgY0 = getSvgY(0, yMaxVal, yMinVal);
+        const svgY1 = getSvgY(ry, yMaxVal, yMinVal);
+        const rectSvgW = svgX2 - svgX1;
+        const rectSvgH = Math.abs(svgY1 - svgY0);
+        riemannRects.push({
+          x: svgX1,
+          y: ry >= 0 ? svgY1 : svgY0,
+          w: rectSvgW,
+          h: rectSvgH,
+          positive: ry >= 0
+        });
+        riemannArea += ry * rectW;
+      }
+    }
+  }
+
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -1303,6 +1372,47 @@ export const FunctionPlotter = ({
               <polyline fill="none" stroke={supplyLineColor} strokeWidth="3" points={expressionPoints} strokeLinecap="round" />
             )}
 
+            {/* ── Multi-function overlay polylines ── */}
+            {isExpressionMode && showOverlay && overlay2Points && (
+              <polyline fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeDasharray="6,3" points={overlay2Points} strokeLinecap="round" />
+            )}
+            {isExpressionMode && showOverlay && overlay3Points && (
+              <polyline fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="3,4" points={overlay3Points} strokeLinecap="round" />
+            )}
+
+            {/* ── Calculus: Riemann rectangles ── */}
+            {isExpressionMode && calculusMode === 'riemann' && riemannRects.map((r, i) => (
+              <rect key={i} x={r.x} y={r.y} width={Math.max(0, r.w - 1)} height={r.h}
+                fill={r.positive ? 'rgba(59,130,246,0.25)' : 'rgba(239,68,68,0.25)'}
+                stroke={r.positive ? '#3b82f6' : '#ef4444'} strokeWidth="0.8" />
+            ))}
+
+            {/* ── Calculus: Tangent line ── */}
+            {isExpressionMode && calculusMode === 'tangent' && !isNaN(tangentY) && (
+              <>
+                {/* Tangent line */}
+                <line
+                  x1={getSvgX(tx1, xMaxVal, xMinVal)} y1={getSvgY(ty1, yMaxVal, yMinVal)}
+                  x2={getSvgX(tx2, xMaxVal, xMinVal)} y2={getSvgY(ty2, yMaxVal, yMinVal)}
+                  stroke="#06b6d4" strokeWidth="2" strokeDasharray="5,3"
+                />
+                {/* Contact point */}
+                <circle
+                  cx={getSvgX(tangentX, xMaxVal, xMinVal)}
+                  cy={getSvgY(tangentY, yMaxVal, yMinVal)}
+                  r="4" fill="#06b6d4" stroke="#fff" strokeWidth="1.5"
+                />
+                {/* Slope label */}
+                <text
+                  x={getSvgX(tangentX, xMaxVal, xMinVal) + 8}
+                  y={getSvgY(tangentY, yMaxVal, yMinVal) - 8}
+                  fill="#06b6d4" fontSize="9" fontWeight="900" fontFamily="monospace"
+                >
+                  f'({tangentX.toFixed(2)}) ≈ {tangentSlope.toFixed(3)}
+                </text>
+              </>
+            )}
+
             {/* Labels and Ticks */}
             <text x={width - padding} y={height - padding + 22} fill={isPaper ? "#1e293b" : "#94a3b8"} fontSize="9" fontWeight="900" textAnchor="end" className="uppercase tracking-widest">{resolvedXLabel}</text>
             <text x={padding - 10} y={padding - 12} fill={isPaper ? "#1e293b" : "#94a3b8"} fontSize="9" fontWeight="900" textAnchor="start" className="uppercase tracking-widest">{resolvedYLabel}</text>
@@ -1418,6 +1528,149 @@ export const FunctionPlotter = ({
                     <span className={`uppercase ${isPaper ? "text-emerald-800" : "text-emerald-400"}`}>{getUiString('supply_shift')}</span>
                     <span className="font-mono">{supplyShift}</span>
                   </div>
+
+        {/* ═══ MULTI-FUNCTION OVERLAY PANEL (expression mode only) ═══ */}
+        {isExpressionMode && (
+          <div className={`rounded-2xl border p-4 space-y-3 ${
+            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-850 bg-slate-900/20'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-[9px] font-black uppercase tracking-widest ${
+                isPaper ? 'text-slate-700' : 'text-slate-400'
+              }`}>📈 Multi-Function Overlay</span>
+              <button
+                onClick={() => setShowOverlay(o => !o)}
+                className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
+                  showOverlay
+                    ? 'bg-indigo-600 border-indigo-500 text-white'
+                    : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-850 text-slate-400'
+                }`}
+              >
+                {showOverlay ? '✓ Overlay ON' : 'Enable Overlay'}
+              </button>
+            </div>
+            {showOverlay && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: '#f59e0b' }} />
+                  <input
+                    type="text"
+                    placeholder="f₂(x) e.g. cos(x)"
+                    value={overlayExpr2}
+                    onChange={e => setOverlayExpr2(e.target.value)}
+                    className={`flex-1 text-[11px] font-mono px-3 py-1.5 rounded-xl border focus:outline-none transition-colors ${
+                      isPaper ? 'bg-white border-[#dbd5be] text-slate-800 focus:border-amber-500' : 'bg-slate-950 border-slate-800 text-white focus:border-amber-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: '#f43f5e' }} />
+                  <input
+                    type="text"
+                    placeholder="f₃(x) e.g. x^2/4"
+                    value={overlayExpr3}
+                    onChange={e => setOverlayExpr3(e.target.value)}
+                    className={`flex-1 text-[11px] font-mono px-3 py-1.5 rounded-xl border focus:outline-none transition-colors ${
+                      isPaper ? 'bg-white border-[#dbd5be] text-slate-800 focus:border-rose-500' : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+                    }`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ CALCULUS MODE PANEL (expression mode only) ═══ */}
+        {isExpressionMode && (
+          <div className={`rounded-2xl border p-4 space-y-3 ${
+            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-850 bg-slate-900/20'
+          }`}>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className={`text-[9px] font-black uppercase tracking-widest ${
+                isPaper ? 'text-slate-700' : 'text-slate-400'
+              }`}>∫ Calculus Sandbox</span>
+              <div className="flex gap-1.5">
+                {(['off', 'tangent', 'riemann'] as const).map(mode => (
+                  <button key={mode} onClick={() => setCalculusMode(mode)}
+                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
+                      calculusMode === mode
+                        ? mode === 'tangent' ? 'bg-cyan-600 border-cyan-500 text-white' : mode === 'riemann' ? 'bg-blue-600 border-blue-500 text-white' : (isPaper ? 'bg-slate-200 border-slate-400 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-300')
+                        : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-850 text-slate-400'
+                    }`}>
+                    {mode === 'off' ? '✕ Off' : mode === 'tangent' ? "f'(x) Tangent" : '∫ Riemann'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {calculusMode === 'tangent' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-4">
+                  <label className={`text-[9px] font-black uppercase tracking-wider flex-1 ${
+                    isPaper ? 'text-slate-600' : 'text-cyan-400'
+                  }`}>
+                    Tangent Point: x = <span className="font-mono">{tangentX.toFixed(2)}</span>
+                  </label>
+                  <input type="range" min={xMinVal} max={xMaxVal} step={(xMaxVal - xMinVal) / 200}
+                    value={tangentX} onChange={e => setTangentX(parseFloat(e.target.value))}
+                    className="flex-1 h-1 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+                </div>
+                <div className={`px-3 py-2 rounded-xl font-mono text-[11px] border font-black ${
+                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-850 text-cyan-400'
+                }`}>
+                  f({tangentX.toFixed(3)}) ≈ <span className="text-white">{tangentY.toFixed(4)}</span> &nbsp;|&nbsp;
+                  f'({tangentX.toFixed(3)}) ≈ <span className="text-white">{tangentSlope.toFixed(4)}</span>
+                </div>
+              </div>
+            )}
+
+            {calculusMode === 'riemann' && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className={`text-[9px] font-black uppercase tracking-wider flex justify-between ${
+                      isPaper ? 'text-slate-600' : 'text-blue-400'
+                    }`}>
+                      <span>a (left)</span>
+                      <span className="font-mono">{riemannA}</span>
+                    </label>
+                    <input type="range" min={xMinVal} max={riemannB - 0.5} step={0.5}
+                      value={riemannA} onChange={e => setRiemannA(parseFloat(e.target.value))}
+                      className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className={`text-[9px] font-black uppercase tracking-wider flex justify-between ${
+                      isPaper ? 'text-slate-600' : 'text-blue-400'
+                    }`}>
+                      <span>b (right)</span>
+                      <span className="font-mono">{riemannB}</span>
+                    </label>
+                    <input type="range" min={riemannA + 0.5} max={xMaxVal} step={0.5}
+                      value={riemannB} onChange={e => setRiemannB(parseFloat(e.target.value))}
+                      className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className={`text-[9px] font-black uppercase tracking-wider flex justify-between ${
+                      isPaper ? 'text-slate-600' : 'text-blue-400'
+                    }`}>
+                      <span>n (rects)</span>
+                      <span className="font-mono">{riemannN}</span>
+                    </label>
+                    <input type="range" min={2} max={64} step={1}
+                      value={riemannN} onChange={e => setRiemannN(parseInt(e.target.value))}
+                      className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                  </div>
+                </div>
+                <div className={`px-3 py-2 rounded-xl font-mono text-[11px] border font-black ${
+                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-850 text-blue-400'
+                }`}>
+                  ∫<sub>{riemannA}</sub><sup>{riemannB}</sup> f(x) dx ≈ <span className={riemannArea >= 0 ? 'text-blue-300' : 'text-red-400'}>{riemannArea.toFixed(4)}</span>
+                  <span className={`ml-3 text-[9px] font-semibold ${ isPaper ? 'text-slate-500' : 'text-slate-500'}`}>(Midpoint Riemann, n={riemannN})</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
                   <input type="range" min="-20" max="25" step="1" value={supplyShift} onChange={(e) => setSupplyShift(parseInt(e.target.value))} className="w-full" />
                 </div>
                 <div className="space-y-2">

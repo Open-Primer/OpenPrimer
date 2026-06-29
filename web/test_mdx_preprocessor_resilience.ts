@@ -218,6 +218,135 @@ Why is neuroscience important?
   }
 }
 
+function testSourceShielding() {
+  console.log("\n=== STARTING SOURCE SHIELDING FOR TRANSLATION TEST ===");
+
+  const inputMdx = `
+<CustomFigure src="market.jpg" caption="Figure 1: Market scene in Latin America. Source: Wikimedia Commons" />
+
+Some narrative text here.
+*Figure 2: Map of Al-Andalus at its peak. Source: [Al-Andalus](https://en.wikipedia.org/wiki/Al-Andalus)*
+
+Another figure with a full-width colon:
+<CustomFigure src="saussure.jpg" caption="Figure 3: de Saussure. Source：Wikipedia" />
+`;
+
+  console.log("ORIGINAL MDX:");
+  console.log(inputMdx.trim());
+
+  // 1. Isolate JSX and Sources
+  const { content: isolated, registry } = isolateJsxForTranslation(inputMdx);
+  console.log("\nISOLATED CONTENT (Sent to Translator):");
+  console.log(isolated.trim());
+
+  // Assert that "Source:" attributions are shielded
+  const hasSourcePlaceholder = isolated.includes('__SRC_ATTR_PLACEHOLDER_');
+  const hasRawSource = isolated.includes('Source:') || isolated.includes('Source :') || isolated.includes('Source：');
+
+  console.log("Has Source Placeholder:", hasSourcePlaceholder);
+  console.log("Has Raw Source (should be false):", hasRawSource);
+
+  // Simulate LLM translation
+  let translatedIsolated = isolated
+    .replace("Market scene in Latin America.", "Scène de marché en Amérique latine.")
+    .replace("Map of Al-Andalus at its peak.", "Carte d'Al-Andalus à son apogée.")
+    .replace("Some narrative text here.", "Texte narratif ici.")
+    .replace("Another figure with a full-width colon:", "Une autre figure avec deux points de largeur totale :");
+
+  console.log("\nSIMULATED TRANSLATED ISOLATED:");
+  console.log(translatedIsolated.trim());
+
+  // 2. Restore JSX and Sources
+  const restored = restoreJsxAfterTranslation(translatedIsolated, registry);
+  console.log("\nRESTORED TRANSLATED MDX:");
+  console.log(restored.trim());
+
+  // Verify that original sources are restored exactly
+  const hasCustomFigure1Restored = restored.includes('caption="Figure 1: Scène de marché en Amérique latine. Source: Wikimedia Commons"');
+  const hasMarkdownFigure2Restored = restored.includes("*Figure 2: Carte d'Al-Andalus à son apogée. Source: [Al-Andalus](https://en.wikipedia.org/wiki/Al-Andalus)*");
+  const hasCustomFigure3Restored = restored.includes('caption="Figure 3: de Saussure. Source：Wikipedia"');
+
+  console.log("\nVERIFICATION RESULTS:");
+  console.log("CustomFigure 1 Restored Exactly:", hasCustomFigure1Restored);
+  console.log("Markdown Figure 2 Restored Exactly:", hasMarkdownFigure2Restored);
+  console.log("CustomFigure 3 Restored Exactly:", hasCustomFigure3Restored);
+
+  if (hasSourcePlaceholder && !hasRawSource && hasCustomFigure1Restored && hasMarkdownFigure2Restored && hasCustomFigure3Restored) {
+    console.log("\n🎉 ALL SOURCE SHIELDING TESTS PASSED!");
+  } else {
+    console.error("\n❌ SOME SOURCE SHIELDING TESTS FAILED!");
+    process.exit(1);
+  }
+}
+
+function testReferencesBlockAndGoingFurther() {
+  console.log("\n=== STARTING REFERENCES BLOCK AND GOING FURTHER TEST ===");
+
+  const inputMdx = `
+Some text about paradigm shifts.
+
+<GoingFurther>
+  <GoingFurtherItem title="The Structure of Scientific Revolutions" type="book" description="A landmark work on scientific paradigm shifts." />
+</GoingFurther>
+
+
+### References
+
+[1] Thomas S. Kuhn. 1962. *The Structure of Scientific Revolutions*. University of Chicago Press.
+`;
+
+  console.log("ORIGINAL MDX:");
+  console.log(inputMdx.trim());
+
+  // 1. Isolate JSX and References Block
+  const { content: isolated, registry } = isolateJsxForTranslation(inputMdx);
+  console.log("\nISOLATED CONTENT (Sent to Translator):");
+  console.log(isolated.trim());
+
+  // Check that references block is isolated
+  const hasRefsPlaceholder = isolated.includes('__REFERENCES_BLOCK_PLACEHOLDER__');
+  const hasRawRefs = isolated.includes('Thomas S. Kuhn');
+
+  console.log("Has References Placeholder:", hasRefsPlaceholder);
+  console.log("Has Raw References (should be false):", hasRawRefs);
+
+  // Check that GoingFurtherItem has generic attribute placeholder (for translation)
+  const hasGoingFurtherPlaceholder = isolated.includes('__JSX_ATTR_GENERIC_GoingFurtherItem_');
+  console.log("Has GoingFurtherItem Translation Placeholder:", hasGoingFurtherPlaceholder);
+
+  // Simulate LLM translation
+  let translatedIsolated = isolated
+    .replace("Some text about paradigm shifts.", "Quelques textes sur les changements de paradigme.")
+    .replace("The Structure of Scientific Revolutions", "La structure des révolutions scientifiques")
+    .replace("A landmark work on scientific paradigm shifts.", "Un ouvrage de référence sur les changements de paradigme scientifique.");
+
+  console.log("\nSIMULATED TRANSLATED ISOLATED:");
+  console.log(translatedIsolated.trim());
+
+  // 2. Restore JSX and References Block
+  const restored = restoreJsxAfterTranslation(translatedIsolated, registry, 'fr');
+  console.log("\nRESTORED TRANSLATED MDX:");
+  console.log(restored.trim());
+
+  // Verify that the references block is restored exactly (but header localized)
+  const hasRestoredRefs = restored.includes('[1] Thomas S. Kuhn. 1962. *The Structure of Scientific Revolutions*. University of Chicago Press.');
+  const hasLocalizedHeader = restored.includes('### Références');
+  const hasTranslatedGoingFurther = restored.includes('title="La structure des révolutions scientifiques"') && restored.includes('description="Un ouvrage de référence sur les changements de paradigme scientifique."');
+
+  console.log("\nVERIFICATION RESULTS:");
+  console.log("References Restored Exactly:", hasRestoredRefs);
+  console.log("Header Localized to French:", hasLocalizedHeader);
+  console.log("GoingFurtherItem Attributes Translated:", hasTranslatedGoingFurther);
+
+  if (hasRefsPlaceholder && !hasRawRefs && hasGoingFurtherPlaceholder && hasRestoredRefs && hasLocalizedHeader && hasTranslatedGoingFurther) {
+    console.log("\n🎉 ALL REFERENCES AND GOING FURTHER TESTS PASSED!");
+  } else {
+    console.error("\n❌ SOME REFERENCES OR GOING FURTHER TESTS FAILED!");
+    process.exit(1);
+  }
+}
+
 testPreprocessor();
 testTranslationIsolation();
-
+testSourceShielding();
+testReferencesBlockAndGoingFurther();

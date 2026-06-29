@@ -222,6 +222,12 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved, alt
           )}
         </div>
         <h4 className="text-sm font-bold text-slate-100 truncate">{title}</h4>
+        {(description || alt) && (
+          <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed border-t border-slate-800/60 pt-1.5 max-w-xl">
+            <span className="font-semibold text-slate-500 uppercase text-[9px] tracking-widest block mb-0.5">Transcription / Description :</span>
+            {description || alt}
+          </p>
+        )}
       </div>
 
       {/* Control Pane */}

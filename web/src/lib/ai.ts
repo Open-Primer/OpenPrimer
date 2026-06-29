@@ -345,8 +345,9 @@ const lessonWidgetsSchema = {
             properties: {
               title: { type: "string" },
               type: { type: "string", enum: ["book", "article", "video", "website", "research", "movie", "film"] },
-              url: { type: "string" },
-              description: { type: "string" }
+              description: { type: "string" },
+              author: { type: "string" },
+              year: { type: "string" }
             },
             required: ["title", "type", "description"]
           }
@@ -731,7 +732,9 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         url = "";
       }
       const description = (it.description || "Pour approfondir vos connaissances sur le sujet.").trim();
-      return { title, type, url, description };
+      const author = it.author ? String(it.author).trim() : "";
+      const year = it.year ? String(it.year).trim() : "";
+      return { title, type, url, description, author, year };
     });
   }
 
@@ -912,6 +915,52 @@ export function extractAndInjectCitations(content: string, references: string[])
 
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
   let content = narrativeMdx.trim();
+
+  // Initialize references array if not present
+  if (!widgets) widgets = {};
+  if (!widgets.references || !Array.isArray(widgets.references)) {
+    widgets.references = [];
+  }
+
+  // Pre-process goingFurther items to construct bibliographic references if author/year are present
+  if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items)) {
+    widgets.goingFurther.items.forEach((it: any) => {
+      if (it.author || it.year) {
+        const title = it.title || '';
+        const author = it.author || '';
+        const year = it.year || '';
+        
+        let bibEntry = '';
+        if (author && year) {
+          bibEntry = `${author}. ${year}. *${title}*.`;
+        } else if (author) {
+          bibEntry = `${author}. *${title}*.`;
+        } else if (year) {
+          bibEntry = `*${title}* (${year}).`;
+        } else {
+          bibEntry = `*${title}*.`;
+        }
+        
+        // Find existing index in widgets.references
+        let existingIdx = widgets.references.findIndex((r: string) => {
+          const cleanR = r.toLowerCase().replace(/[*_.]/g, '').trim();
+          const cleanBib = bibEntry.toLowerCase().replace(/[*_.]/g, '').trim();
+          return cleanR.includes(cleanBib) || cleanBib.includes(cleanR);
+        });
+        
+        let refNum: number;
+        if (existingIdx !== -1) {
+          refNum = existingIdx + 1;
+        } else {
+          widgets.references.push(bibEntry);
+          refNum = widgets.references.length;
+        }
+        
+        // Store refNum on the item so it renders with the badge
+        it.refNum = refNum;
+      }
+    });
+  }
   if (isTerminalEvaluation) {
     let finalEvalStr = '';
     if (widgets && widgets.finalEvaluation) {
@@ -1067,7 +1116,12 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   // Render GoingFurther suggested readings widget
   let goingFurtherItemsStr = '';
   if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items) && widgets.goingFurther.items.length > 0) {
-    goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : ''} description="${it.description.replace(/"/g, '&quot;')}" />`).join('\n  ')}\n</GoingFurther>`;
+    goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => {
+      const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
+      const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
+      const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
+      return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : ''}${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
+    }).join('\n  ')}\n</GoingFurther>`;
   }
 
   const { content: contentGf, replaced: repGf } = replaceWidget(content, 'goingFurther', goingFurtherItemsStr);
@@ -2101,7 +2155,7 @@ Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw J
           }
         }
 
-        const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+        let narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
 ${pronunciationMandate}
@@ -2244,18 +2298,23 @@ ${referencesMetadata}
 
    - ⛔ ABSOLUTELY FORBIDDEN: Wrapping any verb, adjective, or cognitive action word inside these entity tags. This includes ALL Bloom’s Taxonomy verbs (analyser, évaluer, créer, comprendre, identifier, analyze, evaluate, create, understand, apply, etc.) as well as any other action verbs. These MUST remain as plain bold text (**analyser**) or plain text, NEVER as JSX hover-card tags.
 
-   - ⛔ FORBIDDEN EXAMPLE (never do this): `<analyser>analyser</analyser>`, `<ConceptLink name="analyser">analyser</ConceptLink>`, `<ConceptLink name="Évaluer">Évaluer</ConceptLink>`
+   - ⛔ FORBIDDEN EXAMPLE (never do this): \`<analyser>analyser</analyser>\`, \`<ConceptLink name="analyser">analyser</ConceptLink>\`, \`<ConceptLink name="Évaluer">Évaluer</ConceptLink>\`
 
-   - ✅ VALID EXAMPLES (only wrap true named entities): `<RealPerson name="Socrate">Socrate (470-399 av. J.-C.)</RealPerson>`, `<ConceptLink name="Logos">logos</ConceptLink>`, `<Location name="Athènes">Athènes</Location>`
+   - ✅ VALID EXAMPLES (only wrap true named entities): \`<RealPerson name="Socrate">Socrate (470-399 av. J.-C.)</RealPerson>\`, \`<ConceptLink name="Logos">logos</ConceptLink>\`, \`<Location name="Athènes">Athènes</Location>\`
 
    - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
-7. **Factual Images & Captions**:
-   - Include 5 to 6 factual/sourced images and 1 to 2 decorative AI illustrations for Licence level.
-   - Factual images (historical figures, maps, diagrams) MUST use standard Markdown image tags where the Alt Text is the **EXACT, search-friendly English Wikipedia title** of the subject, and the URL is empty/blank:
-     \`![Adam_Smith]()\`
-   - Decorative/Conceptual images MUST use a descriptive query as the Alt Text and have a blank/empty URL, e.g. \`![A colorful diagram showing photosynthesis]()\`.
-   - Every image must have an italicized figure caption directly below:
-     *Figure X: [Title] - [Description].*
+7. **Factual Images & Multimedia (CustomFigure)**:
+   - Include 5 to 6 factual/sourced images/figures and 1 to 2 audio/video resources for Licence level.
+   - Do NOT use standard Markdown image syntax (\`![Alt]()\`) or raw URLs anywhere.
+   - You MUST represent all media (images, audio, and video) using the unified \`<CustomFigure />\` component. This tag acts as a non-interactive widget.
+   - The \`<CustomFigure />\` component MUST have a \`type\` attribute ("image", "audio", or "video") and a \`description\` attribute detailing the asset to look up or generate. Do NOT include a \`src\` or \`url\` attribute; the backend media resolver will automatically resolve and populate the source.
+   - Structure:
+     - For images (historical figures, maps, scientific diagrams):
+       \`<CustomFigure type="image" description="EXACT English Wikipedia title of the subject (e.g. Adam_Smith) or detailed visual description of the diagram" alt="Short Alt Text" caption="Italicized caption text with explanation of the figure" />\`
+     - For audio (pronunciations, speech files, audio documents):
+       \`<CustomFigure type="audio" description="Descriptive text of the sound, pronunciation, or speech content" title="Short Audio Title" />\`
+     - For video (educational videos, documentary clips):
+       \`<CustomFigure type="video" description="Topic or query for the video lookup" title="Short Video Title" />\`
    - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
 
 ---
@@ -2264,15 +2323,18 @@ ${referencesMetadata}
 - Return ONLY the raw MDX content.
 - Do NOT wrap your output in markdown code blocks (\`\`\`).
 - Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
-${isPenultimateLesson ? `
+`;
+
+        if (isPenultimateLesson) {
+          narrativePrompt += `
 
 ---
 
 ### 6. COURSE SYNTHESIS MANDATE 🎓 (PENULTIMATE LESSON — MANDATORY)
 This is the **penultimate lesson** of the course "${correctedCourseName}", immediately preceding the Final Evaluation.
 In addition to delivering rich content on this lesson's specific topic, you MUST include a **comprehensive course-wide synthesis** as the FINAL section of this document, titled:
-- **FR**: `## Bilan général du cours`
-- **EN**: `## Course Synthesis`
+- **FR**: \`## Bilan général du cours\`
+- **EN**: \`## Course Synthesis\`
 - Use the appropriate title in the target language **${targetLang.toUpperCase()}**.
 
 This synthesis MUST (400–600 words):
@@ -2280,8 +2342,9 @@ This synthesis MUST (400–600 words):
 2. Highlight 3–5 major conceptual pillars or breakthroughs covered across the course.
 3. Position this knowledge in the broader academic landscape of the discipline.
 4. End with a forward-looking perspective: open questions, future research, or real-world applications.
-` : ''}
 `;
+        }
+
 
         // Export Scribe Prompt
         saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
@@ -2361,11 +2424,10 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
-7. **Visual Assets Density, Sourcing & Captions**:
-   - For higher education, verify that the lesson contains at least **5 to 6 distinct factual images/figures** and **1 to 2 decorative AI illustrations**.
-   - Factual images must use English Wikipedia page titles as their Alt Text and have a blank/empty URL, e.g. \`![Adam_Smith]()\`. Obscure or bloated alt texts are unacceptable.
-   - Every image must have an italicized figure caption directly below:
-     *Figure X: [Title] - [Description]. Source: ...*
+7. **Visual Assets & Media (CustomFigure)**:
+   - Verify that the lesson contains at least 5 to 6 distinct images/figures and 1 to 2 audio/video resources.
+   - Verify that the writer has NOT used standard Markdown image syntax (\`![Alt]()\`) or raw URLs for media. All media must be defined via the \`<CustomFigure type="..." description="..." />\` component.
+   - Ensure that \`<CustomFigure>\` has a \`type\` attribute ("image", "audio", or "video") and a substantial \`description\` attribute, and has NO \`src\` or \`url\` attribute.
 
 ---
 
@@ -3049,7 +3111,8 @@ Rules:
 5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
    - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language to preserve academic citation integrity.
    - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
-   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash. If there is a bracketed original version or translation (e.g. \`[Original] "..."\` or \`[Translation] "..."\`), preserve both if they are in different languages, but never translate the original citation text.
+   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash.
+   - Translate the quote content into the target course language, followed by its original version in brackets (e.g., \`[Original: "Original quote..."]\`) IF the target course language is different from the quote's original language. If the target course language is the same as the quote's original language, only keep the original version (do NOT repeat it or wrap it in brackets). Never translate the original citation text in the brackets.
 6. CRITICAL MDX COMPILER COMPLIANCE RULES:
    - Do NOT wrap the translated response in markdown code blocks (such as \`\`\`md or \`\`\`mdx). Return the raw MDX content directly.
    - Absolutely NO orphaned JSX tags or unclosed tags.
@@ -3153,7 +3216,7 @@ Your validation checklist:
 6. Zero placeholders: Are there any placeholders or unfinished sections?
 7. Assessment Integrity: Ensure all translated interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) are complete, fully populated with high-quality, non-empty text matching the target course level, length, and complexity of the subject, and verify that the translation has not broken correct option attributes (e.g. "correct" prop on <Option>, or "correctIndex" on <DiagnosticQuiz>).
 8. Academic References and Figure Sources: Do NOT expect or request translation of academic references, book/article/publication titles, author names, or citation texts inside <References> components or itemsBase64 attributes. These must remain exactly as they are in the original to preserve citation integrity.
-9. Immutability of Citations and Sources: Verify that "Source:" prefixes and associated bibliographic links/attributions in figure captions or narrative text remain exactly in their original language (typically English) and have not been translated. Reject the translation if bibliographic citations or original quote blocks have their reference metadata or book titles translated.
+9. Immutability of Citations and Sources: Verify that "Source:" prefixes and associated bibliographic links/attributions in figure captions or narrative text remain exactly in their original language (typically English) and have not been translated. Verify that quotes (lines starting with '>') have the quote translated to the target course language, followed by its original version in brackets (e.g. \`[Original: "Original quote..."]\`) if different from the target course language. Ensure that if the target course language matches the quote's original language, only one quote exists (no brackets or duplication). Ensure all citation details (author, book, publisher, etc. after the '—' dash) remain untranslated. Reject the translation if bibliographic citations, original quote blocks, reference metadata, or book titles are translated.
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -3259,7 +3322,8 @@ Follow all initial translation rules:
 5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
    - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language to preserve academic citation integrity.
    - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
-   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash. If there is a bracketed original version or translation (e.g. \`[Original] "..."\` or \`[Translation] "..."\`), preserve both if they are in different languages, but never translate the original citation text.`;
+   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash.
+   - Translate the quote content into the target course language, followed by its original version in brackets (e.g., \`[Original: "Original quote..."]\`) IF the target course language is different from the quote's original language. If the target course language is the same as the quote's original language, only keep the original version (do NOT repeat it or wrap it in brackets). Never translate the original citation text in the brackets.`;
 
 if (process.env.DEBUG === 'true') {
                   saveDraftRevision(`prompt_translation_refiner_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration + 1}.md`, promptRefine);
@@ -5146,33 +5210,33 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
                                     .replace(/\s*url='[^']*'/gi, '');
           }
           updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
-        } else {
-          // No URL in original — try to auto-resolve from title
-          let resolvedUrl = '';
-          if (title) {
-            if (type === 'video' || type === 'film' || type === 'movie') {
-              const alt = await findAlternativeVideoWithFallback(title, targetLang);
-              if (alt && alt.url) resolvedUrl = alt.url;
-            } else {
-              for (const lang of [targetLang, 'en']) {
-                try {
-                  const wikiRes = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
-                  if (wikiRes.ok) {
-                    const data = await wikiRes.json();
-                    if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
-                      resolvedUrl = data[3][0];
-                      break;
-                    }
+        }
+      } else {
+        // No URL in original — try to auto-resolve from title
+        let resolvedUrl = '';
+        if (title) {
+          if (type === 'video' || type === 'film' || type === 'movie') {
+            const alt = await findAlternativeVideoWithFallback(title, targetLang);
+            if (alt && alt.url) resolvedUrl = alt.url;
+          } else {
+            for (const lang of [targetLang, 'en']) {
+              try {
+                const wikiRes = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
+                if (wikiRes.ok) {
+                  const data = await wikiRes.json();
+                  if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
+                    resolvedUrl = data[3][0];
+                    break;
                   }
-                } catch {}
-                if (resolvedUrl) break;
-              }
+                }
+              } catch {}
+              if (resolvedUrl) break;
             }
-            if (resolvedUrl) {
-              const newTag = block.fullBlock.replace(/(\/?>)$/, ` url="${resolvedUrl.replace(/"/g, '&quot;')}" />`);
-              updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
-              console.log(`[EXTERNAL RESOURCE VALIDATOR] Auto-resolved URL for "${title}": ${resolvedUrl}`);
-            }
+          }
+          if (resolvedUrl) {
+            const newTag = block.fullBlock.replace(/(\/?>)$/, ` url="${resolvedUrl.replace(/"/g, '&quot;')}" />`);
+            updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
+            console.log(`[EXTERNAL RESOURCE VALIDATOR] Auto-resolved URL for "${title}": ${resolvedUrl}`);
           }
         }
       }

@@ -3152,6 +3152,16 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = cleanBiographyAlerts(processed);
   
   // Group images, captions, and fallback links into a single <CustomFigure> component
+  const figureAboveRegex = /\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013\u2014].*?)\s*\*\s*\r?\n\s*!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
+  processed = processed.replace(figureAboveRegex, (match, caption, alt, imgUrl, fallbackText, fallbackUrl) => {
+    const cleanAlt = (alt || '').replace(/"/g, '&quot;');
+    let cleanCaption = (caption || '');
+    cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
+    cleanCaption = cleanCaption.replace(/"/g, '&quot;');
+    const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
+    return `<CustomFigure src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
+  });
+
   const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureRegex, (match, alt, imgUrl, caption, fallbackText, fallbackUrl) => {
     const cleanAlt = (alt || '').replace(/"/g, '&quot;');
@@ -3296,12 +3306,46 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = normalizeComplexAttributeTags(processed);
 
   // 4. Highlight inline citations & add ID anchors for bidirectional scroll
-  processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-(\d+)"[^>]*?>\s*\d+\s*<\/a>\s*<\/sup>/gi, (match, num) => {
+  const bodyCitedSet = new Set<number>();
+  
+  // First, convert any <sup>...ref-src...</sup> patterns
+  processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-(\d+)"[^>]*?>\s*\d+\s*<\/a>\s*<\/sup>/gi, '<sup>[$1](#ref-$1)</sup>');
+  
+  // Second, convert any [ref-1], [ref1], [ref_1] patterns (case insensitive)
+  processed = processed.replace(/\[ref[-_]?\s*(\d+)\]/gi, '[$1](#ref-$1)');
+  
+  // Third, convert any <sup>1</sup> or <sup>[1]</sup> to <sup>[1](#ref-1)</sup> if they are not already links
+  processed = processed.replace(/<sup>\s*\[?(\d+)\]?\s*<\/sup>/gi, (match, num) => {
+    if (match.includes('(')) return match;
     return `<sup>[${num}](#ref-${num})</sup>`;
   });
 
-  processed = processed.replace(/<sup>\s*\[?\[?(\d+)\]?\]?\(#ref-\1\)\s*<\/sup>/gi, (match, num) => {
-    return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
+  // Replace all [X](#ref-X) and <sup>[X](#ref-X)</sup> with proper bidirectional links
+  processed = processed.replace(/(?:<sup>\s*)?\[(\d+)\]\(#ref-\1\)(?:\s*<\/sup>)?/gi, (match, numStr) => {
+    const num = parseInt(numStr, 10);
+    if (!bodyCitedSet.has(num)) {
+      bodyCitedSet.add(num);
+      return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
+    } else {
+      return `<sup><a href="#ref-${num}">[${num}]</a></sup>`;
+    }
+  });
+
+  // Protect all JSX tags from having their "Figure X" text replaced with links
+  const jsxTags: string[] = [];
+  processed = processed.replace(/<(\/?)([A-Za-z][A-Za-z0-9.]*)\b((?:[^'">`]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)*?)(\/?)>/g, (match) => {
+    jsxTags.push(match);
+    return `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
+  });
+
+  // 4b. Format Figure mentions in text as links to their anchors (case-insensitive, matching Figure X or figure X)
+  processed = processed.replace(/\b([Ff]igure)\s*(\d+)\b/g, (match, word, num) => {
+    return `<a href="#figure-${num}" class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors no-underline font-bold">${word} ${num}</a>`;
+  });
+
+  // Restore the JSX tags
+  processed = processed.replace(/___JSX_TAG_PLACEHOLDER_(\d+)___/g, (match, index) => {
+    return jsxTags[parseInt(index, 10)];
   });
 
   // 5. Render Glossary as static list at the bottom of the page
@@ -4074,12 +4118,31 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   const registry: Record<string, any> = {};
   let currentId = 0;
 
-  // Pre-process and flatten interactive components (like Question/Option tags) so they are in consistent flat-prop formats
   let processed = mdx;
+
+  // Step -1: Isolate the references block at the end of the file to prevent translation
+  const refsRegex = /(\n\n\n###?\s*(?:References|R[eé]f[eé]rences)\b[\s\S]*)$/i;
+  const refsMatch = processed.match(refsRegex);
+  if (refsMatch) {
+    const originalRefs = refsMatch[1];
+    const placeholder = `__REFERENCES_BLOCK_PLACEHOLDER__`;
+    registry[placeholder] = { type: 'references_block', original: originalRefs };
+    processed = processed.slice(0, refsMatch.index) + '\n\n\n' + placeholder;
+  }
+
+  // Pre-process and flatten interactive components (like Question/Option tags) so they are in consistent flat-prop formats
   processed = normalizeQuestionAndQuizTags(processed);
   processed = healSelfClosingComponents(processed);
   processed = healFillInBlanks(processed);
   processed = healQuestionTags(processed);
+
+  // Step 0: Isolate all "Source:" attributions to protect them from translation
+  const sourceRegex = /(\bSource\s*[:：]\s*.*?(?=\s*(?:\r?\n\r?\n|\*+|\r?\n[^\r\n>]*?\bSource\b|$)))/gi;
+  processed = processed.replace(sourceRegex, (match) => {
+    const placeholder = `__SRC_ATTR_PLACEHOLDER_${currentId++}__`;
+    registry[placeholder] = { type: 'source_attribution', original: match };
+    return placeholder;
+  });
 
   // Step 1: Replace all closing custom JSX tags
   processed = processed.replace(/<\/([A-Z][A-Za-z0-9.]*)>/g, (match, tagName) => {
@@ -4114,6 +4177,7 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
       SpeciesLink: ['name', 'bio', 'description'],
       ChemicalLink: ['name', 'bio', 'description'],
       CelestialLink: ['name', 'bio', 'description'],
+      GoingFurtherItem: ['title', 'description'],
     };
 
     const attrsToTranslate = TRANSLATABLE_ATTRS[tagName]?.filter(attr => attrs[attr]);
@@ -4235,7 +4299,17 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
     const idMatch = placeholder.match(/_(\d+)__/);
     const placeholderId = idMatch ? idMatch[1] : '\\d+';
 
-    if (entry.type === 'close') {
+    if (entry.type === 'source_attribution') {
+      processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+    } else if (entry.type === 'references_block') {
+      let restoredRefs = entry.original;
+      if (targetLang && targetLang.toLowerCase() === 'fr') {
+        restoredRefs = restoredRefs.replace(/(###?\s*)References/i, '$1Références');
+      } else if (targetLang && targetLang.toLowerCase() === 'en') {
+        restoredRefs = restoredRefs.replace(/(###?\s*)R[eé]f[eé]rences/i, '$1References');
+      }
+      processed = processed.replace(new RegExp(placeholder, 'gi'), restoredRefs);
+    } else if (entry.type === 'close') {
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
     } else if (entry.type === 'self') {
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);

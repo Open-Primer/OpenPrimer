@@ -10,9 +10,11 @@ interface ResourceItemProps {
   url?: string;
   description: string;
   refNum?: number;
+  author?: string;
+  year?: string;
 }
 
-export const GoingFurtherItem = ({ title, type, url, description, refNum }: ResourceItemProps) => {
+export const GoingFurtherItem = ({ title, type, url, description, refNum, author, year }: ResourceItemProps) => {
   const [isValid, setIsValid] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
@@ -104,6 +106,11 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum }: Reso
               </span>
             )}
           </div>
+          {(author || year) && (
+            <p className="text-[10px] text-slate-400/80 font-medium italic">
+              {author}{year ? ` (${year})` : ''}
+            </p>
+          )}
           <p className="text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-350 transition-colors duration-200">
             {description}
           </p>

@@ -613,30 +613,92 @@ async function fetchArchiveOrgMedia(
   }
 }
 
-// ─── Unified multi-source image resolver ────────────────────────────────────
-// Cascade: Wikidata P18 → Wikipedia/Wikimedia → Gallica → NASA → Met Museum → Archive.org → Smithsonian → null
-// Returns { url, sourceLabel } so callers can inject proper attribution into captions.
+export function getWikimediaPageUrl(url: string): string | null {
+  if (!url) return null;
+  if (url.includes('commons.wikimedia.org/wiki/File:')) {
+    return url;
+  }
+  if (url.includes('commons.wikimedia.org/wiki/Special:FilePath/')) {
+    const parts = url.split('Special:FilePath/');
+    if (parts[1]) {
+      return `https://commons.wikimedia.org/wiki/File:${parts[1]}`;
+    }
+  }
+  if (url.includes('upload.wikimedia.org/wikipedia/commons/')) {
+    let cleanUrl = url;
+    if (url.includes('/thumb/')) {
+      cleanUrl = url.replace('/thumb/', '/');
+      const lastSlashIdx = cleanUrl.lastIndexOf('/');
+      if (lastSlashIdx !== -1) {
+        cleanUrl = cleanUrl.substring(0, lastSlashIdx);
+      }
+    }
+    const parts = cleanUrl.split('/commons/');
+    if (parts[1]) {
+      const fileParts = parts[1].split('/');
+      const fileName = fileParts[fileParts.length - 1];
+      if (fileName) {
+        return `https://commons.wikimedia.org/wiki/File:${fileName}`;
+      }
+    }
+  }
+  return null;
+}
+
 export async function resolveImageFromSources(
   title: string,
   lang: string = 'en',
   discipline?: string
-): Promise<{ url: string; sourceLabel: string } | null> {
+): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
   const query = title.trim().replace(/_/g, ' ');
 
   // 1. Wikidata P18 — canonical, most reliable for named entities
   const wdImage = await fetchWikidataImage(query);
-  if (wdImage) return { url: wdImage, sourceLabel: 'Wikimedia Commons' };
+  if (wdImage) {
+    const isValid = await validateImageWithGemini(wdImage, query);
+    if (isValid) {
+      return { 
+        url: wdImage, 
+        sourceLabel: 'Wikimedia Commons',
+        sourceUrl: getWikimediaPageUrl(wdImage) || undefined
+      };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Wikidata P18 image rejected by Gemini for query "${query}". Trying fallback...`);
+    }
+  }
 
   // 2. Wikipedia/Wikimedia Commons search
   const wikiImage = await fetchWikipediaImage(query, lang);
-  if (wikiImage) return { url: wikiImage, sourceLabel: 'Wikimedia Commons' };
+  if (wikiImage) {
+    const isValid = await validateImageWithGemini(wikiImage, query);
+    if (isValid) {
+      return { 
+        url: wikiImage, 
+        sourceLabel: 'Wikimedia Commons',
+        sourceUrl: getWikimediaPageUrl(wikiImage) || undefined
+      };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Wikipedia page image rejected by Gemini for query "${query}". Trying fallback...`);
+    }
+  }
 
   // 3. Gallica BNF — for old books, French manuscripts, historical texts
   const disc = (discipline || '').toLowerCase();
   const isHistoryOrLit = disc.includes('hist') || disc.includes('liter') || disc.includes('class') || lang === 'fr';
   if (isHistoryOrLit) {
     const gallicaImage = await fetchGallicaImage(query);
-    if (gallicaImage) return { url: gallicaImage, sourceLabel: 'Gallica / Bibliothèque nationale de France (Domaine Public)' };
+    if (gallicaImage) {
+      const isValid = await validateImageWithGemini(gallicaImage, query);
+      if (isValid) {
+        return { 
+          url: gallicaImage, 
+          sourceLabel: 'Gallica / Bibliothèque nationale de France (Domaine Public)',
+          sourceUrl: gallicaImage
+        };
+      } else {
+        console.log(`[MEDIA-RESOLVER] Gallica image rejected by Gemini for query "${query}". Trying fallback...`);
+      }
+    }
   }
 
   // 4. NASA — prioritise for science/space disciplines
@@ -644,28 +706,67 @@ export async function resolveImageFromSources(
     disc.includes('cosmo') || disc.includes('bio') || disc.includes('chem') || disc.includes('geo');
   if (isScience) {
     const nasaImage = await fetchNASAImage(query);
-    if (nasaImage) return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
+    if (nasaImage) {
+      const isValid = await validateImageWithGemini(nasaImage, query);
+      if (isValid) {
+        return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
+      } else {
+        console.log(`[MEDIA-RESOLVER] NASA image rejected by Gemini for query "${query}". Trying fallback...`);
+      }
+    }
   }
 
   // 5. Met Museum — for art, history, archaeology, classical studies
   const isArtHistory = disc.includes('art') || disc.includes('archae') || disc.includes('philosoph');
   if (isArtHistory) {
     const metImage = await fetchMetMuseumImage(query);
-    if (metImage) return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
+    if (metImage) {
+      const isValid = await validateImageWithGemini(metImage, query);
+      if (isValid) {
+        return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
+      } else {
+        console.log(`[MEDIA-RESOLVER] Met Museum image rejected by Gemini for query "${query}". Trying fallback...`);
+      }
+    }
   }
 
   // 6. Archive.org Fallback for Images
   const archiveImage = await fetchArchiveOrgMedia(query, 'image');
-  if (archiveImage) return archiveImage;
+  if (archiveImage?.url) {
+    const isValid = await validateImageWithGemini(archiveImage.url, query);
+    if (isValid) {
+      return {
+        url: archiveImage.url,
+        sourceLabel: archiveImage.sourceLabel,
+        sourceUrl: archiveImage.url
+      };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Archive.org image rejected by Gemini for query "${query}". Trying fallback...`);
+    }
+  }
 
   // 7. Smithsonian — broad fallback for natural history, science, culture
   const smithsonianImage = await fetchSmithsonianImage(query);
-  if (smithsonianImage) return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
+  if (smithsonianImage) {
+    const isValid = await validateImageWithGemini(smithsonianImage, query);
+    if (isValid) {
+      return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
+    } else {
+      console.log(`[MEDIA-RESOLVER] Smithsonian image rejected by Gemini for query "${query}". Trying fallback...`);
+    }
+  }
 
   // 8. NASA as universal last resort (very broad image library)
   if (!isScience) {
     const nasaFallback = await fetchNASAImage(query);
-    if (nasaFallback) return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
+    if (nasaFallback) {
+      const isValid = await validateImageWithGemini(nasaFallback, query);
+      if (isValid) {
+        return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
+      } else {
+        console.log(`[MEDIA-RESOLVER] NASA fallback image rejected by Gemini for query "${query}". Trying fallback...`);
+      }
+    }
   }
 
   // 9. Unsplash fallback
@@ -866,6 +967,61 @@ function buildLyriaPrompt(title: string): string {
 
   // Default: atmospheric/contextual music
   return `Generate a short, atmospheric audio clip suitable for an educational course. Subject: ${title}. Calm, focused, no lyrics.`;
+}
+
+// Check if the audio title or customText is intended to be spoken speech
+function isSpeechAudio(title: string, customText: string): boolean {
+  const t = title.toLowerCase().trim();
+  const c = (customText || '').toLowerCase().trim();
+
+  // 1. Explicitly block any non-speech sounds (music, nature, animals, etc.)
+  const nonSpeechKeywords = [
+    'song', 'chant', 'bird', 'oiseau', 'barking', 'meow', 'cri', 'sound', 'bruit', 
+    'noise', 'music', 'musique', 'symphony', 'orchestra', 'instrument', 'piano', 
+    'violin', 'guitar', 'drum', 'flute', 'wind', 'vent', 'rain', 'pluie', 'thunder', 
+    'tonnerre', 'storm', 'tempête', 'wave', 'vague', 'explosion', 'siren', 'sirène', 
+    'beep', 'bip', 'effect', 'effet', 'ambient', 'ambiance', 'heartbeat', 'heart', 
+    'pulse', 'sinus', 'rhythm', 'note', 'scale', 'chord', 'bach', 'beethoven', 'mozart', 
+    'prelude', 'sinusoid', 'frequency', 'fréquence', 'signal', 'tone'
+  ];
+
+  if (nonSpeechKeywords.some(kw => t.includes(kw) || c.includes(kw))) {
+    return false;
+  }
+
+  // 2. Explicitly block historical speeches, addresses, conferences, talks, interviews
+  // because they require authentic audio, not synthesized text.
+  const historicalOrEventKeywords = [
+    'speech', 'discours', 'adresse', 'allocution', 'conférence', 'lecture', 'talk', 
+    'interview', 'debate', 'débat', 'declaration', 'déclaration', 'proclamation'
+  ];
+
+  if (historicalOrEventKeywords.some(kw => t.includes(kw))) {
+    return false;
+  }
+
+  // 3. Only synthesize if it is a pronunciation guide, language word learning, phonetics, or vocabulary practice.
+  const pronunciationKeywords = [
+    'prononciation', 'pronunciation', 'prononcer', 'pronounce', 'phonème', 'phoneme', 
+    'diphthong', 'diphthongue', 'voyelle', 'vowel', 'consonne', 'consonant', 'digraphe', 
+    'digraph', 'syllable', 'syllabe', 'word', 'vocabulaire', 'vocabulary', 'mot', 'parler', 
+    'speak', 'langue', 'language', 'accent'
+  ];
+
+  if (pronunciationKeywords.some(kw => t.includes(kw) || c.includes(kw))) {
+    return true;
+  }
+
+  // 4. Default: If customText is provided and it is short (representing a word/phrase to learn), allow it.
+  if (c !== '') {
+    const words = c.split(/\s+/);
+    if (words.length <= 5) {
+      return true;
+    }
+  }
+
+  // Otherwise, default to false. Do not generate TTS for general/historical content.
+  return false;
 }
 
 // Google Cloud Text-to-Speech API caller
@@ -1184,7 +1340,7 @@ export async function resolveAndPersistMedia(
       }
 
       // Step C: Fallback to Text-to-Speech synthesis (always available via GCP SA).
-      if (!audioBuffer && (customText || title)) {
+      if (!audioBuffer && (customText || title) && isSpeechAudio(title, customText)) {
         const textToSynthesize = customText || title;
         audioBuffer = await synthesizeSpeech(textToSynthesize, targetLang);
         mimeType = 'audio/mpeg';
@@ -1246,7 +1402,10 @@ export async function resolveAndPersistMedia(
           if (captionMatch) {
             const originalCaption = captionMatch[0];
             if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
-              const updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${resolved.sourceLabel}*`);
+              const finalLabel = resolved.sourceUrl 
+                ? `[${resolved.sourceLabel}](${resolved.sourceUrl})`
+                : resolved.sourceLabel;
+              const updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${finalLabel}*`);
               updatedContent = updatedContent.slice(0, afterImg) +
                 updatedContent.slice(afterImg).replace(originalCaption, updatedCaption);
             }
@@ -1316,31 +1475,143 @@ export async function resolveAndPersistMedia(
     }
   }
 
-  // Process JSX Figures: <CustomFigure src="..." />
+  // Process JSX Figures: <CustomFigure src="..." /> or <CustomFigure type="..." />
   const figRegex = /<CustomFigure\s+([^>]*?)\/>/g;
   let figMatch;
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
     const fullTag = figMatch[0];
     const attrsStr = figMatch[1];
 
-    const srcMatch = attrsStr.match(/src="([^"]+)"/);
-    const altMatch = attrsStr.match(/alt="([^"]+)"/);
-    const captionMatch = attrsStr.match(/caption="([^"]+)"/);
+    const getAttr = (name: string) => {
+      const curlyMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
+      if (curlyMatch) return curlyMatch[1].trim();
+      const quoteMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+      if (quoteMatch) return quoteMatch[1].trim();
+      const unquotedMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*([^\\s/>]+)`, 'i'));
+      if (unquotedMatch) return unquotedMatch[1].trim();
+      return '';
+    };
 
-    const originalSrc = srcMatch ? srcMatch[1] : '';
-    const altText = altMatch ? altMatch[1] : '';
-    const caption = captionMatch ? captionMatch[1] : '';
+    const typeText = getAttr('type').toLowerCase() || 'image';
+    const originalSrc = getAttr('src');
+    const altText = getAttr('alt');
+    const caption = getAttr('caption');
+    const title = getAttr('title');
+    const description = getAttr('description') || getAttr('desc');
 
-    if (originalSrc !== undefined || altText || caption) {
-      console.log(`[MEDIA-RESOLVER] Processing JSX Figure: ${altText} (${originalSrc})`);
+    if (typeText === 'audio') {
+      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="audio": "${description || title}"`);
+      const queryName = (description || title || caption || '').trim();
+      let resolvedUrl = await fetchWikimediaAudio(queryName);
+      let audioBuffer: Buffer | null = null;
+      let mimeType = 'audio/mpeg';
+
+      if (resolvedUrl) {
+        try {
+          const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
+          if (dlRes.ok) {
+            audioBuffer = Buffer.from(await dlRes.arrayBuffer());
+            const contentType = dlRes.headers.get('content-type') || '';
+            if (contentType.includes('ogg') || resolvedUrl.endsWith('.ogg')) mimeType = 'audio/ogg';
+            else if (contentType.includes('wav') || resolvedUrl.endsWith('.wav')) mimeType = 'audio/wav';
+            else if (contentType.includes('audio/ogg') || resolvedUrl.endsWith('.oga')) mimeType = 'audio/ogg';
+          }
+        } catch (err) {
+          console.warn(`[MEDIA-RESOLVER] Failed to download audio for CustomFigure from ${resolvedUrl}:`, err);
+        }
+      }
+
+      if (!audioBuffer) {
+        const archiveAudio = await fetchArchiveOrgMedia(queryName, 'audio');
+        if (archiveAudio?.url) {
+          resolvedUrl = archiveAudio.url;
+          try {
+            const dlRes = await fetchWithTimeout(resolvedUrl, {}, 6000);
+            if (dlRes.ok) {
+              audioBuffer = Buffer.from(await dlRes.arrayBuffer());
+              const contentType = dlRes.headers.get('content-type') || '';
+              if (contentType.includes('ogg') || resolvedUrl.endsWith('.ogg')) mimeType = 'audio/ogg';
+              else if (contentType.includes('wav') || resolvedUrl.endsWith('.wav')) mimeType = 'audio/wav';
+              else if (contentType.includes('audio/ogg') || resolvedUrl.endsWith('.oga')) mimeType = 'audio/ogg';
+            }
+          } catch (err) {
+            console.warn(`[MEDIA-RESOLVER] Failed to download audio from archive.org (${resolvedUrl}):`, err);
+          }
+        }
+      }
+
+      const durationHint = attrsStr.match(/duration="([^"]+)"/)?.[1] || '30s';
+      if (!audioBuffer) {
+        const lyriaPrompt = buildLyriaPrompt(queryName);
+        audioBuffer = await generateLyriaAudio(lyriaPrompt, durationHint);
+        if (audioBuffer) mimeType = 'audio/mpeg';
+      }
+
+      if (!audioBuffer && queryName) {
+        audioBuffer = await synthesizeSpeech(queryName, targetLang);
+        mimeType = 'audio/mpeg';
+      }
+
+      if (audioBuffer) {
+        const hash = crypto.createHash('md5').update(queryName).digest('hex');
+        const ext = getSafeExtension(mimeType, 'mp3');
+        const fileName = `audio_${hash}.${ext}`;
+        const publicUrl = await uploadToSupabaseStorage(fileName, audioBuffer, mimeType);
+        if (publicUrl) {
+          const finalTitle = (title || queryName).replace(/"/g, '&quot;');
+          const finalText = description.replace(/"/g, '&quot;');
+          updatedContent = updatedContent.replace(
+            fullTag,
+            `<AudioPlayer url="${publicUrl}" title="${finalTitle}" text="${finalText}" />`
+          );
+          continue;
+        }
+      }
+      
+      // Fallback if audio fails to resolve
+      console.log(`[MEDIA-RESOLVER] Audio CustomFigure resolving failed. Setting unresolved={true}.`);
+      updatedContent = updatedContent.replace(
+        fullTag,
+        `<AudioPlayer title="${(title || queryName).replace(/"/g, '&quot;')}" unresolved={true} />`
+      );
+      continue;
+    }
+
+    if (typeText === 'video') {
+      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="video": "${description || title}"`);
+      const queryName = (description || title || caption || '').trim();
+      if (queryName) {
+        const searchQuery = `${queryName} cours education ${targetLang === 'fr' ? 'français' : 'english'}`;
+        const realId = await searchYouTubeVideo(searchQuery);
+        if (realId) {
+          const newUrl = `https://www.youtube.com/watch?v=${realId}`;
+          const finalTitle = (title || queryName).replace(/"/g, '&quot;');
+          updatedContent = updatedContent.replace(
+            fullTag,
+            `<Video id="${realId}" url="${newUrl}" title="${finalTitle}" />`
+          );
+          continue;
+        }
+      }
+      console.log(`[MEDIA-RESOLVER] Video CustomFigure resolving failed. Setting unresolved={true}.`);
+      updatedContent = updatedContent.replace(
+        fullTag,
+        `<Video title="${(title || queryName).replace(/"/g, '&quot;')}" unresolved={true} />`
+      );
+      continue;
+    }
+
+    // Default/Image
+    if (originalSrc || altText || caption || description) {
+      console.log(`[MEDIA-RESOLVER] Processing JSX Figure: ${altText || description} (${originalSrc})`);
       let sourceUrl = originalSrc;
       let resolvedSuccess = false;
 
-      const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
+      const queryName = (description || altText || caption || '').trim().replace(/_/g, ' ');
       if (queryName) {
         const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
         const wikiImage = resolved ? resolved.url : null;
-        if (wikiImage) {
+        if (resolved && wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
           let updatedAttrs = attrsStr;
           if (attrsStr.includes('src=')) {
@@ -1348,12 +1619,24 @@ export async function resolveAndPersistMedia(
           } else {
             updatedAttrs += ` src="${wikiImage}"`;
           }
+          
+          let finalLabel = resolved.sourceLabel;
+          if (resolved.sourceUrl) {
+            finalLabel = `[${resolved.sourceLabel}](${resolved.sourceUrl})`;
+          }
           if (resolved && caption && !caption.includes('Source:')) {
-            const newCaption = `${caption} — Source: ${resolved.sourceLabel}`;
+            const newCaption = `${caption} — Source: ${finalLabel}`;
             if (updatedAttrs.includes('caption=')) {
               updatedAttrs = updatedAttrs.replace(/caption="[^"]*"/, `caption="${newCaption}"`);
             } else {
               updatedAttrs += ` caption="${newCaption}"`;
+            }
+          }
+          if (resolved.sourceUrl) {
+            if (updatedAttrs.includes('fallbackUrl=')) {
+              updatedAttrs = updatedAttrs.replace(/fallbackUrl="[^"]*"/, `fallbackUrl="${resolved.sourceUrl}"`);
+            } else {
+              updatedAttrs += ` fallbackUrl="${resolved.sourceUrl}"`;
             }
           }
           // Unsplash images are decorative illustrations — tag them so the renderer
@@ -1370,8 +1653,8 @@ export async function resolveAndPersistMedia(
       }
 
       // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
-      if (sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText || caption) || isFactualMedia(altText || caption))) {
-        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption}"`);
+      if (sourceUrl && sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText || caption || description) || isFactualMedia(altText || caption || description))) {
+        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption || description}"`);
         updatedContent = updatedContent.replace(fullTag, "");
         resolvedSuccess = true;
         continue;
@@ -1379,59 +1662,59 @@ export async function resolveAndPersistMedia(
 
       // Download and upload to Supabase Storage (Only for generated or other custom external images)
       if (sourceUrl) {
-      try {
-        let buffer: Buffer | null = null;
-        let contentType = 'image/jpeg';
-        const isLocal = !sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://') && !sourceUrl.startsWith('//');
+        try {
+          let buffer: Buffer | null = null;
+          let contentType = 'image/jpeg';
+          const isLocal = !sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://') && !sourceUrl.startsWith('//');
 
-        if (isLocal) {
-          const localPath = path.join(process.cwd(), 'public', sourceUrl);
-          if (fs.existsSync(localPath)) {
-            try {
-              buffer = fs.readFileSync(localPath);
-              const ext = path.extname(localPath).toLowerCase();
-              if (ext === '.png') contentType = 'image/png';
-              else if (ext === '.gif') contentType = 'image/gif';
-              else if (ext === '.svg') contentType = 'image/svg+xml';
-              else if (ext === '.webp') contentType = 'image/webp';
-            } catch (err) {
-              console.warn(`[MEDIA-RESOLVER] Failed to read local image ${localPath}:`, err);
+          if (isLocal) {
+            const localPath = path.join(process.cwd(), 'public', sourceUrl);
+            if (fs.existsSync(localPath)) {
+              try {
+                buffer = fs.readFileSync(localPath);
+                const ext = path.extname(localPath).toLowerCase();
+                if (ext === '.png') contentType = 'image/png';
+                else if (ext === '.gif') contentType = 'image/gif';
+                else if (ext === '.svg') contentType = 'image/svg+xml';
+                else if (ext === '.webp') contentType = 'image/webp';
+              } catch (err) {
+                console.warn(`[MEDIA-RESOLVER] Failed to read local image ${localPath}:`, err);
+              }
+            } else {
+              console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
             }
           } else {
-            console.warn(`[MEDIA-RESOLVER] Local image path ${localPath} does not exist.`);
-          }
-        } else {
-          const imageRes = await fetchWithTimeout(sourceUrl, {}, 20000);
-          if (imageRes.ok) {
-            contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-            buffer = Buffer.from(await imageRes.arrayBuffer());
-          }
-        }
-
-        if (buffer && !contentType.toLowerCase().includes('text/html')) {
-          const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-          const ext = getSafeExtension(contentType, 'jpg');
-          const fileName = `img_${hash}.${ext}`;
-          
-          const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
-          if (publicUrl) {
-            let updatedAttrs = attrsStr;
-            if (updatedAttrs.includes('src=')) {
-              updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
-            } else {
-              updatedAttrs += ` src="${publicUrl}"`;
+            const imageRes = await fetchWithTimeout(sourceUrl, {}, 20000);
+            if (imageRes.ok) {
+              contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+              buffer = Buffer.from(await imageRes.arrayBuffer());
             }
-            updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
-            resolvedSuccess = true;
           }
+
+          if (buffer && !contentType.toLowerCase().includes('text/html')) {
+            const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+            const ext = getSafeExtension(contentType, 'jpg');
+            const fileName = `img_${hash}.${ext}`;
+            
+            const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+            if (publicUrl) {
+              let updatedAttrs = attrsStr;
+              if (updatedAttrs.includes('src=')) {
+                updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
+              } else {
+                updatedAttrs += ` src="${publicUrl}"`;
+              }
+              updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+              resolvedSuccess = true;
+            }
+          }
+        } catch (err) {
+          console.warn(`[MEDIA-RESOLVER] Failed to download or upload JSX image ${sourceUrl}:`, err);
         }
-      } catch (err) {
-        console.warn(`[MEDIA-RESOLVER] Failed to download or upload JSX image ${sourceUrl}:`, err);
-      }
       }
 
       if (!resolvedSuccess) {
-        console.log(`[MEDIA-RESOLVER] Setting unresolved={true} on unresolvable Figure: "${altText || caption}"`);
+        console.log(`[MEDIA-RESOLVER] Setting unresolved={true} on unresolvable Figure: "${altText || caption || description}"`);
         let updatedAttrs = attrsStr;
         if (!attrsStr.includes('unresolved=')) {
           updatedAttrs += ' unresolved={true}';
@@ -1888,7 +2171,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
         if (audioBuffer) mimeType = 'audio/mpeg';
       }
 
-      if (!audioBuffer && (customText || title)) {
+      if (!audioBuffer && (customText || title) && isSpeechAudio(title, customText)) {
         audioBuffer = await synthesizeSpeech(customText || title, targetLangLower);
         mimeType = 'audio/mpeg';
       }
