@@ -102,6 +102,8 @@ ${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
 - **Syllabus Generation Attempts**: ${stats.syllabusAttempts}
 - **Narrative Scribe Attempts**: ${stats.narrativeAttempts}
 - **Narrative Critic Rejections**: ${stats.narrativeRejections}
+- **Narrative Global Rewrites (4A)**: ${stats.narrativeGlobalRewrites ?? 0}
+- **Narrative Localized Section Repairs (4A)**: ${stats.narrativeLocalRepairs ?? 0}
 - **Widgets Architect Attempts**: ${stats.widgetsAttempts}
 - **Widgets Critic Rejections**: ${stats.widgetsRejections}
 - **MDX Self-Healing Attempts**: ${stats.selfHealingAttempts}
@@ -2003,6 +2005,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         syllabusAttempts: 1,
         narrativeAttempts: 0,
         narrativeRejections: 0,
+        narrativeGlobalRewrites: 0,
+        narrativeLocalRepairs: 0,
         widgetsAttempts: 0,
         widgetsRejections: 0,
         selfHealingAttempts: 0,
@@ -2445,14 +2449,20 @@ You must audit the narrative text against the following 7 critical checkpoints:
 ---
 
 ### OUTPUT FORMAT
-You must return ONLY a valid JSON object matching the \`verificationSchema\` with the following keys:
-- **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints; false if there are any violations).
-- **\`critique\`**: string (detailed, actionable explanation of the violations and clear instructions on how the writer must expand or correct the text. Leave empty if approved).
+Your audit must be in dual-mode:
+- If the issues are **widespread** (structural skeleton, severe length deficiency, plan mismatch, numerous missing sections/anchors requiring a full rewrite), set **\`isGlobalRevision\`: true** and provide a comprehensive **\`globalCritique\`**.
+- If the issues are **localized** to specific sections, set **\`isGlobalRevision\`: false**, and list each \`## \` section in the **\`sections\`** array with its own \`approved\` flag and \`critique\`.
+
+You must return ONLY a valid JSON object with the following keys:
+- **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints).
+- **\`isGlobalRevision\`**: boolean (true = full rewrite needed; false = localized section fixes).
+- **\`globalCritique\`**: string (comprehensive global critique if isGlobalRevision is true; empty otherwise).
+- **\`sections\`**: array of \`{ heading: string, approved: boolean, critique: string }\` - list all \`## \` sections. Required even when approved is true (set approved: true for passing sections).
 
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
-          const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, verificationSchema, 0.1);
+          const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, revisionAuditSchema, 0.1);
           saveDraftRevision(`critique_stage4a_narrative_${item.slug}_attempt_${narrativeIteration}.json`, critiqueJsonStr);
 
           const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
@@ -2462,8 +2472,14 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
             await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text APPROVED on attempt ${narrativeIteration}!`);
             narrativeApproved = true;
           } else {
-            const critiqueText = audit?.critique || 'Invalid response from critic.';
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text REJECTED. Critique: ${critiqueText}`);
+            const isGlobalNarrative = !!audit?.isGlobalRevision;
+            const globalCritiqueText = audit?.globalCritique || '';
+            const criticSectionsNarrative: { heading: string; approved: boolean; critique: string }[] = audit?.sections || [];
+            const critiqueText = isGlobalNarrative
+              ? globalCritiqueText
+              : (criticSectionsNarrative.filter(s => !s.approved).map(s => `[${s.heading}]: ${s.critique}`).join(' | ') || 'Invalid response from critic.');
+
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative REJECTED (${isGlobalNarrative ? 'GLOBAL rewrite' : 'LOCALIZED repair'}). Critique: ${critiqueText}`);
             lessonStats.narrativeRejections++;
 
             if (narrativeIteration >= maxNarrativeIterations) {
@@ -2471,39 +2487,126 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
               break;
             }
 
-            const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
-The narrative critic (Agent 4A) has rejected your previously generated academic narrative text.
-You MUST now rewrite, expand, and fully correct the academic narrative text based on their feedback, ensuring zero placeholders, high academic density, and proper formatting.
+            if (isGlobalNarrative) {
+              // === GLOBAL REWRITE PATH ===
+              lessonStats.narrativeGlobalRewrites++;
+              const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+The narrative critic (Agent 4A) has rejected your previously generated academic narrative text with a GLOBAL critique requiring a full rewrite.
 
 ${pronunciationMandate}
 
-⚠️ CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
+[CRITICAL] CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
 - Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags (<ul>, <ol>, <li>) for lists; use standard Markdown instead.
-- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $$ \\{...\\} $$.
+- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $ \\{...\\} $.
 - Never write "import " or "export " at the start of a line in plain prose.
 
-CRITIQUE FROM AGENT 4A:
-"${critiqueText}"
+GLOBAL CRITIQUE FROM AGENT 4A:
+"${globalCritiqueText}"
 
 PREVIOUS ACADEMIC NARRATIVE TEXT:
 ---
 ${cleanedNarrative}
 ---
 
-Generate the complete, updated, fully-fledged academic narrative text incorporating all corrections.
+Re-generate the ENTIRE academic narrative from scratch, fully addressing the global critique.
 Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
 
-          const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
-          const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
-          
-          // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
-          cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
-          
-          lessonStats.narrativeAttempts++;
-          saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
+              const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
+              const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
+              // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
+              cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
+              lessonStats.narrativeAttempts++;
+              saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
+
+            } else {
+              // === LOCALIZED SECTION-BY-SECTION REPAIR PATH ===
+              lessonStats.narrativeLocalRepairs++;
+              const rejectedSections = criticSectionsNarrative.filter(s => !s.approved);
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Localized repair for ${rejectedSections.length} section(s): ${rejectedSections.map(s => `"${s.heading}"`).join(', ')}`);
+
+              const parsedSections = parseMarkdownSections(cleanedNarrative);
+              const rejectedSectionsData: { heading: string; content: string; critique: string; precedingHeading: string | null; succeedingHeading: string | null; }[] = [];
+
+              for (let i = 0; i < parsedSections.length; i++) {
+                const sec = parsedSections[i];
+                const secHeadingNorm = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                const criticMatch = criticSectionsNarrative.find(cs => {
+                  const csHeadingNorm = (cs.heading || 'Header / Introduction Block').trim().toLowerCase();
+                  return csHeadingNorm === secHeadingNorm || csHeadingNorm.replace(/^##\s+/, '') === secHeadingNorm.replace(/^##\s+/, '');
+                });
+                if (criticMatch && !criticMatch.approved) {
+                  rejectedSectionsData.push({
+                    heading: sec.heading || 'Header / Introduction Block',
+                    content: sec.content,
+                    critique: criticMatch.critique,
+                    precedingHeading: i > 0 ? parsedSections[i - 1].heading : null,
+                    succeedingHeading: i < parsedSections.length - 1 ? parsedSections[i + 1].heading : null
+                  });
+                }
+              }
+
+              if (rejectedSectionsData.length > 0) {
+                const promptJointRepair = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+We need to repair specific sections of the lesson narrative "${item.title}" that were rejected by the Narrative Critic (Agent 4A).
+
+[CRITICAL] CRITICAL MDX COMPLIANCE:
+- Do NOT use raw JSX tags for interactive widgets. Use bracketed anchors: [[WIDGET:id]].
+- Do NOT use raw HTML tags; use standard Markdown instead.
+- Do NOT use literal curly braces { } in plain text.
+
+CONTEXT:
+Course: "${correctedCourseName}" | Level: "${levelInput}" | Language: "${targetLang.toUpperCase()}"
+
+${rejectedSectionsData.map((rj, idx) => `
+--- REJECTED SECTION ${idx + 1} ---
+Heading: "${rj.heading}"
+Neighborhood:
+  - Preceding: ${rj.precedingHeading || 'None'}
+  - Succeeding: ${rj.succeedingHeading || 'None'}
+Critique from Agent 4A:
+  "${rj.critique}"
+Current Content:
+${rj.content}
+----------------------------------
+`).join('\n')}
+
+INSTRUCTIONS:
+1. Repair each rejected section to fully resolve its critique.
+2. Wrap each repaired section in: <revised_section heading="HEADING_EXACTLY_AS_SHOWN">[your repaired content]</revised_section>
+3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
+4. Do NOT include markdown code block wrappers or conversational text.`;
+
+                const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.3);
+                const repairs = parseJointRepairOutput(scribeRepairOutput);
+
+                // Fallback: single section repair with no XML tags
+                if (repairs.size === 0 && rejectedSectionsData.length === 1) {
+                  const key = rejectedSectionsData[0].heading.trim().toLowerCase();
+                  repairs.set(key, scribeRepairOutput.trim());
+                }
+
+                for (const sec of parsedSections) {
+                  const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                  if (repairs.has(key)) {
+                    await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Applied repair for section: "${sec.heading}"`);
+                    sec.content = repairs.get(key)!;
+                  }
+                }
+
+                const repairedNarrative = reconstructMarkdown(parsedSections);
+                const rawRepaired = repairedNarrative.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the repaired draft!
+                cleanedNarrative = preprocessMdx(rawRepaired, targetLang.toLowerCase(), false, item.slug);
+                lessonStats.narrativeAttempts++;
+                saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
+              } else {
+                await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] No matching sections found for localized repair. Moving forward.`);
+                break;
+              }
+            }
+          }
         }
-      }
       approvedNarrativeText = cleanedNarrative;
       }
 
