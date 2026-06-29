@@ -994,7 +994,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     } else if (comp.componentType === "UnsolvedExercise") {
       compStr = `<UnsolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" correctAnswer="${(props.correctAnswer || '').replace(/"/g, '&quot;')}" explanation="${(props.explanation || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</UnsolvedExercise>`;
     } else if (comp.componentType === "Mermaid") {
-      compStr = `<Mermaid chart={\`${props.chart || ''}\`} />`;
+      const mCaption = props.caption ? ` caption="${(props.caption || '').replace(/"/g, '&quot;')}"` : '';
+      compStr = `<Mermaid chart={\`${props.chart || ''}\`}${mCaption} />`;
     } else if (comp.componentType === "FunctionPlotter") {
       compStr = `<FunctionPlotter fn="${props.fn || 'x^2'}" domain={${JSON.stringify(props.domain || [-10, 10])}} />`;
     } else if (comp.componentType === "CodeSandbox") {
@@ -1133,8 +1134,13 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   if (!repFe) {
     content = content + `\n\n${finalEvalStr}`;
   }
-
-  const glossaryStr = `\n\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${g.definition}`).join('\n')}`;
+  // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
+  const cleanGlossaryDef = (def: string): string => (def || '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')  // [text](url) -> text
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')          // [[text]] -> text
+    .trim();
+  const glossaryStr = `\n\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
+  content = content.trim() + glossaryStr;
   content = content.trim() + glossaryStr;
 
   // Convert [refN] citations in the narrative text to standard superscript links with back-links
@@ -2026,6 +2032,10 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
       };
 
       const isTerminalEvaluation = item.slug === 'evaluation-finale' || item.slug === 'final-evaluation';
+      // Penultimate lesson = immediately before the terminal evaluation
+      const terminalIdx = lessonsList.findIndex((l: any) => l.slug === 'evaluation-finale' || l.slug === 'final-evaluation');
+      const penultimateIdx = terminalIdx !== -1 ? terminalIdx - 1 : originalSyllabusLessonsLength - 2;
+      const isPenultimateLesson = !isTerminalEvaluation && realIndex === penultimateIdx;
       let approvedNarrativeText = '';
 
       // 1. Discipline-Aware Catalog Pruning
@@ -2154,7 +2164,7 @@ You must adapt your writing style, formatting, and density strictly to the epist
 
 ### 2. LEVEL & LANGUAGE ADAPTATION (BLOOM'S TAXONOMY)
 - **Vocabulary & Tone**: Tailor all terminology, sentence complexity, and conceptual depth to the target academic level ("${levelInput}").
-- **Language**: Write the entire content in "${targetLang.toUpperCase()}".
+- **Language**: Write the ENTIRE content — every word including lesson titles, all section headings (## ...), figure captions, hover-card attributes, and all prose — exclusively in **"${targetLang.toUpperCase()}"**. This is absolute and non-negotiable. A heading or title in any other language is a CRITICAL ERROR that will immediately reject the lesson.
 - **Bloom's Taxonomy Rule**:
   - If the target level is University/Higher Education (L1-M2, beginner-expert):
     - If Target Language is **FR** (French): Systematically use Revised Bloom's Taxonomy verbs: **Analyser** (Analyze), **Évaluer** (Evaluate), and **Créer** (Create) when introducing goals and activities.
@@ -2198,7 +2208,11 @@ ${formattedCatalogList}
    - Target word count: **3,000 to 5,000 words** of deeply developed text across at least 4 to 5 conceptual sections (each starting with a '## ' heading).
 2. **Author Quotes with Citations**:
    - Weave at least one high-impact, authentic quotation from a notable expert/scientist, formatted exactly as:
-     > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
+     > "Quote text in the course's target language..." — Author, *Original Book/Publication Title* (in its original language, NEVER translated), Publisher, City, Year, p. Page
+   - If the quote's original language is different from the course's target language, you MUST follow it with its original version in brackets, e.g.:
+     > [Original] "Original quote text in its original language..."
+     Do not repeat the quote if the original language is the same as the course's target language.
+   - Crucially, all bibliographic references (author names, book/publication titles, publishers, cities, and publication details) MUST remain in their original language and must NEVER be translated.
    - Every foreign-language quote must be followed by its bracketed translation in the course's target language, plus a paragraph detailing its conceptual implications.
 3. **In-text Bibliography Citations (CRITICAL)**:
    - Ground the lesson in these specific, canonical course-level references:
@@ -2227,7 +2241,13 @@ ${referencesMetadata}
      - \`<ChemicalLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
      - \`<CelestialLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Celestial Body/Space Mission</CelestialLink>\`
    *Strict Constraints*:
-   - ABSOLUTELY FORBIDDEN to wrap verbs (especially action/Bloom verbs like "analyser", "comprendre", "créer", "identifier", etc.) inside these entity tags. Verbs must remain as plain text or bold text, never wrapped in hover-cards. Only wrap true named entities or technical terms.
+
+   - ⛔ ABSOLUTELY FORBIDDEN: Wrapping any verb, adjective, or cognitive action word inside these entity tags. This includes ALL Bloom’s Taxonomy verbs (analyser, évaluer, créer, comprendre, identifier, analyze, evaluate, create, understand, apply, etc.) as well as any other action verbs. These MUST remain as plain bold text (**analyser**) or plain text, NEVER as JSX hover-card tags.
+
+   - ⛔ FORBIDDEN EXAMPLE (never do this): `<analyser>analyser</analyser>`, `<ConceptLink name="analyser">analyser</ConceptLink>`, `<ConceptLink name="Évaluer">Évaluer</ConceptLink>`
+
+   - ✅ VALID EXAMPLES (only wrap true named entities): `<RealPerson name="Socrate">Socrate (470-399 av. J.-C.)</RealPerson>`, `<ConceptLink name="Logos">logos</ConceptLink>`, `<Location name="Athènes">Athènes</Location>`
+
    - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
 7. **Factual Images & Captions**:
    - Include 5 to 6 factual/sourced images and 1 to 2 decorative AI illustrations for Licence level.
@@ -2244,6 +2264,23 @@ ${referencesMetadata}
 - Return ONLY the raw MDX content.
 - Do NOT wrap your output in markdown code blocks (\`\`\`).
 - Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
+${isPenultimateLesson ? `
+
+---
+
+### 6. COURSE SYNTHESIS MANDATE 🎓 (PENULTIMATE LESSON — MANDATORY)
+This is the **penultimate lesson** of the course "${correctedCourseName}", immediately preceding the Final Evaluation.
+In addition to delivering rich content on this lesson's specific topic, you MUST include a **comprehensive course-wide synthesis** as the FINAL section of this document, titled:
+- **FR**: `## Bilan général du cours`
+- **EN**: `## Course Synthesis`
+- Use the appropriate title in the target language **${targetLang.toUpperCase()}**.
+
+This synthesis MUST (400–600 words):
+1. Summarize the intellectual journey of the entire course "${correctedCourseName}", connecting all major themes.
+2. Highlight 3–5 major conceptual pillars or breakthroughs covered across the course.
+3. Position this knowledge in the broader academic landscape of the discipline.
+4. End with a forward-looking perspective: open questions, future research, or real-world applications.
+` : ''}
 `;
 
         // Export Scribe Prompt
@@ -2311,7 +2348,9 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, or \`<Mermaid>\`). They must exclusively use bracketed anchors. Note: <SandboxPrononciation /> and <PronunciationSandbox /> are explicitly allowed as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
 4. **Author Quotes & In-text Citations**:
    - Verify that the text integrates high-impact quotes formatted exactly as:
-     > "Quote text..." — Author, *Book/Publication Title*, Publisher, City, Year, p. Page
+     > "Quote text in the course's target language..." — Author, *Original Book/Publication Title* (in its original language), Publisher, City, Year, p. Page
+   - Verify that all bibliographic references (book/publication titles, publishers, cities) are in their original language and have NOT been translated.
+   - If the quote's original language is different from the course's target language, verify it is followed by its original version in brackets: \`> [Original] "..."\`. Ensure there are no duplicate translations if the quote was originally in the course language.
    - Every foreign-language quote must be immediately followed by its bracketed translation. Every quote must have an explanatory paragraph.
    - Verify that references are cited inline using standard brackets, e.g. \`[1](#ref-1)\`.
 5. **Controlled Digressions & Mini-Biographies**:
@@ -3004,10 +3043,14 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
 Rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
-2. Keep all Math equations (wrapped in $ or $$) completely untouched.
-3. Do NOT translate technical code blocks. You will see placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. These placeholders protect the custom interactive components from corruption. Do NOT translate or modify these placeholders or the '|||' separators. Preserve them EXACTLY as they are.
+2. Keep all Math equations (wrapped in $ or $) completely untouched.
+3. Do NOT translate technical code blocks. You will see placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__, and source attribution placeholders like __SRC_ATTR_PLACEHOLDER_...__. These placeholders protect the custom interactive components and figure source attributions from corruption. Do NOT translate or modify these placeholders or the '|||' separators. Preserve them EXACTLY as they are.
 4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
-5. CRITICAL MDX COMPILER COMPLIANCE RULES:
+5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
+   - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language to preserve academic citation integrity.
+   - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
+   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash. If there is a bracketed original version or translation (e.g. \`[Original] "..."\` or \`[Translation] "..."\`), preserve both if they are in different languages, but never translate the original citation text.
+6. CRITICAL MDX COMPILER COMPLIANCE RULES:
    - Do NOT wrap the translated response in markdown code blocks (such as \`\`\`md or \`\`\`mdx). Return the raw MDX content directly.
    - Absolutely NO orphaned JSX tags or unclosed tags.
    - Never nest a custom component inside itself.
@@ -3105,11 +3148,12 @@ Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
 2. MDX Components Preservation: Are all MDX elements (like <Quiz>, <Question>, <Option>, <Glossary>, <Video>, <Audio>, <FillInBlanks>, <SolvedProblem>, <Summary>, <SelfEval>, <HistoricalPerson>, <Location>, <Place>, <EntityLink>, <EssayEvaluation>, <OpenQuestion>, <ScientificDebate>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) completely present with all their JSX tags and properties intact? Do NOT generate empty components like <CriticalThinking />, <WhatsNext />, <OpenQuestion />, or <ScientificDebate /> without text/children. Do NOT nest wrapper components (e.g. nesting <WhatsNext> inside itself is strictly forbidden).
 3. Custom attributes: For <Glossary>, are term/definition translated? For <HistoricalPerson>, are name/lang translated/updated? For <EssayEvaluation>, are prompt/subject translated? Are other properties (like durations, options, gradingSystem, IDs, itemsBase64 payloads) preserved exactly as in the original?
-4. Formulas and Code: Are all Math equations ($...$ or $$...$$) and code blocks kept exactly as they were, untranslated?
+4. Formulas and Code: Are all Math equations ($...$ or $...$) and code blocks kept exactly as they were, untranslated?
 5. Zero Translator Commentary: Did the translator introduce any notes, prefixes, or meta-conversational lines (e.g. "Here is the translation:")? If so, reject it.
 6. Zero placeholders: Are there any placeholders or unfinished sections?
 7. Assessment Integrity: Ensure all translated interactive assessments (<Quiz>, <Question>, <Option>, <DiagnosticQuiz>, <EssayEvaluation>, <UnsolvedExercise>) are complete, fully populated with high-quality, non-empty text matching the target course level, length, and complexity of the subject, and verify that the translation has not broken correct option attributes (e.g. "correct" prop on <Option>, or "correctIndex" on <DiagnosticQuiz>).
-8. Academic References: Do NOT expect or request translation of academic references, book/article titles, author names, or citation texts inside <References> components or itemsBase64 attributes. These must remain exactly as they are in the original to preserve citation integrity.
+8. Academic References and Figure Sources: Do NOT expect or request translation of academic references, book/article/publication titles, author names, or citation texts inside <References> components or itemsBase64 attributes. These must remain exactly as they are in the original to preserve citation integrity.
+9. Immutability of Citations and Sources: Verify that "Source:" prefixes and associated bibliographic links/attributions in figure captions or narrative text remain exactly in their original language (typically English) and have not been translated. Reject the translation if bibliographic citations or original quote blocks have their reference metadata or book titles translated.
 
 You must output ONLY a valid JSON object matching this structure:
 {
@@ -3118,7 +3162,7 @@ You must output ONLY a valid JSON object matching this structure:
 }
 Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
 
-              let criticResText = '';
+let criticResText = '';
               let criticSuccess = false;
 
               if (process.env.DEBUG === 'true') {
@@ -3209,11 +3253,15 @@ ${isolatedRejected}
 Please re-translate the Original MDX Content to "${targetLang.toUpperCase()}", correcting all issues highlighted by the critic.
 Follow all initial translation rules:
 1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
-2. Keep all Math equations (wrapped in $ or $$) completely untouched.
-3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators. Absolutely do NOT append any text, properties, or attributes to these placeholders (for example, never append itemsBase64=... next to __JSX_SELF_References_...__).
-4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.`;
+2. Keep all Math equations (wrapped in $ or $) completely untouched.
+3. Do NOT translate technical code blocks or placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__, and source attribution placeholders like __SRC_ATTR_PLACEHOLDER_...__. Preserve them EXACTLY as they are. Do not translate the '|||' separators. Absolutely do NOT append any text, properties, or attributes to these placeholders (for example, never append itemsBase64=... next to __JSX_SELF_References_...__).
+4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
+5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
+   - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language to preserve academic citation integrity.
+   - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
+   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash. If there is a bracketed original version or translation (e.g. \`[Original] "..."\` or \`[Translation] "..."\`), preserve both if they are in different languages, but never translate the original citation text.`;
 
-                if (process.env.DEBUG === 'true') {
+if (process.env.DEBUG === 'true') {
                   saveDraftRevision(`prompt_translation_refiner_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_${critiqueIteration + 1}.md`, promptRefine);
                 }
 
