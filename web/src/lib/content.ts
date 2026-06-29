@@ -229,7 +229,7 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
 export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
   const sectionPatterns = [
     { id: 'conclusion', regex: /^(#{2,3}\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/mi },
-    { id: 'et_apres', regex: /^(#{2,3}\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??)[^\n]*)/mi },
+    { id: 'et_apres', regex: /^(#{2,3}\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??|Pour\s+aller\s+plus\s+loin|Going\s+Further|Para\s+ir\s+m\u00e1s\s+all\u00e1|Weiterf\u00fchrende\s+Literatur|深入\s*学习)[^\n]*)/mi },
     { id: 'evaluation', regex: /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi },
     { id: 'glossaire', regex: /^(#{2,3}\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*)/mi },
     { id: 'references', regex: /^(#{2,3}\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/mi },

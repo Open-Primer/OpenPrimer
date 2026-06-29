@@ -27,7 +27,7 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cayylzaasyqqpvuezufy.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https:; connect-src 'self' https://cayylzaasyqqpvuezufy.supabase.co https://aiplatform.googleapis.com https://api.resend.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https://*.youtube.com https://*.youtube-nocookie.com https://*.vimeo.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
+    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cayylzaasyqqpvuezufy.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https:; connect-src 'self' https://cayylzaasyqqpvuezufy.supabase.co https://aiplatform.googleapis.com https://api.resend.com https://*.wikipedia.org; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https://*.youtube.com https://*.youtube-nocookie.com https://*.vimeo.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
   },
   {
     key: 'Cross-Origin-Opener-Policy',

@@ -71,18 +71,17 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum }: Reso
 
   const { language } = useLanguage();
 
-  if (isValid === false) {
-    return null; // Automatically suppress/remove the entire block if the link is not valid or broken
-  }
-
-  const CardWrapper = url ? 'a' : 'div';
-  const extraProps = url ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {};
+  const hasRealUrl = url && isValid !== false;
+  const CardWrapper = (hasRealUrl || refNum) ? 'a' : 'div';
+  const extraProps = hasRealUrl 
+    ? { href: url, target: '_blank', rel: 'noopener noreferrer' } 
+    : (refNum ? { href: `#ref-${refNum}` } : {});
 
   return (
     <CardWrapper 
       id={refNum ? `cite-${refNum}` : undefined}
       {...(extraProps as any)}
-      className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-800 transition-all duration-300 ${url ? 'cursor-pointer' : ''}`}
+      className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-800 transition-all duration-300 ${(hasRealUrl || refNum) ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-start gap-4">
         <div className="mt-1 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 shadow-inner group-hover:scale-110 transition-all duration-300">
@@ -97,16 +96,12 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum }: Reso
               {getBadgeText(language)}
             </span>
             {refNum && (
-              <a 
-                href={`#ref-${refNum}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-900/50 text-indigo-400 hover:text-indigo-200 hover:bg-indigo-900 transition-all select-none cursor-pointer"
-                title={language.toUpperCase() === 'FR' ? `Voir la référence [${refNum}]` : `View reference [${refNum}]`}
+              <span 
+                className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-900/50 text-indigo-400 select-none"
+                title={language.toUpperCase() === 'FR' ? `Référence [${refNum}]` : `Reference [${refNum}]`}
               >
                 [{refNum}]
-              </a>
+              </span>
             )}
           </div>
           <p className="text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-350 transition-colors duration-200">
@@ -114,7 +109,7 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum }: Reso
           </p>
         </div>
       </div>
-      {url && (
+      {(hasRealUrl || refNum) && (
         <div className="self-end md:self-auto flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 group-hover:text-blue-400 group-hover:border-blue-500/30 transition-all duration-300">
           <ArrowUpRight className="w-4 h-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
         </div>
