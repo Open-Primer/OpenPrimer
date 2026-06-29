@@ -4123,10 +4123,15 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
     }
 
     if (tagName === 'Question' || tagName === 'DiagnosticQuiz') {
-      const q = attrs.q || attrs.questionText || attrs.text || attrs.question || '';
+      let qKey = 'q';
+      if (attrs.questionText) qKey = 'questionText';
+      else if (attrs.text) qKey = 'text';
+      else if (attrs.question) qKey = 'question';
+
+      const q = attrs[qKey] || '';
       const explanation = attrs.explanation || '';
       const placeholder = `__JSX_ATTR_${tagName}_${placeholderId}__`;
-      registry[placeholder] = { type: 'attr_question', tagName, attrs, original: match, isSelfClosing };
+      registry[placeholder] = { type: 'attr_question', tagName, qKey, attrs, original: match, isSelfClosing };
       return `${placeholder} ${q} ||| ${explanation} __JSX_END_${placeholderId}__`;
     }
 
@@ -4173,7 +4178,16 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
     } else if (entry.type === 'self') {
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
     } else if (entry.type === 'open') {
-      processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
+      let original = entry.original;
+      if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName) && entry.attrs) {
+        const updatedAttrs = { ...entry.attrs, lang: targetLang.toLowerCase() };
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(updatedAttrs)) {
+          attrsStr += formatAttribute(k, v);
+        }
+        original = `<${entry.tagName}${attrsStr}>`;
+      }
+      processed = processed.replace(new RegExp(placeholder, 'gi'), original);
     } else if (entry.type === 'attr_generic') {
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
@@ -4186,6 +4200,9 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
             updatedAttrs[attrName] = translatedValues[idx];
           }
         });
+        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName)) {
+          updatedAttrs['lang'] = targetLang.toLowerCase();
+        }
         let attrsStr = '';
         for (const [k, v] of Object.entries(updatedAttrs)) {
           attrsStr += formatAttribute(k, v);
@@ -4255,6 +4272,9 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         const name = match[1].trim() || entry.attrs.name || '';
         let attrsStr = '';
         const updatedAttrs = { ...entry.attrs };
+        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName)) {
+          updatedAttrs['lang'] = targetLang.toLowerCase();
+        }
         for (const [k, v] of Object.entries(updatedAttrs)) {
           if (k !== 'name') {
             attrsStr += formatAttribute(k, v);
@@ -4285,7 +4305,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const q = match[1].trim() || entry.attrs.q || entry.attrs.questionText || entry.attrs.text || entry.attrs.question || '';
+        const qKey = entry.qKey || 'q';
+        const q = match[1].trim() || entry.attrs[qKey] || '';
         const explanation = match[2].trim() || entry.attrs.explanation || '';
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
@@ -4294,7 +4315,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
           }
         }
         const expAttr = explanation ? ` explanation="${explanation}"` : '';
-        const restoredTag = `<${entry.tagName} q="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
+        const restoredTag = `<${entry.tagName} ${qKey}="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
         processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
       } else {
         processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);

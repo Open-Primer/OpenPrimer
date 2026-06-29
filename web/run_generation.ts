@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // 1. Manually parse .env.local to ensure environment variables are present in process.env
-const envPath = path.join(__dirname, '.env.local');
+const envPath = path.join(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf-8');
   envContent.split('\n').forEach(line => {

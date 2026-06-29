@@ -2809,7 +2809,7 @@ ${isolatedContent}`;
                 if (res && res.ok) {
                   const resJson = await res.json();
                   const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  translatedMdx = restoreJsxAfterTranslation(rawText, registry);
+                  translatedMdx = restoreJsxAfterTranslation(rawText, registry, targetLang);
                   transSuccess = true;
                 }
               } catch (err) {
@@ -2831,7 +2831,7 @@ ${isolatedContent}`;
                 if (res.ok) {
                   const resJson = await res.json();
                   const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  translatedMdx = restoreJsxAfterTranslation(rawText, registry);
+                  translatedMdx = restoreJsxAfterTranslation(rawText, registry, targetLang);
                   transSuccess = true;
 
                   const durationMs = Date.now() - startTime;
@@ -3001,7 +3001,7 @@ Follow all initial translation rules:
                     if (resRefine && resRefine.ok) {
                       const resJson = await resRefine.json();
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry);
+                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry, targetLang);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -3021,7 +3021,7 @@ Follow all initial translation rules:
                     if (resRefine.ok) {
                       const resJson = await resRefine.json();
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry);
+                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry, targetLang);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -3039,6 +3039,11 @@ Follow all initial translation rules:
                   break;
                 }
               }
+            }
+
+            if (!approved && currentTranslation) {
+              console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation not fully approved after max critique iterations. Using latest refinement.`);
+              translatedMdx = currentTranslation;
             }
 
             // Translate title
