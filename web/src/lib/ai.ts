@@ -711,16 +711,25 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         {
           title: "Introduction aux concepts clés",
           type: "website",
-          url: "https://wikipedia.org",
+          url: "",
           description: "Explorez les notions fondamentales et historiques liées à cette leçon sur Wikipédia."
         }
       ]
     };
   } else {
+    const PLACEHOLDER_URL_PATTERNS = [
+      'example.com', 'your_youtube_id', 'youtube.com/watch?v=xxxxxx',
+      'youtube.com/watch?v=abcdef', 'youtube.com/watch?v=12345',
+      'youtube.com/watch?v=dqw4w9wgxcq', 'test.com', 'placeholder', 'fakeurl'
+    ];
     widgets.goingFurther.items = widgets.goingFurther.items.map((it: any) => {
       const title = (it.title || "Ressource complémentaire").trim();
       const type = ["book", "article", "video", "website", "research", "movie", "film"].includes(it.type) ? it.type : "website";
-      const url = (it.url || "").trim();
+      let url = (it.url || "").trim();
+      const lowerUrl = url.toLowerCase();
+      if (url && PLACEHOLDER_URL_PATTERNS.some(p => lowerUrl.includes(p))) {
+        url = "";
+      }
       const description = (it.description || "Pour approfondir vos connaissances sur le sujet.").trim();
       return { title, type, url, description };
     });
@@ -2034,6 +2043,11 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
   Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
       }).join('\n\n');
 
+      const courseReferences = parsedSyllabus?.references || [];
+      const referencesMetadata = courseReferences.length > 0
+        ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
+        : 'None provided. Please construct academic references for the discipline.';
+
       if (isTerminalEvaluation) {
         approvedNarrativeText = '[[WIDGET:finalEvaluation]]';
       } else {
@@ -2076,11 +2090,6 @@ Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw J
 `;
           }
         }
-
-        const courseReferences = parsedSyllabus?.references || [];
-        const referencesMetadata = courseReferences.length > 0
-          ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
-          : 'None provided. Please construct academic references for the discipline.';
 
         const narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
@@ -2381,8 +2390,8 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
           saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
         }
       }
-
-      const approvedNarrativeText = cleanedNarrative;
+      approvedNarrativeText = cleanedNarrative;
+      }
 
       // ───────────────────────────────────────────────────────────────
       // [STAGE 2] WIDGETS ARCHITECT (AGENT 3B)
@@ -2483,12 +2492,11 @@ Your generated JSON must contain the following top-level keys:
 5. **\`whatsNext\`**:
    - Provide 2 to 3 engaging next steps or follow-up courses, each with \`title\`, \`description\`, and \`slug\`.
 5b. **\`goingFurther\`**:
-   - Provide 2 to 3 suggested readings or external resources (books, articles, videos, websites) to explore the topic deeper. Each item must have:
-     - \`title\`: Title of the resource.
-     - \`type\`: One of "book", "article", "video", "website", "research", "movie", "film".
-     - \`url\`: A valid external URL if available (optional).
-     - \`description\`: A brief explanation of what the resource contains and why it is valuable.
-6. **\`finalEvaluation\`**:
+    - Provide a pool of EXACTLY 5 to 6 suggested readings or external resources (books, articles, videos, websites) to explore the topic deeper. Do NOT invent or generate URLs yourself. Focus on providing accurate, highly relevant titles, types, and descriptions. The system will automatically search and resolve real links for them. Each item must have:
+      - \`title\`: Title of the resource.
+      - \`type\`: One of "book", "article", "video", "website", "research", "movie", "film".
+      - \`description\`: A brief explanation of what the resource contains and why it is valuable.
+ 6. **\`finalEvaluation\`**:
    - A comprehensive final test. This must be a structured JSON object representing either an \`EssayEvaluation\` with a detailed prompt, or a high-fidelity MCQ \`Quiz\`.
    - **MCQ Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
      - You MUST generate a pool of EXACTLY ${finalQuizPoolCount} questions in the \`props.questions\` array.
@@ -5067,7 +5075,20 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
             }
           }
 
-          // 4. Update the tag
+          // 4. Fallback: try Wikipedia search for non-video types
+          if (!alternativeUrl && title && type !== 'video' && type !== 'film' && type !== 'movie') {
+            try {
+              const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
+              if (wikiRes.ok) {
+                const data = await wikiRes.json();
+                if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
+                  alternativeUrl = data[3][0];
+                }
+              }
+            } catch {}
+          }
+
+          // 5. Update the tag (replace URL if found, else strip it)
           let newTag = block.fullBlock;
           if (alternativeUrl) {
             newTag = block.fullBlock.replace(/url="[^"]*"/gi, `url="${alternativeUrl.replace(/"/g, '&quot;')}"`)
@@ -5077,6 +5098,34 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
                                     .replace(/\s*url='[^']*'/gi, '');
           }
           updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
+        } else {
+          // No URL in original — try to auto-resolve from title
+          let resolvedUrl = '';
+          if (title) {
+            if (type === 'video' || type === 'film' || type === 'movie') {
+              const alt = await findAlternativeVideoWithFallback(title, targetLang);
+              if (alt && alt.url) resolvedUrl = alt.url;
+            } else {
+              for (const lang of [targetLang, 'en']) {
+                try {
+                  const wikiRes = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
+                  if (wikiRes.ok) {
+                    const data = await wikiRes.json();
+                    if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
+                      resolvedUrl = data[3][0];
+                      break;
+                    }
+                  }
+                } catch {}
+                if (resolvedUrl) break;
+              }
+            }
+            if (resolvedUrl) {
+              const newTag = block.fullBlock.replace(/(\/?>)$/, ` url="${resolvedUrl.replace(/"/g, '&quot;')}" />`);
+              updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
+              console.log(`[EXTERNAL RESOURCE VALIDATOR] Auto-resolved URL for "${title}": ${resolvedUrl}`);
+            }
+          }
         }
       }
     }
