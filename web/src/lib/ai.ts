@@ -624,6 +624,28 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
       } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
         if (!comp.props.prompt) comp.props.prompt = "Expliquez le concept clé de cette leçon de vive voix.";
         if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
+      } else if (comp.componentType === "Media") {
+        if (!comp.props.type) comp.props.type = "image";
+        if (!comp.props.description) comp.props.description = "Asset description";
+        if (!comp.props.alt) comp.props.alt = comp.props.description;
+        if (!comp.props.caption) comp.props.caption = `Illustration: ${comp.props.description}`;
+        if (!comp.props.title) comp.props.title = comp.props.description;
+      } else if (comp.componentType === "Citation") {
+        if (!comp.props.quote) comp.props.quote = "Quote text.";
+        if (!comp.props.author) comp.props.author = "Author";
+        if (!comp.props.source) comp.props.source = "Source";
+        if (!comp.props.year) comp.props.year = "N.D.";
+        if (!comp.props.commentary) comp.props.commentary = "Analysis and context of the citation.";
+      } else if (comp.componentType === "Biography") {
+        if (!comp.props.name) comp.props.name = "Biography Subject";
+        if (!comp.props.dates) comp.props.dates = "";
+        if (!comp.props.description) comp.props.description = "Biographical details.";
+        if (!comp.props.wikipediaUrl) comp.props.wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.props.name)}`;
+      } else if (comp.componentType === "Epistemology") {
+        if (!comp.props.title) comp.props.title = "Critical Perspective";
+        if (!comp.props.content) comp.props.content = "Epistemological discussion.";
+      } else if (comp.componentType === "BrilliantIdea") {
+        if (!comp.props.content) comp.props.content = "Brilliant pedagogical idea explanation.";
       }
 
       return comp;
@@ -648,7 +670,8 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         "StructureViewer3D", "QuantumOrbitalExplorer", "DynamicSimulation",
         "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
         "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
-        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography"
+        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography",
+        "Media", "Citation", "Epistemology", "BrilliantIdea"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
@@ -918,6 +941,11 @@ export function extractAndInjectCitations(content: string, references: string[])
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
   let content = narrativeMdx.trim();
 
+  // Normalize suffix-augmented anchors [[WIDGET:Type:ID:Topic]] and [[WIDGET:Type:ID]] to [[WIDGET:ID]]
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*([^\]]*?))?\s*\]\]/gi, (match, type, id) => {
+    return `[[WIDGET:${id}]]`;
+  });
+
   // Initialize references array if not present
   if (!widgets) widgets = {};
   if (!widgets.references || !Array.isArray(widgets.references)) {
@@ -1094,6 +1122,28 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const bDesc = (props.description || '').replace(/"/g, '&quot;');
       const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
       compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
+    } else if (comp.componentType === "Media") {
+      const mType = (props.type || 'image').replace(/"/g, '&quot;');
+      const mDesc = (props.description || '').replace(/"/g, '&quot;');
+      const mAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
+      const mCap = props.caption ? ` caption="${props.caption.replace(/"/g, '&quot;')}"` : '';
+      const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<CustomFigure type="${mType}" description="${mDesc}"${mAlt}${mCap}${mTitle} />`;
+    } else if (comp.componentType === "Citation") {
+      const cQuote = (props.quote || '').replace(/"/g, '&quot;');
+      const cAuthor = (props.author || '').replace(/"/g, '&quot;');
+      const cSource = (props.source || '').replace(/"/g, '&quot;');
+      const cYear = props.year ? ` year="${props.year.replace(/"/g, '&quot;')}"` : '';
+      const cOrig = props.original ? ` original="${props.original.replace(/"/g, '&quot;')}"` : '';
+      const cComm = props.commentary ? ` commentary="${props.commentary.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<Citation quote="${cQuote}" author="${cAuthor}" source="${cSource}"${cYear}${cOrig}${cComm} />`;
+    } else if (comp.componentType === "Epistemology") {
+      const eTitle = (props.title || 'Critical Perspective').replace(/"/g, '&quot;');
+      const eContent = props.content || '';
+      compStr = `<Epistemology title="${eTitle}">\n${eContent}\n</Epistemology>`;
+    } else if (comp.componentType === "BrilliantIdea") {
+      const iContent = props.content || '';
+      compStr = `<BrilliantIdea>\n${iContent}\n</BrilliantIdea>`;
     } else {
       compStr = `<${comp.componentType} id="${comp.id}" />`;
     }
@@ -1121,34 +1171,15 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     }
   });
 
-  // Render GoingFurther suggested readings widget
+  // Render GoingFurther suggested readings widget (no url tag at this point)
   let goingFurtherItemsStr = '';
   if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items) && widgets.goingFurther.items.length > 0) {
     goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => {
       const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
       const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
       const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
-      return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : ''}${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
+      return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
     }).join('\n  ')}\n</GoingFurther>`;
-  }
-
-  const { content: contentGf, replaced: repGf } = replaceWidget(content, 'goingFurther', goingFurtherItemsStr);
-  content = contentGf;
-  if (!repGf) {
-    const conclusionIdx = content.indexOf('## Conclusion');
-    const conclusionIdxFr = content.indexOf('## Synthèse');
-    const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
-
-    if (targetConclusionIdx !== -1) {
-      content = content.slice(0, targetConclusionIdx).trim() + `\n\n${goingFurtherItemsStr}\n\n` + content.slice(targetConclusionIdx);
-    } else {
-      const summaryRegex = /\[\[\s*WIDGET\s*:\s*conclusionSummary\s*\]\]/i;
-      if (summaryRegex.test(content)) {
-        content = content.replace(summaryRegex, `${goingFurtherItemsStr}\n\n[[WIDGET:conclusionSummary]]`);
-      } else {
-        content = content + `\n\n${goingFurtherItemsStr}`;
-      }
-    }
   }
 
   const parsedSteps = (widgets.whatsNext.steps || []).map((s: any) => ({
@@ -1160,27 +1191,41 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   }));
   const stepsEncoded = Buffer.from(JSON.stringify(parsedSteps)).toString('base64');
   const whatsNextStr = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
-  
-  const { content: contentWn, replaced: repWn } = replaceWidget(content, 'whatsNext', whatsNextStr);
-  content = contentWn;
-  if (!repWn) {
-    content = content + `\n\n${whatsNextStr}`;
-  }
 
   const summaryStr = `<Summary items={${JSON.stringify(widgets.conclusionSummary.items)}} />`;
-  
-  const { content: contentCs, replaced: repCs } = replaceWidget(content, 'conclusionSummary', summaryStr);
-  content = contentCs;
-  if (!repCs) {
-    const conclusionIdx = content.indexOf('## Conclusion');
-    const conclusionIdxFr = content.indexOf('## Synthèse');
-    const targetConclusionIdx = conclusionIdx !== -1 ? conclusionIdx : (conclusionIdxFr !== -1 ? conclusionIdxFr : -1);
 
-    if (targetConclusionIdx !== -1) {
-      content = content.slice(0, targetConclusionIdx + 13) + `\n\n${summaryStr}\n` + content.slice(targetConclusionIdx + 13);
-    } else {
-      content = content + `\n\n${summaryStr}`;
+  // Clean up/strip any existing widgets or anchors first to prevent duplicates or out-of-order rendering
+  content = content
+    .replace(/\[\[\s*WIDGET\s*:\s*conclusionSummary\s*\]\]/gi, '')
+    .replace(/\[\[\s*WIDGET\s*:\s*whatsNext\s*\]\]/gi, '')
+    .replace(/\[\[\s*WIDGET\s*:\s*goingFurther\s*\]\]/gi, '')
+    .replace(/<Summary\b[^>]*>(?:[\s\S]*?<\/Summary>)?/gi, '')
+    .replace(/<WhatsNext\b[^>]*>(?:[\s\S]*?<\/WhatsNext>)?/gi, '')
+    .replace(/<GoingFurther\b[^>]*>[\s\S]*?<\/GoingFurther>/gi, '');
+
+  const conclusionRegex = /^(#{2,3}\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/mi;
+  const conclusionMatch = content.match(conclusionRegex);
+  
+  if (conclusionMatch) {
+    const headerText = conclusionMatch[0];
+    const headerIdx = conclusionMatch.index!;
+    
+    // Find next heading
+    const postHeader = content.substring(headerIdx + headerText.length);
+    const nextHeadingRegex = /^#{2,3}\s+/m;
+    const nextHeadingMatch = postHeader.match(nextHeadingRegex);
+    
+    let sectionEnd = content.length;
+    if (nextHeadingMatch) {
+      sectionEnd = headerIdx + headerText.length + nextHeadingMatch.index!;
     }
+    
+    const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
+    
+    const rebuiltConclusion = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
+    content = content.substring(0, headerIdx) + rebuiltConclusion + content.substring(sectionEnd);
+  } else {
+    content = content.trim() + `\n\n## Conclusion\n\n${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
   }
 
   let finalEvalStr = '';
@@ -1191,18 +1236,84 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
   }
 
-  const { content: contentFe, replaced: repFe } = replaceWidget(content, 'finalEvaluation', finalEvalStr);
-  content = contentFe;
-  if (!repFe) {
-    content = content + `\n\n${finalEvalStr}`;
+  // Remove any existing finalEvaluation anchors
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*finalEvaluation\s*\]\]/gi, '');
+
+  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
+  const evalMatch = content.match(evalRegex);
+  
+  const evalHeadings: Record<string, string> = {
+    fr: '## Évaluation Finale',
+    en: '## Final Evaluation',
+    es: '## Evaluación Final',
+    de: '## Abschlussbewertung',
+    zh: '## 最终评估'
+  };
+
+  if (evalMatch) {
+    const headerText = evalMatch[0];
+    const headerIdx = evalMatch.index!;
+    
+    // Find next heading
+    const postHeader = content.substring(headerIdx + headerText.length);
+    const nextHeadingRegex = /^#{2,3}\s+/m;
+    const nextHeadingMatch = postHeader.match(nextHeadingRegex);
+    
+    let sectionEnd = content.length;
+    if (nextHeadingMatch) {
+      sectionEnd = headerIdx + headerText.length + nextHeadingMatch.index!;
+    }
+    
+    const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
+    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
+    content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
+  } else {
+    const contentLowerTmp = content.toLowerCase();
+    let langKey = 'en';
+    if (contentLowerTmp.includes('présentation') || contentLowerTmp.includes('introduction') || contentLowerTmp.includes('références') || contentLowerTmp.includes('glossaire') || contentLowerTmp.includes('conclusion') || contentLowerTmp.includes('synthèse')) {
+      langKey = 'fr';
+    } else if (contentLowerTmp.includes('referencias') || contentLowerTmp.includes('glosario') || contentLowerTmp.includes('conclusión')) {
+      langKey = 'es';
+    } else if (contentLowerTmp.includes('referenzen') || contentLowerTmp.includes('glossar') || contentLowerTmp.includes('fazit')) {
+      langKey = 'de';
+    } else if (contentLowerTmp.includes('参考文献') || contentLowerTmp.includes('词汇表') || contentLowerTmp.includes('结论')) {
+      langKey = 'zh';
+    }
+    const evalHeading = evalHeadings[langKey];
+    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
   }
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
   const cleanGlossaryDef = (def: string): string => (def || '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')  // [text](url) -> text
     .replace(/\[\[([^\]]+)\]\]/g, '$1')          // [[text]] -> text
     .trim();
-  const glossaryStr = `\n\n\n### Glossaire\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
-  content = content.trim() + glossaryStr;
+  const contentLower = content.toLowerCase();
+  let glossaryHeading = '### Glossaire';
+  let refHeading = '### Références';
+
+  if (contentLower.includes('references') || contentLower.includes('glossary') || contentLower.includes('summary')) {
+    glossaryHeading = '### Glossary';
+    refHeading = '### References';
+  } else if (contentLower.includes('referencias') || contentLower.includes('glosario') || contentLower.includes('conclusión')) {
+    glossaryHeading = '### Glosario';
+    refHeading = '### Referencias';
+  } else if (contentLower.includes('referenzen') || contentLower.includes('glossar') || contentLower.includes('fazit')) {
+    glossaryHeading = '### Glossar';
+    refHeading = '### Referenzen';
+  } else if (contentLower.includes('参考文献') || contentLower.includes('词汇表') || contentLower.includes('结论')) {
+    glossaryHeading = '### 词汇表';
+    refHeading = '### 参考文献';
+  }
+
+  // Strip any existing glossary and references headings to prevent duplication
+  const glossaireRegex = /^#{2,3}\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*/gmi;
+  const referencesRegex = /^#{2,3}\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*/gmi;
+  
+  content = content
+    .replace(glossaireRegex, '')
+    .replace(referencesRegex, '');
+
+  const glossaryStr = `\n\n\n${glossaryHeading}\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
   content = content.trim() + glossaryStr;
 
   // Convert [refN] citations in the narrative text to standard superscript links with back-links
@@ -1227,10 +1338,6 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     const cleanRef = ref.replace(/^\[\d+\]\s*/, '');
     referencesList.push(`[${refNum}] ${cleanRef}`);
   });
-
-  // Build references section based on target language keywords in content
-  const isFr = content.toLowerCase().includes('présentation') || content.toLowerCase().includes('introduction') || content.toLowerCase().includes('références') || content.toLowerCase().includes('glossaire');
-  const refHeading = isFr ? '### Références' : '### References';
 
   const referencesStr = `\n\n\n${refHeading}\n\n${referencesList.join('\n')}`;
   content = content.trim() + referencesStr;
@@ -2254,49 +2361,54 @@ Instead, you must decide where these elements belong and insert standard or cust
 - \`[[WIDGET:prerequisites]]\`: Place at the very beginning of the document, before the introduction.
 - \`[[WIDGET:diagnosticQuiz]]\`: Place immediately after the prerequisites block, before the introduction. This provides a diagnostic skip-pass for students.
 - \`[[WIDGET:learningObjectives]]\`: Place immediately after the \`## Introduction\` section.
-- \`[[WIDGET:conclusionSummary]]\`: Place at the very beginning of the \`## Conclusion\` section.
-- \`[[WIDGET:goingFurther]]\`: Place immediately before the \`## Conclusion\` section. This renders suggested readings as interactive widgets.
-- \`[[WIDGET:whatsNext]]\`: Place at the very end of the \`## Conclusion\` section.
-- \`[[WIDGET:finalEvaluation]]\`: Place at the very end of the document, after the conclusion, as the ultimate summative validation.
+- \`[[WIDGET:conclusionSummary]]\`: Place inside the \`## Conclusion\` section, at the beginning of the section.
+- \`[[WIDGET:whatsNext]]\`: Place inside the \`## Conclusion\` section, immediately after conclusionSummary.
+- \`[[WIDGET:goingFurther]]\`: Place inside the \`## Conclusion\` section, at the very end (after whatsNext).
+- \`[[WIDGET:finalEvaluation]]\`: Place after the Conclusion section, as the ultimate validation quiz or essay.
 
-#### B. Discipline-Aware Custom Interactive Anchors:
-You must insert at least 1 to 2 custom interactive widget anchors inside the conceptual body sections (e.g., \`[[WIDGET:my_custom_chart]]\`).
-For each anchor you insert, you must provide a dedicated, highly engaging narrative paragraph directly before or after it, explaining what the component represents, guiding students on what variables to manipulate, or prompting them on what to solve.
+#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Topic]]):
+1. **Controlled Digressions (Epistemology Widget)**:
+   - Include at least one historical controversy or limit-of-concept discussion.
+   - Do NOT write raw \`<Epistemology>\` JSX tags. Exclusively represent this as an anchor:
+     \`[[WIDGET:Epistemology:epistemology_id:Brief description of the controversy or critical perspective topic]]\`
+     Example: \`[[WIDGET:Epistemology:value_paradox:The diamond-water paradox of value and early classical utility controversies]]\`
+2. **Contextual Mini-Biographies (Biography Widget)**:
+   - Include at least one biographical sidebar.
+   - Do NOT write raw markdown callouts (\`> [!INFO] **Mini-Biography: ...**\`) or Wikipedia links. Exclusively represent this as an anchor:
+     \`[[WIDGET:Biography:biography_id:RealPerson Name, dates, and main academic contributions/role]]\`
+     Example: \`[[WIDGET:Biography:adam_smith:Adam Smith (1723-1790), Scottish philosopher and pioneer of political economy]]\`
+3. **Author Quotes with Citations (Citation Widget)**:
+   - Weave at least one high-impact, authentic quotation from a notable expert/scientist.
+   - Do NOT write raw blockquotes or text quote blocks. You must exclusively represent it as an anchor:
+     \`[[WIDGET:Citation:citation_id:Author Name, original publication details, and the core topic or text hint of the quote]]\`
+     Example: \`[[WIDGET:Citation:smith_quote:Adam Smith, Quote from Wealth of Nations (1776) about the invisible hand and self-interest of the butcher and baker]]\`
+     Agent 3B (Architect) will expand this anchor into the full quote, translation, and commentary.
+4. **Factual Images & Multimedia (Media Widget)**:
+   - Include 5 to 6 factual/sourced images/figures and 1 to 2 audio/video resources for Licence level.
+   - Do NOT use standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags.
+   - You MUST represent all media (images, audio, and video) using the unified Media widget anchor:
+     \`[[WIDGET:Media:media_id:detailed topic description of the image/audio/video, including specific names and visual representations]]\`
+     Examples:
+     - For images: \`[[WIDGET:Media:image_smith_portrait:image:Portrait of Adam Smith, John Kay 1790 painting]]\`
+     - For audio: \`[[WIDGET:Media:audio_pronunciation:audio:Pronunciation of laissez-faire in French]]\`
+     - For video: \`[[WIDGET:Media:video_economics:video:Video documentary segment on Adam Smith's division of labor]]\`
+   - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
+   - **CRITICAL DUPLICATION CONSTRAINT**: The following media descriptions/captions have already been used in this course. You MUST NOT repeat them or use similar representations. Ensure every figure is completely unique:
+\${usedMediaListStr}
+5. **Brilliant Ideas (BrilliantIdea Widget)**:
+   - You may include pedagogical analogies, intuitive mental models, or brilliant ideas.
+   - Do NOT write raw \`<BrilliantIdea>\` JSX tags. Exclusively represent this as an anchor:
+     \`[[WIDGET:BrilliantIdea:idea_id:Brief description of the pedagogical analogy/concept box]]\`
+     Example: \`[[WIDGET:BrilliantIdea:self_interest:Analogy of how self-interest regulates daily transactions like buying bread]]\`
 
-**Approved Pruned Widgets for this Discipline**:
-${formattedCatalogList}
-
-*Constraint on Curation Budget*:
-- You may insert **at most 1** database-curated widget from the approved list above (e.g. \`[[WIDGET:FunctionPlotter:my_plot]]\` or \`[[WIDGET:CodeSandbox:my_sandbox]]\`). Rely on simple discursives like Quizzes, FillInBlanks, or Solved/Unsolved Exercises for other sections (e.g., \`[[WIDGET:Quiz:section_quiz]]\` or \`[[WIDGET:SolvedExercise:math_work]]\`).
-
----
-
-### 4. RIGOROUS WRITING & PEDAGOGICAL STYLING RULES
-1. **Academic Density & Word Count**:
-   - For higher education levels (L1-L3), write an extremely thorough, exhaustive narrative. Skeletons, empty summaries, or "write section here" comments are strictly forbidden.
-   - Target word count: **3,000 to 5,000 words** of deeply developed text across at least 4 to 5 conceptual sections (each starting with a '## ' heading).
-2. **Author Quotes with Citations**:
-   - Weave at least one high-impact, authentic quotation from a notable expert/scientist, formatted exactly as:
-     > "Quote text in the course's target language..." — Author, *Original Book/Publication Title* (in its original language, NEVER translated), Publisher, City, Year, p. Page
-   - If the quote's original language is different from the course's target language, you MUST follow it with its original version in brackets, e.g.:
-     > [Original] "Original quote text in its original language..."
-     Do not repeat the quote if the original language is the same as the course's target language.
-   - Crucially, all bibliographic references (author names, book/publication titles, publishers, cities, and publication details) MUST remain in their original language and must NEVER be translated.
-   - Every foreign-language quote must be followed by its bracketed translation in the course's target language, plus a paragraph detailing its conceptual implications.
-3. **In-text Bibliography Citations (CRITICAL)**:
+6. **In-text Bibliography Citations (CRITICAL)**:
    - Ground the lesson in these specific, canonical course-level references:
-${referencesMetadata}
+\${referencesMetadata}
    - When making claims or citing definitions, you must cite these references inline using the strict format: [refN] (where N is the 1-based number of the reference, e.g. [ref1], [ref2]).
    - Do NOT use other citation formats (like superscript HTML links, raw URLs, or bracketed numbers like [1]).
    - Only cite references that are relevant to this lesson, but make sure to cite at least 1 or 2 canonical references from the list.
-4. **Controlled Digressions (Encadrés Épistémologiques)**:
-   - Include at least one historical controversy or limit-of-concept discussion box:
-     <Epistemology title="Title of Controversy">Deep academic controversy or critical discussion...</Epistemology>
-5. **Contextual Mini-Biographies**:
-   - Include at least one detailed biographical sidebar:
-     > [!INFO] **Mini-Biography: Name (Dates)**
-     > Write 8-12 lines of biography detailing their main academic contribution. Systematically include a direct working Wikipedia link at the end: \`[Read more on Wikipedia](...)\`.
-6. **Entity Hover-Cards**:
+
+7. **Entity Hover-Cards**:
    - Wrap named historical figures, landmark artworks, locations, events, fictional characters, scientific concepts, mathematical theorems, or academic institutions mentioned inline in Hover-Card components with a short description:
      - \`<RealPerson name="Wiki_Title" description="...">Name (Dates)</RealPerson>\`
      - \`<FictionalCharacter name="Wiki_Title" description="...">Character Name</FictionalCharacter>\`
@@ -2310,33 +2422,12 @@ ${referencesMetadata}
      - \`<ChemicalLink name="Wiki_Title" description="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
      - \`<CelestialLink name="Wiki_Title" description="...">Celestial Body/Space Mission</CelestialLink>\`
    *Strict Constraints*:
-
    - ⛔ ABSOLUTELY FORBIDDEN: Wrapping any verb, adjective, or cognitive action word inside these entity tags. This includes ALL Bloom’s Taxonomy verbs (analyser, évaluer, créer, comprendre, identifier, analyze, evaluate, create, understand, apply, etc.) as well as any other action verbs. These MUST remain as plain bold text (**analyser**) or plain text, NEVER as JSX hover-card tags.
-
    - ⛔ FORBIDDEN EXAMPLE (never do this): \`<analyser>analyser</analyser>\`, \`<ConceptLink name="analyser">analyser</ConceptLink>\`, \`<ConceptLink name="Évaluer">Évaluer</ConceptLink>\`
-
    - ✅ VALID EXAMPLES (only wrap true named entities): \`<RealPerson name="Socrate">Socrate (470-399 av. J.-C.)</RealPerson>\`, \`<ConceptLink name="Logos">logos</ConceptLink>\`, \`<Location name="Athènes">Athènes</Location>\`
-
    - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
-7. **Factual Images & Multimedia (CustomFigure)**:
-   - Include 5 to 6 factual/sourced images/figures and 1 to 2 audio/video resources for Licence level.
-   - Do NOT use standard Markdown image syntax (\`![Alt]()\`) or raw URLs anywhere.
-   - You MUST represent all media (images, audio, and video) using the unified \`<CustomFigure />\` component. This tag acts as a non-interactive widget.
-   - The \`<CustomFigure />\` component MUST have a \`type\` attribute ("image", "audio", or "video") and a \`description\` attribute detailing the asset to look up or generate. Do NOT include a \`src\` or \`url\` attribute; the backend media resolver will automatically resolve and populate the source.
-   - Structure:
-     - For images (historical figures, maps, scientific diagrams):
-       \`<CustomFigure type="image" description="EXACT English Wikipedia title of the subject (e.g. Adam_Smith) or detailed visual description of the diagram" alt="Short Alt Text" caption="Italicized caption text with explanation of the figure" />\`
-     - For audio (pronunciations, speech files, audio documents):
-       \`<CustomFigure type="audio" description="Descriptive text of the sound, pronunciation, or speech content" title="Short Audio Title" />\`
-     - For video (educational videos, documentary clips):
-       \`<CustomFigure type="video" description="Topic or query for the video lookup" title="Short Video Title" />\`
-   - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
-   - **CRITICAL DUPLICATION CONSTRAINT**: The following media descriptions/captions have already been used in this course. You MUST NOT repeat them or use similar representations. Ensure every figure is completely unique:
-${usedMediaListStr}
 
----
 
-### 5. OUTPUT FORMAT
 - Return ONLY the raw MDX content.
 - Do NOT wrap your output in markdown code blocks (\`\`\`).
 - Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
@@ -2420,31 +2511,32 @@ You must audit the narrative text against the following 7 critical checkpoints:
      - \`[[WIDGET:prerequisites]]\` (at the very beginning)
      - \`[[WIDGET:diagnosticQuiz]]\` (before introduction)
      - \`[[WIDGET:learningObjectives]]\` (after introduction)
-     - \`[[WIDGET:conclusionSummary]]\` (at the beginning of ## Conclusion)
-     - \`[[WIDGET:goingFurther]]\` (immediately before the ## Conclusion section)
-     - \`[[WIDGET:whatsNext]]\` (at the very end of conclusion)
+     - \`[[WIDGET:conclusionSummary]]\` (inside ## Conclusion, at the beginning)
+     - \`[[WIDGET:whatsNext]]\` (inside ## Conclusion, immediately after conclusionSummary)
+     - \`[[WIDGET:goingFurther]]\` (inside ## Conclusion, at the very end, after whatsNext)
      - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
-   - Verify that there are **at least 1 to 2** custom interactive anchors (e.g. \`[[WIDGET:my_plot]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
-   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, or \`<Mermaid>\`). They must exclusively use bracketed anchors. Note: <SandboxPrononciation /> and <PronunciationSandbox /> are explicitly allowed as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
-4. **Author Quotes & In-text Citations**:
-   - Verify that the text integrates high-impact quotes formatted exactly as:
-     > "Quote text in the course's target language..." — Author, *Original Book/Publication Title* (in its original language), Publisher, City, Year, p. Page
-   - Verify that all bibliographic references (book/publication titles, publishers, cities) are in their original language and have NOT been translated.
-   - If the quote's original language is different from the course's target language, verify it is followed by its original version in brackets: \`> [Original] "..."\`. Ensure there are no duplicate translations if the quote was originally in the course language.
-   - Every foreign-language quote must be immediately followed by its bracketed translation. Every quote must have an explanatory paragraph.
-   - Verify that references are cited inline using standard brackets, e.g. \`[1](#ref-1)\`.
+   - Verify that there are **at least 1 to 2** custom interactive/narrative anchors (\`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:Type:ID]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
+   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, or \`<Citation>\`). They must exclusively use suffix-augmented bracketed anchors. Note: \`<SandboxPrononciation />\` and \`<PronunciationSandbox />\` are explicitly allowed as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
+4. **Author Quotes & Citation Anchors**:
+   - Verify that quotes and citations are represented using suffix-augmented anchors:
+     \`[[WIDGET:Citation:citation_id:Topic/Hint]]\`
+     Reject if quotes are written as raw blockquotes (\`> "..."\`) or raw text quote blocks.
+   - Verify that references are cited inline using standard brackets grounded in canonical references (e.g. \`[ref1]\`, \`[ref2]\`).
 5. **Controlled Digressions & Mini-Biographies**:
-   - For higher education, verify that at least one \`<Epistemology>\` controversy/limit box is present with deep theoretical content.
-   - Verify that at least one contextual Mini-Biography is present, is substantial (8-12 lines), and contains a working, direct Wikipedia Markdown link at the very end.
+   - Verify that epistemology controversies and biographies are represented exclusively as bracketed anchors:
+     \`[[WIDGET:Epistemology:epistemology_id:Topic/Hint]]\`
+     \`[[WIDGET:Biography:biography_id:Topic/Hint]]\`
+     Reject if they are written out as raw JSX tags (\`<Epistemology>\`, \`<Biography>\`) or raw markdown callouts.
 6. **Connected Entity Hover-Cards**:
    - Verify that named entities mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<FictionalCharacter>\`, \`<Location>\`, \`<EventLink>\`, \`<Artwork>\`, \`<ConceptLink>\`, \`<TheoremLink>\`, \`<InstitutionLink>\`, \`<SpeciesLink>\`, \`<ChemicalLink>\`, or \`<CelestialLink>\`.
    - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
-7. **Visual Assets & Media (CustomFigure)**:
-   - Verify that the lesson contains at least 5 to 6 distinct images/figures and 1 to 2 audio/video resources.
-   - Verify that the writer has NOT used standard Markdown image syntax (\`![Alt]()\`) or raw URLs for media. All media must be defined via the \`<CustomFigure type="..." description="..." />\` component.
-   - Ensure that \`<CustomFigure>\` has a \`type\` attribute ("image", "audio", or "video") and a substantial \`description\` attribute, and has NO \`src\` or \`url\` attribute.
+
+
+   - Verify that the lesson contains at least 5 to 6 image anchors and 1 to 2 audio/video anchors represented as:
+     \`[[WIDGET:Media:media_id:Topic/Hint]]\`
+     Reject if standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags are used.
 
 ---
 
@@ -2731,7 +2823,35 @@ ${referencesMetadata}
    - Book/article titles must be in standard quotes (or French guillemets « ... »), not asterisks.
    - Exclude this references array only for primary school levels.
 9. **\`interactiveComponents\`**:
-   - An array of all custom interactive components. Every custom \`[[WIDGET:id]]\` anchor in the narrative draft MUST have a corresponding object here where \`id\` matches the anchor suffix exactly, \`componentType\` matches the selected widget ID, \`sectionAnchor\` is the heading title of the parent section, and \`props\` specifies its data properties.
+   - An array of all custom interactive components. Every custom widget anchor placed in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) MUST have a corresponding object here.
+   - For anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
+     - \`id\` -> the \`ID\` part of the anchor.
+     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Media", "Citation", "Biography", "Epistemology", "BrilliantIdea", or custom widgets).
+     - \`sectionAnchor\` -> the heading title of the parent section.
+     - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
+       - **Media**:
+         - \`type\`: "image", "audio", or "video".
+         - \`description\`: The detailed search/generation description for the media.
+         - \`alt\`: Short description for accessibility.
+         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance.
+         - \`title\`: Short title (used for audio/video).
+       - **Citation**:
+         - \`quote\`: The text of the quote in the target language.
+         - \`author\`: The author name.
+         - \`source\`: The book/publication source title in its original language (untranslated).
+         - \`year\`: The publication year.
+         - \`original\`: (Optional) Original language quote text if different from target language.
+         - \`commentary\`: Academic commentary explaining the significance of the quote (at least 3-4 sentences).
+       - **Biography**:
+         - \`name\`: Full name.
+         - \`dates\`: Dates of birth and death (e.g., "1723-1790").
+         - \`description\`: Detailed biography paragraph (8-12 lines) on main academic contributions.
+         - \`wikipediaUrl\`: Working URL to the English Wikipedia page of the subject.
+       - **Epistemology**:
+         - \`title\`: Controversy title.
+         - \`content\`: Deeply academic prose discussion (150-250 words) detailing the controversy.
+       - **BrilliantIdea**:
+         - \`content\`: An intuitive analogy or brilliant pedagogical explanation (100-180 words).
    - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
      - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
      - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
@@ -2849,11 +2969,20 @@ ${approvedNarrativeText}
 You must audit the widgets JSON against the following 6 critical checkpoints:
 
 1. **Perfect Semantic & Anchor Alignment**:
-   - **STRICT REJECTION**: You MUST verify that every single interactive anchor (e.g. \`[[WIDGET:id]]\`) placed in the approved narrative draft has a corresponding entry in the \`interactiveComponents\` array with the exact same \`id\` (after removing the suffix/prefix, matching precisely).
-   - Ensure \`sectionAnchor\` matches the actual section title (\`## Heading\`) in the narrative draft.
-   - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON.
+   - **STRICT REJECTION**: You MUST verify that every custom widget anchor in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) has a corresponding object in the \`interactiveComponents\` array.
+   - Map:
+     - \`id\` -> matches the \`ID\` part of the anchor.
+     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Media", "Biography", "Citation", "Epistemology", "BrilliantIdea", or custom widgets).
+     - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
+   - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
+     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, and \`caption\` (detailed italicized explanation of the figure's relevance). Do NOT allow blank or placeholder descriptions/captions.
+     - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
+     - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
+     - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
+     - **BrilliantIdea**: Must have \`content\` (analogy or intuitive explanation, 100-180 words).
+   - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON, or if any of the properties above contain default placeholder texts.
 
-2. **Curation-First Matchmaker & Budget Compliance**:
+
    - Verify that any database-curated widgets (like \`FunctionPlotter\`, \`CodeSandbox\`, \`DataChart\`, etc.) have their \`props\` set to exactly \`{}\` (empty object).
    - Verify that the number of database-curated widgets in this lesson does not exceed the remaining budget: **${remainingBudget}**.
    - Verify that no database-curated widget used in this lesson has already been used earlier in the course: **${alreadyUsedList}**.
@@ -5684,7 +5813,7 @@ function sanitizeMdxFallback(mdx: string): string {
     'SummativeEvaluation', 'EvaluationSection', 'Assignment', 'Deadline', 'Submission',
     'Evaluation', 'FinalProject', 'FinalWork', 'Format', 'Instructions', 'FinalQuiz',
     'QuizQuestion', 'Answer', 'Description', 'Title', 'FormativeQuiz', 'Callout',
-    'CalloutContainer', 'Image',
+    'CalloutContainer', 'Image', 'Media', 'Biography', 'Citation',
     
     // Common standard HTML elements that could be output or generated
     'p', 'span', 'div', 'a', 'img', 'br', 'hr', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre',

@@ -386,8 +386,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex h-screen overflow-hidden">
         {/* Admin Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-[100] w-64 border-r border-slate-900 bg-background flex flex-col transition-transform duration-300
-          md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+          fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-[100] w-64 border-r rtl:border-r-0 rtl:border-l border-slate-900 bg-background flex flex-col transition-transform duration-300
+          md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full rtl:translate-x-full'}
         `}>
           <div className="p-8">
             <Link href="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { preprocessMdx } from '../src/lib/content';
+import { stitchLessonContent } from '../src/lib/ai';
 
 test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
   test('should strip HistoricalPerson from alert titles and deduplicate in body text', () => {
@@ -303,4 +304,71 @@ Les cellules.
       expect(result.hasSimulator).toBe(true);
     });
   });
+
+  test.describe('Widgets and Bloom Taxonomy Compliance', () => {
+    test('should not strip a valid DiagnosticQuiz with curly brace correctIndex and options', () => {
+      const rawMdx = `
+# Lesson title
+<Prerequisites items={["A"]} />
+<DiagnosticQuiz question="What is the derivative of x^2?" options={["2x", "x", "3"]} correctIndex={0} targetSectionId="derivatives" sectionTitle="Derivatives" />
+
+## Introduction
+The derivative represents the rate of change.
+      `.trim();
+      const processed = preprocessMdx(rawMdx, 'en');
+      expect(processed).toContain('<DiagnosticQuiz');
+      expect(processed).toContain('correctIndex="0"');
+      expect(processed).toContain('targetSectionId="derivatives"');
+    });
+
+    test('should validate Bloom Taxonomy verbs and reject forbidden ones', () => {
+      const allowedVerbs = ['Analyze', 'Evaluate', 'Create', 'Analyser', 'Évaluer', 'Créer'];
+      const forbiddenVerbs = ['understand', 'know', 'list', 'comprendre', 'connaître'];
+      
+      const checkBloom = (text: string) => {
+        const textLower = text.toLowerCase();
+        const hasForbidden = forbiddenVerbs.some(verb => textLower.includes(verb));
+        const hasAllowed = allowedVerbs.some(verb => textLower.includes(verb.toLowerCase()));
+        return hasAllowed && !hasForbidden;
+      };
+
+      const badObjectives = 'Objectives: Understand the concepts and list the properties.';
+      const goodObjectives = 'Objectives: Analyze the concepts and Create the model.';
+
+      expect(checkBloom(badObjectives)).toBe(false);
+      expect(checkBloom(goodObjectives)).toBe(true);
+    });
+
+    test('should verify correct rendering of localized glossary and references headings in English', () => {
+      const widgets = {
+        prerequisites: { items: ['Basic Math'] },
+        diagnosticQuiz: {
+          question: 'What is 1+1?',
+          options: ['2', '3'],
+          correctIndex: 0,
+          targetSectionId: 'basic',
+          sectionTitle: 'Basic'
+        },
+        learningObjectives: {
+          knowledge: ['Analyze math'],
+          skills: ['Evaluate equations'],
+          attitudes: ['Create patterns']
+        },
+        interactiveComponents: [],
+        conclusionSummary: { items: ['Math is elegant.'] },
+        whatsNext: { steps: [] },
+        goingFurther: { items: [] },
+        finalEvaluation: { type: 'Quiz', props: { questions: [] } },
+        glossary: [{ term: 'Math', definition: 'The study of numbers.' }],
+        references: ['Newton, I. (1687). *Principia*.']
+      };
+      
+      const stitched = stitchLessonContent('## Introduction\nWelcome.', widgets, false);
+      expect(stitched).toContain('### Glossary');
+      expect(stitched).toContain('### References');
+      expect(stitched).not.toContain('### Glossaire');
+      expect(stitched).not.toContain('### Références');
+    });
+  });
 });
+

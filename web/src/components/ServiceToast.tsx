@@ -44,7 +44,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
     : degradedCount > 0
     ? 'bg-amber-400 shadow-amber-400/50'
     : allOk
-    ? 'bg-emerald-400 shadow-emerald-500/40'
+    ? 'bg-emerald-500 shadow-emerald-500/40'
     : 'bg-slate-500';
 
   const panelBorder = offlineCount > 0
@@ -65,7 +65,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-[9999] flex flex-col items-start gap-2">
+    <div className="fixed bottom-4 left-4 rtl:left-auto rtl:right-4 z-[9999] flex flex-col items-start gap-2">
       {/* Expanded panel — slides up from the dot */}
       <AnimatePresence>
         {expanded && (

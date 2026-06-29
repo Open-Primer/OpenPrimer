@@ -404,7 +404,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                       href={result.path}
                       className={`flex flex-col gap-1 px-3 py-2.5 transition-all group ${
                         isActive
-                          ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                          ? 'bg-blue-600/15 text-blue-400 border-s-2 border-blue-500 ps-2.5 rounded-e-xl rounded-s-none'
                           : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
                       }`}
                     >
@@ -421,7 +421,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                         </span>
                       </div>
                       {result.excerpt && (
-                        <span className="pl-7 text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors line-clamp-2 leading-relaxed italic">
+                        <span className="ps-7 text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors line-clamp-2 leading-relaxed italic">
                           {highlightText(result.excerpt, searchQuery)}
                         </span>
                       )}
@@ -448,7 +448,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                 href={item.path || '#'}
                 className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
                   isActive
-                    ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                    ? 'bg-blue-600/15 text-blue-400 border-s-2 border-blue-500 ps-2.5 rounded-e-xl rounded-s-none'
                     : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
                 }`}
               >
@@ -481,7 +481,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
                       href={page.path || '#'}
                       className={`flex items-center gap-3 px-3 py-2.5 transition-all group ${
                         isActive
-                          ? 'bg-blue-600/15 text-blue-400 border-l-2 border-blue-500 pl-2.5 rounded-r-xl rounded-l-none'
+                          ? 'bg-blue-600/15 text-blue-400 border-s-2 border-blue-500 ps-2.5 rounded-e-xl rounded-s-none'
                           : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300 rounded-xl'
                       }`}
                     >
@@ -519,7 +519,7 @@ export const Sidebar = ({ items, isOpen }: SidebarProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="fixed bottom-6 right-6 z-[9999] max-w-sm p-4 bg-slate-900/90 border border-emerald-500/30 text-white rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3"
+            className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-[9999] max-w-sm p-4 bg-slate-900/90 border border-emerald-500/30 text-white rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">

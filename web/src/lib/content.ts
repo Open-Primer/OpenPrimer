@@ -235,7 +235,6 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     { id: 'references', regex: /^(#{2,3}\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/mi },
   ];
 
-
   const LOCALIZED_HEADINGS: Record<string, Record<string, string>> = {
     conclusion: {
       fr: '## Conclusion',
@@ -274,54 +273,100 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     },
   };
 
-  const sections: { id: string; header: string; index: number }[] = [];
+  // Find all matches of headings in the MDX
+  const foundHeadings: { id: string; header: string; index: number }[] = [];
   for (const pattern of sectionPatterns) {
-    const match = mdx.match(pattern.regex);
-    if (match) {
-      sections.push({
+    const flags = (pattern.regex.flags.includes('g') ? pattern.regex.flags : pattern.regex.flags + 'g')
+      .replace('y', '');
+    const globalRegex = new RegExp(pattern.regex.source, flags);
+    
+    let match;
+    while ((match = globalRegex.exec(mdx)) !== null) {
+      foundHeadings.push({
         id: pattern.id,
         header: match[0],
-        index: match.index!,
+        index: match.index,
       });
     }
   }
 
-  sections.sort((a, b) => a.index - b.index);
+  // Sort headings by index ascending
+  foundHeadings.sort((a, b) => a.index - b.index);
 
-  if (sections.length === 0) {
-    return mdx;
+  // Filter out any duplicate indices
+  const uniqueHeadings: typeof foundHeadings = [];
+  let lastIndex = -1;
+  for (const h of foundHeadings) {
+    if (h.index !== lastIndex) {
+      uniqueHeadings.push(h);
+      lastIndex = h.index;
+    }
   }
 
-  const firstSectionIndex = sections[0].index;
+  const firstSectionIndex = uniqueHeadings.length > 0 ? uniqueHeadings[0].index : mdx.length;
   const coreContent = mdx.substring(0, firstSectionIndex).trim();
 
-  const normalizedLang = (lang || 'en').toLowerCase().split('-')[0];
-  const sectionContents: Record<string, string> = {};
-  for (let i = 0; i < sections.length; i++) {
-    const current = sections[i];
-    const next = sections[i + 1];
-    const start = current.index;
+  // Group sliced contents by section ID
+  const sectionContents: Record<string, string[]> = {
+    conclusion: [],
+    et_apres: [],
+    evaluation: [],
+    glossaire: [],
+    references: [],
+  };
+
+  for (let i = 0; i < uniqueHeadings.length; i++) {
+    const current = uniqueHeadings[i];
+    const next = uniqueHeadings[i + 1];
+    const start = current.index + current.header.length;
     const end = next ? next.index : mdx.length;
     let content = mdx.substring(start, end).trim();
+    
+    // Remove any inner headings that match any of the section pattern regexes
+    // to prevent duplicate headers within a section
+    for (const pattern of sectionPatterns) {
+      const flags = (pattern.regex.flags.includes('g') ? pattern.regex.flags : pattern.regex.flags + 'g')
+        .replace('y', '');
+      const globalRegex = new RegExp(pattern.regex.source, flags);
+      content = content.replace(globalRegex, '');
+    }
 
-    // Dynamically replace the matched header with the localized version
-    const langKey = normalizedLang in LOCALIZED_HEADINGS[current.id] ? normalizedLang : 'en';
-    const canonicalHeader = LOCALIZED_HEADINGS[current.id][langKey];
-    content = content.replace(current.header, canonicalHeader);
+    if (sectionContents[current.id]) {
+      sectionContents[current.id].push(content);
+    }
+  }
 
-    sectionContents[current.id] = content;
+  const normalizedLang = (lang || 'en').toLowerCase().split('-')[0];
+  const langKey = normalizedLang in LOCALIZED_HEADINGS.conclusion ? normalizedLang : 'en';
+
+  const mergedContents: Record<string, string> = {};
+  for (const id of Object.keys(sectionContents)) {
+    mergedContents[id] = sectionContents[id].filter(Boolean).join('\n\n').trim();
+  }
+
+  // Ensure mandatory sections exist
+  const mandatory = ['conclusion', 'evaluation', 'glossaire', 'references'];
+  for (const id of mandatory) {
+    if (uniqueHeadings.every(h => h.id !== id)) {
+      mergedContents[id] = mergedContents[id] || '';
+    }
   }
 
   const desiredOrder = ['conclusion', 'evaluation', 'et_apres', 'glossaire', 'references'];
   let rebuilt = coreContent;
 
   for (const id of desiredOrder) {
-    if (sectionContents[id]) {
-      rebuilt += '\n\n' + sectionContents[id];
+    const isMandatory = mandatory.includes(id);
+    const hasContent = mergedContents[id] !== undefined && (mergedContents[id] !== '' || uniqueHeadings.some(h => h.id === id));
+    
+    if (isMandatory || hasContent) {
+      const canonicalHeader = LOCALIZED_HEADINGS[id][langKey];
+      const content = mergedContents[id] || '';
+      rebuilt += `\n\n${canonicalHeader}\n${content ? content : ''}`;
     }
   }
 
-  return rebuilt + '\n';
+  return rebuilt.trim() + '\n';
 }
 
 export function parseAndStripFrontmatter(content: string) {
@@ -1674,7 +1719,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
     'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
-    'IdeeBrillante', 'BrilliantIdea',
+    'IdeeBrillante', 'BrilliantIdea', 'Media', 'Biography',
     'FunctionManipulator', 'EquationManipulator',
     // Interactive/sandbox/widget components — must NOT have their JSX expression attributes escaped
     'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
@@ -2240,7 +2285,8 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'StructureViewer3D', 'GeochemicalChart', 'DataTable', 'PeriodicElement',
     'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
     'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
-    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage'
+    'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage',
+    'Media', 'Biography'
   ];
 
   let processed = mdx;
@@ -3265,26 +3311,30 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   // 2b. Clean up empty/placeholder DiagnosticQuizzes
   processed = processed.replace(/<DiagnosticQuiz\b([^>]*?)(?:\/>|>([\s\S]*?)<\/DiagnosticQuiz>)/gi, (match, attrsStr) => {
-    const questionMatch = attrsStr.match(/question=["']([^"']*)["']/i);
-    const optionsMatch = attrsStr.match(/options=["']([^"']*)["']/i);
-    const correctIndexMatch = attrsStr.match(/correctIndex=["']([^"']*)["']/i);
-    const targetSectionIdMatch = attrsStr.match(/targetSectionId=["']([^"']*)["']/i);
-    const sectionTitleMatch = attrsStr.match(/sectionTitle=["']([^"']*)["']/i);
+    const getAttr = (name: string): string => {
+      const regexQuote = new RegExp(`${name}\\s*=\\s*["']([^"']*?)["']`, 'i');
+      const regexCurly = new RegExp(`${name}\\s*=\\s*\\{([^}]+?)\\}`, 'i');
+      
+      const mq = attrsStr.match(regexQuote);
+      if (mq) return mq[1].trim();
+      
+      const mc = attrsStr.match(regexCurly);
+      if (mc) return mc[1].trim();
+      
+      return '';
+    };
 
-    const question = questionMatch ? questionMatch[1].trim() : '';
-    const options = optionsMatch ? optionsMatch[1].trim() : '';
-    const correctIndex = correctIndexMatch ? correctIndexMatch[1].trim() : '';
-    const targetSectionId = targetSectionIdMatch ? targetSectionIdMatch[1].trim() : '';
-    const sectionTitle = sectionTitleMatch ? sectionTitleMatch[1].trim() : '';
+    const question = getAttr('question');
+    const options = getAttr('options');
+    const targetSectionId = getAttr('targetSectionId');
+    const sectionTitle = getAttr('sectionTitle');
 
-    const isPlaceholder = (str: string) => {
+    const isPlaceholderVal = (str: string) => {
+      if (!str) return false;
       const s = str.toLowerCase();
       return (
-        !s ||
         s.includes('placeholder') ||
-        s.includes('example') ||
         s.includes('dummy') ||
-        s.includes('diagnostic question') ||
         s.includes('section-slug-to-skip-to') ||
         s.includes('section title to skip') ||
         s.includes('option a|||option b')
@@ -3292,11 +3342,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     };
 
     if (
-      isPlaceholder(question) ||
-      isPlaceholder(options) ||
-      isPlaceholder(targetSectionId) ||
-      isPlaceholder(sectionTitle) ||
-      !correctIndex
+      !question ||
+      isPlaceholderVal(question) ||
+      isPlaceholderVal(options) ||
+      isPlaceholderVal(targetSectionId) ||
+      isPlaceholderVal(sectionTitle)
     ) {
       console.log(`[PREPROCESSOR] Removing empty or placeholder <DiagnosticQuiz>: ${match}`);
       return '';
