@@ -323,17 +323,6 @@ const ALERT_TITLES: Record<string, Record<string, string>> = {
     AR: "تنبيه",
     HI: "सावधानी",
     UR: "احتیاط"
-  },
-  biography: {
-    EN: "Mini-Biography",
-    FR: "Mini-Biographie",
-    ES: "Mini-Biografía",
-    DE: "Mini-Biografie",
-    ZH: "迷你传记",
-    PT: "Mini-Biografia",
-    AR: "سيرة مصغرة",
-    HI: "लघु-जीवनी",
-    UR: "مختصر سوانح عمری"
   }
 };
 
@@ -373,11 +362,6 @@ const Alert = ({ type, children }: { type: string; children: React.ReactNode }) 
     titleKey = "caution";
     borderClass = "border-l-red-500 bg-red-500/5 dark:bg-red-500/[0.04] border-red-500/20";
     titleColor = "text-red-500 dark:text-red-400";
-  } else if (t === 'biography') {
-    icon = <BookOpen className="w-4 h-4 text-violet-500 dark:text-violet-400" />;
-    titleKey = "biography";
-    borderClass = "border-l-violet-500 bg-violet-500/5 dark:bg-violet-500/[0.04] border-violet-500/20";
-    titleColor = "text-violet-500 dark:text-violet-400";
   }
 
   const title = (ALERT_TITLES[titleKey] && ALERT_TITLES[titleKey][langKey]) || ALERT_TITLES[titleKey]?.EN || "Note";

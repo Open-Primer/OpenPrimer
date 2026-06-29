@@ -7,11 +7,11 @@ import { useLanguage } from '@/context/LanguageContext';
 interface BiographyProps {
   name: string;
   dates?: string;
-  bio: string;
+  description: string;
   wikipediaUrl?: string;
 }
 
-export const Biography = ({ name, dates, bio, wikipediaUrl }: BiographyProps) => {
+export const Biography = ({ name, dates, description, wikipediaUrl }: BiographyProps) => {
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase();
 
@@ -34,6 +34,8 @@ export const Biography = ({ name, dates, bio, wikipediaUrl }: BiographyProps) =>
   const title = titleLabels[langKey] || titleLabels.EN;
   const wikiLabel = wikiLabels[langKey] || wikiLabels.EN;
 
+  const finalBio = description || '';
+
   return (
     <div className="my-6 p-5 rounded-2xl border-l-4 border-l-violet-500 bg-violet-500/5 dark:bg-violet-500/[0.04] border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
       <div className="flex items-center gap-2 mb-3 select-none">
@@ -49,7 +51,7 @@ export const Biography = ({ name, dates, bio, wikipediaUrl }: BiographyProps) =>
           {name}{dates ? ` (${dates})` : ''}
         </strong>
         {dates ? ' : ' : ' '}
-        {bio}
+        {finalBio}
       </div>
       {wikipediaUrl && (
         <div className="mt-3 flex items-center">

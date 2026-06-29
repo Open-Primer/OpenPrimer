@@ -2712,6 +2712,9 @@ function cleanBiographyAlerts(mdx: string): string {
     const headerText = boldMatch[1].trim();
     const subjectName = headerText.replace(/\([^)]+\)/g, '').trim();
 
+    const datesMatch = headerText.match(/\(([^)]+)\)/);
+    const dates = datesMatch ? datesMatch[1].trim() : '';
+
     let cleanedBody = body;
 
     const realPersonRegex = /<RealPerson\b([^>]*?)>([\s\S]*?)<\/RealPerson>/gi;
@@ -2725,16 +2728,22 @@ function cleanBiographyAlerts(mdx: string): string {
     });
 
     const headerFull = boldMatch[0];
-    const remainingText = cleanedBody.substring(boldMatch.index! + headerFull.length);
+    let remainingText = cleanedBody.substring(boldMatch.index! + headerFull.length);
 
     const subjectRegex = new RegExp('^(\\s*[:\\-–—]?\\s*)' + escapeRegex(subjectName) + '\\b', 'i');
     const subMatch = remainingText.match(subjectRegex);
     if (subMatch) {
-      const replacedRemaining = remainingText.replace(subjectRegex, '');
-      cleanedBody = cleanedBody.substring(0, boldMatch.index! + headerFull.length) + replacedRemaining;
+      remainingText = remainingText.replace(subjectRegex, '');
     }
 
-    return `<Alert type="biography">${cleanedBody}</Alert>`;
+    const bioText = remainingText.replace(/\[(?:Read more on Wikipedia|En savoir plus sur Wikipédia|Mehr auf Wikipedia lesen|Leer más en Wikipedia)\]\([^)]+\)/gi, '').trim();
+    const cleanBio = bioText.replace(/^[:\-–—\s]+/g, '').trim();
+
+    const escName = subjectName.replace(/"/g, '&quot;');
+    const escDates = dates ? ` dates="${dates.replace(/"/g, '&quot;')}"` : '';
+    const escBio = cleanBio.replace(/"/g, '&quot;');
+
+    return `<Biography name="${escName}"${escDates} description="${escBio}" />`;
   });
 }
 
@@ -4161,22 +4170,22 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
     const TRANSLATABLE_ATTRS: Record<string, string[]> = {
       CustomFigure: ['caption', 'alt'],
       Image: ['caption', 'alt'],
-      HistoricalPerson: ['name', 'bio', 'description'],
-      RealPerson: ['name', 'bio', 'description'],
-      FictionalCharacter: ['name', 'bio', 'description'],
-      Location: ['name', 'bio', 'description'],
-      EventLink: ['name', 'bio', 'description'],
-      HistoricalEventLink: ['name', 'bio', 'description'],
-      EvenementHistorique: ['name', 'bio', 'description'],
-      Artwork: ['name', 'bio', 'description'],
-      ConceptLink: ['name', 'bio', 'description'],
-      TheoremLink: ['name', 'bio', 'description'],
-      InstitutionLink: ['name', 'bio', 'description'],
-      WebsiteLink: ['name', 'bio', 'description'],
-      ProjectLink: ['name', 'bio', 'description'],
-      SpeciesLink: ['name', 'bio', 'description'],
-      ChemicalLink: ['name', 'bio', 'description'],
-      CelestialLink: ['name', 'bio', 'description'],
+      HistoricalPerson: ['name', 'description'],
+      RealPerson: ['name', 'description'],
+      FictionalCharacter: ['name', 'description'],
+      Location: ['name', 'description'],
+      EventLink: ['name', 'description'],
+      HistoricalEventLink: ['name', 'description'],
+      EvenementHistorique: ['name', 'description'],
+      Artwork: ['name', 'description'],
+      ConceptLink: ['name', 'description'],
+      TheoremLink: ['name', 'description'],
+      InstitutionLink: ['name', 'description'],
+      WebsiteLink: ['name', 'description'],
+      ProjectLink: ['name', 'description'],
+      SpeciesLink: ['name', 'description'],
+      ChemicalLink: ['name', 'description'],
+      CelestialLink: ['name', 'description'],
       GoingFurtherItem: ['title', 'description'],
     };
 

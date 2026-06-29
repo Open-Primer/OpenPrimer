@@ -646,7 +646,7 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         "StructureViewer3D", "QuantumOrbitalExplorer", "DynamicSimulation",
         "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
         "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
-        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive"
+        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
@@ -1086,6 +1086,12 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const oWeb = props.webBrowsingAllowed !== undefined ? ` webBrowsingAllowed={${props.webBrowsingAllowed}}` : '';
       const oAi = props.aiTutorAssistanceAllowed !== undefined ? ` aiTutorAssistanceAllowed={${props.aiTutorAssistanceAllowed}}` : '';
       compStr = `<OralEvaluation prompt="${oPrompt}"${oSubject}${oGrading}${oDur}${oFinal}${oCalc}${oDocs}${oWeb}${oAi} />`;
+    } else if (comp.componentType === "Biography") {
+      const bName = (props.name || '').replace(/"/g, '&quot;');
+      const bDates = props.dates ? ` dates="${props.dates.replace(/"/g, '&quot;')}"` : '';
+      const bDesc = (props.description || '').replace(/"/g, '&quot;');
+      const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
     } else {
       compStr = `<${comp.componentType} id="${comp.id}" />`;
     }
@@ -1958,6 +1964,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     const MAX_PARALLEL_LESSONS = Number(process.env.MAX_PARALLEL_LESSONS || 1);
 
     const usedDatabaseWidgetIds = new Set<string>();
+    const usedMediaRegistry: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
 
     // 2. For each lesson, generate rich MDX content with concurrency limit
     await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item: any, index) => {
@@ -2155,6 +2162,10 @@ Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw J
           }
         }
 
+        const usedMediaListStr = usedMediaRegistry.length > 0
+          ? usedMediaRegistry.map(m => `- Type: ${m.type}, Description: "${m.description}"${m.caption ? `, Caption: "${m.caption}"` : ''}`).join('\n')
+          : 'None yet. This is the first lesson or no media has been used yet.';
+
         let narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
@@ -2283,17 +2294,17 @@ ${referencesMetadata}
      > Write 8-12 lines of biography detailing their main academic contribution. Systematically include a direct working Wikipedia link at the end: \`[Read more on Wikipedia](...)\`.
 6. **Entity Hover-Cards**:
    - Wrap named historical figures, landmark artworks, locations, events, fictional characters, scientific concepts, mathematical theorems, or academic institutions mentioned inline in Hover-Card components with a short description:
-     - \`<RealPerson name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Name (Dates)</RealPerson>\`
-     - \`<FictionalCharacter name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Character Name</FictionalCharacter>\`
-     - \`<Artwork name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Title</Artwork>\`
-     - \`<Location name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</Location>\`
-     - \`<EventLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Name</EventLink>\`
-     - \`<ConceptLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Concept Name</ConceptLink>\`
-     - \`<TheoremLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Theorem/Law Name</TheoremLink>\`
-     - \`<InstitutionLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" description="...">Institution Name</InstitutionLink>\`
-     - \`<SpeciesLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Species Name</SpeciesLink>\`
-     - \`<ChemicalLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
-     - \`<CelestialLink name="Wiki_Title" lang="${targetLang.toLowerCase()}" bio="...">Celestial Body/Space Mission</CelestialLink>\`
+     - \`<RealPerson name="Wiki_Title" description="...">Name (Dates)</RealPerson>\`
+     - \`<FictionalCharacter name="Wiki_Title" description="...">Character Name</FictionalCharacter>\`
+     - \`<Artwork name="Wiki_Title" description="...">Title</Artwork>\`
+     - \`<Location name="Wiki_Title" description="...">Name</Location>\`
+     - \`<EventLink name="Wiki_Title" description="...">Name</EventLink>\`
+     - \`<ConceptLink name="Wiki_Title" description="...">Concept Name</ConceptLink>\`
+     - \`<TheoremLink name="Wiki_Title" description="...">Theorem/Law Name</TheoremLink>\`
+     - \`<InstitutionLink name="Wiki_Title" description="...">Institution Name</InstitutionLink>\`
+     - \`<SpeciesLink name="Wiki_Title" description="...">Species Name</SpeciesLink>\`
+     - \`<ChemicalLink name="Wiki_Title" description="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
+     - \`<CelestialLink name="Wiki_Title" description="...">Celestial Body/Space Mission</CelestialLink>\`
    *Strict Constraints*:
 
    - ⛔ ABSOLUTELY FORBIDDEN: Wrapping any verb, adjective, or cognitive action word inside these entity tags. This includes ALL Bloom’s Taxonomy verbs (analyser, évaluer, créer, comprendre, identifier, analyze, evaluate, create, understand, apply, etc.) as well as any other action verbs. These MUST remain as plain bold text (**analyser**) or plain text, NEVER as JSX hover-card tags.
@@ -2316,6 +2327,8 @@ ${referencesMetadata}
      - For video (educational videos, documentary clips):
        \`<CustomFigure type="video" description="Topic or query for the video lookup" title="Short Video Title" />\`
    - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
+   - **CRITICAL DUPLICATION CONSTRAINT**: The following media descriptions/captions have already been used in this course. You MUST NOT repeat them or use similar representations. Ensure every figure is completely unique:
+${usedMediaListStr}
 
 ---
 
@@ -2503,8 +2516,8 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
       const isLvlPrimary = cleanLevel.startsWith('p') || cleanLevel.startsWith('m') || cleanLevel.includes('primary') || cleanLevel.includes('maternelle') || ['1', '2', '3', 'foundation_1', 'foundation_2'].includes(cleanLevel);
       const isLvlSecondary = cleanLevel.includes('secondary') || cleanLevel.startsWith('coll') || cleanLevel.startsWith('lyc') || cleanLevel.includes('preuni') || ['secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3'].includes(cleanLevel);
 
-      const finalQuizPoolCount = isLvlPrimary ? 10 : isLvlSecondary ? 25 : 60;
       const finalQuizDisplayLimit = isLvlPrimary ? 5 : isLvlSecondary ? 15 : 30;
+      const finalQuizPoolCount = isTerminalEvaluation ? finalQuizDisplayLimit : (isLvlPrimary ? 10 : isLvlSecondary ? 25 : 60);
 
       const sectionQuizPoolCount = isLvlPrimary ? 5 : isLvlSecondary ? 10 : 20;
       const sectionQuizDisplayLimit = isLvlPrimary ? 3 : isLvlSecondary ? 5 : 10;
@@ -2621,6 +2634,16 @@ ${referencesMetadata}
      - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
      - This guarantees the pool is larger than the visible slice for retry randomisation.
 
+=============================================================================
+⚠️ QUIZ SCOPE & ALIGNMENT MANDATE ⚠️
+1. Section Quizzes:
+   - For any Quiz component inside the interactiveComponents array, the questions must EXCLUSIVELY cover the concepts taught in the specific section it is anchored in (sectionAnchor). Do NOT include questions covering other parts of the lesson.
+2. Lesson finalEvaluation Quiz:
+   - The lesson's finalEvaluation quiz must comprehensively cover the concepts of the ENTIRE lesson.
+3. Terminal Course finalEvaluation Quiz (for the final evaluation lesson):
+   - The terminal course evaluation quiz (where isTerminalEvaluation is true) must comprehensively cover concepts from ALL lessons in the entire course. It is permitted to technically incorporate, adapt, or build upon questions from previous lessons to build this final unified exam.
+=============================================================================
+
 ---
 
 ### 3. OUTPUT FORMAT
@@ -2662,20 +2685,25 @@ ${referencesMetadata}
             );
 
             if (matchedKey) {
+              const noPropsWidgets = new Set(['StructureViewer3D', 'QuantumOrbitalExplorer', 'DynamicSimulation', 'ChemicalStoichiometry', 'BasicMathExplorer']);
+              const isDatabaseCurated = noPropsWidgets.has(matchedKey);
+
               const isDuplicate = usedDatabaseWidgetIds.has(matchedKey);
               const isOverBudget = (usedDatabaseWidgetIds.size + databaseWidgetsInThisLesson) >= 2;
 
-              if (isDuplicate || isOverBudget) {
+              if (isDatabaseCurated && (isDuplicate || isOverBudget)) {
                 console.log(`[WIDGET CURATION] Filtered out database widget "${matchedKey}" (Duplicate: ${isDuplicate}, OverBudget: ${isOverBudget})`);
                 return false;
               }
 
               comp.componentType = matchedKey;
-              comp.id = matchedKey;
-              comp.props = {};
-              databaseWidgetsInThisLesson++;
-              usedDatabaseWidgetIds.add(matchedKey);
-              appendTaskLog(`[WIDGET CURATION] Selected and approved database-curated widget: "${matchedKey}"`);
+              if (isDatabaseCurated) {
+                comp.id = matchedKey;
+                comp.props = {};
+                databaseWidgetsInThisLesson++;
+                usedDatabaseWidgetIds.add(matchedKey);
+              }
+              appendTaskLog(`[WIDGET CURATION] Selected and approved widget: "${matchedKey}" (Database Curated: ${isDatabaseCurated})`);
               return true;
             }
 
@@ -2753,6 +2781,14 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
      - Primary / Middle School: High visual focus, simplified sliders, gamified challenges, visual metaphors, zero complex algebra symbols.
      - High School: Balanced equations and visual models, preset configs matching standard curriculum formulas.
      - University / Higher Education: Full scientific controls, rigorous mathematical formulas, analytical overlays, data export capability.
+8. **Biography Component Integrity**:
+   - **STRICT REJECTION**: Verify that all Biography components inside interactiveComponents have name, description, and wikipediaUrl defined with meaningful, accurate, and non-generic content.
+   - Reject if any biography attributes are missing, empty, or use default/placeholder text like "Scientifique / Auteur", "Biographie détaillée à venir.", or default URLs like "https://wikipedia.org". If so, set approved to false and critique exactly what is missing.
+9. **Quiz Scope and Question Pool Integrity**:
+   - **STRICT REJECTION**: Verify that every Section Quiz (interactiveComponents with componentType: 'Quiz') exclusively covers concepts of the specific section it is anchored in (sectionAnchor).
+   - Verify that the lesson's finalEvaluation quiz covers the whole lesson.
+   - Verify that the terminal course finalEvaluation quiz (when isTerminalEvaluation is true) covers concepts from all lessons of the course.
+   - Verify that all quizzes have their questions pool size and display limit matching exactly the requested limits.
 
 ---
 
@@ -2906,6 +2942,19 @@ ${validatedMdx}`;
       // any content regenerated by the self-healing loop is also fully sanitized.
       const healedMdx = preprocessMdx(mdxWithFrontmatter, targetLang.toLowerCase(), false, item.slug);
       const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
+
+      // Parse custom figures and add to global registry for deduplication
+      try {
+        const figures = extractCustomFigures(resolvedMdx);
+        for (const fig of figures) {
+          const isDup = usedMediaRegistry.some(existing => areMediaSimilar(existing, fig));
+          if (!isDup) {
+            usedMediaRegistry.push(fig);
+          }
+        }
+      } catch (err) {
+        console.warn(`[MEDIA DEDUPLICATION] Failed to parse and register figures for lesson "${item.title}":`, err);
+      }
 
       // Save to Supabase
       await dbService.saveLesson({
@@ -5557,5 +5606,44 @@ function sanitizeMdxFallback(mdx: string): string {
   });
   
   return processedParts.join('');
+}
+
+export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string }> {
+  const figures: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
+  const regex = /<CustomFigure\s+([^>]*)\/>/g;
+  let match;
+  while ((match = regex.exec(mdx)) !== null) {
+    const attrsStr = match[1];
+    const typeMatch = attrsStr.match(/type=["']([^"']*)["']/);
+    const descMatch = attrsStr.match(/description=["']([^"']*)["']/);
+    const titleMatch = attrsStr.match(/title=["']([^"']*)["']/);
+    const captionMatch = attrsStr.match(/caption=["']([^"']*)["']/);
+    if (typeMatch && descMatch) {
+      figures.push({
+        type: typeMatch[1],
+        description: descMatch[1],
+        title: titleMatch ? titleMatch[1] : undefined,
+        caption: captionMatch ? captionMatch[1] : undefined
+      });
+    }
+  }
+  return figures;
+}
+
+export function areMediaSimilar(fig1: any, fig2: any): boolean {
+  if (fig1.type !== fig2.type) return false;
+  const desc1 = fig1.description.toLowerCase().trim();
+  const desc2 = fig2.description.toLowerCase().trim();
+  if (desc1 === desc2) return true;
+  
+  const words1 = desc1.split(/\s+/).filter((w: string) => w.length > 3);
+  const words2 = desc2.split(/\s+/).filter((w: string) => w.length > 3);
+  if (words1.length === 0 || words2.length === 0) return false;
+  let matches = 0;
+  for (const w of words1) {
+    if (words2.includes(w)) matches++;
+  }
+  const similarity = matches / Math.min(words1.length, words2.length);
+  return similarity > 0.6;
 }
 

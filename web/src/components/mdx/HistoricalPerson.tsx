@@ -26,7 +26,6 @@ import {
 
 export interface EntityLinkProps {
   name: string;
-  lang?: string;
   children: React.ReactNode;
   type?: 'person' | 'character' | 'location' | 'event' | 'entity' | 'artwork' | 'website' | 'project' | 'concept' | 'theorem' | 'institution' | 'species' | 'chemical' | 'celestial';
   description?: string;
@@ -397,7 +396,6 @@ const extractEntityMetadata = (
 
 export const EntityLink = ({ 
   name, 
-  lang, 
   children, 
   type = 'entity',
   description,
@@ -419,13 +417,12 @@ export const EntityLink = ({
   }, [unresolved, markDegraded]);
 
   const { language } = useLanguage();
-  // Resolution: UI context lang → course lang prop (fallback) → 'en'
-  const activeLang = ((language || lang || 'en')).toLowerCase().trim();
+  const activeLang = (language || 'en').toLowerCase().trim();
 
   const localizedName = getLocalizedName(name, activeLang);
   const cleanName = (localizedName || '').trim();
-  const langCode = (activeLang || 'en').toLowerCase().trim();
-  const originalLang = (lang || 'fr').toLowerCase().trim();
+  const langCode = activeLang;
+  const originalLang = activeLang;
 
   // 5-stage Wikipedia cascade (shared hook)
   const wiki = useWikiCascade(
