@@ -1,11 +1,11 @@
-import * as fs from 'fs';
-import * as path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 // Load env variables from .env.local to ensure they are available immediately
-const envPath = path.join(__dirname, '.env.local');
+const envPath = path.join(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf-8');
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line: string) => {
     const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
     if (match) {
       const key = match[1];
@@ -24,7 +24,7 @@ process.env.CLI_WORKER = 'true';
 async function main() {
   // Dynamically import ai.ts AFTER env variables are loaded to prevent connection failure
   console.log("📥 Dynamically importing ai module...");
-  const { generateCourseContent, translateCourseContent } = await import('./src/lib/ai');
+  const { generateCourseContent, translateCourseContent } = require('./src/lib/ai');
 
   const coursesToGenerate = [
     { name: "Introduction à l'astrophysique et à la cosmologie", level: "L1" }
@@ -40,10 +40,6 @@ async function main() {
     try {
       const result = await generateCourseContent(c.name, c.level, "fr");
       console.log(`✅ Course "${result.title}" generated successfully! Slug: "${result.slug}"`);
-      
-      // console.log(`\n🌍 Translating course "${result.slug}" into [${targetLang}]...`);
-      // await translateCourseContent(result.slug, targetLang);
-      // console.log(`✅ Course translation to [${targetLang}] complete!`);
     } catch (error) {
       console.error(`❌ Failed for course "${c.name}":`, error);
     }
