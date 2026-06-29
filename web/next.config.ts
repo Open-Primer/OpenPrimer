@@ -41,7 +41,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // output: "standalone",
+  output: "standalone",
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const headersList = [
