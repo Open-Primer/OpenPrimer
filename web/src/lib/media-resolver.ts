@@ -1177,8 +1177,13 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
     }
     
     const fullCaption = captionMatch[2];
-    const prefixesPattern = /^(?:Figure|Figura|Abbildung|\u56fe)\s*\d*\s*[:\-\u2013]?\s*/gi;
-    const cleanCaption = fullCaption.replace(prefixesPattern, '');
+    const prefixesPattern = /^(?:Figure|Figura|Abbildung|Illustration|Sch\u00e9ma|Schema|Diagramme|Diagram|Graphique|Graph|\u56fe)\s*\d*\s*[:\-\u2013\u2014]?\s*/gi;
+    let cleanCaption = fullCaption;
+    let previousCaption = '';
+    while (cleanCaption !== previousCaption) {
+      previousCaption = cleanCaption;
+      cleanCaption = cleanCaption.replace(prefixesPattern, '').trim();
+    }
     const escapedCleanCaption = cleanCaption.replace(/&quot;/g, '"').replace(/"/g, '&quot;');
     const newCaption = `${prefix} ${figureCount}: ${escapedCleanCaption}`;
     figureCount++;

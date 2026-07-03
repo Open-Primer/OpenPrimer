@@ -117,6 +117,33 @@ const extractDatesOrCentury = (desc: string | null, extract: string | null): str
   return null;
 };
 
+const cleanCreator = (creator: string, isFr: boolean): string => {
+  if (!creator) return '';
+  const splitRegex = isFr
+    ? /\b(?:énonce|est|qui|que|déclare|stipule|définit|explique|concerne|décrit|montre|sert|visant)\b/i
+    : /\b(?:states|is|was|who|that|which|defines|explains|concerns|describes|shows|serves|aims)\b/i;
+  
+  const match = creator.match(splitRegex);
+  let cleaned = creator;
+  if (match && match.index !== undefined) {
+    cleaned = creator.substring(0, match.index);
+  }
+  
+  cleaned = cleaned.trim();
+  const trailingRegex = isFr
+    ? /\b(?:de|du|d'|l'|la|le|les|et|en|par|pour|sur|dans|avec)$/i
+    : /\b(?:of|and|in|by|for|on|with|at|to)$/i;
+      
+  while (true) {
+    const prevLen = cleaned.length;
+    cleaned = cleaned.replace(/[-',;\s]+$/, '').trim();
+    cleaned = cleaned.replace(trailingRegex, '').trim();
+    if (cleaned.length === prevLen) break;
+  }
+  
+  return cleaned;
+};
+
 const extractEntityMetadata = (
   type: string,
   desc: string | null,
@@ -242,7 +269,7 @@ const extractEntityMetadata = (
     const conceptCreatorFr = /\b(?:conçu par|introduit par|formulé par|théorie de)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
     const conceptCreatorEn = /\b(?:coined by|introduced by|formulated by|theory of)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
     const creatorMatch = combined.match(isFr ? conceptCreatorFr : conceptCreatorEn);
-    const creator = creatorMatch ? creatorMatch[1].trim() : null;
+    const creator = creatorMatch ? cleanCreator(creatorMatch[1], isFr) : null;
 
     const domainsFr = ['Physique', 'Mathématiques', 'Philosophie', 'Économie', 'Biologie', 'Chimie', 'Informatique', 'Sociologie', 'Psychologie', 'Statistique'];
     const domainsEn = ['Physics', 'Mathematics', 'Philosophy', 'Economics', 'Biology', 'Chemistry', 'Computer Science', 'Sociology', 'Psychology', 'Statistics'];
@@ -272,7 +299,7 @@ const extractEntityMetadata = (
     const theoremCreatorFr = /\b(?:théorème de|loi de|découvert par|formulé par)\s+([A-Z\u00C0-\u00DC][A-Za-z\u00C0-\u00DC\u00df\s'-]{2,30})/i;
     const theoremCreatorEn = /\b(?:theorem of|law of|formulated by|discovered by)\s+([A-Z][A-Za-z\s'-]{2,30})/i;
     const creatorMatch = combined.match(isFr ? theoremCreatorFr : theoremCreatorEn);
-    const creator = creatorMatch ? creatorMatch[1].trim() : null;
+    const creator = creatorMatch ? cleanCreator(creatorMatch[1], isFr) : null;
     
     const dates = extractDatesOrCentury(desc, summary);
     

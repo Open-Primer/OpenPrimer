@@ -1660,17 +1660,7 @@ export const AITutorOverlay = ({
                           </div>
                         ) : null}
 
-                        <button
-                          onClick={() => {
-                            setIsFlipped(false);
-                            setTimeout(() => {
-                              setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
-                            }, 200);
-                          }}
-                          className="w-full py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700/80 hover:text-white text-slate-300 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                        >
-                          ➡️ {t.skip_next_card}
-                        </button>
+
 
                         {!isFlipped && !isCoachingDismissed && (
                           <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-500/20 text-left relative overflow-hidden">

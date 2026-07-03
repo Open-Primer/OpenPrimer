@@ -762,7 +762,7 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
           href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors cursor-pointer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 no-underline hover:underline font-normal transition-colors cursor-pointer"
         >
           {linkText}
         </a>
@@ -804,7 +804,7 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
           href={url} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors cursor-pointer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 no-underline hover:underline font-normal transition-colors cursor-pointer"
         >
           {sourceName}
         </a>

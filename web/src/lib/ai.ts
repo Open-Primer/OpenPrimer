@@ -1,4 +1,4 @@
-import { dbService } from './db';
+﻿import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
@@ -474,7 +474,8 @@ const lessonWidgetsSchema = {
               type: { type: "string", enum: ["book", "article", "video", "website", "research", "movie", "film"] },
               description: { type: "string" },
               author: { type: "string" },
-              year: { type: "string" }
+              year: { type: "string" },
+              url: { type: "string" }
             },
             required: ["title", "type", "description"]
           }
@@ -803,9 +804,22 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
       } else if (comp.componentType === "Media") {
         if (!comp.props.type) comp.props.type = "image";
-        if (!comp.props.description) comp.props.description = "Asset description";
+        if (!comp.props.description) {
+          let fallbackDesc = "";
+          if (comp.sectionAnchor) {
+            let clean = comp.sectionAnchor.replace(/^#+\s*/, '').trim();
+            clean = clean.replace(/^(Section|Leçon|Lesson)\s*\d+[\s:-]*/i, '').trim();
+            if (clean) {
+              fallbackDesc = clean;
+            }
+          }
+          if (!fallbackDesc) {
+            fallbackDesc = discipline || (lang === 'fr' ? "Astrophysique" : "Astrophysics");
+          }
+          comp.props.description = fallbackDesc;
+        }
         if (!comp.props.alt) comp.props.alt = comp.props.description;
-        if (!comp.props.caption) comp.props.caption = `Illustration: ${comp.props.description}`;
+        if (!comp.props.caption) comp.props.caption = lang === 'fr' ? `Illustration : ${comp.props.description}` : `Illustration: ${comp.props.description}`;
         if (!comp.props.title) comp.props.title = comp.props.description;
       } else if (comp.componentType === "Citation") {
         if (!comp.props.quote) comp.props.quote = "Quote text.";
@@ -1180,11 +1194,14 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   if (isTerminalEvaluation) {
     let finalEvalStr = '';
     if (widgets && widgets.finalEvaluation) {
-      if (widgets.finalEvaluation.type === "Quiz") {
+      const finalEvalType = (widgets.finalEvaluation.type || '').toLowerCase();
+      if (finalEvalType === "quiz" || finalEvalType === "qcm") {
         const fProps = widgets.finalEvaluation.props || {};
         finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
       } else {
-        finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
+        const promptVal = (widgets.finalEvaluation.props?.prompt || "Rédigez un essai de synthèse structuré sur les concepts clés de cette leçon.").replace(/"/g, '&quot;');
+        const subjectVal = (widgets.finalEvaluation.props?.subject || "Essai de synthèse").replace(/"/g, '&quot;');
+        finalEvalStr = `<EssayEvaluation prompt="${promptVal}" subject="${subjectVal}" durationLimit={3600} />`;
       }
     }
 
@@ -1194,7 +1211,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
         const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
         const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
         const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
-        return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
+        const urlAttr = it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : '';
+        return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr}${urlAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
       }).join('\n  ')}\n</GoingFurther>`;
     }
 
@@ -1435,7 +1453,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
       const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
       const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
-      return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
+      const urlAttr = it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : '';
+      return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr}${urlAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
     }).join('\n  ')}\n</GoingFurther>`;
   }
 
@@ -1479,18 +1498,21 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
     
-    const rebuiltConclusion = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${summaryStr}`;
+    const rebuiltConclusion = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
     content = content.substring(0, headerIdx) + rebuiltConclusion + content.substring(sectionEnd);
   } else {
-    content = content.trim() + `\n\n## Conclusion\n\n${summaryStr}`;
+    content = content.trim() + `\n\n## Conclusion\n\n${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
   }
 
   let finalEvalStr = '';
-  if (widgets.finalEvaluation.type === "Quiz") {
+  const finalEvalType = (widgets.finalEvaluation.type || '').toLowerCase();
+  if (finalEvalType === "quiz" || finalEvalType === "qcm") {
     const fProps = widgets.finalEvaluation.props || {};
-    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
   } else {
-    finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')} " durationLimit={3600} />`;
+    const promptVal = (widgets.finalEvaluation.props?.prompt || "Rédigez un essai de synthèse structuré sur les concepts clés de cette leçon.").replace(/"/g, '&quot;');
+    const subjectVal = (widgets.finalEvaluation.props?.subject || "Essai de synthèse").replace(/"/g, '&quot;');
+    finalEvalStr = `<EssayEvaluation prompt="${promptVal}" subject="${subjectVal}" durationLimit={3600} />`;
   }
 
   // Remove any existing finalEvaluation anchors
@@ -1522,7 +1544,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     }
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
-    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
+    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
     content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
   } else {
     const contentLowerTmp = content.toLowerCase();
@@ -1537,7 +1559,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       langKey = 'zh';
     }
     const evalHeading = evalHeadings[langKey];
-    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
+    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
   }
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
   const cleanGlossaryDef = (def: string): string => (def || '')
@@ -2393,7 +2415,10 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         let success = false;
         let lastError = 'N/A';
 
-        const generationConfig: any = { temperature };
+        const generationConfig: any = { 
+          temperature,
+          maxOutputTokens: 8192
+        };
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
@@ -2812,8 +2837,8 @@ You must audit the narrative text against the following 7 critical checkpoints:
 
 ### OUTPUT FORMAT
 Your audit must be in dual-mode:
-- If the issues are **widespread** (structural skeleton, severe length deficiency, plan mismatch, numerous missing sections/anchors requiring a full rewrite), set **\`isGlobalRevision\`: true** and provide a comprehensive **\`globalCritique\`**.
-- If the issues are **localized** to specific sections, set **\`isGlobalRevision\`: false**, and list each \`## \` section in the **\`sections\`** array with its own \`approved\` flag and \`critique\`.
+- **\`isGlobalRevision\` MUST ONLY be set to \`true\` if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency representing a complete failure, or massive plan mismatch requiring a total lesson rewrite), and provide a comprehensive **\`globalCritique\`**.
+- **For standard, localized, or section-specific errors, you MUST set \`isGlobalRevision\`: false** and list each \`## \` section in the **\`sections\`** array with its own \`approved\` flag and \`critique\`, allowing localized repairs. Do NOT trigger a global rewrite for localized mistakes.
 
 You must return ONLY a valid JSON object with the following keys:
 - **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints).
@@ -3128,6 +3153,7 @@ Your generated JSON must contain the following top-level keys:
      - You MUST generate a pool of EXACTLY ${finalQuizPoolCount} questions in the \`props.questions\` array.
      - You MUST specify \`props.limit\`: ${finalQuizDisplayLimit} in the \`props\` object.
      - This ensures there are enough extra questions in the pool so that the platform randomly shuffles and selects ${finalQuizDisplayLimit} questions at runtime, preventing repetition.
+     - **TOKEN EFFICIENCY & EXTREME CONCISENESS RULE**: To prevent hitting output token limits, you MUST write extremely concise, high-impact question cards. Options should be short, distinct, single-phrase choices. Explanations MUST be highly compressed, punchy, and limited to EXACTLY 1 to 2 short sentences (maximum of 20-25 words per explanation). Avoid verbose commentary, repetitive introductory phrases, or structural bloat. Focus on density and clarity.
 7. **\`glossary\`**:
    - An array of at least 3 key academic terms with clear definitions.
 8. **\`references\` (CRITICAL REFERENCE MAPPING RULE)**:
@@ -3148,9 +3174,9 @@ ${referencesMetadata}
      - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
        - **Media**:
          - \`type\`: "image", "audio", or "video".
-         - \`description\`: The detailed search/generation description for the media.
-         - \`alt\`: Short description for accessibility.
-         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance.
+         - \`description\`: The detailed search/generation description for the media. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Media:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
+         - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
+         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
          - \`title\`: Short title (used for audio/video).
        - **Citation**:
          - \`quote\`: The text of the quote in the target language.
@@ -3196,7 +3222,7 @@ ${referencesMetadata}
       saveDraftRevision(`prompt_stage2_architect_${item.slug}.md`, widgetsPrompt);
       saveDraftRevision(`agent3_widgets_schema.json`, JSON.stringify(lessonWidgetsSchema, null, 2));
 
-      let parsedWidgets: any = {};
+      let parsedWidgets: any = null;
       let widgetsApproved = false;
       let widgetsIteration = 0;
       const maxWidgetsIterations = 3;
@@ -3205,8 +3231,50 @@ ${referencesMetadata}
       lessonStats.widgetsAttempts++;
       saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
 
-      const cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-      parsedWidgets = safeJsonParse(cleanWidgetsJson, 'WFTA Stage 2 Widgets Parsing');
+      let cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+
+      // Pre-flight validation / auto-repair loop
+      let parseSuccess = false;
+      let preflightAttempts = 0;
+      const maxPreflightAttempts = 2;
+      let currentWidgetsJsonStr = cleanWidgetsJson;
+
+      while (!parseSuccess && preflightAttempts <= maxPreflightAttempts) {
+        try {
+          parsedWidgets = safeJsonParse(currentWidgetsJsonStr, 'WFTA Stage 2 Widgets Parsing');
+          parseSuccess = true;
+        } catch (err: any) {
+          if (err instanceof StructuralJsonError || err instanceof SyntaxError || err.message.includes('JSON')) {
+            preflightAttempts++;
+            if (preflightAttempts > maxPreflightAttempts) {
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Pre-flight JSON parsing failed after ${maxPreflightAttempts} repair attempts. Propagating error.`);
+              throw err;
+            }
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Pre-flight JSON parsing failed: ${err.message}. Retrying local syntax repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
+            
+            const preflightRepairPrompt = `You are a precise JSON syntax repair assistant.
+The JSON output below has syntax errors (such as missing brackets, unescaped quotes, trailing commas, or incomplete properties) and cannot be parsed.
+Your task is to fix the syntax errors and return ONLY the completely valid, parseable JSON object matching the required schema.
+
+### PARSE ERROR:
+${err.message}
+
+### MALFORMED JSON TO REPAIR:
+\`\`\`json
+${currentWidgetsJsonStr}
+\`\`\`
+
+Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
+
+            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, lessonWidgetsSchema, 0.1);
+            currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            saveDraftRevision(`draft_stage2_widgets_${item.slug}_preflight_repair_${preflightAttempts}.json`, currentWidgetsJsonStr);
+          } else {
+            throw err;
+          }
+        }
+      }
+
       parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
 
       while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
@@ -3292,7 +3360,7 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
      - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Media", "Biography", "Citation", "Epistemology", "BrilliantIdea", or custom widgets).
      - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
    - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, and \`caption\` (detailed italicized explanation of the figure's relevance). Do NOT allow blank or placeholder descriptions/captions.
+     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, and \`caption\` (detailed italicized explanation of the figure's relevance). Do NOT allow blank or placeholder descriptions/captions, and STRICTLY REJECT if description, alt, or caption are lazy copy-pastes of the chapter's heading or parent section title.
      - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
      - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
      - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
@@ -3342,14 +3410,19 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
 ---
 
 ### OUTPUT FORMAT
-You must return ONLY a valid JSON object matching the \`verificationSchema\` with the following keys:
-- **\`approved\`**: boolean (true if the widgets JSON complies perfectly with all checkpoints; false if there are any violations).
-- **\`critique\`**: string (detailed, actionable explanation of the violations and clear instructions on how the widgets architect must modify or regenerate the JSON. Leave empty if approved).
+You must return ONLY a valid JSON object matching the \`widgetsAuditSchema\` with the following keys:
+- **\`approved\`**: boolean (true if the ENTIRE widgets JSON complies perfectly with all checkpoints; false if there are any violations).
+- **\`isGlobalRevision\`**: boolean (true ONLY if the errors are widespread, systemic, or if structural keys are missing, requiring a complete full-JSON regeneration; false if the errors are localized and can be repaired component-by-component. You MUST prefer false and use localized critiques for standard/localized errors. Do NOT trigger a global rewrite for standard localized errors).
+- **\`globalCritique\`**: string (high-level or global feedback. Leave empty if approved).
+- **\`widgets\`**: array of objects, one for each checked key/widget in the JSON (e.g. \`prerequisites\`, \`diagnosticQuiz\`, \`learningObjectives\`, \`conclusionSummary\`, \`whatsNext\`, \`goingFurther\`, or any key inside \`interactiveComponents\` such as \`interactiveComponents:my_chart\`). Each item must contain:
+  - **\`key\`**: string (the unique identifier/path of the widget or property block, e.g., "diagnosticQuiz", "references", "interactiveComponents:my_plot").
+  - **\`approved\`**: boolean (true if this specific component is perfect; false if it has errors).
+  - **\`critique\`**: string (specific, actionable feedback on how to fix this individual component. Leave empty if approved).
 
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
-        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, verificationSchema, 0.1);
+        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1);
         const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
 
@@ -3357,8 +3430,15 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED ${isTerminalEvaluation ? '(Terminal Evaluation Bypass)' : `on attempt ${widgetsIteration}`}!`);
           widgetsApproved = true;
         } else {
-          const critiqueText = widgetsAudit?.critique || 'Invalid response from widgets critic.';
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON REJECTED. Critique: ${critiqueText}`);
+          const isGlobalWidgets = !!widgetsAudit?.isGlobalRevision;
+          const globalCritiqueText = widgetsAudit?.globalCritique || '';
+          const criticWidgetsList: { key: string; approved: boolean; critique: string }[] = widgetsAudit?.widgets || [];
+
+          const critiqueText = isGlobalWidgets
+            ? globalCritiqueText
+            : (criticWidgetsList.filter(w => !w.approved).map(w => `[${w.key}]: ${w.critique}`).join(' | ') || 'Invalid response from widgets critic.');
+
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON REJECTED (${isGlobalWidgets ? 'GLOBAL rewrite' : 'LOCALIZED repair'}). Critique: ${critiqueText}`);
           lessonStats.widgetsRejections++;
           saveDraftRevision(`critique_stage4b_widgets_${item.slug}_attempt_${widgetsIteration}.json`, widgetsAuditStr);
 
@@ -3367,8 +3447,10 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
             break;
           }
 
-          const widgetsRefinerPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-The widgets critic (Agent 4B) has rejected your previously generated widgets JSON.
+          if (isGlobalWidgets) {
+            // === GLOBAL REWRITE PATH (FALLBACK) ===
+            const widgetsRefinerPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+The widgets critic (Agent 4B) has rejected your previously generated widgets JSON with a GLOBAL critique requiring a full rewrite.
 You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
 
 ⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
@@ -3384,8 +3466,8 @@ You must ensure that interactive widgets/sandboxes align strictly with the targe
 - **University / Higher Education (L1, L2, L3, M1, M2, beginner, intermediate, advanced, expert)**:
   Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV). Use sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative/integral solvers.
 
-CRITIQUE FROM AGENT 4B:
-"${critiqueText}"
+GLOBAL CRITIQUE FROM AGENT 4B:
+"${globalCritiqueText}"
 
 PREVIOUS WIDGETS JSON:
 ---
@@ -3399,15 +3481,127 @@ ${approvedNarrativeText}
 
 Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.`;
 
-          saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
+            saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
 
-          const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.2);
-          lessonStats.widgetsAttempts++;
-          saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
+            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.2);
+            lessonStats.widgetsAttempts++;
+            saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
 
-          const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-          parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
-          parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+            const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
+            parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+          } else {
+            // === LOCALIZED COMPONENT-BY-COMPONENT REPAIR PATH ===
+            const rejectedWidgets = criticWidgetsList.filter(w => !w.approved);
+            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Localized repair for ${rejectedWidgets.length} widget(s): ${rejectedWidgets.map(w => `"${w.key}"`).join(', ')}`);
+
+            const rejectedWidgetsData: { key: string; critique: string; currentValue: any; }[] = [];
+
+            for (const rw of rejectedWidgets) {
+              const key = rw.key;
+              let currentValue: any = null;
+
+              if (key.startsWith('interactiveComponents:')) {
+                const compId = key.substring('interactiveComponents:'.length);
+                if (parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
+                  currentValue = parsedWidgets.interactiveComponents.find((c: any) => c && (c.id === compId || c.componentType === compId));
+                }
+              } else {
+                currentValue = parsedWidgets ? parsedWidgets[key] : null;
+              }
+
+              rejectedWidgetsData.push({
+                key,
+                critique: rw.critique,
+                currentValue
+              });
+            }
+
+            const widgetsRepairPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+We need to repair specific component keys of the generated widgets JSON for the lesson "${item.title}" that were rejected by the Widgets Critic (Agent 4B).
+
+⚠️ CRITICAL REMINDER FOR MDX COMPLIANCE:
+- Do NOT use raw javascript arrow functions, backticks (\`), or complex unescaped double quotes inside interactive component properties (such as "props").
+- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
+
+CONTEXT:
+Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
+
+REJECTED WIDGETS DATA:
+${rejectedWidgetsData.map((rw, idx) => `
+--- REJECTED WIDGET ${idx + 1} ---
+Key: "${rw.key}"
+Critique from Agent 4B:
+  "${rw.critique}"
+Current JSON Value:
+${JSON.stringify(rw.currentValue, null, 2)}
+----------------------------------
+`).join('\n')}
+
+INSTRUCTIONS:
+1. Repair each rejected widget key to fully resolve its critique.
+2. Return a SINGLE JSON object containing ONLY the repaired keys as its top-level properties (or for "interactiveComponents", return the repaired component object).
+3. Format of output JSON:
+   For top-level keys like "diagnosticQuiz", the output JSON should have:
+   {
+     "diagnosticQuiz": { ... repaired object ... }
+   }
+   For "interactiveComponents:compId" keys, return the repaired component object under the component's key, like:
+   {
+     "interactiveComponents:compId": { ... repaired component object, including id, componentType, sectionAnchor, props, etc. ... }
+   }
+
+Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
+
+            saveDraftRevision(`prompt_stage2_repair_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRepairPrompt);
+
+            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.2);
+            lessonStats.widgetsAttempts++;
+            saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
+
+            const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            const repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
+
+            if (repairedWidgetsJson) {
+              if (Array.isArray(repairedWidgetsJson.interactiveComponents)) {
+                for (const repComp of repairedWidgetsJson.interactiveComponents) {
+                  if (repComp && repComp.id) {
+                    const idx = parsedWidgets.interactiveComponents.findIndex((c: any) => c && c.id === repComp.id);
+                    if (idx !== -1) {
+                      parsedWidgets.interactiveComponents[idx] = repComp;
+                    } else {
+                      parsedWidgets.interactiveComponents.push(repComp);
+                    }
+                  }
+                }
+              }
+
+              for (const rw of rejectedWidgetsData) {
+                const key = rw.key;
+                if (key.startsWith('interactiveComponents:')) {
+                  const compId = key.substring('interactiveComponents:'.length);
+                  const repairedComp = repairedWidgetsJson[key] || repairedWidgetsJson[compId];
+                  if (repairedComp && parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
+                    const idx = parsedWidgets.interactiveComponents.findIndex((c: any) => c && (c.id === compId || c.componentType === compId));
+                    if (idx !== -1) {
+                      parsedWidgets.interactiveComponents[idx] = repairedComp;
+                      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Merged repaired component for key "${key}"`);
+                    } else {
+                      parsedWidgets.interactiveComponents.push(repairedComp);
+                      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Added repaired component for key "${key}"`);
+                    }
+                  }
+                } else {
+                  if (repairedWidgetsJson[key] !== undefined) {
+                    parsedWidgets[key] = repairedWidgetsJson[key];
+                    await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Merged repaired top-level property for key "${key}"`);
+                  }
+                }
+              }
+            }
+
+            parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+          }
         }
       }
 
@@ -4540,8 +4734,8 @@ Your validation checklist:
    - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />').
 
 Your audit can be in dual-mode:
-- If there are widespread, structural, length, course-outline, or numerous missing tag issues that require a total lesson re-write, you MUST set "isGlobalRevision": true and provide a comprehensive "globalCritique".
-- If the issues are localized to specific sections, you can set "isGlobalRevision": false, approve/reject section-by-section, and specify the exact "critique" for the rejected sections in the "sections" array.
+- **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the revision requiring a complete full-JSON rewrite). If so, provide a comprehensive "globalCritique".
+- **For standard, localized, or section-specific mistakes, you MUST set "isGlobalRevision": false**, approve/reject section-by-section, and specify the exact "critique" for the rejected sections in the "sections" array to allow localized section-by-section repairs. Do NOT trigger a global rewrite for standard localized errors.
 
 You must output ONLY a valid JSON object matching the revisionAuditSchema:
 {
@@ -5731,8 +5925,8 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
       const getAttr = (name: string) => {
         const curlyMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
         if (curlyMatch) return curlyMatch[1].trim();
-        const quoteMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
-        if (quoteMatch) return quoteMatch[1].trim();
+        const quoteMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
+        if (quoteMatch) return quoteMatch[2].trim();
         const unquotedMatch = block.attributes.match(new RegExp(`${name}\\s*=\\s*([^\\s/>]+)`, 'i'));
         if (unquotedMatch) return unquotedMatch[1].trim();
         return '';
@@ -5740,6 +5934,7 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
 
       const url = getAttr('url');
       const title = getAttr('title');
+      const author = getAttr('author');
       const type = getAttr('type').toLowerCase() || 'website';
 
       if (url) {
@@ -5788,7 +5983,8 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
           // 4. Fallback: try Wikipedia search for non-video types
           if (!alternativeUrl && title && type !== 'video' && type !== 'film' && type !== 'movie') {
             try {
-              const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
+              const query = (type === 'book' && author) ? `${title} ${author}` : title;
+              const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
               if (wikiRes.ok) {
                 const data = await wikiRes.json();
                 if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
@@ -5819,7 +6015,8 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
           } else {
             for (const lang of [targetLang, 'en']) {
               try {
-                const wikiRes = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&format=json`);
+                const query = (type === 'book' && author) ? `${title} ${author}` : title;
+                const wikiRes = await fetchWithTimeout(`https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
                 if (wikiRes.ok) {
                   const data = await wikiRes.json();
                   if (data && data[3] && data[3][0] && await isUrlReachable(data[3][0])) {
@@ -6163,16 +6360,16 @@ export function extractCustomFigures(mdx: string): Array<{ type: string; descrip
   let match;
   while ((match = regex.exec(mdx)) !== null) {
     const attrsStr = match[1];
-    const typeMatch = attrsStr.match(/type=["']([^"']*)["']/);
-    const descMatch = attrsStr.match(/description=["']([^"']*)["']/);
-    const titleMatch = attrsStr.match(/title=["']([^"']*)["']/);
-    const captionMatch = attrsStr.match(/caption=["']([^"']*)["']/);
+    const typeMatch = attrsStr.match(/type=(["'])([\s\S]*?)\1/i);
+    const descMatch = attrsStr.match(/description=(["'])([\s\S]*?)\1/i);
+    const titleMatch = attrsStr.match(/title=(["'])([\s\S]*?)\1/i);
+    const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/i);
     if (typeMatch && descMatch) {
       figures.push({
-        type: typeMatch[1],
-        description: descMatch[1],
-        title: titleMatch ? titleMatch[1] : undefined,
-        caption: captionMatch ? captionMatch[1] : undefined
+        type: typeMatch[2],
+        description: descMatch[2],
+        title: titleMatch ? titleMatch[2] : undefined,
+        caption: captionMatch ? captionMatch[2] : undefined
       });
     }
   }

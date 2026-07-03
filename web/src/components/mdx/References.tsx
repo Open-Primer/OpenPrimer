@@ -53,6 +53,18 @@ interface DisplayReferenceItem extends ReferenceItem {
   allNums: number[];
 }
 
+function parseMarkdownToHtml(text: string): string {
+  if (!text) return "";
+  let html = text;
+  // Replace double asterisks with strong
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Replace single asterisks with em
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Replace underscores with em
+  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  return html;
+}
+
 export function References({ itemsBase64, items: directItems }: ReferencesProps) {
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase();
@@ -211,7 +223,7 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
             <div className="flex-1">
               <span 
                 className="prose-strong:font-black prose-a:text-indigo-400 hover:prose-a:underline break-words" 
-                dangerouslySetInnerHTML={{ __html: item.text }} 
+                dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(item.text) }} 
               />
               {item.scholarUrl && (() => {
                 // Sanitize scholarText: strip HTML tags, collapse whitespace, cap at 60 chars

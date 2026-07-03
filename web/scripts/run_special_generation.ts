@@ -38,7 +38,7 @@ async function main() {
 
   // Dynamically import ai.ts AFTER env variables are loaded to prevent connection failure
   console.log("📥 Dynamically importing ai module...");
-  const { generateCourseContent, translateCourseContent } = require('./src/lib/ai');
+  const { generateCourseContent, translateCourseContent } = await import('../src/lib/ai');
 
   const coursesToGenerate = [
     { name: "Introduction à l'astrophysique et à la cosmologie", level: "L1" }
