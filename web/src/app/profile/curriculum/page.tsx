@@ -288,6 +288,18 @@ const COMPLETED_LABEL: Record<string, string> = {
   UR: "مکمل"
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  EN: "Status",
+  FR: "Statut",
+  ES: "Estado",
+  DE: "Status",
+  ZH: "状态",
+  PT: "Status",
+  AR: "الحالة",
+  HI: "स्थिति",
+  UR: "حالت"
+};
+
 const EARNED_BADGES_LABEL: Record<string, string> = {
   EN: "Earned badges",
   FR: "Badges gagnés",
@@ -456,6 +468,18 @@ const KEEP_ENROLLMENTS_LABEL: Record<string, string> = {
   UR: "کورس की رجسٹریشن برقرار رکھیں"
 };
 
+const KEEP_ENROLLMENTS_DESC_LABEL: Record<string, string> = {
+  EN: "Keep your individual progress and enrollment for the child courses. Uncheck to abandon all.",
+  FR: "Conservez vos progrès et inscriptions individuelles pour les cours de ce cursus. Décochez pour tout abandonner.",
+  ES: "Mantenga su progreso e inscripción individual para los cursos secundarios. Desmarque para abandonar todo.",
+  DE: "Behalten Sie Ihren individuellen Fortschritt und Ihre Anmeldung für die untergeordneten Kurse. Deaktivieren Sie diese Option, um alle abzubrechen.",
+  ZH: "保留子课程的个人进度和加入状态。取消勾选将全部放弃。",
+  PT: "Mantenha o seu progresso individual e inscrição para os cursos filhos. Desmarque para cancelar todos.",
+  AR: "الاحتفاظ بتقدمك الفردي وتسجيلك في المقررات الفرعية. قم بإلغاء التحديد للتخلي عن الجميع.",
+  HI: "उप-पाठ्यक्रमों के लिए अपनी व्यक्तिगत प्रगति और नामांकन बनाए रखें। सभी को छोड़ने के लिए अनचेक करें।",
+  UR: "ذیلی کورسز के लिए अपनी انفرادی پیشرفت اور رجسٹریشن برقرار رکھیں۔ سب کو چھوڑنے کے لیے ان چیک کریں۔"
+};
+
 const REVIEWED_READ_ONLY_LABEL: Record<string, string> = {
   EN: "REVIEWED • READ ONLY",
   FR: "ÉVALUÉ • LECTURE SEULE",
@@ -540,6 +564,43 @@ const SUBMIT_REVIEW_LABEL: Record<string, string> = {
   UR: "جائزہ جمع کروائیں"
 };
 
+const REVIEW_SAVED_LABEL: Record<string, string> = {
+  EN: "Your rating has been successfully saved. Thank you for sharing your feedback!",
+  FR: "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !",
+  ES: "Tu calificación ha sido guardada con éxito. ¡Gracias por compartir tus comentarios!",
+  DE: "Ihre Bewertung wurde erfolgreich gespeichert. Vielen Dank für Ihr Feedback!",
+  ZH: "您的评分已成功保存。感谢您分享您的反馈！",
+  PT: "A sua avaliação foi salva com sucesso. Obrigado por partilhar o seu feedback!",
+  AR: "تم حفظ تقييمك بنجاح. شكرًا لمشاركتك ملاحظاتك!",
+  HI: "आपकी रेटिंग सफलतापूर्वक सहेज ली गई है। अपनी प्रतिक्रिया साझा करने के लिए धन्यवाद!",
+  UR: "آپ کی درجہ بندی کامیابی کے ساتھ محفوظ کر لی گئی ہے۔ اپنی رائے دینے کا شکریہ!"
+};
+
+const TEXTAREA_PLACEHOLDER_LABEL: Record<string, string> = {
+  EN: "What did you think of the pacing, clarity, or explanations? Suggest revisions...",
+  FR: "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions...",
+  ES: "¿Qué te pareció el ritmo, la claridad o las explicaciones? Sugiere revisiones...",
+  DE: "Was halten Sie von Tempo, Klarheit oder Erklärungen? Schlagen Sie Überarbeitungen vor...",
+  ZH: "您对课程进度、清晰度或解释有何看法？请提出修改建议...",
+  PT: "O que achou do ritmo, clareza ou explicações? Sugira revisões...",
+  AR: "ما رأيك في الوتيرة أو الوضوح أو الشروحات؟ اقترح مراجعات...",
+  HI: "गति, स्पष्टता या स्पष्टीकरण के बारे में आपने क्या सोचा? संशोधन का सुझाव दें...",
+  UR: "رفتار، وضاحت، یا وضاحتوں کے بارے में آپ کا کیا خیال ہے؟ نظرثانی تجویز کریں..."
+};
+
+function getElectiveDescription(enrolled: number, min: number, isCompliant: boolean, lang: string): string {
+  const l = lang.toUpperCase();
+  if (l === 'FR') return `${enrolled} sur ${min} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`;
+  if (l === 'ES') return `${enrolled} de ${min} curso(s) opcional(es) elegido(s) — ${isCompliant ? 'Conforme' : 'Selección requerida'}`;
+  if (l === 'DE') return `${enrolled} von ${min} optionalen Kurs(en) gewählt — ${isCompliant ? 'Konform' : 'Auswahl erforderlich'}`;
+  if (l === 'ZH') return `已选择 ${min} 个选修课程中的 ${enrolled} 个 — ${isCompliant ? '符合要求' : '需要选择'}`;
+  if (l === 'PT') return `${enrolled} de ${min} curso(s) opcional(is) escolhido(s) — ${isCompliant ? 'Conforme' : 'Seleção necessária'}`;
+  if (l === 'AR') return `تم اختيار ${enrolled} من أصل ${min} مقرر(ات) اختيارية — ${isCompliant ? 'متوافق' : 'الاختيار مطلوب'}`;
+  if (l === 'HI') return `${min} वैकल्पिक पाठ्यक्रमों में से ${enrolled} चुने गए — ${isCompliant ? 'अनुरूप' : 'चयन आवश्यक'}`;
+  if (l === 'UR') return `${min} اختیاری کورسز میں سے ${enrolled} منتخب کیے گئے — ${isCompliant ? 'مطابق' : 'انتخاب مطلوب'}`;
+  return `${enrolled} of ${min} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`;
+}
+
 function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {
   const upperLang = (lang || 'EN').toUpperCase();
   const dynamicVal = ach.translations?.[upperLang]?.[field] || ach.translations?.[lang.toLowerCase()]?.[field];
@@ -558,6 +619,7 @@ export default function CurriculumPage() {
   const router = useRouter();
   const { language: lang, setLanguage: setLang } = useLanguage();
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
+  const upperLang = (lang || 'EN').toUpperCase();
 
   const [progress, setProgress] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
@@ -1407,6 +1469,7 @@ export default function CurriculumPage() {
                      {activeCourses.map((course: any) => {
                        const courseDetails = courses.find((cd: any) => cd.slug === course.slug || cd.id === course.id);
                        const isCurr = courseDetails?.isCurriculum || course.isCurriculum;
+                       const upperLang = lang.toUpperCase();
                        
                        let ratingCount = courseDetails?.ratingCount || 0;
                        let averageRating = courseDetails?.averageRating || 0;
@@ -1463,7 +1526,7 @@ export default function CurriculumPage() {
                                     ) : (
                                       <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
                                         <Icons.BookOpen className="w-3.5 h-3.5 text-blue-400" />
-                                        {lang === 'FR' ? 'Cours' : 'Course'}
+                                        {COURSE_LABEL[upperLang] || COURSE_LABEL.EN}
                                       </span>
                                     )}
 
@@ -1472,19 +1535,19 @@ export default function CurriculumPage() {
                                       isMandatoryChild ? (
                                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-500 flex items-center gap-1.5 select-none shadow-[0_0_15px_rgba(245,158,11,0.05)] animate-pulse">
                                           <Icons.Lock className="w-3.5 h-3.5 text-amber-500" />
-                                          {lang === 'FR' ? 'Obligatoire' : 'Mandatory'}
+                                          {MANDATORY_LABEL[upperLang] || MANDATORY_LABEL.EN}
                                         </span>
                                       ) : (
                                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-slate-800/60 border border-slate-700/50 rounded-xl text-slate-400 flex items-center gap-1.5 select-none">
                                           <Icons.Unlock className="w-3.5 h-3.5 text-slate-400" />
-                                          {lang === 'FR' ? 'Optionnel' : 'Optional'}
+                                          {OPTIONAL_LABEL[upperLang] || OPTIONAL_LABEL.EN}
                                         </span>
                                       )
                                     )}
 
                                     {/* Multilingual / translation mismatch badge */}
                                     {!isCurr && courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
-                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={lang === 'FR' ? 'Non disponible dans votre langue active' : 'Not available in your active language'}>
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={NOT_AVAILABLE_IN_LANG[upperLang] || NOT_AVAILABLE_IN_LANG.EN}>
                                         <Icons.Globe className="w-3.5 h-3.5 animate-pulse" />
                                         {courseDetails.languages.join(', ').toUpperCase()}
                                       </span>
@@ -1528,8 +1591,8 @@ export default function CurriculumPage() {
                                       onClick={(e) => toggleBookmark(course.id, e)}
                                       aria-pressed={bookmarks.includes(course.id)}
                                       title={bookmarks.includes(course.id) 
-                                        ? (lang === 'FR' ? 'Supprimer des favoris' : 'Remove bookmark') 
-                                        : (lang === 'FR' ? 'Sauvegarder ce cours' : 'Save this course')}
+                                        ? (REMOVE_BOOKMARK_LABEL[upperLang] || REMOVE_BOOKMARK_LABEL.EN) 
+                                        : (SAVE_COURSE_LABEL[upperLang] || SAVE_COURSE_LABEL.EN)}
                                       className={`p-2 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${
                                         bookmarks.includes(course.id) 
                                           ? 'text-blue-400 bg-blue-400/10 border-blue-500/20' 
@@ -1542,7 +1605,7 @@ export default function CurriculumPage() {
                                     {/* 7. Trash / Abandon Icon Button */}
                                     {isMandatoryChild ? (
                                       <div
-                                        title={lang === 'FR' ? "Cours obligatoire du curriculum (abandon impossible)" : "Mandatory curriculum course (cannot disenroll)"}
+                                        title={MANDATORY_CURRICULUM_COURSE_LABEL[upperLang] || MANDATORY_CURRICULUM_COURSE_LABEL.EN}
                                         className="p-2 rounded-xl text-slate-655 bg-slate-950/30 border border-slate-850 flex items-center justify-center cursor-not-allowed"
                                       >
                                         <Icons.Lock className="w-4 h-4" />
@@ -1715,7 +1778,7 @@ export default function CurriculumPage() {
                              {/* Corner Ribbon */}
                              <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
                                <div className={`absolute top-6 -right-8 w-[150px] bg-gradient-to-r ${isCurr ? 'from-violet-600 to-fuchsia-400' : 'from-emerald-600 to-teal-400'} text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 rotate-45 shadow-xl border-y border-white/20 select-none`}>
-                                 {lang === 'FR' ? 'Complété' : 'Completed'}
+                                 {COMPLETED_LABEL[upperLang] || COMPLETED_LABEL.EN}
                                </div>
                              </div>
 
@@ -1733,13 +1796,13 @@ export default function CurriculumPage() {
                                    ) : (
                                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 flex items-center gap-1.5 select-none">
                                        <Icons.BookOpen className="w-3.5 h-3.5 text-blue-400" />
-                                       {lang === 'FR' ? 'Cours' : 'Course'}
+                                        {COURSE_LABEL[upperLang] || COURSE_LABEL.EN}
                                      </span>
                                    )}
 
                                    {/* Multilingual / translation mismatch badge */}
                                    {!isCurr && courseDetails?.languages && courseDetails.languages.length > 0 && !courseDetails.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase()) && (
-                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={lang === 'FR' ? 'Non disponible dans votre langue active' : 'Not available in your active language'}>
+                                     <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 flex items-center gap-1" title={NOT_AVAILABLE_IN_LANG[upperLang] || NOT_AVAILABLE_IN_LANG.EN}>
                                        <Icons.Globe className="w-3.5 h-3.5 animate-pulse" />
                                        {courseDetails.languages.join(', ').toUpperCase()}
                                      </span>
@@ -1783,8 +1846,8 @@ export default function CurriculumPage() {
                                      onClick={(e) => toggleBookmark(course.id, e)}
                                      aria-pressed={bookmarks.includes(course.id)}
                                      title={bookmarks.includes(course.id) 
-                                       ? (lang === 'FR' ? 'Supprimer des favoris' : 'Remove bookmark') 
-                                       : (lang === 'FR' ? 'Sauvegarder ce cours' : 'Save this course')}
+                                       ? (REMOVE_BOOKMARK_LABEL[upperLang] || REMOVE_BOOKMARK_LABEL.EN) 
+                                       : (SAVE_COURSE_LABEL[upperLang] || SAVE_COURSE_LABEL.EN)}
                                      className={`p-2 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${
                                        bookmarks.includes(course.id) 
                                          ? 'text-blue-400 bg-blue-400/10 border-blue-500/20' 

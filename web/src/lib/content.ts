@@ -141,7 +141,7 @@ function getLearnMoreWikipediaLabel(lang: string): string {
 
 
 export async function enrichGlossaryWithWikipediaLinks(content: string, lang: string): Promise<string> {
-  const glossaryIndex = content.search(/###\s*(Glossaire|Glossary)/i);
+  const glossaryIndex = content.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary)/iu);
   if (glossaryIndex === -1) return content;
 
   const preGlossary = content.slice(0, glossaryIndex);
@@ -228,11 +228,11 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
 
 export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
   const sectionPatterns = [
-    { id: 'conclusion', regex: /^(#{2,3}\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/mi },
-    { id: 'et_apres', regex: /^(#{2,3}\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??|Pour\s+aller\s+plus\s+loin|Going\s+Further|Para\s+ir\s+m\u00e1s\s+all\u00e1|Weiterf\u00fchrende\s+Literatur|深入\s*学习)[^\n]*)/mi },
-    { id: 'evaluation', regex: /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi },
-    { id: 'glossaire', regex: /^(#{2,3}\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*)/mi },
-    { id: 'references', regex: /^(#{2,3}\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/mi },
+    { id: 'conclusion', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/miu },
+    { id: 'et_apres', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??|Pour\s+aller\s+plus\s+loin|Going\s+Further|Para\s+ir\s+m\u00e1s\s+all\u00e1|Weiterf\u00fchrende\s+Literatur|深入\s*学习)[^\n]*)/miu },
+    { id: 'evaluation', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/miu },
+    { id: 'glossaire', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*)/miu },
+    { id: 'references', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/miu },
   ];
 
   const LOCALIZED_HEADINGS: Record<string, Record<string, string>> = {
@@ -344,22 +344,14 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     mergedContents[id] = sectionContents[id].filter(Boolean).join('\n\n').trim();
   }
 
-  // Ensure mandatory sections exist
-  const mandatory = ['conclusion', 'evaluation', 'glossaire', 'references'];
-  for (const id of mandatory) {
-    if (uniqueHeadings.every(h => h.id !== id)) {
-      mergedContents[id] = mergedContents[id] || '';
-    }
-  }
-
   const desiredOrder = ['conclusion', 'evaluation', 'et_apres', 'glossaire', 'references'];
   let rebuilt = coreContent;
 
   for (const id of desiredOrder) {
-    const isMandatory = mandatory.includes(id);
-    const hasContent = mergedContents[id] !== undefined && (mergedContents[id] !== '' || uniqueHeadings.some(h => h.id === id));
+    const hasContent = mergedContents[id] !== undefined && mergedContents[id] !== '';
+    const wasPresent = uniqueHeadings.some(h => h.id === id);
     
-    if (isMandatory || hasContent) {
+    if (hasContent || wasPresent) {
       const canonicalHeader = LOCALIZED_HEADINGS[id][langKey];
       const content = mergedContents[id] || '';
       rebuilt += `\n\n${canonicalHeader}\n${content ? content : ''}`;
@@ -3468,7 +3460,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   });
 
   // 5. Render Glossary as static list at the bottom of the page
-  const glossaryIndex = processed.search(/###\s*(Glossaire|Glossary)/i);
+  const glossaryIndex = processed.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary)/iu);
   if (glossaryIndex !== -1) {
     const preGlossary = processed.slice(0, glossaryIndex);
     let glossaryContent = processed.slice(glossaryIndex);
@@ -4161,7 +4153,7 @@ function removeOrphanedCloseTags(mdx: string): string {
     }
     
     // Find a good place to insert closing tags: before glossary or references, or at the end
-    const insertIndex = result.search(/###\s*(Glossaire|Glossary|Réf|References|Bibliography)/i);
+    const insertIndex = result.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Réf|References|Bibliography)/iu);
     if (insertIndex !== -1) {
       result = result.substring(0, insertIndex) + `\n${closingTags}\n\n` + result.substring(insertIndex);
     } else {

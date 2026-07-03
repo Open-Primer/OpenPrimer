@@ -702,9 +702,9 @@ export const AITutorOverlay = ({
     }
   };
 
-  const hasGlossaryInProp = pageContext && (
+   const hasGlossaryInProp = pageContext && (
     /<Glossary\s+term=/i.test(pageContext) ||
-    /##+\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/i.test(pageContext)
+    /##+\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/iu.test(pageContext)
   );
 
   const QUICK_ACTIONS = [
@@ -987,7 +987,7 @@ export const AITutorOverlay = ({
       }
 
       // 2. Extract from static markdown glossary section
-      const glossaryIndex = pageContext.search(/##+\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/i);
+      const glossaryIndex = pageContext.search(/##+\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/iu);
       if (glossaryIndex !== -1) {
         let glossarySection = pageContext.slice(glossaryIndex);
         const nextHeadingIndex = glossarySection.slice(1).search(/\r?\n\s*##+\s+/);
