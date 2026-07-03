@@ -2212,6 +2212,117 @@ function deduplicateHistoricalPersons(mdx: string): string {
   return processed;
 }
 
+interface Token {
+  index: number;
+  length: number;
+  type: 'open' | 'close' | 'self';
+  raw: string;
+  newIndex?: number;
+}
+
+function parseTagTokens(text: string, tag: string): Token[] {
+  const tokens: Token[] = [];
+  const lowerText = text.toLowerCase();
+  const tagLower = tag.toLowerCase();
+  
+  let i = 0;
+  while (i < text.length) {
+    const nextTag = lowerText.indexOf('<', i);
+    if (nextTag === -1) break;
+    
+    let isClose = false;
+    let tagStart = nextTag + 1;
+    if (lowerText[tagStart] === '/') {
+      isClose = true;
+      tagStart++;
+    }
+    
+    if (lowerText.substring(tagStart, tagStart + tagLower.length) === tagLower) {
+      const nextChar = lowerText[tagStart + tagLower.length];
+      if (!nextChar || /\s/.test(nextChar) || nextChar === '/' || nextChar === '>') {
+        let endIdx = -1;
+        let inDoubleQuote = false;
+        let inSingleQuote = false;
+        let inBacktick = false;
+        let braceDepth = 0;
+        let isEscaped = false;
+        
+        for (let j = tagStart + tagLower.length; j < text.length; j++) {
+          const char = text[j];
+          
+          if (isEscaped) {
+            isEscaped = false;
+            continue;
+          }
+          if (char === '\\') {
+            isEscaped = true;
+            continue;
+          }
+          
+          if (inDoubleQuote) {
+            if (char === '"') inDoubleQuote = false;
+            continue;
+          }
+          if (inSingleQuote) {
+            if (char === "'") inSingleQuote = false;
+            continue;
+          }
+          if (inBacktick) {
+            if (char === '`') inBacktick = false;
+            continue;
+          }
+          
+          if (char === '"') {
+            inDoubleQuote = true;
+            continue;
+          }
+          if (char === "'") {
+            inSingleQuote = true;
+            continue;
+          }
+          if (char === '`') {
+            inBacktick = true;
+            continue;
+          }
+          
+          if (char === '{') {
+            braceDepth++;
+            continue;
+          }
+          if (char === '}') {
+            if (braceDepth > 0) braceDepth--;
+            continue;
+          }
+          
+          if (braceDepth === 0 && char === '>') {
+            endIdx = j;
+            break;
+          }
+        }
+        
+        if (endIdx !== -1) {
+          const raw = text.substring(nextTag, endIdx + 1);
+          const isSelf = !isClose && raw.endsWith('/>');
+          
+          tokens.push({
+            index: nextTag,
+            length: raw.length,
+            type: isClose ? 'close' : (isSelf ? 'self' : 'open'),
+            raw
+          });
+          
+          i = endIdx + 1;
+          continue;
+        }
+      }
+    }
+    
+    i = nextTag + 1;
+  }
+  
+  return tokens;
+}
+
 function balancePedagogicalTags(mdx: string): string {
   const inlineTags = [
     'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'HistoricalDate', 'Location', 'EntityLink', 'WebsiteLink', 'ProjectLink', 'SiteWeb',
@@ -2232,37 +2343,7 @@ function balancePedagogicalTags(mdx: string): string {
 
   for (const tag of allTags) {
     const isInline = inlineTags.includes(tag);
-    const regex = new RegExp("<(\\/?)(" + tag + ")\\b((?:[^'\"\\x60]|\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'|\\x60(?:[^\\x60\\\\]|\\\\.)*\\x60)*?)(\\/?)>", 'gi');
-    
-    interface Token {
-      index: number;
-      length: number;
-      type: 'open' | 'close' | 'self';
-      raw: string;
-      newIndex?: number;
-    }
-    
-    const tokens: Token[] = [];
-    let match;
-    
-    while ((match = regex.exec(result)) !== null) {
-      const isClose = match[1] === '/';
-      const isSelf = match[4] === '/';
-      
-      let type: 'open' | 'close' | 'self' = 'open';
-      if (isClose) {
-        type = 'close';
-      } else if (isSelf) {
-        type = 'self';
-      }
-      
-      tokens.push({
-        index: match.index,
-        length: match[0].length,
-        type,
-        raw: match[0]
-      });
-    }
+    const tokens = parseTagTokens(result, tag);
     
     if (tokens.length === 0) continue;
     
