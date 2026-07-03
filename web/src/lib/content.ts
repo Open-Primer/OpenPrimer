@@ -227,10 +227,21 @@ export async function enrichGlossaryWithWikipediaLinks(content: string, lang: st
 }
 
 export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
+  const codeBlocks: string[] = [];
+  const placeholderPrefix = '___MDX_CODE_BLOCK_PLACEHOLDER_';
+  const placeholderSuffix = '___';
+  
+  // Replace code blocks and inline code with placeholders to prevent matching headings inside them
+  let processedMdx = mdx.replace(/```[\s\S]*?```|`[^`\n]*`/g, (match) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(match);
+    return `${placeholderPrefix}${idx}${placeholderSuffix}`;
+  });
+
   const sectionPatterns = [
     { id: 'conclusion', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Conclusion|Synthèse|Discussion|Synthèse\s*&\s*Discussion|Synthèse\s*&amp;\s*Discussion|Summary\s*&\s*Conclusion|Summary|Fazit|结论)[^\n]*)/miu },
-    { id: 'et_apres', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Et Après|Et après\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??|Pour\s+aller\s+plus\s+loin|Going\s+Further|Para\s+ir\s+m\u00e1s\s+all\u00e1|Weiterf\u00fchrende\s+Literatur|深入\s*学习)[^\n]*)/miu },
-    { id: 'evaluation', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/miu },
+    { id: 'et_apres', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Et Après|Et après\s*\??|Prochaines?\s+[\u00e9\u00c9e]tape?s?\s*\??|What's\s*Next\s*\??|What’s\s*Next\s*\??|WhatsNext|Ouverture|¿Y\s*ahora\s*qué\??|Wie\s*geht\s*es\s*weiter\??|下一步是什么\??|Pour\s+aller\s+plus\s+loin|Going\s+Further|Para\s+ir\s+m\u00e1s\s+all\u00e1|Weiterf\u00fchrende\s+Literatur|深入\s*学习)[^\n]*)/miu },
+    { id: 'evaluation', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:(?:Évaluation|Evaluation)\s+(?:Finale|Sommative|Final)|Quiz\s+Final|Final\s+Quiz|(?:Quiz|QCM)\s+de\s+validation|Validation\s+des\s+acquis|Summative\s+Evaluation|Final\s+Evaluation|Evaluación\s+Final|最终评估)(?:\s+[^\n]*)?|#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Quiz|Assessment|Abschlussbewertung|测试|测验)\s*$)/miu },
     { id: 'glossaire', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)[^\n]*)/miu },
     { id: 'references', regex: /^(#{2,3}\s*[^\p{L}\p{N}\s]*\s*(?:Références|References|Réf\.|Réf|Bibliography|Referencias|Referenzen|参考文献)[^\n]*)/miu },
   ];
@@ -273,7 +284,7 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     },
   };
 
-  // Find all matches of headings in the MDX
+  // Find all matches of headings in the processed MDX
   const foundHeadings: { id: string; header: string; index: number }[] = [];
   for (const pattern of sectionPatterns) {
     const flags = (pattern.regex.flags.includes('g') ? pattern.regex.flags : pattern.regex.flags + 'g')
@@ -281,7 +292,7 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     const globalRegex = new RegExp(pattern.regex.source, flags);
     
     let match;
-    while ((match = globalRegex.exec(mdx)) !== null) {
+    while ((match = globalRegex.exec(processedMdx)) !== null) {
       foundHeadings.push({
         id: pattern.id,
         header: match[0],
@@ -303,8 +314,8 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     }
   }
 
-  const firstSectionIndex = uniqueHeadings.length > 0 ? uniqueHeadings[0].index : mdx.length;
-  const coreContent = mdx.substring(0, firstSectionIndex).trim();
+  const firstSectionIndex = uniqueHeadings.length > 0 ? uniqueHeadings[0].index : processedMdx.length;
+  const coreContent = processedMdx.substring(0, firstSectionIndex).trim();
 
   // Group sliced contents by section ID
   const sectionContents: Record<string, string[]> = {
@@ -319,8 +330,8 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
     const current = uniqueHeadings[i];
     const next = uniqueHeadings[i + 1];
     const start = current.index + current.header.length;
-    const end = next ? next.index : mdx.length;
-    let content = mdx.substring(start, end).trim();
+    const end = next ? next.index : processedMdx.length;
+    let content = processedMdx.substring(start, end).trim();
     
     // Remove any inner headings that match any of the section pattern regexes
     // to prevent duplicate headers within a section
@@ -341,7 +352,11 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
 
   const mergedContents: Record<string, string> = {};
   for (const id of Object.keys(sectionContents)) {
-    mergedContents[id] = sectionContents[id].filter(Boolean).join('\n\n').trim();
+    mergedContents[id] = sectionContents[id]
+      .map(str => str.trim())
+      .filter(str => str !== '')
+      .join('\n\n')
+      .trim();
   }
 
   const desiredOrder = ['conclusion', 'evaluation', 'et_apres', 'glossaire', 'references'];
@@ -349,16 +364,23 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
 
   for (const id of desiredOrder) {
     const hasContent = mergedContents[id] !== undefined && mergedContents[id] !== '';
-    const wasPresent = uniqueHeadings.some(h => h.id === id);
     
-    if (hasContent || wasPresent) {
+    if (hasContent) {
       const canonicalHeader = LOCALIZED_HEADINGS[id][langKey];
-      const content = mergedContents[id] || '';
-      rebuilt += `\n\n${canonicalHeader}\n${content ? content : ''}`;
+      const content = mergedContents[id];
+      rebuilt += `\n\n${canonicalHeader}\n${content}`;
     }
   }
 
-  return rebuilt.trim() + '\n';
+  // Restore code blocks from placeholders
+  let restored = rebuilt;
+  const restoreRegex = new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, 'g');
+  restored = restored.replace(restoreRegex, (match, idxStr) => {
+    const idx = parseInt(idxStr, 10);
+    return codeBlocks[idx] !== undefined ? codeBlocks[idx] : match;
+  });
+
+  return restored.trim() + '\n';
 }
 
 export function parseAndStripFrontmatter(content: string) {
