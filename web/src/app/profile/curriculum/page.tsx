@@ -35,6 +35,511 @@ const LOCALES: Record<string, Record<string, string>> = {
   ZH: zhLocale,
 };
 
+const STREAK_7_TITLE: Record<string, string> = {
+  EN: "🏆 Impressive streak!",
+  FR: "🏆 Série impressionnante !",
+  ES: "🏆 ¡Racha impresionante!",
+  DE: "🏆 Beeindruckende Serie!",
+  ZH: "🏆 令人惊叹的连续学习天数！",
+  PT: "🏆 Série impressionante!",
+  AR: "🏆 سلسلة مذهلة!",
+  HI: "🏆 प्रभावशाली सिलसिला!",
+  UR: "🏆 متاثر کن سلسلہ!"
+};
+
+const STREAK_3_TITLE: Record<string, string> = {
+  EN: "⚡ Keep it up!",
+  FR: "⚡ Continue comme ça !",
+  ES: "⚡ ¡Sigue así!",
+  DE: "⚡ Weiter so!",
+  ZH: "⚡ 继续保持！",
+  PT: "⚡ Continue assim!",
+  AR: "⚡ واصل العمل الرائع!",
+  HI: "⚡ इसे जारी रखें!",
+  UR: "⚡ اسے جاری رکھیں!"
+};
+
+const STREAK_0_TITLE: Record<string, string> = {
+  EN: "Come back daily to build a streak!",
+  FR: "Reviens chaque jour pour une série !",
+  ES: "¡Vuelve a diario para crear una racha!",
+  DE: "Kommen Sie täglich wieder, um eine Serie aufzubauen!",
+  ZH: "每天回来学习以保持连续天数！",
+  PT: "Volte diariamente para construir uma série!",
+  AR: "عد يومياً لبناء سلسلة تعلم!",
+  HI: "सिलसिला बनाने के लिए प्रतिदिन वापस आएं!",
+  UR: "سلسلہ بنانے کے لیے روزانہ واپس آئیں!"
+};
+
+const STUDY_600_TITLE: Record<string, string> = {
+  EN: "📖 Dedicated reader",
+  FR: "📖 Lecteur assidu",
+  ES: "📖 Lector dedicado",
+  DE: "📖 Engagierter Leser",
+  ZH: "📖 专心致志的读者",
+  PT: "📖 Leitor dedicado",
+  AR: "📖 قارئ مخلص",
+  HI: "📖 समर्पित पाठक",
+  UR: "📖 سرگرم قاری"
+};
+
+const STUDY_120_TITLE: Record<string, string> = {
+  EN: "✨ Great progress",
+  FR: "✨ Belle progression",
+  ES: "✨ Gran progreso",
+  DE: "✨ Toller Fortschritt",
+  ZH: "✨ 极大进步",
+  PT: "✨ Ótimo progresso",
+  AR: "✨ تقدم رائع",
+  HI: "✨ बेहतरीन प्रगति",
+  UR: "✨ شاندار پیش رفت"
+};
+
+const STUDY_0_TITLE: Record<string, string> = {
+  EN: "Every minute counts!",
+  FR: "Chaque minute compte !",
+  ES: "¡Cada minuto cuenta!",
+  DE: "Jede Minute zählt!",
+  ZH: "每一分钟都至关重要！",
+  PT: "Cada minuto conta!",
+  AR: "كل دقيقة تهم!",
+  HI: "हर मिनट मायने रखता है!",
+  UR: "हर min مهم ہے!"
+};
+
+const DISMISS_ALERT: Record<string, string> = {
+  EN: "Dismiss conflict",
+  FR: "Ignorer cette alerte",
+  ES: "Descartar conflicto",
+  DE: "Konflikt ausblenden",
+  ZH: "忽略此冲突",
+  PT: "Ignorar conflito",
+  AR: "تجاهل التعارض",
+  HI: "टकराव खारिज करें",
+  UR: "تنازعہ کو مسترد کریں"
+};
+
+const VERSION_CONFLICT_TITLE: Record<string, string> = {
+  EN: "Version Conflict Detected",
+  FR: "Conflit de version détecté",
+  ES: "Conflicto de versión detectado",
+  DE: "Versionskonflikt erkannt",
+  ZH: "检测到版本冲突",
+  PT: "Conflito de versão detectado",
+  AR: "تم اكتشاف تعارض في الإصدار",
+  HI: "संस्करण संघर्ष का पता चला",
+  UR: "ورژن کا تنازعہ پایا گیا"
+};
+
+const ABANDON_STANDALONE_COURSE: Record<string, string> = {
+  EN: "Abandon Standalone Course",
+  FR: "Abandonner le cours individuel",
+  ES: "Abandonar curso independiente",
+  DE: "Eigenständigen Kurs abbrechen",
+  ZH: "放弃独立课程",
+  PT: "Abandonar curso independente",
+  AR: "التخلي عن الدورة التدريبية المستقلة",
+  HI: "स्टैंडअलोन कोर्स छोड़ें",
+  UR: "اکیلے کورس کو چھوڑیں"
+};
+
+const IGNORE_CONFLICT: Record<string, string> = {
+  EN: "Ignore Conflict",
+  FR: "Ignorer l'alerte",
+  ES: "Ignorar conflicto",
+  DE: "Konflikt ignorieren",
+  ZH: "忽略冲突",
+  PT: "Ignorar conflito",
+  AR: "تجاهل التعارض",
+  HI: "टकराव को अनदेखा करें",
+  UR: "تنازعہ کو نظر انداز کریں"
+};
+
+function getConflictDescription(conflict: any, lang: string): string {
+  const isFr = lang.toUpperCase() === 'FR';
+  const isEs = lang.toUpperCase() === 'ES';
+  const isDe = lang.toUpperCase() === 'DE';
+  const isZh = lang.toUpperCase() === 'ZH';
+  const isPt = lang.toUpperCase() === 'PT';
+  const isAr = lang.toUpperCase() === 'AR';
+  const isHi = lang.toUpperCase() === 'HI';
+  const isUr = lang.toUpperCase() === 'UR';
+
+  if (isFr) {
+    return `Vous êtes inscrit à la fois au cours individuel "${conflict.standalone.title}" et au cursus "${conflict.curriculum.title}" qui contient déjà le module "${conflict.curriculumChild.title}". Cela peut entraîner des doublons ou des incohérences de progression.`;
+  }
+  if (isEs) {
+    return `Está inscrito tanto en el curso independiente "${conflict.standalone.title}" como en el plan de estudios "${conflict.curriculum.title}", que ya incluye el módulo "${conflict.curriculumChild.title}". Esto puede generar duplicados o conflictos de progreso.`;
+  }
+  if (isDe) {
+    return `Sie sind sowohl für den eigenständigen Kurs "${conflict.standalone.title}" als auch für den Lehrplan "${conflict.curriculum.title}" angemeldet, der bereits das Modul "${conflict.curriculumChild.title}" enthält. Dies kann zu doppelten oder widersprüchlichen Fortschritten führen.`;
+  }
+  if (isZh) {
+    return `您同时加入了独立课程 "${conflict.standalone.title}" 和学习项目 "${conflict.curriculum.title}"（其中已包含模块 "${conflict.curriculumChild.title}"）。这可能会导致重复或进度冲突。`;
+  }
+  if (isPt) {
+    return `Você está inscrito tanto no curso independente "${conflict.standalone.title}" quanto no currículo "${conflict.curriculum.title}", que já inclui o módulo "${conflict.curriculumChild.title}". Isso pode levar a duplicatas ou conflitos de progresso.`;
+  }
+  if (isAr) {
+    return `أنت مسجل في كل من الدورة التدريبية المستقلة "${conflict.standalone.title}" والمنهج الدراسي "${conflict.curriculum.title}"، والذي يتضمن بالفعل الوحدة "${conflict.curriculumChild.title}". قد يؤدي هذا إلى تكرار أو تعارض في التقدم.`;
+  }
+  if (isHi) {
+    return `आप स्टैंडअलोन कोर्स "${conflict.standalone.title}" और पाठ्यक्रम "${conflict.curriculum.title}" दोनों में नामांकित हैं, जिसमें पहले से ही मॉड्यूल "${conflict.curriculumChild.title}" शामिल है। इससे प्रगति में दोहराव या विरोध हो सकता है।`;
+  }
+  if (isUr) {
+    return `آپ اکیلے کورس "${conflict.standalone.title}" اور نصاب "${conflict.curriculum.title}" دونوں میں رجسٹرڈ ہیں، جس میں پہلے سے ہی ماڈیول "${conflict.curriculumChild.title}" شامل ہے۔ اس سے دہراؤ یا ترقی میں تنازعہ پیدا ہو سکتا ہے۔`;
+  }
+  return `You are enrolled in both the standalone course "${conflict.standalone.title}" and the curriculum "${conflict.curriculum.title}", which already includes the module "${conflict.curriculumChild.title}". This may lead to duplicate or conflicting progress.`;
+}
+
+const COURSE_LABEL: Record<string, string> = {
+  EN: "Course",
+  FR: "Cours",
+  ES: "Curso",
+  DE: "Kurs",
+  ZH: "课程",
+  PT: "Curso",
+  AR: "دورة",
+  HI: "कोर्स",
+  UR: "کورس"
+};
+
+const MANDATORY_LABEL: Record<string, string> = {
+  EN: "Mandatory",
+  FR: "Obligatoire",
+  ES: "Obligatorio",
+  DE: "Pflicht",
+  ZH: "必修",
+  PT: "Obrigatório",
+  AR: "إلزامي",
+  HI: "अनिवार्य",
+  UR: "لازمی"
+};
+
+const OPTIONAL_LABEL: Record<string, string> = {
+  EN: "Optional",
+  FR: "Optionnel",
+  ES: "Opcional",
+  DE: "Wahlfach",
+  ZH: "选修",
+  PT: "Opcional",
+  AR: "اختياري",
+  HI: "वैकल्पिक",
+  UR: "اختیاری"
+};
+
+const NOT_AVAILABLE_IN_LANG: Record<string, string> = {
+  EN: "Not available in your active language",
+  FR: "Non disponible dans votre langue active",
+  ES: "No disponible en tu idioma activo",
+  DE: "In Ihrer aktiven Sprache nicht verfügbar",
+  ZH: "在您的活动语言中不可用",
+  PT: "Não disponível no seu idioma ativo",
+  AR: "غير متوفر بلغتك النشطة",
+  HI: "आपकी सक्रिय भाषा में उपलब्ध नहीं है",
+  UR: "آپ کی فعال زبان में उपलब्ध नहीं है"
+};
+
+const REMOVE_BOOKMARK_LABEL: Record<string, string> = {
+  EN: "Remove bookmark",
+  FR: "Supprimer des favoris",
+  ES: "Eliminar marcador",
+  DE: "Lesezeichen entfernen",
+  ZH: "删除书签",
+  PT: "Remover marcador",
+  AR: "إزالة الإشارة المرجع",
+  HI: "बुकमार्क हटाएं",
+  UR: "بک مارک ہٹائیں"
+};
+
+const SAVE_COURSE_LABEL: Record<string, string> = {
+  EN: "Save this course",
+  FR: "Sauvegarder ce cours",
+  ES: "Guardar este curso",
+  DE: "Kurs speichern",
+  ZH: "保存此课程",
+  PT: "Salvar este curso",
+  AR: "حفظ هذه الدورة",
+  HI: "इस कोर्स को सहेजें",
+  UR: "اس کورس کو محفوظ کریں"
+};
+
+const MANDATORY_CURRICULUM_COURSE_LABEL: Record<string, string> = {
+  EN: "Mandatory curriculum course (cannot disenroll)",
+  FR: "Cours obligatoire du curriculum (abandon impossible)",
+  ES: "Curso curricular obligatorio (no se puede dar de baja)",
+  DE: "Pflichtlehrplankurs (Abmeldung nicht möglich)",
+  ZH: "必修课程（无法退选）",
+  PT: "Curso curricular obrigatório (não é possível cancelar a inscrição)",
+  AR: "دورة منهجية إلزامية (لا يمكن إلغاء التسجيل)",
+  HI: "अनिवार्य पाठ्यक्रम (नामांकन रद्द नहीं किया जा सकता)",
+  UR: "لازمی نصابی کورس (رجسٹریشن منسوخ نہیں کی جا سکتی)"
+};
+
+const COMPLETED_LABEL: Record<string, string> = {
+  EN: "Completed",
+  FR: "Complété",
+  ES: "Completado",
+  DE: "Abgeschlossen",
+  ZH: "已完成",
+  PT: "Concluído",
+  AR: "مكتمل",
+  HI: "पूरा किया",
+  UR: "مکمل"
+};
+
+const EARNED_BADGES_LABEL: Record<string, string> = {
+  EN: "Earned badges",
+  FR: "Badges gagnés",
+  ES: "Insignias ganadas",
+  DE: "Verdienstliche Abzeichen",
+  ZH: "获得的徽章",
+  PT: "Medalhas ganhas",
+  AR: "الشارات المكتسبة",
+  HI: "अर्जित बैज",
+  UR: "حاصل کردہ بیجز"
+};
+
+const VIEW_REVIEW_LABEL: Record<string, string> = {
+  EN: "View Review",
+  FR: "Voir l'évaluation",
+  ES: "Ver evaluación",
+  DE: "Bewertung ansehen",
+  ZH: "查看评价",
+  PT: "Ver avaliação",
+  AR: "عرض التقييم",
+  HI: "समीक्षा देखें",
+  UR: "جائزہ دیکھیں"
+};
+
+const REVIEW_COURSE_LABEL: Record<string, string> = {
+  EN: "Review Course",
+  FR: "Revoir le cours",
+  ES: "Revisar curso",
+  DE: "Kurs bewerten",
+  ZH: "评价课程",
+  PT: "Avaliar curso",
+  AR: "مراجعة الدورة",
+  HI: "कोर्स की समीक्षा करें",
+  UR: "کورس کا جائزہ لیں"
+};
+
+const DISMISS_RECOMMENDATION_LABEL: Record<string, string> = {
+  EN: "Dismiss recommendation",
+  FR: "Masquer cette recommandation",
+  ES: "Descartar recomendación",
+  DE: "Empfehlung ausblenden",
+  ZH: "忽略推荐",
+  PT: "Ignorar recomendação",
+  AR: "تجاهل التوصية",
+  HI: "सिफारिश खारिज करें",
+  UR: "سفارش کو مسترد کریں"
+};
+
+const ELECTIVE_CHOICES_LABEL: Record<string, string> = {
+  EN: "Elective Course Choices",
+  FR: "Choix des options",
+  ES: "Elección de asignaturas optativas",
+  DE: "Wahlfachoptionen",
+  ZH: "选修课程选择",
+  PT: "Escolhas de cursos eletivos",
+  AR: "خيارات المقررات الاختيارية",
+  HI: "वैकल्पिक पाठ्यक्रम विकल्प",
+  UR: "اختیاری کورس کے انتخاب"
+};
+
+const COMPLIANT_LABEL: Record<string, string> = {
+  EN: "Compliant",
+  FR: "Conforme",
+  ES: "Conforme",
+  DE: "Konform",
+  ZH: "符合要求",
+  PT: "Conforme",
+  AR: "متوافق",
+  HI: "अनुरूप",
+  UR: "مطابق"
+};
+
+const REQUIRED_LABEL: Record<string, string> = {
+  EN: "Required",
+  FR: "Requis",
+  ES: "Requerido",
+  DE: "Erforderlich",
+  ZH: "需要",
+  PT: "Requerido",
+  AR: "مطلوب",
+  HI: "आवश्यक",
+  UR: "مطلوبہ"
+};
+
+const ELECTIVE_LABEL: Record<string, string> = {
+  EN: "Elective",
+  FR: "Optionnel",
+  ES: "Optativa",
+  DE: "Wahlpflicht",
+  ZH: "选修",
+  PT: "Eletiva",
+  AR: "اختياري",
+  HI: "वैकल्पिक",
+  UR: "اختیاری"
+};
+
+const EXPECTED_LABEL: Record<string, string> = {
+  EN: "expected",
+  FR: "prévues",
+  ES: "previstas",
+  DE: "erwartet",
+  ZH: "预计",
+  PT: "previstas",
+  AR: "متوقعة",
+  HI: "अपेक्षित",
+  UR: "متوقع"
+};
+
+const NOT_ENROLLED_LABEL: Record<string, string> = {
+  EN: "Not enrolled",
+  FR: "Non inscrit",
+  ES: "No inscrito",
+  DE: "Nicht angemeldet",
+  ZH: "未加入",
+  PT: "Não inscrito",
+  AR: "غير مسجل",
+  HI: "नामांकित नहीं",
+  UR: "رجسٹرڈ نہیں"
+};
+
+const REMOVE_LABEL: Record<string, string> = {
+  EN: "Remove",
+  FR: "Retirer",
+  ES: "Quitar",
+  DE: "Entfernen",
+  ZH: "退选",
+  PT: "Remover",
+  AR: "إزالة",
+  HI: "हटाएं",
+  UR: "ہٹائیں"
+};
+
+const CHOOSE_LABEL: Record<string, string> = {
+  EN: "Choose",
+  FR: "Choisir",
+  ES: "Elegir",
+  DE: "Wählen",
+  ZH: "选择",
+  PT: "Escolher",
+  AR: "اختر",
+  HI: "चुनें",
+  UR: "منتخب کریں"
+};
+
+const THIS_COURSE_LABEL: Record<string, string> = {
+  EN: "this course",
+  FR: "ce cours",
+  ES: "este curso",
+  DE: "dieser Kurs",
+  ZH: "此课程",
+  PT: "este curso",
+  AR: "هذه الدورة",
+  HI: "यह कोर्स",
+  UR: "یہ کورس"
+};
+
+const KEEP_ENROLLMENTS_LABEL: Record<string, string> = {
+  EN: "Keep course enrollments",
+  FR: "Conserver l'inscription aux modules",
+  ES: "Mantener inscripciones de cursos",
+  DE: "Kursanmeldungen behalten",
+  ZH: "保留课程加入状态",
+  PT: "Manter inscrições nos cursos",
+  AR: "الاحتفاظ بالتسجيل في الدورات",
+  HI: "कोर्स नामांकन बनाए रखें",
+  UR: "کورس की رجسٹریشن برقرار رکھیں"
+};
+
+const REVIEWED_READ_ONLY_LABEL: Record<string, string> = {
+  EN: "REVIEWED • READ ONLY",
+  FR: "ÉVALUÉ • LECTURE SEULE",
+  ES: "EVALUADO • SOLO LECTURA",
+  DE: "BEWERTET • NUR LESEN",
+  ZH: "已评价 • 只读",
+  PT: "AVALIADO • APENAS LEITURA",
+  AR: "تم التقييم • للقراءة فقط",
+  HI: "समीक्षित • केवल पढ़ने के लिए",
+  UR: "جائزہ لیا گیا • صرف پڑھنے کے لیے"
+};
+
+const CLOSE_LABEL: Record<string, string> = {
+  EN: "Close",
+  FR: "Fermer",
+  ES: "Cerrar",
+  DE: "Schließen",
+  ZH: "关闭",
+  PT: "Fechar",
+  AR: "إغلاق",
+  HI: "बंद करें",
+  UR: "بند کریں"
+};
+
+const YOUR_SAVED_REVIEW_LABEL: Record<string, string> = {
+  EN: "YOUR SAVED REVIEW",
+  FR: "VOTRE ÉVALUATION ENREGISTRÉE",
+  ES: "TU EVALUACIÓN GUARDADA",
+  DE: "IHRE GESPEICHERTE BEWERTUNG",
+  ZH: "您保存的评价",
+  PT: "SUA AVALIAÇÃO SALVA",
+  AR: "تقييمك المحفوظ",
+  HI: "आपकी सहेजी गई समीक्षा",
+  UR: "آپ کا محفوظ کردہ جائزہ"
+};
+
+const SHARE_YOUR_EXPERIENCE_LABEL: Record<string, string> = {
+  EN: "SHARE YOUR EXPERIENCE",
+  FR: "PARTAGEZ VOTRE EXPÉRIENCE",
+  ES: "COMPARTE TU EXPERIENCIA",
+  DE: "TEILEN SIE IHRE ERFAHRUNG",
+  ZH: "分享您的学习体验",
+  PT: "COMPARTILHE SUA EXPERIÊNCIA",
+  AR: "شارك تجربتك",
+  HI: "अपना अनुभव साझा करें",
+  UR: "اپنا تجربہ شیئر کریں"
+};
+
+const RATE_THIS_COURSE_LABEL: Record<string, string> = {
+  EN: "Rate this course",
+  FR: "Évaluez ce cours",
+  ES: "Califica este curso",
+  DE: "Diesen Kurs bewerten",
+  ZH: "为此课程评分",
+  PT: "Avalie este curso",
+  AR: "قيم هذه الدورة",
+  HI: "इस कोर्स को रेट करें",
+  UR: "اس کورس کی درجہ بندی کریں"
+};
+
+const COMMENTS_SUGGESTIONS_LABEL: Record<string, string> = {
+  EN: "Comments or Suggestions",
+  FR: "Commentaires ou Suggestions",
+  ES: "Comentarios o sugerencias",
+  DE: "Kommentare oder Vorschläge",
+  ZH: "意见或建议",
+  PT: "Comentários ou sugestões",
+  AR: "التعليقات أو الاقتراحات",
+  HI: "टिप्पणियाँ या सुझाव",
+  UR: "تبصرے یا تجاویز"
+};
+
+const SUBMIT_REVIEW_LABEL: Record<string, string> = {
+  EN: "Submit Review",
+  FR: "Soumettre l'évaluation",
+  ES: "Enviar evaluación",
+  DE: "Bewertung absenden",
+  ZH: "提交评价",
+  PT: "Enviar avaliação",
+  AR: "إرسال التقييم",
+  HI: "समीक्षा सबमिट करें",
+  UR: "جائزہ جمع کروائیں"
+};
+
 function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {
   const upperLang = (lang || 'EN').toUpperCase();
   const dynamicVal = ach.translations?.[upperLang]?.[field] || ach.translations?.[lang.toLowerCase()]?.[field];
@@ -716,7 +1221,7 @@ export default function CurriculumPage() {
             <button
               onClick={() => setDismissedConflicts(prev => [...prev, conflict.standalone.id])}
               className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
-              title={lang === 'FR' ? "Ignorer cette alerte" : "Dismiss conflict"}
+              title={DISMISS_ALERT[lang.toUpperCase()] || DISMISS_ALERT.EN}
             >
               <Icons.X className="w-4 h-4" />
             </button>
@@ -727,12 +1232,10 @@ export default function CurriculumPage() {
               </div>
               <div className="space-y-2 flex-1">
                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
-                  {lang === 'FR' ? "Conflit de version détecté" : "Version Conflict Detected"}
+                  {VERSION_CONFLICT_TITLE[lang.toUpperCase()] || VERSION_CONFLICT_TITLE.EN}
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  {lang === 'FR' 
-                    ? `Vous êtes inscrit à la fois au cours individuel "${conflict.standalone.title}" et au cursus "${conflict.curriculum.title}" qui contient déjà le module "${conflict.curriculumChild.title}". Cela peut entraîner des doublons ou des incohérences de progression.`
-                    : `You are enrolled in both the standalone course "${conflict.standalone.title}" and the curriculum "${conflict.curriculum.title}", which already includes the module "${conflict.curriculumChild.title}". This may lead to duplicate or conflicting progress.`}
+                  {getConflictDescription(conflict, lang)}
                 </p>
                 <div className="flex gap-3 pt-2">
                   <button
@@ -741,13 +1244,13 @@ export default function CurriculumPage() {
                     }}
                     className="px-3.5 py-1.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    {lang === 'FR' ? "Abandonner le cours individuel" : "Abandon Standalone Course"}
+                    {ABANDON_STANDALONE_COURSE[lang.toUpperCase()] || ABANDON_STANDALONE_COURSE.EN}
                   </button>
                   <button
                     onClick={() => setDismissedConflicts(prev => [...prev, conflict.standalone.id])}
                     className="px-3.5 py-1.5 bg-slate-950/45 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    {lang === 'FR' ? "Ignorer l'alerte" : "Ignore Conflict"}
+                    {IGNORE_CONFLICT[lang.toUpperCase()] || IGNORE_CONFLICT.EN}
                   </button>
                 </div>
               </div>
@@ -807,10 +1310,10 @@ export default function CurriculumPage() {
               </p>
               <p className="text-[9px] text-slate-600 mt-2 font-medium">
                 {(progress.studyStreakDays ?? 0) >= 7
-                  ? (lang === 'FR' ? '🏆 Série impressionnante !' : lang === 'ES' ? '🏆 ¡Racha impresionante!' : lang === 'DE' ? '🏆 Beeindruckende Serie!' : lang === 'ZH' ? '🏆 令人惊叹的连续学习天数！' : '🏆 Impressive streak!')
+                  ? (STREAK_7_TITLE[lang] || STREAK_7_TITLE.EN)
                   : (progress.studyStreakDays ?? 0) >= 3
-                  ? (lang === 'FR' ? '⚡ Continue comme ça !' : lang === 'ES' ? '⚡ ¡Sigue así!' : lang === 'DE' ? '⚡ Weiter so!' : lang === 'ZH' ? '⚡ 继续保持！' : '⚡ Keep it up!')
-                  : (lang === 'FR' ? 'Reviens chaque jour pour une série !' : lang === 'ES' ? '¡Vuelve a diario para crear una racha!' : lang === 'DE' ? 'Kommen Sie täglich wieder, um eine Serie aufzubauen!' : lang === 'ZH' ? '每天回来学习以保持连续天数！' : 'Come back daily to build a streak!')}
+                  ? (STREAK_3_TITLE[lang] || STREAK_3_TITLE.EN)
+                  : (STREAK_0_TITLE[lang] || STREAK_0_TITLE.EN)}
               </p>
             </div>
 
@@ -836,10 +1339,10 @@ export default function CurriculumPage() {
               <p className="text-3xl font-black text-white">{progress.learningTime || "0h 0m"}</p>
               <p className="text-[9px] text-slate-600 mt-2 font-medium">
                 {(progress.totalMinutes ?? 0) >= 600
-                  ? (lang === 'FR' ? '📖 Lecteur assidu' : lang === 'ES' ? '📖 Lector dedicado' : lang === 'DE' ? '📖 Engagierter Leser' : lang === 'ZH' ? '📖 专心致志的读者' : '📖 Dedicated reader')
+                  ? (STUDY_600_TITLE[lang] || STUDY_600_TITLE.EN)
                   : (progress.totalMinutes ?? 0) >= 120
-                  ? (lang === 'FR' ? '✨ Belle progression' : lang === 'ES' ? '✨ Gran progreso' : lang === 'DE' ? '✨ Toller Fortschritt' : lang === 'ZH' ? '✨ 极大进步' : '✨ Great progress')
-                  : (lang === 'FR' ? 'Chaque minute compte !' : lang === 'ES' ? '¡Cada minute cuenta!' : lang === 'DE' ? 'Jede Minute zählt!' : lang === 'ZH' ? '每一分钟都至关重要！' : 'Every minute counts!')}
+                  ? (STUDY_120_TITLE[lang] || STUDY_120_TITLE.EN)
+                  : (STUDY_0_TITLE[lang] || STUDY_0_TITLE.EN)}
               </p>
             </div>
 

@@ -71,3 +71,7 @@ diff_curriculum.txt
 lesson_content.mdx
 lesson_body_text.txt
 saved_cloud_run_url.txt
+
+# local next build/test output
+/dist/
+/.debug-mdx/

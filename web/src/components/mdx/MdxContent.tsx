@@ -63,6 +63,10 @@ import { DynamicTableChart } from './DynamicTableChart';
 import { Geometry2D } from './Geometry2D';
 import { OpenQuestion } from './OpenQuestion';
 import { ScientificDebate } from './ScientificDebate';
+import { PreviousLessonSummary } from './PreviousLessonSummary';
+import { CareerProfile } from './CareerProfile';
+import { ResearchFocus } from './ResearchFocus';
+import { RecentNewsBridge } from './RecentNewsBridge';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
@@ -2506,6 +2510,15 @@ const components = {
   OpenQuestion,
   ScientificDebate,
   Citation,
+  PreviousLessonSummary,
+  ResumeLeconPrecedente: PreviousLessonSummary,
+  CareerProfile,
+  FicheMetier: CareerProfile,
+  FocalisationMetier: CareerProfile,
+  ResearchFocus,
+  QuestionRecherche: ResearchFocus,
+  RecentNewsBridge,
+  LienActualite: RecentNewsBridge,
   QuoteBlock,
   InteractiveQuote,
 

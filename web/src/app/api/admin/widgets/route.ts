@@ -5,9 +5,49 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { callVertexAI } from '@/lib/vertex-client';
 import { supabaseAdmin } from '@/lib/supabase';
-
+import { cookies } from 'next/headers';
+import { dbService } from '@/lib/db';
+import { verifySession } from '@/lib/authHelper';
 
 const execPromise = promisify(exec);
+
+async function checkAdminAuth(request: Request): Promise<boolean> {
+  // 1. Try Authorization header verifySession first
+  try {
+    const authUser = await verifySession(request);
+    if (authUser) {
+      const { data: profile } = await dbService.getUserProfile(authUser.id);
+      if (profile?.role === 'admin') {
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('[SECURITY] verifySession error in checkAdminAuth:', err);
+  }
+
+  // 2. Try cookie op_user_id
+  try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('op_user_id')?.value;
+    if (userId) {
+      const { data: profile } = await dbService.getUserProfile(userId);
+      if (profile?.role === 'admin') {
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('[SECURITY] Cookie auth error in checkAdminAuth:', err);
+  }
+
+  // Fallback for development if database is not configured
+  const isProd = process.env.NODE_ENV === 'production';
+  if (!isProd && (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project'))) {
+    console.log('[SECURITY DEBUG] Database not configured, allowing offline development access.');
+    return true;
+  }
+
+  return false;
+}
 
 // Rich metadata catalog for all existing prominent widgets
 interface WidgetMetadata {
@@ -646,8 +686,14 @@ async function applyDraftTranslationsToLocales(
 }
 
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const isAuthorized = await checkAdminAuth(request);
+    if (!isAuthorized) {
+      console.warn('[SECURITY] Unauthorized admin GET request on widgets API route.');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     pruneExpiredLocks();
     const catalog = getWidgetsCatalog();
 
@@ -736,6 +782,12 @@ export async function POST(request: Request) {
   let widgetId = '';
 
   try {
+    const isAuthorized = await checkAdminAuth(request);
+    if (!isAuthorized) {
+      console.warn('[SECURITY] Unauthorized admin POST request on widgets API route.');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     pruneExpiredLocks();
     const body = await request.json();
     widgetId = body.widgetId;

@@ -427,6 +427,58 @@ const lessonWidgetsSchema = {
     references: {
       type: "array",
       items: { type: "string" }
+    },
+    previousLessonSummary: {
+      type: "object",
+      properties: {
+        previousLessonTitle: { type: "string" },
+        previousLessonSlug: { type: "string" },
+        keyTakeaways: { type: "array", items: { type: "string" } },
+        cognitiveBridge: { type: "string" }
+      },
+      required: ["previousLessonTitle", "keyTakeaways", "cognitiveBridge"]
+    },
+    careerProfile: {
+      type: "object",
+      properties: {
+        profession: { type: "string" },
+        discipline: { type: "string" },
+        courseConnection: { type: "string" },
+        keyMissions: { type: "array", items: { type: "string" } },
+        careerOutlook: {
+          type: "object",
+          properties: {
+            demand: { type: "string" },
+            typicalEmployers: { type: "array", items: { type: "string" } },
+            salaryIndication: { type: "string" }
+          },
+          required: ["demand", "typicalEmployers", "salaryIndication"]
+        }
+      },
+      required: ["profession", "discipline", "courseConnection", "keyMissions", "careerOutlook"]
+    },
+    researchFocus: {
+      type: "object",
+      properties: {
+        question: { type: "string" },
+        category: { type: "string" },
+        context: { type: "string" },
+        whyUnresolved: { type: "string" },
+        activeHypotheses: { type: "array", items: { type: "string" } }
+      },
+      required: ["question", "category", "context", "whyUnresolved", "activeHypotheses"]
+    },
+    recentNewsBridge: {
+      type: "object",
+      properties: {
+        eventTitle: { type: "string" },
+        date: { type: "string" },
+        source: { type: "string" },
+        description: { type: "string" },
+        courseConnection: { type: "string" },
+        whyItMatters: { type: "string" }
+      },
+      required: ["eventTitle", "date", "source", "description", "courseConnection", "whyItMatters"]
     }
   },
   required: [
@@ -1109,6 +1161,36 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     </ul>
   </Attitudes>
 </Objectives>`;
+
+  // Stitch New Pedagogical Widgets
+  if (widgets.previousLessonSummary) {
+    const prevSummaryStr = `<PreviousLessonSummary previousLessonTitle="${(widgets.previousLessonSummary.previousLessonTitle || '').replace(/"/g, '&quot;')}" keyTakeaways={${JSON.stringify(widgets.previousLessonSummary.keyTakeaways || [])}} cognitiveBridge="${(widgets.previousLessonSummary.cognitiveBridge || '').replace(/"/g, '&quot;')}" />`;
+    content = replaceWidget(content, 'previousLessonSummary', prevSummaryStr).content;
+  } else {
+    content = replaceWidget(content, 'previousLessonSummary', '').content;
+  }
+
+  if (widgets.careerProfile) {
+    const careerOutlook = widgets.careerProfile.careerOutlook || {};
+    const careerStr = `<CareerProfile profession="${(widgets.careerProfile.profession || '').replace(/"/g, '&quot;')}" discipline="${(widgets.careerProfile.discipline || '').replace(/"/g, '&quot;')}" courseConnection="${(widgets.careerProfile.courseConnection || '').replace(/"/g, '&quot;')}" keyMissions={${JSON.stringify(widgets.careerProfile.keyMissions || [])}} careerOutlook={${JSON.stringify({ demand: careerOutlook.demand || '', typicalEmployers: careerOutlook.typicalEmployers || [], salaryIndication: careerOutlook.salaryIndication || '' })}} />`;
+    content = replaceWidget(content, 'careerProfile', careerStr).content;
+  } else {
+    content = replaceWidget(content, 'careerProfile', '').content;
+  }
+
+  if (widgets.researchFocus) {
+    const researchStr = `<ResearchFocus question="${(widgets.researchFocus.question || '').replace(/"/g, '&quot;')}" category="${(widgets.researchFocus.category || '').replace(/"/g, '&quot;')}" context="${(widgets.researchFocus.context || '').replace(/"/g, '&quot;')}" whyUnresolved="${(widgets.researchFocus.whyUnresolved || '').replace(/"/g, '&quot;')}" activeHypotheses={${JSON.stringify(widgets.researchFocus.activeHypotheses || [])}} />`;
+    content = replaceWidget(content, 'researchFocus', researchStr).content;
+  } else {
+    content = replaceWidget(content, 'researchFocus', '').content;
+  }
+
+  if (widgets.recentNewsBridge) {
+    const newsStr = `<RecentNewsBridge eventTitle="${(widgets.recentNewsBridge.eventTitle || '').replace(/"/g, '&quot;')}" date="${(widgets.recentNewsBridge.date || '').replace(/"/g, '&quot;')}" source="${(widgets.recentNewsBridge.source || '').replace(/"/g, '&quot;')}" description="${(widgets.recentNewsBridge.description || '').replace(/"/g, '&quot;')}" courseConnection="${(widgets.recentNewsBridge.courseConnection || '').replace(/"/g, '&quot;')}" whyItMatters="${(widgets.recentNewsBridge.whyItMatters || '').replace(/"/g, '&quot;')}" />`;
+    content = replaceWidget(content, 'recentNewsBridge', newsStr).content;
+  } else {
+    content = replaceWidget(content, 'recentNewsBridge', '').content;
+  }
 
   const { content: content1, replaced: repPrereq } = replaceWidget(content, 'prerequisites', prerequisitesStr);
   content = content1;
@@ -2452,9 +2534,13 @@ You do NOT write interactive components, quizzes, or glossary definitions in raw
 Instead, you must decide where these elements belong and insert standard or custom bracketed anchor tags \`[[WIDGET:id]]\` directly into your narrative. The **Widgets Architect (Agent 3B)** will parse these anchors and generate matching interactive components programmatically.
 
 #### A. Standard/Structural Widget Anchors (Insert Each Exactly Once):
-- \`[[WIDGET:prerequisites]]\`: Place at the very beginning of the document, before the introduction.
+- \`[[WIDGET:previousLessonSummary]]\`: If this lesson is not the first lesson of the module (Lesson 2+), place this at the absolute beginning, before prerequisites, to reactivate memory.
+- \`[[WIDGET:prerequisites]]\`: Place at the very beginning of the document, before the introduction (after previousLessonSummary if present).
 - \`[[WIDGET:diagnosticQuiz]]\`: Place immediately after the prerequisites block, before the introduction. This provides a diagnostic skip-pass for students.
 - \`[[WIDGET:learningObjectives]]\`: Place immediately after the \`## Introduction\` section.
+- \`[[WIDGET:careerProfile]]\`: OPTIONAL (recommended for theoretical or applied courses). Place this inside any conceptual body section to link the theoretical material directly with real-world careers, salary outlooks, and employment opportunities.
+- \`[[WIDGET:researchFocus]]\`: OPTIONAL (recommended for science or research-intensive courses). Place this inside body sections to highlight unresolved questions, mysteries, or competing hypotheses currently under research.
+- \`[[WIDGET:recentNewsBridge]]\`: OPTIONAL (recommended for rapidly evolving fields). Place this in body sections to bridge the theory to a recent media event or scientific breakthrough (e.g., ESA/NASA LISA mission, JWST discoveries).
 - \`[[WIDGET:conclusionSummary]]\`: Place inside the \`## Conclusion\` section, at the beginning of the section.
 - \`[[WIDGET:whatsNext]]\`: Place inside the \`## Conclusion\` section, immediately after conclusionSummary.
 - \`[[WIDGET:goingFurther]]\`: Place inside the \`## Conclusion\` section, at the very end (after whatsNext).
@@ -2628,9 +2714,15 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - Check for and reject any nested or duplicated Hover-Cards.
 
 
+7. **Media Anchors & Assets**:
    - Verify that the lesson contains at least 5 to 6 image anchors and 1 to 2 audio/video anchors represented as:
      \`[[WIDGET:Media:media_id:Topic/Hint]]\`
      Reject if standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags are used.
+8. **Rich Markdown Tables and Diagrams (MANDATORY for University Levels)**:
+   - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
+     - Verify that the narrative contains **at least 1 to 2 rich Markdown comparison tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
+     - Verify that the narrative contains **at least 1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
+     - Reject if these rich visual/structural elements are missing from a university-level narrative.
 
 ---
 
@@ -2687,6 +2779,11 @@ ${pronunciationMandate}
 - Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $ \\{...\\} $.
 - Never write "import " or "export " at the start of a line in plain prose.
 
+[CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
+- If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
+  * You MUST systematically design and include at least **1 to 2 rich Markdown tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
+  * You MUST also include at least **1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
+
 GLOBAL CRITIQUE FROM AGENT 4A:
 "${globalCritiqueText}"
 
@@ -2740,6 +2837,10 @@ We need to repair specific sections of the lesson narrative "${item.title}" that
 - Do NOT use raw JSX tags for interactive widgets. Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags; use standard Markdown instead.
 - Do NOT use literal curly braces { } in plain text.
+
+[CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
+- If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
+  * Ensure that if the section or heading is criticized for lacking structured comparative data or visual flows, you design and insert 1 to 2 rich Markdown tables (using standard \`| Column 1 | Column 2 |\` format) and/or 1 to 2 Mermaid diagrams (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model the concepts.
 
 CONTEXT:
 Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
@@ -2904,6 +3005,37 @@ Your generated JSON must contain the following top-level keys:
       - \`title\`: Title of the resource.
       - \`type\`: One of "book", "article", "video", "website", "research", "movie", "film".
       - \`description\`: A brief explanation of what the resource contains and why it is valuable.
+5c. **\`previousLessonSummary\`** (Generate ONLY if the anchor \`[[WIDGET:previousLessonSummary]]\` is present in the narrative draft):
+    - Synthesize the content of the previous lesson of this module. Must match the following schema:
+      - \`previousLessonTitle\`: The title of the previous lesson in the module (can be derived from previous lessons or context).
+      - \`previousLessonSlug\`: (Optional) The slug of the previous lesson.
+      - \`keyTakeaways\`: An array of 3 to 4 concise, high-impact key takeaway sentences.
+      - \`cognitiveBridge\`: A transition paragraph (2-3 sentences) linking the previous lesson's concepts to the current lesson's introduction.
+5d. **\`careerProfile\`** (Generate ONLY if the anchor \`[[WIDGET:careerProfile]]\` is present in the narrative draft):
+    - Link the theory to a professional career. Must match the following schema:
+      - \`profession\`: Name of the professional career/role.
+      - \`discipline\`: Field of study.
+      - \`courseConnection\`: Transition paragraph linking the lesson's theory directly to the daily practice or importance of this career.
+      - \`keyMissions\`: An array of 3 to 4 typical high-impact missions/tasks this professional performs.
+      - \`careerOutlook\`: Object with:
+        - \`demand\`: Growth perspective (e.g., "High", "Growing").
+        - \`typicalEmployers\`: Array of 2 to 3 typical employers.
+        - \`salaryIndication\`: Salary description or range.
+5e. **\`researchFocus\`** (Generate ONLY if the anchor \`[[WIDGET:researchFocus]]\` is present in the narrative draft):
+    - Highlight mysteries under active academic research. Must match the following schema:
+      - \`question\`: The primary unresolved scientific or theoretical question/mystery.
+      - \`category\`: The field or type of research (e.g., "Quantum Foundations", "Sociological Controversy", etc.).
+      - \`context\`: Historical/academic context (3-4 sentences) explaining why this is a current topic of interest.
+      - \`whyUnresolved\`: A detailed explanation (3-4 sentences) of the methodological or technological hurdles.
+      - \`activeHypotheses\`: An array of 2 to 3 competing active hypotheses currently being investigated.
+5f. **\`recentNewsBridge\`** (Generate ONLY if the anchor \`[[WIDGET:recentNewsBridge]]\` is present in the narrative draft):
+    - Provide a modern context connection. Must match the following schema:
+      - \`eventTitle\`: Title of the recent real-world event, news, or scientific breakthrough.
+      - \`date\`: Approximate date (e.g., "2023-2026").
+      - \`source\`: Prestigious scientific journal, space agency, or media outlet (e.g., "Nature", "NASA", "ESA").
+      - \`description\`: A clear, professional description (2-3 sentences) of the event/breakthrough.
+      - \`courseConnection\`: Detailed explanation (3-4 sentences) linking this real event directly to the theoretical principles discussed in this lesson.
+      - \`whyItMatters\`: A summarizing sentence or two highlighting why this breakthrough matters for the future of the discipline.
  6. **\`finalEvaluation\`**:
    - A comprehensive final test. This must be a structured JSON object representing either an \`EssayEvaluation\` with a detailed prompt, or a high-fidelity MCQ \`Quiz\`.
    - **MCQ Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:

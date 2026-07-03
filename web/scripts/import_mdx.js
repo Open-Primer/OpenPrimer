@@ -1,6 +1,21 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
+
+// Monkey patch js-yaml v4 compatibility for gray-matter which still calls the deprecated/removed safeLoad
+const yaml = require('js-yaml');
+if (yaml) {
+  try {
+    Object.defineProperty(yaml, 'safeLoad', {
+      value: yaml.load,
+      writable: true,
+      configurable: true
+    });
+  } catch (e) {
+    yaml.safeLoad = yaml.load;
+  }
+}
+
 const matter = require('gray-matter');
 
 // Load environment variables
