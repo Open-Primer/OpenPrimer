@@ -312,6 +312,7 @@ export interface DatabaseService {
   getPipelineQueue(): Promise<{ data: any[]; error: any }>;
   savePipelineQueue(queue: any[]): Promise<{ data: any[]; error: any }>;
   getUsers(): Promise<{ data: UserProfile[] | null; error: any }>;
+  getUserProfile(id: string): Promise<{ data: UserProfile | null; error: any }>;
   deleteUser(id: string): Promise<{ data: any; error: any }>;
   toggleBlockUser(id: string): Promise<{ data: any; error: any }>;
   updateUserRole(id: string, role: string): Promise<{ data: any; error: any }>;

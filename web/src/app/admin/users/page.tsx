@@ -376,6 +376,42 @@ const DELETE_OWN_WARN: Record<string, string> = {
   UR: "⚠️ آپ اپنا ایڈمن اکاؤنٹ حذف کرنے والے ہیں۔ اس عمل کے فوراً بعد آپ کو لاگ آؤٹ کر دیا جائے گا اور آپ تمام انتظامی رسائی کھو دیں گے۔"
 };
 
+const ACTIVATE_TITLE: Record<string, string> = {
+  EN: "Click to Activate",
+  FR: "Cliquer pour activer",
+  ES: "Haga clic para activar",
+  DE: "Klicken Sie zum Aktivieren",
+  ZH: "点击启用账号",
+  PT: "Clique para ativar",
+  AR: "انقر للتفعيل",
+  HI: "सक्रिय करने के लिए क्लिक करें",
+  UR: "فعال کرنے کے لیے کلک کریں"
+};
+
+const BLOCK_TITLE: Record<string, string> = {
+  EN: "Click to Block",
+  FR: "Cliquer pour bloquer",
+  ES: "Haga clic para bloquear",
+  DE: "Klicken Sie zum Blockieren",
+  ZH: "点击封禁账号",
+  PT: "Clique para bloquear",
+  AR: "انقر للحظر",
+  HI: "अवरुद्ध करने के लिए क्लिक करें",
+  UR: "بلاک کرنے کے لیے کلک کریں"
+};
+
+const DELETE_USER_TITLE: Record<string, string> = {
+  EN: "Delete User",
+  FR: "Supprimer l'utilisateur",
+  ES: "Eliminar usuario",
+  DE: "Benutzer löschen",
+  ZH: "删除用户账号",
+  PT: "Excluir usuário",
+  AR: "حذف المستخدم",
+  HI: "उपयोगकर्ता को हटाएं",
+  UR: "صارف کو حذف کریں"
+};
+
 const getDeleteTitle = (name: string, langKey: string) => {
   switch (langKey) {
     case 'FR': return `Supprimer le compte de ${name}`;

@@ -1179,12 +1179,54 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
     const fullCaption = captionMatch[2];
     const prefixesPattern = /^(?:Figure|Figura|Abbildung|\u56fe)\s*\d*\s*[:\-\u2013]?\s*/gi;
     const cleanCaption = fullCaption.replace(prefixesPattern, '');
-    const newCaption = `${prefix} ${figureCount}: ${cleanCaption}`;
+    const escapedCleanCaption = cleanCaption.replace(/&quot;/g, '"').replace(/"/g, '&quot;');
+    const newCaption = `${prefix} ${figureCount}: ${escapedCleanCaption}`;
     figureCount++;
     
     const updatedAttrs = attrsStr.replace(/caption=(["'])([\s\S]*?)\1/, `caption=$1${newCaption}$1`);
     return `<CustomFigure ${updatedAttrs}/>`;
   });
+}
+
+export function parseAttributesRobustly(attrsStr: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const attrNames = ['type', 'description', 'desc', 'alt', 'caption', 'title', 'src', 'fallbackUrl', 'unresolved', 'isIllustration'];
+  
+  for (const name of attrNames) {
+    const curlyMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
+    if (curlyMatch) {
+      attrs[name] = curlyMatch[1].trim();
+      continue;
+    }
+
+    const regex = new RegExp(`${name}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i');
+    const match = attrsStr.match(regex);
+    if (match) {
+      attrs[name] = match[2].trim();
+    }
+  }
+  return attrs;
+}
+
+export function rebuildCustomFigure(attrs: Record<string, string>): string {
+  const parts: string[] = [];
+  if (attrs.type) parts.push(`type="${attrs.type.replace(/"/g, '&quot;')}"`);
+  if (attrs.description) parts.push(`description="${attrs.description.replace(/"/g, '&quot;')}"`);
+  if (attrs.desc && !attrs.description) parts.push(`description="${attrs.desc.replace(/"/g, '&quot;')}"`);
+  if (attrs.alt) parts.push(`alt="${attrs.alt.replace(/"/g, '&quot;')}"`);
+  if (attrs.caption) parts.push(`caption="${attrs.caption.replace(/"/g, '&quot;')}"`);
+  if (attrs.title) parts.push(`title="${attrs.title.replace(/"/g, '&quot;')}"`);
+  if (attrs.src) parts.push(`src="${attrs.src.replace(/"/g, '&quot;')}"`);
+  if (attrs.fallbackUrl) parts.push(`fallbackUrl="${attrs.fallbackUrl.replace(/"/g, '&quot;')}"`);
+  if (attrs.unresolved) {
+    const val = attrs.unresolved === 'true' || attrs.unresolved === '{true}' ? 'true' : attrs.unresolved;
+    parts.push(`unresolved={${val}}`);
+  }
+  if (attrs.isIllustration) {
+    const val = attrs.isIllustration === 'true' || attrs.isIllustration === '{true}' ? 'true' : attrs.isIllustration;
+    parts.push(`isIllustration={${val}}`);
+  }
+  return `<CustomFigure ${parts.join(' ')} />`;
 }
 
 /**
@@ -1485,8 +1527,8 @@ export async function resolveAndPersistMedia(
     const getAttr = (name: string) => {
       const curlyMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
       if (curlyMatch) return curlyMatch[1].trim();
-      const quoteMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
-      if (quoteMatch) return quoteMatch[1].trim();
+      const quoteMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
+      if (quoteMatch) return quoteMatch[2].trim();
       const unquotedMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*([^\\s/>]+)`, 'i'));
       if (unquotedMatch) return unquotedMatch[1].trim();
       return '';
@@ -1607,46 +1649,32 @@ export async function resolveAndPersistMedia(
       let sourceUrl = originalSrc;
       let resolvedSuccess = false;
 
+      const currentAttrs = parseAttributesRobustly(attrsStr);
       const queryName = (description || altText || caption || '').trim().replace(/_/g, ' ');
       if (queryName) {
         const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
         const wikiImage = resolved ? resolved.url : null;
         if (resolved && wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);
-          let updatedAttrs = attrsStr;
-          if (attrsStr.includes('src=')) {
-            updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${wikiImage}"`);
-          } else {
-            updatedAttrs += ` src="${wikiImage}"`;
-          }
+          
+          currentAttrs.src = wikiImage;
           
           let finalLabel = resolved.sourceLabel;
           if (resolved.sourceUrl) {
             finalLabel = `[${resolved.sourceLabel}](${resolved.sourceUrl})`;
           }
-          if (resolved && caption && !caption.includes('Source:')) {
-            const newCaption = `${caption} — Source: ${finalLabel}`;
-            if (updatedAttrs.includes('caption=')) {
-              updatedAttrs = updatedAttrs.replace(/caption="[^"]*"/, `caption="${newCaption}"`);
-            } else {
-              updatedAttrs += ` caption="${newCaption}"`;
-            }
+          if (caption && !caption.includes('Source:')) {
+            currentAttrs.caption = `${caption} — Source: ${finalLabel}`;
           }
           if (resolved.sourceUrl) {
-            if (updatedAttrs.includes('fallbackUrl=')) {
-              updatedAttrs = updatedAttrs.replace(/fallbackUrl="[^"]*"/, `fallbackUrl="${resolved.sourceUrl}"`);
-            } else {
-              updatedAttrs += ` fallbackUrl="${resolved.sourceUrl}"`;
-            }
+            currentAttrs.fallbackUrl = resolved.sourceUrl;
           }
-          // Unsplash images are decorative illustrations — tag them so the renderer
-          // skips "Figure N:" numbering and TTS reader ignores them entirely.
-          if (resolved && resolved.sourceLabel && resolved.sourceLabel.includes('Unsplash')) {
-            if (!updatedAttrs.includes('isIllustration=')) {
-              updatedAttrs += ' isIllustration={true}';
-            }
+          if (resolved.sourceLabel && resolved.sourceLabel.includes('Unsplash')) {
+            currentAttrs.isIllustration = 'true';
           }
-          updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+          
+          const newTag = rebuildCustomFigure(currentAttrs);
+          updatedContent = updatedContent.replace(fullTag, newTag);
           resolvedSuccess = true;
           continue;
         }
@@ -1698,14 +1726,11 @@ export async function resolveAndPersistMedia(
             
             const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
             if (publicUrl) {
-              let updatedAttrs = attrsStr;
-              if (updatedAttrs.includes('src=')) {
-                updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
-              } else {
-                updatedAttrs += ` src="${publicUrl}"`;
-              }
-              updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+              currentAttrs.src = publicUrl;
+              const newTag = rebuildCustomFigure(currentAttrs);
+              updatedContent = updatedContent.replace(fullTag, newTag);
               resolvedSuccess = true;
+              continue;
             }
           }
         } catch (err) {
@@ -1715,12 +1740,11 @@ export async function resolveAndPersistMedia(
 
       if (!resolvedSuccess) {
         console.log(`[MEDIA-RESOLVER] Setting unresolved={true} on unresolvable Figure: "${altText || caption || description}"`);
-        let updatedAttrs = attrsStr;
-        if (!attrsStr.includes('unresolved=')) {
-          updatedAttrs += ' unresolved={true}';
-        }
-        updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+        currentAttrs.unresolved = 'true';
       }
+      
+      const newTag = rebuildCustomFigure(currentAttrs);
+      updatedContent = updatedContent.replace(fullTag, newTag);
     }
   }
 
@@ -2269,29 +2293,26 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
   }
 
   for (const { fullTag, attrsStr } of figuresToProcess) {
-    if (checkCount >= MAX_CHECKS || repairCount >= MAX_REPAIRS) break;
-
-    const srcMatch = attrsStr.match(/src="([^"]+)"/);
-    const altMatch = attrsStr.match(/alt="([^"]+)"/);
-    const captionMatch = attrsStr.match(/caption="([^"]+)"/);
-
-    const originalSrc = srcMatch ? srcMatch[1] : '';
-    const altText = altMatch ? altMatch[1] : '';
-    const caption = captionMatch ? captionMatch[1] : '';
+    const currentAttrs = parseAttributesRobustly(attrsStr);
+    const originalSrc = currentAttrs.src || '';
+    const altText = currentAttrs.alt || '';
+    const caption = currentAttrs.caption || '';
 
     const hasDummyUrl = !originalSrc || originalSrc.includes('example.com') || originalSrc.includes('placeholder') || originalSrc === '';
 
     let needsResolution = hasDummyUrl;
     if (!needsResolution && originalSrc) {
-      checkCount++;
-      const exists = await validateMediaUrl(originalSrc);
-      if (!exists) {
-        console.log(`[RESTITUTION-REPAIR] CustomFigure source ${originalSrc} is broken (404). Triggering repair.`);
-        needsResolution = true;
+      if (checkCount < MAX_CHECKS) {
+        checkCount++;
+        const exists = await validateMediaUrl(originalSrc);
+        if (!exists) {
+          console.log(`[RESTITUTION-REPAIR] CustomFigure source ${originalSrc} is broken (404). Triggering repair.`);
+          needsResolution = true;
+        }
       }
     }
 
-    if (needsResolution) {
+    if (needsResolution && repairCount < MAX_REPAIRS) {
       repairCount++;
       console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${altText || caption}"`);
       const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
@@ -2314,22 +2335,10 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
               
               const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
               if (publicUrl) {
-                let updatedAttrs = attrsStr;
-                if (attrsStr.includes('src=')) {
-                  updatedAttrs = updatedAttrs.replace(/src="[^"]*"/, `src="${publicUrl}"`);
-                } else {
-                  updatedAttrs += ` src="${publicUrl}"`;
-                }
-                
+                currentAttrs.src = publicUrl;
                 if (wikidataFallbackUrl) {
-                  if (updatedAttrs.includes('fallbackUrl=')) {
-                    updatedAttrs = updatedAttrs.replace(/fallbackUrl="[^"]*"/, `fallbackUrl="${wikidataFallbackUrl}"`);
-                  } else {
-                    updatedAttrs += ` fallbackUrl="${wikidataFallbackUrl}"`;
-                  }
+                  currentAttrs.fallbackUrl = wikidataFallbackUrl;
                 }
-                
-                updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
                 success = true;
               }
@@ -2342,13 +2351,14 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
       if (!success) {
         console.log(`[RESTITUTION-REPAIR] Setting unresolved={true} on broken/unresolved CustomFigure: "${altText || caption}"`);
-        let updatedAttrs = attrsStr;
-        if (!attrsStr.includes('unresolved=')) {
-          updatedAttrs += ' unresolved={true}';
-        }
-        updatedContent = updatedContent.replace(fullTag, `<CustomFigure ${updatedAttrs}/>`);
+        currentAttrs.unresolved = 'true';
       }
     }
+
+    // ALWAYS rebuild and replace the CustomFigure tag. This guarantees that any raw double quotes
+    // inside caption or other attributes (e.g. from existing DB records) are correctly escaped as &quot;
+    const newTag = rebuildCustomFigure(currentAttrs);
+    updatedContent = updatedContent.replace(fullTag, newTag);
   }
 
   // 5. Renumber figures sequentially to guarantee continuous numbering after client-side deletions/repairs

@@ -25,6 +25,8 @@ import { CardSort } from './CardSort';
 import { SocraticInput } from './SocraticInput';
 import { Timeline } from './Timeline';
 import { Biography } from './Biography';
+import { MatchingEvaluation } from './MatchingEvaluation';
+import { ReorderEvaluation } from './ReorderEvaluation';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -2470,6 +2472,10 @@ const components = {
   SimulateurOrbital: OrbitalMechanicsSim,
   CardSort,
   AssociationPaires: CardSort,
+  MatchingEvaluation,
+  AssociationCorrespondance: MatchingEvaluation,
+  ReorderEvaluation,
+  ReordonnerItems: ReorderEvaluation,
   SocraticInput,
   AnalyseSocratique: SocraticInput,
   Timeline,

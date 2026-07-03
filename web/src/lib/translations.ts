@@ -994,77 +994,121 @@ export const getLocalizedLabel = (key: string, lang: string) => {
       FR: "Poids de maîtrise",
       ES: "Peso de maestría",
       DE: "Meisterungsgewicht",
-      ZH: "掌握权重"
+      ZH: "掌握权重",
+      PT: "Peso de maestria",
+      AR: "وزن التمكن",
+      HI: "प्रवीणता भार",
+      UR: "مهارت کا وزن"
     },
     duration: {
       EN: "Duration",
       FR: "Durée",
       ES: "Duración",
       DE: "Dauer",
-      ZH: "时长"
+      ZH: "时长",
+      PT: "Duração",
+      AR: "المدة",
+      HI: "अवधि",
+      UR: "دورانیہ"
     },
     level: {
       EN: "Level",
       FR: "Niveau",
       ES: "Nivel",
       DE: "Stufe",
-      ZH: "级别"
+      ZH: "级别",
+      PT: "Nível",
+      AR: "المستوى",
+      HI: "स्तर",
+      UR: "لیول"
     },
     credits: {
       EN: "credits",
       FR: "crédits",
       ES: "créditos",
       DE: "Credits",
-      ZH: "学分"
+      ZH: "学分",
+      PT: "créditos",
+      AR: "وحدات",
+      HI: "क्रेडिट",
+      UR: "کریڈٹ"
     },
     hours_unit: {
       EN: "hrs",
       FR: "h",
       ES: "hrs",
       DE: "Std.",
-      ZH: "小时"
+      ZH: "小时",
+      PT: "h",
+      AR: "س",
+      HI: "घंटे",
+      UR: "گھنٹے"
     },
     why_create_account: {
       EN: "Why create an account?",
       FR: "Pourquoi créer un compte ?",
       ES: "¿Por qué créer una cuenta?",
       DE: "Warum ein Konto erstellen?",
-      ZH: "为什么要创建账户？"
+      ZH: "为什么要创建账户？",
+      PT: "Por que criar uma conta?",
+      AR: "لماذا تنشئ حساباً؟",
+      HI: "खाता क्यों बनाएं?",
+      UR: "اکاؤنٹ کیوں بنائیں؟"
     },
     account_benefits: {
       EN: "A free account allows you to save your progress permanently, accumulate your study credits, unlock certifications, and interact with your personal AI Tutor.",
       FR: "Un compte gratuit vous permet de sauvegarder durablement votre progression, d'accumuler vos crédits de formation, d'obtenir vos certifications, et d'activer le Tuteur IA personnel pour lever vos doutes.",
       ES: "Una cuenta gratuita le permite guardar su progreso permanentemente, acumular sus créditos de estudio, desbloquear certificaciones e interactuar con su tutor de IA personal.",
       DE: "Mit einem kostenlosen Konto können Sie Ihren Fortschritt dauerhaft speichern, Ihre Studienleistungen sammeln, Zertifikate freischalten und mit Ihrem persönlichen KI-Tutor interagieren.",
-      ZH: "免费账户可以永久保存您的进度、累积您的学习学分、解锁认证并与您的个人 AI 导师互动。"
+      ZH: "免费账户可以永久保存您的进度、累积您的学习学分、解锁认证并与您的个人 AI 导师互动。",
+      PT: "Uma conta gratuita permite que você salve seu progresso permanentemente, acumule seus créditos de estudo, desbloquee certificações e interaja com seu tutor de IA pessoal.",
+      AR: "يتيح لك الحساب المجاني حفظ تقدمك بشكل دائم، وتجميع وحدات الدراسة الخاصة بك، وفتح الشهادات، والتفاعل مع معلم الذكاء الاصطناعي الخاص بك.",
+      HI: "एक निःशुल्क खाता आपको अपनी प्रगति को स्थायी रूप से सहेजने, अपने अध्ययन क्रेडिट जमा करने, प्रमाणपत्रों को अनलॉक करने और अपने व्यक्तिगत एआई ट्यूटर के साथ बातचीत करने की अनुमति देता है।",
+      UR: "ایک مفت اکاؤنٹ آپ کو اپنی پیشرفت کو مستقل طور پر محفوظ کرنے، اپنے اسٹڈی کریڈٹس جمع کرنے، سرٹیفیکیشنز کو غیر مقفل کرنے اور اپنے ذاتی AI ٹیوٹر کے ساتھ بات چیت کرنے کی اجازت دیتا ہے۔"
     },
     create_account: {
       EN: "Create an Account",
       FR: "Créer un Compte",
       ES: "Crear una Cuenta",
       DE: "Konto Erstellen",
-      ZH: "创建账户"
+      ZH: "创建账户",
+      PT: "Criar uma Conta",
+      AR: "إنشاء حساب",
+      HI: "खाता बनाएं",
+      UR: "اکاؤنٹ بنائیں"
     },
     log_in: {
       EN: "Log In",
       FR: "Se Connecter",
       ES: "Iniciar Sesión",
       DE: "Einloggen",
-      ZH: "登录"
+      ZH: "登录",
+      PT: "Iniciar Sessão",
+      AR: "تسجيل الدخول",
+      HI: "लॉग इन करें",
+      UR: "لاگ ان کریں"
     },
     start_limited: {
       EN: "Start learning with limited features",
       FR: "Démarrer avec des fonctions limitées",
       ES: "Comenzar a aprender con functions limitadas",
       DE: "Mit eingeschränkten Funktionen lernen",
-      ZH: "以有限的功能开始学习"
+      ZH: "以有限的功能开始学习",
+      PT: "Começar com recursos limitados",
+      AR: "ابدأ التعلم بميزات محدودة",
+      HI: "सीमित सुविधाओं के साथ सीखना शुरू करें",
+      UR: "محدود خصوصیات के ساتھ سیکھنا شروع کریں"
     },
     completed_modules: {
       EN: "Curriculum and Completed Courses",
       FR: "Cursus et modules complétés",
       ES: "Currículo y cursos completados",
       DE: "Lehrplan und abgeschlossene Kurse",
-      ZH: "课程与已完成模块"
+      ZH: "课程与已完成模块",
+      PT: "Currículo e Módulos Concluídos",
+      AR: "المنهج الدراسي والموديولات المكتملة",
+      HI: "पाठ्यक्रम और पूर्ण किए गए मॉड्यूल",
+      UR: "نصاب اور مکمل شدہ ماڈیولز"
     }
   };
   return labels[key]?.[l] || labels[key]?.EN || '';

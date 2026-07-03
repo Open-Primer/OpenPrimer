@@ -190,6 +190,160 @@ const AUTH_STRINGS: Record<string, Record<string, string>> = {
   }
 };
 
+const LOCAL_HOMEPAGE_STRINGS: Record<string, Record<string, string>> = {
+  email_validation_failed: {
+    EN: "Email validation failed.",
+    FR: "Échec de la validation de l'e-mail.",
+    ES: "La validación del correo electrónico falló.",
+    DE: "E-Mail-Validierung fehlgeschlagen.",
+    ZH: "电子邮件验证失败。",
+    PT: "Falha na validação do e-mail.",
+    AR: "فشل التحقق من البريد الإلكتروني.",
+    HI: "ईमेल सत्यापन विफल रहा।",
+    UR: "ای میل की توथीक नाकाम हो गई।"
+  },
+  max_length_60: {
+    EN: "Maximum allowed length is 60 characters.",
+    FR: "La longueur maximale autorisée est de 60 caractères.",
+    ES: "La longitud máxima permitida es de 60 caracteres.",
+    DE: "Die maximal zulässige Länge beträgt 60 Zeichen.",
+    ZH: "最大允许长度为 60 个字符。",
+    PT: "O comprimento máximo permitido é de 60 caracteres.",
+    AR: "الحد الأقصى المسموح به للطول هو 60 حرفًا.",
+    HI: "अधिकतम अनुमत लंबाई 60 वर्ण है।",
+    UR: "زیادہ سے زیادہ اجازت شدہ لمبائی 60 حروف ہے۔"
+  },
+  email_already_registered: {
+    EN: "This email address is already registered.",
+    FR: "Cette adresse e-mail est déjà enregistrée.",
+    ES: "Esta dirección de correo electrónico ya está registrada.",
+    DE: "Diese E-Mail-Adresse ist bereits registriert.",
+    ZH: "该电子邮件地址已被注册。",
+    PT: "Este endereço de e-mail já está registrado.",
+    AR: "عنوان البريد الإلكتروني هذا مسجل بالفعل.",
+    HI: "यह ईमेल पता पहले से ही पंजीकृत है।",
+    UR: "یہ ای میل ایڈریس پہلے سے رجسٹرڈ ہے۔"
+  },
+  registration_failed: {
+    EN: "Registration failed.",
+    FR: "Échec de l'inscription.",
+    ES: "El registro falló.",
+    DE: "Registrierung fehlgeschlagen.",
+    ZH: "注册失败。",
+    PT: "Falha no registro.",
+    AR: "فشل التسجيل.",
+    HI: "पंजीकरण विफल रहा।",
+    UR: "رجسٹریشن ناکام ہو گئی۔"
+  },
+  server_connection_error: {
+    EN: "Server connection error. Please try again.",
+    FR: "Erreur de connexion au serveur. Veuillez réessayer.",
+    ES: "Error de conexión con el servidor. Por favor, inténtelo de nuevo.",
+    DE: "Serververbindungsfehler. Bitte versuchen Sie es erneut.",
+    ZH: "服务器连接错误。请重试。",
+    PT: "Erro de conexão com o servidor. Por favor, tente novamente.",
+    AR: "خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.",
+    HI: "सर्वर कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।",
+    UR: "سرور کنکشن کی خرابی۔ براہ کرم دوبارہ کوشش کریں۔"
+  },
+  enter_credentials: {
+    EN: "Please enter your credentials.",
+    FR: "Veuillez entrer vos identifiants.",
+    ES: "Por favor, introduzca sus credenciales.",
+    DE: "Bitte geben Sie Ihre Anmeldedaten ein.",
+    ZH: "请输入您的凭据。",
+    PT: "Por favor, insira suas credenciais.",
+    AR: "يرجى إدخال بيانات الاعتماد الخاصة بك.",
+    HI: "कृपया अपने क्रेडेंशियल दर्ज करें।",
+    UR: "براہ کرم اپنی اسناد درج کریں۔"
+  },
+  incorrect_credentials: {
+    EN: "Incorrect credentials.",
+    FR: "Identifiants incorrects.",
+    ES: "Credenciales incorrectas.",
+    DE: "Ungültige Anmeldedaten.",
+    ZH: "凭据不正确。",
+    PT: "Credenciais incorretas.",
+    AR: "بيانات الاعتماد غير صحيحة.",
+    HI: "गलत क्रेडेंशियल।",
+    UR: "غلط اسناد۔"
+  },
+  google_signin_failed: {
+    EN: "Failed to sign in with Google.",
+    FR: "Échec de la connexion avec Google.",
+    ES: "Error al iniciar sesión con Google.",
+    DE: "Anmeldung mit Google fehlgeschlagen.",
+    ZH: "使用 Google 登录失败。",
+    PT: "Falha ao fazer login com o Google.",
+    AR: "فشل تسجيل الدخول باستخدام Google.",
+    HI: "Google के साथ साइन इन करने में विफल।",
+    UR: "Google کے ساتھ سائن ان کرنے میں ناکام۔"
+  },
+  enter_email_reset: {
+    EN: "Please enter your email address.",
+    FR: "Veuillez entrer votre adresse e-mail.",
+    ES: "Por favor, introduzca su dirección de correo electrónico.",
+    DE: "Bitte geben Sie Ihre E-Mail-Adresse ein.",
+    ZH: "请输入您的电子邮件地址。",
+    PT: "Por favor, insira seu endereço de e-mail.",
+    AR: "يرجى إدخال عنوان بريدك الإلكتروني.",
+    HI: "कृपया अपना ईमेल पता दर्ज करें।",
+    UR: "براہ کرم اپنا ای میل ایڈریس درج کریں۔"
+  },
+  generic_error: {
+    EN: "An error occurred. Please try again.",
+    FR: "Une erreur est survenue. Veuillez réessayer.",
+    ES: "Ha ocurrido un error. Por favor, inténtelo de nuevo.",
+    DE: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    ZH: "发生错误。请重试。",
+    PT: "Ocorreu um erro. Por favor, tente novamente.",
+    AR: "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    HI: "एक त्रुटि हुई। कृपया पुनः प्रयास करें।",
+    UR: "ایک خرابی پیش آگئی۔ براہ کرم دوبارہ کوشش کریں۔"
+  },
+  reset_email_info: {
+    EN: "If this email address is registered, you will receive a reset link shortly.",
+    FR: "Si cette adresse e-mail est enregistrée, vous recevrez bientôt un lien de réinitialisation.",
+    ES: "Si esta dirección de correo electrónico está registrada, recibirá un enlace de restablecimiento en breve.",
+    DE: "Wenn diese E-Mail-Adresse registriert ist, erhalten Sie in Kürze einen Link zum Zurücksetzen.",
+    ZH: "如果该电子邮件地址已注册，您很快就会收到重置链接。",
+    PT: "Se este endereço de e-mail estiver registrado, você receberá um link de redefinição em breve.",
+    AR: "إذا كان عنوان البريد الإلكتروني هذا مسجلاً، فستتلقى رابط إعادة التعيين قريبًا.",
+    HI: "यदि यह ईमेल पता पंजीकृत है, तो आपको शीघ्र ही एक रीसेट लिंक प्राप्त होगा।",
+    UR: "اگر یہ ای میل ایڈریس رجسٹرڈ ہے تو آپ کو جلد ہی ایک ری سیٹ لنک موصول ہو جائے گا۔"
+  },
+  optional_parentheses: {
+    EN: "(optional)",
+    FR: "(optionnel)",
+    ES: "(opcional)",
+    DE: "(optional)",
+    ZH: "(可选)",
+    PT: "(opcional)",
+    AR: "(اختياري)",
+    HI: "(वैकल्पिक)",
+    UR: "(اختیاری)"
+  },
+  hero_subtitle: {
+    EN: "Explore our elite university curricula and interactive courses",
+    FR: "Découvrez nos cursus universitaires et cours interactifs d'élite",
+    ES: "Explore nuestros planes de estudio universitarios de élite y cursos interactivos",
+    DE: "Erkunden Sie unsere universitären Elite-Lehrpläne und interaktiven Kurse",
+    ZH: "探索我们的精英大学课程和互动课程",
+    PT: "Explore nossos currículos universitários de elite e cursos interativos",
+    AR: "استكشف مناهجنا الجامعية النخبة ودوراتنا التفاعلية",
+    HI: "हमारे कुलीन विश्वविद्यालय पाठ्यक्रम और संवादात्मक पाठ्यक्रमों का अन्वेषण करें",
+    UR: "ہمارے اشرافیہ یونیورسٹی کے نصاب اور انٹرایکティブ کورسز کو دریافت کریں"
+  }
+};
+
+const getLocalString = (key: string, currentLang: string): string => {
+  const lUpper = currentLang.toUpperCase();
+  if (LOCAL_HOMEPAGE_STRINGS[key]) {
+    return LOCAL_HOMEPAGE_STRINGS[key][lUpper] || LOCAL_HOMEPAGE_STRINGS[key].EN;
+  }
+  return '';
+};
+
 
 export default function Home() {
   const router = useRouter();
@@ -382,11 +536,11 @@ export default function Home() {
                 router.push('/catalog');
               }
             } else {
-              setErrorMsg(data.error || (lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed."));
+              setErrorMsg(data.error || getLocalString('email_validation_failed', lang));
             }
           })
           .catch(() => {
-            setErrorMsg(lang === 'FR' ? "Erreur de validation de l'email." : "Email validation failed.");
+            setErrorMsg(getLocalString('email_validation_failed', lang));
           });
       }
     }
@@ -410,7 +564,7 @@ export default function Home() {
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password || !confirmPassword) {
-      setErrorMsg(s.all_fields_required || (lang === 'FR' ? 'Veuillez remplir tous les champs requis.' : 'Please fill all required fields.'));
+      setErrorMsg(s.all_fields_required);
       return;
     }
 
@@ -418,21 +572,21 @@ export default function Home() {
     const lName = lastName.trim();
 
     if (fName.length > 60 || lName.length > 60 || email.length > 60 || password.length > 60) {
-      setErrorMsg(lang === 'FR' ? 'La longueur maximale autorisée est de 60 caractères.' : 'Maximum allowed length is 60 characters.');
+      setErrorMsg(getLocalString('max_length_60', lang));
       return;
     }
 
     if (fName !== "" || lName !== "") {
       const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']{2,60}$/;
       if ((fName !== "" && !nameRegex.test(fName)) || (lName !== "" && !nameRegex.test(lName))) {
-        setErrorMsg(s.invalid_name || (lang === 'FR' ? 'Veuillez entrer un nom valide (2 à 60 caractères, lettres/espaces/tirets uniquement).' : 'Please enter a valid name (2-60 characters, letters/spaces/hyphens only).'));
+        setErrorMsg(s.invalid_name);
         return;
       }
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setErrorMsg(s.invalid_email || (lang === 'FR' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.'));
+      setErrorMsg(s.invalid_email);
       return;
     }
 
@@ -445,7 +599,7 @@ export default function Home() {
       'silvere@openprimer.app'
     ];
     if (DEMO_EMAILS.includes(emailLower)) {
-      setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est déjà enregistrée.' : 'This email address is already registered.');
+      setErrorMsg(getLocalString('email_already_registered', lang));
       return;
     }
 
@@ -454,7 +608,7 @@ export default function Home() {
       try {
         const storedProfile = JSON.parse(storedProfileStr);
         if (storedProfile && storedProfile.email && storedProfile.email.toLowerCase() === emailLower) {
-          setErrorMsg(lang === 'FR' ? 'Cette adresse e-mail est déjà enregistrée.' : 'This email address is already registered.');
+          setErrorMsg(getLocalString('email_already_registered', lang));
           return;
         }
       } catch (err) {}
@@ -463,12 +617,12 @@ export default function Home() {
     // Advanced Password Complexity Validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^+=._\-\[\]{}()]).{12,}$/;
     if (!passwordRegex.test(password)) {
-      setErrorMsg(s.password_complexity_error || (lang === 'FR' ? 'Le mot de passe doit contenir au moins 12 caractères, incluant une majuscule, une minuscule, un chiffre et un caractère spécial.' : 'Password must be at least 12 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'));
+      setErrorMsg(s.password_complexity_error);
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg(s.passwords_dont_match || (lang === 'FR' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.'));
+      setErrorMsg(s.passwords_dont_match);
       return;
     }
 
@@ -501,12 +655,12 @@ export default function Home() {
       });
       const data = await res.json();
       if (!data.success) {
-        setErrorMsg(data.error || (lang === 'FR' ? "Échec de l'inscription." : "Registration failed."));
+        setErrorMsg(data.error || getLocalString('registration_failed', lang));
         return;
       }
       setAuthModal('verify');
     } catch (err: any) {
-      setErrorMsg(lang === 'FR' ? "Erreur de connexion au serveur." : "Server connection error.");
+      setErrorMsg(getLocalString('server_connection_error', lang));
     }
   };
 
@@ -530,7 +684,7 @@ export default function Home() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMsg(lang === 'FR' ? 'Veuillez entrer vos identifiants.' : 'Please enter your credentials.');
+      setErrorMsg(getLocalString('enter_credentials', lang));
       return;
     }
 
@@ -545,7 +699,7 @@ export default function Home() {
         });
 
         if (authError) {
-          setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+          setErrorMsg(getLocalString('incorrect_credentials', lang));
           return;
         }
 
@@ -631,7 +785,7 @@ export default function Home() {
       } catch (err) {
         console.error("Direct Supabase login exception", err);
       }
-      setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+      setErrorMsg(getLocalString('incorrect_credentials', lang));
       return;
     }
 
@@ -709,7 +863,7 @@ export default function Home() {
       console.error("Authentication check exception", err);
     }
 
-    setErrorMsg(lang === 'FR' ? 'Identifiants incorrects.' : 'Incorrect credentials.');
+    setErrorMsg(getLocalString('incorrect_credentials', lang));
   };
 
   const handleGoogleSignIn = async () => {
@@ -724,14 +878,14 @@ export default function Home() {
       if (error) throw error;
     } catch (err: any) {
       console.error("Google Sign-In Error:", err);
-      setErrorMsg(err?.message || (lang === 'FR' ? "Échec de la connexion avec Google." : "Failed to sign in with Google."));
+      setErrorMsg(err?.message || getLocalString('google_signin_failed', lang));
     }
   };
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setErrorMsg(lang === 'FR' ? 'Veuillez entrer votre adresse email.' : 'Please enter your email address.');
+      setErrorMsg(getLocalString('enter_email_reset', lang));
       return;
     }
 
@@ -752,14 +906,14 @@ export default function Home() {
       if (!data.success) {
         // Only show a real error for server failures, not for "email not found"
         // (to avoid email enumeration attacks, the API returns success even if not found)
-        setErrorMsg(data.error || (lang === 'FR' ? 'Une erreur est survenue. Veuillez réessayer.' : 'An error occurred. Please try again.'));
+        setErrorMsg(data.error || getLocalString('generic_error', lang));
         return;
       }
       // Always show the neutral success message regardless of whether email exists
-      setSuccessMsg(s.email_sent || (lang === 'FR' ? 'Si cette adresse email est enregistrée, vous recevrez un lien de réinitialisation.' : 'If this email address is registered, you will receive a reset link shortly.'));
+      setSuccessMsg(getLocalString('reset_email_info', lang));
     } catch (err: any) {
       console.error('[FORGOT PASSWORD]', err);
-      setErrorMsg(lang === 'FR' ? 'Erreur de connexion au serveur.' : 'Server connection error. Please try again.');
+      setErrorMsg(getLocalString('server_connection_error', lang));
     }
   };
 
@@ -903,7 +1057,7 @@ export default function Home() {
              </div>
              <div className="flex items-center gap-2">
                <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{s.languages}</h3>
-               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{lang === 'ZH' ? '5 种语言' : `5 ${s.languages}`}</div>
+               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{lang.toUpperCase() === 'ZH' ? `${stats?.total_languages || 9} 种语言` : `${stats?.total_languages || 9} ${s.languages}`}</div>
              </div>
              <p className="text-sm text-slate-500 leading-relaxed">{s.multilingual_desc}</p>
            </div>
@@ -926,7 +1080,7 @@ export default function Home() {
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[32px] text-center hover:border-blue-500/30 transition-all duration-300 backdrop-blur-xl group">
                   <p className="text-4xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500 group-hover:scale-105 transition-transform duration-300">
-                    {stats ? stats.total_languages : 5}
+                    {stats?.total_languages || 9}
                   </p>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">{s.languages}</p>
                </div>

@@ -49,6 +49,8 @@ export const WhatsNext = ({ title, items, itemsBase64, children }: WhatsNextProp
   const normalizedLang = (language || 'en').toLowerCase().split('-')[0];
   const displayTitle = title || defaultTitles[normalizedLang] || defaultTitles['en'];
 
+  const [existsMap, setExistsMap] = React.useState<Record<string, boolean>>({});
+
   let resolvedItems: WhatsNextItem[] = items || [];
   if (itemsBase64) {
     try {
@@ -63,12 +65,38 @@ export const WhatsNext = ({ title, items, itemsBase64, children }: WhatsNextProp
     }
   }
 
+  React.useEffect(() => {
+    if (resolvedItems.length === 0) return;
+    const slugs = resolvedItems.map(item => item.slug.toLowerCase()).filter(Boolean);
+    if (slugs.length === 0) return;
+
+    fetch(`/api/check-course?slug=${encodeURIComponent(slugs.join(','))}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.exists) {
+          setExistsMap(data.exists);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to check course existence:", err);
+      });
+  }, [resolvedItems]);
+
   const hasItems = resolvedItems.length > 0;
   const hasChildren = !isChildrenEmpty(children);
 
   if (!hasChildren && !hasItems) {
     return null;
   }
+
+  const soonLabels: Record<string, string> = {
+    fr: "Bientôt disponible",
+    en: "Coming soon",
+    es: "Próximamente",
+    de: "Demnächst verfügbar",
+    zh: "即将推出"
+  };
+  const soonLabel = soonLabels[normalizedLang] || soonLabels['en'];
 
   return (
     <div className="my-8 p-6 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 border border-violet-500/20 rounded-3xl relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
@@ -91,26 +119,44 @@ export const WhatsNext = ({ title, items, itemsBase64, children }: WhatsNextProp
 
       {hasItems && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 select-none">
-          {resolvedItems.map((item, idx) => (
-            <a
-              key={idx}
-              href={`/course/${item.slug}`}
-              className="p-4 rounded-2xl bg-slate-950/40 border border-slate-850/50 hover:border-violet-500/35 hover:bg-slate-900/40 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
-            >
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">
-                  {item.subject || 'Course'}
-                </span>
-                <h4 className="text-sm font-bold text-white group-hover:text-violet-300 transition-colors mt-1">
-                  {item.title}
-                </h4>
-              </div>
-              <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/30 text-[10px] font-bold text-slate-400">
-                <span>{item.level || 'All levels'}</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </a>
-          ))}
+          {resolvedItems.map((item, idx) => {
+            const cleanSlug = item.slug.toLowerCase();
+            // Default to true during loading to prevent abrupt visual layout shift
+            const exists = existsMap[cleanSlug] !== false; 
+            const CardComponent = exists ? 'a' : 'div';
+            const extraProps = exists ? { href: `/course/${item.slug}` } : {};
+
+            return (
+              <CardComponent
+                key={idx}
+                {...(extraProps as any)}
+                className={`p-4 rounded-2xl bg-slate-950/40 border border-slate-850/50 transition-all duration-300 flex flex-col justify-between group ${
+                  exists 
+                    ? 'hover:border-violet-500/35 hover:bg-slate-900/40 cursor-pointer' 
+                    : 'opacity-65 cursor-default'
+                }`}
+              >
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">
+                    {item.subject || 'Course'}
+                  </span>
+                  <h4 className={`text-sm font-bold mt-1 transition-colors ${exists ? 'text-white group-hover:text-violet-300' : 'text-slate-500'}`}>
+                    {item.title}
+                  </h4>
+                </div>
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/30 text-[10px] font-bold text-slate-400">
+                  <span>{item.level || 'All levels'}</span>
+                  {exists ? (
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  ) : (
+                    <span className="text-[9px] font-normal italic text-slate-500 select-none normal-case tracking-normal">
+                      {soonLabel}
+                    </span>
+                  )}
+                </div>
+              </CardComponent>
+            );
+          })}
         </div>
       )}
     </div>

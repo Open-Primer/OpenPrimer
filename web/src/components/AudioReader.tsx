@@ -713,6 +713,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const selectedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const readCourseRef = useRef(true);
   const readTutorRef = useRef(true);
+  const ttsEnabledRef = useRef(true);
   const isReadingTutorRef = useRef(false);
   const tutorSentencesRef = useRef<string[]>([]);
   const currentSentenceIndexRef = useRef(-1);
@@ -736,11 +737,12 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     selectedVoiceRef.current = selectedVoice;
     readCourseRef.current = readCourse;
     readTutorRef.current = readTutor;
+    ttsEnabledRef.current = ttsEnabled;
     isReadingTutorRef.current = isReadingTutor;
     tutorSentencesRef.current = tutorSentences;
     currentSentenceIndexRef.current = currentSentenceIndex;
     currentTutorSentenceIndexRef.current = currentTutorSentenceIndex;
-  }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, isReadingTutor, tutorSentences, currentSentenceIndex, currentTutorSentenceIndex]);
+  }, [isPlaying, isPaused, rate, volume, selectedVoice, readCourse, readTutor, ttsEnabled, isReadingTutor, tutorSentences, currentSentenceIndex, currentTutorSentenceIndex]);
 
   useEffect(() => {
     if (!readTutor && isReadingTutor) {
@@ -1162,8 +1164,31 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   }, [content, lang]);
 
   // 3. Reset audio playback state when pathname, content or language changes
+  const prevContentRef = useRef(content);
+  const prevPathnameRef = useRef(pathname);
+  const prevLangRef = useRef(lang);
+
   useEffect(() => {
-    stop();
+    const pathChanged = prevPathnameRef.current !== pathname;
+    const langChanged = prevLangRef.current !== lang;
+    const contentChanged = prevContentRef.current !== content;
+
+    prevPathnameRef.current = pathname;
+    prevLangRef.current = lang;
+    prevContentRef.current = content;
+
+    if (pathChanged || langChanged) {
+      stop();
+      return;
+    }
+
+    if (contentChanged) {
+      if (pathname === '/profile/curriculum') {
+        // Skip stopping speech on curriculum page content updates (e.g. streaks/points dynamic changes)
+        return;
+      }
+      stop();
+    }
   }, [pathname, content, lang]);
 
   // 4. Highlight and scroll sync logic for the active sentence
@@ -1434,7 +1459,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       const customEvent = e as CustomEvent;
       const text = customEvent.detail?.text;
       const isOpen = customEvent.detail?.isOpen;
-      if (!text || !readTutorRef.current) return;
+      
+      console.log(`AudioReader: captured tutor response event. Text length: ${text?.length || 0}, ttsEnabled: ${ttsEnabledRef.current}, readTutor: ${readTutorRef.current}`);
+      
+      if (!text || !ttsEnabledRef.current || !readTutorRef.current) return;
 
       // Clean MDX/Markdown formatting from the tutor response
       let cleaned = cleanMdxText(text);

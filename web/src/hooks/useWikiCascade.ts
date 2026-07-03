@@ -16,6 +16,133 @@ export interface WikiResult {
   exists: boolean | null;
 }
 
+const TYPE_SUFFIXES: Record<string, Record<string, string[]>> = {
+  fr: {
+    celestial: ['(planète)', '(corps céleste)', '(étoile)', '(galaxie)', '(satellite)', '(astéroïde)', '(nébuleuse)', '(constellation)'],
+    person: ['(savant)', '(mathématicien)', '(philosophe)', '(physicien)', '(astronome)', '(écrivain)', '(chimiste)', '(historien)', '(économiste)', '(biologiste)', '(artiste)', '(peintre)'],
+    location: ['(ville)', '(pays)', '(département)', '(région)', '(fleuve)', '(montagne)', '(île)', '(continent)'],
+    character: ['(personnage)', '(mythologie)', '(héros)'],
+    artwork: ['(tableau)', '(peinture)', '(sculpture)', '(roman)', '(film)', '(livre)'],
+    concept: ['(notion)', '(philosophie)', '(économie)', '(physique)', '(mathématiques)'],
+    theorem: ['(théorème)', '(loi)', '(principe)'],
+    institution: ['(université)', '(école)', '(institution)', '(académie)'],
+    species: ['(plante)', '(animal)', '(insecte)', '(oiseau)', '(arbre)'],
+    chemical: ['(chimie)', '(composé)', '(élément)', '(molécule)'],
+  },
+  en: {
+    celestial: ['(planet)', '(celestial body)', '(star)', '(galaxy)', '(moon)', '(satellite)', '(asteroid)', '(nebula)', '(constellation)'],
+    person: ['(scientist)', '(mathematician)', '(philosopher)', '(physicist)', '(astronomer)', '(writer)', '(chemist)', '(historian)', '(economist)', '(biologist)', '(artist)', '(painter)'],
+    location: ['(city)', '(country)', '(region)', '(river)', '(island)', '(mountain)', '(continent)'],
+    character: ['(character)', '(mythology)', '(hero)'],
+    artwork: ['(painting)', '(sculpture)', '(novel)', '(film)', '(book)', '(artwork)'],
+    concept: ['(concept)', '(philosophy)', '(economics)', '(physics)', '(mathematics)'],
+    theorem: ['(theorem)', '(law)', '(principle)'],
+    institution: ['(university)', '(school)', '(institution)', '(academy)'],
+    species: ['(plant)', '(animal)', '(insect)', '(bird)', '(tree)'],
+    chemical: ['(chemistry)', '(compound)', '(element)', '(molecule)'],
+  },
+  es: {
+    celestial: ['(planeta)', '(cuerpo celeste)', '(estrella)', '(galaxia)', '(satélite)', '(satélite natural)', '(asteroide)', '(nebulosa)', '(constelación)'],
+    person: ['(científico)', '(matemático)', '(filósofo)', '(físico)', '(astrónomo)', '(escritor)', '(químico)', '(historiador)', '(economista)', '(biólogo)', '(artista)', '(pintor)'],
+    location: ['(ciudad)', '(país)', '(provincia)', '(departamento)', '(región)', '(río)', '(montaña)', '(isla)', '(continente)'],
+    character: ['(personaje)', '(mitología)', '(héroe)'],
+    artwork: ['(cuadro)', '(pintura)', '(escultura)', '(novela)', '(película)', '(libro)', '(obra de arte)'],
+    concept: ['(concepto)', '(filosofía)', '(economía)', '(física)', '(matemáticas)'],
+    theorem: ['(teorema)', '(ley)', '(principio)'],
+    institution: ['(universidad)', '(escuela)', '(institución)', '(academia)'],
+    species: ['(planta)', '(animal)', '(insecto)', '(ave)', '(árbol)'],
+    chemical: ['(química)', '(compuesto)', '(elemento)', '(molécula)'],
+  },
+  de: {
+    celestial: ['(Planet)', '(Himmelskörper)', '(Stern)', '(Galaxie)', '(Mond)', '(Satellit)', '(Asteroid)', '(Nebel)', '(Konstellation)'],
+    person: ['(Wissenschaftler)', '(Mathematiker)', '(Philosoph)', '(Physiker)', '(Astronom)', '(Schriftsteller)', '(Chemiker)', '(Historiker)', '(Ökonom)', '(Biologe)', '(Künstler)', '(Maler)'],
+    location: ['(Stadt)', '(Land)', '(Region)', '(Fluss)', '(Insel)', '(Berg)', '(Kontinent)'],
+    character: ['(Figur)', '(Mythologie)', '(Held)'],
+    artwork: ['(Gemälde)', '(Skulptur)', '(Roman)', '(Film)', '(Buch)', '(Kunstwerk)'],
+    concept: ['(Begriff)', '(Philosophie)', '(Wirtschaft)', '(Physik)', '(Mathematik)'],
+    theorem: ['(Satz)', '(Theorem)', '(Gesetz)', '(Prinzip)'],
+    institution: ['(Universität)', '(Schule)', '(Institution)', '(Akademie)'],
+    species: ['(Pflanze)', '(Tier)', '(Insekt)', '(Vogel)', '(Baum)'],
+    chemical: ['(Chemie)', '(Verbindung)', '(Element)', '(Molekül)'],
+  },
+  zh: {
+    celestial: ['(行星)', '(天体)', '(恒星)', '(星系)', '(卫星)', '(小行星)', '(星云)', '(星座)'],
+    person: ['(科学家)', '(数学家)', '(哲学家)', '(物理学家)', '(天文学家)', '(作家)', '(化学家)', '(历史学家)', '(经济学家)', '(生物学家)', '(艺术家)', '(画家)'],
+    location: ['(城市)', '(国家)', '(地区)', '(河流)', '(岛屿)', '(山脉)', '(大陆)'],
+    character: ['(角色)', '(神话)', '(英雄)'],
+    artwork: ['(画作)', '(雕塑)', '(小说)', '(电影)', '(书)', '(艺术品)'],
+    concept: ['(概念)', '(哲学)', '(经济学)', '(物理学)', '(数学)'],
+    theorem: ['(定理)', '(定律)', '(原理)'],
+    institution: ['(大学)', '(学校)', '(机构)', '(研究院)'],
+    species: ['(植物)', '(动物)', '(昆虫)', '(鸟)', '(树木)'],
+    chemical: ['(化学)', '(化合物)', '(化学元素)', '(分子)'],
+  }
+};
+
+const isDisambiguation = (r: { extract: string | null; description: string | null; type?: string }, lang: string): boolean => {
+  if (r.type === 'disambiguation') return true;
+  const desc = (r.description || '').toLowerCase();
+  const ext = (r.extract || '').toLowerCase();
+  const l = lang.toLowerCase().trim();
+  
+  if (l === 'fr') {
+    return desc.includes('homonymie') || ext.includes('page d\'homonymie') || ext.includes('plusieurs homonymes');
+  }
+  if (l === 'es') {
+    return desc.includes('desambiguación') || desc.includes('homonimia') || ext.includes('página de desambiguación') || ext.includes('término homónimo');
+  }
+  if (l === 'de') {
+    return desc.includes('begriffsklärung') || ext.includes('begriffsklärung') || ext.includes('steht für');
+  }
+  if (l === 'zh') {
+    return desc.includes('消歧义') || ext.includes('消歧义') || ext.includes('是一个多义词');
+  }
+  
+  return desc.includes('disambiguation') || ext.includes('disambiguation page') || ext.includes('may refer to');
+};
+
+const fetchSearchFirstMatch = async (name: string, targetLang: string, type?: string) => {
+  if (!type) return null;
+  const lang = targetLang.toLowerCase().trim();
+  const suffixes = TYPE_SUFFIXES[lang]?.[type] || TYPE_SUFFIXES['en']?.[type] || [];
+  if (suffixes.length === 0) return null;
+
+  const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&utf8=1&format=json&origin=*`;
+  const res = await fetch(searchUrl);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const results: any[] = data?.query?.search || [];
+  
+  const cleanBase = name.trim().toLowerCase().replace(/_/g, ' ');
+  
+  for (const r of results) {
+    const title = r.title as string;
+    const cleanTitle = title.toLowerCase();
+    if (cleanTitle.startsWith(cleanBase + ' (')) {
+      const hasSuffix = suffixes.some(suff => cleanTitle.endsWith(suff.toLowerCase()));
+      if (hasSuffix) {
+        return title.replace(/ /g, '_');
+      }
+    }
+  }
+  
+  for (const r of results) {
+    const title = r.title as string;
+    const cleanTitle = title.toLowerCase();
+    if (cleanTitle.startsWith(cleanBase + ' (')) {
+      const hasContainedSuffix = suffixes.some(suff => {
+        const innerSuff = suff.replace(/[()]/g, '').toLowerCase();
+        return cleanTitle.includes(innerSuff);
+      });
+      if (hasContainedSuffix) {
+        return title.replace(/ /g, '_');
+      }
+    }
+  }
+  
+  return null;
+};
+
 /**
  * Runs the 5-stage Wikipedia resolution cascade:
  *  1. REST API  – activeLang
@@ -28,12 +155,14 @@ export interface WikiResult {
  * @param activeLang    The UI language the user is currently viewing (e.g. "fr")
  * @param originalLang  The language the course was authored in (e.g. "fr"); defaults to "fr"
  * @param skip          When true the hook does nothing (e.g. term has a hardcoded URL already)
+ * @param type          Optional semantic category type to help resolve disambiguation pages
  */
 export function useWikiCascade(
   name: string,
   activeLang: string,
   originalLang: string = 'fr',
-  skip: boolean = false
+  skip: boolean = false,
+  type?: string
 ): WikiResult {
   const [summary, setSummary] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
@@ -82,12 +211,32 @@ export function useWikiCascade(
         extract: (data.extract as string) || null,
         url: data.content_urls?.desktop?.page || `https://${targetLang}.wikipedia.org/wiki/${encodeURIComponent(title)}`,
         description: (data.description as string) || null,
+        type: (data.type as string) || 'standard',
       };
     };
 
+    // ─── Helper: Best Extract Fetcher (falls back to Action API if REST is too short) ───
+    const fetchBestExtract = async (title: string, targetLang: string) => {
+      const r = await fetchFromRestApi(title, targetLang);
+      if (!r.extract || r.extract.length < 220) {
+        try {
+          const act = await fetchFromActionApi(title, targetLang);
+          if (act.extract && act.extract.length > (r.extract || '').length) {
+            return { ...r, extract: act.extract };
+          }
+        } catch (_) {}
+      }
+      return r;
+    };
+
     // ─── Helper: Commit result ─────────────────────────────────────────
-    const commit = (result: { extract: string | null; url: string; description: string | null }) => {
+    const commit = (result: { extract: string | null; url: string; description: string | null; type?: string }) => {
       if (!isMounted) return;
+      if (isDisambiguation(result, langCode)) {
+        console.warn(`[WIKI CASCADE] Quality gate: Refused to commit disambiguation page for "${name}" on "${langCode}"`);
+        setExists(false);
+        return;
+      }
       setSummary(result.extract);
       setUrl(result.url);
       setDescription(result.description);
@@ -95,23 +244,42 @@ export function useWikiCascade(
     };
 
     const cascade = async () => {
+      let resolvedTitle = formattedName;
+      try {
+        const initialRes = await fetchFromRestApi(formattedName, langCode);
+        if (isDisambiguation(initialRes, langCode)) {
+          const searched = await fetchSearchFirstMatch(name, langCode, type);
+          if (searched) {
+            console.log(`[WIKI CASCADE] Disambiguation detected for "${formattedName}". Resolved to "${searched}"`);
+            resolvedTitle = searched;
+          }
+        }
+      } catch (err: any) {
+        console.warn(`[WIKI CASCADE] Disambiguation check / initial REST failed: ${err.message}`);
+        // If the page doesn't even exist under the base name, try search
+        const searched = await fetchSearchFirstMatch(name, langCode, type);
+        if (searched) {
+          resolvedTitle = searched;
+        }
+      }
+
       // ── Stage 1: REST on activeLang ──────────────────────────────────
       try {
-        const r = await fetchFromRestApi(formattedName, langCode);
+        const r = await fetchBestExtract(resolvedTitle, langCode);
         commit(r);
         return;
       } catch (e: any) {
-        console.warn(`[WIKI CASCADE] Stage 1 REST (${langCode}) failed for "${name}": ${e.message}`);
+        console.warn(`[WIKI CASCADE] Stage 1 REST (${langCode}) failed for "${resolvedTitle}": ${e.message}`);
       }
 
       // ── Stage 2: Action API on activeLang ────────────────────────────
       try {
-        const r = await fetchFromActionApi(formattedName, langCode);
+        const r = await fetchFromActionApi(resolvedTitle, langCode);
         commit(r);
-        console.log(`[WIKI CASCADE] Stage 2 Action (${langCode}) resolved "${name}"`);
+        console.log(`[WIKI CASCADE] Stage 2 Action (${langCode}) resolved "${resolvedTitle}"`);
         return;
       } catch (e: any) {
-        console.warn(`[WIKI CASCADE] Stage 2 Action (${langCode}) failed for "${name}": ${e.message}`);
+        console.warn(`[WIKI CASCADE] Stage 2 Action (${langCode}) failed for "${resolvedTitle}": ${e.message}`);
       }
 
       // ── Stage 3: Interlanguage (originalLang → activeLang) ───────────
@@ -130,7 +298,7 @@ export function useWikiCascade(
                 const translatedTitle = (match['*'] as string).replace(/ /g, '_');
                 // REST first
                 try {
-                  const r = await fetchFromRestApi(translatedTitle, langCode);
+                  const r = await fetchBestExtract(translatedTitle, langCode);
                   commit(r);
                   console.log(`[WIKI CASCADE] Stage 3 REST (${origLang}→${langCode}) resolved "${name}" → "${translatedTitle}"`);
                   return;
@@ -169,7 +337,7 @@ export function useWikiCascade(
                   // Found a translation in the active language
                   const translatedTitle = (match['*'] as string).replace(/ /g, '_');
                   try {
-                    const r = await fetchFromRestApi(translatedTitle, langCode);
+                    const r = await fetchBestExtract(translatedTitle, langCode);
                     commit(r);
                     console.log(`[WIKI CASCADE] Stage 3b EN→${langCode.toUpperCase()} resolved "${name}" → "${translatedTitle}"`);
                     return;
@@ -177,7 +345,7 @@ export function useWikiCascade(
                 } else {
                   // EN article exists but no translation — show EN summary with Google Translate link
                   try {
-                    const r = await fetchFromRestApi(formattedName, 'en');
+                    const r = await fetchBestExtract(formattedName, 'en');
                     const rawUrl = r.url;
                     const translatedUrl = `https://translate.google.com/translate?sl=en&tl=${langCode}&u=${encodeURIComponent(rawUrl)}`;
                     commit({ ...r, url: translatedUrl });
@@ -193,11 +361,11 @@ export function useWikiCascade(
         }
       }
 
-      // ── Stage 4: Original language fallback (only when langs differ) ──
+      // ── Stage 4: Original language fallback (only when scams differ) ──
       if (origLang !== langCode) {
         // REST
         try {
-          const r = await fetchFromRestApi(formattedName, origLang);
+          const r = await fetchBestExtract(formattedName, origLang);
           const translatedUrl = `https://translate.google.com/translate?sl=${origLang}&tl=${langCode}&u=${encodeURIComponent(r.url)}`;
           commit({ ...r, url: translatedUrl });
           console.log(`[WIKI CASCADE] Stage 4 REST (${origLang}) resolved "${name}" — wrapping in Google Translate`);

@@ -773,6 +773,16 @@ export const EssayEvaluation = ({
             </div>
             <div className="flex items-start gap-2">
               <span className="text-violet-400 font-black shrink-0">▸</span>
+              <span>
+                {language === 'FR' ? "Format de réponse attendu : texte, audio, image sont supportés (ou une combinaison)"
+                  : language === 'ES' ? "Formato de respuesta esperado: texto, audio, imagen son soportados (o una combinación)"
+                  : language === 'DE' ? "Erwartetes Antwortformat: Text, Audio, Bild werden unterstützt (oder eine Kombination)"
+                  : language === 'ZH' ? "期望的回答格式：支持文本、音频、图像（或其组合）"
+                  : "Expected response format: text, audio, image are supported (or a combination)"}
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>{t.grading_scale} <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
             </div>
             <div className="flex items-start gap-2">

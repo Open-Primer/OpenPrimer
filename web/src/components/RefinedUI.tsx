@@ -702,7 +702,10 @@ export const AITutorOverlay = ({
     }
   };
 
-  const hasGlossaryInProp = pageContext && /<Glossary\s+term=/i.test(pageContext);
+  const hasGlossaryInProp = pageContext && (
+    /<Glossary\s+term=/i.test(pageContext) ||
+    /##+\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/i.test(pageContext)
+  );
 
   const QUICK_ACTIONS = [
     { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: t.give_example_prompt },
@@ -937,31 +940,72 @@ export const AITutorOverlay = ({
   useEffect(() => {
     const cleanGlossaryDefinition = (def: string): string => {
       if (!def) return '';
-      const colonIndex = def.indexOf(':');
+      // 1. Clean HTML tags
+      let cleaned = def.replace(/<[^>]+>/g, '');
+      // 2. Clean Wikipedia links (both markdown links and plain brackets)
+      cleaned = cleaned.replace(/\[?\[?(Wikip[eé]dia|Wikipedia)\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, '');
+      cleaned = cleaned.replace(/\[\s*(Wikip[eé]dia|Wikipedia)\s*\]/gi, '');
+      cleaned = cleaned.replace(/\(\s*(Wikip[eé]dia|Wikipedia)\s*\)/gi, '');
+      // 3. Clean up formatting artifacts like duplicate dots or spaces
+      cleaned = cleaned.trim();
+      cleaned = cleaned.replace(/\s+/g, ' ');
+      cleaned = cleaned.replace(/\s+\.$/, '.');
+      cleaned = cleaned.replace(/\.{2,}/g, '.');
+
+      const colonIndex = cleaned.indexOf(':');
       if (colonIndex !== -1) {
-        const part1 = def.substring(0, colonIndex).trim();
-        const part2 = def.substring(colonIndex + 1).trim();
+        const part1 = cleaned.substring(0, colonIndex).trim();
+        const part2 = cleaned.substring(colonIndex + 1).trim();
         if (part2.startsWith(part1)) {
           return part2;
         }
       }
-      return def;
+      return cleaned;
     };
 
     if (pageContext) {
       const cards: { term: string; definition: string }[] = [];
+      const seen = new Set<string>();
+
+      const addCard = (term: string, definition: string) => {
+        const cleanedTerm = term.trim().charAt(0).toUpperCase() + term.trim().slice(1);
+        const cleanedDef = cleanGlossaryDefinition(definition).trim();
+        const key = cleanedTerm.toLowerCase();
+        if (cleanedTerm && cleanedDef && !seen.has(key)) {
+          seen.add(key);
+          cards.push({ term: cleanedTerm, definition: cleanedDef });
+        }
+      };
+
+      // 1. Extract from JSX tags
       const regex = /<Glossary\s+term=["']([^"']+)["']\s+definition=["']([^"']+)["']/g;
       let match;
-      const seen = new Set<string>();
       while ((match = regex.exec(pageContext)) !== null) {
         const term = match[1];
         const definition = match[2];
-        const key = `${term}::${definition}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          cards.push({ term, definition: cleanGlossaryDefinition(definition) });
+        addCard(term, definition);
+      }
+
+      // 2. Extract from static markdown glossary section
+      const glossaryIndex = pageContext.search(/##+\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/i);
+      if (glossaryIndex !== -1) {
+        let glossarySection = pageContext.slice(glossaryIndex);
+        const nextHeadingIndex = glossarySection.slice(1).search(/\r?\n\s*##+\s+/);
+        if (nextHeadingIndex !== -1) {
+          glossarySection = glossarySection.slice(0, nextHeadingIndex + 1);
+        }
+        const lines = glossarySection.split(/\r?\n/);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          const itemMatch = trimmed.match(/^[-*]\s+(?:\*+|_*)?([^*_:]+)(?:\*+|_*)?\s*:\s*([\s\S]*)$/);
+          if (itemMatch) {
+            const term = itemMatch[1];
+            const definition = itemMatch[2];
+            addCard(term, definition);
+          }
         }
       }
+
       setFlashcards(cards);
       setCurrentCardIndex(0);
       setIsFlipped(false);
@@ -1246,20 +1290,63 @@ export const AITutorOverlay = ({
                           className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
                         />
                         
-                        <button 
-                          type="button"
-                          disabled={isGenerating} 
-                          onClick={toggleListening} 
-                          className={`absolute right-16 top-3 p-2 rounded-xl border transition-all ${
-                            isListening 
-                              ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.3)] animate-pulse' 
-                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
-                          } disabled:opacity-40 disabled:cursor-not-allowed`}
-                          title={isListening ? t.voice_stop : t.voice_enable}
-                          aria-label="Active voice coaching input"
-                        >
-                          <Mic className="w-4 h-4" />
-                        </button>
+                        <div className="absolute right-16 top-3 flex items-center justify-center">
+                          {isListening && (
+                            <>
+                              {/* Pulsing Outer Rings */}
+                              <motion.div 
+                                className="absolute inset-0 rounded-xl bg-blue-500/30 z-0"
+                                initial={{ scale: 1, opacity: 0.6 }}
+                                animate={{ scale: 1.8, opacity: 0 }}
+                                transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+                              />
+                              <motion.div 
+                                className="absolute inset-0 rounded-xl bg-indigo-500/20 z-0"
+                                initial={{ scale: 1, opacity: 0.8 }}
+                                animate={{ scale: 1.4, opacity: 0 }}
+                                transition={{ duration: 1.2, repeat: Infinity, delay: 0.4, ease: "easeOut" }}
+                              />
+                            </>
+                          )}
+                          <button 
+                            type="button"
+                            disabled={isGenerating} 
+                            onClick={toggleListening} 
+                            className={`relative p-2 rounded-xl border transition-all z-10 ${
+                              isListening 
+                                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white border-transparent shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
+                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                            } disabled:opacity-40 disabled:cursor-not-allowed`}
+                            title={isListening ? t.voice_stop : t.voice_enable}
+                            aria-label="Active voice coaching input"
+                          >
+                            {isListening ? (
+                              <div className="flex items-center gap-1.5 px-0.5">
+                                <Mic className="w-4 h-4 text-white" />
+                                <div className="flex items-end gap-[2px] h-3">
+                                  {[0, 1, 2, 3].map((i) => (
+                                    <motion.span
+                                      key={i}
+                                      className="w-[2px] bg-white rounded-full"
+                                      animate={{
+                                        height: [4, 12, 4],
+                                      }}
+                                      transition={{
+                                        duration: 0.6,
+                                        repeat: Infinity,
+                                        repeatType: 'reverse',
+                                        delay: i * 0.15,
+                                        ease: "easeInOut"
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <Mic className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
 
                         {isGenerating ? (
                           <button 

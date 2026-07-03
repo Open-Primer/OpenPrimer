@@ -42,8 +42,13 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         return notFound();
       }
 
-      const userRole = cookieStore.get('op_user_role')?.value;
-      const isAdmin = userRole === 'admin';
+      let isAdmin = false;
+      if (userId) {
+        const { data: profile } = await dbService.getUserProfile(userId);
+        if (profile?.role === 'admin') {
+          isAdmin = true;
+        }
+      }
 
       const archivingLevel = typeof courseData.archivingLevel === 'number'
         ? courseData.archivingLevel
@@ -51,7 +56,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
       const isActive = courseData.is_active !== false && courseData.isActive !== false;
       
-      console.log(`[CoursePage Guard] evaluates values:`, { userId, userRole, isAdmin, archivingLevel, isActive });
+      console.log(`[CoursePage Guard] evaluates values:`, { userId, isAdmin, archivingLevel, isActive });
 
       // 1. Inactive check (if not active and not archived, only admin can bypass)
       if (!isActive && archivingLevel === 0 && !isAdmin) {
@@ -241,6 +246,10 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       else if (lUpper === 'ES') moduleName = "Módulo Principal";
       else if (lUpper === 'DE') moduleName = "Kernmodul";
       else if (lUpper === 'ZH') moduleName = "核心模块";
+      else if (lUpper === 'PT') moduleName = "Módulo Principal";
+      else if (lUpper === 'AR') moduleName = "الوحدة الرئيسية";
+      else if (lUpper === 'HI') moduleName = "मुख्य मॉड्यूल";
+      else if (lUpper === 'UR') moduleName = "بنیادی ماڈیول";
     }
     
     const level = pageData.meta.level || 'L1';
@@ -255,29 +264,33 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       else if (lUpper === 'ES') moduleLabel = "Módulo Principal";
       else if (lUpper === 'DE') moduleLabel = "Kernmodul";
       else if (lUpper === 'ZH') moduleLabel = "核心模块";
+      else if (lUpper === 'PT') moduleLabel = "Módulo Principal";
+      else if (lUpper === 'AR') moduleLabel = "الوحدة الرئيسية";
+      else if (lUpper === 'HI') moduleLabel = "मुख्य मॉड्यूल";
+      else if (lUpper === 'UR') moduleLabel = "بنیادی ماڈیول";
 
       const lvlStr = String(lvl).toUpperCase();
       let lvlVal = lvlStr;
       if (lvlStr === 'L1') {
         if (lUpper === 'EN') lvlVal = '101';
         else if (lUpper === 'ZH') lvlVal = '大一 (101)';
-        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L1 (101)';
+        else lvlVal = 'L1 (101)';
       } else if (lvlStr === 'L2') {
         if (lUpper === 'EN') lvlVal = '201';
         else if (lUpper === 'ZH') lvlVal = '大二 (201)';
-        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L2 (201)';
+        else lvlVal = 'L2 (201)';
       } else if (lvlStr === 'L3') {
         if (lUpper === 'EN') lvlVal = '301';
         else if (lUpper === 'ZH') lvlVal = '大三 (301)';
-        else if (lUpper === 'ES' || lUpper === 'DE') lvlVal = 'L3 (301)';
+        else lvlVal = 'L3 (301)';
       } else if (lvlStr === 'M1') {
         if (lUpper === 'EN') lvlVal = '501';
         else if (lUpper === 'ZH') lvlVal = '研一 (501)';
-        else if (lUpper === 'ES' || lUpper === 'DE' || lUpper === 'FR') lvlVal = 'M1 (501)';
+        else lvlVal = 'M1 (501)';
       } else if (lvlStr === 'M2') {
         if (lUpper === 'EN') lvlVal = '502';
         else if (lUpper === 'ZH') lvlVal = '研二 (502)';
-        else if (lUpper === 'ES' || lUpper === 'DE' || lUpper === 'FR') lvlVal = 'M2 (502)';
+        else lvlVal = 'M2 (502)';
       } else if (/^\d+$/.test(lvlStr)) {
         const num = parseInt(lvlStr, 10);
         if (lUpper === 'ZH') lvlVal = `${num}年级`;
@@ -285,6 +298,10 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         else if (lUpper === 'FR') lvlVal = `Niveau ${num}`;
         else if (lUpper === 'ES') lvlVal = `Grado ${num}`;
         else if (lUpper === 'DE') lvlVal = `Klasse ${num}`;
+        else if (lUpper === 'PT') lvlVal = `Ano ${num}`;
+        else if (lUpper === 'AR') lvlVal = `الصف ${num}`;
+        else if (lUpper === 'HI') lvlVal = `कक्षा ${num}`;
+        else if (lUpper === 'UR') lvlVal = `کلاس ${num}`;
       }
 
       return `${moduleLabel} • ${lvlVal}`;
@@ -318,74 +335,124 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
       const dict: Record<string, Record<string, string>> = {
         physics: {
+          EN: "Physics",
           FR: "Physique",
           ES: "Física",
           DE: "Physik",
           ZH: "物理",
-          IT: "Fisica"
+          IT: "Fisica",
+          PT: "Física",
+          AR: "الفيزياء",
+          HI: "भौतिक विज्ञान",
+          UR: "طبیعیات"
         },
         "classical mechanics": {
+          EN: "Classical Mechanics",
           FR: "Mécanique Classique",
           ES: "Mecánica Clásica",
           DE: "Klassische Mechanik",
           ZH: "经典力学",
-          IT: "Meccanica Classica"
+          IT: "Meccanica Classica",
+          PT: "Mecânica Clásica",
+          AR: "الميكانيكا الكلاسيكية",
+          HI: "शास्त्रीय यांत्रिकी",
+          UR: "کلاسیکی میکانکس"
         },
         biology: {
+          EN: "Biology",
           FR: "Biologie",
           ES: "Biología",
           DE: "Biologie",
           ZH: "生物",
-          IT: "Biologia"
+          IT: "Biologia",
+          PT: "Biologia",
+          AR: "علم الأحياء",
+          HI: "जीव विज्ञान",
+          UR: "حیاتیات"
         },
         chemistry: {
+          EN: "Chemistry",
           FR: "Chimie",
           ES: "Química",
           DE: "Chemie",
           ZH: "化学",
-          IT: "Chimica"
+          IT: "Chimica",
+          PT: "Química",
+          AR: "الكيمياء",
+          HI: "रसायन विज्ञान",
+          UR: "کیمسٹری"
         },
         law: {
+          EN: "Law",
           FR: "Droit",
           ES: "Derecho",
           DE: "Recht",
           ZH: "法律",
-          IT: "Diritto"
+          IT: "Diritto",
+          PT: "Direito",
+          AR: "القانون",
+          HI: "कानून",
+          UR: "قانون"
         },
         mathematics: {
+          EN: "Mathematics",
           FR: "Mathématiques",
           ES: "Matemáticas",
           DE: "Mathematik",
           ZH: "数学",
-          IT: "Matematica"
+          IT: "Matematica",
+          PT: "Matemática",
+          AR: "الرياضيات",
+          HI: "गणित",
+          UR: "ریاضی"
         },
         economics: {
+          EN: "Economics",
           FR: "Économie",
           ES: "Economía",
           DE: "Wirtschaft",
           ZH: "经济学",
-          IT: "Economia"
+          IT: "Economia",
+          PT: "Economia",
+          AR: "الاقتصاد",
+          HI: "अर्थशास्त्र",
+          UR: "معاشیات"
         },
         "computer science": {
+          EN: "Computer Science",
           FR: "Informatique",
           ES: "Informática",
           DE: "Informatik",
           ZH: "计算机科学",
-          IT: "Informatica"
+          IT: "Informatica",
+          PT: "Ciência da Computação",
+          AR: "علوم الحاسوب",
+          HI: "कंप्यूटर विज्ञान",
+          UR: "کمپ्यूटर سائنس"
         },
         cs: {
+          EN: "Computer Science",
           FR: "Informatique",
           ES: "Informática",
           DE: "Informatik",
           ZH: "计算机科学",
-          IT: "Informatica"
+          IT: "Informatica",
+          PT: "Ciência da Computação",
+          AR: "علوم الحاسوب",
+          HI: "कंप्यूटर विज्ञान",
+          UR: "کمپ्यूटर سائنس"
         },
         history: {
+          EN: "History",
           FR: "Histoire",
           ES: "Historia",
           DE: "Geschichte",
           ZH: "历史",
-          IT: "Storia"
+          IT: "Storia",
+          PT: "História",
+          AR: "التاريخ",
+          HI: "इतिहास",
+          UR: "تاریخ"
         }
       };
 

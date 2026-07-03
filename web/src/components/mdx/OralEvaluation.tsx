@@ -708,6 +708,16 @@ export const OralEvaluation = ({
             </div>
             <div className="flex items-start gap-2">
               <span className="text-violet-400 font-black shrink-0">▸</span>
+              <span>
+                {language === 'FR' ? "Format de réponse attendu : Audio / Oral (avec transcription automatique)"
+                  : language === 'ES' ? "Formato de respuesta esperado: Audio / Oral (con transcripción automática)"
+                  : language === 'DE' ? "Erwartetes Antwortformat: Audio / Mündlich (mit automatischer Transkription)"
+                  : language === 'ZH' ? "期望的回答格式：音频 / 口头（带自动转录）"
+                  : "Expected response format: Audio / Oral (with automatic transcription)"}
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>Scale : <strong className="text-violet-300">{formatGradingSystem(gradingSystem, language)}</strong></span>
             </div>
             <div className="flex items-start gap-2">

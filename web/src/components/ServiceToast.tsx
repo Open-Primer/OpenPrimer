@@ -5,19 +5,141 @@ import { AlertTriangle, WifiOff, RefreshCw, CheckCircle, ShieldAlert, Cpu, X } f
 import { useServiceStatus, ServiceHealth, SERVICES_CONFIG } from '../lib/serviceStatus';
 
 const SERVICE_LABELS: Record<string, Record<string, string>> = {
-  system_health: { EN: 'System Health', FR: 'Santé Système', ES: 'Salud del Sistema', DE: 'Systemgesundheit', ZH: '系统健康' },
-  health_db:     { EN: 'Database', FR: 'Base de données', ES: 'Base de datos', DE: 'Datenbank', ZH: '数据库' },
-  health_email:  { EN: 'Email', FR: 'Email', ES: 'Email', DE: 'E-Mail', ZH: '邮件' },
-  health_ai:     { EN: 'AI Agent', FR: 'Agent IA', ES: 'Agente IA', DE: 'KI-Agent', ZH: 'AI代理' },
-  health_images: { EN: 'Images', FR: 'Images', ES: 'Imágenes', DE: 'Bilder', ZH: '图像' },
+  system_health: { 
+    EN: 'System Health', 
+    FR: 'Santé Système', 
+    ES: 'Salud del Sistema', 
+    DE: 'Systemgesundheit', 
+    ZH: '系统健康',
+    PT: 'Saúde do Sistema',
+    AR: 'صحة النظام',
+    HI: 'सिस्टम स्वास्थ्य',
+    UR: 'سستم کی صحت'
+  },
+  health_db: { 
+    EN: 'Database', 
+    FR: 'Base de données', 
+    ES: 'Base de datos', 
+    DE: 'Datenbank', 
+    ZH: '数据库',
+    PT: 'Base de dados',
+    AR: 'قاعدة البيانات',
+    HI: 'डेटाबेस',
+    UR: 'ڈیٹا بیس'
+  },
+  health_email: { 
+    EN: 'Email', 
+    FR: 'Email', 
+    ES: 'Email', 
+    DE: 'E-Mail', 
+    ZH: '邮件',
+    PT: 'Email',
+    AR: 'البريد الإلكتروني',
+    HI: 'ईमेल',
+    UR: 'ای میل'
+  },
+  health_ai: { 
+    EN: 'AI Agent', 
+    FR: 'Agent IA', 
+    ES: 'Agente IA', 
+    DE: 'KI-Agent', 
+    ZH: 'AI代理',
+    PT: 'Agente de IA',
+    AR: 'عميل الذكاء الاصطناعي',
+    HI: 'एआई एजेंट',
+    UR: 'اے آئی ایجنٹ'
+  },
+  health_images: { 
+    EN: 'Images', 
+    FR: 'Images', 
+    ES: 'Imágenes', 
+    DE: 'Bilder', 
+    ZH: '图像',
+    PT: 'Imagens',
+    AR: 'الصور',
+    HI: 'छवियां',
+    UR: 'تصاویر'
+  },
+  health_smithsonian: { 
+    EN: 'Smithsonian Institution', 
+    FR: 'Smithsonian Institution', 
+    ES: 'Institución Smithsonian', 
+    DE: 'Smithsonian Institution', 
+    ZH: '史密森尼学会',
+    PT: 'Instituição Smithsonian',
+    AR: 'مؤسسة سميثسونيان',
+    HI: 'स्मिथसोनियन संस्थान',
+    UR: 'سمتھسونین انسٹی ٹیوٹ'
+  },
+  health_unsplash: { 
+    EN: 'Unsplash Photos', 
+    FR: 'Photos Unsplash', 
+    ES: 'Fotos de Unsplash', 
+    DE: 'Unsplash-Fotos', 
+    ZH: 'Unsplash图片',
+    PT: 'Fotos do Unsplash',
+    AR: 'صور Unsplash',
+    HI: 'अनस्प्लैश तस्वीरें',
+    UR: 'ان اسپلش تصاویر'
+  }
 };
 
 const STATUS_MSGS: Record<string, Record<string, string>> = {
-  offline:      { EN: 'offline', FR: 'hors ligne', ES: 'sin conexión', DE: 'offline', ZH: '离线' },
-  degraded:     { EN: 'degraded', FR: 'dégradé', ES: 'degradado', DE: 'eingeschränkt', ZH: '降级' },
-  unauthorized: { EN: 'auth failed', FR: 'auth requise', ES: 'auth req.', DE: 'Auth fehlg.', ZH: '验证失败' },
-  ok:           { EN: 'ok', FR: 'ok', ES: 'ok', DE: 'ok', ZH: '正常' },
-  unknown:      { EN: '…', FR: '…', ES: '…', DE: '…', ZH: '…' },
+  offline: { 
+    EN: 'offline', 
+    FR: 'hors ligne', 
+    ES: 'sin conexão', 
+    DE: 'offline', 
+    ZH: '离线',
+    PT: 'desconectado',
+    AR: 'غير متصل',
+    HI: 'ऑफ़लाइन',
+    UR: 'آف لائن'
+  },
+  degraded: { 
+    EN: 'degraded', 
+    FR: 'dégradé', 
+    ES: 'degradado', 
+    DE: 'eingeschränkt', 
+    ZH: '降级',
+    PT: 'degradado',
+    AR: 'محدود',
+    HI: 'کمजोर',
+    UR: 'محدود'
+  },
+  unauthorized: { 
+    EN: 'auth failed', 
+    FR: 'auth requise', 
+    ES: 'auth req.', 
+    DE: 'Auth fehlg.', 
+    ZH: '验证失败',
+    PT: 'falha de autenticação',
+    AR: 'فشل المصادقة',
+    HI: 'अनधिकृत',
+    UR: 'ناکام تصدیق'
+  },
+  ok: { 
+    EN: 'ok', 
+    FR: 'ok', 
+    ES: 'ok', 
+    DE: 'ok', 
+    ZH: '正常',
+    PT: 'ok',
+    AR: 'موافق',
+    HI: 'ठीक',
+    UR: 'ٹھیک'
+  },
+  unknown: { 
+    EN: '…', 
+    FR: '…', 
+    ES: '…', 
+    DE: '…', 
+    ZH: '…',
+    PT: '…',
+    AR: '…',
+    HI: '…',
+    UR: '…'
+  }
 };
 
 interface ServiceToastProps {
@@ -28,6 +150,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
   const { health, isChecking, refresh } = useServiceStatus(30_000);
   const [expanded, setExpanded] = useState(false);
   const L = (lang || 'EN').toUpperCase();
+  const isRtl = ['AR', 'UR'].includes(L);
 
   const services = SERVICES_CONFIG.map(cfg => health[cfg.id] || {
     id: cfg.id, nameKey: cfg.nameKey, url: cfg.url,
@@ -65,7 +188,7 @@ export default function ServiceToast({ lang = 'EN' }: ServiceToastProps) {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 rtl:left-auto rtl:right-4 z-[9999] flex flex-col items-start gap-2">
+    <div className={`fixed bottom-4 ${isRtl ? 'right-4 items-end' : 'left-4 items-start'} z-[9999] flex flex-col gap-2`}>
       {/* Expanded panel — slides up from the dot */}
       <AnimatePresence>
         {expanded && (

@@ -85,6 +85,47 @@ export function saveDraftRevision(filename: string, content: string) {
   }
 }
 
+export function getDescriptiveLevelForPrompt(level: string): string {
+  if (!level) return 'Beginner Level';
+  const clean = level.trim();
+  switch (clean) {
+    case 'L1':
+      return 'University Year 1 / Bachelor 1st Year (L1)';
+    case 'L2':
+      return 'University Year 2 / Bachelor 2nd Year (L2)';
+    case 'L3':
+      return 'University Year 3 / Bachelor 3rd Year (L3)';
+    case 'M1':
+      return 'Master 1st Year (M1)';
+    case 'M2':
+      return 'Master 2nd Year (M2)';
+    case 'foundation_1':
+      return 'Primary School (foundation_1)';
+    case 'foundation_2':
+      return 'Primary School (foundation_2)';
+    case 'secondary_1':
+      return 'Middle School (secondary_1)';
+    case 'secondary_2':
+      return 'High School (secondary_2)';
+    case 'preuni_1':
+      return 'Pre-University Year 1 (preuni_1)';
+    case 'preuni_2':
+      return 'Pre-University Year 2 (preuni_2)';
+    case 'preuni_3':
+      return 'Pre-University Year 3 (preuni_3)';
+    case 'beginner':
+      return 'Beginner Level';
+    case 'intermediate':
+      return 'Intermediate Level';
+    case 'advanced':
+      return 'Advanced Level';
+    case 'expert':
+      return 'Expert Level';
+    default:
+      return clean;
+  }
+}
+
 export function generateStatsMarkdown(stats: any): string {
   return `# 📊 Generation Statistics: ${stats.lessonTitle}
 
@@ -646,6 +687,14 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         if (!comp.props.content) comp.props.content = "Epistemological discussion.";
       } else if (comp.componentType === "BrilliantIdea") {
         if (!comp.props.content) comp.props.content = "Brilliant pedagogical idea explanation.";
+      } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
+        comp.componentType = "MatchingEvaluation";
+        if (!comp.props.pairs) comp.props.pairs = "Concept A|Definition A || Concept B|Definition B";
+        if (!comp.props.title) comp.props.title = "Associez les éléments";
+      } else if (comp.componentType === "ReorderEvaluation" || comp.componentType === "ReordonnerItems") {
+        comp.componentType = "ReorderEvaluation";
+        if (!comp.props.items) comp.props.items = "Étape 1 | Étape 2 | Étape 3";
+        if (!comp.props.title) comp.props.title = "Remettez dans l'ordre";
       }
 
       return comp;
@@ -671,7 +720,8 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
         "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
         "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
         "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography",
-        "Media", "Citation", "Epistemology", "BrilliantIdea"
+        "Media", "Citation", "Epistemology", "BrilliantIdea", "MatchingEvaluation", "AssociationCorrespondance",
+        "ReorderEvaluation", "ReordonnerItems"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
@@ -1001,7 +1051,38 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
         finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
       }
     }
-    return finalEvalStr;
+
+    let goingFurtherItemsStr = '';
+    if (widgets && widgets.goingFurther && Array.isArray(widgets.goingFurther.items) && widgets.goingFurther.items.length > 0) {
+      goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => {
+        const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
+        const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
+        const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
+        return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
+      }).join('\n  ')}\n</GoingFurther>`;
+    }
+
+    let whatsNextStr = '';
+    if (widgets && widgets.whatsNext) {
+      const parsedSteps = (widgets.whatsNext.steps || []).map((s: any) => ({
+        title: s.title || '',
+        description: s.description || '',
+        slug: s.slug || '',
+        subject: s.subject || '',
+        level: s.level || ''
+      }));
+      const stepsEncoded = Buffer.from(JSON.stringify(parsedSteps)).toString('base64');
+      whatsNextStr = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
+    }
+
+    let combined = finalEvalStr;
+    if (goingFurtherItemsStr) {
+      combined += `\n\n${goingFurtherItemsStr}`;
+    }
+    if (whatsNextStr) {
+      combined += `\n\n${whatsNextStr}`;
+    }
+    return combined;
   }
   if (widgets) {
     widgets.references = widgets.references || [];
@@ -1144,6 +1225,16 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     } else if (comp.componentType === "BrilliantIdea") {
       const iContent = props.content || '';
       compStr = `<BrilliantIdea>\n${iContent}\n</BrilliantIdea>`;
+    } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
+      const titleAttr = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
+      const pairsAttr = (props.pairs || '').replace(/"/g, '&quot;');
+      const explAttr = props.explanation ? ` explanation="${props.explanation.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<MatchingEvaluation pairs="${pairsAttr}"${titleAttr}${explAttr} />`;
+    } else if (comp.componentType === "ReorderEvaluation" || comp.componentType === "ReordonnerItems") {
+      const titleAttr = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
+      const itemsAttr = (props.items || '').replace(/"/g, '&quot;');
+      const explAttr = props.explanation ? ` explanation="${props.explanation.replace(/"/g, '&quot;')}"` : '';
+      compStr = `<ReorderEvaluation items="${itemsAttr}"${titleAttr}${explAttr} />`;
     } else {
       compStr = `<${comp.componentType} id="${comp.id}" />`;
     }
@@ -1222,10 +1313,10 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
     
-    const rebuiltConclusion = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
+    const rebuiltConclusion = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${summaryStr}`;
     content = content.substring(0, headerIdx) + rebuiltConclusion + content.substring(sectionEnd);
   } else {
-    content = content.trim() + `\n\n## Conclusion\n\n${summaryStr}${whatsNextStr ? '\n\n' + whatsNextStr : ''}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
+    content = content.trim() + `\n\n## Conclusion\n\n${summaryStr}`;
   }
 
   let finalEvalStr = '';
@@ -1233,7 +1324,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     const fProps = widgets.finalEvaluation.props || {};
     finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${q.q.replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${o.text.replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
   } else {
-    finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')}" durationLimit={3600} />`;
+    finalEvalStr = `<EssayEvaluation prompt="${(widgets.finalEvaluation.props.prompt || '').replace(/"/g, '&quot;')}" subject="${(widgets.finalEvaluation.props.subject || '').replace(/"/g, '&quot;')} " durationLimit={3600} />`;
   }
 
   // Remove any existing finalEvaluation anchors
@@ -1265,7 +1356,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     }
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
-    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
+    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
     content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
   } else {
     const contentLowerTmp = content.toLowerCase();
@@ -1280,7 +1371,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       langKey = 'zh';
     }
     const evalHeading = evalHeadings[langKey];
-    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
+    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}${goingFurtherItemsStr ? '\n\n' + goingFurtherItemsStr : ''}`;
   }
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
   const cleanGlossaryDef = (def: string): string => (def || '')
@@ -1758,7 +1849,7 @@ export async function generateCourseContent(courseName: string, levelInput: stri
 
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
-Your mission is to design the structure, lesson titles, and cognitive strategy of the course titled "${correctedCourseName}" for the level "${level}". You do not write the course content; you construct its pure, highly-adapted computational and educational backbone.
+Your mission is to design the structure, lesson titles, and cognitive strategy of the course titled "${correctedCourseName}" for the level "${getDescriptiveLevelForPrompt(level)}". You do not write the course content; you construct its pure, highly-adapted computational and educational backbone.
 
 An anatomy course is not structured like an algebraic topology or political philosophy course. You MUST adapt the skeleton of the course to the epistemological DNA of the discipline, the target audience's age (from Primary School to Bachelor/University Year 3), and the course's hourly volume.
 
@@ -1767,7 +1858,7 @@ An anatomy course is not structured like an algebraic topology or political phil
 # STEP 1: PARAMETERS AND COGNITIVE DNA
 The following parameters are fixed *a priori* and must guide your architecture:
 - **Course Title:** "${correctedCourseName}"
-- **Target Level:** "${level}"
+- **Target Level:** "${getDescriptiveLevelForPrompt(level)}"
 - **Discipline:** "${discipline}"
 - **Hourly Volume:** "${volume}"
 - **Target Language:** "${targetLang}"
@@ -2309,7 +2400,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
 ### METADATA
 - **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${levelInput}"
+- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
 - **Lesson Title**: "${item.title}"
 - **Lesson Slug**: "${item.slug}"
 - **Target Language**: "${targetLang.toUpperCase()}"
@@ -2339,12 +2430,15 @@ You must adapt your writing style, formatting, and density strictly to the epist
 ---
 
 ### 2. LEVEL & LANGUAGE ADAPTATION (BLOOM'S TAXONOMY)
-- **Vocabulary & Tone**: Tailor all terminology, sentence complexity, and conceptual depth to the target academic level ("${levelInput}").
+- **Vocabulary & Tone**: Tailor all terminology, sentence complexity, and conceptual depth to the target academic level ("${getDescriptiveLevelForPrompt(levelInput)}").
 - **Language**: Write the ENTIRE content — every word including lesson titles, all section headings (## ...), figure captions, hover-card attributes, and all prose — exclusively in **"${targetLang.toUpperCase()}"**. This is absolute and non-negotiable. A heading or title in any other language is a CRITICAL ERROR that will immediately reject the lesson.
 - **Bloom's Taxonomy Rule**:
   - If the target level is University/Higher Education (L1-M2, beginner-expert):
     - If Target Language is **FR** (French): Systematically use Revised Bloom's Taxonomy verbs: **Analyser** (Analyze), **Évaluer** (Evaluate), and **Créer** (Create) when introducing goals and activities.
     - If Target Language is **EN** (English) or any other language: Systematically use their exact localized equivalents: **Analyze**, **Evaluate**, and **Create**.
+- **Rich Markdown Tables and Diagrams (MANDATORY for University Levels)**:
+  - If the target level is University/Higher Education (L1, L2, L3, M1, M2): You MUST systematically design and include at least **1 to 2 rich Markdown tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
+  - You MUST also include at least **1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies. Ensure these are integrated naturally and professionally within your text.
 - **Grade-Level Tailoring Matrix for Widgets**:
   When describing, introducing, or placing custom interactive widget anchors in your narrative sections, align the context and instructions with the target grade:
   - Middle School (Primary/Maternelle): Focus on visual metaphors (e.g., slicing pizza slices, balancing weights on scales), simple interactive sliders, zero complex algebra symbols, and gamified problem-solving challenges.
@@ -2485,7 +2579,7 @@ This synthesis MUST (400–600 words):
 
 ### METADATA
 - **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${levelInput}"
+- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
 - **Lesson Title**: "${item.title}"
 - **Target Language**: "${targetLang.toUpperCase()}"
 
@@ -2648,7 +2742,7 @@ We need to repair specific sections of the lesson narrative "${item.title}" that
 - Do NOT use literal curly braces { } in plain text.
 
 CONTEXT:
-Course: "${correctedCourseName}" | Level: "${levelInput}" | Language: "${targetLang.toUpperCase()}"
+Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
 
 ${rejectedSectionsData.map((rj, idx) => `
 --- REJECTED SECTION ${idx + 1} ---
@@ -2748,7 +2842,7 @@ Interactive widgets must adapt to the grade level specified by the course genera
 
 ### METADATA
 - **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${levelInput}"
+- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
 - **Lesson Title**: "${item.title}"
 - **Target Language**: "${targetLang.toUpperCase()}"
 - **Course Discipline**: "${courseContext.discipline || 'General'}"
@@ -2772,7 +2866,12 @@ ${formattedCatalogList}
 
 #### B. Selection Heuristics & Budget Enforcer:
 1. **Simple Discursive Components (Can be generated from scratch)**:
-   - \`Quiz\`: Multiple-choice question sets with questions, options, correct indices, and detailed explanations.
+   - \`Quiz\`: Multiple-choice question sets. Props: \`questions\` (array of question items with \`q\`, \`options\` array, \`correctIndex\`, and \`explanation\`).
+     * Supports **multimedia**: Each question item can have optional props: \`mediaType\` ("image" | "audio" | "video"), \`mediaUrl\`, and \`mediaCaption\`.
+     * Supports **speed mode** (timed runs with auto-advancing): set \`mode\` to "speed" and \`questionDurationLimit\` (seconds, default: 10) on the main Quiz props.
+     * Supports **elimination mode** (interactive negative eliminations): set \`mode\` to "elimination" on individual Question objects (learners click wrong answers to cross them out).
+   - \`MatchingEvaluation\` (French alias: \`AssociationCorrespondance\`): Interactive left-right items matching challenge. Props: \`pairs\` (left-right elements matched, formatted like: "Concept A|Def A || Concept B|Def B"), \`title\` (optional title), and \`explanation\` (optional tutor explanation).
+   - \`ReorderEvaluation\` (French alias: \`ReordonnerItems\`): Clickable chip Duolingo-style step-reordering puzzle. Props: \`items\` (sequence of blocks in correct order separated by vertical bars, like: "Step 1 | Step 2 | Step 3"), \`title\` (optional title), and \`explanation\` (optional tutor explanation).
    - \`FillInBlanks\`: Sentence structures with blank gaps.
    - \`SolvedExercise\`: Step-by-step worked analytical or mathematical solution.
    - \`UnsolvedExercise\`: Conceptual or mathematical question with an explanation and correct answer string.
@@ -2858,13 +2957,13 @@ ${referencesMetadata}
      - This guarantees the pool is larger than the visible slice for retry randomisation.
 
 =============================================================================
-⚠️ QUIZ SCOPE & ALIGNMENT MANDATE ⚠️
-1. Section Quizzes:
-   - For any Quiz component inside the interactiveComponents array, the questions must EXCLUSIVELY cover the concepts taught in the specific section it is anchored in (sectionAnchor). Do NOT include questions covering other parts of the lesson.
-2. Lesson finalEvaluation Quiz:
-   - The lesson's finalEvaluation quiz must comprehensively cover the concepts of the ENTIRE lesson.
-3. Terminal Course finalEvaluation Quiz (for the final evaluation lesson):
-   - The terminal course evaluation quiz (where isTerminalEvaluation is true) must comprehensively cover concepts from ALL lessons in the entire course. It is permitted to technically incorporate, adapt, or build upon questions from previous lessons to build this final unified exam.
+⚠️ EVALUATION SCOPE & ALIGNMENT MANDATE ⚠️
+1. Section-Level/Mid-Lesson Evaluations (such as Quizzes, Essays, Audio, or any other interactive evaluations):
+   - For any interactive evaluation component (such as Quiz, EssayEvaluation, Audio evaluation, open questions, etc.) located inside the interactiveComponents array, the questions, prompts, or activities must EXCLUSIVELY cover the concepts taught in the specific section it is anchored in (sectionAnchor). Do NOT include questions, prompts, or topics covering other sections or parts of the lesson.
+2. Lesson finalEvaluation (at the end of a lesson):
+   - The lesson's finalEvaluation (whether structured as a Quiz, EssayEvaluation, Audio, or other format) must comprehensively cover the concepts of the ENTIRE lesson.
+3. Terminal Course finalEvaluation (for the final evaluation lesson at the end of the course):
+   - The terminal course final evaluation (where isTerminalEvaluation is true) must comprehensively cover concepts and learning objectives from ALL lessons in the entire course. It is permitted to technically incorporate, adapt, or build upon questions, prompts, and case studies from previous lessons to build this final unified evaluation.
 =============================================================================
 
 ---
@@ -2943,7 +3042,7 @@ You are the Widgets Critic Agent (Agent 4B). Your job is to strictly review the 
 
 ### METADATA
 - **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${levelInput}"
+- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
 - **Lesson Title**: "${item.title}"
 - **Target Language**: "${targetLang.toUpperCase()}"
 - **Course Discipline**: "${courseContext.discipline || 'General'}"
@@ -3009,17 +3108,17 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
    - Ensure that the inline citations inside the approved narrative (e.g. \`[1](#ref-1)\`) map 1-to-1 to their correct index in this array (i.e. \`references[0]\` is citation \`[1]\`, \`references[1]\` is citation \`[2]\`).
 
 7. **Grade-Level Tailoring Matrix**:
-   - Verify that interactive widgets/sandboxes align strictly with the target academic level "${levelInput}":
+   - Verify that interactive widgets/sandboxes align strictly with the target academic level "${getDescriptiveLevelForPrompt(levelInput)}":
      - Primary / Middle School: High visual focus, simplified sliders, gamified challenges, visual metaphors, zero complex algebra symbols.
      - High School: Balanced equations and visual models, preset configs matching standard curriculum formulas.
      - University / Higher Education: Full scientific controls, rigorous mathematical formulas, analytical overlays, data export capability.
 8. **Biography Component Integrity**:
    - **STRICT REJECTION**: Verify that all Biography components inside interactiveComponents have name, description, and wikipediaUrl defined with meaningful, accurate, and non-generic content.
    - Reject if any biography attributes are missing, empty, or use default/placeholder text like "Scientifique / Auteur", "Biographie détaillée à venir.", or default URLs like "https://wikipedia.org". If so, set approved to false and critique exactly what is missing.
-9. **Quiz Scope and Question Pool Integrity**:
-   - **STRICT REJECTION**: Verify that every Section Quiz (interactiveComponents with componentType: 'Quiz') exclusively covers concepts of the specific section it is anchored in (sectionAnchor).
-   - Verify that the lesson's finalEvaluation quiz covers the whole lesson.
-   - Verify that the terminal course finalEvaluation quiz (when isTerminalEvaluation is true) covers concepts from all lessons of the course.
+9. **Evaluation Scope and Integrity Check**:
+   - **STRICT REJECTION**: Verify that every Section Evaluation (such as a Quiz, EssayEvaluation, Audio evaluation, or other interactive evaluation inside interactiveComponents) exclusively covers concepts of the specific section it is anchored in (sectionAnchor). Do NOT allow questions or prompts that reference concepts from other sections.
+   - Verify that the lesson's finalEvaluation (Quiz, EssayEvaluation, Audio, etc.) comprehensively covers the concepts of the ENTIRE lesson.
+   - Verify that the terminal course finalEvaluation (when isTerminalEvaluation is true) comprehensively covers concepts from ALL lessons of the entire course.
    - Verify that all quizzes have their questions pool size and display limit matching exactly the requested limits.
 
 ---
@@ -3059,7 +3158,7 @@ You MUST now rewrite and fully correct the JSON object based on their feedback, 
 - Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
 
 ### GRADE-LEVEL TAILORING MATRIX FOR INTERACTIVE SANDBOXES
-You must ensure that interactive widgets/sandboxes align strictly with the target academic level "${levelInput}":
+You must ensure that interactive widgets/sandboxes align strictly with the target academic level "${getDescriptiveLevelForPrompt(levelInput)}":
 - **Primary / Middle School (Primary/Maternelle, foundation_1, foundation_2, secondary_1)**:
   Focus on high visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols. Use visual metaphors (e.g., sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
 - **High School (secondary_2, preuni_1, preuni_2, preuni_3)**:
@@ -5543,7 +5642,7 @@ export async function generateCurriculum(curriculumName: string, levelInput: str
   };
   const level = normalizeLevel(levelInput);
 
-  const promptCurriculum = `You are a Curriculum Planner Agent (Agent 0). Your goal is to structure a full academic curriculum for "${curriculumName}" at the level "${level}".
+  const promptCurriculum = `You are a Curriculum Planner Agent (Agent 0). Your goal is to structure a full academic curriculum for "${curriculumName}" at the level "${getDescriptiveLevelForPrompt(level)}".
 You must model this curriculum on real-world academic programs (curriculums and syllabus guidelines from schools and universities) for this specific discipline and level, ensuring they reflect natural and realistic educational paths:
 
 1. **Primary, Middle, and High School Levels (K-12: foundation_1, foundation_2, secondary_1, secondary_2, preuni):**

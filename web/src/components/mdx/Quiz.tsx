@@ -39,6 +39,8 @@ interface QuizProps {
   webBrowsingAllowed?: boolean;
   aiTutorAssistanceAllowed?: boolean;
   limit?: number;
+  mode?: 'standard' | 'speed';
+  questionDurationLimit?: number;
 }
 
 export const Quiz = ({
@@ -50,6 +52,8 @@ export const Quiz = ({
   webBrowsingAllowed = false,
   aiTutorAssistanceAllowed = false,
   limit,
+  mode = 'standard',
+  questionDurationLimit = 10,
 }: QuizProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -124,7 +128,7 @@ export const Quiz = ({
     : undefined;
 
   // Resolve questions via stable Fisher-Yates shuffle on resetKey / mount
-  const questions = React.useMemo(() => {
+  const questions: any[] = React.useMemo(() => {
     // Fisher-Yates Shuffle
     const shuffleArray = <T,>(array: T[]): T[] => {
       const copy = [...array];
@@ -167,12 +171,19 @@ export const Quiz = ({
   const [isTutorLoading, setIsTutorLoading] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
 
+  // Speed mode states
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(questionDurationLimit);
+  const [isQuestionFeedbackActive, setIsQuestionFeedbackActive] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'incorrect' | 'timeout' | null>(null);
+  const [isSpeedFinished, setIsSpeedFinished] = useState(false);
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const totalQuestions = questions.length;
   const totalAnswered = Object.keys(answers).length;
   const totalCorrect = Object.values(answers).filter(Boolean).length;
-  const isFinished = totalAnswered === totalQuestions || isTimeUp;
+  const isFinished = mode === 'speed' ? isSpeedFinished : (totalAnswered === totalQuestions || isTimeUp);
 
   useEffect(() => {
     if (!isStarted && actualDurationLimit) {
@@ -396,7 +407,7 @@ export const Quiz = ({
 
   // Countdown timer logic
   useEffect(() => {
-    if (isStarted && actualDurationLimit && timeLeft > 0 && !isFinished) {
+    if (isStarted && actualDurationLimit && timeLeft > 0 && !isFinished && mode !== 'speed') {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -412,7 +423,80 @@ export const Quiz = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isStarted, actualDurationLimit, isFinished]);
+  }, [isStarted, actualDurationLimit, isFinished, mode]);
+
+  // Speed mode question timer
+  useEffect(() => {
+    if (mode === 'speed' && isStarted && !isFinished && !isQuestionFeedbackActive) {
+      const qDuration = questions[currentQuestionIndex]?.props.durationLimit || questionDurationLimit;
+      setQuestionTimeLeft(qDuration);
+
+      const interval = setInterval(() => {
+        setQuestionTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            handleSpeedQuestionTimeout();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [mode, isStarted, currentQuestionIndex, isFinished, isQuestionFeedbackActive, questionDurationLimit, questions]);
+
+  const advanceSpeedQuestion = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    } else {
+      setIsSpeedFinished(true);
+    }
+  };
+
+  const handleSpeedQuestionTimeout = () => {
+    if (isFinished || isQuestionFeedbackActive) return;
+
+    const question = questions[currentQuestionIndex];
+    if (!question) return;
+
+    let questionText = question.props.q;
+    if (!questionText && question.props.children) {
+      const stringChild = React.Children.toArray(question.props.children).find(
+        c => typeof c === 'string'
+      );
+      if (stringChild) {
+        questionText = String(stringChild);
+      }
+    }
+    questionText = questionText || `question_${currentQuestionIndex}`;
+
+    // Mark as incorrect
+    handleAnswer(questionText, false);
+
+    setFeedbackType('timeout');
+    setIsQuestionFeedbackActive(true);
+
+    setTimeout(() => {
+      setIsQuestionFeedbackActive(false);
+      setFeedbackType(null);
+      advanceSpeedQuestion();
+    }, 1500);
+  };
+
+  const handleSpeedAnswer = (questionText: string, correct: boolean) => {
+    if (isFinished || isQuestionFeedbackActive) return;
+
+    handleAnswer(questionText, correct);
+    setFeedbackType(correct ? 'correct' : 'incorrect');
+    setIsQuestionFeedbackActive(true);
+
+    setTimeout(() => {
+      setIsQuestionFeedbackActive(false);
+      setFeedbackType(null);
+      advanceSpeedQuestion();
+    }, 1500);
+  };
 
   // Warn user before reloading or navigating away
   useEffect(() => {
@@ -481,6 +565,10 @@ export const Quiz = ({
     setIsStarted(false);
     setIsTimeUp(false);
     setTimeLeft(actualDurationLimit || 0);
+    setCurrentQuestionIndex(0);
+    setIsSpeedFinished(false);
+    setIsQuestionFeedbackActive(false);
+    setFeedbackType(null);
     setResetKey((prev) => prev + 1);
   };
 
@@ -596,6 +684,16 @@ export const Quiz = ({
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>
               <span>{questionsLabel}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-black shrink-0">▸</span>
+              <span>
+                {language === 'FR' ? "Format de réponse attendu : Choix unique ou choix multiple"
+                  : language === 'ES' ? "Formato de respuesta esperado: Selección única o múltiple"
+                  : language === 'DE' ? "Erwartetes Antwortformat: Einfach- oder Mehrfachauswahl"
+                  : language === 'ZH' ? "期望的回答格式：单选或多选"
+                  : "Expected response format: Single or multiple choice"}
+              </span>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-400 font-black shrink-0">▸</span>
@@ -733,6 +831,43 @@ export const Quiz = ({
         </div>
       )}
 
+      {/* Speed Mode Progress Bar */}
+      {isStarted && mode === 'speed' && !isFinished && (
+        <div className="space-y-2 select-none">
+          <div className="flex justify-between items-center text-xs font-bold text-slate-400">
+            <span>
+              {language === 'FR' ? `Question ${currentQuestionIndex + 1} sur ${totalQuestions}` : `Question ${currentQuestionIndex + 1} of ${totalQuestions}`}
+            </span>
+            <span className={cn("font-mono", questionTimeLeft <= 3 ? "text-red-400 animate-pulse font-black" : "text-slate-300")}>
+              {questionTimeLeft}s
+            </span>
+          </div>
+          <div className="w-full bg-slate-950/80 h-2.5 rounded-full overflow-hidden border border-slate-800/80">
+            <div 
+              className={cn(
+                "h-full transition-all duration-1000 ease-linear rounded-full",
+                questionTimeLeft <= 3 ? "bg-red-500 animate-pulse" : "bg-gradient-to-r from-blue-500 to-purple-500"
+              )} 
+              style={{ width: `${(questionTimeLeft / (questions[currentQuestionIndex]?.props.durationLimit || questionDurationLimit)) * 100}%` }}
+            />
+          </div>
+          {isQuestionFeedbackActive && (
+            <div className={cn(
+              "p-3 rounded-xl text-center text-xs font-black uppercase tracking-widest animate-pulse border",
+              feedbackType === 'correct' 
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                : feedbackType === 'timeout'
+                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-400"
+            )}>
+              {feedbackType === 'correct' && (language === 'FR' ? '✓ Correct !' : '✓ Correct!')}
+              {feedbackType === 'incorrect' && (language === 'FR' ? '✖ Incorrect !' : '✖ Incorrect!')}
+              {feedbackType === 'timeout' && (language === 'FR' ? '⏳ Temps écoulé !' : '⏳ Time is up!')}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Questions List */}
       {(!isFinished || showAnswers) && (
         <div className="space-y-8">
@@ -750,12 +885,18 @@ export const Quiz = ({
 
             const isAnswered = answers[questionText] !== undefined;
             const savedAnswer = answers[questionText];
+
+            // In standard mode, render all questions. In speed mode, render ONLY the current active question (or all if showing answers at the end).
+            const shouldRender = mode !== 'speed' || showAnswers || index === currentQuestionIndex;
+            if (!shouldRender) return null;
             
             return React.cloneElement(question, {
               key: `${resetKey}_${index}`,
               q: questionText,
-              onAnswer: (correct: boolean) => handleAnswer(questionText, correct),
-              isParentReadOnly: isFinished || isTimeUp,
+              onAnswer: mode === 'speed' 
+                ? (correct: boolean) => handleSpeedAnswer(questionText, correct)
+                : (correct: boolean) => handleAnswer(questionText, correct),
+              isParentReadOnly: isFinished || isTimeUp || (mode === 'speed' && isQuestionFeedbackActive),
               savedCorrect: isAnswered ? savedAnswer : null
             } as any);
           })}
@@ -846,6 +987,11 @@ interface QuestionProps {
   explanation?: string;
   options?: string;
   correctIndex?: string | number;
+  mediaType?: 'image' | 'audio' | 'video';
+  mediaUrl?: string;
+  mediaCaption?: string;
+  mode?: 'standard' | 'elimination';
+  durationLimit?: number;
 }
 
 export const Question = ({
@@ -856,7 +1002,11 @@ export const Question = ({
   savedCorrect,
   explanation,
   options: optionsProp,
-  correctIndex
+  correctIndex,
+  mediaType,
+  mediaUrl,
+  mediaCaption,
+  mode = 'standard',
 }: QuestionProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -867,6 +1017,8 @@ export const Question = ({
   const [selected, setSelected] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isFullscreenImage, setIsFullscreenImage] = useState(false);
+  const [eliminatedIndexes, setEliminatedIndexes] = useState<number[]>([]);
 
   // Parse options either from children or from options prop
   const finalOptions = React.useMemo(() => {
@@ -905,15 +1057,7 @@ export const Question = ({
     }
   }, [savedCorrect, finalOptions]);
 
-  const handleSelect = (index: number, correct: boolean) => {
-    if (isReadOnly) return;
-    setSelected(index);
-    setIsCorrect(correct);
-    if (onAnswer) {
-      onAnswer(correct);
-    }
-
-    // Dispatch Cognitive Bridge Event
+  const dispatchBridgeEvent = (index: number, correct: boolean) => {
     if (typeof window !== 'undefined') {
       const event = new CustomEvent('op_exercise_completed', {
         detail: {
@@ -929,34 +1073,149 @@ export const Question = ({
     }
   };
 
+  const handleSelect = (index: number, correct: boolean) => {
+    if (isReadOnly) return;
+
+    if (mode === 'elimination') {
+      // In elimination mode:
+      // Clicking a correct option is a failure (the user was supposed to eliminate incorrect options, not click the correct one!).
+      if (correct) {
+        setSelected(index);
+        setIsCorrect(false);
+        if (onAnswer) onAnswer(false);
+        
+        // Dispatch Cognitive Bridge Event
+        dispatchBridgeEvent(index, false);
+      } else {
+        // Clicking an incorrect option eliminates it!
+        const nextEliminated = [...eliminatedIndexes, index];
+        setEliminatedIndexes(nextEliminated);
+
+        // If they successfully eliminated all incorrect options!
+        const totalIncorrect = finalOptions.filter(o => !o.correct).length;
+        if (nextEliminated.length === totalIncorrect) {
+          // Highlight the remaining correct option!
+          const correctIdx = finalOptions.findIndex((opt) => opt.correct === true);
+          setSelected(correctIdx !== -1 ? correctIdx : index);
+          setIsCorrect(true);
+          if (onAnswer) onAnswer(true);
+
+          dispatchBridgeEvent(correctIdx !== -1 ? correctIdx : index, true);
+        }
+      }
+    } else {
+      // Standard mode
+      setSelected(index);
+      setIsCorrect(correct);
+      if (onAnswer) {
+        onAnswer(correct);
+      }
+      dispatchBridgeEvent(index, correct);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Mode Badge if elimination */}
+      {mode === 'elimination' && (
+        <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-xl select-none inline-block">
+          {language === 'FR' ? "⚠️ Élimination des fausses affirmations" : "⚠️ Elimination of incorrect choices"}
+        </span>
+      )}
+
       <p className="text-md font-bold text-slate-100">{q}</p>
+
+      {/* Media rendering */}
+      {mediaUrl && (
+        <div className="my-4">
+          {mediaType === 'image' && (
+            <div className="relative group/q_zoom w-full flex flex-col items-center justify-center">
+              <img 
+                src={mediaUrl} 
+                alt={mediaCaption || q} 
+                onClick={() => setIsFullscreenImage(true)}
+                style={{ cursor: 'zoom-in' }}
+                className="max-w-full rounded-2xl max-h-[260px] object-contain border border-slate-800/85 bg-slate-950/40 p-1.5 shadow-md"
+              />
+              {mediaCaption && <p className="text-[11px] text-slate-400 italic text-center mt-2 font-medium">{mediaCaption}</p>}
+
+              {/* Fullscreen Portal Image Replica */}
+              {isFullscreenImage && (
+                <div 
+                  onClick={() => setIsFullscreenImage(false)}
+                  className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none cursor-zoom-out animate-in fade-in duration-200"
+                >
+                  <img 
+                    src={mediaUrl} 
+                    alt={mediaCaption || q} 
+                    className="max-w-[95vw] max-h-[90vh] object-contain shadow-2xl rounded-xl"
+                  />
+                  {mediaCaption && (
+                    <p className="text-xs text-slate-300 font-semibold mt-4 bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-full">
+                      {mediaCaption}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {mediaType === 'audio' && (
+            <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl flex flex-col gap-3 my-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  <Play className="w-4 h-4 fill-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-black uppercase text-blue-400 tracking-widest">
+                    {language === 'FR' ? "Extrait Audio" : "Audio Clip"}
+                  </p>
+                  {mediaCaption && <p className="text-[11px] text-slate-400 italic mt-0.5 font-medium">{mediaCaption}</p>}
+                </div>
+              </div>
+              <audio src={mediaUrl} controls className="w-full bg-slate-900/40 rounded-xl" />
+            </div>
+          )}
+
+          {mediaType === 'video' && (
+            <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl flex flex-col gap-3 my-3">
+              <video src={mediaUrl} controls className="w-full rounded-xl max-h-[300px] bg-black/60 shadow-lg" />
+              {mediaCaption && <p className="text-[11px] text-slate-400 italic text-center font-medium">{mediaCaption}</p>}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-3">
         {finalOptions.map((option, index) => {
           const isSelectedOption = index === selected;
           const isOptionCorrect = option.correct === true;
+          const isEliminated = eliminatedIndexes.includes(index);
 
           return (
             <button
               key={index}
               onClick={() => handleSelect(index, isOptionCorrect)}
-              disabled={isReadOnly}
+              disabled={isReadOnly || isEliminated}
               className={cn(
                 "p-4 text-left rounded-xl border transition-all duration-200 group flex items-center justify-between text-sm",
-                isReadOnly
-                  ? isSelectedOption
-                    ? isCorrect
-                      ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default" 
-                      : "bg-red-500/10 border-red-500/50 text-red-400 cursor-default"
-                    : isOptionCorrect
-                      ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default"
-                      : "bg-slate-800/30 border-slate-700 opacity-50 cursor-default"
-                  : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
+                isEliminated 
+                  ? "bg-slate-900/10 border-slate-850 text-slate-500 opacity-40 cursor-default line-through"
+                  : isReadOnly
+                    ? isSelectedOption
+                      ? isCorrect
+                        ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default" 
+                        : "bg-red-500/10 border-red-500/50 text-red-400 cursor-default"
+                      : isOptionCorrect
+                        ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default"
+                        : "bg-slate-800/30 border-slate-700 opacity-50 cursor-default"
+                    : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
               )}
             >
               <span className="font-medium">{option.text}</span>
-              {selected === null && !isParentReadOnly ? (
+              {isEliminated ? (
+                <XCircle className="w-4 h-4 text-red-500/70" />
+              ) : selected === null && !isParentReadOnly ? (
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400" />
               ) : isSelectedOption ? (
                 isCorrect ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />

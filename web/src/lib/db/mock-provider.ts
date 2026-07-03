@@ -340,6 +340,19 @@ This lesson covers:
     return { data: getUsers(), error: null };
   },
 
+  getUserProfile: async (id: string) => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('openprimer_users');
+      if (stored) {
+        try {
+          setUsersList(JSON.parse(stored));
+        } catch (e) {}
+      }
+    }
+    const found = getUsers().find(u => u.id === id);
+    return { data: found || null, error: null };
+  },
+
   deleteUser: async (id: string) => {
     if (id === 'u1' || id === '26d54efe-6f14-4e36-9fcf-3fcf684a4444') {
       return { data: null, error: new Error('Deletion of Vanguard Admin profile is prohibited.') as any };

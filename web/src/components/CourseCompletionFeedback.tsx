@@ -688,9 +688,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             className="flex-1 p-6 bg-slate-900/20 hover:bg-blue-600/10 border border-slate-850 hover:border-blue-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
           >
             <div className="space-y-1">
-              <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block">
-                {t.finishLearning}
-              </span>
               <span className="text-base font-black text-slate-300 group-hover:text-blue-400 transition-colors block">
                 {t.backToCurriculum}
               </span>

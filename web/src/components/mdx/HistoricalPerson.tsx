@@ -84,7 +84,10 @@ const getLocalizedName = (name: string, lang: string): string => {
       'John Locke': 'John_Locke',
       'Jean-Jacques Rousseau': 'Jean-Jacques_Rousseau',
       'Gottfried Wilhelm Leibniz': 'Gottfried_Wilhelm_Leibniz',
-      'Leibniz': 'Gottfried_Wilhelm_Leibniz'
+      'Leibniz': 'Gottfried_Wilhelm_Leibniz',
+      'Venus': 'Vénus',
+      'Saturn': 'Saturne',
+      'Mercury': 'Mercure'
     };
     if (frMap[clean]) return frMap[clean];
   }
@@ -169,17 +172,21 @@ const extractEntityMetadata = (
     
     let matchedCountry = null;
     let matchedContinent = null;
+    let earliestCountryIndex = Infinity;
+    let earliestContinentIndex = Infinity;
     
     for (const c of countries) {
-      if (new RegExp(`\\b${c}\\b`, 'i').test(combined)) {
+      const match = combined.match(new RegExp(`\\b${c}\\b`, 'i'));
+      if (match && match.index !== undefined && match.index < earliestCountryIndex) {
         matchedCountry = c;
-        break;
+        earliestCountryIndex = match.index;
       }
     }
     for (const cont of continents) {
-      if (new RegExp(`\\b${cont}\\b`, 'i').test(combined)) {
+      const match = combined.match(new RegExp(`\\b${cont}\\b`, 'i'));
+      if (match && match.index !== undefined && match.index < earliestContinentIndex) {
         matchedContinent = cont;
-        break;
+        earliestContinentIndex = match.index;
       }
     }
     
@@ -322,10 +329,12 @@ const extractEntityMetadata = (
     const classTerms = isFr ? classTermsFr : classTermsEn;
     
     let matchedClass = null;
+    let earliestClassIndex = Infinity;
     for (const t of classTerms) {
-      if (new RegExp(`\\b${t}s?\\b`, 'i').test(combined)) {
+      const match = combined.match(new RegExp(`\\b${t}s?\\b`, 'i'));
+      if (match && match.index !== undefined && match.index < earliestClassIndex) {
         matchedClass = t.charAt(0).toUpperCase() + t.slice(1);
-        break;
+        earliestClassIndex = match.index;
       }
     }
     
@@ -369,10 +378,12 @@ const extractEntityMetadata = (
     const bodyTerms = isFr ? bodyTermsFr : bodyTermsEn;
     
     let matchedBody = null;
+    let earliestBodyIndex = Infinity;
     for (const t of bodyTerms) {
-      if (new RegExp(`\\b${t}s?\\b`, 'i').test(combined)) {
+      const match = combined.match(new RegExp(`\\b${t}s?\\b`, 'i'));
+      if (match && match.index !== undefined && match.index < earliestBodyIndex) {
         matchedBody = t.charAt(0).toUpperCase() + t.slice(1);
-        break;
+        earliestBodyIndex = match.index;
       }
     }
     
@@ -392,6 +403,161 @@ const extractEntityMetadata = (
   }
 
   return { icon: Globe, label: null };
+};
+
+// ─── Century and Metadata Extraction Helpers ─────────────────────────────────
+
+const getRomanNumeral = (num: number): string => {
+  const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI"];
+  return roman[num] || `${num}e`;
+};
+
+const getCenturyFromYear = (year: number): number => {
+  return Math.floor((Math.abs(year) - 1) / 100) + 1;
+};
+
+const getOrdinalSuffix = (num: number): string => {
+  if (num % 10 === 1 && num % 100 !== 11) return "st";
+  if (num % 10 === 2 && num % 100 !== 12) return "nd";
+  if (num % 10 === 3 && num % 100 !== 13) return "rd";
+  return "th";
+};
+
+const getCenturyFromYears = (years: number[], isFr: boolean, hasBC = false): string | null => {
+  if (years.length === 0) return null;
+  const cent1 = getCenturyFromYear(years[0]);
+  const cent2 = years.length > 1 ? getCenturyFromYear(years[1]) : cent1;
+  
+  if (isFr) {
+    const roman1 = getRomanNumeral(cent1);
+    const roman2 = getRomanNumeral(cent2);
+    const suffix = hasBC ? " av. J.-C." : "";
+    if (cent1 === cent2) {
+      return `${roman1}e siècle${suffix}`;
+    } else {
+      return `${roman1}e-${roman2}e s.${suffix}`;
+    }
+  } else {
+    const suffix = hasBC ? " BC" : "";
+    if (cent1 === cent2) {
+      const ordinal = getOrdinalSuffix(cent1);
+      return `${cent1}${ordinal} century${suffix}`;
+    } else {
+      const ord1 = getOrdinalSuffix(cent1);
+      const ord2 = getOrdinalSuffix(cent2);
+      return `${cent1}${ord1}-${cent2}${ord2} c.${suffix}`;
+    }
+  }
+};
+
+const extractCenturyText = (text: string, isFr: boolean): string | null => {
+  if (isFr) {
+    const match = text.match(/(\b[IVXLCDM]+e?\s*siècle\s*(?:av\.\s*J\.-C\.)?|\b\d+\s*(?:e|ème)\s*siècle\s*(?:av\.\s*J\.-C\.)?)/i);
+    return match ? match[1].trim() : null;
+  } else {
+    const match = text.match(/(\b\d+(?:th|st|nd|rd)\s*century\s*(?:BC|AD)?|\b[IVXLCDM]+th\s*century\s*(?:BC|AD)?)/i);
+    return match ? match[1].trim() : null;
+  }
+};
+
+const parseYears = (str: string): number[] => {
+  const matches = str.match(/\b\d{3,4}\b/g);
+  if (matches) {
+    return matches.map(Number);
+  }
+  return [];
+};
+
+const getPersonCentury = (
+  props: EntityLinkProps,
+  wiki: any,
+  isFr: boolean
+): string | null => {
+  if (props.century) return props.century;
+  
+  const combinedText = `${props.dates || ''} ${props.lifespan || ''} ${props.era || ''} ${wiki.description || ''} ${wiki.summary || ''}`;
+  const extracted = extractCenturyText(combinedText, isFr);
+  if (extracted) return extracted;
+
+  const datesText = `${props.dates || ''} ${props.lifespan || ''}`;
+  const hasBC = /av\.|BC|B\.C\./i.test(datesText) || /av\.|BC|B\.C\./i.test(combinedText);
+  const years = parseYears(datesText);
+  if (years.length > 0) {
+    return getCenturyFromYears(years, isFr, hasBC);
+  }
+
+  const wikiYears = parseYears(combinedText);
+  if (wikiYears.length > 0) {
+    const validYears = wikiYears.filter(y => y > 100 && y < 2100);
+    if (validYears.length > 0) {
+      return getCenturyFromYears(validYears.slice(0, 2), isFr, hasBC);
+    }
+  }
+  return null;
+};
+
+const isGenericLabel = (label: string | null | undefined): boolean => {
+  if (!label) return true;
+  const l = label.toLowerCase().trim();
+  const genericList = [
+    "concept académique", "academic concept",
+    "lieu géographique", "geographic place",
+    "corps céleste / espace", "celestial body / space",
+    "corps céleste", "celestial body",
+    "événement", "event",
+    "loi / théorème", "law / theorem",
+    "espèce / organisme", "species / organism",
+    "molécule / chimie", "molecule / chemical",
+    "institution", "project / website", "projet / site",
+    "encyclopédie", "encyclopedia"
+  ];
+  return genericList.includes(l);
+};
+
+const formatSummaryText = (text: string | null | undefined): string | null => {
+  if (!text) return null;
+  
+  // Clean up references and spaces
+  let cleaned = text
+    .replace(/\[\d+\]/g, '')
+    .replace(/\[citation needed\]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (cleaned.length <= 500) {
+    return cleaned;
+  }
+
+  // Truncate cleanly at a sentence boundary
+  const sentences = cleaned.split(/(?<=[.!?])\s+/);
+  let accumulated = '';
+  for (const sentence of sentences) {
+    if (accumulated.length + sentence.length + 1 <= 510) {
+      accumulated += (accumulated ? ' ' : '') + sentence;
+    } else {
+      if (!accumulated) {
+        accumulated = sentence.slice(0, 497) + '...';
+      }
+      break;
+    }
+  }
+  return accumulated.trim();
+};
+
+const parseWikipediaUrl = (url: string): { lang: string; title: string } | null => {
+  if (!url) return null;
+  try {
+    const match = url.match(/https?:\/\/([a-z-]+)\.wikipedia\.org\/wiki\/([^?#]+)/i);
+    if (match) {
+      return {
+        lang: match[1].toLowerCase(),
+        title: decodeURIComponent(match[2])
+      };
+    }
+  } catch (e) {
+    console.error("Failed to parse Wikipedia URL:", e);
+  }
+  return null;
 };
 
 export const EntityLink = ({ 
@@ -422,22 +588,36 @@ export const EntityLink = ({
   const localizedName = getLocalizedName(name, activeLang);
   const cleanName = (localizedName || '').trim();
   const langCode = activeLang;
-  const originalLang = activeLang;
+
+  const targetUrl = propUrl || propHref || '';
+  const parsedWiki = parseWikipediaUrl(targetUrl);
+
+  let queryName = cleanName;
+  let queryOriginalLang = activeLang;
+
+  if (parsedWiki) {
+    queryName = parsedWiki.title;
+    queryOriginalLang = parsedWiki.lang;
+  }
+
+  const resolvedType = type || 'entity';
 
   // 5-stage Wikipedia cascade (shared hook)
   const wiki = useWikiCascade(
-    cleanName,
+    queryName,
     activeLang,
-    originalLang,
-    !!(unresolved || !cleanName || !activeLang)
+    queryOriginalLang,
+    !!(unresolved || !queryName || !activeLang),
+    resolvedType
   );
 
   const fallbackUrl = wiki.exists === false
-    ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanName)}`
-    : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(cleanName.replace(/ /g, '_'))}`;
+    ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(queryName)}`
+    : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(queryName.replace(/ /g, '_'))}`;
   const resolvedWikiUrl = wiki.url || fallbackUrl;
   const resolvedExternalUrl = propUrl || propHref;
   const resolvedSummary = wiki.summary || description;
+  const formattedSummary = formatSummaryText(resolvedSummary);
 
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -463,11 +643,25 @@ export const EntityLink = ({
     setTimeoutId(id);
   };
 
-  const resolvedType = type || 'entity';
   const isFr = activeLang.toLowerCase().trim() === 'fr';
 
   const metaInfo = extractEntityMetadata(resolvedType, wiki.description, wiki.summary, isFr);
-  const resolvedDates = dates || lifespan || century || (creation ? (isFr ? `Création : ${creation}` : `Created: ${creation}`) : era) || metaInfo.label;
+
+  // Compute rightLabel for context display
+  let rightLabel: string | null = null;
+  if (resolvedType === 'person') {
+    rightLabel = getPersonCentury({ name, children, type, description, century, lifespan, dates, creation, era, unresolved }, wiki, isFr);
+    if (!rightLabel) {
+      rightLabel = dates || lifespan || null;
+    }
+  } else {
+    rightLabel = metaInfo.label;
+  }
+
+  // Filter out generic placeholders
+  if (rightLabel && isGenericLabel(rightLabel)) {
+    rightLabel = null;
+  }
 
   let Icon = metaInfo.icon || Globe;
   let headerLabel = isFr ? 'Encyclopédie' : 'Encyclopedia';
@@ -587,16 +781,15 @@ export const EntityLink = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
               </div>
+              {rightLabel && (
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider [.theme-paper_&]:text-slate-500">
+                  {rightLabel}
+                </span>
+              )}
             </div>
-            {resolvedDates && (
-              <div className="flex items-center gap-1.5 mb-3 text-xs font-semibold text-slate-400 [.theme-paper_&]:text-slate-600 border-b border-slate-800/40 pb-2 [.theme-paper_&]:border-slate-200/50">
-                <Icon className="w-3.5 h-3.5 text-slate-500 [.theme-paper_&]:text-slate-400" />
-                <span>{resolvedDates}</span>
-              </div>
-            )}
-            {resolvedSummary ? (
+            {formattedSummary ? (
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
-                &ldquo;{resolvedSummary}&rdquo;
+                &ldquo;{formattedSummary}&rdquo;
               </p>
             ) : wiki.exists === false ? (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-650">

@@ -680,6 +680,46 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
+  getUserProfile: async (id: string) => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return { data: null, error: null };
+        }
+        throw error;
+      }
+      if (!data) return { data: null, error: null };
+      const u = data;
+      const mapped = {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role || 'student',
+        level: u.level ?? 1,
+        kp: u.kp ?? 0,
+        isEmailVerified: u.is_email_verified ?? u.isEmailVerified ?? false,
+        isBlocked: u.is_blocked ?? u.isBlocked ?? false,
+        joinedAt: u.joined_at ?? u.joinedAt ?? new Date().toISOString().split('T')[0],
+        favorites: u.favorites ?? [],
+        aiCoachMessage: u.ai_coach_message ?? u.aiCoachMessage ?? '',
+        preferredLang: u.preferred_lang ?? u.preferredLang ?? 'EN',
+        readingMode: u.reading_mode ?? u.readingMode ?? 'default',
+        password: u.password,
+        audioVolume: u.audio_volume != null ? Number(u.audio_volume) : undefined,
+        audioRate: u.audio_rate != null ? Number(u.audio_rate) : undefined,
+        audioVoiceId: u.audio_voice_id ?? undefined,
+        audioReadCourse: u.audio_read_course ?? true,
+        audioReadTutor: u.audio_read_tutor ?? true,
+        ttsEnabled: u.tts_enabled ?? true
+      };
+      return { data: mapped, error: null };
+    } catch (e) {
+      handleDatabaseError(e);
+      return { data: null, error: e as any };
+    }
+  },
+
   deleteUser: async (id: string) => {
     try {
       if (id === '26d54efe-6f14-4e36-9fcf-3fcf684a4444') {
