@@ -457,7 +457,17 @@ export const AITutorOverlay = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardMastery, setCardMastery] = useState<Record<string, string>>({});
   const [isCoachingDismissed, setIsCoachingDismissed] = useState(false);
+  
   const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const initialInputTextRef = useRef<string>('');
+
+  const [micActivity, setMicIntensity] = useState(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   const [selfEvalPre, setSelfEvalPre] = useState<number | null>(null);
   const [selfEvalPost, setSelfEvalPost] = useState<number | null>(null);
@@ -550,13 +560,120 @@ export const AITutorOverlay = ({
     }
   }, [tutorEnabled]);
 
+  // Auto-resize textarea based on text content height
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [input]);
+
+  // Clean up all voice streams and timers on unmount
+  useEffect(() => {
+    return () => {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        if (audioContextRef.current.state !== 'closed') {
+          try {
+            audioContextRef.current.close();
+          } catch (e) {}
+        }
+      }
+      if (micStreamRef.current) {
+        try {
+          micStreamRef.current.getTracks().forEach(track => track.stop());
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  // Real-time microphone amplitude/intensity tracking using Web Audio API
+  useEffect(() => {
+    const startVoiceAnalysis = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
+        
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return;
+        const audioContext = new AudioContextClass();
+        audioContextRef.current = audioContext;
+        
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+        
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        const updateVolume = () => {
+          if (!analyserRef.current) return;
+          analyserRef.current.getByteFrequencyData(dataArray);
+          
+          let total = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            total += dataArray[i];
+          }
+          const average = total / bufferLength;
+          setMicIntensity(average);
+          
+          animationFrameRef.current = requestAnimationFrame(updateVolume);
+        };
+        
+        updateVolume();
+      } catch (err) {
+        console.warn("Could not start voice analysis:", err);
+      }
+    };
+
+    const stopVoiceAnalysis = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (audioContextRef.current) {
+        if (audioContextRef.current.state !== 'closed') {
+          try {
+            audioContextRef.current.close();
+          } catch (e) {}
+        }
+        audioContextRef.current = null;
+      }
+      if (micStreamRef.current) {
+        try {
+          micStreamRef.current.getTracks().forEach(track => track.stop());
+        } catch (e) {}
+        micStreamRef.current = null;
+      }
+      setMicIntensity(0);
+    };
+
+    if (isListening) {
+      startVoiceAnalysis();
+    } else {
+      stopVoiceAnalysis();
+    }
+
+    return () => {
+      stopVoiceAnalysis();
+    };
+  }, [isListening]);
+
+  // Speech Recognition setup with 4s silence detection
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const rec = new SpeechRecognition();
-        rec.continuous = false;
-        rec.interimResults = false;
+        rec.continuous = true;
+        rec.interimResults = true;
         rec.lang = lang.toLowerCase() === 'fr' ? 'fr-FR' : 'en-US';
 
         rec.onstart = () => {
@@ -565,18 +682,50 @@ export const AITutorOverlay = ({
 
         rec.onend = () => {
           setIsListening(false);
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
         };
 
         rec.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          if (transcript) {
-            setInput(prev => prev ? prev + " " + transcript : transcript);
+          let finalTranscript = '';
+          let interimTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
           }
+
+          if (finalTranscript || interimTranscript) {
+            const currentSpeech = (finalTranscript + interimTranscript).trim();
+            setInput(prev => {
+              const base = initialInputTextRef.current || '';
+              return base ? (base + " " + currentSpeech).trim() : currentSpeech;
+            });
+          }
+
+          // Reset silence timer to 4 seconds
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            try {
+              rec.stop();
+            } catch (e) {}
+          }, 4000); // 4 seconds silence
         };
 
         rec.onerror = (e: any) => {
           console.error("Speech Recognition error:", e);
           setIsListening(false);
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
         };
 
         recognitionRef.current = rec;
@@ -591,9 +740,21 @@ export const AITutorOverlay = ({
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
     } else {
-      recognitionRef.current.start();
+      initialInputTextRef.current = input;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(() => {
+        try {
+          if (recognitionRef.current) recognitionRef.current.stop();
+        } catch (e) {}
+      }, 5000); // 5s timeout if they start speaking and say nothing
+      
+      try {
+        recognitionRef.current.start();
+      } catch (e) {}
     }
   };
 
@@ -1279,32 +1440,42 @@ export const AITutorOverlay = ({
                     </div>
 
                     <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
-                      <div className="relative flex items-center">
-                        <input 
-                          type="text" 
+                      <div className="relative flex items-end">
+                        <textarea 
+                          ref={textareaRef}
                           disabled={isGenerating} 
                           value={input} 
                           onChange={(e) => setInput(e.target.value)} 
-                          onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          rows={1}
                           placeholder={t.placeholder} 
-                          className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-4 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed" 
+                          className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-3.5 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed resize-none min-h-[48px] max-h-32 custom-scrollbar" 
                         />
                         
-                        <div className="absolute right-16 top-3 flex items-center justify-center">
+                        <div className="absolute right-16 bottom-3 flex items-center justify-center">
                           {isListening && (
                             <>
-                              {/* Pulsing Outer Rings */}
+                              {/* Dynamic Pulsing Outer Rings responding to Voice Intensity */}
                               <motion.div 
                                 className="absolute inset-0 rounded-xl bg-blue-500/30 z-0"
-                                initial={{ scale: 1, opacity: 0.6 }}
-                                animate={{ scale: 1.8, opacity: 0 }}
-                                transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+                                style={{
+                                  scale: 1 + (micActivity / 128) * 0.6,
+                                  opacity: 0.3 + (micActivity / 255) * 0.7,
+                                }}
+                                transition={{ type: "spring", stiffness: 300, damping: 15 }}
                               />
                               <motion.div 
                                 className="absolute inset-0 rounded-xl bg-indigo-500/20 z-0"
-                                initial={{ scale: 1, opacity: 0.8 }}
-                                animate={{ scale: 1.4, opacity: 0 }}
-                                transition={{ duration: 1.2, repeat: Infinity, delay: 0.4, ease: "easeOut" }}
+                                style={{
+                                  scale: 1 + (micActivity / 128) * 0.3,
+                                  opacity: 0.2 + (micActivity / 255) * 0.5,
+                                }}
+                                transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
                               />
                             </>
                           )}
@@ -1314,37 +1485,13 @@ export const AITutorOverlay = ({
                             onClick={toggleListening} 
                             className={`relative p-2 rounded-xl border transition-all z-10 ${
                               isListening 
-                                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white border-transparent shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
-                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                                ? 'bg-blue-600 text-white border-transparent shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
+                                : 'bg-slate-800/40 text-slate-400 border-slate-775 hover:bg-slate-800 hover:text-white hover:border-slate-700'
                             } disabled:opacity-40 disabled:cursor-not-allowed`}
                             title={isListening ? t.voice_stop : t.voice_enable}
                             aria-label="Active voice coaching input"
                           >
-                            {isListening ? (
-                              <div className="flex items-center gap-1.5 px-0.5">
-                                <Mic className="w-4 h-4 text-white" />
-                                <div className="flex items-end gap-[2px] h-3">
-                                  {[0, 1, 2, 3].map((i) => (
-                                    <motion.span
-                                      key={i}
-                                      className="w-[2px] bg-white rounded-full"
-                                      animate={{
-                                        height: [4, 12, 4],
-                                      }}
-                                      transition={{
-                                        duration: 0.6,
-                                        repeat: Infinity,
-                                        repeatType: 'reverse',
-                                        delay: i * 0.15,
-                                        ease: "easeInOut"
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            ) : (
-                              <Mic className="w-4 h-4" />
-                            )}
+                            <Mic className={`w-4 h-4 ${isListening ? 'text-white' : ''}`} />
                           </button>
                         </div>
 
@@ -1352,7 +1499,7 @@ export const AITutorOverlay = ({
                           <button 
                             type="button"
                             onClick={stopGeneration} 
-                            className="absolute right-4 top-3 p-2 bg-red-650 rounded-xl text-white hover:bg-red-650 transition-all cursor-pointer flex items-center justify-center border border-red-500/30"
+                            className="absolute right-4 bottom-3 p-2 bg-red-650 rounded-xl text-white hover:bg-red-650 transition-all cursor-pointer flex items-center justify-center border border-red-500/30"
                             title={lang === 'FR' ? "Arrêter la réflexion" : "Stop response"}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
@@ -1361,7 +1508,7 @@ export const AITutorOverlay = ({
                           <button 
                             disabled={isGenerating} 
                             onClick={() => handleSend()} 
-                            className="absolute right-4 top-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
+                            className="absolute right-4 bottom-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
                           >
                             <Send className="w-4 h-4" />
                           </button>

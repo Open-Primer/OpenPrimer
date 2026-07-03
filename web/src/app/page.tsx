@@ -332,7 +332,29 @@ const LOCAL_HOMEPAGE_STRINGS: Record<string, Record<string, string>> = {
     PT: "Explore nossos currículos universitários de elite e cursos interativos",
     AR: "استكشف مناهجنا الجامعية النخبة ودوراتنا التفاعلية",
     HI: "हमारे कुलीन विश्वविद्यालय पाठ्यक्रम और संवादात्मक पाठ्यक्रमों का अन्वेषण करें",
-    UR: "ہمارے اشرافیہ یونیورسٹی کے نصاب اور انٹرایکティブ کورسز کو دریافت کریں"
+    UR: "ہمارے اشرافیہ یونیورسٹی के نصاب और انٹرایکティブ کورسز کو دریافت کریں"
+  },
+  email_sent_title: {
+    EN: "Email Sent",
+    FR: "E-mail Envoyé",
+    ES: "Correo electrónico enviado",
+    DE: "E-Mail gesendet",
+    ZH: "电子邮件已发送",
+    PT: "E-mail enviado",
+    AR: "تم إرسال البريد الإلكتروني",
+    HI: "ईमेल भेज दिया गया",
+    UR: "ای میل بھیج دی گئی"
+  },
+  languages_formatted: {
+    EN: "{count} languages",
+    FR: "{count} langues",
+    ES: "{count} idiomas",
+    DE: "{count} Sprachen",
+    ZH: "{count} 种语言",
+    PT: "{count} idiomas",
+    AR: "{count} لغات",
+    HI: "{count} भाषाएँ",
+    UR: "{count} زبانیں"
   }
 };
 
@@ -1018,7 +1040,7 @@ export default function Home() {
           <CourseKiosk 
             lang={lang} 
             title={s.popular_curricula}
-            subtitle={lang.toUpperCase() === 'FR' ? "Découvrez nos cursus universitaires et cours interactifs d'élite" : "Explore our elite university curricula and interactive courses"}
+            subtitle={getLocalString('hero_subtitle', lang)}
             onCourseClick={(course) => {
               const targetPath = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
               console.log("[Client Navigation] Course clicked in kiosk. Navigating to:", targetPath);
@@ -1057,7 +1079,7 @@ export default function Home() {
              </div>
              <div className="flex items-center gap-2">
                <h3 className="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{s.languages}</h3>
-               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{lang.toUpperCase() === 'ZH' ? `${stats?.total_languages || 9} 种语言` : `${stats?.total_languages || 9} ${s.languages}`}</div>
+               <div className="bg-violet-500/20 text-violet-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">{getLocalString('languages_formatted', lang).replace('{count}', String(stats?.total_languages || 9))}</div>
              </div>
              <p className="text-sm text-slate-500 leading-relaxed">{s.multilingual_desc}</p>
            </div>
@@ -1157,7 +1179,7 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {a.first_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                            {a.first_name} <span className="text-[6px] text-slate-600 lowercase">{getLocalString('optional_parentheses', lang)}</span>
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
@@ -1173,7 +1195,7 @@ export default function Home() {
 
                         <div className="space-y-1">
                           <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-3">
-                            {a.last_name} <span className="text-[6px] text-slate-600 lowercase">({lang.toUpperCase() === 'FR' ? "optionnel" : "optional"})</span>
+                            {a.last_name} <span className="text-[6px] text-slate-600 lowercase">{getLocalString('optional_parentheses', lang)}</span>
                           </label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
@@ -1393,7 +1415,7 @@ export default function Home() {
                             onClick={() => { setErrorMsg(''); setSuccessMsg(''); setAuthModal('forgot'); }}
                             className="text-[10px] font-semibold text-slate-400 hover:text-blue-400 transition-colors cursor-pointer focus:outline-none"
                           >
-                            {s.forgot_password || (lang === 'FR' ? 'Mot de passe oublié ?' : 'Forgot Password?')}
+                            {s.forgot_password}
                           </button>
                         </div>
                       </div>
@@ -1486,10 +1508,10 @@ export default function Home() {
                         <Lock className="w-8 h-8" />
                       </div>
                       <h2 className="text-2xl font-black tracking-tight text-white uppercase">
-                        {s.forgot_password || (lang === 'FR' ? 'Mot de passe oublié' : 'Forgot Password')}
+                        {s.forgot_password}
                       </h2>
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black mt-2 leading-relaxed">
-                        {s.enter_email || (lang === 'FR' ? "Entrez votre adresse e-mail" : "Enter your email address")}
+                        {s.enter_email}
                       </p>
                     </div>
 
@@ -1505,7 +1527,7 @@ export default function Home() {
                         <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                           <p className="font-bold text-white uppercase text-[8px] tracking-wider">
-                            {lang === 'FR' ? 'E-mail Envoyé' : 'Email Sent'}
+                            {getLocalString('email_sent_title', lang)}
                           </p>
                           <p className="text-slate-400 leading-normal text-[10px] font-medium">
                             {successMsg}
@@ -1537,7 +1559,7 @@ export default function Home() {
                           type="submit"
                           className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
                         >
-                          {s.send_reset_link || (lang === 'FR' ? 'Envoyer le lien' : 'Send Reset Link')}
+                          {s.send_reset_link}
                         </button>
                       </form>
                     ) : null}
@@ -1547,7 +1569,7 @@ export default function Home() {
                         onClick={() => { setErrorMsg(''); setSuccessMsg(''); setAuthModal('login'); }}
                         className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest cursor-pointer"
                       >
-                        {s.back_to_login || (lang === 'FR' ? 'Retour à la connexion' : 'Back to Login')}
+                        {s.back_to_login}
                       </button>
                     </div>
                   </motion.div>

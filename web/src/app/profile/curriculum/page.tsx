@@ -588,6 +588,18 @@ const TEXTAREA_PLACEHOLDER_LABEL: Record<string, string> = {
   UR: "رفتار، وضاحت، یا وضاحتوں کے بارے में آپ کا کیا خیال ہے؟ نظرثانی تجویز کریں..."
 };
 
+const ENROLLMENT_SUCCESSFUL_LABEL: Record<string, string> = {
+  EN: "Enrollment Successful!",
+  FR: "Inscription Réussie !",
+  ES: "¡Inscripción exitosa!",
+  DE: "Anmeldung erfolgreich!",
+  ZH: "加入成功！",
+  PT: "Inscrição bem-sucedida!",
+  AR: "تم التسجيل بنجاح!",
+  HI: "नामांकन सफल!",
+  UR: "رجسٹریشن کامیاب!"
+};
+
 function getElectiveDescription(enrolled: number, min: number, isCompliant: boolean, lang: string): string {
   const l = lang.toUpperCase();
   if (l === 'FR') return `${enrolled} sur ${min} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`;
@@ -1866,7 +1878,7 @@ export default function CurriculumPage() {
 
                              {/* Dynamic miniature badge grid */}
                              {earnedBadges.length > 0 && (
-                               <div className="flex gap-1.5 flex-wrap mb-4" role="group" aria-label={lang === 'FR' ? 'Badges gagnés' : 'Earned badges'}>
+                               <div className="flex gap-1.5 flex-wrap mb-4" role="group" aria-label={EARNED_BADGES_LABEL[upperLang] || EARNED_BADGES_LABEL.EN}>
                                  {earnedBadges.map((ach) => {
                                    const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
                                    const IconComp = (Icons as any)[badge.iconName] || Icons.Award;
@@ -1885,8 +1897,8 @@ export default function CurriculumPage() {
                              
                              <div className="mt-auto">
                                 <div className="flex justify-between items-center mb-2">
-                                   <span className="text-[9px] font-black uppercase text-slate-600">{lang.toUpperCase() === 'FR' ? 'Statut' : 'Status'}</span>
-                                   <span className={`text-[9px] font-black ${isCurr ? 'text-violet-400' : 'text-emerald-400'}`}>100% {lang.toUpperCase() === 'FR' ? 'Terminé' : 'Completed'}</span>
+                                   <span className="text-[9px] font-black uppercase text-slate-600">{STATUS_LABEL[upperLang] || STATUS_LABEL.EN}</span>
+                                   <span className={`text-[9px] font-black ${isCurr ? 'text-violet-400' : 'text-emerald-400'}`}>100% {COMPLETED_LABEL[upperLang] || COMPLETED_LABEL.EN}</span>
                                 </div>
                                 <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
                                    <div className={`h-full ${isCurr ? 'bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.6)]' : 'bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)]'}`} style={{ width: '100%' }} />
@@ -1905,8 +1917,8 @@ export default function CurriculumPage() {
                                 >
                                    <span className={`text-[9px] font-black uppercase tracking-widest text-slate-550 group-hover:${isCurr ? 'text-violet-400' : 'text-emerald-400'} transition-colors`}>
                                       {hasReview 
-                                        ? (lang === 'FR' ? "Voir l'évaluation" : "View Review") 
-                                        : (lang === 'FR' ? "Revoir le cours" : "Review Course")}
+                                        ? (VIEW_REVIEW_LABEL[upperLang] || VIEW_REVIEW_LABEL.EN) 
+                                        : (REVIEW_COURSE_LABEL[upperLang] || REVIEW_COURSE_LABEL.EN)}
                                    </span>
                                    <ChevronRight className={`w-4 h-4 text-slate-500 group-hover:${isCurr ? 'text-violet-400' : 'text-emerald-400'} group-hover:translate-x-1 transition-all`} />
                                 </div>
@@ -1995,7 +2007,7 @@ export default function CurriculumPage() {
                               handleDismissRecommendation(recCourse.id);
                             }}
                             className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
-                            title={lang === 'FR' ? "Masquer cette recommandation" : "Dismiss recommendation"}
+                            title={DISMISS_RECOMMENDATION_LABEL[upperLang] || DISMISS_RECOMMENDATION_LABEL.EN}
                           >
                             <Icons.X className="w-4 h-4" />
                           </button>
@@ -2401,12 +2413,10 @@ export default function CurriculumPage() {
                         </div>
                         <div>
                           <h4 className="text-sm font-black leading-tight text-white">
-                            {lang === 'FR' ? 'Choix des options' : 'Elective Course Choices'}
+                            {ELECTIVE_CHOICES_LABEL[upperLang] || ELECTIVE_CHOICES_LABEL.EN}
                           </h4>
                           <p className="text-xs opacity-85 mt-1 font-semibold leading-normal">
-                            {lang === 'FR' 
-                              ? `${enrolledOptionalCount} sur ${minOptionalCount} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`
-                              : `${enrolledOptionalCount} of ${minOptionalCount} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`}
+                            {getElectiveDescription(enrolledOptionalCount, minOptionalCount, isCompliant, lang)}
                           </p>
                         </div>
                       </div>
@@ -2416,8 +2426,8 @@ export default function CurriculumPage() {
                           : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
                       }`}>
                         {isCompliant 
-                          ? (lang === 'FR' ? 'Conforme' : 'Compliant') 
-                          : (lang === 'FR' ? 'Requis' : 'Required')}
+                          ? (COMPLIANT_LABEL[upperLang] || COMPLIANT_LABEL.EN) 
+                          : (REQUIRED_LABEL[upperLang] || REQUIRED_LABEL.EN)}
                       </span>
                     </div>
                   )}
@@ -2449,15 +2459,15 @@ export default function CurriculumPage() {
                                     : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
                                 }`}>
                                   {cc.isOptional 
-                                    ? (lang === 'FR' ? 'Optionnel' : 'Elective') 
-                                    : (lang === 'FR' ? 'Obligatoire' : 'Mandatory')}
+                                    ? (ELECTIVE_LABEL[upperLang] || ELECTIVE_LABEL.EN) 
+                                    : (MANDATORY_LABEL[upperLang] || MANDATORY_LABEL.EN)}
                                 </span>
                               </div>
                               <h5 className="text-sm font-black text-white">
                                 {cc.title}{isMultilingualParent && cc.langCode ? ` (${cc.langCode.toUpperCase()})` : ''}
                               </h5>
                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                                {getLocalizedSubject(cc.subject)} • {cc.hours}h {lang === 'FR' ? 'prévues' : 'expected'}
+                                {getLocalizedSubject(cc.subject)} • {cc.hours}h {EXPECTED_LABEL[upperLang] || EXPECTED_LABEL.EN}
                               </p>
                             </div>
 
@@ -2472,7 +2482,7 @@ export default function CurriculumPage() {
                                 </div>
                               ) : (
                                 <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                                  {lang === 'FR' ? 'Non inscrit' : 'Not enrolled'}
+                                  {NOT_ENROLLED_LABEL[upperLang] || NOT_ENROLLED_LABEL.EN}
                                 </span>
                               )}
 
@@ -2493,8 +2503,8 @@ export default function CurriculumPage() {
                                     }`}
                                   >
                                     {cc.isEnrolled 
-                                      ? (lang === 'FR' ? 'Retirer' : 'Remove') 
-                                      : (lang === 'FR' ? 'Choisir' : 'Choose')}
+                                      ? (REMOVE_LABEL[upperLang] || REMOVE_LABEL.EN) 
+                                      : (CHOOSE_LABEL[upperLang] || CHOOSE_LABEL.EN)}
                                   </button>
                                 )}
 
@@ -2557,7 +2567,7 @@ export default function CurriculumPage() {
               </div>
 
               <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                {t.disenroll_confirm_desc.replace('{title}', abandonTarget.title || (lang === 'FR' ? 'ce cours' : 'this course'))}
+                {t.disenroll_confirm_desc.replace('{title}', abandonTarget.title || (THIS_COURSE_LABEL[upperLang] || THIS_COURSE_LABEL.EN))}
               </p>
 
               {abandonTarget.isCurriculum && (
@@ -2571,11 +2581,9 @@ export default function CurriculumPage() {
                   />
                   <label htmlFor="keepChildCourses" className="text-xs text-slate-300 font-medium leading-relaxed select-none cursor-pointer">
                     <span className="font-black text-white block mb-1">
-                      {lang === 'FR' ? "Conserver l'inscription aux modules" : "Keep course enrollments"}
+                      {KEEP_ENROLLMENTS_LABEL[upperLang] || KEEP_ENROLLMENTS_LABEL.EN}
                     </span>
-                    {lang === 'FR' 
-                      ? "Conservez vos progrès et inscriptions individuelles pour les cours de ce cursus. Décochez pour tout abandonner." 
-                      : "Keep your individual progress and enrollment for the child courses. Uncheck to abandon all."}
+                    {KEEP_ENROLLMENTS_DESC_LABEL[upperLang] || KEEP_ENROLLMENTS_DESC_LABEL.EN}
                   </label>
                 </div>
               )}
@@ -2823,7 +2831,7 @@ export default function CurriculumPage() {
                 {/* Header ribbon if completed */}
                 {isReviewed && (
                   <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-600/10 text-emerald-400 border-l border-b border-emerald-500/20 rounded-bl-2xl text-[8px] font-black uppercase tracking-wider select-none animate-pulse">
-                    {lang === 'FR' ? "ÉVALUÉ • LECTURE SEULE" : "REVIEWED • READ ONLY"}
+                    {REVIEWED_READ_ONLY_LABEL[upperLang] || REVIEWED_READ_ONLY_LABEL.EN}
                   </div>
                 )}
 
@@ -2834,7 +2842,7 @@ export default function CurriculumPage() {
                     setSelectedReviewCourse(null);
                   }}
                   className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-500 hover:text-white rounded-xl cursor-pointer transition-colors"
-                  title={lang === 'FR' ? "Fermer" : "Close"}
+                  title={CLOSE_LABEL[upperLang] || CLOSE_LABEL.EN}
                 >
                   <Icons.X className="w-4 h-4" />
                 </button>
@@ -2847,8 +2855,8 @@ export default function CurriculumPage() {
                   <div>
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 block mb-1">
                       {isReviewed 
-                        ? (lang === 'FR' ? "VOTRE ÉVALUATION ENREGISTRÉE" : "YOUR SAVED REVIEW") 
-                        : (lang === 'FR' ? "PARTAGEZ VOTRE EXPÉRIENCE" : "SHARE YOUR EXPERIENCE")}
+                        ? (YOUR_SAVED_REVIEW_LABEL[upperLang] || YOUR_SAVED_REVIEW_LABEL.EN) 
+                        : (SHARE_YOUR_EXPERIENCE_LABEL[upperLang] || SHARE_YOUR_EXPERIENCE_LABEL.EN)}
                     </span>
                     <h3 className="text-xl font-black text-white leading-tight">
                       {getLocalizedTitle(selectedReviewCourse)}
@@ -2860,9 +2868,7 @@ export default function CurriculumPage() {
                   <div className="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl p-4 text-xs font-semibold flex items-center gap-3 border-l-4 border-l-emerald-500">
                     <Icons.CheckCircle className="w-5 h-5 shrink-0" />
                     <span>
-                      {lang === 'FR' 
-                        ? "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !" 
-                        : "Your rating has been successfully saved. Thank you for sharing your feedback!"}
+                      {REVIEW_SAVED_LABEL[upperLang] || REVIEW_SAVED_LABEL.EN}
                     </span>
                   </div>
                 )}
@@ -2873,7 +2879,7 @@ export default function CurriculumPage() {
                     {/* Stars Selection */}
                     <div className="space-y-3">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                        {lang === 'FR' ? "Évaluez ce cours" : "Rate this course"} {!isReviewed && <span className="text-red-500">*</span>}
+                        {RATE_THIS_COURSE_LABEL[upperLang] || RATE_THIS_COURSE_LABEL.EN} {!isReviewed && <span className="text-red-500">*</span>}
                       </span>
                       <div className="flex items-center gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -2901,17 +2907,13 @@ export default function CurriculumPage() {
                     {/* Comment Area */}
                     <div className="space-y-2">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                        {lang === 'FR' ? "Commentaires ou Suggestions" : "Comments or Suggestions"}
+                        {COMMENTS_SUGGESTIONS_LABEL[upperLang] || COMMENTS_SUGGESTIONS_LABEL.EN}
                       </span>
                       <textarea
                         value={localComment}
                         onChange={(e) => setLocalComment(e.target.value)}
                         disabled={isReviewed}
-                        placeholder={
-                          lang === 'FR' 
-                            ? "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions..."
-                            : "What did you think of the pacing, clarity, or explanations? Suggest revisions..."
-                        }
+                        placeholder={TEXTAREA_PLACEHOLDER_LABEL[upperLang] || TEXTAREA_PLACEHOLDER_LABEL.EN}
                         rows={4}
                         className={`w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-white outline-none transition-all font-medium leading-relaxed ${isReviewed ? 'opacity-50 cursor-not-allowed border-slate-900' : 'focus:border-emerald-500/50'}`}
                       />
@@ -2928,7 +2930,7 @@ export default function CurriculumPage() {
                       }}
                       className="flex-1 py-4 bg-slate-950 hover:bg-slate-850 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
                     >
-                      {lang === 'FR' ? "Fermer" : "Close"}
+                      {CLOSE_LABEL[upperLang] || CLOSE_LABEL.EN}
                     </button>
                     {!isReviewed && (
                       <button
@@ -2940,7 +2942,7 @@ export default function CurriculumPage() {
                             : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
                         }`}
                       >
-                        {lang === 'FR' ? "Soumettre l'évaluation" : "Submit Review"}
+                        {SUBMIT_REVIEW_LABEL[upperLang] || SUBMIT_REVIEW_LABEL.EN}
                       </button>
                     )}
                   </div>
@@ -2961,7 +2963,7 @@ export default function CurriculumPage() {
           >
             <Icons.CheckCircle className="w-4 h-4 text-emerald-400 animate-pulse" />
             <span className="text-xs font-bold text-slate-100 tracking-wide">
-              {lang.toUpperCase() === 'FR' ? 'Inscription Réussie !' : 'Enrollment Successful!'}
+              {ENROLLMENT_SUCCESSFUL_LABEL[upperLang] || ENROLLMENT_SUCCESSFUL_LABEL.EN}
             </span>
           </motion.div>
         )}

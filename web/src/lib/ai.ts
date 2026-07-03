@@ -225,6 +225,28 @@ const verificationSchema = {
   required: ["approved", "critique"]
 };
 
+const widgetsAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    isGlobalRevision: { type: "boolean" },
+    globalCritique: { type: "string" },
+    widgets: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          key: { type: "string" },
+          approved: { type: "boolean" },
+          critique: { type: "string" }
+        },
+        required: ["key", "approved", "critique"]
+      }
+    }
+  },
+  required: ["approved", "isGlobalRevision", "globalCritique", "widgets"]
+};
+
 const revisionAuditSchema = {
   type: "object",
   properties: {
@@ -287,6 +309,68 @@ function reconstructMarkdown(sections: MarkdownSection[]): string {
       return sec.content;
     }
   }).join('\n');
+}
+
+function pruneNarrativeForWidgets(narrativeText: string): string {
+  const paragraphs = narrativeText.split(/\n\s*\n/);
+  const prunedParagraphs: string[] = [];
+
+  for (let i = 0; i < paragraphs.length; i++) {
+    const p = paragraphs[i].trim();
+    if (!p) continue;
+
+    // Preserve headings
+    if (p.startsWith('#')) {
+      prunedParagraphs.push(p);
+      continue;
+    }
+
+    // Check if paragraph has an anchor or inline citation links/references
+    const hasWidget = /\[\[WIDGET:.*?\]\]/gi.test(p);
+    const hasCitation = /\[\d+\]/gi.test(p) || /#ref-/gi.test(p);
+
+    if (hasWidget || hasCitation) {
+      // Add preceding paragraph context if not already present
+      if (i > 0) {
+        const prev = paragraphs[i - 1].trim();
+        if (prev && !prev.startsWith('#') && !prunedParagraphs.includes(prev)) {
+          if (prunedParagraphs.length > 0 && prunedParagraphs[prunedParagraphs.length - 1] !== '...') {
+            prunedParagraphs.push('...');
+          }
+          prunedParagraphs.push(`(Context) ${prev}`);
+        }
+      }
+
+      prunedParagraphs.push(p);
+
+      // Add succeeding paragraph context
+      if (i < paragraphs.length - 1) {
+        const next = paragraphs[i + 1].trim();
+        if (next && !next.startsWith('#')) {
+          prunedParagraphs.push(`(Context) ${next}`);
+          i++; // Skip next paragraph
+        }
+      }
+    } else {
+      if (prunedParagraphs.length > 0 && prunedParagraphs[prunedParagraphs.length - 1] !== '...') {
+        prunedParagraphs.push('...');
+      }
+    }
+  }
+
+  // Remove consecutive ellipses
+  const result: string[] = [];
+  for (const item of prunedParagraphs) {
+    if (item === '...') {
+      if (result.length > 0 && result[result.length - 1] !== '...') {
+        result.push('...');
+      }
+    } else {
+      result.push(item);
+    }
+  }
+
+  return result.join('\n\n');
 }
 
 function parseJointRepairOutput(output: string): Map<string, string> {
@@ -2902,6 +2986,8 @@ INSTRUCTIONS:
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
 
+      const prunedNarrativeText = pruneNarrativeForWidgets(approvedNarrativeText);
+
       const cleanLevel = (levelInput || 'L1').trim().toLowerCase();
       const isLvlPrimary = cleanLevel.startsWith('p') || cleanLevel.startsWith('m') || cleanLevel.includes('primary') || cleanLevel.includes('maternelle') || ['1', '2', '3', 'foundation_1', 'foundation_2'].includes(cleanLevel);
       const isLvlSecondary = cleanLevel.includes('secondary') || cleanLevel.startsWith('coll') || cleanLevel.startsWith('lyc') || cleanLevel.includes('preuni') || ['secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3'].includes(cleanLevel);
@@ -2952,9 +3038,9 @@ Interactive widgets must adapt to the grade level specified by the course genera
 ---
 
 ### INPUT APPROVED NARRATIVE DRAFT
-Review the approved narrative text to identify all placed \`[[WIDGET:id]]\` anchors and the bibliography citation links (e.g. \`[1](#ref-1)\`):
+Review the approved narrative text (pruned for layout) to identify all placed \`[[WIDGET:id]]\` anchors and the bibliography citation links (e.g. \`[1](#ref-1)\`):
 ---
-${approvedNarrativeText}
+${prunedNarrativeText}
 ---
 
 ---

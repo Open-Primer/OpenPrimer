@@ -465,7 +465,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "eval_passing_grade": "Note de passage :",
     "eval_attempts_unlimited": "Tentatives illimitées",
     "eval_attempts_single": "Une seule tentative — évaluation finale",
-    "summative_single_attempt_warning": "⚠️ Tentative Unique : Il s'agit d'une évaluation finale. Vous ne pourrez pas recommencer ce test après l'avoir soumis."
+    "summative_single_attempt_warning": "⚠️ Tentative Unique : Il s'agit d'une évaluation finale. Vous ne pourrez pas recommencer ce test après l'avoir soumis.",
+    "forgot_password": "Mot de passe oublié ?",
+    "reset_password": "Réinitialiser le mot de passe",
+    "send_reset_link": "Envoyer le lien",
+    "back_to_login": "Retour à la connexion",
+    "enter_email": "Entrez votre adresse e-mail",
+    "email_sent": "Un lien de réinitialisation de mot de passe a été envoyé à votre adresse e-mail."
   },
   HI: {
     "change_tutor": "ट्यूटर बदलें",
@@ -486,7 +492,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "छोड़ें / अगला कार्ड",
     "coaching_dismiss": "छोड़ें",
     "coaching_title": "एआई व्यक्तिगत कोचिंग और रीयल-टाइम सिंक",
-    "coaching_desc": "प्रत्येक रेटिंग आपके एआई ट्यूटर को आपकी ताकत और कमजोरियों के आधार पर कोचिंग को व्यक्तिगत बनाने के लिए प्रशिक्षित करती है। आपकी प्रगति रीयल-टाइम में सिंक होती है, जिससे आप आसानी से टैब बदल सकते हैं या रोक सकते हैं!"
+    "coaching_desc": "प्रत्येक रेटिंग आपके एआई ट्यूटर को आपकी ताकत और कमजोरी के आधार पर कोचिंग को व्यक्तिगत बनाने के लिए प्रशिक्षित करती है। आपकी प्रगति रीयल-टाइम में सिंक होती है, जिससे आप आसानी से टैब बदल सकते हैं या रोक सकते हैं!",
+    "forgot_password": "पासवर्ड भूल गए?",
+    "reset_password": "पासवर्ड रीसेट करें",
+    "send_reset_link": "रीसेट लिंक भेजें",
+    "back_to_login": "लॉगिन पर वापस जाएं",
+    "enter_email": "अपना ईमेल पता दर्ज करें",
+    "email_sent": "आपके ईमेल पते पर पासवर्ड रीसेट लिंक भेज दिया गया है।"
   },
   ES: {
     "change_tutor": "Cambiar tutor",
@@ -507,7 +519,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "Omitir / Siguiente tarjeta",
     "coaching_dismiss": "Descartar",
     "coaching_title": "Coaching Personalizado por IA y Sincronización en Tiempo Real",
-    "coaching_desc": "¡Cada evaluación entrena a su Tutor de IA para personalizar su orientación según sus fortalezas y debilidades. Su progreso se sincroniza en tiempo real, lo que le permite cambiar de pestaña o pausar sin problemas!"
+    "coaching_desc": "¡Cada evaluación entrena a su Tutor de IA para personalizar su orientación según sus fortalezas y debilidades. Su progreso se sincroniza en tempo real, lo que le permite cambiar de pestaña o pausar sin problemas!",
+    "forgot_password": "¿Olvidó su contraseña?",
+    "reset_password": "Restablecer contraseña",
+    "send_reset_link": "Enviar enlace de restablecimiento",
+    "back_to_login": "Volver al inicio de sesión",
+    "enter_email": "Introduzca su dirección de correo electrónico",
+    "email_sent": "Se ha enviado un enlace para restablecer la contraseña a su dirección de correo electrónico."
   },
   DE: {
     "change_tutor": "Tutor wechseln",
@@ -528,7 +546,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "Überspringen / Nächste Karte",
     "coaching_dismiss": "Ausblenden",
     "coaching_title": "Personalisierte KI-Begleitung & Echtzeit-Synchronisation",
-    "coaching_desc": "Jede Bewertung trainiert Ihren KI-Tutor, die Unterstützung an Ihre Stärken und Schwächen anzupassen. Ihr Fortschritt wird in Echtzeit synchronisiert, sodass Sie nahtlos Tabs wechseln oder pausieren können!"
+    "coaching_desc": "Jede Bewertung trainiert Ihren KI-Tutor, die Unterstützung an Ihre Stärken und Schwächen anzupassen. Ihr Fortschritt wird in Echtzeit synchronisiert, sodass Sie nahtlos Tabs wechseln oder pausieren können!",
+    "forgot_password": "Passwort vergessen?",
+    "reset_password": "Passwort zurücksetzen",
+    "send_reset_link": "Zurücksetzungslink senden",
+    "back_to_login": "Zurück zur Anmeldung",
+    "enter_email": "Geben Sie Ihre E-Mail-Adresse ein",
+    "email_sent": "Ein Link zum Zurücksetzen des Passworts wurde an Ihre E-Mail-Adresse gesendet."
   },
   ZH: {
     "change_tutor": "更换导师",
@@ -549,7 +573,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "跳过 / 下一张",
     "coaching_dismiss": "隐藏",
     "coaching_title": "AI个性化辅导与实时同步",
-    "coaching_desc": "每次评估都会训练您的AI导师，根据您的优缺点定制个性化辅导。您的学习进度实时同步，您可以随时切换标签或暂停，无缝连接！"
+    "coaching_desc": "每次评估都会训练您的AI导师，根据您的优缺点定制个性化辅导。您的学习进度实时同步，您可以随时切换标签或暂停，无缝连接！",
+    "forgot_password": "忘记密码？",
+    "reset_password": "重置密码",
+    "send_reset_link": "发送重置链接",
+    "back_to_login": "返回登录",
+    "enter_email": "请输入您的电子邮件地址",
+    "email_sent": "密码重置链接已发送到您的电子邮件地址。"
   },
   PT: {
     "change_tutor": "Alterar tutor",
@@ -570,7 +600,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "Pular / Próxima carta",
     "coaching_dismiss": "Ocultar",
     "coaching_title": "Coaching Personalizado por IA & Sincronização em Tempo Real",
-    "coaching_desc": "Cada avaliação treina o seu Tutor de IA para personalizar as explicações com base nos seus pontos fortes e fracos. O seu progresso sincroniza em tempo real, permitindo-lhe alternar entre abas ou fazer pausas sem preocupações!"
+    "coaching_desc": "Cada avaliação treina o seu Tutor de IA para personalizar as explicações com base nos seus pontos fortes e fracos. O seu progresso sincroniza em tempo real, permitindo-lhe alternar entre abas ou fazer pausas sem preocupações!",
+    "forgot_password": "Esqueceu a senha?",
+    "reset_password": "Redefinir senha",
+    "send_reset_link": "Enviar link de redefinição",
+    "back_to_login": "Voltar para o login",
+    "enter_email": "Insira seu endereço de e-mail",
+    "email_sent": "Um link de redefinição de senha foi enviado para o seu endereço de e-mail."
   },
   AR: {
     "change_tutor": "تغيير المعلم",
@@ -591,7 +627,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "تخطي / البطاقة التالية",
     "coaching_dismiss": "تجاهل",
     "coaching_title": "التدريب الشخصي بالذكاء الاصطناعي والمزامنة الفورية",
-    "coaching_desc": "كل تقييم يدرب معلمك الآلي على تخصيص إرشاداته بناءً على نقاط قوتك وضعفك. تتم مزامنة تقدمك في الوقت الفعلي، مما يتيح لك تبديل علامات التبويب أو التوقف مؤقتًا بسلاسة!"
+    "coaching_desc": "كل تقييم يدرب معلمك الآلي على تخصيص إرشاداته بناءً على نقاط قوتك وضعفك. تتم مزامنة تقدمك في الوقت الفعلي، مما يتيح لك تبديل علامات التبويب أو التوقف مؤقتًا بسلاسة!",
+    "forgot_password": "هل نسيت كلمة المرور؟",
+    "reset_password": "إعادة تعيين كلمة المرور",
+    "send_reset_link": "إرسال رابط إعادة التعيين",
+    "back_to_login": "العودة إلى تسجيل الدخول",
+    "enter_email": "أدخل عنوان بريدك الإلكتروني",
+    "email_sent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى عنوان بريدك الإلكتروني."
   },
   UR: {
     "change_tutor": "ٹیوٹر تبدیل کریں",
@@ -612,7 +654,13 @@ export const RAW_STATIC_UI_STRINGS = {
     "skip_next_card": "چھوڑیں / اگلا کارڈ",
     "coaching_dismiss": "چھوڑیں",
     "coaching_title": "اے آئی ذاتی نوعیت کی کوچنگ اور رئیل ٹائم مطابقت پذیری",
-    "coaching_desc": "ہر درجہ بندی آپ کے اے آئی ٹیوٹر کو آپ کی طاقتوں اور کمزوریوں کی بنیاد پر کوچنگ کو ذاتی بنانے کی تربیت دیتی ہے۔ آپ کی پیشرفت ریئل ٹائم میں مطابقت پذیر ہوتی ہے، جس سے آپ آسانی سے ٹیبز تبدیل کر سکتے ہیں یا سیکھنا روک سکتے ہیں!"
+    "coaching_desc": "ہر درجہ بندی آپ کے اے آئی ٹیوٹر کو آپ کی طاقتوں اور کمزوریوں کی بنیاد پر کوچنگ کو ذاتی بنانے کی تربیت دیتی ہے۔ آپ کی پیشرفت ریئل ٹائم میں مطابقت پذیر ہوتی ہے، جس سے آپ آسانی سے ٹیبز تبدیل کر سکتے ہیں یا سیکھنا روک سکتے ہیں!",
+    "forgot_password": "کیا آپ پاس ورڈ بھول گئے؟",
+    "reset_password": "پاس ورڈ دوبارہ ترتیب دیں",
+    "send_reset_link": "ری سیٹ لنک بھیجیں",
+    "back_to_login": "لاگ ان پر واپس جائیں",
+    "enter_email": "اپنا ای میل ایڈریس درج کریں",
+    "email_sent": "آپ کے ای میل ایڈریس پر پاس ورڈ ری سیٹ لنک بھیج دیا گیا ہے۔"
   }
 };
 
