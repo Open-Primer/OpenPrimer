@@ -53,3 +53,26 @@ When inserting or recommending an image, figure, or illustration, you must searc
   - AI image generation (`generate_image`) must be strictly reserved for general contextual, abstract, or highly conceptual illustrations (e.g. general educational visual metaphors, standard stylized scientific backgrounds, or non-specific textures).
 - **Impeccable Quality & Consistency**:
   - Any AI-generated illustration must be of professional graphic design quality. If quality or accurate details cannot be guaranteed, **avoid generating or showing the illustration**.
+
+---
+
+## 5. Optimized AI Generation Parameters (Gemini 2.5 Flash Booster Guidelines)
+
+To maximize generation performance, conceptual richness, and structural integrity across the generation pipelines (Scribe, Architects, Revision, and Translator), the following parameter mappings must be systematically configured and maintained:
+
+### A. Academic & Narrative Content Generation (Scribe / Revision Narrator)
+For open-ended academic prose, detailed context-building, or global revisions, a moderately exploratory configuration is calibrated to prevent lexical stagnation (avoiding overused transitional terms like *"En effet"*, *"Ainsi"*, *"Par conséquent"*) and encourage diverse, highly engaging narrative paths.
+- **Temperature**: `0.35`
+- **Frequency Penalty**: `0.25`
+- **Top-P**: `0.85`
+- **Max Output Tokens**: `8192`
+
+### B. Structural & Schema-Bound Tasks (Syllabus, Widgets, Audits, JSON Outputs)
+For tasks outputting strict schemas, JSON arrays, key-value mappings, and programmatic components, zero-error execution is paramount. The generation parameters must guarantee maximum determinism to prevent unclosed boundaries or corrupted attributes.
+- **Temperature**: `0.1` (or `0.0` where strict schema compliance is required)
+- **Response MIME Type**: `application/json`
+- **Frequency Penalty / Top-P**: Not set (disabled to enforce deterministic paths)
+
+### C. Language-Specific and Regional Alignment (Translation & Localization)
+Translation and localization tasks must maintain absolute structure, mapping exact MDX components and attributes, while translating only the natural text.
+- **Temperature**: `0.1`

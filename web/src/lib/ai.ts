@@ -244,7 +244,7 @@ const widgetsAuditSchema = {
       }
     }
   },
-  required: ["approved", "isGlobalRevision", "globalCritique", "widgets"]
+  required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
 const revisionAuditSchema = {
@@ -266,7 +266,7 @@ const revisionAuditSchema = {
       }
     }
   },
-  required: ["approved", "isGlobalRevision", "globalCritique", "sections"]
+  required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
 interface MarkdownSection {
@@ -2199,7 +2199,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             task: 'course_generation',
             contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
             generationConfig: {
-              temperature: 0.2,
+              temperature: 0.1,
               responseMimeType: "application/json",
               responseSchema: syllabusSchema
             }
@@ -2225,6 +2225,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             body: JSON.stringify({
               contents: [{ parts: [{ text: promptSyllabus }] }],
               generationConfig: {
+                temperature: 0.1,
                 responseMimeType: "application/json",
                 responseSchema: syllabusSchema
               }
@@ -2409,7 +2410,9 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
       const callAIEngine = async (
         promptText: string,
         schema?: any,
-        temperature: number = 0.2
+        temperature: number = 0.2,
+        frequencyPenalty?: number,
+        topP?: number
       ): Promise<string> => {
         let resultText = '';
         let success = false;
@@ -2419,6 +2422,12 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
           temperature,
           maxOutputTokens: 8192
         };
+        if (frequencyPenalty !== undefined) {
+          generationConfig.frequencyPenalty = frequencyPenalty;
+        }
+        if (topP !== undefined) {
+          generationConfig.topP = topP;
+        }
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
@@ -2748,7 +2757,7 @@ This synthesis MUST (400–600 words):
         // Export Scribe Prompt
         saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
 
-        let narrativeText = await callAIEngine(narrativePrompt, null, 0.3);
+        let narrativeText = await callAIEngine(narrativePrompt, null, 0.35, 0.25, 0.85);
 
         // Pre-verifier 1: MDX Text Preprocessor & Cleaner
         let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
@@ -2846,7 +2855,7 @@ You must return ONLY a valid JSON object with the following keys:
 - **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints).
 - **\`isGlobalRevision\`**: boolean (true = full rewrite needed; false = localized section fixes).
 - **\`globalCritique\`**: string (comprehensive global critique if isGlobalRevision is true; empty otherwise).
-- **\`sections\`**: array of \`{ heading: string, approved: boolean, critique: string }\` - list all \`## \` sections. Required even when approved is true (set approved: true for passing sections).
+- **\`sections\`**: array of \`{ heading: string, approved: boolean, critique: string }\` - list all \`## \` sections. Required when approved is true and isGlobalRevision is false. [CRITICAL] If isGlobalRevision is true, you MUST leave this array empty (\`[]\`) or omit it entirely to avoid running out of output tokens and causing truncation.
 
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
@@ -2906,7 +2915,7 @@ ${cleanedNarrative}
 Re-generate the ENTIRE academic narrative from scratch, fully addressing the global critique.
 Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
 
-              const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.3);
+              const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.35, 0.25, 0.85);
               const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
               // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
               cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
@@ -2975,7 +2984,7 @@ INSTRUCTIONS:
 3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
 4. Do NOT include markdown code block wrappers or conversational text.`;
 
-                const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.3);
+                const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
                 const repairs = parseJointRepairOutput(scribeRepairOutput);
 
                 // Fallback: single section repair with no XML tags
@@ -3229,7 +3238,7 @@ ${referencesMetadata}
       let widgetsIteration = 0;
       const maxWidgetsIterations = 3;
 
-      const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.2);
+      const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.1);
       lessonStats.widgetsAttempts++;
       saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
 
@@ -3416,7 +3425,7 @@ You must return ONLY a valid JSON object matching the \`widgetsAuditSchema\` wit
 - **\`approved\`**: boolean (true if the ENTIRE widgets JSON complies perfectly with all checkpoints; false if there are any violations).
 - **\`isGlobalRevision\`**: boolean (true ONLY if the errors are widespread, systemic, or if structural keys are missing, requiring a complete full-JSON regeneration; false if the errors are localized and can be repaired component-by-component. You MUST prefer false and use localized critiques for standard/localized errors. Do NOT trigger a global rewrite for standard localized errors).
 - **\`globalCritique\`**: string (high-level or global feedback. Leave empty if approved).
-- **\`widgets\`**: array of objects, one for each checked key/widget in the JSON (e.g. \`prerequisites\`, \`diagnosticQuiz\`, \`learningObjectives\`, \`conclusionSummary\`, \`whatsNext\`, \`goingFurther\`, or any key inside \`interactiveComponents\` such as \`interactiveComponents:my_chart\`). Each item must contain:
+- **\`widgets\`**: array of objects, one for each checked key/widget in the JSON. Each item must contain key, approved, and critique. [CRITICAL] If isGlobalRevision is true, you MUST leave this array empty (\`[]\`) or omit it entirely to avoid running out of output tokens and causing truncation. Required when isGlobalRevision is false. Each item must contain:
   - **\`key\`**: string (the unique identifier/path of the widget or property block, e.g., "diagnosticQuiz", "references", "interactiveComponents:my_plot").
   - **\`approved\`**: boolean (true if this specific component is perfect; false if it has errors).
   - **\`critique\`**: string (specific, actionable feedback on how to fix this individual component. Leave empty if approved).
@@ -3485,7 +3494,7 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
 
             saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
 
-            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.2);
+            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.1);
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
 
@@ -3557,7 +3566,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
 
             saveDraftRevision(`prompt_stage2_repair_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRepairPrompt);
 
-            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.2);
+            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1);
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
 
@@ -4650,7 +4659,11 @@ INSTRUCTIONS:
         const res = await callVertexAI({
           task: 'course_generation',
           contents: [{ role: 'user', parts: [{ text: promptRevise }] }],
-          generationConfig: { temperature: 0.3 }
+          generationConfig: {
+            temperature: 0.35,
+            frequencyPenalty: 0.25,
+            topP: 0.85
+          }
         });
         if (res && res.ok) {
           const jsonRes = await res.json();
@@ -4668,7 +4681,12 @@ INSTRUCTIONS:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptRevise }] }]
+            contents: [{ parts: [{ text: promptRevise }] }],
+            generationConfig: {
+              temperature: 0.35,
+              frequencyPenalty: 0.25,
+              topP: 0.85
+            }
           })
         });
         if (res.ok) {
@@ -4852,7 +4870,11 @@ Return ONLY the revised MDX content. Do NOT include markdown code block wrappers
               const resRefine = await callVertexAI({
                 task: 'course_generation',
                 contents: [{ role: 'user', parts: [{ text: promptRefineGlobal }] }],
-                generationConfig: { temperature: 0.3 }
+                generationConfig: {
+                  temperature: 0.35,
+                  frequencyPenalty: 0.25,
+                  topP: 0.85
+                }
               });
               if (resRefine && resRefine.ok) {
                 const resJson = await resRefine.json();
@@ -4870,7 +4892,12 @@ Return ONLY the revised MDX content. Do NOT include markdown code block wrappers
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  contents: [{ parts: [{ text: promptRefineGlobal }] }]
+                  contents: [{ parts: [{ text: promptRefineGlobal }] }],
+                  generationConfig: {
+                    temperature: 0.35,
+                    frequencyPenalty: 0.25,
+                    topP: 0.85
+                  }
                 })
               });
               if (resRefine.ok) {
@@ -4971,7 +4998,11 @@ INSTRUCTIONS:
                 const resRepair = await callVertexAI({
                   task: 'course_generation',
                   contents: [{ role: 'user', parts: [{ text: promptJointRepair }] }],
-                  generationConfig: { temperature: 0.3 }
+                  generationConfig: {
+                    temperature: 0.35,
+                    frequencyPenalty: 0.25,
+                    topP: 0.85
+                  }
                 });
                 if (resRepair && resRepair.ok) {
                   const resJson = await resRepair.json();
@@ -4989,7 +5020,12 @@ INSTRUCTIONS:
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptJointRepair }] }]
+                    contents: [{ parts: [{ text: promptJointRepair }] }],
+                    generationConfig: {
+                      temperature: 0.35,
+                      frequencyPenalty: 0.25,
+                      topP: 0.85
+                    }
                   })
                 });
                 if (resRepair.ok) {
@@ -5445,7 +5481,7 @@ If you cannot find any real audio, output: {}`;
           task: 'course_generation',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0.1,
             responseMimeType: "application/json",
             responseSchema: audioSearchSchema
           }
@@ -6098,7 +6134,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
         task: 'course_generation',
         contents: [{ role: 'user', parts: [{ text: promptCurriculum }] }],
         generationConfig: {
-          temperature: 0.2,
+          temperature: 0.1,
           responseMimeType: "application/json",
           responseSchema: curriculumSchema
         }
@@ -6117,6 +6153,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           body: JSON.stringify({
             contents: [{ parts: [{ text: promptCurriculum }] }],
             generationConfig: {
+              temperature: 0.1,
               responseMimeType: "application/json",
               responseSchema: curriculumSchema
             }

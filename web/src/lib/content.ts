@@ -4746,6 +4746,9 @@ function cleanUrlGarbage(text: string): string {
 }
 
 function isDuplicateReference(t1: string, t2: string): boolean {
+  if (typeof t1 !== 'string' || typeof t2 !== 'string') return false;
+  if (!t1.trim() || !t2.trim()) return false;
+
   const getCleanWords = (t: string) => {
     const clean = t.toLowerCase()
       .replace(/<[^>]*>/g, '')
