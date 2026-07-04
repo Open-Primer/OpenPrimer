@@ -1,0 +1,47 @@
+{
+  "approved": false,
+  "isGlobalRevision": false,
+  "globalCritique": "",
+  "sections": [
+    {
+      "heading": "Introduction : Le Grand Récit Cosmique",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "heading": "1. Des Mythes Fondateurs aux Premières Observations Systématiques",
+      "approved": false,
+      "critique": "Citations are not formatted using the required [[WIDGET:Citation:citation_id:Topic/Hint]] anchor. Instead, raw HTML <sup><a> tags are used. Additionally, the overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "2. L'Antiquité Grecque et les Premiers Modèles Cosmiques",
+      "approved": false,
+      "critique": "Citations are not formatted using the required [[WIDGET:Citation:citation_id:Topic/Hint]] anchor. Instead, raw HTML <sup><a> tags are used. Additionally, the overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "3. La Révolution Copernicienne : Un Changement de Paradigme",
+      "approved": false,
+      "critique": "The overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "4. Galilée et l'Avènement du Télescope : La Preuve Observationnelle",
+      "approved": false,
+      "critique": "The overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "5. Isaac Newton et la Gravitation Universelle : L'Unification du Ciel et de la Terre",
+      "approved": false,
+      "critique": "Citations are not formatted using the required [[WIDGET:Citation:citation_id:Topic/Hint]] anchor. Instead, raw HTML <sup><a> tags are used. Additionally, the overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "6. Synthèse des Paradigmes Cosmiques",
+      "approved": false,
+      "critique": "The overall narrative is missing the required 1-2 audio/video media anchors."
+    },
+    {
+      "heading": "Conclusion",
+      "approved": false,
+      "critique": "The overall narrative is missing the required 1-2 audio/video media anchors."
+    }
+  ]
+}

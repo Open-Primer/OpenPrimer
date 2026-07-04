@@ -1,0 +1,61 @@
+{
+  "courseContext": {
+    "discipline": "Astrophysique et Cosmologie",
+    "description": "Ce cours introductif offre une exploration des fondements de l'astrophysique et de la cosmologie, des étoiles aux galaxies, et de l'origine à l'évolution de l'Univers. Il vise à familiariser les étudiants de première année avec les concepts clés, les méthodes d'observation et les grandes questions qui animent ces disciplines fascinantes.",
+    "epistemologicalMatrix": "Sciences Empiriques / Expérimentales",
+    "targetLevel": "L1",
+    "pedagogicalStrategy": "La stratégie pédagogique s'appuie sur une approche progressive, partant des observations célestes pour construire les modèles théoriques. Elle privilégie l'utilisation de visualisations, de diagrammes et de simulations pour illustrer les phénomènes complexes, en accord avec la nature empirique de la discipline et le niveau introductif. L'accent est mis sur la compréhension conceptuelle et la capacité à interpréter les données observationnelles."
+  },
+  "lessons": [
+    {
+      "title": "Des mythes aux télescopes : L'éveil de la cosmologie",
+      "slug": "mythes-telescopes-eveil-cosmologie",
+      "cognitiveArtifact": "Analyse historique et conceptuelle, frise chronologique interactive",
+      "technicalDepth": "Vue d'ensemble des paradigmes historiques, contextualisation des grandes découvertes et des figures clés de l'astronomie et de la cosmologie."
+    },
+    {
+      "title": "Le ciel étoilé : Coordonnées et mouvements célestes",
+      "slug": "ciel-etoile-coordonnees-mouvements",
+      "cognitiveArtifact": "Diagrammes célestes interactifs, simulations de mouvements planétaires et stellaires",
+      "technicalDepth": "Introduction aux systèmes de coordonnées équatoriales et écliptiques, mouvements diurnes et annuels, saisons et phénomènes astronomiques fondamentaux."
+    },
+    {
+      "title": "Les étoiles : Naissance, vie et mort des soleils",
+      "slug": "etoiles-naissance-vie-mort",
+      "cognitiveArtifact": "Diagramme de Hertzsprung-Russell interactif, schémas de fusion nucléaire et d'évolution stellaire",
+      "technicalDepth": "Propriétés physiques des étoiles (luminosité, température, masse), classification spectrale, étapes de l'évolution stellaire, des naines blanches aux trous noirs."
+    },
+    {
+      "title": "Galaxies et structure de l'Univers : Des îles cosmiques au réseau cosmique",
+      "slug": "galaxies-structure-univers",
+      "cognitiveArtifact": "Images télescopiques annotées, modèles 3D de galaxies et de l'Univers à grande échelle",
+      "technicalDepth": "Morphologie des galaxies, la Voie Lactée, amas et superamas de galaxies, introduction à la matière noire et à l'énergie noire et leur rôle dans la structure cosmique."
+    },
+    {
+      "title": "L'Univers en expansion : Du Big Bang au fond diffus cosmologique",
+      "slug": "univers-expansion-big-bang-cmb",
+      "cognitiveArtifact": "Graphiques de la loi de Hubble, simulations de l'expansion de l'Univers, cartes du fond diffus cosmologique (CMB)",
+      "technicalDepth": "Preuves observationnelles de l'expansion de l'Univers, le modèle du Big Bang, le rayonnement fossile (CMB) et son importance comme preuve clé."
+    },
+    {
+      "title": "Formation des structures et destin de l'Univers : Les grandes questions de la cosmologie moderne",
+      "slug": "formation-structures-destin-univers",
+      "cognitiveArtifact": "Simulations numériques de formation de structures cosmiques, scénarios d'évolution future de l'Univers",
+      "technicalDepth": "Mécanismes de formation des galaxies et des amas, les différents scénarios de fin de l'Univers, synthèse des concepts clés du cours et ouverture sur les défis actuels de la recherche en astrophysique et cosmologie, intégrant une conclusion générale."
+    },
+    {
+      "title": "Évaluation Terminale",
+      "slug": "evaluation-terminale",
+      "cognitiveArtifact": "Questions à choix multiples, problèmes à résoudre, questions de rédaction",
+      "technicalDepth": "Évaluation sommative des connaissances acquises et de la compréhension des concepts fondamentaux de l'astrophysique et de la cosmologie."
+    }
+  ],
+  "references": [
+    "Luminet, Jean-Pierre. \"Le destin de l'univers: Trous noirs et énergie sombre.\" Fayard, 2006.",
+    "Lachièze-Rey, Marc. \"Cosmologie.\" Dunod, 2013.",
+    "Carroll, Bradley W., and Dale A. Ostlie. \"An Introduction to Modern Astrophysics.\" Cambridge University Press, 2017.",
+    "Hawking, Stephen. \"Une brève histoire du temps: Du Big Bang aux trous noirs.\" Flammarion, 1989.",
+    "Séguin, Marc, et Benoît Villeneuve. \"Astronomie et astrophysique.\" De Boeck Supérieur, 2018.",
+    "Reeves, Hubert. \"Patience dans l'azur: L'évolution cosmique.\" Seuil, 1981."
+  ]
+}

@@ -1,0 +1,87 @@
+{
+"approved": false,
+"isGlobalRevision": false,
+"globalCritique": "",
+"widgets": [
+{
+"key": "prerequisites",
+"approved": true,
+"critique": ""
+},
+{
+"key": "diagnosticQuiz",
+"approved": true,
+"critique": ""
+},
+{
+"key": "learningObjectives",
+"approved": true,
+"critique": ""
+},
+{
+"key": "interactiveComponents:babylonian_map",
+"approved": false,
+"critique": "The \"description\", \"alt\", and \"caption\" fields are lazy copy-pastes of the section heading. They must be replaced with the specific content provided in the narrative anchor: \"Carte du monde babylonienne (Imago Mundi), représentant la Terre comme un disque plat entouré d'eau et de montagnes lointaines, datant du 6e siècle av. J.-C.\"."
+},
+{
+"key": "interactiveComponents:ptolemy_model",
+"approved": false,
+"critique": "The \"description\", \"alt\", and \"caption\" fields are lazy copy-pastes of the section heading. They must be replaced with the specific content provided in the narrative anchor: \"Diagramme détaillé du modèle géocentrique de Ptolémée, montrant la Terre au centre, les déférents et les épicycles pour expliquer le mouvement rétrograde d'une planète.\"."
+},
+{
+"key": "interactiveComponents:copernican_model",
+"approved": false,
+"critique": "The \"description\", \"alt\", and \"caption\" fields are lazy copy-pastes of the section heading. They must be replaced with the specific content provided in the narrative anchor: \"Schéma du modèle héliocentrique de Copernic, montrant le Soleil au centre et les planètes, y compris la Terre, orbitant autour de lui sur des cercles concentriques.\"."
+},
+{
+"key": "interactiveComponents:galileo_telescope",
+"approved": false,
+"critique": "The \"description\", \"alt\", and \"caption\" fields are lazy copy-pastes of the section heading. They must be replaced with the specific content provided in the narrative anchor: \"Représentation de Galilée observant le ciel avec son télescope, avec des croquis de ses observations des lunes de Jupiter et des phases de Vénus.\"."
+},
+{
+"key": "interactiveComponents:newton_principia",
+"approved": false,
+"critique": "The \"description\", \"alt\", and \"caption\" fields are lazy copy-pastes of the section heading. They must be replaced with the specific content provided in the narrative anchor: \"Page de titre des Philosophiae Naturalis Principia Mathematica d'Isaac Newton, publiée en 1687, un ouvrage fondateur de la physique classique.\"."
+},
+{
+"key": "interactiveComponents:video_cosmo_evolution_summary",
+"approved": false,
+"critique": "The 'url' provided is a Rick Roll, which is unacceptable for academic content. The 'title' 'Vidéo académique' is too generic and should be more descriptive of the video's content."
+},
+{
+"key": "whatsNext",
+"approved": true,
+"critique": ""
+},
+{
+"key": "goingFurther",
+"approved": true,
+"critique": ""
+},
+{
+"key": "conclusionSummary",
+"approved": true,
+"critique": ""
+},
+{
+"key": "finalEvaluation",
+"approved": false,
+"critique": "The quiz questions, options, and explanations are placeholders ('Question d'examen finale ?', 'Option Correcte', 'Explication générale.') and must be replaced with actual academic content relevant to the entire lesson."
+},
+{
+"key": "glossary",
+"approved": true,
+"critique": ""
+},
+{
+"key": "references",
+"approved": false,
+"critique": "The number of references (6) slightly exceeds the recommended range of 3 to 5 authoritative academic works."
+},
+{
+"key": "careerProfile",
+"approved": true,
+"critique": ""
+}
+]
+}

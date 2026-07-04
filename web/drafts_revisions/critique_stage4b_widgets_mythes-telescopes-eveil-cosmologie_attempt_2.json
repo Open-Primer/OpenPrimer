@@ -1,0 +1,87 @@
+{
+  "approved": false,
+  "isGlobalRevision": false,
+  "globalCritique": "",
+  "widgets": [
+    {
+      "key": "prerequisites",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "diagnosticQuiz",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "learningObjectives",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:babylonian_map",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:ptolemy_model",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:copernican_model",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:galileo_telescope",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:newton_principia",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:video_cosmo_evolution_summary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "whatsNext",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "goingFurther",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "conclusionSummary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "finalEvaluation",
+      "approved": false,
+      "critique": "The 'finalEvaluation' quiz contains only one question focusing on Nicolas Copernic. For a lesson covering the evolution of cosmology from myths to Newton, the final evaluation must comprehensively assess understanding across all major topics discussed, not just a single historical figure. Please add more questions to cover the entire scope of the lesson."
+    },
+    {
+      "key": "glossary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "references",
+      "approved": false,
+      "critique": "The inline citation [1] in the narrative refers to ancient Mesopotamian cosmogonies, but 'references[0]' is a modern book on black holes and dark energy by Luminet. This is a semantic mismatch. Additionally, the inline citation [4] for Newton's *Principia Mathematica* points to 'references[3]', which is a popular science book by Stephen Hawking. While relevant, it is not an authoritative source for direct citation of Newton's foundational work in an academic context. Please ensure all inline citations map to appropriate and authoritative academic sources in the 'references' array."
+    },
+    {
+      "key": "careerProfile",
+      "approved": true,
+      "critique": ""
+    }
+  ]
+}

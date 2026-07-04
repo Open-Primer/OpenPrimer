@@ -1,0 +1,87 @@
+{
+  "approved": false,
+  "isGlobalRevision": false,
+  "globalCritique": "Critical errors found in references and incomplete data in 'goingFurther' section. Please review specific critiques for details.",
+  "widgets": [
+    {
+      "key": "prerequisites",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "diagnosticQuiz",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "learningObjectives",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:babylonian_map",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:ptolemy_model",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:copernican_model",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:galileo_telescope",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:newton_principia",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "interactiveComponents:video_cosmo_evolution_summary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "whatsNext",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "goingFurther",
+      "approved": false,
+      "critique": "Some 'goingFurther' items have empty 'url', 'author', or 'year' fields. Please ensure all relevant fields are populated with complete information."
+    },
+    {
+      "key": "conclusionSummary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "finalEvaluation",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "glossary",
+      "approved": true,
+      "critique": ""
+    },
+    {
+      "key": "references",
+      "approved": false,
+      "critique": "Citation mismatch: Narrative citation [3] refers to Ptolémée's Almageste, but references[2] is 'An Introduction to Modern Astrophysics'. Ensure 1-to-1 mapping between narrative citations and the references array."
+    },
+    {
+      "key": "careerProfile",
+      "approved": true,
+      "critique": ""
+    }
+  ]
+}

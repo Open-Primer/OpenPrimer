@@ -1,0 +1,106 @@
+```json
+{
+  "finalEvaluation": {
+    "type": "Quiz",
+    "props": {
+      "durationLimit": 1800,
+      "questions": [
+        {
+          "q": "Quel modèle cosmologique a dominé la pensée occidentale pendant plus de mille ans, plaçant la Terre au centre de l'Univers ?",
+          "explanation": "Le modèle géocentrique, notamment celui de Ptolémée, a été le paradigme dominant pendant plus de 14 siècles. Il décrivait un Univers où la Terre était immobile au centre, avec le Soleil, la Lune et les planètes orbitant autour d'elle sur des sphères complexes.",
+          "options": [
+            {
+              "text": "Modèle héliocentrique",
+              "correct": false
+            },
+            {
+              "text": "Modèle géocentrique",
+              "correct": true
+            },
+            {
+              "text": "Modèle du Big Bang",
+              "correct": false
+            },
+            {
+              "text": "Modèle de l'Univers stationnaire",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quel est l'apport majeur de Nicolas Copernic à l'évolution de la cosmologie ?",
+          "explanation": "Nicolas Copernic a révolutionné la cosmologie en proposant un modèle héliocentrique, plaçant le Soleil au centre du système solaire et reléguant la Terre au rang de simple planète orbitant autour de lui. Ce modèle a jeté les bases de la science moderne, bien qu'il ait initialement rencontré une forte résistance.",
+          "options": [
+            {
+              "text": "Il a prouvé que la Terre est plate et entourée d'un océan cosmique.",
+              "correct": false
+            },
+            {
+              "text": "Il a développé le modèle géocentrique avec des épicycles pour expliquer le mouvement des planètes.",
+              "correct": false
+            },
+            {
+              "text": "Il a proposé un modèle héliocentrique où la Terre et les autres planètes tournent autour du Soleil.",
+              "correct": true
+            },
+            {
+              "text": "Il a formulé les lois de la gravitation universelle pour décrire les mouvements célestes.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quelles observations de Galilée ont apporté des preuves cruciales en faveur du modèle héliocentrique ?",
+          "explanation": "Les observations de Galilée, notamment les phases de Vénus (similaires à celles de la Lune, incompatibles avec le modèle géocentrique) et les lunes de Jupiter (démontrant que tous les corps célestes ne tournent pas autour de la Terre), ont fourni des preuves empiriques solides en faveur du modèle héliocentrique de Copernic.",
+          "options": [
+            {
+              "text": "La découverte de l'expansion de l'Univers.",
+              "correct": false
+            },
+            {
+              "text": "L'observation des anneaux de Saturne.",
+              "correct": false
+            },
+            {
+              "text": "Les phases de Vénus et les lunes de Jupiter.",
+              "correct": true
+            },
+            {
+              "text": "La mesure de la distance Terre-Soleil.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Comment Isaac Newton a-t-il unifié les lois du mouvement terrestre et céleste ?",
+          "explanation": "Isaac Newton a formulé la loi universelle de la gravitation, démontrant que la même force qui fait tomber une pomme sur Terre est responsable du mouvement des planètes autour du Soleil. Cette unification a fourni un cadre théorique complet pour expliquer les observations astronomiques et a marqué l'apogée de la révolution scientifique.",
+          "options": [
+            {
+              "text": "En prouvant que les planètes se déplacent sur des épicycles.",
+              "correct": false
+            },
+            {
+              "text": "En développant la théorie de la relativité générale.",
+              "correct": false
+            },
+            {
+              "text": "En formulant la loi universelle de la gravitation.",
+              "correct": true
+            },
+            {
+              "text": "En découvrant de nouvelles planètes dans le système solaire.",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "references": [
+    "Rochberg, Francesca. \"The Heavenly Writing: Divination, Horoscopy, and Astronomy in Mesopotamian Culture.\" Cambridge University Press, 2004.",
+    "Lachièze-Rey, Marc. \"Cosmologie.\" Dunod, 2013.",
+    "Carroll, Bradley W., and Dale A. Ostlie. \"An Introduction to Modern Astrophysics.\" Cambridge University Press, 2017.",
+    "Newton, Isaac. \"Philosophiæ Naturalis Principia Mathematica.\" (Various editions, e.g., Andrew Motte's 1729 translation or I. Bernard Cohen's 1999 edition)."
+  ]
+}
+```

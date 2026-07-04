@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
-import { preprocessMdx } from './src/lib/content';
+import { preprocessMdx } from '../src/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';

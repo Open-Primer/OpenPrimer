@@ -1,0 +1,401 @@
+{
+  "type": "object",
+  "properties": {
+    "prerequisites": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "slug",
+              "level",
+              "subject"
+            ]
+          }
+        }
+      },
+      "required": [
+        "items"
+      ]
+    },
+    "diagnosticQuiz": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "correctIndex": {
+          "type": "integer"
+        },
+        "targetSectionId": {
+          "type": "string"
+        },
+        "sectionTitle": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "options",
+        "correctIndex",
+        "targetSectionId",
+        "sectionTitle"
+      ]
+    },
+    "learningObjectives": {
+      "type": "object",
+      "properties": {
+        "knowledge": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attitudes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "knowledge",
+        "skills",
+        "attitudes"
+      ]
+    },
+    "interactiveComponents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "componentType": {
+            "type": "string"
+          },
+          "sectionAnchor": {
+            "type": "string"
+          },
+          "props": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "componentType",
+          "sectionAnchor",
+          "props"
+        ]
+      }
+    },
+    "whatsNext": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "description",
+              "slug"
+            ]
+          }
+        }
+      },
+      "required": [
+        "steps"
+      ]
+    },
+    "goingFurther": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "book",
+                  "article",
+                  "video",
+                  "website",
+                  "research",
+                  "movie",
+                  "film"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              },
+              "year": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "type",
+              "description"
+            ]
+          }
+        }
+      },
+      "required": [
+        "items"
+      ]
+    },
+    "conclusionSummary": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "items"
+      ]
+    },
+    "finalEvaluation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "props": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "props"
+      ]
+    },
+    "glossary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "term": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "term",
+          "definition"
+        ]
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "previousLessonSummary": {
+      "type": "object",
+      "properties": {
+        "previousLessonTitle": {
+          "type": "string"
+        },
+        "previousLessonSlug": {
+          "type": "string"
+        },
+        "keyTakeaways": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cognitiveBridge": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "previousLessonTitle",
+        "keyTakeaways",
+        "cognitiveBridge"
+      ]
+    },
+    "careerProfile": {
+      "type": "object",
+      "properties": {
+        "profession": {
+          "type": "string"
+        },
+        "discipline": {
+          "type": "string"
+        },
+        "courseConnection": {
+          "type": "string"
+        },
+        "keyMissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "careerOutlook": {
+          "type": "object",
+          "properties": {
+            "demand": {
+              "type": "string"
+            },
+            "typicalEmployers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "salaryIndication": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "demand",
+            "typicalEmployers",
+            "salaryIndication"
+          ]
+        }
+      },
+      "required": [
+        "profession",
+        "discipline",
+        "courseConnection",
+        "keyMissions",
+        "careerOutlook"
+      ]
+    },
+    "researchFocus": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "whyUnresolved": {
+          "type": "string"
+        },
+        "activeHypotheses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "question",
+        "category",
+        "context",
+        "whyUnresolved",
+        "activeHypotheses"
+      ]
+    },
+    "recentNewsBridge": {
+      "type": "object",
+      "properties": {
+        "eventTitle": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "courseConnection": {
+          "type": "string"
+        },
+        "whyItMatters": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "eventTitle",
+        "date",
+        "source",
+        "description",
+        "courseConnection",
+        "whyItMatters"
+      ]
+    }
+  },
+  "required": [
+    "prerequisites",
+    "diagnosticQuiz",
+    "learningObjectives",
+    "interactiveComponents",
+    "whatsNext",
+    "goingFurther",
+    "conclusionSummary",
+    "finalEvaluation",
+    "glossary",
+    "references"
+  ]
+}
