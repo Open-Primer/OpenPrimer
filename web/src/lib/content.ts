@@ -1826,7 +1826,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
   const allowedTagsPattern = allowedTags.join('|');
   const splitRegex = new RegExp(
-    `(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*(?:\\n[^$\\n]+)*\\$|\`\`\`[\\s\\S]*?\`\`\`|\`[^\`]*\`|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
+    `(\\$\\$[\\s\\S]*?\\$\\$|(?<!\\d)\\$(?=\\S)[^$\\n]*?\\$(?!\\d)|\`\`\`[\\s\\S]*?\`\`\`|\`[^\`]*\`|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
     'gi'
   );
   const parts = mdx.split(splitRegex);
