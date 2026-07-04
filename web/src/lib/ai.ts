@@ -1,4 +1,4 @@
-﻿import { dbService } from './db';
+import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
@@ -2422,6 +2422,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
+        } else if (promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
+          generationConfig.responseMimeType = "application/json";
         }
 
         if (isVertexConfigured()) {

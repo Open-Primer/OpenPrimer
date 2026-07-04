@@ -3119,6 +3119,12 @@ function deduplicateOriginalQuotes(mdx: string): string {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
+    // Skip component/JSX lines to avoid corrupting array/object attributes (like keyMissions={[...]})
+    if (/<[A-Z][A-Za-z0-9.]*\b/.test(line) || /<\/[A-Za-z0-9.-]+>/.test(line) || /^\s*\/>/.test(line)) {
+      result.push(line);
+      continue;
+    }
+    
     const quoteRegex = /"([^"]{15,})"[^)]|“([^”]{15,})”|«([^»]{15,})»|'([^']{15,})'/g;
     let match;
     while ((match = quoteRegex.exec(line)) !== null) {
@@ -3343,6 +3349,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   processed = healUnclosedInlineTags(processed);
   processed = escapeCurlyBracesAndLessThanInText(processed);
+
   processed = sanitizeAmpersandInJsxAttributes(processed);
   processed = processed.replace(/<!--[\s\S]*?-->/g, '');
   processed = stripJsxComments(processed);
