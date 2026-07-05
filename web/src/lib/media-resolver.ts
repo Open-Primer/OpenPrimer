@@ -195,10 +195,14 @@ async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeTyp
   }
 }
 
-// Recursive ytInitialData parser to extract search result videos
 async function searchYouTubeVideo(query: string): Promise<string | null> {
   try {
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const rawQuery = query.trim();
+    const cleanQuery = await optimizeQueryWithGemini(rawQuery);
+    if (cleanQuery !== rawQuery) {
+      console.log(`[MEDIA-RESOLVER] Optimized YouTube search query from "${rawQuery}" to "${cleanQuery}"`);
+    }
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(cleanQuery)}`;
     const res = await fetchWithTimeout(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
@@ -683,14 +687,80 @@ export function getConciseQuery(description: string, alt: string, caption: strin
   return (cleanAlt || cleanCaption || desc || '').trim();
 }
 
+async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en'): Promise<string> {
+  const trimmed = rawQuery.trim();
+  const words = trimmed.split(/\s+/);
+  // If it's already short (e.g. 3 words or less), just return it
+  if (words.length <= 3) {
+    return trimmed;
+  }
+
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      return trimmed;
+    }
+
+    const promptText = `Tu es un assistant de recherche documentaire.
+Considère la description de média suivante : "${trimmed}".
+Optimise cette description pour en faire une requête de recherche très efficace sur des bases de données comme Wikimedia Commons, Wikipédia ou de grands musées.
+Ta tâche consiste à extraire uniquement 1 à 3 mots-clés essentiels (noms propres ou noms communs cardinaux, par exemple "Claudio Monteverdi", "Sonar ASDIC", "Effet Doppler", "Théâtre de Bayreuth") sans adjectif superflu, verbe ou explication secondaire.
+Réponds UNIQUEMENT avec ces mots-clés optimisés en français ou en anglais selon la nature du terme, sans guillemets, sans ponctuation finale et sans autre texte explicatif.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: promptText
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 20,
+        temperature: 0.1
+      }
+    };
+
+    const res = await fetchWithTimeout(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }, 10000);
+
+    if (res.ok) {
+      const resJson = await res.json();
+      const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const optimized = text.trim().replace(/["']/g, '');
+        if (optimized && optimized.length > 0) {
+          return optimized;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] optimizeQueryWithGemini failed for "${trimmed}":`, err);
+  }
+
+  return trimmed;
+}
+
 export async function resolveImageFromSources(
   title: string,
   lang: string = 'en',
   discipline?: string,
   validationPrompt?: string
 ): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
-  const query = title.trim().replace(/_/g, ' ');
-  const validationDesc = validationPrompt ? validationPrompt : query;
+  const originalQuery = title.trim().replace(/_/g, ' ');
+  const validationDesc = validationPrompt ? validationPrompt : originalQuery;
+
+  // Optimize query with Gemini for DB search
+  const query = await optimizeQueryWithGemini(originalQuery, lang);
+  console.log(`[MEDIA-RESOLVER] Original query: "${originalQuery}" | Optimized search query: "${query}"`);
 
   // 1. Wikidata P18 — canonical, most reliable for named entities
   const wdImage = await fetchWikidataImage(query);
@@ -890,7 +960,11 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
 // Wikimedia Commons Audio Fetcher
 async function fetchWikimediaAudio(title: string): Promise<string | null> {
   try {
-    const cleanTitle = title.trim();
+    const rawTitle = title.trim();
+    const cleanTitle = await optimizeQueryWithGemini(rawTitle);
+    if (cleanTitle !== rawTitle) {
+      console.log(`[MEDIA-RESOLVER] Optimized audio search query from "${rawTitle}" to "${cleanTitle}"`);
+    }
     // Search Wikimedia Commons in Namespace 6 (File) with audio formats
     const searchQuery = `${cleanTitle} (filetype:ogg OR filetype:wav OR filetype:mp3 OR filetype:oga)`;
     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchQuery)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
@@ -1235,7 +1309,7 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
 
 export function parseAttributesRobustly(attrsStr: string): Record<string, string> {
   const attrs: Record<string, string> = {};
-  const attrNames = ['type', 'description', 'desc', 'alt', 'caption', 'title', 'src', 'fallbackUrl', 'unresolved', 'isIllustration'];
+  const attrNames = ['type', 'description', 'desc', 'alt', 'caption', 'title', 'src', 'fallbackUrl', 'unresolved', 'isIllustration', 'searchQuery', 'searchquery'];
   
   for (const name of attrNames) {
     const curlyMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
@@ -1261,6 +1335,10 @@ export function rebuildCustomFigure(attrs: Record<string, string>): string {
   if (attrs.alt) parts.push(`alt="${attrs.alt.replace(/"/g, '&quot;')}"`);
   if (attrs.caption) parts.push(`caption="${attrs.caption.replace(/"/g, '&quot;')}"`);
   if (attrs.title) parts.push(`title="${attrs.title.replace(/"/g, '&quot;')}"`);
+  
+  const queryVal = attrs.searchQuery || attrs.searchquery;
+  if (queryVal) parts.push(`searchQuery="${queryVal.replace(/"/g, '&quot;')}"`);
+
   if (attrs.src) parts.push(`src="${attrs.src.replace(/"/g, '&quot;')}"`);
   if (attrs.fallbackUrl) parts.push(`fallbackUrl="${attrs.fallbackUrl.replace(/"/g, '&quot;')}"`);
   if (attrs.unresolved) {
@@ -1585,10 +1663,11 @@ export async function resolveAndPersistMedia(
     const caption = getAttr('caption');
     const title = getAttr('title');
     const description = getAttr('description') || getAttr('desc');
+    const searchQuery = getAttr('searchQuery') || getAttr('searchquery');
 
     if (typeText === 'audio') {
-      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="audio": "${description || title}"`);
-      const queryName = (description || title || caption || '').trim();
+      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="audio": "${searchQuery || description || title}"`);
+      const queryName = (searchQuery || description || title || caption || '').trim();
       let resolvedUrl = await fetchWikimediaAudio(queryName);
       let audioBuffer: Buffer | null = null;
       let mimeType = 'audio/mpeg';
@@ -1665,8 +1744,8 @@ export async function resolveAndPersistMedia(
     }
 
     if (typeText === 'video') {
-      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="video": "${description || title}"`);
-      const queryName = (description || title || caption || '').trim();
+      console.log(`[MEDIA-RESOLVER] Resolving CustomFigure type="video": "${searchQuery || description || title}"`);
+      const queryName = (searchQuery || description || title || caption || '').trim();
       if (queryName) {
         const searchQuery = `${queryName} cours education ${targetLang === 'fr' ? 'français' : 'english'}`;
         const realId = await searchYouTubeVideo(searchQuery);
@@ -1696,7 +1775,7 @@ export async function resolveAndPersistMedia(
 
       const currentAttrs = parseAttributesRobustly(attrsStr);
       const detailedDesc = (description || altText || caption || '').trim();
-      const queryName = getConciseQuery(description, altText, caption);
+      const queryName = searchQuery ? searchQuery.trim() : getConciseQuery(description, altText, caption);
       if (queryName) {
         const resolved = await resolveImageFromSources(queryName, targetLang, discipline, detailedDesc);
         const wikiImage = resolved ? resolved.url : null;
@@ -2343,6 +2422,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
     const originalSrc = currentAttrs.src || '';
     const altText = currentAttrs.alt || '';
     const caption = currentAttrs.caption || '';
+    const searchQuery = currentAttrs.searchQuery || currentAttrs.searchquery || '';
 
     const hasDummyUrl = !originalSrc || originalSrc.includes('example.com') || originalSrc.includes('placeholder') || originalSrc === '';
 
@@ -2360,8 +2440,8 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
     if (needsResolution && repairCount < MAX_REPAIRS) {
       repairCount++;
-      console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${altText || caption}"`);
-      const queryName = (altText || caption || '').trim().replace(/_/g, ' ');
+      console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${searchQuery || altText || caption}"`);
+      const queryName = (searchQuery || altText || caption || '').trim().replace(/_/g, ' ');
       
       const resolution = await resolveMediaImage(queryName, targetLangLower);
       let sourceUrl = resolution.url;

@@ -1457,10 +1457,18 @@ body:not(.theme-paper):not(.theme-focus) footer {
   text-shadow: 0 0 8px rgba(139, 92, 246, 0.6) !important;
 }
 
-/* Ensure links in figure and illustration captions keep standard font-weight across all themes */
+/* Ensure links in figure and illustration captions keep standard font-weight and color across all themes */
 .custom-figure a,
 .custom-figure p a,
 .custom-illustration a,
 .custom-illustration p a {
   font-weight: 400 !important;
+  color: inherit !important;
+  text-decoration: underline !important;
+}
+.custom-figure a:hover,
+.custom-figure p a:hover,
+.custom-illustration a:hover,
+.custom-illustration p a:hover {
+  color: #6366f1 !important; /* subtle indigo hover color */
 }

@@ -4074,15 +4074,15 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
         refText = `${cb.author ? `**${cb.author}**, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
         if (cb.original) {
           if (currentLang === 'fr') {
-            refText += ` Version originale : « ${cb.original} »`;
+            refText += ` [Version originale : ${cb.original}]`;
           } else if (currentLang === 'es') {
-            refText += ` Versión original: « ${cb.original} »`;
+            refText += ` [Versión original: ${cb.original}]`;
           } else if (currentLang === 'de') {
-            refText += ` Originalversion: „${cb.original}“`;
+            refText += ` [Originalversion: ${cb.original}]`;
           } else if (currentLang === 'zh') {
-            refText += ` 原文：“${cb.original}”`;
+            refText += ` [原文：${cb.original}]`;
           } else {
-            refText += ` Original version: "${cb.original}"`;
+            refText += ` [Original version: ${cb.original}]`;
           }
         }
       }

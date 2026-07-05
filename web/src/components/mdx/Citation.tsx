@@ -138,7 +138,7 @@ export const Citation = ({
 
       {/* Commentary */}
       {commentary && (
-        <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/80 text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 select-text">
+        <div className="mt-4 text-[13px] leading-relaxed text-slate-700 dark:text-slate-350 select-text">
           {commentary}
         </div>
       )}

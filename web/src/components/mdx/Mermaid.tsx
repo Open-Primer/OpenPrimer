@@ -893,7 +893,6 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         </div>
       </div>
 
-      {/* Map canvas */}
       <div 
         className={`w-full h-full flex items-center justify-center overflow-hidden canvas-bg ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleMouseDown}
@@ -909,7 +908,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
             transition: isDragging ? 'none' : 'transform 0.15s ease-out',
             willChange: 'transform'
           }}
-          className="max-w-[95vw] max-h-[90vh] flex items-center justify-center pointer-events-auto"
+          className="max-w-[95vw] max-h-[90vh] flex items-center justify-center pointer-events-auto mermaid-fullscreen-svg-wrapper"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
       </div>
@@ -994,6 +993,13 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         #${cssId} .cluster-label span {
           fill:  ${txt} !important;
           color: ${txt} !important;
+        }
+
+        /* ── Fullscreen fit-to-screen scaling ── */
+        .mermaid-fullscreen-svg-wrapper #${cssId},
+        .mermaid-fullscreen-svg-wrapper #${cssId} svg {
+          width: 95vw !important;
+          height: 90vh !important;
         }
       ` }} />
       

@@ -127,7 +127,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Luigi Galvani",
       description: "Galvani découvre que des étincelles électriques provoquent la contraction des muscles de pattes de grenouille disséquées. Il postule l'existence d'une 'électricité animale' intrinsèque aux tissus vivants.",
       impact: "Naissance de l'électrophysiologie moderne, prouvant pour la première fois que les signaux nerveux ont une nature électrique.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Galvani_frog_experiment.jpg",
+      imageUrl: "",
       caption: "Gravure d'époque illustrant les expériences de Galvani sur l'excitabilité neuromusculaire de la grenouille."
     },
     {
@@ -136,7 +136,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Julius Bernstein",
       description: "Bernstein formule la première explication physique quantitative du potentiel de repos. Il émet l'hypothèse que la cellule est entourée d'une membrane sélectivement perméable aux ions potassium (K+) au repos, générant un potentiel de diffusion thermique.",
       impact: "Application directe de la thermodynamique physique aux cellules vivantes; précurseur des équations de Nernst et GHK.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/6/69/Julius_Bernstein_1910.jpg",
+      imageUrl: "",
       caption: "Portrait de Julius Bernstein, qui posa les fondations thermodynamiques des potentiels membranaires."
     },
     {
@@ -145,7 +145,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Alan Hodgkin & Andrew Huxley",
       description: "En utilisant l'axone géant de calmar (Loligo pealeii) pour sa taille exceptionnelle (jusqu'à 1 mm de diamètre), ils parviennent à insérer une micro-électrode et enregistrent pour la première fois le potentiel d'action directement de l'intérieur de la cellule.",
       impact: "Confirmation définitive que le potentiel d'action dépasse 0 mV (overshoot) et s'inverse temporairement.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Loligo_pealeii.jpg",
+      imageUrl: "",
       caption: "Le calmar côtier Loligo pealeii, dont l'axone géant a rendu possible l'électrophysiologie moderne."
     },
     {
@@ -154,7 +154,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Hodgkin, Huxley & Katz",
       description: "Ils élaborent une série d'équations différentielles non linéaires décrivant comment les conductances du sodium (Na+) et du potassium (K+) varient en fonction du voltage et du temps, décrivant mathématiquement la genèse du potentiel d'action.",
       impact: "Prix Nobel de 1963. Naissance des neurosciences computationnelles et premier modèle biophysique quantitatif complet.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Squid_giant_axon_preparation.jpg",
+      imageUrl: "",
       caption: "Dispositif d'isolation de l'axone géant de calmar utilisé dans les expériences de voltage-clamp de Hodgkin et Huxley."
     }
   ],
@@ -165,7 +165,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Luigi Galvani",
       description: "Galvani discovers that electrical sparks trigger contractions in dissected frog legs. He postulates 'animal electricity' inherent to living tissues.",
       impact: "Birth of modern electrophysiology, demonstrating for the first time that nervous conduction has an electrical nature.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Galvani_frog_experiment.jpg",
+      imageUrl: "",
       caption: "Historical engraving showing Galvani's neuromuscular excitability experiments on dissected frogs."
     },
     {
@@ -174,7 +174,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Julius Bernstein",
       description: "Bernstein formulates the first quantitative physical model of resting potentials, postulating that cells are enclosed in a membrane selectively permeable to K+ at rest.",
       impact: "Direct integration of thermodynamic principles into cell biology; precursors to Nernst & GHK models.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/6/69/Julius_Bernstein_1910.jpg",
+      imageUrl: "",
       caption: "Portrait of Julius Bernstein, who laid the physical-chemistry foundations of membrane biophysics."
     },
     {
@@ -183,7 +183,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Alan Hodgkin & Andrew Huxley",
       description: "Using the massive giant axon of the squid (Loligo pealeii) which measures up to 1 mm in diameter, they insert a microelectrode and record the action potential inside a nerve cell.",
       impact: "Definitive evidence of the action potential 'overshoot' passing beyond 0 mV into positive territory.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Loligo_pealeii.jpg",
+      imageUrl: "",
       caption: "The coastal squid Loligo pealeii, whose large axon paved the way for intracellular electrophysiology."
     },
     {
@@ -192,7 +192,7 @@ const DEFAULT_MILESTONES: Record<string, Milestone[]> = {
       author: "Hodgkin, Huxley & Katz",
       description: "They construct a set of non-linear differential equations describing voltage- and time-gated sodium (Na+) and potassium (K+) currents, mathematically predicting the action potential.",
       impact: "1963 Nobel Prize. Birth of computational neuroscience and the gold standard biophysical model of excitable membranes.",
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Squid_giant_axon_preparation.jpg",
+      imageUrl: "",
       caption: "Experimental voltage-clamp setup used to isolate squid giant axons."
     }
   ]
@@ -367,18 +367,36 @@ export const Timeline: React.FC<TimelineProps> = ({ milestones, milestonesString
       <div className="relative z-10 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Side: Illustrative Asset (Authentic Factual Photo/Diagram) */}
-        <div className="lg:col-span-5 flex flex-col items-center">
-          <div className="w-full rounded-2xl overflow-hidden border border-slate-950/10 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 relative aspect-[4/3] group shadow-inner">
-            <img 
-              src={current.imageUrl} 
-              alt={current.caption}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
+        <div className="lg:col-span-5 flex flex-col items-center w-full">
+          <div className="w-full rounded-2xl overflow-hidden border border-slate-950/10 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 relative aspect-[4/3] group shadow-inner flex flex-col items-center justify-center p-4">
+            {current.imageUrl ? (
+              <img 
+                src={current.imageUrl} 
+                alt={current.caption || current.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center space-y-3 p-6 select-none">
+                <div className="p-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm animate-pulse">
+                  <Sparkles className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 block font-sans tracking-wide">
+                    Illustration à venir
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block max-w-[200px] leading-relaxed">
+                    Résolue dynamiquement par le moteur de cours lors de la génération
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           {/* Scientific Caption */}
-          <p className="mt-2.5 text-[11px] md:text-xs text-slate-500 dark:text-slate-400 italic text-center leading-relaxed max-w-sm">
-            {current.caption}
-          </p>
+          {current.caption && (
+            <p className="mt-2.5 text-[11px] md:text-xs text-slate-500 dark:text-slate-400 italic text-center leading-relaxed max-w-sm">
+              {current.caption}
+            </p>
+          )}
         </div>
 
         {/* Right Side: Details Card */}

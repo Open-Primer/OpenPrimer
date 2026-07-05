@@ -434,14 +434,281 @@ const lessonWidgetsSchema = {
     interactiveComponents: {
       type: "array",
       items: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          componentType: { type: "string" },
-          sectionAnchor: { type: "string" },
-          props: { type: "object" }
-        },
-        required: ["id", "componentType", "sectionAnchor", "props"]
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Biography"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "Full name of the person." },
+                  dates: { type: "string", description: "Lifespan dates, e.g., '1856-1939' or '1723-1790'." },
+                  description: { type: "string", description: "Detailed biographical summary focusing on their contributions (8-12 sentences)." },
+                  wikipediaUrl: { type: "string", description: "Direct link to their English Wikipedia page." }
+                },
+                required: ["name", "dates", "description", "wikipediaUrl"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Citation"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  quote: { type: "string", description: "The exact quote text in the target language." },
+                  author: { type: "string", description: "Full name of the author." },
+                  source: { type: "string", description: "Title of the book, paper, or landmark publication." },
+                  year: { type: "string", description: "Year of publication, e.g., '1776'." },
+                  original: { type: "string", description: "Original untranslated quote text in the author's original language of writing. MANDATORY if the author's original language of writing is different from the target language. Empty or omitted if the original language is the same as the target language." },
+                  commentary: { type: "string", description: "Academic analysis explaining the relevance of the quote (at least 3-4 sentences)." }
+                },
+                required: ["quote", "author", "source", "year", "commentary"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Epistemology"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "The title of the debate or critical controversy." },
+                  content: { type: "string", description: "Deeply academic analysis of the epistemology debate (150-250 words)." }
+                },
+                required: ["title", "content"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["BrilliantIdea"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  content: { type: "string", description: "An intuitive analogy or brilliant pedagogical explanation (100-180 words)." }
+                },
+                required: ["content"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["PronunciationSandbox", "SandboxPrononciation"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  word: { type: "string", description: "The word/phrase to practice pronouncing." },
+                  ipa: { type: "string", description: "The phonetic transcription in International Phonetic Alphabet (IPA)." },
+                  lang: { type: "string", description: "The language code of the word, e.g., 'fr' or 'en'." },
+                  definition: { type: "string", description: "A short, clear definition of the word." },
+                  explanation: { type: "string", description: "Orthographic and phonetic pronunciation guidance." }
+                },
+                required: ["word", "ipa", "lang", "definition", "explanation"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Media"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["image", "audio", "video"] },
+                  description: { type: "string", description: "The detailed search/generation description for the media." },
+                  alt: { type: "string", description: "Short description for accessibility." },
+                  caption: { type: "string", description: "A detailed, italicized caption explaining academic relevance." },
+                  title: { type: "string", description: "Short title." },
+                  searchQuery: { type: "string", description: "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches." }
+                },
+                required: ["type", "description", "alt", "caption", "searchQuery"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Quiz"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  limit: { type: "integer", description: "The number of questions to display at once." },
+                  mode: { type: "string", enum: ["standard", "speed"] },
+                  questionDurationLimit: { type: "integer", description: "Optional speed mode time limit in seconds per question." },
+                  questions: {
+                     type: "array",
+                     items: {
+                       type: "object",
+                       properties: {
+                         q: { type: "string", description: "The question card text." },
+                         explanation: { type: "string", description: "Extremely concise, punchy explanation of the correct choice." },
+                         mode: { type: "string", enum: ["standard", "elimination"] },
+                         mediaType: { type: "string", enum: ["image", "audio", "video"] },
+                         mediaUrl: { type: "string" },
+                         mediaCaption: { type: "string" },
+                         options: {
+                           type: "array",
+                           items: {
+                             type: "object",
+                             properties: {
+                               text: { type: "string", description: "The text of the option." },
+                               correct: { type: "boolean", description: "Whether this option is correct." }
+                             },
+                             required: ["text", "correct"]
+                           }
+                         }
+                       },
+                       required: ["q", "explanation", "options"]
+                     }
+                  }
+                },
+                required: ["limit", "questions"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["MatchingEvaluation", "AssociationCorrespondance"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  pairs: { type: "string", description: "Sequence of pairs separated by vertical bars and double pipes, e.g., 'Concept A|Def A || Concept B|Def B'" },
+                  explanation: { type: "string" }
+                },
+                required: ["pairs"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["ReorderEvaluation", "ReordonnerItems"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  items: { type: "string", description: "Sequence of ordered items separated by vertical bars, e.g., 'Step 1 | Step 2 | Step 3'" },
+                  explanation: { type: "string" }
+                },
+                required: ["items"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["FillInBlanks", "TextesATrous"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  sentence: { type: "string", description: "The sentence containing one or more blanks represented by five underscores (_____)." },
+                  answer: { type: "string", description: "The correct comma-separated answers for the blanks." }
+                },
+                required: ["sentence", "answer"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["SolvedExercise", "ExerciceResolut"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  problem: { type: "string", description: "The problem statement." },
+                  solution: { type: "string", description: "The detailed step-by-step solution." }
+                },
+                required: ["title", "problem", "solution"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["UnsolvedExercise", "ExerciceACompleter"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  problem: { type: "string", description: "The unsolved application exercise statement." },
+                  correctAnswer: { type: "string", description: "The correct analytical answer or formula." }
+                },
+                required: ["title", "problem", "correctAnswer"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Mermaid"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  chart: { type: "string", description: "Valid Mermaid chart notation." }
+                },
+                required: ["chart"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string" },
+              sectionAnchor: { type: "string" },
+              props: { type: "object" }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          }
+        ]
       }
     },
     whatsNext: {
@@ -579,6 +846,103 @@ const lessonWidgetsSchema = {
     "references"
   ]
 };
+
+function extractWidgetAnchors(narrativeText: string): { raw: string, type: string, id: string, topic?: string }[] {
+  const matches: { raw: string, type: string, id: string, topic?: string }[] = [];
+  const regex = /\[\[WIDGET:(.*?)\]\]+/gi;
+  let match;
+  while ((match = regex.exec(narrativeText)) !== null) {
+    const raw = match[0];
+    const inner = match[1].trim();
+    const parts = inner.split(':');
+    if (parts.length >= 3) {
+      const type = parts[0].trim();
+      const id = parts[1].trim();
+      const topic = parts.slice(2).join(':').trim();
+      matches.push({ raw, type, id, topic });
+    } else if (parts.length === 2) {
+      const type = parts[0].trim();
+      const id = parts[1].trim();
+      matches.push({ raw, type, id });
+    } else if (parts.length === 1) {
+      const id = parts[0].trim();
+      matches.push({ raw, type: id, id });
+    }
+  }
+  return matches;
+}
+
+function getDynamicWidgetsSchema(narrativeText: string): any {
+  const schema = JSON.parse(JSON.stringify(lessonWidgetsSchema));
+  const anchors = extractWidgetAnchors(narrativeText);
+  const foundTypes = new Set(anchors.map(a => a.type.toLowerCase()));
+  const foundIds = new Set(anchors.map(a => a.id.toLowerCase()));
+
+  const conditionalProps = ["previousLessonSummary", "careerProfile", "researchFocus", "recentNewsBridge"];
+  for (const prop of conditionalProps) {
+    if (!foundTypes.has(prop.toLowerCase()) && !foundIds.has(prop.toLowerCase())) {
+      delete schema.properties[prop];
+    }
+  }
+
+  if (schema.properties.interactiveComponents && schema.properties.interactiveComponents.items) {
+    const anyOf = schema.properties.interactiveComponents.items.anyOf;
+    if (Array.isArray(anyOf)) {
+      const activeAnyOf: any[] = [];
+      const genericFallback = anyOf[anyOf.length - 1];
+
+      for (const option of anyOf) {
+        if (!option.properties || !option.properties.componentType) continue;
+        const compTypeEnum = option.properties.componentType.enum;
+        if (Array.isArray(compTypeEnum)) {
+          const hasMatch = compTypeEnum.some(type => foundTypes.has(type.toLowerCase()));
+          if (hasMatch) {
+            activeAnyOf.push(option);
+          }
+        }
+      }
+
+      activeAnyOf.push(genericFallback);
+      schema.properties.interactiveComponents.items.anyOf = activeAnyOf;
+    }
+  }
+
+  return schema;
+}
+
+function getSchemasForRejectedKeys(rejectedKeys: string[], baseSchema: any): string {
+  const schemas: Record<string, any> = {};
+
+  for (const key of rejectedKeys) {
+    if (key.startsWith('interactiveComponents:')) {
+      const compId = key.substring('interactiveComponents:'.length).toLowerCase();
+      if (baseSchema.properties.interactiveComponents?.items?.anyOf) {
+        const anyOf = baseSchema.properties.interactiveComponents.items.anyOf;
+        const matched = anyOf.find((opt: any) => {
+          if (!opt.properties || !opt.properties.componentType) return false;
+          const compTypeEnum = opt.properties.componentType.enum;
+          return Array.isArray(compTypeEnum) && compTypeEnum.some(type => type.toLowerCase() === compId || type.toLowerCase().replace(/sandbox|prononciation/g, '') === compId.replace(/sandbox|prononciation/g, ''));
+        });
+        if (matched) {
+          schemas[key] = matched;
+        } else {
+          schemas[key] = anyOf[anyOf.length - 1];
+        }
+      }
+    } else {
+      const propSchema = baseSchema.properties[key];
+      if (propSchema) {
+        schemas[key] = propSchema;
+      }
+    }
+  }
+
+  if (Object.keys(schemas).length === 0) {
+    return "No specific schemas found. Follow the standard properties format.";
+  }
+
+  return JSON.stringify(schemas, null, 2);
+}
 
 function getDisciplineFallbackSentence(discipline?: string, lang: string = 'fr'): { sentence: string; answer: string } {
   const normDisc = (discipline || '').toLowerCase();
@@ -866,11 +1230,7 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
       
       const alwaysAllowed = [
         "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer",
-        "StructureViewer3D", "QuantumOrbitalExplorer", "DynamicSimulation",
-        "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
-        "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
-        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography",
-        "Media", "Citation", "Epistemology", "BrilliantIdea", "MatchingEvaluation", "AssociationCorrespondance",
+        "Biography", "Media", "Citation", "Epistemology", "BrilliantIdea", "MatchingEvaluation", "AssociationCorrespondance",
         "ReorderEvaluation", "ReordonnerItems"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
@@ -1142,7 +1502,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   let content = narrativeMdx.trim();
 
   // Normalize suffix-augmented anchors [[WIDGET:Type:ID:Topic]] and [[WIDGET:Type:ID]] to [[WIDGET:ID]]
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*([^\]]*?))?\s*\]\]/gi, (match, type, id) => {
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*(.*?))?\s*\]\]+/gi, (match, type, id) => {
     return `[[WIDGET:${id}]]`;
   });
 
@@ -1622,7 +1982,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   content = content.trim() + referencesStr;
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*[^\]\s]+\s*\]\]/gi, '');
+  content = content.replace(/\[\[\s*WIDGET\s*:.*?\]\]+/gi, '');
 
   // Clean up empty self-closing InteractiveDiagram components without hotspotsBase64
   content = content.replace(/<InteractiveDiagram(?![\s\S]*?hotspotsBase64)[^>]*?\/>/gi, '');
@@ -2154,7 +2514,16 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     let courseContext: any = {};
     let originalSyllabusLessonsLength = 0;
 
-    if (taskId && extra && extra.syllabus) {
+    const courseSlugForSyllabus = cleanPathSegment(correctedCourseName);
+    const localSyllabusPath = path.join(process.cwd(), 'drafts_revisions', `final_stage0_syllabus_${courseSlugForSyllabus}.json`);
+    const localDraftSyllabusPath = path.join(process.cwd(), 'drafts_revisions', `draft_stage0_syllabus_${courseSlugForSyllabus}.json`);
+    if (fs.existsSync(localSyllabusPath)) {
+      await appendTaskLog(`[AI GENERATOR] Found local syllabus file ${localSyllabusPath}. Reusing to preserve customized structure.`);
+      parsedSyllabus = JSON.parse(fs.readFileSync(localSyllabusPath, 'utf8'));
+    } else if (fs.existsSync(localDraftSyllabusPath)) {
+      await appendTaskLog(`[AI GENERATOR] Found local draft syllabus file ${localDraftSyllabusPath}. Reusing to preserve customized structure.`);
+      parsedSyllabus = JSON.parse(fs.readFileSync(localDraftSyllabusPath, 'utf8'));
+    } else if (taskId && extra && extra.syllabus) {
       await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
       parsedSyllabus = extra.syllabus;
     }
@@ -2596,6 +2965,10 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 4. NO STRAY import/export STATEMENTS:
    - Never write "import " or "export " at the beginning of a line in normal text.
    - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`).
+
+5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES:
+   - Never place any [[WIDGET:...]] bracketed anchors (such as Citation, Media, Biography, Epistemology, etc.) inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
+   - Always place every widget anchor on its own separate, clean line, surrounded by a blank line before and after.
 =============================================================================
 
 ---
@@ -3022,6 +3395,28 @@ INSTRUCTIONS:
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
 
+      const activeAnchors = extractWidgetAnchors(approvedNarrativeText);
+      const activeAnchorIds = new Set(activeAnchors.map(a => a.id.toLowerCase()));
+      const activeAnchorTypes = new Set(activeAnchors.map(a => a.type.toLowerCase()));
+
+      const dynamicCatalog = Object.fromEntries(
+        Object.entries(prunedCatalog).filter(([id, meta]: [string, any]) => {
+          const lowerId = id.toLowerCase();
+          const lowerType = (meta.componentType || '').toLowerCase();
+          return activeAnchorIds.has(lowerId) || activeAnchorTypes.has(lowerId) || (lowerType && activeAnchorIds.has(lowerType));
+        })
+      );
+
+      const dynamicCatalogList = Object.entries(dynamicCatalog).map(([id, meta]: [string, any]) => {
+        return `- ID: "${id}"
+  Name: "${meta.nameEN || id}" (${meta.nameFR || id})
+  Description: "${meta.descEN || meta.descFR || ''}"
+  Disciplines: [${(meta.disciplines || []).join(', ')}]
+  Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
+      }).join('\n\n') || 'None anchored.';
+
+      const dynamicSchema = getDynamicWidgetsSchema(approvedNarrativeText);
+
       const prunedNarrativeText = pruneNarrativeForWidgets(approvedNarrativeText);
 
       const cleanLevel = (levelInput || 'L1').trim().toLowerCase();
@@ -3085,7 +3480,7 @@ ${prunedNarrativeText}
 For every custom interactive widget anchor you find in the approved narrative draft (other than standard structural ones), you must define a corresponding item inside the \`interactiveComponents\` JSON array:
 
 #### A. Approved Pruned Widgets for this Discipline:
-${formattedCatalogList}
+${dynamicCatalogList}
 
 #### B. Selection Heuristics & Budget Enforcer:
 1. **Simple Discursive Components (Can be generated from scratch)**:
@@ -3184,17 +3579,18 @@ ${referencesMetadata}
      - \`sectionAnchor\` -> the heading title of the parent section.
      - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
        - **Media**:
+          - \`searchQuery\`: Highly canonical and extremely concise 1 to 3 search words or keywords (e.g., "Claudio Monteverdi", "Larynx humain", "Doppler acoustique") extracted directly from the detailed description to ensure precise database matches on Wikidata, Wikimedia Commons, and other repositories. Do NOT repeat or use long, complex descriptions or captions here.
          - \`type\`: "image", "audio", or "video".
          - \`description\`: The detailed search/generation description for the media. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Media:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
          - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
-         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
+         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance (strictly avoid manual sequential numbering, relative indexes, or prefixes like "Figure 1:", "Expérience 1 :", "Illustration .2", or "Figure 1.2:"). MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
          - \`title\`: Short title (used for audio/video).
        - **Citation**:
          - \`quote\`: The text of the quote in the target language.
          - \`author\`: The author name.
          - \`source\`: The book/publication source title in its original language (untranslated).
          - \`year\`: The publication year.
-         - \`original\`: (Optional) Original language quote text if different from target language.
+         - \`original\`: Original language quote text in the author's original language of writing. This field is MANDATORY if the author's original language of writing is different from the target language. Leave empty or omit ONLY if the original language is the exact same as the target language.
          - \`commentary\`: Academic commentary explaining the significance of the quote (at least 3-4 sentences).
        - **Biography**:
          - \`name\`: Full name.
@@ -3231,14 +3627,14 @@ ${referencesMetadata}
 
       // Export Architect Prompt & Schema
       saveDraftRevision(`prompt_stage2_architect_${item.slug}.md`, widgetsPrompt);
-      saveDraftRevision(`agent3_widgets_schema.json`, JSON.stringify(lessonWidgetsSchema, null, 2));
+      saveDraftRevision(`agent3_widgets_schema.json`, JSON.stringify(dynamicSchema, null, 2));
 
       let parsedWidgets: any = null;
       let widgetsApproved = false;
       let widgetsIteration = 0;
       const maxWidgetsIterations = 3;
 
-      const widgetsJsonStr = await callAIEngine(widgetsPrompt, lessonWidgetsSchema, 0.1);
+      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1);
       lessonStats.widgetsAttempts++;
       saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
 
@@ -3277,7 +3673,7 @@ ${currentWidgetsJsonStr}
 
 Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
 
-            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, lessonWidgetsSchema, 0.1);
+            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1);
             currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_preflight_repair_${preflightAttempts}.json`, currentWidgetsJsonStr);
           } else {
@@ -3371,7 +3767,7 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
      - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Media", "Biography", "Citation", "Epistemology", "BrilliantIdea", or custom widgets).
      - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
    - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, and \`caption\` (detailed italicized explanation of the figure's relevance). Do NOT allow blank or placeholder descriptions/captions, and STRICTLY REJECT if description, alt, or caption are lazy copy-pastes of the chapter's heading or parent section title.
+     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery, and STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title.
      - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
      - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
      - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
@@ -3494,13 +3890,19 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
 
             saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
 
-            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.1);
+            const dynamicSchemaGlobal = getDynamicWidgetsSchema(approvedNarrativeText);
+            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, dynamicSchemaGlobal, 0.1);
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
 
-            const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-            parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
-            parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+            try {
+              const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+              const newlyParsed = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
+              parsedWidgets = validateAndFixWidgets(newlyParsed, courseContext.discipline || correctedCourseName, targetLang);
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Successfully parsed globally refined widgets JSON.`);
+            } catch (jsonErr: any) {
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Global widgets refinement parsing failed (${jsonErr.message}). Falling back to the previous widgets JSON version to prevent crash.`);
+            }
           } else {
             // === LOCALIZED COMPONENT-BY-COMPONENT REPAIR PATH ===
             const rejectedWidgets = criticWidgetsList.filter(w => !w.approved);
@@ -3528,6 +3930,8 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
               });
             }
 
+            const repairSchemasStr = getSchemasForRejectedKeys(rejectedWidgets.map(w => w.key), lessonWidgetsSchema);
+
             const widgetsRepairPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 We need to repair specific component keys of the generated widgets JSON for the lesson "${item.title}" that were rejected by the Widgets Critic (Agent 4B).
 
@@ -3548,6 +3952,9 @@ Current JSON Value:
 ${JSON.stringify(rw.currentValue, null, 2)}
 ----------------------------------
 `).join('\n')}
+
+### STRICT JSON SCHEMAS FOR REJECTED WIDGETS:
+${repairSchemasStr}
 
 INSTRUCTIONS:
 1. Repair each rejected widget key to fully resolve its critique.
@@ -3570,8 +3977,13 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
 
-            const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-            const repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
+            let repairedWidgetsJson: any = null;
+            try {
+              const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+              repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
+            } catch (jsonErr: any) {
+              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Localized widgets repair parsing failed (${jsonErr.message}). Skipping this repair iteration to prevent crash.`);
+            }
 
             if (repairedWidgetsJson) {
               if (Array.isArray(repairedWidgetsJson.interactiveComponents)) {
@@ -6393,8 +6805,8 @@ function sanitizeMdxFallback(mdx: string): string {
   return processedParts.join('');
 }
 
-export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string }> {
-  const figures: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
+export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> {
+  const figures: Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> = [];
   const regex = /<CustomFigure\s+([^>]*)\/>/g;
   let match;
   while ((match = regex.exec(mdx)) !== null) {
@@ -6403,12 +6815,14 @@ export function extractCustomFigures(mdx: string): Array<{ type: string; descrip
     const descMatch = attrsStr.match(/description=(["'])([\s\S]*?)\1/i);
     const titleMatch = attrsStr.match(/title=(["'])([\s\S]*?)\1/i);
     const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/i);
+    const searchQueryMatch = attrsStr.match(/searchQuery=(["'])([\s\S]*?)\1/i);
     if (typeMatch && descMatch) {
       figures.push({
         type: typeMatch[2],
         description: descMatch[2],
         title: titleMatch ? titleMatch[2] : undefined,
-        caption: captionMatch ? captionMatch[2] : undefined
+        caption: captionMatch ? captionMatch[2] : undefined,
+        searchQuery: searchQueryMatch ? searchQueryMatch[2] : undefined
       });
     }
   }
