@@ -369,6 +369,143 @@ The derivative represents the rate of change.
       expect(stitched).not.toContain('### Glossaire');
       expect(stitched).not.toContain('### Références');
     });
+
+    test('should verify correct localized evaluation headings mapping (isTerminalEvaluation false across French, English, Spanish, German, Chinese)', () => {
+      const widgets = {
+        prerequisites: { items: ['Basic Math'] },
+        diagnosticQuiz: {
+          question: 'What is 1+1?',
+          options: ['2', '3'],
+          correctIndex: 0,
+          targetSectionId: 'basic',
+          sectionTitle: 'Basic'
+        },
+        learningObjectives: {
+          knowledge: ['Analyze math'],
+          skills: ['Evaluate equations'],
+          attitudes: ['Create patterns']
+        },
+        interactiveComponents: [],
+        conclusionSummary: { items: ['Math is elegant.'] },
+        whatsNext: { steps: [] },
+        goingFurther: { items: [] },
+        finalEvaluation: { type: 'Quiz', props: { questions: [] } },
+        glossary: [{ term: 'Math', definition: 'The study of numbers.' }],
+        references: ['Newton, I. (1687). *Principia*.']
+      };
+
+      // English, non-terminal evaluation (Self-Evaluation)
+      const stitchedEnSelf = stitchLessonContent('## Overview\nWelcome.\n\n## Summary\nHope you enjoyed.', widgets, false);
+      expect(stitchedEnSelf).toContain('## Self-Evaluation');
+
+      // French, non-terminal evaluation (Auto-évaluation)
+      const stitchedFrSelf = stitchLessonContent('## Présentation\nBienvenue.', widgets, false);
+      expect(stitchedFrSelf).toContain('## Auto-évaluation');
+
+      // Spanish, non-terminal evaluation (Autoevaluación)
+      const stitchedEsSelf = stitchLessonContent('## Overview\nWelcome.\n\n## Summary\nEspero que disfrutes.\n\nreferencias', widgets, false);
+      expect(stitchedEsSelf).toContain('## Autoevaluación');
+
+      // German, non-terminal evaluation (Selbstbewertung)
+      const stitchedDeSelf = stitchLessonContent('## Einführung\nWillkommen.\n\n## Fazit\nIch hoffe, es hat Ihnen gefallen.', widgets, false);
+      expect(stitchedDeSelf).toContain('## Selbstbewertung');
+
+      // Chinese, non-terminal evaluation (自我评估)
+      const stitchedZhSelf = stitchLessonContent('## 介绍\n欢迎。\n\n## 结论\n希望你喜欢。', widgets, false);
+      expect(stitchedZhSelf).toContain('## 自我评估');
+    });
+
+    test('should sequentially renumber figures and strip pre-existing figure prefixes', () => {
+      const widgets = {
+        prerequisites: { items: ['Basic Math'] },
+        diagnosticQuiz: {
+          question: 'What is 1+1?',
+          options: ['2', '3'],
+          correctIndex: 0,
+          targetSectionId: 'basic',
+          sectionTitle: 'Basic'
+        },
+        learningObjectives: {
+          knowledge: ['Analyze math'],
+          skills: ['Evaluate equations'],
+          attitudes: ['Create patterns']
+        },
+        interactiveComponents: [],
+        conclusionSummary: { items: ['Math is elegant.'] },
+        whatsNext: { steps: [] },
+        goingFurther: { items: [] },
+        finalEvaluation: { type: 'Quiz', props: { questions: [] } },
+        glossary: [{ term: 'Math', definition: 'The study of numbers.' }],
+        references: ['Newton, I. (1687). *Principia*.']
+      };
+
+      const narrativeWithFigures = `
+## Overview
+Here is an image:
+<Image description="A beautiful plot of gravity" caption="Figure 5: Overwritten gravity curve" />
+And another figure:
+<CustomFigure caption="fig 2 - Schema of orbit" />
+And a mermaid diagram:
+<Mermaid chart="graph TD; A --- B" description="Illustration 9: Diagram showing workflow" />
+
+## Summary
+Done.
+      `;
+
+      const stitched = stitchLessonContent(narrativeWithFigures, widgets, false);
+
+      // Check first image caption is renumbered as "Figure 1: Overwritten gravity curve"
+      expect(stitched).toContain('caption="Figure 1: Overwritten gravity curve"');
+      
+      // Check second image caption is renumbered as "Figure 2: Schema of orbit"
+      expect(stitched).toContain('caption="Figure 2: Schema of orbit"');
+      
+      // Check mermaid (uses description to build caption since caption was missing)
+      // "Illustration 9: Diagram showing workflow" -> renumbered as "Figure 3: Diagram showing workflow"
+      expect(stitched).toContain('caption="Figure 3: Diagram showing workflow"');
+    });
+
+    test('should clean up trailing unbalanced closing brackets at the end of lines', () => {
+      const widgets = {
+        prerequisites: { items: ['Basic Math'] },
+        diagnosticQuiz: {
+          question: 'What is 1+1?',
+          options: ['2', '3'],
+          correctIndex: 0,
+          targetSectionId: 'basic',
+          sectionTitle: 'Basic'
+        },
+        learningObjectives: {
+          knowledge: ['Analyze math'],
+          skills: ['Evaluate equations'],
+          attitudes: ['Create patterns']
+        },
+        interactiveComponents: [],
+        conclusionSummary: { items: ['Math is elegant.'] },
+        whatsNext: { steps: [] },
+        goingFurther: { items: [] },
+        finalEvaluation: { type: 'Quiz', props: { questions: [] } },
+        glossary: [{ term: 'Math', definition: 'The study of numbers.' }],
+        references: ['Newton, I. (1687). *Principia*.']
+      };
+
+      const narrativeWithUnbalancedBrackets = `
+## Introduction
+This is some clean text.
+But this line has a dangling bracket at the end. ]
+And another one with nested brackets [like this] ]
+But this one [is perfectly balanced]
+      `;
+
+      const stitched = stitchLessonContent(narrativeWithUnbalancedBrackets, widgets, false);
+
+      expect(stitched).toContain('This is some clean text.');
+      expect(stitched).toContain('But this line has a dangling bracket at the end.');
+      expect(stitched).not.toContain('dangling bracket at the end. ]');
+      expect(stitched).toContain('And another one with nested brackets [like this]');
+      expect(stitched).not.toContain('[like this] ]');
+      expect(stitched).toContain('But this one [is perfectly balanced]');
+    });
   });
 });
 

@@ -3854,7 +3854,7 @@ ${referencesMetadata}
 
 ### 3. OUTPUT FORMAT
 - Return ONLY a valid JSON object matching the \`lessonWidgetsSchema\` schema.
-- Do NOT wrap your JSON response in markdown code blocks (`` ` ``).
+- Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 - Ensure all string values are fully written in "${targetLang.toUpperCase()}".
 `;
 
@@ -3904,7 +3904,7 @@ ${err.message}
 ${currentWidgetsJsonStr}
 \`\`\`
 
-Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (`` ` ``).`;
+Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
 
             const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1);
             currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
@@ -4000,7 +4000,7 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
      - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Image", "Audio", "Video", "Biography", "Citation", "Epistemology", or custom widgets).
      - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
    - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Image**: Must have \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery, and STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title.
+     - **Image**: Must have \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery. STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title, if they contain manual figure prefixes or labels (such as "Figure 1:", "Figure :", "Figure %d:", "Figure -", etc.), or if they contain relative/local image links or filenames (such as "./media/image.png" or "/images/photo.jpg").
      - **Audio**: Must have \`title\` and optional \`description\` (narration details, pronunciation guide).
      - **Video**: Must have \`title\` and optionally \`url\` or \`id\` if specified.
      - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
